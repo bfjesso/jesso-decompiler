@@ -50,21 +50,21 @@ enum LegacyPrefix
 	ASO = 0x67, // address-size override
 };
 
-struct LegacyPrefixesResult
+struct LegacyPrefixes
 {
-	enum prefix group1;
-	enum prefix group2;
-	enum prefix group3;
-	enum prefix group4;
+	enum LegacyPrefix group1;
+	enum LegacyPrefix group2;
+	enum LegacyPrefix group3;
+	enum LegacyPrefix group4;
 	unsigned char numOfPrefixes;
 };
 
-static struct LegacyPrefixesResult handleLegacyPrefixes(unsigned char* bytes);
+static struct LegacyPrefixes handleLegacyPrefixes(unsigned char* bytes);
 
 
 // REX Prefix
 
-struct REXPrefixResult 
+struct REXPrefix
 {
 	unsigned char isValidREX;
 	
@@ -76,23 +76,72 @@ struct REXPrefixResult
 	// REX byte: 0100WRXB
 };
 
-static struct REXPrefixResult handleREXPrefix(unsigned char* bytes);
+static struct REXPrefix handleREXPrefix(unsigned char* bytes);
 
 
 // Opcode
 
-enum OpcodeEscape
-{
-	NO_ESCAPE, // one byte opcode
-	x0F, // two byte opcode
-	x0Fx38, // three byte opcode
-	x0Fx3A // three byte opcode
-};
-
 struct OpcodeResult 
 {
-	struct Opcode opcode;
+	struct Opcode* opcode;
 	unsigned char numOfBytes;
 };
 
-static struct OpcodeResult handleOpcode(unsigned char* bytes);
+static struct OpcodeResult handleOpcode(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions);
+
+
+// Operands
+
+enum Register32
+{
+	EAX,
+	ECX,
+	EDX,
+	EBX,
+	ESP,
+	EBP,
+	ESI,
+	EDI
+};
+enum Register16
+{
+	AX,
+	CX,
+	DX,
+	BX,
+	SP,
+	BP,
+	SI,
+	DI
+};
+enum Register8
+{
+	AL,
+	CL,
+	DL,
+	BL,
+	AH,
+	CH,
+	DH,
+	BH
+};
+
+union Operand
+{
+	enum Register32 reg32;
+	enum Register16 reg16;
+	enum Register8 reg8;
+};
+
+struct OperandsResult 
+{
+	union Operand operand1;
+	union Operand operand2;
+	union Operand operand3;
+};
+
+static struct OperandsResult handleOperands(unsigned char* bytes, unsigned char is64BitMode, struct OpcodeResult* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
+
+// ModR/M
+
+const char* handleModRM(unsigned char* bytes, unsigned char is64BitMode, struct OpcodeResult* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
