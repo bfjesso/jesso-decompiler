@@ -1,5 +1,5 @@
 #include "../Headers/disassembler.h"
-#include "../Headers/opcodeTables.h"
+#include "../Headers/oneByteOpcodeMap.h"
 
 struct DisassembledInstruction disassembleInstruction(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions)
 {
