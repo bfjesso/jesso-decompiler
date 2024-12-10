@@ -27,8 +27,6 @@ extern "C"
 
 enum LegacyPrefix
 {
-	NO_PREFIX,
-
 	// group 1
 	LOCK = 0xF0,
 	REPNZ = 0xF2, // repeat not zero
@@ -48,6 +46,8 @@ enum LegacyPrefix
 
 	// group 4
 	ASO = 0x67, // address-size override
+
+	NO_PREFIX
 };
 
 struct LegacyPrefixes
@@ -56,7 +56,6 @@ struct LegacyPrefixes
 	enum LegacyPrefix group2;
 	enum LegacyPrefix group3;
 	enum LegacyPrefix group4;
-	unsigned char numOfPrefixes;
 };
 
 static struct LegacyPrefixes handleLegacyPrefixes(unsigned char* bytes);
@@ -81,40 +80,12 @@ static struct REXPrefix handleREXPrefix(unsigned char* bytes);
 
 // Opcode
 
-struct OpcodeResult 
-{
-	struct Opcode* opcode;
-	unsigned char numOfBytes;
-};
-
-static struct OpcodeResult handleOpcode(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions);
+static struct Opcode* handleOpcode(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions);
 
 
 // Operands
 
-enum Register32
-{
-	EAX,
-	ECX,
-	EDX,
-	EBX,
-	ESP,
-	EBP,
-	ESI,
-	EDI
-};
-enum Register16
-{
-	AX,
-	CX,
-	DX,
-	BX,
-	SP,
-	BP,
-	SI,
-	DI
-};
-enum Register8
+enum Register
 {
 	AL,
 	CL,
@@ -123,17 +94,66 @@ enum Register8
 	AH,
 	CH,
 	DH,
-	BH
+	BH,
+	R8B,
+	R9B,
+	R10B,
+	R11B,
+	R12B,
+	R13B,
+	R14B,
+	R15B,
+	AX,
+	CX,
+	DX,
+	BX,
+	SP,
+	BP,
+	SI,
+	DI,
+	EAX,
+	ECX,
+	EDX,
+	EBX,
+	ESP,
+	EBP,
+	ESI,
+	EDI,
+	RAX,
+	RCX,
+	RDX,
+	RBX,
+	RSP,
+	RBP,
+	RSI,
+	RDI,
+	R8,
+	R9,
+	R10,
+	R11,
+	R12,
+	R13,
+	R14,
+	R15,
+
+	NO_REG
+};
+
+struct MemoryAddress 
+{
+	enum Register reg;
+	enum Register regDisplacement;
+	unsigned int constDisplacement;
 };
 
 union Operand
 {
-	enum Register32 reg32;
-	enum Register16 reg16;
-	enum Register8 reg8;
+	enum Register reg;
+	struct MemoryAddress memoryAddress;
+	int immediate;
 };
 
-struct OperandsResult 
+struct OperandsResult
 {
 	union Operand operand1;
 	union Operand operand2;

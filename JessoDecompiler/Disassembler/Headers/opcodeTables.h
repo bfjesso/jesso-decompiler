@@ -126,9 +126,9 @@ enum Mnemonic
 enum OperandCode
 {
 	ONE,
-	AL,
-	CL,
-	DX,
+	AL_CODE,
+	CL_CODE,
+	DX_CODE,
 	rAX,
 	rCX,
 	rDX,
@@ -160,13 +160,13 @@ enum OperandCode
 	Gv,
 	Gz,
 	Gw,
+	M,
+	Mp,
+	Ma,
 	Ib,
 	Iv,
 	Iz,
 	Iw,
-	M,
-	Mp,
-	Ma,
 	Yb,
 	Yv,
 	Yz,
@@ -200,7 +200,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ ADD, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x01
 	{ ADD, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x02
 	{ ADD, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x03
-	{ ADD, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x04
+	{ ADD, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x04
 	{ ADD, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x05
 	{ PUSH_ES, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x06
 	{ POP_ES, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x07
@@ -208,7 +208,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ OR, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x09
 	{ OR, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x0A
 	{ OR, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x0B
-	{ OR, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x0C
+	{ OR, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x0C
 	{ OR, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x0D
 	{ PUSH_CS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x0E
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0x0F; not an opcode: 2-byte escape
@@ -216,7 +216,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ ADC, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x11
 	{ ADC, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x12
 	{ ADC, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x13
-	{ ADC, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x14
+	{ ADC, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x14
 	{ ADC, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x15
 	{ PUSH_SS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x16
 	{ POP_SS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x17
@@ -224,7 +224,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ SBB, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x19
 	{ SBB, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x1A
 	{ SBB, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x1B
-	{ SBB, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x1C
+	{ SBB, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x1C
 	{ SBB, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x1D
 	{ PUSH_DS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x1E
 	{ POP_DS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x1F
@@ -232,7 +232,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ AND, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x21
 	{ AND, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x22
 	{ AND, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x23
-	{ AND, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x24
+	{ AND, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x24
 	{ AND, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x25
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0x26; not an opcode: ES segment prefix
 	{ DAA, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },																// 0x27
@@ -240,7 +240,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ SUB, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x29
 	{ SUB, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x2A
 	{ SUB, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x2B
-	{ SUB, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x2C
+	{ SUB, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x2C
 	{ SUB, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x2D
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0x2E; not an opcode: CS segment prefix
 	{ DAS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },																// 0x2F
@@ -248,7 +248,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ XOR, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x31
 	{ XOR, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x32
 	{ XOR, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x33
-	{ XOR, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x34
+	{ XOR, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x34
 	{ XOR, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x35
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0x36; not an opcode: SS segment prefix
 	{ AAA, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },																// 0x37
@@ -256,7 +256,7 @@ const struct Opcode oneByteMap[0x100] =
 	{ CMP, -1, Ev, Gv, NO_OPERAND_CODE },																						// 0x39
 	{ CMP, -1, Gb, Eb, NO_OPERAND_CODE },																						// 0x3A
 	{ CMP, -1, Gv, Ev, NO_OPERAND_CODE },																						// 0x3B
-	{ CMP, -1, AL, Ib, NO_OPERAND_CODE },																						// 0x3C
+	{ CMP, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0x3C
 	{ CMP, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0x3D
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0x3E; not an opcode: DS segment prefix
 	{ AAS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },																// 0x3F
@@ -356,21 +356,21 @@ const struct Opcode oneByteMap[0x100] =
 	{ POPFD, -1, Fv, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0x9D; POPF if operand size prefix, POPFQ if 64-bit mode (POPFD not possible in 64-bit mode)					!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	{ SAHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9E
 	{ LAHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9F
-	{ MOV, -1, AL, Ob, NO_OPERAND_CODE },																						// 0xA0
+	{ MOV, -1, AL_CODE, Ob, NO_OPERAND_CODE },																					// 0xA0
 	{ MOV, -1, rAX, Ov, NO_OPERAND_CODE },																						// 0xA1
-	{ MOV, -1, Ob, AL, NO_OPERAND_CODE },																						// 0xA2
+	{ MOV, -1, Ob, AL_CODE, NO_OPERAND_CODE },																					// 0xA2
 	{ MOV, -1, Ov, rAX, NO_OPERAND_CODE },																						// 0xA3
 	{ MOVS, -1, Yb, Xb, NO_OPERAND_CODE },																						// 0xA4; alternate mnemonics: MOVSB
 	{ MOVS, -1, Yv, Xv, NO_OPERAND_CODE },																						// 0xA5; alternate mnemonics: MOVSW, MOVSD, MOVSQ
 	{ CMPS, -1, Xb, Yb, NO_OPERAND_CODE },																						// 0xA6; alternate mnemonics: CMPSB
 	{ CMPS, -1, Xv, Yv, NO_OPERAND_CODE },																						// 0xA7; alternate mnemonics: CMPSW, CMPSD
-	{ TEST, -1, AL, Ib, NO_OPERAND_CODE },																						// 0xA8
+	{ TEST, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0xA8
 	{ TEST, -1, rAX, Iz, NO_OPERAND_CODE },																						// 0xA9
-	{ STOS, -1, Yb, AL, NO_OPERAND_CODE },																						// 0xAA; alternate mnemonics: STOSB
+	{ STOS, -1, Yb, AL_CODE, NO_OPERAND_CODE },																					// 0xAA; alternate mnemonics: STOSB
 	{ STOS, -1, Yv, rAX, NO_OPERAND_CODE },																						// 0xAB; alternate mnemonics: STOSW, STOSD, STOSQ
-	{ LODS, -1, AL, Xb, NO_OPERAND_CODE },																						// 0xAC; alternate mnemonics: LODSB
+	{ LODS, -1, AL_CODE, Xb, NO_OPERAND_CODE },																					// 0xAC; alternate mnemonics: LODSB
 	{ LODS, -1, rAX, Xv, NO_OPERAND_CODE },																						// 0xAD; alternate mnemonics: LODSW, LODSD, LODSQ
-	{ SCAS, -1, AL, Yb, NO_OPERAND_CODE },																						// 0xAE; alternate mnemonics: SCASB
+	{ SCAS, -1, AL_CODE, Yb, NO_OPERAND_CODE },																					// 0xAE; alternate mnemonics: SCASB
 	{ SCAS, -1, rAX, Yv, NO_OPERAND_CODE },																						// 0xAF; alternate mnemonics: SCASW, SCASD, SCASQ
 	{ MOV, -1, AL_R8B, Ib, NO_OPERAND_CODE },																					// 0xB0
 	{ MOV, -1, CL_R9B, Ib, NO_OPERAND_CODE },																					// 0xB1
@@ -406,8 +406,8 @@ const struct Opcode oneByteMap[0x100] =
 	{ IRET, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0xCF; alternate mnemonics: IRETD, IRETQ
 	{ EXTENDED_OPCODE, 2, Eb, ONE, NO_OPERAND_CODE },																			// 0xD0; an extended opcode
 	{ EXTENDED_OPCODE, 2, Ev, ONE, NO_OPERAND_CODE },																			// 0xD1; an extended opcode
-	{ EXTENDED_OPCODE, 2, Eb, CL, NO_OPERAND_CODE },																			// 0xD2; an extended opcode
-	{ EXTENDED_OPCODE, 2, Ev, CL, NO_OPERAND_CODE },																			// 0xD3; an extended opcode
+	{ EXTENDED_OPCODE, 2, Eb, CL_CODE, NO_OPERAND_CODE },																		// 0xD2; an extended opcode
+	{ EXTENDED_OPCODE, 2, Ev, CL_CODE, NO_OPERAND_CODE },																		// 0xD3; an extended opcode
 	{ AAM, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE },																			// 0xD4
 	{ AAD, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE },																			// 0xD5
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0xD6; not an opcode: reserved
@@ -424,18 +424,18 @@ const struct Opcode oneByteMap[0x100] =
 	{ LOOPZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0xE1; alternate mnemonics: LOOPE
 	{ LOOP, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE },																			// 0xE2
 	{ JRCXZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0xE3
-	{ IN, -1, AL, Ib, NO_OPERAND_CODE },																						// 0xE4
+	{ IN, -1, AL_CODE, Ib, NO_OPERAND_CODE },																					// 0xE4
 	{ IN, -1, rAX, Ib, NO_OPERAND_CODE },																						// 0xE5
-	{ OUT, -1, Ib, AL, NO_OPERAND_CODE },																						// 0xE6
+	{ OUT, -1, Ib, AL_CODE, NO_OPERAND_CODE },																					// 0xE6
 	{ OUT, -1, Ib, rAX, NO_OPERAND_CODE },																						// 0xE7
 	{ NEAR_CALL, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE },																	// 0xE8
 	{ NEAR_JMP, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0xE9
 	{ FAR_JMP, -1, Ap, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0xEA
 	{ SHORT_JMP, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE },																	// 0xEB
-	{ IN, -1, AL, DX, NO_OPERAND_CODE },																						// 0xEC
-	{ IN, -1, rAX, DX, NO_OPERAND_CODE },																						// 0xED
-	{ OUT, -1, DX, AL, NO_OPERAND_CODE },																						// 0xEE
-	{ OUT, -1, DX, rAX, NO_OPERAND_CODE },																						// 0xEF
+	{ IN, -1, AL_CODE, DX_CODE, NO_OPERAND_CODE },																				// 0xEC
+	{ IN, -1, rAX, DX_CODE, NO_OPERAND_CODE },																					// 0xED
+	{ OUT, -1, DX_CODE, AL_CODE, NO_OPERAND_CODE },																				// 0xEE
+	{ OUT, -1, DX_CODE, rAX, NO_OPERAND_CODE },																					// 0xEF
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0xF0; not an opcode: LOCK prefix
 	{ INT1, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0xF1
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },														// 0xF2; not an opcode: REPNZ prefix
@@ -456,7 +456,7 @@ const struct Opcode oneByteMap[0x100] =
 const struct Opcode alternateX63 = { MOVSXD, -1, Gv, Ev, NO_OPERAND_CODE };
 
 // Appendix A: A.4.2 table A-6
-const char* const extendedOpcodeMnemonics[18][8] = // [group index][3 ModR/M bits]
+const enum Mnemonic extendedOpcodeMnemonics[18][8] = // [group index][3 ModR/M bits]
 {
 	{ ADD, OR, ADC, SBB, AND, SUB, XOR, CMP },																					// group 1
 	{ POP, NO_MNEMONIC, NO_MNEMONIC, NO_MNEMONIC, NO_MNEMONIC, NO_MNEMONIC, NO_MNEMONIC, NO_MNEMONIC },							// group 1A
