@@ -17,7 +17,7 @@ enum Mnemonic
 	MOV, MOVS, MOVSXD, MUL,
 	NEG, NOP, NOT,
 	OR, OUT, OUTS,
-	POP, POPAD, POP_DS, POP_ES, POP_SS, POPFD, PUSH, PUSHAD, PUSH_CS, PUSH_DS, PUSH_ES, PUSH_SS, PUSHFD,
+	POP, POPAD, POP_DS, POP_ES, POP_SS, POPF, PUSH, PUSHAD, PUSH_CS, PUSH_DS, PUSH_ES, PUSH_SS, PUSHF,
 	RCL, RCR, RET_FAR, RET_NEAR, ROL, ROR,
 	SAHF, SAR, SBB, SCAS, SHL, SHR, STC, STD, STI, STOS, SUB,
 	TEST,
@@ -27,6 +27,29 @@ enum Mnemonic
 	EXTENDED_OPCODE,
 	NO_MNEMONIC
 };
+
+const char* mnemonicStrs[] =
+{
+	"AAA", "AAD", "AAM", "AAS", "ADC", "ADD", "AND", "ARPL",
+	"BOUND", 
+	"CALL_FAR", "CALL_NEAR", "CDQ", "CLC", "CLD", "CLI", "CMC", "CMP", "CMPS", "CWDE", 
+	"DAA", "DAS", "DEC", "DIV", 
+	"ENTER",
+	"HLT", 
+	"IDIV", "IMUL", "IN", "INC", "INS", "INT", "INT1", "INT3", "INTO", "IRET", 
+	"JA", "JB", "JBE", "JG", "JL", "JLE", "JMP", "JMP_FAR", "JMP_NEAR", "JMP_SHORT", "JNB", "JNL", "JNO", "JNP", "JNS", "JNZ", "JO", "JP", "JRCXZ", "JS", "JZ", 
+	"LAHF", "LDS", "LEA", "LEAVE", "LES", "LODS", "LOOP", "LOOPNZ", "LOOPZ", 
+	"MOV", "MOVS", "MOVSXD", "MUL", 
+	"NEG", "NOP", "NOT", 
+	"OR", "OUT", "OUTS", 
+	"POP", "POPAD", "POP_DS", "POP_ES", "POP_SS", "POPF", "PUSH", "PUSHAD", "PUSH_CS", "PUSH_DS", "PUSH_ES", "PUSH_SS", "PUSHF", 
+	"RCL", "RCR", "RET_FAR", "RET_NEAR", "ROL", "ROR", 
+	"SAHF", "SAR", "SBB", "SCAS", "SHL", "SHR", "STC", "STD", "STI", "STOS", "SUB", 
+	"TEST", 
+	"WAIT", 
+	"XCHG", "XLAT", "XOR"
+};
+
 
 // Appendix A: A.2
 // "Operands are identified by a two-character code of the form Zz. The first character, an uppercase letter, specifies
@@ -48,7 +71,6 @@ enum OperandCode
 	Ob, Ov,
 	Sw,
 	Ap,
-	Fv,
 
 	NO_OPERAND_CODE
 };

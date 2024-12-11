@@ -1,51 +1,28 @@
 #pragma once
 
-struct DisassemblerOptions
-{
-	char is64BitMode;
-};
-
-struct DisassembledInstruction
-{
-	const char* temp;
-	unsigned char numOfBytes;
-};
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-	struct DisassembledInstruction disassembleInstruction(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions);
-
-#ifdef __cplusplus
-}
-#endif
-
-
 // Legacy Prefixes
 
 enum LegacyPrefix
 {
-	// group 1
-	LOCK = 0xF0,
-	REPNZ = 0xF2, // repeat not zero
-	REPZ = 0xF3, // repeat zero
-
 	// group 2
 	// segment overrides
-	CS_BNT = 0x2E, // branch not taken if Jcc (conditional jump) instruction
-	SS = 0x36,
-	DS_BT = 0x3E, // branch taken if Jcc (conditional jump) instruction
-	ES = 0x26,
-	FS = 0x64,
-	GS = 0x65,
+	CSO_BNT, // branch not taken if Jcc (conditional jump) instruction
+	SSO,
+	DSO_BT, // branch taken if Jcc (conditional jump) instruction
+	ESO,
+	FSO,
+	GSO,
+	
+	// group 1
+	LOCK,
+	REPNZ, // repeat not zero
+	REPZ, // repeat zero
 
 	// group 3
-	OSO = 0x66, // operand-size override
+	OSO, // operand-size override
 
 	// group 4
-	ASO = 0x67, // address-size override
+	ASO, // address-size override
 
 	NO_PREFIX
 };
@@ -56,6 +33,7 @@ struct LegacyPrefixes
 	enum LegacyPrefix group2;
 	enum LegacyPrefix group3;
 	enum LegacyPrefix group4;
+	unsigned char numOfPrefixes;
 };
 
 static struct LegacyPrefixes handleLegacyPrefixes(unsigned char* bytes);
@@ -75,82 +53,60 @@ struct REXPrefix
 	// REX byte: 0100WRXB
 };
 
-static struct REXPrefix handleREXPrefix(unsigned char* bytes);
+static struct REXPrefix handleREXPrefix(unsigned char* bytes, char bytesLen);
 
 
 // Opcode
 
-static struct Opcode* handleOpcode(unsigned char* bytes, struct DisassemblerOptions* disassemblerOptions);
+static struct Opcode* handleOpcode(unsigned char* bytes, char bytesLen, struct DisassemblerOptions* disassemblerOptions);
 
 
 // Operands
 
+enum Segment 
+{
+	CS,
+	SS,
+	DS,
+	ES,
+	FS,
+	GS,
+
+	NO_SEGMENT
+};
+
 enum Register
 {
-	AL,
-	CL,
-	DL,
-	BL,
-	AH,
-	CH,
-	DH,
-	BH,
-	R8B,
-	R9B,
-	R10B,
-	R11B,
-	R12B,
-	R13B,
-	R14B,
-	R15B,
-	AX,
-	CX,
-	DX,
-	BX,
-	SP,
-	BP,
-	SI,
-	DI,
-	EAX,
-	ECX,
-	EDX,
-	EBX,
-	ESP,
-	EBP,
-	ESI,
-	EDI,
-	RAX,
-	RCX,
-	RDX,
-	RBX,
-	RSP,
-	RBP,
-	RSI,
-	RDI,
-	R8,
-	R9,
-	R10,
-	R11,
-	R12,
-	R13,
-	R14,
-	R15,
+	AL, CL, DL, BL, AH, CH, DH, BH,
+	R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B,
+	AX, CX, DX, BX, SP, BP, SI, DI, 
+	EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
+	RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI,
+	R8, R9, R10, R11, R12, R13, R14, R15,
 
 	NO_REG
 };
 
 struct MemoryAddress 
 {
+	union 
+	{
+		enum Segment segment;
+		unsigned short constSegment;
+	};
+	
 	enum Register reg;
 	enum Register regDisplacement;
 	unsigned int constDisplacement;
+	unsigned char scale; // if SIB byte
 };
 
 union Operand
 {
+	enum Segement segment;
 	enum Register reg;
 	struct MemoryAddress memoryAddress;
-	int immediate;
+	unsigned long long immediate;
 };
 
 struct OperandsResult
@@ -160,8 +116,47 @@ struct OperandsResult
 	union Operand operand3;
 };
 
-static struct OperandsResult handleOperands(unsigned char* bytes, unsigned char is64BitMode, struct OpcodeResult* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
+static struct OperandsResult handleOperands(unsigned char* bytes, char bytesLen, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
 
 // ModR/M
 
-const char* handleModRM(unsigned char* bytes, unsigned char is64BitMode, struct OpcodeResult* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
+static union Operand handleModRM(unsigned char* bytes, char bytesLen, unsigned char modRMByte, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride);
+
+// SIB
+
+static union Operand handleSIB(unsigned char* bytes, char bytesLen);
+
+
+static unsigned long long getUIntFromBytes(unsigned char* bytes, char bytesLen, unsigned char size);
+
+
+// Result
+
+
+struct DisassemblerOptions
+{
+	char is64BitMode;
+};
+
+struct DisassembledInstruction
+{
+	struct LegacyPrefixes legacyPrefixes;
+	enum Mnemonic opcode;
+	struct OperandsResult operands;
+
+	const char* str;
+	unsigned char numOfBytes;
+};
+
+const char* instructionToStr(struct DisassembledInstruction* instruction);
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	unsigned char disassembleInstruction(unsigned char* bytes, char bytesLen, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+
+#ifdef __cplusplus
+}
+#endif

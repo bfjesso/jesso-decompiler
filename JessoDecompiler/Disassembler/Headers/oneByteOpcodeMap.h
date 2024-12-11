@@ -163,8 +163,8 @@ const struct Opcode oneByteMap[0x100] =
 	{ CDQ, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },																// 0x99; CWD if operand size is 16-bit, CQO if operand size is 64-bit			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	{ CALL_FAR, -1, Ap, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0x9A
 	{ WAIT, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9B; alternate mnemonics: FWAIT
-	{ PUSHFD, -1, Fv, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0x9C; PUSHF if operand size prefix, PUSHFQ if 64-bit mode (PUSHFD not possible in 64-bit mode)					!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	{ POPFD, -1, Fv, NO_OPERAND_CODE, NO_OPERAND_CODE },																		// 0x9D; POPF if operand size prefix, POPFQ if 64-bit mode (POPFD not possible in 64-bit mode)					!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	{ PUSHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9C
+	{ POPF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9D
 	{ SAHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9E
 	{ LAHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE },															// 0x9F
 	{ MOV, -1, AL_CODE, Ob, NO_OPERAND_CODE },																					// 0xA0
