@@ -45,9 +45,13 @@ void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 	unsigned char bytes[255];
 	if (!ParseStringBytes(bytesInputTextCtrl->GetValue(), bytes, 255)) { return; }
 
-	struct disassembledInstruction result = disassembleInstruction(bytes);
+	struct DisassemblerOptions options;
+	options.is64BitMode = 0;
 
-	disassemblyStaticText->SetLabelText(result.temp);
+	struct DisassembledInstruction result;
+	disassembleInstruction(bytes, &options, &result);
+
+	disassemblyStaticText->SetLabelText(result.str);
 }
 
 // allocates memory for bytes; needs to be deleted later
