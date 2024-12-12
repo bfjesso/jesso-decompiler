@@ -49,7 +49,7 @@ void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 	options.is64BitMode = 0;
 
 	struct DisassembledInstruction result;
-	disassembleInstruction(bytes, &options, &result);
+	disassembleInstruction(bytes, bytes + 100, & options, &result); // broken
 
 	disassemblyStaticText->SetLabelText(result.str);
 }
