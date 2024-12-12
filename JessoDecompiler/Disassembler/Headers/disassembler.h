@@ -33,10 +33,9 @@ struct LegacyPrefixes
 	enum LegacyPrefix group2;
 	enum LegacyPrefix group3;
 	enum LegacyPrefix group4;
-	unsigned char numOfPrefixes;
 };
 
-static struct LegacyPrefixes handleLegacyPrefixes(unsigned char* bytes);
+static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result);
 
 
 // REX Prefix
@@ -53,12 +52,12 @@ struct REXPrefix
 	// REX byte: 0100WRXB
 };
 
-static struct REXPrefix handleREXPrefix(unsigned char* bytes, char bytesLen);
+static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct REXPrefix* result);
 
 
 // Opcode
 
-static struct Opcode* handleOpcode(unsigned char* bytes, char bytesLen, struct DisassemblerOptions* disassemblerOptions);
+static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct Opcode** result);
 
 
 // Operands
@@ -116,19 +115,18 @@ struct OperandsResult
 	union Operand operand3;
 };
 
-static struct OperandsResult handleOperands(unsigned char* bytes, char bytesLen, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix);
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct OperandsResult* result);
 
 // ModR/M
 
-static union Operand handleModRM(unsigned char* bytes, char bytesLen, unsigned char modRMByte, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride);
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, union Operand* result);
 
 // SIB
 
-static union Operand handleSIB(unsigned char* bytes, char bytesLen);
+static unsigned char* handleSIB(unsigned char** bytesPtr, union Operand* result);
 
 
-static unsigned long long getUIntFromBytes(unsigned char* bytes, char bytesLen, unsigned char size);
-
+static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char size);
 
 // Result
 
@@ -155,7 +153,7 @@ extern "C"
 {
 #endif
 
-	unsigned char disassembleInstruction(unsigned char* bytes, char bytesLen, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 
 #ifdef __cplusplus
 }
