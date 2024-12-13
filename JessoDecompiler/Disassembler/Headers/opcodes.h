@@ -79,7 +79,5 @@ struct Opcode
 {
 	const enum Mnemonic mnemonic;
 	const char extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
-	const enum OperandCode operand1;
-	const enum OperandCode operand2;
-	const enum OperandCode operand3;
+	const enum OperandCode operands[3];
 };

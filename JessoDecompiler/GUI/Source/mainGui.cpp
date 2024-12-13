@@ -49,7 +49,7 @@ void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 	options.is64BitMode = 0;
 
 	struct DisassembledInstruction result;
-	disassembleInstruction(bytes, bytes + 100, & options, &result); // broken
+	disassembleInstruction(bytes, bytes + 5, &options, &result); // broken
 
 	disassemblyStaticText->SetLabelText(result.str);
 }
@@ -57,6 +57,8 @@ void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 // allocates memory for bytes; needs to be deleted later
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
 {
+	str.Replace(" ", "", true);
+	
 	int strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0) 
 	{ 

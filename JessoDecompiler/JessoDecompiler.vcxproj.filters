@@ -30,13 +30,16 @@
     <ClInclude Include="Disassembler\Headers\disassembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Disassembler\Headers\opcodeTables.h">
+    <ClInclude Include="Disassembler\Headers\opcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GUI\Headers\initApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GUI\Headers\mainGui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Disassembler\Headers\extendedOpcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GUI\Source\mainGui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Disassembler\Headers\oneByteOpcodeMap.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

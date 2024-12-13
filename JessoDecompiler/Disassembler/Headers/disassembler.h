@@ -74,6 +74,16 @@ enum Segment
 	NO_SEGMENT
 };
 
+const char* segmentStrs[] = 
+{
+	"CS",
+	"SS",
+	"DS",
+	"ES",
+	"FS",
+	"GS"
+};
+
 enum Register
 {
 	AL, CL, DL, BL, AH, CH, DH, BH,
@@ -86,44 +96,60 @@ enum Register
 	NO_REG
 };
 
+
+const char* registerStrs[] = 
+{
+	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
+	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
+	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI",
+	"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI",
+	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI",
+	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"
+};
+
+
 struct MemoryAddress 
 {
-	union 
-	{
-		enum Segment segment;
-		unsigned short constSegment;
-	};
-	
+	enum Segment segment;
+	unsigned short constSegment;
+
 	enum Register reg;
+	unsigned char scale; // if SIB byte
 	enum Register regDisplacement;
 	unsigned int constDisplacement;
-	unsigned char scale; // if SIB byte
 };
 
-union Operand
+enum OperandType 
 {
-	enum Segement segment;
-	enum Register reg;
-	struct MemoryAddress memoryAddress;
-	unsigned long long immediate;
+	NO_OPERAND,
+	SEGMENT,
+	REGISTER,
+	MEM_ADDRESS,
+	IMMEDIATE
 };
 
-struct OperandsResult
+struct Operand
 {
-	union Operand operand1;
-	union Operand operand2;
-	union Operand operand3;
+	union
+	{
+		enum Segement segment;
+		enum Register reg;
+		struct MemoryAddress memoryAddress;
+		unsigned long long immediate;
+	};
+
+	enum OperandType type;
 };
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct OperandsResult* result);
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
 
 // ModR/M
 
-static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, union Operand* result);
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, struct Operand* result);
 
 // SIB
 
-static unsigned char* handleSIB(unsigned char** bytesPtr, union Operand* result);
+static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result);
 
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char size);
@@ -140,13 +166,15 @@ struct DisassembledInstruction
 {
 	struct LegacyPrefixes legacyPrefixes;
 	enum Mnemonic opcode;
-	struct OperandsResult operands;
+	struct Operand operands[3];
 
 	const char* str;
 	unsigned char numOfBytes;
 };
 
-const char* instructionToStr(struct DisassembledInstruction* instruction);
+static void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
+
+static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize);
 
 #ifdef __cplusplus
 extern "C"
