@@ -1,5 +1,6 @@
 #include "../Headers/disassembler.h"
 #include "../Headers/oneByteOpcodeMap.h"
+#include "../Headers/extendedOpcodeMap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,27 +21,27 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	struct Opcode* opcode = 0;
-	if (!handleOpcode(&bytes, maxBytesAddr, disassemblerOptions, &opcode))
+	// if the opcode is an extended one then modRM will be retrieved
+	unsigned char modRMByte = 0;
+	char hasGotModRM = 0;
+	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0 };
+	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &opcode))
 	{
 		return 0;
 	}
 
-	if (!handleOperands(&bytes, maxBytesAddr, disassemblerOptions->is64BitMode, opcode, &result->legacyPrefixes, &rexPrefix, &result->operands))
+	if (!handleOperands(&bytes, maxBytesAddr, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &result->legacyPrefixes, &rexPrefix, &result->operands))
 	{
 		return 0;
 	}
 
-	result->opcode = opcode->mnemonic;
+	result->opcode = opcode.mnemonic;
 	result->numOfBytes = (bytes - startPoint);
-
-	result->str = (char*)malloc(20);
-	instructionToStr(result, result->str, 20);
 
 	return 1;
 }
 
-static void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
+void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
 {
 	int bufferIndex = 0;
 
@@ -49,30 +50,45 @@ static void instructionToStr(struct DisassembledInstruction* instruction, char* 
 
 	if (bufferIndex + mnemonicStrLen - 1 > bufferSize) { return; }
 	strcpy(buffer + bufferIndex, mnemonicStr);
-
 	bufferIndex += mnemonicStrLen;
+
+	if (bufferIndex > bufferSize) { return; }
+	buffer[bufferIndex] = ' ';
+	bufferIndex++;
 
 	for (int i = 0; i < 3; i++) 
 	{
 		if (instruction->operands[i].type == NO_OPERAND) { break; }
 
+		if (i != 0) 
+		{
+			if (bufferIndex + 1 > bufferSize) { return; }
+			buffer[bufferIndex] = ',';
+			buffer[bufferIndex + 1] = ' ';
+			bufferIndex += 2;
+		}
+
 		struct Operand* currentOperand = &instruction->operands[i];
 
-		const char* segmentStr = segmentStrs[currentOperand->segment];
-		unsigned char segmentStrLen = strlen(segmentStr);
+		const char* segmentStr;
+		unsigned char segmentStrLen;
 
-		const char* registerStr = registerStrs[currentOperand->reg];
-		unsigned char registerStrLen = strlen(registerStrs[currentOperand->reg]);
+		const char* registerStr;
+		unsigned char registerStrLen;
 
 		static char immediateBuffer[20];
 		switch (currentOperand->type)
 		{
 		case SEGMENT:
+			segmentStr = segmentStrs[currentOperand->segment];
+			segmentStrLen = strlen(segmentStr);
 			if (bufferIndex + segmentStrLen - 1 > bufferSize) { return; }
 			strcpy(buffer + bufferIndex, segmentStr);
 			bufferIndex += segmentStrLen;
 			break;
 		case REGISTER:
+			registerStr = registerStrs[currentOperand->reg];
+			registerStrLen = strlen(registerStrs[currentOperand->reg]);
 			if (bufferIndex + registerStrLen - 1 > bufferSize) { return; }
 			strcpy(buffer + bufferIndex, registerStr);
 			bufferIndex += registerStrLen;
@@ -87,18 +103,30 @@ static void instructionToStr(struct DisassembledInstruction* instruction, char* 
 			bufferIndex += strlen(immediateBuffer);
 			break;
 		}
-
-		if (bufferIndex > bufferSize) { return; }
-		buffer[bufferIndex] = ',';
-		bufferIndex++;
 	}
 
-	buffer[bufferIndex - 1] = 0; // remove last comma
+	if (bufferIndex > bufferSize) { return; }
+	buffer[bufferIndex] = 0;
+	bufferIndex++;
 }
 
 static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize) 
 {
 	int bufferIndex = 0;
+
+	if (memAddr->ptrSize != 0) 
+	{
+		const char* ptrSizeStr = ptrSizeStrs[memAddr->ptrSize / 2];
+		unsigned char ptrSizeStrLen = strlen(ptrSizeStr);
+
+		if (bufferIndex + ptrSizeStrLen - 1 > bufferSize) { return; }
+		strcpy(buffer + bufferIndex, ptrSizeStr);
+		bufferIndex += ptrSizeStrLen;
+
+		if (bufferIndex > bufferSize) { return; }
+		buffer[bufferIndex] = ' ';
+		bufferIndex++;
+	}
 	
 	if (memAddr->segment != NO_SEGMENT) 
 	{
@@ -112,7 +140,6 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		if (bufferIndex > bufferSize) { return; }
 		buffer[bufferIndex] = ':';
 		bufferIndex++;
-		
 	}
 	else if (memAddr->constSegment != 0) 
 	{
@@ -142,7 +169,7 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		bufferIndex += registerStrLen;
 	}
 
-	if (memAddr->scale != 0) 
+	if (memAddr->scale > 1) 
 	{
 		if (bufferIndex > bufferSize) { return; }
 		buffer[bufferIndex] = '*';
@@ -170,7 +197,15 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 	if (memAddr->constDisplacement != 0) 
 	{
 		char constDisp[20];
-		sprintf(constDisp, "0x%X", memAddr->constDisplacement);
+		if (memAddr->constDisplacement < 0) 
+		{
+			sprintf(constDisp, "-0x%X", -memAddr->constDisplacement);
+		}
+		else 
+		{
+			sprintf(constDisp, "+0x%X", memAddr->constDisplacement);
+		}
+
 		if (bufferIndex + strlen(constDisp) - 1 > bufferSize) { return; }
 		strcpy(buffer + bufferIndex, constDisp);
 		bufferIndex += strlen(constDisp);
@@ -185,6 +220,11 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 
 static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result)
 {
+	result->group1 = NO_PREFIX;
+	result->group2 = NO_PREFIX;
+	result->group3 = NO_PREFIX;
+	result->group4 = NO_PREFIX;
+	
 	for (int i = 0; i < 4; i++) // up to four prefixes
 	{
 		if ((*bytesPtr) > maxBytesAddr) { return 0; }
@@ -255,7 +295,7 @@ static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* ma
 	return 1;
 }
 
-static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct Opcode** result)
+static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 	
@@ -284,11 +324,11 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	}
 	else if ((*bytesPtr) <= maxBytesAddr) // sequence: opcode
 	{
-		*result = &oneByteMap[(*bytesPtr)[0]];
+		*result = oneByteMap[(*bytesPtr)[0]];
 
 		if (disassemblerOptions->is64BitMode && (*bytesPtr)[0] == 0x63)
 		{
-			*result = &alternateX63;
+			*result = alternateX63;
 		}
 
 		(*bytesPtr)++;
@@ -298,211 +338,307 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		return 0;
 	}
 
+	if (result->mnemonic == EXTENDED_OPCODE)
+	{
+		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+		
+		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char mod = (((modRMByte >> 7) & 0x01) * 2) + ((modRMByte >> 6) & 0x01);
+		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
+		unsigned char rm = (((modRMByte >> 2) & 0x01) * 4) + (((modRMByte >> 1) & 0x01) * 2) + ((modRMByte >> 0) & 0x01);
+
+		result->mnemonic = extendedOpcodeMap[result->extensionGroup][reg].mnemonic;
+		if (extendedOpcodeMap[result->extensionGroup][reg].operands[0] != NO_OPERAND_CODE) 
+		{
+			for (int i = 0; i < 3; i++) 
+			{
+				result->operands[i] = extendedOpcodeMap[result->extensionGroup][reg].operands[i];
+			}
+		}
+
+		if (result->extensionGroup == 3 && ((*bytesPtr) - 1)[0] == 0xF7)
+		{
+			switch (result->mnemonic) 
+			{
+			case TEST:
+				result->operands[0] = Iz;
+				break;
+			case MUL:
+			case IMUL:
+			case DIV:
+			case IDIV:
+				result->operands[0] = rAX;
+				break;
+			}
+		}
+
+		(*hasGotModRMRef) = 1;
+		(*modRMByteRef) = modRMByte;
+		(*bytesPtr)++;
+	}
+
 	return 1;
 }
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result)
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result)
 {
 	for (int i = 0; i < 3; i++)
 	{
 		enum OperandCode currentOperandCode = opcode->operands[i];
 		struct Operand* currentOperand = &(result[i]);
 
+		currentOperand->type = NO_OPERAND;
 		currentOperand->reg = NO_REG;
+		currentOperand->immediate = 0;
+		currentOperand->memoryAddress.ptrSize = 0;
 		currentOperand->memoryAddress.segment = NO_SEGMENT;
 		currentOperand->memoryAddress.reg = NO_REG;
 		currentOperand->memoryAddress.regDisplacement = NO_REG;
 		currentOperand->memoryAddress.constDisplacement = 0;
+		currentOperand->memoryAddress.constSegment = 0;
 		currentOperand->memoryAddress.scale = 1;
 
-		unsigned char modRMByte = 0;
-		if ((*bytesPtr) > maxBytesAddr) 
-		{
-			modRMByte = (*bytesPtr)[0]; // may or may not actually be a modrm byte
-		}
-
-		char hasGotModRM = 0;
-
+		unsigned char operandSize;
 		switch (currentOperandCode)
 		{
 		case NO_OPERAND_CODE:
 			return 1; // no more operands; done handling them all
 			break;
 		case ONE:
+			currentOperand->type = IMMEDIATE;
 			currentOperand->immediate = 1;
 			break;
 		case AL_CODE:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = AL;
 			break;
 		case CL_CODE:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = CL;
 			break;
 		case DX_CODE:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = DX;
 			break;
 		case rAX:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RAX : (legPrefixes->group3 == OSO ? AX : EAX);
 			break;
 		case rCX:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RCX : (legPrefixes->group3 == OSO ? CX : ECX);
 			break;
 		case rDX:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RDX : (legPrefixes->group3 == OSO ? DX : EDX);
 			break;
 		case rBX:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RBX : (legPrefixes->group3 == OSO ? BX : EBX);
 			break;
 		case rSP:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RSP : (legPrefixes->group3 == OSO ? SP : ESP);
 			break;
 		case rBP:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RBP : (legPrefixes->group3 == OSO ? BP : EBP);
 			break;
 		case rSI:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RSI : (legPrefixes->group3 == OSO ? SI : ESI);
 			break;
 		case rDI:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->w ? RDI : (legPrefixes->group3 == OSO ? DI : EDI);
 			break;
 		case rAX_r8:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R8 : (legPrefixes->group3 == OSO ? AX : (is64BitMode ? RAX : EAX));
 			break;
 		case rCX_r9:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R9 : (legPrefixes->group3 == OSO ? CX : (is64BitMode ? RCX : ECX));
 			break;
 		case rDX_r10:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R10 : (legPrefixes->group3 == OSO ? DX : (is64BitMode ? RDX : EDX));
 			break;
 		case rBX_r11:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R11 : (legPrefixes->group3 == OSO ? BX : (is64BitMode ? RBX : EBX));
 			break;
 		case rSP_r12:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R12 : (legPrefixes->group3 == OSO ? SP : (is64BitMode ? RSP : ESP));
 			break;
 		case rBP_r13:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R13 : (legPrefixes->group3 == OSO ? BP : (is64BitMode ? RBP : EBP));
 			break;
 		case rSI_r14:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R14 : (legPrefixes->group3 == OSO ? SI : (is64BitMode ? RSI : ESI));
 			break;
 		case rDI_r15:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R15 : (legPrefixes->group3 == OSO ? DI : (is64BitMode ? RDI : EDI));
 			break;
 		case AL_R8B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R8B : AL;
 			break;
 		case CL_R9B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R9B : CL;
 			break;
 		case DL_R10B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R10B : DL;
 			break;
 		case BL_R11B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R11B : BL;
 			break;
 		case AH_R12B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R12B : AH;
 			break;
 		case CH_R13B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R13B : CH;
 			break;
 		case DH_R14B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R14B : DH;
 			break;
 		case BH_R15B:
+			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R15B : BH;
 			break;
 		case Eb:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 0, 1, legPrefixes->group4 == ASO, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 1, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ev:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 0, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ew:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 0, 2, legPrefixes->group4 == ASO, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Ep:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gb:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 1, 1, 0, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 1, 0, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gv:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 1, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4, 0, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4, 0, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gz:
-			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 1, legPrefixes->group3 == OSO ? 2 : 4, 0, currentOperand)) { return 0; }
+			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : 4, 0, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gw:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 1, 2, 0, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 2, 0, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case M:
 		case Mp:
 		case Ma:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 0, 0, legPrefixes->group4 == ASO, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 0, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ib:
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, maxBytesAddr, 1);
+			if ((*bytesPtr) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, 1);
 			break;
 		case Iv:
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, maxBytesAddr, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4);
+			operandSize = legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4;
+			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iz:
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, maxBytesAddr, legPrefixes->group3 == OSO ? 2 : 4);
+			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
+			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iw:
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, maxBytesAddr, 2);
+			if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Yb:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = DI;
 			break;
 		case Yv:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = legPrefixes->group3 == OSO ? DI : is64BitMode ? RDI : EDI;
 			break;
 		case Yz:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = legPrefixes->group3 == OSO ? DI : EDI;
 			break;
 		case Xb:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = SI;
 			break;
 		case Xv:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = legPrefixes->group3 == OSO ? SI : is64BitMode ? RSI : ESI;
 			break;
 		case Xz:
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = legPrefixes->group3 == OSO ? SI : ESI;
 			break;
 		case Jb:
-			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, maxBytesAddr, 1) + 2); // add 2 because that is this instruction's size
+			if ((*bytesPtr) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, 1) + 2); // add 2 because that is this instruction's size
 			break;
 		case Jz:
-			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, maxBytesAddr, legPrefixes->group3 == OSO ? 2 : 4) + (legPrefixes->group3 == OSO ? 3 : 5)); // add 3 or 5 because that is this instruction's size
+			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
+			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize) + (legPrefixes->group3 == OSO ? 3 : 5); // add 3 or 5 because that is this instruction's size
 			break;
 		case Ob:
+			if ((*bytesPtr) > maxBytesAddr) { return 0; }
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = legPrefixes->group2 == NO_PREFIX ? DS : (enum Segment)legPrefixes->group2;
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, maxBytesAddr, 1);
+			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1);
 			break;
 		case Ov:
+			operandSize = legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4;
+			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
+			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = legPrefixes->group2 == NO_PREFIX ? DS : (enum Segment)legPrefixes->group2;
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, maxBytesAddr, legPrefixes->group3 == OSO ? 2 : is64BitMode ? 8 : 4);
+			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Sw:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, &modRMByte, 2, 2, 0, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 2, 2, 0, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ap:
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, maxBytesAddr, 4);
-			currentOperand->memoryAddress.constSegment = getUIntFromBytes(bytesPtr, maxBytesAddr, 2);
+			if (((*bytesPtr) + 5) > maxBytesAddr) { return 0; }
+			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4);
+			currentOperand->memoryAddress.constSegment = getUIntFromBytes(bytesPtr, 2);
 			break;
 		}
 	}
@@ -510,7 +646,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 	return 1;
 }
 
-static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, struct Operand* result)
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result)
 {
 	unsigned char modRMByte = *modRMByteRef;
 
@@ -528,6 +664,8 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 
 	if (getRegOrSeg == 1)
 	{
+		result->type = REGISTER;
+		
 		switch (operandSize)
 		{
 		case 1:
@@ -544,16 +682,19 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
-		return result;
+		return 1;
 	}
 	else if (getRegOrSeg == 2)
 	{
+		result->type = SEGMENT;
 		result->segment = (enum Segment)reg;
 
-		return result;
+		return 1;
 	}
 	else if (mod == 3)
 	{
+		result->type = REGISTER;
+
 		switch (rm)
 		{
 		case 0:
@@ -582,10 +723,13 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
-		return result;
+		return 1;
 	}
 
-	if (addressSizeOverride)
+	result->type = MEM_ADDRESS;
+	result->memoryAddress.ptrSize = operandSize;
+
+	if (addressSizeOverride && !is64bitMode)
 	{
 		switch (mod)
 		{
@@ -634,45 +778,45 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 1:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 2:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 3:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 4:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 5:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 6:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 7:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			}
 
@@ -777,42 +921,42 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			case 0:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EAX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 1:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ECX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 2:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 3:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 4:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				handleSIB(bytesPtr, result);
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 5:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBP;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 6:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ESI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 7:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			}
 
@@ -869,6 +1013,11 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		}
 	}
 
+	if (is64bitMode && !addressSizeOverride && result->memoryAddress.reg != NO_REG)
+	{
+		result->memoryAddress.reg += (RAX - EAX);
+	}
+
 	return 1;
 }
 
@@ -892,11 +1041,11 @@ static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result
 	return result;
 }
 
-static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char size)
+static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize)
 {
 	unsigned long long result = 0;
 
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < resultSize; i++)
 	{
 		result += ((*bytesPtr)[0] << (8 * i));
 		(*bytesPtr)++;

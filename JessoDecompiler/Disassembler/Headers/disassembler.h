@@ -57,7 +57,7 @@ static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* ma
 
 // Opcode
 
-static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct Opcode** result);
+static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct Opcode* result);
 
 
 // Operands
@@ -107,16 +107,26 @@ const char* registerStrs[] =
 	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"
 };
 
+const char* ptrSizeStrs[] =
+{
+	"BYTE PTR",
+	"WORD PTR",
+	"DWORD PTR",
+	"FWORD PTR",
+	"QWORD PTR"
+};
+
 
 struct MemoryAddress 
 {
+	unsigned char ptrSize;
 	enum Segment segment;
 	unsigned short constSegment;
 
 	enum Register reg;
 	unsigned char scale; // if SIB byte
 	enum Register regDisplacement;
-	unsigned int constDisplacement;
+	int constDisplacement;
 };
 
 enum OperandType 
@@ -141,18 +151,18 @@ struct Operand
 	enum OperandType type;
 };
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
 
 // ModR/M
 
-static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, struct Operand* result);
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result);
 
 // SIB
 
 static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result);
 
 
-static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char size);
+static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);
 
 // Result
 
@@ -168,13 +178,8 @@ struct DisassembledInstruction
 	enum Mnemonic opcode;
 	struct Operand operands[3];
 
-	const char* str;
 	unsigned char numOfBytes;
 };
-
-static void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
-
-static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize);
 
 #ifdef __cplusplus
 extern "C"
@@ -182,7 +187,10 @@ extern "C"
 #endif
 
 	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+	void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
 
 #ifdef __cplusplus
 }
 #endif
+
+static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize);

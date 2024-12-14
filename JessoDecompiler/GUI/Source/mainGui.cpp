@@ -19,6 +19,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
 
+	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
+	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
+
 	disassemblyStaticText = new wxStaticText(this, wxID_ANY, "RESULT: ");
 	disassemblyStaticText->SetOwnForegroundColour(textColor);
 
@@ -30,6 +33,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer->Add(bytesInputTextCtrl, 0, wxALL, 10);
 
 	row2Sizer->Add(disassembleButton, 0, wxRIGHT | wxLEFT, 10);
+	row2Sizer->Add(is64BitModeCheckBox, 0, wxRIGHT, 10);
 
 	row3Sizer->Add(disassemblyStaticText, 0, wxTOP | wxRIGHT | wxLEFT, 10);
 
@@ -46,18 +50,23 @@ void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 	if (!ParseStringBytes(bytesInputTextCtrl->GetValue(), bytes, 255)) { return; }
 
 	struct DisassemblerOptions options;
-	options.is64BitMode = 0;
+	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
 	struct DisassembledInstruction result;
-	disassembleInstruction(bytes, bytes + 5, &options, &result); // broken
+	disassembleInstruction(bytes, bytes + 15, &options, &result);
 
-	disassemblyStaticText->SetLabelText(result.str);
+	char buffer[50];
+	instructionToStr(&result, buffer, 50);
+	disassemblyStaticText->SetLabelText(buffer);
 }
 
 // allocates memory for bytes; needs to be deleted later
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
 {
 	str.Replace(" ", "", true);
+	str.Replace("\\", "", true);
+	str.Replace("x", "", true);
+	str.Replace("X", "", true);
 	
 	int strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0) 

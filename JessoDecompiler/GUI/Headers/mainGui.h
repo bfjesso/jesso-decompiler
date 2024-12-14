@@ -12,6 +12,7 @@ public:
 
 	wxTextCtrl* bytesInputTextCtrl = nullptr;
 	wxButton* disassembleButton = nullptr;
+	wxCheckBox* is64BitModeCheckBox = nullptr;
 	wxStaticText* disassemblyStaticText = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
