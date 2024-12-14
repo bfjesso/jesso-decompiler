@@ -47,20 +47,27 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 void MainGui::DisassembleBytesInput(wxCommandEvent& e)
 {
 	unsigned char bytes[255];
-	if (!ParseStringBytes(bytesInputTextCtrl->GetValue(), bytes, 255)) { return; }
+	if (!ParseStringBytes(bytesInputTextCtrl->GetValue(), bytes, 255)) 
+	{ 
+		disassemblyStaticText->SetLabelText("Failed to parse bytes.");
+		return; 
+	}
 
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
 	struct DisassembledInstruction result;
-	disassembleInstruction(bytes, bytes + 15, &options, &result);
+	if (!disassembleInstruction(bytes, bytes + 15, &options, &result))
+	{ 
+		disassemblyStaticText->SetLabelText("Failed to disassemble instruction.");
+		return; 
+	}
 
 	char buffer[50];
 	instructionToStr(&result, buffer, 50);
 	disassemblyStaticText->SetLabelText(buffer);
 }
 
-// allocates memory for bytes; needs to be deleted later
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
 {
 	str.Replace(" ", "", true);

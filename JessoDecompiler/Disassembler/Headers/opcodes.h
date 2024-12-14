@@ -75,9 +75,20 @@ enum OperandCode
 	NO_OPERAND_CODE
 };
 
+enum OpcodeSuperscript
+{
+	i64, // invalid in 64-bit mode
+	o64, // only available in 64-bit mode
+	d64, // operand size defaults to 64-bit size
+	f64, // operand size forced to 64-bit size
+
+	NO_SUPERSCRIPT
+};
+
 struct Opcode
 {
-	enum Mnemonic mnemonic;
+	unsigned char mnemonic;
 	char extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
-	enum OperandCode operands[3];
+	unsigned char operands[3];
+	unsigned char opcodeSuperscript;
 };

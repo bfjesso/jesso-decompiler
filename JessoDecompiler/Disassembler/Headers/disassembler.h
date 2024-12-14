@@ -29,10 +29,10 @@ enum LegacyPrefix
 
 struct LegacyPrefixes
 {
-	enum LegacyPrefix group1;
-	enum LegacyPrefix group2;
-	enum LegacyPrefix group3;
-	enum LegacyPrefix group4;
+	unsigned char group1;
+	unsigned char group2;
+	unsigned char group3;
+	unsigned char group4;
 };
 
 static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result);
@@ -88,9 +88,9 @@ enum Register
 {
 	AL, CL, DL, BL, AH, CH, DH, BH,
 	R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B,
-	AX, CX, DX, BX, SP, BP, SI, DI, 
-	EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
-	RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI,
+	AX, CX, DX, BX, SP, BP, SI, DI, IP,
+	EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI, EIP,
+	RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI, RIP,
 	R8, R9, R10, R11, R12, R13, R14, R15,
 
 	NO_REG
@@ -101,9 +101,9 @@ const char* registerStrs[] =
 {
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
 	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
-	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI",
-	"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI",
-	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI",
+	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", "IP",
+	"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI", "EIP",
+	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "RIP",
 	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"
 };
 
@@ -120,12 +120,12 @@ const char* ptrSizeStrs[] =
 struct MemoryAddress 
 {
 	unsigned char ptrSize;
-	enum Segment segment;
+	unsigned char segment;
 	unsigned short constSegment;
 
-	enum Register reg;
+	unsigned char reg;
 	unsigned char scale; // if SIB byte
-	enum Register regDisplacement;
+	unsigned char regDisplacement;
 	int constDisplacement;
 };
 
@@ -142,13 +142,13 @@ struct Operand
 {
 	union
 	{
-		enum Segement segment;
-		enum Register reg;
+		unsigned char segment;
+		unsigned char reg;
 		struct MemoryAddress memoryAddress;
 		unsigned long long immediate;
 	};
 
-	enum OperandType type;
+	unsigned char type;
 };
 
 static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
@@ -175,7 +175,7 @@ struct DisassemblerOptions
 struct DisassembledInstruction
 {
 	struct LegacyPrefixes legacyPrefixes;
-	enum Mnemonic opcode;
+	unsigned char opcode;
 	struct Operand operands[3];
 
 	unsigned char numOfBytes;
