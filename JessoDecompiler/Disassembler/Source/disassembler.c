@@ -1,5 +1,7 @@
 #include "../Headers/disassembler.h"
+#include "../Headers/registers.h"
 #include "../Headers/oneByteOpcodeMap.h"
+#include "../Headers/twoByteOpcodeMap.h"
 #include "../Headers/extendedOpcodeMap.h"
 
 #include <stdio.h>
@@ -9,8 +11,9 @@
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	unsigned char* startPoint = bytes;
-	
-	if (!handleLegacyPrefixes(&bytes, maxBytesAddr, &result->legacyPrefixes))
+
+	struct LegacyPrefixes legacyPrefixes = { NO_PREFIX, NO_PREFIX, NO_PREFIX, NO_PREFIX };
+	if (!handleLegacyPrefixes(&bytes, maxBytesAddr, &legacyPrefixes))
 	{
 		return 0;
 	}
@@ -30,7 +33,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	if (!handleOperands(&bytes, maxBytesAddr, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &result->legacyPrefixes, &rexPrefix, &result->operands))
+	if (!handleOperands(&bytes, maxBytesAddr, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &result->operands))
 	{
 		return 0;
 	}
@@ -43,6 +46,13 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 
 void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
 {
+	if (instruction->opcode == NO_MNEMONIC) // the opcode is either not implemented in the disassembler or there is a bad instruction in the file
+	{
+		if (5 > bufferSize) { return; }
+		strcpy(buffer, "error");
+		return;
+	}
+	
 	int bufferIndex = 0;
 
 	const char* mnemonicStr = mnemonicStrs[instruction->opcode];
@@ -321,7 +331,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		}
 		else if(((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
-			//result.opcode = &twoByteMap[(*bytesPtr)[1]];
+			*result = twoByteOpcodeMap[(*bytesPtr)[1]];
 			(*bytesPtr) += 2;
 		}
 		else 
@@ -331,21 +341,21 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	}
 	else if ((*bytesPtr) <= maxBytesAddr) // sequence: opcode
 	{
-		*result = oneByteMap[(*bytesPtr)[0]];
+		*result = oneByteOpcodeMap[(*bytesPtr)[0]];
 
 		if (disassemblerOptions->is64BitMode && (*bytesPtr)[0] == 0x63)
 		{
 			*result = alternateX63;
 		}
 
-		if ((disassemblerOptions->is64BitMode && result->opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && result->opcodeSuperscript == o64))
-		{
-			return 0;
-		}
-
 		(*bytesPtr)++;
 	}
 	else
+	{
+		return 0;
+	}
+
+	if ((disassemblerOptions->is64BitMode && result->opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && result->opcodeSuperscript == o64))
 	{
 		return 0;
 	}

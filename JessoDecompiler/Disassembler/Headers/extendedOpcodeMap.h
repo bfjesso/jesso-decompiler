@@ -17,13 +17,13 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][3 ModR/M bits: r
 	},
 	{	// group 1A
 		{ POP, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 2
 		{ ROL, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -32,12 +32,12 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][3 ModR/M bits: r
 		{ RCR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ SHL, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ SHR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ 0 },
+		{ NO_MNEMONIC },
 		{ SAR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{	// group 3
 		{ TEST, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operands is Iz if opcode is 0xF7
-		{ 0 },
+		{ NO_MNEMONIC },
 		{ NOT, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NEG, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ MUL, -1, AL_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operands is rAX if opcode is 0xF7
@@ -48,12 +48,12 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][3 ModR/M bits: r
 	{	// group 4
 		{ INC, -1, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ DEC, -1, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 5
 		{ INC, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -63,126 +63,126 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][3 ModR/M bits: r
 		{ JMP_NEAR, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },
 		{ JMP_FAR, -1, Mp, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },
 		{ PUSH, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ 0 }
+		{ NO_MNEMONIC }
 	},	// The groups after 5 are not implemented except for group 11, which is partially implemented for the MOV opcode
 	{	// group 6
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 7
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 8
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 9
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 10
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 11
 		{ MOV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ MOV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 12
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 13
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 14
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 15
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 16
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	},
 	{	// group 17
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 },
-		{ 0 }
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
 	}
 };
