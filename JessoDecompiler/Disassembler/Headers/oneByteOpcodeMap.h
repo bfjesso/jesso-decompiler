@@ -5,7 +5,7 @@
 //	Intel 64 and IA-32 architectures software developer's manual
 
 // Appendix A: A.3 table A-2
-const struct Opcode oneByteOpcodeMap[0x100] =
+const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 {
 	{ ADD, -1, Eb, Gb, NO_OPERAND_CODE, NO_SUPERSCRIPT },											// 0x00
 	{ ADD, -1, Ev, Gv, NO_OPERAND_CODE, NO_SUPERSCRIPT },											// 0x01

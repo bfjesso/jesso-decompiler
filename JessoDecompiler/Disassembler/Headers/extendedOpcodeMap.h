@@ -1,9 +1,12 @@
 #pragma once
 #include "opcodes.h"
 
+// The information in this file comes from the
+//	Intel 64 and IA-32 architectures software developer's manual
+
 // Appendix A: A.4.2 table A-6
 // any NO_OPERAND_CODE means that the operand code will be what is in the regular opcode map
-const struct Opcode extendedOpcodeMap[18][8] = // [group index][3 ModR/M bits: reg]
+const struct Opcode extendedOpcodeMap[18][8] = // [group index][ModR/M bits 3-5]
 {
 	{	// group 1
 		{ ADD, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },

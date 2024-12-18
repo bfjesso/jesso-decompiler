@@ -3,6 +3,7 @@
 #include "../Headers/oneByteOpcodeMap.h"
 #include "../Headers/twoByteOpcodeMap.h"
 #include "../Headers/extendedOpcodeMap.h"
+#include "../Headers/escapeOpcodeMaps.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,13 +45,11 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	return 1;
 }
 
-void instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
+unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
 {
-	if (instruction->opcode == NO_MNEMONIC) // the opcode is either not implemented in the disassembler or there is a bad instruction in the file
+	if (instruction->opcode == NO_MNEMONIC) // the opcode is either not implemented in the disassembler or there was a bad instruction read
 	{
-		if (5 > bufferSize) { return; }
-		strcpy(buffer, "error");
-		return;
+		return 0;
 	}
 	
 	int bufferIndex = 0;
@@ -58,11 +57,11 @@ void instructionToStr(struct DisassembledInstruction* instruction, char* buffer,
 	const char* mnemonicStr = mnemonicStrs[instruction->opcode];
 	unsigned char mnemonicStrLen = strlen(mnemonicStr);
 
-	if (bufferIndex + mnemonicStrLen - 1 > bufferSize) { return; }
+	if (bufferIndex + mnemonicStrLen - 1 > bufferSize) { return 0; }
 	strcpy(buffer + bufferIndex, mnemonicStr);
 	bufferIndex += mnemonicStrLen;
 
-	if (bufferIndex > bufferSize) { return; }
+	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = ' ';
 	bufferIndex++;
 
@@ -72,7 +71,7 @@ void instructionToStr(struct DisassembledInstruction* instruction, char* buffer,
 
 		if (i != 0) 
 		{
-			if (bufferIndex + 1 > bufferSize) { return; }
+			if (bufferIndex + 1 > bufferSize) { return 0; }
 			buffer[bufferIndex] = ',';
 			buffer[bufferIndex + 1] = ' ';
 			bufferIndex += 2;
@@ -92,35 +91,37 @@ void instructionToStr(struct DisassembledInstruction* instruction, char* buffer,
 		case SEGMENT:
 			segmentStr = segmentStrs[currentOperand->segment];
 			segmentStrLen = strlen(segmentStr);
-			if (bufferIndex + segmentStrLen - 1 > bufferSize) { return; }
+			if (bufferIndex + segmentStrLen - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, segmentStr);
 			bufferIndex += segmentStrLen;
 			break;
 		case REGISTER:
 			registerStr = registerStrs[currentOperand->reg];
 			registerStrLen = strlen(registerStrs[currentOperand->reg]);
-			if (bufferIndex + registerStrLen - 1 > bufferSize) { return; }
+			if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, registerStr);
 			bufferIndex += registerStrLen;
 			break;
 		case MEM_ADDRESS:
-			memAddressToStr(&currentOperand->memoryAddress, buffer + bufferIndex, bufferSize - bufferIndex, &bufferIndex);
+			if (!memAddressToStr(&currentOperand->memoryAddress, buffer + bufferIndex, bufferSize - bufferIndex, &bufferIndex)) { return 0; }
 			break;
 		case IMMEDIATE:
 			sprintf(immediateBuffer, "0x%X", currentOperand->immediate);
-			if (bufferIndex + strlen(immediateBuffer) - 1 > bufferSize) { return; }
+			if (bufferIndex + strlen(immediateBuffer) - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, immediateBuffer);
 			bufferIndex += strlen(immediateBuffer);
 			break;
 		}
 	}
 
-	if (bufferIndex > bufferSize) { return; }
+	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = 0;
 	bufferIndex++;
+
+	return 1;
 }
 
-static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize) 
+static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize)
 {
 	int bufferIndex = 0;
 
@@ -129,11 +130,11 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		const char* ptrSizeStr = ptrSizeStrs[memAddr->ptrSize / 2];
 		unsigned char ptrSizeStrLen = strlen(ptrSizeStr);
 
-		if (bufferIndex + ptrSizeStrLen - 1 > bufferSize) { return; }
+		if (bufferIndex + ptrSizeStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, ptrSizeStr);
 		bufferIndex += ptrSizeStrLen;
 
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = ' ';
 		bufferIndex++;
 	}
@@ -143,11 +144,11 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		const char* segmentStr = segmentStrs[memAddr->segment];
 		unsigned char segmentStrLen = strlen(segmentStr);
 		
-		if (bufferIndex + segmentStrLen - 1 > bufferSize) { return; }
+		if (bufferIndex + segmentStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, segmentStr);
 		bufferIndex += segmentStrLen;
 
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = ':';
 		bufferIndex++;
 	}
@@ -156,16 +157,16 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		static char hexSeg[20];
 		sprintf(hexSeg, "0x%X", memAddr->constSegment);
 
-		if (bufferIndex + strlen(hexSeg) - 1 > bufferSize) { return; }
+		if (bufferIndex + strlen(hexSeg) - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, hexSeg);
 		bufferIndex += strlen(hexSeg);
 
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = ':';
 		bufferIndex++;
 	}
 
-	if (bufferIndex > bufferSize) { return; }
+	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = '[';
 	bufferIndex++;
 
@@ -174,32 +175,32 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 		const char* registerStr = registerStrs[memAddr->reg];
 		unsigned char registerStrLen = strlen(registerStrs[memAddr->reg]);
 		
-		if (bufferIndex + registerStrLen - 1 > bufferSize) { return; }
+		if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, registerStr);
 		bufferIndex += registerStrLen;
 	}
 
 	if (memAddr->scale > 1) 
 	{
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = '*';
 		bufferIndex++;
 
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = memAddr->scale + '0';
 		bufferIndex++;
 	}
 
 	if (memAddr->regDisplacement != NO_REG)
 	{
-		if (bufferIndex > bufferSize) { return; }
+		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = '+';
 		bufferIndex++;
 		
 		const char* registerStr = registerStrs[memAddr->regDisplacement];
 		unsigned char registerStrLen = strlen(registerStrs[memAddr->regDisplacement]);
 
-		if (bufferIndex + registerStrLen - 1 > bufferSize) { return; }
+		if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, registerStr);
 		bufferIndex += registerStrLen;
 	}
@@ -218,21 +219,23 @@ static void memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigne
 
 		if (buffer[bufferIndex - 1] != '[' && memAddr->constDisplacement >= 0)
 		{
-			if (bufferIndex > bufferSize) { return; }
+			if (bufferIndex > bufferSize) { return 0; }
 			buffer[bufferIndex] = '+';
 			bufferIndex++;
 		}
 
-		if (bufferIndex + strlen(constDisp) - 1 > bufferSize) { return; }
+		if (bufferIndex + strlen(constDisp) - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, constDisp);
 		bufferIndex += strlen(constDisp);
 	}
 
-	if (bufferIndex > bufferSize) { return; }
+	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = ']';
 	bufferIndex++;
 
 	(*resultSize) += bufferIndex;
+
+	return 1;
 }
 
 static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result)
@@ -315,23 +318,28 @@ static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* ma
 static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+	unsigned char opcodeByte = 0;
 	
 	// check the opcode map in use
 	if ((*bytesPtr)[0] == 0x0F)
 	{
 		if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
 		{
-			//result.opcode = &threeByteMap2[(*bytesPtr)[2]];
+			opcodeByte = (*bytesPtr)[2];
+			//result.opcode = &threeByteMap2[opcodeByte];
 			(*bytesPtr) += 3;
 		}
 		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x38) // sequence: 0x0F 0x38 opcode
 		{
-			//result.opcode = &threeByteMap[(*bytesPtr)[2]];
+			opcodeByte = (*bytesPtr)[2];
+			//result.opcode = &threeByteMap[opcodeByte];
 			(*bytesPtr) += 3;
 		}
 		else if(((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
-			*result = twoByteOpcodeMap[(*bytesPtr)[1]];
+			opcodeByte = (*bytesPtr)[1];
+			*result = twoByteOpcodeMap[opcodeByte];
 			(*bytesPtr) += 2;
 		}
 		else 
@@ -341,9 +349,10 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	}
 	else if ((*bytesPtr) <= maxBytesAddr) // sequence: opcode
 	{
-		*result = oneByteOpcodeMap[(*bytesPtr)[0]];
+		opcodeByte = (*bytesPtr)[0];
+		*result = oneByteOpcodeMap[opcodeByte];
 
-		if (disassemblerOptions->is64BitMode && (*bytesPtr)[0] == 0x63)
+		if (disassemblerOptions->is64BitMode && opcodeByte == 0x63)
 		{
 			*result = alternateX63;
 		}
@@ -355,19 +364,19 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		return 0;
 	}
 
+	// check compatibility with 64-bit mode
 	if ((disassemblerOptions->is64BitMode && result->opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && result->opcodeSuperscript == o64))
 	{
 		return 0;
 	}
 
+	// handle extended opcodes or escape opcodes
 	if (result->mnemonic == EXTENDED_OPCODE)
 	{
 		if ((*bytesPtr) > maxBytesAddr) { return 0; }
 		
 		unsigned char modRMByte = (*bytesPtr)[0];
-		unsigned char mod = (((modRMByte >> 7) & 0x01) * 2) + ((modRMByte >> 6) & 0x01);
 		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
-		unsigned char rm = (((modRMByte >> 2) & 0x01) * 4) + (((modRMByte >> 1) & 0x01) * 2) + ((modRMByte >> 0) & 0x01);
 
 		struct Opcode* extendedOpcode = &extendedOpcodeMap[result->extensionGroup][reg];
 
@@ -386,7 +395,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 			result->opcodeSuperscript = extendedOpcode->opcodeSuperscript;
 		}
 
-		if (result->extensionGroup == 3 && ((*bytesPtr) - 1)[0] == 0xF7)
+		if (result->extensionGroup == 3 && opcodeByte == 0xF7)
 		{
 			switch (result->mnemonic) 
 			{
@@ -400,6 +409,45 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 				result->operands[0] = rAX;
 				break;
 			}
+		}
+
+		(*hasGotModRMRef) = 1;
+		(*modRMByteRef) = modRMByte;
+		(*bytesPtr)++;
+	}
+	else if(opcodeByte > 0xD7 && opcodeByte < 0xE0) // escape to coprocessor instruction set
+	{
+		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
+		
+		switch (opcodeByte) 
+		{
+		case 0xD8:
+			*result = modRMByte < 0xC0 ? escapeD8OpcodeMapBits[reg] : escapeD8OpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xD9:
+			*result = modRMByte < 0xC0 ? escapeD9OpcodeMapBits[reg] : escapeD9OpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDA:
+			//*result = modRMByte < 0xC0 ? escapeDAOpcodeMapBits[reg] : escapeDAOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDB:
+			//*result = modRMByte < 0xC0 ? escapeDBOpcodeMapBits[reg] : escapeDBOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDC:
+			//*result = modRMByte < 0xC0 ? escapeDCOpcodeMapBits[reg] : escapeDCOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDD:
+			//*result = modRMByte < 0xC0 ? escapeDDOpcodeMapBits[reg] : escapeDDOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDE:
+			//*result = modRMByte < 0xC0 ? escapeDEOpcodeMapBits[reg] : escapeDEOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDF:
+			//*result = modRMByte < 0xC0 ? escapeDFOpcodeMapBits[reg] : escapeDFOpcodeMapByte[modRMByte - 0xC0];
+			break;
 		}
 
 		(*hasGotModRMRef) = 1;
@@ -551,6 +599,38 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->type = REGISTER;
 			currentOperand->reg = rexPrefix->b ? R15B : BH;
 			break;
+		case ST0_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST0;
+			break;
+		case ST1_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST1;
+			break;
+		case ST2_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST2;
+			break;
+		case ST3_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST3;
+			break;
+		case ST4_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST4;
+			break;
+		case ST5_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST5;
+			break;
+		case ST6_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST6;
+			break;
+		case ST7_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ST7;
+			break;
 		case Eb:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 1, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -584,9 +664,23 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			hasGotModRM = 1;
 			break;
 		case M:
-		case Mp:
-		case Ma:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 0, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Mw:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Md:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Ma:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 8, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Mp:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ib:

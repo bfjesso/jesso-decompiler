@@ -5,7 +5,8 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)
-EVT_BUTTON(DisassembleButtonID, DisassembleCodeSection)
+EVT_BUTTON(DisassembleTestBytesButtonID, DisassembleTestBytes)
+EVT_BUTTON(DisassembleFileButtonID, DisassembleCodeSection)
 EVT_BUTTON(OpenFileButtonID, GetFileHandle)
 wxEND_EVENT_TABLE()
 
@@ -13,17 +14,29 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 {
 	SetOwnBackgroundColour(backgroundColor);
 
+	testBytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "0", wxPoint(0, 0), wxSize(100, 25));
+	testBytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
+	testBytesTextCtrl->SetOwnForegroundColour(textColor);
+
+	disassembleTestBytesButton = new wxButton(this, DisassembleTestBytesButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
+	disassembleTestBytesButton->SetOwnBackgroundColour(foregroundColor);
+	disassembleTestBytesButton->SetOwnForegroundColour(textColor);
+
+	testDisassemblyStaticText = new wxStaticText(this, wxID_ANY, "Disassebled bytes");
+	testDisassemblyStaticText->SetOwnForegroundColour(textColor);
+	
+
 	openFileButton = new wxButton(this, OpenFileButtonID, "Open File", wxPoint(0, 0), wxSize(75, 25));
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
 	openFileButton->SetOwnForegroundColour(textColor);
-	
+
 	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "0", wxPoint(0, 0), wxSize(100, 25));
 	numOfbytesInputTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
 
-	disassembleButton = new wxButton(this, DisassembleButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
-	disassembleButton->SetOwnBackgroundColour(foregroundColor);
-	disassembleButton->SetOwnForegroundColour(textColor);
+	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
+	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
+	disassembleFileButton->SetOwnForegroundColour(textColor);
 
 	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
 	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
@@ -35,21 +48,58 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row4Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row5Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row6Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(openFileButton, 0, wxALL, 10);
-	row1Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxTOP | wxBOTTOM, 10);
+	row1Sizer->Add(testBytesTextCtrl, 0, wxALL, 10);
+	row2Sizer->Add(disassembleTestBytesButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(testDisassemblyStaticText, 0, wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassembleButton, 0, wxRIGHT | wxLEFT, 10);
-	row2Sizer->Add(is64BitModeCheckBox, 0, wxRIGHT, 10);
+	row3Sizer->Add(is64BitModeCheckBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
-	row3Sizer->Add(disassemblyListBox, 0, wxTOP | wxRIGHT | wxLEFT, 10);
+	row4Sizer->Add(openFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row4Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxBOTTOM | wxBOTTOM, 10);
+
+	row5Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+
+	row6Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
 	vSizer->Add(row1Sizer, 0, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
 	vSizer->Add(row3Sizer, 0, wxEXPAND);
+	vSizer->Add(row4Sizer, 0, wxEXPAND);
+	vSizer->Add(row5Sizer, 0, wxEXPAND);
+	vSizer->Add(row6Sizer, 0, wxEXPAND);
 
 	SetSizer(vSizer);
+}
+
+void MainGui::DisassembleTestBytes(wxCommandEvent& e)
+{
+	unsigned char bytes[15];
+	if (!ParseStringBytes(testBytesTextCtrl->GetValue(), bytes, 15)) 
+	{
+		wxMessageBox("Failed to parse bytes", "Can't disassemble");
+		return;
+	}
+
+	struct DisassemblerOptions options;
+	options.is64BitMode = is64BitModeCheckBox->IsChecked();
+
+	struct DisassembledInstruction result;
+	if(disassembleInstruction(bytes, bytes + 15, &options, &result))
+	{
+		char buffer[50];
+		instructionToStr(&result, buffer, 50);
+
+		testDisassemblyStaticText->SetLabel(buffer);
+	}
+	else 
+	{
+		testDisassemblyStaticText->SetLabel("Error disassembling instruction");
+	}
 }
 
 void MainGui::GetFileHandle(wxCommandEvent& e)
@@ -73,7 +123,6 @@ void MainGui::GetFileHandle(wxCommandEvent& e)
 
 	openDllDialog.Close();
 }
-
 
 void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 {
@@ -107,15 +156,20 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 	unsigned int currentIndex = 0;
 	while (disassembleInstruction(&bytes[currentIndex], bytes + numOfBytesToRead - 1, &options, &result))
 	{
-		char buffer[50];
-		instructionToStr(&result, buffer, 50);
-
 		std::stringstream adressToHex;
 		adressToHex << std::hex << (codeSection.VirtualAddress + currentIndex);
-
-		disassemblyListBox->AppendString(adressToHex.str() + ":\t" + wxString(buffer));
-
 		currentIndex += result.numOfBytes;
+		
+		char buffer[50];
+		if (instructionToStr(&result, buffer, 50)) 
+		{
+			disassemblyListBox->AppendString(adressToHex.str() + ":\t" + wxString(buffer));
+		}
+		else 
+		{
+			disassemblyListBox->AppendString(adressToHex.str() + ":\t" + "ERROR");
+			break;
+		}
 	}
 
 	delete[] bytes;

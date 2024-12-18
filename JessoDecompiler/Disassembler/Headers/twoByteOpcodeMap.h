@@ -4,10 +4,10 @@
 // The information in this file comes from the
 //	Intel 64 and IA-32 architectures software developer's manual
 
-// This map is not complete, as only some of the opcodes are implemented as of now
+// This map is not complete; only some of the opcodes are implemented as of now
 
 // Appendix A: A.3 table A-3
-const struct Opcode twoByteOpcodeMap[0x100] =
+const struct Opcode twoByteOpcodeMap[0x100] = // [byte]
 {
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x00
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x01

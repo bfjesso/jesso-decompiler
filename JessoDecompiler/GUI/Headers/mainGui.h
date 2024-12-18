@@ -10,15 +10,22 @@ class MainGui : public wxFrame
 public:
 	MainGui();
 
+	wxTextCtrl* testBytesTextCtrl = nullptr;
+	wxButton* disassembleTestBytesButton = nullptr;
+	wxStaticText* testDisassemblyStaticText = nullptr;
+
 	wxButton* openFileButton = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
-	wxButton* disassembleButton = nullptr;
+	wxButton* disassembleFileButton = nullptr;
 	wxCheckBox* is64BitModeCheckBox = nullptr;
 	wxListBox* disassemblyListBox = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* row3Sizer = nullptr;
+	wxBoxSizer* row4Sizer = nullptr;
+	wxBoxSizer* row5Sizer = nullptr;
+	wxBoxSizer* row6Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	HANDLE currentFile = INVALID_HANDLE_VALUE;
@@ -26,9 +33,12 @@ public:
 	enum ids 
 	{
 		MainWindowID,
+		DisassembleTestBytesButtonID,
 		OpenFileButtonID,
-		DisassembleButtonID
+		DisassembleFileButtonID
 	};
+
+	void DisassembleTestBytes(wxCommandEvent& e);
 
 	void GetFileHandle(wxCommandEvent& e);
 
