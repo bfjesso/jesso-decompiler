@@ -19,6 +19,8 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
+	result->group1Prefix = legacyPrefixes.group1;
+
 	struct REXPrefix rexPrefix = { 0, 0, 0, 0, 0 };
 	if (disassemblerOptions->is64BitMode && !handleREXPrefix(&bytes, maxBytesAddr, &rexPrefix))
 	{
@@ -34,7 +36,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	if (!handleOperands(&bytes, maxBytesAddr, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &result->operands))
+	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &result->operands))
 	{
 		return 0;
 	}
@@ -53,6 +55,19 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	}
 	
 	int bufferIndex = 0;
+
+	if (instruction->group1Prefix != NO_PREFIX) 
+	{
+		const char* group1PrefixStr = group1PrefixStrs[instruction->group1Prefix - LOCK];
+		unsigned char group1PrefixStrLen = strlen(group1PrefixStr);
+		if (bufferIndex + group1PrefixStrLen - 1 > bufferSize) { return 0; }
+		strcpy(buffer + bufferIndex, group1PrefixStr);
+		bufferIndex += group1PrefixStrLen;
+
+		if (bufferIndex > bufferSize) { return 0; }
+		buffer[bufferIndex] = ' ';
+		bufferIndex++;
+	}
 
 	const char* mnemonicStr = mnemonicStrs[instruction->opcode];
 	unsigned char mnemonicStrLen = strlen(mnemonicStr);
@@ -97,7 +112,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			break;
 		case REGISTER:
 			registerStr = registerStrs[currentOperand->reg];
-			registerStrLen = strlen(registerStrs[currentOperand->reg]);
+			registerStrLen = strlen(registerStr);
 			if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, registerStr);
 			bufferIndex += registerStrLen;
@@ -431,22 +446,22 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 			*result = modRMByte < 0xC0 ? escapeD9OpcodeMapBits[reg] : escapeD9OpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDA:
-			//*result = modRMByte < 0xC0 ? escapeDAOpcodeMapBits[reg] : escapeDAOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDAOpcodeMapBits[reg] : escapeDAOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDB:
-			//*result = modRMByte < 0xC0 ? escapeDBOpcodeMapBits[reg] : escapeDBOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDBOpcodeMapBits[reg] : escapeDBOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDC:
-			//*result = modRMByte < 0xC0 ? escapeDCOpcodeMapBits[reg] : escapeDCOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDCOpcodeMapBits[reg] : escapeDCOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDD:
-			//*result = modRMByte < 0xC0 ? escapeDDOpcodeMapBits[reg] : escapeDDOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDDOpcodeMapBits[reg] : escapeDDOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDE:
-			//*result = modRMByte < 0xC0 ? escapeDEOpcodeMapBits[reg] : escapeDEOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDEOpcodeMapBits[reg] : escapeDEOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDF:
-			//*result = modRMByte < 0xC0 ? escapeDFOpcodeMapBits[reg] : escapeDFOpcodeMapByte[modRMByte - 0xC0];
+			*result = modRMByte < 0xC0 ? escapeDFOpcodeMapBits[reg] : escapeDFOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		}
 
@@ -458,7 +473,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	return 1;
 }
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result)
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -498,6 +513,10 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case CL_CODE:
 			currentOperand->type = REGISTER;
 			currentOperand->reg = CL;
+			break;
+		case AX_CODE:
+			currentOperand->type = REGISTER;
+			currentOperand->reg = AX;
 			break;
 		case DX_CODE:
 			currentOperand->type = REGISTER;
@@ -683,6 +702,14 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Mq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 8, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Mt:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 10, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Ib:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
@@ -738,13 +765,13 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case Jb:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, 1) + 2); // add 2 because that is this instruction's size
+			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, 1) + ((*bytesPtr) - startBytePtr)); // add instruction size
 			break;
 		case Jz:
 			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize) + (legPrefixes->group3 == OSO ? 3 : 5); // add 3 or 5 because that is this instruction's size
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize) + ((*bytesPtr) - startBytePtr); // add instruction size
 			break;
 		case Ob:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }

@@ -88,8 +88,16 @@ struct DisassembledInstruction
 {
 	unsigned char opcode;
 	struct Operand operands[3];
+	unsigned char group1Prefix;
 
 	unsigned char numOfBytes;
+};
+
+static const char* group1PrefixStrs[] =
+{
+	"LOCK",
+	"REPNZ",
+	"REPZ"
 };
 
 static const char* ptrSizeStrs[] =
@@ -98,7 +106,8 @@ static const char* ptrSizeStrs[] =
 	"WORD PTR",
 	"DWORD PTR",
 	"FWORD PTR",
-	"QWORD PTR"
+	"QWORD PTR",
+	"TBYTE PTR"
 };
 
 #ifdef __cplusplus
@@ -121,7 +130,7 @@ static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* ma
 
 static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct Opcode* result);
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result);
 
 static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result);
 

@@ -30,7 +30,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
 	openFileButton->SetOwnForegroundColour(textColor);
 
-	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "0", wxPoint(0, 0), wxSize(100, 25));
+	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "4096", wxPoint(0, 0), wxSize(100, 25));
 	numOfbytesInputTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -41,7 +41,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
 	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
 
-	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 700));
+	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 700));
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
@@ -92,9 +92,14 @@ void MainGui::DisassembleTestBytes(wxCommandEvent& e)
 	if(disassembleInstruction(bytes, bytes + 15, &options, &result))
 	{
 		char buffer[50];
-		instructionToStr(&result, buffer, 50);
-
-		testDisassemblyStaticText->SetLabel(buffer);
+		if (instructionToStr(&result, buffer, 50))
+		{
+			testDisassemblyStaticText->SetLabel(buffer);
+		}
+		else 
+		{
+			testDisassemblyStaticText->SetLabel("Error converting disassembled instruction to string");
+		}
 	}
 	else 
 	{
