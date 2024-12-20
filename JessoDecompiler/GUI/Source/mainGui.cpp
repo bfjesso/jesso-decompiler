@@ -1,6 +1,6 @@
 #include "../Headers/mainGui.h"
-#include "../../Disassembler/Headers/disassembler.h"
 #include "../../PEHandler/Headers/peHandler.h"
+#include "../../Decompiler/Headers/decompiler.h"
 #include "sstream"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
@@ -8,15 +8,17 @@ EVT_CLOSE(CloseApp)
 EVT_BUTTON(DisassembleTestBytesButtonID, DisassembleTestBytes)
 EVT_BUTTON(DisassembleFileButtonID, DisassembleCodeSection)
 EVT_BUTTON(OpenFileButtonID, GetFileHandle)
+EVT_BUTTON(DecompileButtonID, DecompileInstructions)
 wxEND_EVENT_TABLE()
 
-MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 800))
+MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(850, 800))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
 	testBytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "0", wxPoint(0, 0), wxSize(100, 25));
 	testBytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	testBytesTextCtrl->SetOwnForegroundColour(textColor);
+	testBytesTextCtrl->SetToolTip("Bytes to disassemble (debugging)");
 
 	disassembleTestBytesButton = new wxButton(this, DisassembleTestBytesButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
 	disassembleTestBytesButton->SetOwnBackgroundColour(foregroundColor);
@@ -24,7 +26,8 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	testDisassemblyStaticText = new wxStaticText(this, wxID_ANY, "Disassebled bytes");
 	testDisassemblyStaticText->SetOwnForegroundColour(textColor);
-	
+
+	// ---------------------
 
 	openFileButton = new wxButton(this, OpenFileButtonID, "Open File", wxPoint(0, 0), wxSize(75, 25));
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
@@ -33,6 +36,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "4096", wxPoint(0, 0), wxSize(100, 25));
 	numOfbytesInputTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
+	numOfbytesInputTextCtrl->SetToolTip("Number of bytes to read from the file's code section");
 
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
@@ -45,6 +49,28 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
+	// ---------------------
+
+	startDecompAddressTextCtrl = new wxTextCtrl(this, wxID_ANY, "1220", wxPoint(0, 0), wxSize(100, 25));
+	startDecompAddressTextCtrl->SetOwnBackgroundColour(foregroundColor);
+	startDecompAddressTextCtrl->SetOwnForegroundColour(textColor);
+	startDecompAddressTextCtrl->SetToolTip("Address to begin decompiling from");
+
+	numOfInstructionsDecompTextCtrl = new wxTextCtrl(this, wxID_ANY, "26", wxPoint(0, 0), wxSize(100, 25));
+	numOfInstructionsDecompTextCtrl->SetOwnBackgroundColour(foregroundColor);
+	numOfInstructionsDecompTextCtrl->SetOwnForegroundColour(textColor);
+	numOfInstructionsDecompTextCtrl->SetToolTip("Number of instructions to decompile");
+
+	decompileButton = new wxButton(this, DecompileButtonID, "Decompile", wxPoint(0, 0), wxSize(75, 25));
+	decompileButton->SetOwnBackgroundColour(foregroundColor);
+	decompileButton->SetOwnForegroundColour(textColor);
+
+	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 700));
+	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
+	decompilationListBox->SetOwnForegroundColour(textColor);
+
+	// ---------------------
+
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -54,17 +80,25 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(testBytesTextCtrl, 0, wxALL, 10);
+	
 	row2Sizer->Add(disassembleTestBytesButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row2Sizer->Add(testDisassemblyStaticText, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row3Sizer->Add(is64BitModeCheckBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
 	row4Sizer->Add(openFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
-	row4Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxBOTTOM | wxBOTTOM, 10);
+	row4Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxBOTTOM, 10);
+	row4Sizer->AddStretchSpacer();
+	row4Sizer->Add(startDecompAddressTextCtrl, 0, wxRIGHT | wxBOTTOM, 10);
+	row4Sizer->Add(numOfInstructionsDecompTextCtrl, 0,wxRIGHT | wxBOTTOM, 10);
 
 	row5Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row5Sizer->AddStretchSpacer();
+	row5Sizer->Add(decompileButton, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row6Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row6Sizer->AddStretchSpacer();
+	row6Sizer->Add(decompilationListBox, 0, wxBOTTOM | wxRIGHT, 10);
 
 	vSizer->Add(row1Sizer, 0, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
@@ -146,38 +180,109 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 
 	disassemblyListBox->Clear();
 
+	instructionAddresses.clear();
+	instructionAddresses.shrink_to_fit();
+
+	disassembledInstructions.clear();
+	disassembledInstructions.shrink_to_fit();
+
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER codeSection = { 0 };
 	if (!readCodeSection(currentFile, bytes, numOfBytesToRead, &codeSection))
 	{
 		wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
+
+		delete[] bytes;
 		return;
 	}
 
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
-	struct DisassembledInstruction result;
+	struct DisassembledInstruction currentInstruction;
 	unsigned int currentIndex = 0;
-	while (disassembleInstruction(&bytes[currentIndex], bytes + numOfBytesToRead - 1, &options, &result))
+	while (disassembleInstruction(&bytes[currentIndex], bytes + numOfBytesToRead - 1, &options, &currentInstruction))
 	{
+		uintptr_t address = codeSection.VirtualAddress + currentIndex;
+
 		std::stringstream adressToHex;
-		adressToHex << std::hex << (codeSection.VirtualAddress + currentIndex);
-		currentIndex += result.numOfBytes;
+		adressToHex << std::hex << address;
+		currentIndex += currentInstruction.numOfBytes;
 		
 		char buffer[50];
-		if (instructionToStr(&result, buffer, 50)) 
+		if (instructionToStr(&currentInstruction, buffer, 50))
 		{
-			disassemblyListBox->AppendString(adressToHex.str() + ":\t" + wxString(buffer));
+			disassemblyListBox->AppendString(adressToHex.str() + "\t" + wxString(buffer));
+
+			instructionAddresses.push_back(address);
+			disassembledInstructions.push_back(currentInstruction);
 		}
 		else 
 		{
-			disassemblyListBox->AppendString(adressToHex.str() + ":\t" + "ERROR");
+			disassemblyListBox->AppendString(adressToHex.str() + "\tERROR");
 			break;
 		}
 	}
 
 	delete[] bytes;
+}
+
+void MainGui::DecompileInstructions(wxCommandEvent& e)
+{
+	uintptr_t startAddress = 0;
+	if (!startDecompAddressTextCtrl->GetValue().ToULongLong(&startAddress, 16))
+	{
+		wxMessageBox("Invalid start address", "Can't read start address input");
+		return;
+	}
+	
+	unsigned int numOfInstructions = 1;
+	if (!numOfInstructionsDecompTextCtrl->GetValue().ToUInt(&numOfInstructions))
+	{
+		wxMessageBox("Invalid number of instructions to read", "Can't read number of instructions input");
+		return;
+	}
+
+	decompilationListBox->Clear();
+
+	DisassembledInstruction* startInstruction = GetInstructionAtAddress(startAddress, 0, instructionAddresses.size() - 1);
+	if (startInstruction == nullptr) 
+	{
+		wxMessageBox("There is no instruction at that address", "Can't find instruction at address");
+		return;
+	}
+
+	LineOfC decompiledFunction[10];
+	unsigned short numOfLinesDecompiled = decompileFunction(startInstruction, numOfInstructions, decompiledFunction, 10);
+	if (numOfLinesDecompiled == 0)
+	{
+		wxMessageBox("Error decompiling instructions", "Can't decompile");
+		return;
+	}
+
+	for (int i = 0; i < numOfLinesDecompiled; i++)
+	{
+		decompilationListBox->AppendString(wxString(decompiledFunction[i].line));
+	}
+}
+
+DisassembledInstruction* MainGui::GetInstructionAtAddress(uintptr_t address, int low, int high)
+{
+	if (high < low) { return nullptr; }
+	
+	int mid = low + (high - low) / 2;
+
+	if (instructionAddresses[mid] == address)
+	{
+		return &disassembledInstructions[mid];
+	}
+
+	if (instructionAddresses[mid] > address)
+	{
+		return GetInstructionAtAddress(address, low, mid - 1);
+	}
+
+	return GetInstructionAtAddress(address, mid + 1, high);
 }
 
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
