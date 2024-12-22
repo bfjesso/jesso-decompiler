@@ -34,7 +34,7 @@ public:
 	wxBoxSizer* row6Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	HANDLE currentFile = INVALID_HANDLE_VALUE;
+	wxString currentFilePath;
 
 	std::vector<uintptr_t> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;
@@ -50,13 +50,13 @@ public:
 
 	void DisassembleTestBytes(wxCommandEvent& e);
 
-	void GetFileHandle(wxCommandEvent& e);
+	void GetFilePath(wxCommandEvent& e);
 
 	void DisassembleCodeSection(wxCommandEvent& e);
 
 	void DecompileInstructions(wxCommandEvent& e);
 
-	DisassembledInstruction* GetInstructionAtAddress(uintptr_t address, int low, int high);
+	int GetInstructionIndexAtAddress(uintptr_t address, int low, int high);
 
 	bool ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
 

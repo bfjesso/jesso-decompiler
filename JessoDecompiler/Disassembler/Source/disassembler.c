@@ -6,7 +6,6 @@
 #include "../Headers/escapeOpcodeMaps.h"
 
 #include <stdio.h>
-//#include <stdlib.h>
 #include <string.h>
 
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)

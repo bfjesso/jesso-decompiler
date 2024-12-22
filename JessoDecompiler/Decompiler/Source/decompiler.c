@@ -21,7 +21,7 @@
 
 // 5. call the apropriate handler function if one of the above is the case
 
-unsigned short decompileFunction(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* resultBuffer, unsigned short resultBufferLen) 
+unsigned short decompileFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
 {
 	int numOfLinesDecompiled = 0;
 	
@@ -41,7 +41,17 @@ unsigned short decompileFunction(struct DisassembledInstruction* instructions, u
 		numOfLinesDecompiled++;
 	}
 
-	// TODO: figure out the scope of conditions
+	struct Scope scopes[5];
+	if(!getAllScopes(instructions, addresses, numOfInstructions, scopes, 5))
+	{
+		return 0;
+	}
+
+	int resultBufferIndex = resultBufferLen - 1;
+	for (int i = numOfInstructions - 1; i >= 0; i--) 
+	{
+
+	}
 
 	return numOfLinesDecompiled;
 }
@@ -84,15 +94,13 @@ static unsigned char getAllLocalVariables(struct DisassembledInstruction* instru
 				struct LocalVariable localVar;
 				localVar.bpOffset = bpOffset;
 
-				strcpy(localVar.name, "var");
-
 				if (bpOffset < 0)
 				{
-					sprintf(localVar.name + 3, "N%X", -bpOffset);
+					sprintf(localVar.name, "var%X", -bpOffset);
 				}
 				else
 				{
-					sprintf(localVar.name + 3, "P%X", bpOffset);
+					sprintf(localVar.name, "arg%X", bpOffset);
 				}
 
 				if (resultBufferIndex >= resultBufferLen) { return 0; }
@@ -104,3 +112,62 @@ static unsigned char getAllLocalVariables(struct DisassembledInstruction* instru
 
 	return 1;
 }
+
+static unsigned char getAllScopes(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Scope* resultBuffer, unsigned char resultBufferLen)
+{
+	int resultBufferIndex = 0;
+	
+	for (int i = 0; i < resultBufferLen; i++)
+	{
+		resultBuffer[i].start = 0;
+		resultBuffer[i].end = 0;
+	}
+	
+	for (int i = 0; i < numOfInstructions - 1; i++) 
+	{
+		struct DisassembledInstruction* currentInstruction = &instructions[i];
+
+		if (currentInstruction->opcode >= JA && currentInstruction->opcode <= JMP_SHORT) 
+		{
+			if (resultBufferIndex >= resultBufferLen) { return 0; }
+			
+			resultBuffer[resultBufferIndex].start = addresses[i + 1];
+			resultBuffer[resultBufferIndex].end = addresses[i] + currentInstruction->operands[0].immediate;
+
+			for (int j = 0; j < numOfInstructions - 1; j++) 
+			{
+				if (addresses[j + 1] == resultBuffer[resultBufferIndex].end) 
+				{
+					resultBuffer[resultBufferIndex].end = addresses[j];
+					break;
+				}
+			}
+
+			resultBufferIndex++;
+		}
+	}
+
+	return 1;
+}
+
+static unsigned char handleReturnStatement(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* result) 
+{
+	for (int i = numOfInstructions - 1; i >= 0; i--) 
+	{
+		struct DisassembledInstruction* currentInstruction = &instructions[i];
+		
+		if (currentInstruction->operands[0].type != REGISTER) { continue; }
+
+		unsigned char reg = currentInstruction->operands[0].reg;
+		if (reg == AX || reg == EAX || reg == RAX)
+		{
+			if (currentInstruction->opcode == MOV) 
+			{
+				strcpy(result->line, "return ");
+			}
+		}
+	}
+
+	return 1;
+}
+

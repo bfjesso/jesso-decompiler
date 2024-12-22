@@ -1,13 +1,12 @@
 #include "../Headers/mainGui.h"
 #include "../../PEHandler/Headers/peHandler.h"
 #include "../../Decompiler/Headers/decompiler.h"
-#include "sstream"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)
 EVT_BUTTON(DisassembleTestBytesButtonID, DisassembleTestBytes)
 EVT_BUTTON(DisassembleFileButtonID, DisassembleCodeSection)
-EVT_BUTTON(OpenFileButtonID, GetFileHandle)
+EVT_BUTTON(OpenFileButtonID, GetFilePath)
 EVT_BUTTON(DecompileButtonID, DecompileInstructions)
 wxEND_EVENT_TABLE()
 
@@ -51,7 +50,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	// ---------------------
 
-	startDecompAddressTextCtrl = new wxTextCtrl(this, wxID_ANY, "1220", wxPoint(0, 0), wxSize(100, 25));
+	startDecompAddressTextCtrl = new wxTextCtrl(this, wxID_ANY, "401220", wxPoint(0, 0), wxSize(100, 25));
 	startDecompAddressTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	startDecompAddressTextCtrl->SetOwnForegroundColour(textColor);
 	startDecompAddressTextCtrl->SetToolTip("Address to begin decompiling from");
@@ -141,14 +140,17 @@ void MainGui::DisassembleTestBytes(wxCommandEvent& e)
 	}
 }
 
-void MainGui::GetFileHandle(wxCommandEvent& e)
+void MainGui::GetFilePath(wxCommandEvent& e)
 {
+	currentFilePath = "";
+	
 	wxFileDialog openDllDialog(this, "Choose PE file", "", "", "EXE and DLL files (*.exe;*.dll)|*.exe;*.dll", wxFD_FILE_MUST_EXIST);
 
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
 	{
-		currentFile = CreateFile(openDllDialog.GetPath().c_str(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if (currentFile != INVALID_HANDLE_VALUE)
+		currentFilePath = openDllDialog.GetPath();
+
+		if (!currentFilePath.empty())
 		{
 			this->SetTitle("Jesso Decompiler x64 - opened file " + openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1));
 		}
@@ -160,12 +162,12 @@ void MainGui::GetFileHandle(wxCommandEvent& e)
 		}
 	}
 
-	openDllDialog.Close();
+	openDllDialog.Close(true);
 }
 
 void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 {
-	if (currentFile == INVALID_HANDLE_VALUE)
+	if (currentFilePath.empty())
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
@@ -188,7 +190,9 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER codeSection = { 0 };
-	if (!readCodeSection(currentFile, bytes, numOfBytesToRead, &codeSection))
+	uintptr_t imageBase = 0;
+	const wchar_t* filePath = currentFilePath.c_str().AsWChar();
+	if (!readCodeSection(filePath, bytes, numOfBytesToRead, &codeSection, &imageBase))
 	{
 		wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 
@@ -201,27 +205,31 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 
 	struct DisassembledInstruction currentInstruction;
 	unsigned int currentIndex = 0;
+	unsigned int instructionNum = 1;
 	while (disassembleInstruction(&bytes[currentIndex], bytes + numOfBytesToRead - 1, &options, &currentInstruction))
 	{
-		uintptr_t address = codeSection.VirtualAddress + currentIndex;
+		uintptr_t address = imageBase + codeSection.VirtualAddress + currentIndex;
 
-		std::stringstream adressToHex;
-		adressToHex << std::hex << address;
+		char addressStr[10];
+		sprintf(addressStr, "%X", address);
+
 		currentIndex += currentInstruction.numOfBytes;
 		
 		char buffer[50];
 		if (instructionToStr(&currentInstruction, buffer, 50))
 		{
-			disassemblyListBox->AppendString(adressToHex.str() + "\t" + wxString(buffer));
+			disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
 
 			instructionAddresses.push_back(address);
 			disassembledInstructions.push_back(currentInstruction);
 		}
 		else 
 		{
-			disassemblyListBox->AppendString(adressToHex.str() + "\tERROR");
+			disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\tERROR");
 			break;
 		}
+
+		instructionNum++;
 	}
 
 	delete[] bytes;
@@ -245,15 +253,15 @@ void MainGui::DecompileInstructions(wxCommandEvent& e)
 
 	decompilationListBox->Clear();
 
-	DisassembledInstruction* startInstruction = GetInstructionAtAddress(startAddress, 0, instructionAddresses.size() - 1);
-	if (startInstruction == nullptr) 
+	int startInstructionIndex = GetInstructionIndexAtAddress(startAddress, 0, instructionAddresses.size() - 1);
+	if (startInstructionIndex == -1)
 	{
 		wxMessageBox("There is no instruction at that address", "Can't find instruction at address");
 		return;
 	}
 
 	LineOfC decompiledFunction[10];
-	unsigned short numOfLinesDecompiled = decompileFunction(startInstruction, numOfInstructions, decompiledFunction, 10);
+	unsigned short numOfLinesDecompiled = decompileFunction(&disassembledInstructions[startInstructionIndex], &instructionAddresses[startInstructionIndex], numOfInstructions, decompiledFunction, 10);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling instructions", "Can't decompile");
@@ -266,23 +274,23 @@ void MainGui::DecompileInstructions(wxCommandEvent& e)
 	}
 }
 
-DisassembledInstruction* MainGui::GetInstructionAtAddress(uintptr_t address, int low, int high)
+int MainGui::GetInstructionIndexAtAddress(uintptr_t address, int low, int high)
 {
-	if (high < low) { return nullptr; }
+	if (high < low) { return -1; }
 	
 	int mid = low + (high - low) / 2;
 
 	if (instructionAddresses[mid] == address)
 	{
-		return &disassembledInstructions[mid];
+		return mid;
 	}
 
 	if (instructionAddresses[mid] > address)
 	{
-		return GetInstructionAtAddress(address, low, mid - 1);
+		return GetInstructionIndexAtAddress(address, low, mid - 1);
 	}
 
-	return GetInstructionAtAddress(address, mid + 1, high);
+	return GetInstructionIndexAtAddress(address, mid + 1, high);
 }
 
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
