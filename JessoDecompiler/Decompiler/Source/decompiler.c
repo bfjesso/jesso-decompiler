@@ -25,93 +25,29 @@ unsigned short decompileFunction(struct DisassembledInstruction* instructions, u
 {
 	int numOfLinesDecompiled = 0;
 	
-	struct LocalVariable localVariables[10];
-	if (!getAllLocalVariables(instructions, numOfInstructions, localVariables, 10)) 
-	{
-		return 0;
-	}
-
-	// temporary
-	for (int i = 0; i < 10; i++) 
-	{
-		if (localVariables[i].name[0] == 0) { break; }
-
-		strcpy(resultBuffer[i].line, localVariables[i].name);
-
-		numOfLinesDecompiled++;
-	}
-
 	struct Scope scopes[5];
 	if(!getAllScopes(instructions, addresses, numOfInstructions, scopes, 5))
 	{
 		return 0;
 	}
 
-	int resultBufferIndex = resultBufferLen - 1;
-	for (int i = numOfInstructions - 1; i >= 0; i--) 
-	{
+	strcpy((&resultBuffer[numOfLinesDecompiled])->line, "}");
+	numOfLinesDecompiled++;
 
+	if (!handleReturnStatement(instructions, numOfInstructions, &resultBuffer[numOfLinesDecompiled]))
+	{
+		return 0;
 	}
+	numOfLinesDecompiled++;
+
+	strcpy((&resultBuffer[numOfLinesDecompiled])->line, "{");
+	numOfLinesDecompiled++;
+
+	
 
 	return numOfLinesDecompiled;
 }
 
-static unsigned char getAllLocalVariables(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LocalVariable* resultBuffer, unsigned char resultBufferLen) 
-{
-	int resultBufferIndex = 0;
-
-	for (int i = 0; i < resultBufferLen; i++) 
-	{
-		resultBuffer[i].name[0] = 0;
-	}
-
-	for (int i = 0; i < numOfInstructions; i++) 
-	{
-		struct DisassembledInstruction* currentInstruction = &instructions[i];
-
-		for (int j = 0; j < 3; j++) 
-		{
-			if (currentInstruction->operands[j].type != MEM_ADDRESS) { continue; }
-
-			unsigned char reg = currentInstruction->operands[j].memoryAddress.reg;
-
-			if (reg == BP || reg == EBP || reg == RBP)
-			{
-				int bpOffset = currentInstruction->operands[j].memoryAddress.constDisplacement;
-				char isAlreadyInList = 0;
-				
-				for (int k = 0; k < resultBufferIndex; k++) 
-				{
-					if (resultBuffer[k].bpOffset == bpOffset) 
-					{
-						isAlreadyInList = 1;
-						break;
-					}
-				}
-
-				if (isAlreadyInList) { break; }
-				
-				struct LocalVariable localVar;
-				localVar.bpOffset = bpOffset;
-
-				if (bpOffset < 0)
-				{
-					sprintf(localVar.name, "var%X", -bpOffset);
-				}
-				else
-				{
-					sprintf(localVar.name, "arg%X", bpOffset);
-				}
-
-				if (resultBufferIndex >= resultBufferLen) { return 0; }
-				resultBuffer[resultBufferIndex] = localVar;
-				resultBufferIndex++;
-			}
-		}
-	}
-
-	return 1;
-}
 
 static unsigned char getAllScopes(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Scope* resultBuffer, unsigned char resultBufferLen)
 {
@@ -152,6 +88,11 @@ static unsigned char getAllScopes(struct DisassembledInstruction* instructions, 
 
 static unsigned char handleReturnStatement(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* result) 
 {
+	char returnExpressions[5][20];
+	int returnExpressionIndex = 0;
+	int variableIndex = 0;
+	char isNotFirstOperation = 0;
+
 	for (int i = numOfInstructions - 1; i >= 0; i--) 
 	{
 		struct DisassembledInstruction* currentInstruction = &instructions[i];
@@ -161,13 +102,109 @@ static unsigned char handleReturnStatement(struct DisassembledInstruction* instr
 		unsigned char reg = currentInstruction->operands[0].reg;
 		if (reg == AX || reg == EAX || reg == RAX)
 		{
-			if (currentInstruction->opcode == MOV) 
+			if (currentInstruction->opcode >= MOV && currentInstruction->opcode <= IDIV)
 			{
-				strcpy(result->line, "return ");
+				char isLocalVar = 0;
+				char operandStr[10];
+				if (!operandToC(&instructions[i - 1], i, &currentInstruction->operands[1], operandStr, 10, &isLocalVar)) 
+				{
+					return 0;
+				}
+
+				if (currentInstruction->opcode == MOV) 
+				{
+					isNotFirstOperation = 0;
+				}
+
+				if (isNotFirstOperation) 
+				{
+					returnExpressions[returnExpressionIndex][0] = '(';
+				}
+
+				if (isLocalVar) 
+				{
+					sprintf(returnExpressions[returnExpressionIndex] + isNotFirstOperation, "\\%s", operationStrs[currentInstruction->opcode]);
+					strcpy(result->variables[variableIndex], operandStr);
+					variableIndex++;
+				}
+				else 
+				{
+					sprintf(returnExpressions[returnExpressionIndex] + isNotFirstOperation, "%s%s", operandStr, operationStrs[currentInstruction->opcode]);
+				}
+
+				returnExpressionIndex++;
+
+				if (currentInstruction->opcode == MOV) 
+				{
+					break;
+				}
+				
+				isNotFirstOperation = 1;
 			}
 		}
 	}
 
+	strcpy(result->line, "\treturn ");
+
+	for (int i = 0; i < returnExpressionIndex; i++) 
+	{
+		strcpy(result->line + strlen(result->line), returnExpressions[i]);
+	}
+
+	for (int i = 0; i < returnExpressionIndex - 1; i++)
+	{
+		strcpy(result->line + strlen(result->line), ")");
+	}
+
+	result->line[strlen(result->line) - 1] = ';';
+
 	return 1;
 }
+
+static unsigned char operandToC(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize, char* isLocalVar) 
+{
+	if (operand->type == IMMEDIATE) 
+	{
+		sprintf(resultBuffer, "%llu", operand->immediate);
+
+		*isLocalVar = 0;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS && (operand->memoryAddress.reg == BP || operand->memoryAddress.reg == EBP || operand->memoryAddress.reg == RBP)) 
+	{
+		if (operand->memoryAddress.constDisplacement < 0)
+		{
+			sprintf(resultBuffer, "var%X", -operand->memoryAddress.constDisplacement);
+		}
+		else
+		{
+			sprintf(resultBuffer, "arg%X", operand->memoryAddress.constDisplacement);
+		}
+
+		*isLocalVar = 1;
+		return 1;
+	}
+	else if(operand->type == REGISTER)
+	{
+		for (int i = numOfInstructions - 1; i >= 0; i--)
+		{
+			struct DisassembledInstruction* currentInstruction = &instructions[i];
+
+			if (currentInstruction->operands[0].type != REGISTER) { continue; }
+
+			if (currentInstruction->operands[0].reg == operand->reg && currentInstruction->opcode == MOV)
+			{
+				return operandToC(&instructions[i - 1], i, &currentInstruction->operands[1], resultBuffer, resultBufferSize, isLocalVar);
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+
+
+
+
 

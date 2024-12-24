@@ -55,7 +55,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	startDecompAddressTextCtrl->SetOwnForegroundColour(textColor);
 	startDecompAddressTextCtrl->SetToolTip("Address to begin decompiling from");
 
-	numOfInstructionsDecompTextCtrl = new wxTextCtrl(this, wxID_ANY, "26", wxPoint(0, 0), wxSize(100, 25));
+	numOfInstructionsDecompTextCtrl = new wxTextCtrl(this, wxID_ANY, "7", wxPoint(0, 0), wxSize(100, 25));
 	numOfInstructionsDecompTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	numOfInstructionsDecompTextCtrl->SetOwnForegroundColour(textColor);
 	numOfInstructionsDecompTextCtrl->SetToolTip("Number of instructions to decompile");
@@ -270,7 +270,17 @@ void MainGui::DecompileInstructions(wxCommandEvent& e)
 
 	for (int i = 0; i < numOfLinesDecompiled; i++)
 	{
-		decompilationListBox->AppendString(wxString(decompiledFunction[i].line));
+		wxString str = wxString(decompiledFunction[i].line);
+
+		int varIndex = 0;
+		while (str.Replace("\\", wxString(decompiledFunction[i].variables[varIndex]), false))
+		{
+			varIndex++;
+		}
+
+		str.Replace("\t", "    ");
+
+		decompilationListBox->InsertItems(1, &str, 0);
 	}
 }
 

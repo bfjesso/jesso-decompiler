@@ -3,8 +3,8 @@
 
 struct LineOfC 
 {
-	char line[20];
-	char variables[2][20];
+	char line[50];
+	char variables[5][10];
 };
 
 struct LocalVariable
@@ -19,6 +19,15 @@ struct Scope
 	unsigned long long end;
 };
 
+const char* operationStrs[] =
+{
+	"",		// MOV
+	" + ",	// ADD
+	" - ",	// SUB
+	" * ",	// IMUL
+	" / "	// IDIV
+};
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -30,9 +39,12 @@ extern "C"
 }
 #endif
 
-static unsigned char getAllLocalVariables(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LocalVariable* resultBuffer, unsigned char resultBufferLen);
-
 static unsigned char getAllScopes(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Scope* resultBuffer, unsigned char resultBufferLen);
 
 static unsigned char handleReturnStatement(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* result);
+
+static unsigned char operandToC(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize, char* isLocalVar);
+
+
+
 
