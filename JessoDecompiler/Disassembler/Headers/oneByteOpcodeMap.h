@@ -119,22 +119,22 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ INS, -1, Yz, rDX, NO_OPERAND_CODE, NO_SUPERSCRIPT },											// 0x6D; alternate mnemonics: INSW, INSD
 	{ OUTS, -1, rDX, Xb, NO_OPERAND_CODE, NO_SUPERSCRIPT },											// 0x6E; alternate mnemonics: OUTSB
 	{ OUTS, -1, rDX, Xz, NO_OPERAND_CODE, NO_SUPERSCRIPT },											// 0x6F; alternate mnemonics: OUTSW, OUTSD
-	{ JO, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x70
-	{ JNO, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x71
-	{ JB, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x72; alternate mnemonics: JNAE, JC
-	{ JNB, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x73; alternate mnemonics: JAE, JNC 
-	{ JZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x74; alternate mnemonics: JE
-	{ JNZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x75; alternate mnemonics: JNE
-	{ JBE, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x76; alternate mnemonics: JNA
-	{ JA, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x77; alternate mnemonics: JNBE
-	{ JS, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x78
-	{ JNS, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x79
-	{ JP, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7A; alternate mnemonics: JPE
-	{ JNP, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7B; alternate mnemonics: JPO
-	{ JL, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7C; alternate mnemonics: JNGE
-	{ JNL, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7D; alternate mnemonics: JGE
-	{ JLE, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7E; alternate mnemonics: JNG
-	{ JG, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },											// 0x7F; alternate mnemonics: JNLE
+	{ JO_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x70
+	{ JNO_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x71
+	{ JB_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x72; alternate mnemonics: JNAE, JC
+	{ JNB_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x73; alternate mnemonics: JAE, JNC 
+	{ JZ_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x74; alternate mnemonics: JE
+	{ JNZ_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x75; alternate mnemonics: JNE
+	{ JBE_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x76; alternate mnemonics: JNA
+	{ JA_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x77; alternate mnemonics: JNBE
+	{ JS_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x78
+	{ JNS_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x79
+	{ JP_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7A; alternate mnemonics: JPE
+	{ JNP_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7B; alternate mnemonics: JPO
+	{ JL_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7C; alternate mnemonics: JNGE
+	{ JNL_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7D; alternate mnemonics: JGE
+	{ JLE_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7E; alternate mnemonics: JNG
+	{ JG_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7F; alternate mnemonics: JNLE
 	{ EXTENDED_OPCODE, 0, Eb, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },								// 0x80; an extended opcode
 	{ EXTENDED_OPCODE, 0, Ev, Iz, NO_OPERAND_CODE, NO_SUPERSCRIPT },								// 0x81; an extended opcode
 	{ EXTENDED_OPCODE, 0, Eb, Ib, NO_OPERAND_CODE, i64 },											// 0x82; an extended opcode

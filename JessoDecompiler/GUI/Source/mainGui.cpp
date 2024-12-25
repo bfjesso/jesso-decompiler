@@ -1,16 +1,15 @@
 #include "../Headers/mainGui.h"
 #include "../../PEHandler/Headers/peHandler.h"
-#include "../../Decompiler/Headers/decompiler.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)
 EVT_BUTTON(DisassembleTestBytesButtonID, DisassembleTestBytes)
 EVT_BUTTON(DisassembleFileButtonID, DisassembleCodeSection)
 EVT_BUTTON(OpenFileButtonID, GetFilePath)
-EVT_BUTTON(DecompileButtonID, DecompileInstructions)
+EVT_GRID_CELL_RIGHT_CLICK(RightClickOptions)
 wxEND_EVENT_TABLE()
 
-MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(850, 800))
+MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(850, 850))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -44,29 +43,39 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
 	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
 
-	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 700));
+	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 400));
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
 	// ---------------------
 
-	startDecompAddressTextCtrl = new wxTextCtrl(this, wxID_ANY, "401220", wxPoint(0, 0), wxSize(100, 25));
-	startDecompAddressTextCtrl->SetOwnBackgroundColour(foregroundColor);
-	startDecompAddressTextCtrl->SetOwnForegroundColour(textColor);
-	startDecompAddressTextCtrl->SetToolTip("Address to begin decompiling from");
-
-	numOfInstructionsDecompTextCtrl = new wxTextCtrl(this, wxID_ANY, "7", wxPoint(0, 0), wxSize(100, 25));
-	numOfInstructionsDecompTextCtrl->SetOwnBackgroundColour(foregroundColor);
-	numOfInstructionsDecompTextCtrl->SetOwnForegroundColour(textColor);
-	numOfInstructionsDecompTextCtrl->SetToolTip("Number of instructions to decompile");
-
-	decompileButton = new wxButton(this, DecompileButtonID, "Decompile", wxPoint(0, 0), wxSize(75, 25));
-	decompileButton->SetOwnBackgroundColour(foregroundColor);
-	decompileButton->SetOwnForegroundColour(textColor);
-
-	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 700));
+	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 400));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
+
+	// ---------------------
+
+	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 9999));
+	functionsGrid->SetLabelBackgroundColour(backgroundColor);
+	functionsGrid->SetLabelTextColour(textColor);
+	functionsGrid->SetDefaultCellBackgroundColour(foregroundColor);
+	functionsGrid->SetDefaultCellTextColour(textColor);
+
+	functionsGrid->CreateGrid(0, 3);
+	functionsGrid->EnableGridLines(false);
+	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
+	functionsGrid->SetScrollRate(0, 10);
+	functionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	functionsGrid->DisableDragRowSize();
+	functionsGrid->EnableEditing(false);
+	functionsGrid->SetColLabelValue(0, "Address");
+	functionsGrid->SetColLabelValue(1, "Name");
+	functionsGrid->SetColLabelValue(2, "Number of Instructions");
+	functionsGrid->HideRowLabels();
+	functionsGrid->SetColSize(0, 200);
+	functionsGrid->SetColSize(1, 200);
+	functionsGrid->SetColSize(2, 9999);
+	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	// ---------------------
 
@@ -76,6 +85,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row4Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row5Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row6Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row7Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(testBytesTextCtrl, 0, wxALL, 10);
@@ -88,16 +98,15 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row4Sizer->Add(openFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row4Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxBOTTOM, 10);
 	row4Sizer->AddStretchSpacer();
-	row4Sizer->Add(startDecompAddressTextCtrl, 0, wxRIGHT | wxBOTTOM, 10);
-	row4Sizer->Add(numOfInstructionsDecompTextCtrl, 0,wxRIGHT | wxBOTTOM, 10);
 
 	row5Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row5Sizer->AddStretchSpacer();
-	row5Sizer->Add(decompileButton, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row6Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 	row6Sizer->AddStretchSpacer();
 	row6Sizer->Add(decompilationListBox, 0, wxBOTTOM | wxRIGHT, 10);
+
+	row7Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
 	vSizer->Add(row1Sizer, 0, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
@@ -105,6 +114,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	vSizer->Add(row4Sizer, 0, wxEXPAND);
 	vSizer->Add(row5Sizer, 0, wxEXPAND);
 	vSizer->Add(row6Sizer, 0, wxEXPAND);
+	vSizer->Add(row7Sizer, 0, wxEXPAND);
 
 	SetSizer(vSizer);
 }
@@ -190,7 +200,6 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER codeSection = { 0 };
-	uintptr_t imageBase = 0;
 	const wchar_t* filePath = currentFilePath.c_str().AsWChar();
 	if (!readCodeSection(filePath, bytes, numOfBytesToRead, &codeSection, &imageBase))
 	{
@@ -233,38 +242,25 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 	}
 
 	delete[] bytes;
+
+	FindAllFunctions();
 }
 
-void MainGui::DecompileInstructions(wxCommandEvent& e)
+void MainGui::DecompileFunction(Function* function)
 {
-	uintptr_t startAddress = 0;
-	if (!startDecompAddressTextCtrl->GetValue().ToULongLong(&startAddress, 16))
+	if (currentFilePath.empty())
 	{
-		wxMessageBox("Invalid start address", "Can't read start address input");
-		return;
-	}
-	
-	unsigned int numOfInstructions = 1;
-	if (!numOfInstructionsDecompTextCtrl->GetValue().ToUInt(&numOfInstructions))
-	{
-		wxMessageBox("Invalid number of instructions to read", "Can't read number of instructions input");
+		wxMessageBox("No file opened", "Can't decompile");
 		return;
 	}
 
 	decompilationListBox->Clear();
 
-	int startInstructionIndex = GetInstructionIndexAtAddress(startAddress, 0, instructionAddresses.size() - 1);
-	if (startInstructionIndex == -1)
-	{
-		wxMessageBox("There is no instruction at that address", "Can't find instruction at address");
-		return;
-	}
-
 	LineOfC decompiledFunction[10];
-	unsigned short numOfLinesDecompiled = decompileFunction(&disassembledInstructions[startInstructionIndex], &instructionAddresses[startInstructionIndex], numOfInstructions, decompiledFunction, 10);
+	unsigned short numOfLinesDecompiled = decompileFunction(function, decompiledFunction, 10);
 	if (numOfLinesDecompiled == 0)
 	{
-		wxMessageBox("Error decompiling instructions", "Can't decompile");
+		wxMessageBox("Error decompiling function", "Can't decompile");
 		return;
 	}
 
@@ -272,10 +268,10 @@ void MainGui::DecompileInstructions(wxCommandEvent& e)
 	{
 		wxString str = wxString(decompiledFunction[i].line);
 
-		int varIndex = 0;
-		while (str.Replace("\\", wxString(decompiledFunction[i].variables[varIndex]), false))
+		int symbolIndex = 0;
+		while (str.Replace("\\", wxString(decompiledFunction[i].symbols[symbolIndex]), false))
 		{
-			varIndex++;
+			symbolIndex++;
 		}
 
 		str.Replace("\t", "    ");
@@ -284,23 +280,60 @@ void MainGui::DecompileInstructions(wxCommandEvent& e)
 	}
 }
 
-int MainGui::GetInstructionIndexAtAddress(uintptr_t address, int low, int high)
+void MainGui::FindAllFunctions() 
 {
-	if (high < low) { return -1; }
+	functions.clear();
+	functions.shrink_to_fit();
+	functionsGrid->ClearGrid();
 	
-	int mid = low + (high - low) / 2;
+	int numOfInstructions = disassembledInstructions.size();
 
-	if (instructionAddresses[mid] == address)
+	int functionNum = 0;
+
+	Function currentFunction = {};
+	int instructionIndex = 0;
+	while (findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex))
 	{
-		return mid;
-	}
+		functions.push_back(currentFunction);
+		numOfInstructions -= currentFunction.numOfInstructions;
 
-	if (instructionAddresses[mid] > address)
-	{
-		return GetInstructionIndexAtAddress(address, low, mid - 1);
-	}
+		functionsGrid->AppendRows(1);
 
-	return GetInstructionIndexAtAddress(address, mid + 1, high);
+		char addressStr[10];
+		sprintf(addressStr, "%X", *currentFunction.address);
+		functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
+
+		sprintf(addressStr, "%X", (*currentFunction.address) - imageBase);
+		functionsGrid->SetCellValue(functionNum, 1, "func" + wxString(addressStr));
+
+		functionsGrid->SetCellValue(functionNum, 2, std::to_string(currentFunction.numOfInstructions));
+		functionNum++;
+	}
+}
+
+void MainGui::RightClickOptions(wxGridEvent& e)
+{
+	wxMenu menu;
+
+	int row = e.GetRow(); // row right-clicked on
+
+	wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
+	decompile->SetBackgroundColour(foregroundColor);
+	decompile->SetTextColour(textColor);
+	menu.Append(decompile);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
+		{
+			DecompileFunction(&functions[row]);
+		}, 100);
+
+	wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");
+	cpyAddr->SetBackgroundColour(foregroundColor);
+	cpyAddr->SetTextColour(textColor);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 101);
+
+	wxPoint pos = wxGetMousePosition() - this->GetPosition();
+	PopupMenu(&menu, wxPoint(pos.x - 8, pos.y - 30));
+	e.Skip();
 }
 
 bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
@@ -336,6 +369,15 @@ bool MainGui::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigne
 	}
 
 	return true;
+}
+
+void MainGui::CopyToClipboard(const char* txt)
+{
+	if (wxTheClipboard->Open())
+	{
+		wxTheClipboard->SetData(new wxTextDataObject(txt));
+		wxTheClipboard->Close();
+	}
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)

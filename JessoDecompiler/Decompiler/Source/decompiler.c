@@ -5,6 +5,15 @@
 #include <stdio.h>
 #include <string.h>
 
+const char* operationStrs[] =
+{
+	"",		// MOV
+	" + ",	// ADD
+	" - ",	// SUB
+	" * ",	// IMUL
+	" / "	// IDIV
+};
+
 // The idea:
 
 // 1. begining at the top, identify all local variables and parameters by their offset from the BP
@@ -21,12 +30,78 @@
 
 // 5. call the apropriate handler function if one of the above is the case
 
-unsigned short decompileFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
+unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
 {
+	struct Function function = { 0 };
+
+	unsigned long long addressToJumpTo = 0;
+	
+	char foundFirstInstruction = 0;
+	for (int i = 0; i < numOfInstructions; i++) 
+	{
+		(*instructionIndex)++;
+
+		if (addressToJumpTo != 0 && addressToJumpTo != addresses[i])
+		{
+			continue;
+		}
+		else 
+		{
+			addressToJumpTo = 0;
+		}
+		
+		struct DisassembledInstruction* currentInstruction = &instructions[i];
+
+		if (currentInstruction->opcode == INT3) 
+		{
+			if (foundFirstInstruction) 
+			{
+				*result = function;
+				return 1;
+			}
+			else 
+			{
+				continue;
+			}
+		}
+
+		if (!foundFirstInstruction)
+		{
+			function.address = &addresses[i];
+			function.firstInstruction = &instructions[i];
+			function.numOfInstructions = 1;
+
+			function.callingConvention = __CDECL;
+
+			foundFirstInstruction = 1;
+		}
+		else
+		{
+			function.numOfInstructions++;
+
+			if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
+			{
+				addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
+			}
+			else if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR)
+			{
+				*result = function;
+				return 1;
+			}
+		}
+	}
+	
+	return 0;
+}
+
+unsigned short decompileFunction(struct Function* function, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
+{
+	if (resultBufferLen < 4) { return 0; }
+	
 	int numOfLinesDecompiled = 0;
 	
 	struct Scope scopes[5];
-	if(!getAllScopes(instructions, addresses, numOfInstructions, scopes, 5))
+	if(!getAllScopes(function, scopes, 5))
 	{
 		return 0;
 	}
@@ -34,7 +109,7 @@ unsigned short decompileFunction(struct DisassembledInstruction* instructions, u
 	strcpy((&resultBuffer[numOfLinesDecompiled])->line, "}");
 	numOfLinesDecompiled++;
 
-	if (!handleReturnStatement(instructions, numOfInstructions, &resultBuffer[numOfLinesDecompiled]))
+	if (!handleReturnStatement(function, &resultBuffer[numOfLinesDecompiled]))
 	{
 		return 0;
 	}
@@ -48,8 +123,7 @@ unsigned short decompileFunction(struct DisassembledInstruction* instructions, u
 	return numOfLinesDecompiled;
 }
 
-
-static unsigned char getAllScopes(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Scope* resultBuffer, unsigned char resultBufferLen)
+static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen)
 {
 	int resultBufferIndex = 0;
 	
@@ -59,22 +133,22 @@ static unsigned char getAllScopes(struct DisassembledInstruction* instructions, 
 		resultBuffer[i].end = 0;
 	}
 	
-	for (int i = 0; i < numOfInstructions - 1; i++) 
+	for (int i = 0; i < function->numOfInstructions - 1; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &instructions[i];
+		struct DisassembledInstruction* currentInstruction = &function->firstInstruction[i];
 
-		if (currentInstruction->opcode >= JA && currentInstruction->opcode <= JMP_SHORT) 
+		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT) 
 		{
 			if (resultBufferIndex >= resultBufferLen) { return 0; }
 			
-			resultBuffer[resultBufferIndex].start = addresses[i + 1];
-			resultBuffer[resultBufferIndex].end = addresses[i] + currentInstruction->operands[0].immediate;
+			resultBuffer[resultBufferIndex].start = function->address[i + 1];
+			resultBuffer[resultBufferIndex].end = function->address[i] + currentInstruction->operands[0].immediate;
 
-			for (int j = 0; j < numOfInstructions - 1; j++) 
+			for (int j = 0; j < function->numOfInstructions - 1; j++)
 			{
-				if (addresses[j + 1] == resultBuffer[resultBufferIndex].end) 
+				if (function->address[j + 1] == resultBuffer[resultBufferIndex].end)
 				{
-					resultBuffer[resultBufferIndex].end = addresses[j];
+					resultBuffer[resultBufferIndex].end = function->address[j];
 					break;
 				}
 			}
@@ -86,16 +160,16 @@ static unsigned char getAllScopes(struct DisassembledInstruction* instructions, 
 	return 1;
 }
 
-static unsigned char handleReturnStatement(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* result) 
+static unsigned char handleReturnStatement(struct Function* function, struct LineOfC* result)
 {
 	char returnExpressions[5][20];
 	int returnExpressionIndex = 0;
-	int variableIndex = 0;
+	int symbolIndex = 0;
 	char isNotFirstOperation = 0;
 
-	for (int i = numOfInstructions - 1; i >= 0; i--) 
+	for (int i = function->numOfInstructions - 1; i >= 0; i--) 
 	{
-		struct DisassembledInstruction* currentInstruction = &instructions[i];
+		struct DisassembledInstruction* currentInstruction = &function->firstInstruction[i];
 		
 		if (currentInstruction->operands[0].type != REGISTER) { continue; }
 
@@ -106,7 +180,7 @@ static unsigned char handleReturnStatement(struct DisassembledInstruction* instr
 			{
 				char isLocalVar = 0;
 				char operandStr[10];
-				if (!operandToC(&instructions[i - 1], i, &currentInstruction->operands[1], operandStr, 10, &isLocalVar)) 
+				if (!operandToC(&function->firstInstruction[i - 1], i, &currentInstruction->operands[1], operandStr, 10, &isLocalVar))
 				{
 					return 0;
 				}
@@ -124,8 +198,8 @@ static unsigned char handleReturnStatement(struct DisassembledInstruction* instr
 				if (isLocalVar) 
 				{
 					sprintf(returnExpressions[returnExpressionIndex] + isNotFirstOperation, "\\%s", operationStrs[currentInstruction->opcode]);
-					strcpy(result->variables[variableIndex], operandStr);
-					variableIndex++;
+					strcpy(result->symbols[symbolIndex], operandStr);
+					symbolIndex++;
 				}
 				else 
 				{
@@ -202,7 +276,12 @@ static unsigned char operandToC(struct DisassembledInstruction* instructions, un
 	return 0;
 }
 
-
+static unsigned char handleFunctionCall(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, char* resultBuffer, unsigned char resultBufferSize) 
+{
+	
+	
+	return 1;
+}
 
 
 

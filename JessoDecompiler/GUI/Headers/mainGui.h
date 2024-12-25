@@ -1,6 +1,9 @@
 #pragma once
 #include <wx/wx.h>
+#include <wx/grid.h>
+#include <wx/clipbrd.h>
 #include "../../Disassembler/Headers/disassembler.h"
+#include "../../Decompiler/Headers/decompiler.h"
 
 const wxColour backgroundColor = wxColour(35, 35, 35);
 const wxColour foregroundColor = wxColour(60, 60, 60);
@@ -21,10 +24,9 @@ public:
 	wxCheckBox* is64BitModeCheckBox = nullptr;
 	wxListBox* disassemblyListBox = nullptr;
 
-	wxTextCtrl* startDecompAddressTextCtrl = nullptr;
-	wxTextCtrl* numOfInstructionsDecompTextCtrl = nullptr;
-	wxButton* decompileButton = nullptr;
 	wxListBox* decompilationListBox = nullptr;
+
+	wxGrid* functionsGrid = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
@@ -32,12 +34,16 @@ public:
 	wxBoxSizer* row4Sizer = nullptr;
 	wxBoxSizer* row5Sizer = nullptr;
 	wxBoxSizer* row6Sizer = nullptr;
+	wxBoxSizer* row7Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxString currentFilePath;
+	uintptr_t imageBase;
 
 	std::vector<uintptr_t> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;
+
+	std::vector<Function> functions;
 	
 	enum ids 
 	{
@@ -54,11 +60,15 @@ public:
 
 	void DisassembleCodeSection(wxCommandEvent& e);
 
-	void DecompileInstructions(wxCommandEvent& e);
+	void DecompileFunction(Function* function);
 
-	int GetInstructionIndexAtAddress(uintptr_t address, int low, int high);
+	void FindAllFunctions();
+
+	void RightClickOptions(wxGridEvent& e);
 
 	bool ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
+
+	void CopyToClipboard(const char* txt);
 
 	void CloseApp(wxCloseEvent& e);
 

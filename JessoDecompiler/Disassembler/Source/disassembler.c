@@ -46,7 +46,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	return 1;
 }
 
-unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize)
+unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize) // this will be in intel syntax
 {
 	if (instruction->opcode == NO_MNEMONIC) // the opcode is either not implemented in the disassembler or there was a bad instruction read
 	{
