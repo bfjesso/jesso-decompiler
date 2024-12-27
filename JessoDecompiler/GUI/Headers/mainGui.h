@@ -1,27 +1,21 @@
 #pragma once
-#include <wx/wx.h>
+#include "../Headers/guiUtils.h"
 #include <wx/grid.h>
-#include <wx/clipbrd.h>
+#include "../Headers/disassembleBytesMenu.h"
 #include "../../Disassembler/Headers/disassembler.h"
 #include "../../Decompiler/Headers/decompiler.h"
 
-const wxColour backgroundColor = wxColour(35, 35, 35);
-const wxColour foregroundColor = wxColour(60, 60, 60);
-const wxColour textColor = wxColour(220, 220, 220);
-
-class MainGui : public wxFrame
+class MainGui : public wxFrame, public Utils
 {
 public:
 	MainGui();
 
-	wxTextCtrl* testBytesTextCtrl = nullptr;
-	wxButton* disassembleTestBytesButton = nullptr;
-	wxStaticText* testDisassemblyStaticText = nullptr;
+	wxMenuBar* menuBar = nullptr;
+	BytesDisassembler* bytesDisassemblerMenu = nullptr;
 
 	wxButton* openFileButton = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
 	wxButton* disassembleFileButton = nullptr;
-	wxCheckBox* is64BitModeCheckBox = nullptr;
 	wxListBox* disassemblyListBox = nullptr;
 
 	wxListBox* decompilationListBox = nullptr;
@@ -32,9 +26,6 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* row4Sizer = nullptr;
-	wxBoxSizer* row5Sizer = nullptr;
-	wxBoxSizer* row6Sizer = nullptr;
-	wxBoxSizer* row7Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxString currentFilePath;
@@ -48,13 +39,11 @@ public:
 	enum ids 
 	{
 		MainWindowID,
-		DisassembleTestBytesButtonID,
+		OpenBytesDisassemblerID,
 		OpenFileButtonID,
 		DisassembleFileButtonID,
 		DecompileButtonID
 	};
-
-	void DisassembleTestBytes(wxCommandEvent& e);
 
 	void GetFilePath(wxCommandEvent& e);
 
@@ -65,10 +54,6 @@ public:
 	void FindAllFunctions();
 
 	void RightClickOptions(wxGridEvent& e);
-
-	bool ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
-
-	void CopyToClipboard(const char* txt);
 
 	void CloseApp(wxCloseEvent& e);
 

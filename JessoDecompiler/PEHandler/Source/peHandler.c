@@ -1,6 +1,6 @@
 #include "../Headers/peHandler.h"
 
-unsigned char readCodeSection(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase)
+unsigned char readCodeSection(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase, unsigned char* is64Bit)
 {
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	
@@ -12,12 +12,14 @@ unsigned char readCodeSection(const wchar_t* filePath, unsigned char* buffer, un
 	DWORD binaryType = 0;
 	if (GetBinaryTypeW(filePath, &binaryType))
 	{
-		if (binaryType == SCS_32BIT_BINARY) 
+		if (binaryType == SCS_32BIT_BINARY)
 		{
+			*is64Bit = 0;
 			return readCodeSection32(file, buffer, bufferSize, codeSection, imageBase);
 		}
 		else if (binaryType == SCS_64BIT_BINARY)
 		{
+			*is64Bit = 1;
 			return readCodeSection64(file, buffer, bufferSize, codeSection, imageBase);
 		}
 	}
