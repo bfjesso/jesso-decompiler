@@ -409,20 +409,9 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 			result->opcodeSuperscript = extendedOpcode->opcodeSuperscript;
 		}
 
-		if (result->extensionGroup == 3 && opcodeByte == 0xF7)
+		if (result->extensionGroup == 3 && opcodeByte == 0xF7 && result->mnemonic == TEST)
 		{
-			switch (result->mnemonic) 
-			{
-			case TEST:
-				result->operands[0] = Iz;
-				break;
-			case MUL:
-			case IMUL:
-			case DIV:
-			case IDIV:
-				result->operands[0] = rAX;
-				break;
-			}
+			result->operands[1] = Iz;
 		}
 
 		(*hasGotModRMRef) = 1;

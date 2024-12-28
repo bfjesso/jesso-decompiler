@@ -58,7 +58,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->SetDefaultCellBackgroundColour(foregroundColor);
 	functionsGrid->SetDefaultCellTextColour(textColor);
 
-	functionsGrid->CreateGrid(0, 3);
+	functionsGrid->CreateGrid(0, 4);
 	functionsGrid->EnableGridLines(false);
 	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
 	functionsGrid->SetScrollRate(0, 10);
@@ -66,12 +66,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->DisableDragRowSize();
 	functionsGrid->EnableEditing(false);
 	functionsGrid->SetColLabelValue(0, "Address");
-	functionsGrid->SetColLabelValue(1, "Name");
-	functionsGrid->SetColLabelValue(2, "Number of Instructions");
+	functionsGrid->SetColLabelValue(1, "Calling Convention");
+	functionsGrid->SetColLabelValue(2, "Name");
+	functionsGrid->SetColLabelValue(3, "Number of Instructions");
 	functionsGrid->HideRowLabels();
 	functionsGrid->SetColSize(0, 200);
 	functionsGrid->SetColSize(1, 200);
-	functionsGrid->SetColSize(2, 9999);
+	functionsGrid->SetColSize(2, 200);
+	functionsGrid->SetColSize(3, 9999);
 	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	// ---------------------
@@ -200,7 +202,7 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 	FindAllFunctions();
 }
 
-void MainGui::DecompileFunction(Function* function)
+void MainGui::DecompileFunction(Function* function, const char* name)
 {
 	if (currentFilePath.empty())
 	{
@@ -211,7 +213,7 @@ void MainGui::DecompileFunction(Function* function)
 	decompilationListBox->Clear();
 
 	LineOfC decompiledFunction[10];
-	unsigned short numOfLinesDecompiled = decompileFunction(function, decompiledFunction, 10);
+	unsigned short numOfLinesDecompiled = decompileFunction(function, name, decompiledFunction, 10);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
@@ -257,10 +259,12 @@ void MainGui::FindAllFunctions()
 		sprintf(addressStr, "%X", *currentFunction.address);
 		functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
 
-		sprintf(addressStr, "%X", (*currentFunction.address) - imageBase);
-		functionsGrid->SetCellValue(functionNum, 1, "func" + wxString(addressStr));
+		functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[currentFunction.callingConvention]));
 
-		functionsGrid->SetCellValue(functionNum, 2, std::to_string(currentFunction.numOfInstructions));
+		sprintf(addressStr, "%X", (*currentFunction.address) - imageBase);
+		functionsGrid->SetCellValue(functionNum, 2, "func" + wxString(addressStr));
+
+		functionsGrid->SetCellValue(functionNum, 3, std::to_string(currentFunction.numOfInstructions));
 		functionNum++;
 	}
 }
@@ -277,7 +281,7 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	menu.Append(decompile);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
 		{
-			DecompileFunction(&functions[row]);
+			DecompileFunction(&functions[row], functionsGrid->GetCellValue(row, 2).c_str().AsChar());
 		}, 100);
 
 	wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");

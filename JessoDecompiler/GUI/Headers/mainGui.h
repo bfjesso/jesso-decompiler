@@ -49,7 +49,7 @@ public:
 
 	void DisassembleCodeSection(wxCommandEvent& e);
 
-	void DecompileFunction(Function* function);
+	void DecompileFunction(Function* function, const char* name);
 
 	void FindAllFunctions();
 
