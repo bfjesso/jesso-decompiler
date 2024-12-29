@@ -212,7 +212,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 
 	decompilationListBox->Clear();
 
-	LineOfC decompiledFunction[10];
+	LineOfC decompiledFunction[100];
 	unsigned short numOfLinesDecompiled = decompileFunction(&functions[0], functions.size(), functionIndex, name, decompiledFunction, 10);
 	if (numOfLinesDecompiled == 0)
 	{
@@ -224,7 +224,10 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 	{
 		wxString str = wxString(decompiledFunction[i].line);
 
-		str.Replace("\t", "    ");
+		for (int j = 0; j < decompiledFunction[i].indents; j++) 
+		{
+			str = "    " + str;
+		}
 
 		decompilationListBox->InsertItems(1, &str, 0);
 	}
