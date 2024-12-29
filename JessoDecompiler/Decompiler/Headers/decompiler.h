@@ -24,10 +24,7 @@ enum PrimitiveType
 
 struct LineOfC 
 {
-	char line[50];
-
-	unsigned char numOfSymbols;
-	char symbols[5][10];
+	char line[150];
 };
 
 struct VariableType 
@@ -39,11 +36,14 @@ struct VariableType
 
 struct Function 
 {
-	unsigned long long* address;
-	struct DisassembledInstruction* firstInstruction;
+	unsigned long long* addresses;
+	struct DisassembledInstruction* instructions;
 	unsigned char numOfInstructions;
 
+	char name[20];
+
 	struct VariableType returnType;
+	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function
 
 	unsigned char callingConvention;
 
@@ -69,11 +69,14 @@ extern "C"
 	const char* callingConventionStrs[];
 	
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex);
-	unsigned short decompileFunction(struct Function* function, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
+	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
+	unsigned short decompileFunction(struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
 
 #ifdef __cplusplus
 }
 #endif
+
+static int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 
 static unsigned short generateFunctionHeader(struct Function* function, const char* functionName, struct LineOfC* result);
 
@@ -81,7 +84,8 @@ static unsigned short variableTypeToStr(struct VariableType* varType, char* buff
 
 static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen);
 
-static unsigned char handleReturnStatement(struct Function* function, struct LineOfC* result);
+static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, struct LineOfC* result);
 
-static unsigned char operandToC(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize, char* isLocalVar);
+static unsigned char operandToC(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize);
 
+static unsigned char decompileFunctionCall(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Functions* callee, struct LineOfC* result);

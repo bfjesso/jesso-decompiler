@@ -202,7 +202,7 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 	FindAllFunctions();
 }
 
-void MainGui::DecompileFunction(Function* function, const char* name)
+void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 {
 	if (currentFilePath.empty())
 	{
@@ -213,7 +213,7 @@ void MainGui::DecompileFunction(Function* function, const char* name)
 	decompilationListBox->Clear();
 
 	LineOfC decompiledFunction[10];
-	unsigned short numOfLinesDecompiled = decompileFunction(function, name, decompiledFunction, 10);
+	unsigned short numOfLinesDecompiled = decompileFunction(&functions[0], functions.size(), functionIndex, name, decompiledFunction, 10);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
@@ -223,12 +223,6 @@ void MainGui::DecompileFunction(Function* function, const char* name)
 	for (int i = 0; i < numOfLinesDecompiled; i++)
 	{
 		wxString str = wxString(decompiledFunction[i].line);
-
-		int symbolIndex = 0;
-		while (str.Replace("\\", wxString(decompiledFunction[i].symbols[symbolIndex]), false))
-		{
-			symbolIndex++;
-		}
 
 		str.Replace("\t", "    ");
 
@@ -250,23 +244,29 @@ void MainGui::FindAllFunctions()
 	int instructionIndex = 0;
 	while (findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex))
 	{
-		functions.push_back(currentFunction);
 		numOfInstructions -= currentFunction.numOfInstructions;
 
 		functionsGrid->AppendRows(1);
 
 		char addressStr[10];
-		sprintf(addressStr, "%X", *currentFunction.address);
+		sprintf(addressStr, "%X", *currentFunction.addresses);
 		functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
 
 		functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[currentFunction.callingConvention]));
 
-		sprintf(addressStr, "%X", (*currentFunction.address) - imageBase);
+		sprintf(addressStr, "%X", (*currentFunction.addresses) - imageBase);
 		functionsGrid->SetCellValue(functionNum, 2, "func" + wxString(addressStr));
 
+		currentFunction.name[0] = 0;
+		strcpy(currentFunction.name, functionsGrid->GetCellValue(functionNum, 2).c_str().AsChar());
+
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(currentFunction.numOfInstructions));
+		
+		functions.push_back(currentFunction);
 		functionNum++;
 	}
+
+	fixAllFunctionReturnTypes(&functions[0], functions.size());
 }
 
 void MainGui::RightClickOptions(wxGridEvent& e)
@@ -281,7 +281,7 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	menu.Append(decompile);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
 		{
-			DecompileFunction(&functions[row], functionsGrid->GetCellValue(row, 2).c_str().AsChar());
+			DecompileFunction(row, functionsGrid->GetCellValue(row, 2).c_str().AsChar());
 		}, 100);
 
 	wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");
