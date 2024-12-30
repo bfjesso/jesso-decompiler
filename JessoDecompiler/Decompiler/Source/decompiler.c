@@ -13,8 +13,23 @@ const char* operationStrs[] =
 	" & ",	// AND
 	" | ",	// OR
 	" ^ ",	// XOR
+	" << ",	// SHL
+	" >> ",	// SHR
 	" * ",	// IMUL
 	" / "	// IDIV
+};
+
+const char* assignmentStrs[] =
+{
+	" = ",	// MOV
+	" += ",	// ADD
+	" -=",	// SUB
+	" &= ",	// AND
+	" |= ",	// OR
+	" ^= ",	// XOR
+	" <<= ",// SHL
+	" >>= ",// SHR
+	" *= ",	// IMUL
 };
 
 const char* primitiveTypeStrs[] =
@@ -57,19 +72,27 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 	int lastInstructionIndex = -1;
 	for (int i = functions[functionIndex].numOfInstructions - 1; i >= 0; i--)
 	{
-		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
-
 		if (numOfLinesDecompiled > resultBufferLen) { return 0; }
+
+		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
 
 		if (currentScope != 0 && functions[functionIndex].addresses[i] == currentScope->start)
 		{
 			scopesDepth--;
 
+			if (scopesDepth == 0) 
+			{
+				if (!getAllLocalVariables(functions[functionIndex].instructions, functions[functionIndex].numOfInstructions, resultBuffer, &numOfLinesDecompiled, resultBufferLen))
+				{
+					return 0;
+				}
+			}
+
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 			numOfLinesDecompiled++;
 
-			if (scopesDepth == 0) 
+			if (scopesDepth == 0)
 			{
 				if (!generateFunctionHeader(&functions[functionIndex], functionName, &resultBuffer[numOfLinesDecompiled]))
 				{
@@ -79,12 +102,17 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 
 				return numOfLinesDecompiled;
 			}
-			else if (!decompileCondition(functions[functionIndex].instructions, i + 1, &resultBuffer[numOfLinesDecompiled])) 
+			else if (!decompileCondition(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled]))
 			{
 				return 0;
 			}
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 			numOfLinesDecompiled++;
+
+			if (currentInstruction->opcode == JMP_SHORT) // is an else
+			{
+				currentScope->lastScope->foundReturnStatement = currentScope->foundReturnStatement;
+			}
 
 			currentScope = currentScope->lastScope;
 		}
@@ -94,7 +122,7 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 			numOfLinesDecompiled++;
-			
+
 			scopesDepth++;
 			scopeIndex--;
 
@@ -103,18 +131,38 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 			nextScope = scopeIndex < 0 ? 0 : &scopes[scopeIndex];
 		}
 
+		if (currentScope == 0) { return 0; }
+
 		if (lastInstructionIndex != -1 && i >= lastInstructionIndex) { continue; }
 
-		if (currentScope != 0) 
+		if (functions[functionIndex].returnType.primitiveType != VOID_TYPE && !currentScope->foundReturnStatement)
 		{
-			if (functions[functionIndex].returnType.primitiveType != VOID_TYPE && !currentScope->foundReturnStatement)
+			if (checkForReturnStatement(&functions[functionIndex].instructions[i], functions[functionIndex].addresses[i], functions, numOfFunctions))
 			{
-				if (checkForReturnStatement(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled], &lastInstructionIndex))
+				if (decompileReturnStatement(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled], &lastInstructionIndex))
 				{
 					currentScope->foundReturnStatement = 1;
 					resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 					numOfLinesDecompiled++;
 				}
+				else
+				{
+					return 0;
+				}
+			}
+		}
+
+		if (checkForAssignment(&functions[functionIndex].instructions[i])) 
+		{
+			if (decompileAssignment(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled], &lastInstructionIndex))
+			{
+				currentScope->foundReturnStatement = 1;
+				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+				numOfLinesDecompiled++;
+			}
+			else
+			{
+				return 0;
 			}
 		}
 	}
@@ -155,7 +203,7 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			sprintf(result->line + strlen(result->line), "%s %s)", argTypeStr, regArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s", argTypeStr, regArgStr);
 		}
 		else 
 		{
@@ -173,11 +221,51 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 		
 		if (i == function->numOfStackArgs - 1)
 		{
-			sprintf(result->line + strlen(result->line), "%s %s)", argTypeStr, stackArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s", argTypeStr, stackArgStr);
 		}
 		else
 		{
 			sprintf(result->line + strlen(result->line), "%s %s, ", argTypeStr, stackArgStr);
+		}
+	}
+
+	strcpy(result->line + strlen(result->line), ")");
+
+	return 1;
+}
+
+static unsigned char getAllLocalVariables(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen)
+{
+	int foundVars[20];
+	int numOfVarsFound = 0;
+	
+	for (int i = 0; i < numOfInstructions; i++)
+	{
+		struct DisassembledInstruction* currentInstruction = &instructions[i];
+
+		int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
+
+		if (checkForAssignment(currentInstruction) && displacement < 0)
+		{
+			unsigned char isAlreadyFound = 0;
+			for (int j = 0; j < numOfVarsFound; j++) 
+			{
+				if (foundVars[j] == displacement) 
+				{
+					isAlreadyFound = 1;
+					break;
+				}
+			}
+
+			if (!isAlreadyFound) 
+			{
+				foundVars[numOfVarsFound] = displacement;
+				numOfVarsFound++;
+
+				sprintf(resultBuffer[*resultBufferIndex].line, "int var%X;", -displacement);
+				resultBuffer[*resultBufferIndex].indents = 1;
+				(*resultBufferIndex)++;
+			}
 		}
 	}
 
@@ -255,11 +343,48 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 	return 1;
 }
 
-static unsigned char decompileCondition(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct LineOfC* result) 
+static unsigned char checkForReturnStatement(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions)
 {
-	struct DisassembledInstruction* currentInstruction = &instructions[numOfInstructions - 1];
+	char isFirstOperandAX = (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, AX));
 
-	char compOperator[3];
+	if ((isFirstOperandAX && instruction->opcode >= MOV && instruction->opcode <= IMUL) || instruction->opcode == IDIV)
+	{
+		return 1;
+	}
+	else if (instruction->opcode == CALL_NEAR)
+	{
+		unsigned long long calleeAddress = address + instruction->operands[0].immediate;
+		int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
+
+		if (calleIndex == -1 || &functions[calleIndex].returnType.primitiveType == VOID_TYPE)
+		{
+			return 0;
+		}
+
+		return 1;
+	}
+
+	return 0;
+}
+
+static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
+{
+	if (instruction != 0 && instruction->opcode >= MOV && instruction->opcode <= IMUL)
+	{
+		if (instruction->operands[0].type == MEM_ADDRESS && compareRegisters(instruction->operands[0].memoryAddress.reg, BP)) 
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result)
+{
+	struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[startInstructionIndex];
+
+	char compOperator[3] = { 0 };
 	
 	if (currentInstruction->opcode == JMP_SHORT)
 	{
@@ -285,26 +410,26 @@ static unsigned char decompileCondition(struct DisassembledInstruction* instruct
 		case JLE_SHORT:
 			strcpy(compOperator, ">");
 			break;
-		case JNL_SHORT:
+		case JGE_SHORT:
 			strcpy(compOperator, "<");
 			break;
 		}
 	}
 	
-	for (int i = numOfInstructions - 2; i >= 0; i--)
+	for (int i = startInstructionIndex - 1; i >= 0; i--)
 	{
-		currentInstruction = &instructions[i];
+		currentInstruction = &functions[functionIndex].instructions[i];
 
 		if (currentInstruction->opcode == CMP) 
 		{
-			char operand1Str[10];
-			if (!operandToC(instructions, i, &currentInstruction->operands[0], operand1Str, 10))
+			char operand1Str[20] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], operand1Str, 20))
 			{
 				return 0;
 			}
 
-			char operand2Str[10];
-			if (!operandToC(instructions, i, &currentInstruction->operands[1], operand2Str, 10))
+			char operand2Str[20] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[1], operand2Str, 20))
 			{
 				return 0;
 			}
@@ -318,116 +443,52 @@ static unsigned char decompileCondition(struct DisassembledInstruction* instruct
 	return 0;
 }
 
-static unsigned char checkForReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result, int* lastInstructionIndex)
+static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result, int* lastInstructionIndex)
 {
-	char returnExpressions[5][50];
-	int returnExpressionIndex = 0;
+	struct Operand eax = { 0 };
+	eax.type = REGISTER;
+	eax.reg = AX;
 
-	unsigned char checkedFirstInstruction = 0;
-
-	for (int i = startInstructionIndex; i >= 0; i--)
+	char returnExpression[50] = { 0 };
+	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &eax, returnExpression, 50))
 	{
-		*lastInstructionIndex = i;
-		
-		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
-
-		unsigned char reg = currentInstruction->operands[0].reg;
-		char isFirstOperandAX = (currentInstruction->operands[0].type == REGISTER && (reg == AX || reg == EAX || reg == RAX));
-		char isSecondOperandAX = (currentInstruction->operands[1].type == REGISTER && (reg == AX || reg == EAX || reg == RAX));
-
-		if ((isFirstOperandAX && currentInstruction->opcode >= MOV && currentInstruction->opcode <= IMUL) || currentInstruction->opcode == IDIV)
-		{
-			checkedFirstInstruction = 1;
-			
-			char targetOperand = 1;
-			if (currentInstruction->opcode == IDIV) { targetOperand = 0; }
-			if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND) { targetOperand = 2; }
-
-			if (currentInstruction->opcode == XOR && isSecondOperandAX) 
-			{
-				strcpy(returnExpressions[returnExpressionIndex], ")0");
-				returnExpressionIndex++;
-				break;
-			}
-
-			char operandStr[10];
-			if (!operandToC(functions[functionIndex].instructions, i, &currentInstruction->operands[targetOperand], operandStr, 10))
-			{
-				return 0;
-			}
-
-			sprintf(returnExpressions[returnExpressionIndex], ")%s%s", operationStrs[currentInstruction->opcode], operandStr);
-			returnExpressionIndex++;
-
-			if (currentInstruction->opcode == MOV)
-			{
-				break;
-			}
-		}
-		else if (currentInstruction->opcode == CALL_NEAR) 
-		{
-			checkedFirstInstruction = 1;
-
-			unsigned long long calleeAddress = functions[functionIndex].addresses[i] + currentInstruction->operands[0].immediate;
-			int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
-			if (calleIndex == -1) 
-			{
-				return 0;
-			}
-
-			if (&functions[calleIndex].returnType.primitiveType == VOID_TYPE) { continue; }
-			
-			struct LineOfC functionCall = { 0 };
-			if (!decompileFunctionCall(functions[functionIndex].instructions, i, &functions[calleIndex], &functionCall))
-			{
-				return 0;
-			}
-
-			sprintf(returnExpressions[returnExpressionIndex], ")%s", functionCall.line);
-
-			returnExpressionIndex++;
-			
-			break;
-		}
-		else if (!checkedFirstInstruction) 
-		{
-			return 0;
-		}
+		return 0;
 	}
 
-	strcpy(result->line, "return ");
-
-	for (int i = returnExpressionIndex - 1; i >= returnExpressionIndex - 2 && i >= 0; i--) // for the last two expressions, remove the parentheses
-	{
-		char temp[50] = { 0 };
-		strcpy(temp, returnExpressions[i] + 1);
-		returnExpressions[i][0] = 0;
-		strcpy(returnExpressions[i], temp);
-	}
-
-	for (int i = 0; i < returnExpressionIndex - 2; i++)
-	{
-		strcpy(result->line + strlen(result->line), "(");
-	}
-
-	for (int i = returnExpressionIndex - 1; i >= 0; i--)
-	{
-		strcpy(result->line + strlen(result->line), returnExpressions[i]);
-	}
-
-	strcpy(result->line + strlen(result->line), ";");
+	sprintf(result->line, "return %s;", returnExpression);
 
 	return 1;
 }
 
-static unsigned char operandToC(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize) 
+static unsigned char decompileAssignment(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result, int* lastInstructionIndex) 
+{
+	struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[startInstructionIndex];
+	
+	char assignee[50] = { 0 };
+	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &currentInstruction->operands[0], assignee, 50)) 
+	{
+		return 0;
+	}
+
+	char valueToAssign[50] = { 0 };
+	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &currentInstruction->operands[1], valueToAssign, 50))
+	{
+		return 0;
+	}
+
+	sprintf(result->line, "%s%s%s;", assignee, assignmentStrs[currentInstruction->opcode], valueToAssign);
+
+	return 1;
+}
+
+static unsigned char decompileOperand(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize)
 {
 	if (operand->type == IMMEDIATE) 
 	{
 		sprintf(resultBuffer, "%llu", operand->immediate);
 		return 1;
 	}
-	else if (operand->type == MEM_ADDRESS && (operand->memoryAddress.reg == BP || operand->memoryAddress.reg == EBP || operand->memoryAddress.reg == RBP)) 
+	else if (operand->type == MEM_ADDRESS && compareRegisters(operand->memoryAddress.reg, EBP))
 	{
 		if (operand->memoryAddress.constDisplacement < 0)
 		{
@@ -442,54 +503,141 @@ static unsigned char operandToC(struct DisassembledInstruction* instructions, un
 	}
 	else if(operand->type == REGISTER)
 	{
-		for (int i = numOfInstructions - 1; i >= 0; i--)
+		if (!decompileExpression(functions, numOfFunctions, startInstructionIndex, functionIndex, operand, resultBuffer, resultBufferSize))
 		{
-			struct DisassembledInstruction* currentInstruction = &instructions[i];
+			// thiscall or fastcall argument
 
-			if (currentInstruction->operands[0].type != REGISTER) { continue; }
-
-			if (currentInstruction->operands[0].reg == operand->reg && currentInstruction->opcode == MOV)
+			if (compareRegisters(operand->reg, CX))
 			{
-				return operandToC(instructions, i, &currentInstruction->operands[1], resultBuffer, resultBufferSize);
+				strcpy(resultBuffer, "argCX");
+				return 1;
 			}
+			else if (compareRegisters(operand->reg, DX))
+			{
+				strcpy(resultBuffer, "argDX");
+				return 1;
+			}
+			else if (compareRegisters(operand->reg, R8))
+			{
+				strcpy(resultBuffer, "argR8");
+				return 1;
+			}
+			else if (compareRegisters(operand->reg, R9))
+			{
+				strcpy(resultBuffer, "argR9");
+				return 1;
+			}
+
+			return 0;
 		}
 
-		// thiscall or fastcall argument
-
-		if (operand->reg == CX || operand->reg == ECX || operand->reg == RCX)
-		{
-			strcpy(resultBuffer, "argCX");
-			return 1;
-		}
-		else if (operand->reg == DX || operand->reg == EDX || operand->reg == RDX)
-		{
-			strcpy(resultBuffer, "argDX");
-			return 1;
-		}
-		else if (operand->reg == R8)
-		{
-			strcpy(resultBuffer, "argR8");
-			return 1;
-		}
-		else if (operand->reg == R9)
-		{
-			strcpy(resultBuffer, "argR9");
-			return 1;
-		}
+		return 1;
 	}
 
 	return 0;
 }
 
-static unsigned char decompileFunctionCall(struct DisassembledInstruction* instructions, unsigned short numOfInstructions, struct Function* callee, struct LineOfC* result)
+static unsigned char decompileExpression(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Operand* operand, char* resultBuffer, unsigned char resultBufferSize) 
 {
-	sprintf(result->line, "%s(", callee->name);
+	char expressions[5][50];
+	int expressionIndex = 0;
+
+	char isOperandAX = compareRegisters(operand->reg, AX);
+
+	unsigned char finished = 0;
+
+	for (int i = startInstructionIndex; i >= 0; i--)
+	{
+		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
+
+		if ((compareRegisters(currentInstruction->operands[0].reg, operand->reg) && currentInstruction->opcode >= MOV && currentInstruction->opcode <= IMUL) || (isOperandAX && currentInstruction->opcode == IDIV))
+		{
+			char targetOperand = 1;
+			if (currentInstruction->opcode == IDIV) { targetOperand = 0; }
+			if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND) { targetOperand = 2; }
+
+			if (currentInstruction->opcode == XOR && compareRegisters(currentInstruction->operands[1].reg, operand->reg))
+			{
+				strcpy(expressions[expressionIndex], ")0");
+				expressionIndex++;
+
+				finished = 1;
+				break;
+			}
+
+			char operandStr[50] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i - 1, functionIndex, &currentInstruction->operands[targetOperand], operandStr, 50))
+			{
+				return 0;
+			}
+
+			sprintf(expressions[expressionIndex], ")%s%s", operationStrs[currentInstruction->opcode], operandStr);
+			expressionIndex++;
+
+			if (currentInstruction->opcode == MOV)
+			{
+				finished = 1;
+				break;
+			}
+		}
+		else if (currentInstruction->opcode == CALL_NEAR)
+		{
+			unsigned long long calleeAddress = functions[functionIndex].addresses[i] + currentInstruction->operands[0].immediate;
+			int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
+			if (calleIndex == -1)
+			{
+				return 0;
+			}
+
+			if (&functions[calleIndex].returnType.primitiveType == VOID_TYPE) { continue; }
+
+			char functionCall[50] = { 0 };
+			if (!decompileFunctionCall(functions, numOfFunctions, i, functionIndex, &functions[calleIndex], functionCall, 50))
+			{
+				return 0;
+			}
+
+			sprintf(expressions[expressionIndex], ")%s", functionCall);
+
+			expressionIndex++;
+
+			finished = 1;
+			break;
+		}
+	}
+
+	if (!finished) { return 0; }
+
+	for (int i = expressionIndex - 1; i >= expressionIndex - 2 && i >= 0; i--) // for the last two expressions, remove the parentheses
+	{
+		char temp[50] = { 0 };
+		strcpy(temp, expressions[i] + 1);
+		expressions[i][0] = 0;
+		strcpy(expressions[i], temp);
+	}
+
+	for (int i = 0; i < expressionIndex - 2; i++)
+	{
+		strcpy(resultBuffer + strlen(resultBuffer), "(");
+	}
+
+	for (int i = expressionIndex - 1; i >= 0; i--)
+	{
+		strcpy(resultBuffer + strlen(resultBuffer), expressions[i]);
+	}
+
+	return 1;
+}
+
+static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, char* resultBuffer, unsigned char resultBufferSize)
+{
+	sprintf(resultBuffer, "%s(", callee->name);
 	
 	for (int i = 0; i < callee->numOfRegArgs; i++) 
 	{
-		for (int j = numOfInstructions - 1; j >= 0; j--)
+		for (int j = startInstructionIndex; j >= 0; j--)
 		{
-			struct DisassembledInstruction* currentInstruction = &instructions[j];
+			struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[j];
 
 			if (currentInstruction->opcode == MOV && currentInstruction->operands[0].type == REGISTER)
 			{
@@ -502,13 +650,13 @@ static unsigned char decompileFunctionCall(struct DisassembledInstruction* instr
 
 				if (cxCheck || dxCheck || r8Check || r9Check)
 				{
-					char argStr[10];
-					if (!operandToC(instructions, j, &currentInstruction->operands[1], argStr, 10))
+					char argStr[20] = { 0 };
+					if (!decompileOperand(functions, numOfFunctions, j, functionIndex, &currentInstruction->operands[1], argStr, 20))
 					{
 						return 0;
 					}
 
-					sprintf(result->line + strlen(result->line), "%s, ", argStr);
+					sprintf(resultBuffer + strlen(resultBuffer), "%s, ", argStr);
 
 					break;
 				}
@@ -517,29 +665,28 @@ static unsigned char decompileFunctionCall(struct DisassembledInstruction* instr
 	}
 	
 	int stackArgsFound = 0;
-	for (int i = numOfInstructions - 1; i >= 0; i--)
+	for (int i = startInstructionIndex; i >= 0; i--)
 	{
 		if (stackArgsFound == callee->numOfStackArgs) { break; }
 		
-		struct DisassembledInstruction* currentInstruction = &instructions[i];
+		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			char argStr[10];
-			if (!operandToC(instructions, i, &currentInstruction->operands[0], argStr, 10))
+			char argStr[20] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], argStr, 20))
 			{
 				return 0;
 			}
 
-			sprintf(result->line + strlen(result->line), "%s, ", argStr);
+			sprintf(resultBuffer + strlen(resultBuffer), "%s, ", argStr);
 
 			stackArgsFound++;
 		}
 	}
 
-	result->line[strlen(result->line) - 2] = ')';
-	result->line[strlen(result->line) - 1] = 0;
+	resultBuffer[strlen(resultBuffer) - 2] = ')';
+	resultBuffer[strlen(resultBuffer) - 1] = 0;
 	
 	return 1;
 }
-

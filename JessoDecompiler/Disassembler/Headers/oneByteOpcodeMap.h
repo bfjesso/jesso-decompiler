@@ -132,7 +132,7 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ JP_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7A; alternate mnemonics: JPE
 	{ JNP_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7B; alternate mnemonics: JPO
 	{ JL_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7C; alternate mnemonics: JNGE
-	{ JNL_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7D; alternate mnemonics: JGE
+	{ JGE_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7D; alternate mnemonics: JNL
 	{ JLE_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7E; alternate mnemonics: JNG
 	{ JG_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },									// 0x7F; alternate mnemonics: JNLE
 	{ EXTENDED_OPCODE, 0, Eb, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },								// 0x80; an extended opcode

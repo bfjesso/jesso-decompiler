@@ -28,3 +28,5 @@ enum Register
 extern const char* segmentStrs[];
 
 extern const char* registerStrs[];
+
+unsigned char compareRegisters(enum Register reg1, enum Register reg2);
