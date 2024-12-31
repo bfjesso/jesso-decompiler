@@ -8,7 +8,7 @@ EVT_BUTTON(OpenFileButtonID, GetFilePath)
 EVT_GRID_CELL_RIGHT_CLICK(RightClickOptions)
 wxEND_EVENT_TABLE()
 
-MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(850, 850))
+MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(1300, 1000))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -40,13 +40,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 400));
+	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
 	// ---------------------
 
-	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 400));
+	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
 
@@ -107,8 +107,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 void MainGui::GetFilePath(wxCommandEvent& e)
 {
-	currentFilePath = "";
-	
 	wxFileDialog openDllDialog(this, "Choose PE file", "", "", "EXE and DLL files (*.exe;*.dll)|*.exe;*.dll", wxFD_FILE_MUST_EXIST);
 
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
@@ -269,7 +267,10 @@ void MainGui::FindAllFunctions()
 		functionNum++;
 	}
 
-	fixAllFunctionReturnTypes(&functions[0], functions.size());
+	if (functions.size() > 0) 
+	{
+		fixAllFunctionReturnTypes(&functions[0], functions.size());
+	}
 }
 
 void MainGui::RightClickOptions(wxGridEvent& e)

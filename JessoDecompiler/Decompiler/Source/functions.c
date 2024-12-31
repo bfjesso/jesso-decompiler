@@ -18,40 +18,22 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	{
 		(*instructionIndex)++;
 
-		if (addressToJumpTo != 0 && addressToJumpTo != addresses[i])
-		{
-			function.numOfInstructions++;
-			continue;
-		}
-		else
-		{
-			addressToJumpTo = 0;
-		}
-
 		struct DisassembledInstruction* currentInstruction = &instructions[i];
-
-		if (currentInstruction->opcode == INT3)
-		{
-			if (foundFirstInstruction)
-			{
-				*result = function;
-				return 1;
-			}
-			else
-			{
-				continue;
-			}
-		}
 
 		if (!foundFirstInstruction)
 		{
+			if (currentInstruction->opcode == INT3)
+			{
+				continue;
+			}
+			
 			function.addresses = &addresses[i];
 			function.instructions = &instructions[i];
 			function.numOfInstructions = 1;
 
 			function.returnType.primitiveType = VOID_TYPE;
-			function.returnType.isPointer = 0;
-			function.returnType.isSigned = 0;
+			function.returnType.numOfPtrs = 0;
+			function.returnType.isSigned = 1;
 
 			function.addressOfReturnFunction = 0;
 
@@ -59,6 +41,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			function.numOfRegArgs = 0;
 			function.numOfStackArgs = 0;
+			function.numOflocalVars = 0;
 
 			foundFirstInstruction = 1;
 		}
@@ -69,65 +52,94 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
 
 			// check for arguments
-			for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
 			{
-				struct Operand* currentOperand = &currentInstruction->operands[i];
+				struct Operand* currentOperand = &currentInstruction->operands[j];
 
 				if (currentOperand->type == REGISTER)
 				{
-					switch (currentOperand->reg)
+					if (compareRegisters(currentOperand->reg, CX)) 
 					{
-					case CX:
-					case ECX:
-					case RCX:
-						if (currentInstruction->opcode == MOV && i == 0) { initializedCX = 1; }
+						if (j == 0) 
+						{ 
+							initializedCX = 1; 
+						}
 						else if (!initializedCX)
 						{
-							function.regArgs[0].primitiveType = INT_TYPE;
-							function.regArgs[0].isPointer = 0;
+							function.regArgs[0].numOfPtrs = 0;
 							function.regArgs[0].isSigned = 1;
+							
+							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[0]))
+							{
+								return 0;
+							}
+							
 							function.numOfRegArgs++;
 							function.callingConvention = __FASTCALL;
 						}
-						break;
-					case DX:
-					case EDX:
-					case RDX:
-						if (currentInstruction->opcode == MOV && i == 0) { initializedDX = 1; }
+					}
+					else if (compareRegisters(currentOperand->reg, DX))
+					{
+						if (j == 0)
+						{
+							initializedDX = 1;
+						}
 						else if (!initializedDX)
 						{
-							function.regArgs[1].primitiveType = INT_TYPE;
-							function.regArgs[1].isPointer = 0;
+							function.regArgs[1].numOfPtrs = 0;
 							function.regArgs[1].isSigned = 1;
+							
+							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[1]))
+							{
+								return 0;
+							}
+							
 							function.numOfRegArgs++;
 							function.callingConvention = __FASTCALL;
 						}
-						break;
-					case R8:
-						if (currentInstruction->opcode == MOV && i == 0) { initializedR8 = 1; }
+					}
+					else if (compareRegisters(currentOperand->reg, R8))
+					{
+						if (j == 0)
+						{
+							initializedR8 = 1;
+						}
 						else if (!initializedR8)
 						{
-							function.regArgs[2].primitiveType = INT_TYPE;
-							function.regArgs[2].isPointer = 0;
+							function.regArgs[2].numOfPtrs = 0;
 							function.regArgs[2].isSigned = 1;
+							
+							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[2]))
+							{
+								return 0;
+							}
+							
 							function.numOfRegArgs++;
 							function.callingConvention = __FASTCALL;
 						}
-						break;
-					case R9:
-						if (currentInstruction->opcode == MOV && i == 0) { initializedR9 = 1; }
+					}
+					else if (compareRegisters(currentOperand->reg, R9))
+					{
+						if (j == 0)
+						{
+							initializedR9 = 1;
+						}
 						else if (!initializedR9)
 						{
-							function.regArgs[3].primitiveType = INT_TYPE;
-							function.regArgs[3].isPointer = 0;
+							function.regArgs[3].numOfPtrs = 0;
 							function.regArgs[3].isSigned = 1;
+							
+							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[3]))
+							{
+								return 0;
+							}
+							
 							function.numOfRegArgs++;
 							function.callingConvention = __FASTCALL;
 						}
-						break;
 					}
 				}
-				else if (currentOperand->type == MEM_ADDRESS && (currentOperand->memoryAddress.reg == BP || currentOperand->memoryAddress.reg == EBP || currentOperand->memoryAddress.reg == RBP) && currentOperand->memoryAddress.constDisplacement > 0)
+				else if (currentOperand->type == MEM_ADDRESS && compareRegisters(currentOperand->memoryAddress.reg, BP) && currentOperand->memoryAddress.constDisplacement > 0)
 				{
 					unsigned char alreadyFound = 0;
 					for (int j = 0; j < function.numOfStackArgs; j++)
@@ -142,9 +154,15 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 					if (!alreadyFound)
 					{
 						function.stackArgBpOffsets[function.numOfStackArgs] = currentOperand->memoryAddress.constDisplacement;
-						function.stackArgs[function.numOfStackArgs].primitiveType = INT_TYPE;
-						function.stackArgs[function.numOfStackArgs].isPointer = 0;
+
+						function.stackArgs[function.numOfStackArgs].numOfPtrs = 0;
 						function.stackArgs[function.numOfStackArgs].isSigned = 1;
+
+						if (!getVariableType(&function, currentOperand, &function.stackArgs[function.numOfStackArgs]))
+						{
+							return 0;
+						}
+						
 						function.numOfStackArgs++;
 					}
 
@@ -168,13 +186,52 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				}
 			}
 
-			if (currentInstruction->opcode == MOV && currentInstruction->operands[0].type == REGISTER)
+			// check for local vars
+			if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP)) 
 			{
-				if (currentInstruction->operands[0].reg == AX || currentInstruction->operands[0].reg == EAX || currentInstruction->operands[0].reg == RAX)
+				int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
+
+				if (currentInstruction->opcode <= MOV && displacement < 0)
 				{
-					function.returnType.primitiveType = INT_TYPE;
-					function.returnType.isPointer = 0;
+					unsigned char isAlreadyFound = 0;
+					for (int j = 0; j < function.numOflocalVars; j++)
+					{
+						if (function.localVars[j].stackOffset == displacement)
+						{
+							isAlreadyFound = 1;
+							break;
+						}
+					}
+
+					if (!isAlreadyFound)
+					{
+						function.localVars[function.numOflocalVars].stackOffset = displacement;
+
+						function.localVars[function.numOflocalVars].type.numOfPtrs = 0;
+						function.localVars[function.numOflocalVars].type.isSigned = 1;
+						
+						if (!getVariableType(&function, &currentInstruction->operands[0], &function.localVars[function.numOflocalVars].type))
+						{
+							return 0;
+						}
+
+						function.numOflocalVars++;
+					}
+				}
+			}
+			
+			// check for return value
+			if (currentInstruction->opcode <= MOV && currentInstruction->operands[0].type == REGISTER)
+			{
+				if (compareRegisters(currentInstruction->operands[0].reg, AX))
+				{
+					function.returnType.numOfPtrs = 0;
 					function.returnType.isSigned = 1;
+					
+					if(!getVariableType(&function, &currentInstruction->operands[1], &function.returnType)) 
+					{
+						return 0;
+					}
 
 					function.addressOfReturnFunction = 0;
 				}
@@ -183,7 +240,23 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			{
 				function.addressOfReturnFunction = addresses[i] + currentInstruction->operands[0].immediate;
 			}
+			else if (currentInstruction->opcode == FLD) 
+			{
+				function.returnType.primitiveType = FLOAT_TYPE;
+				function.returnType.numOfPtrs = 0;
 
+				function.addressOfReturnFunction = 0;
+			}
+
+			if (addressToJumpTo != 0 && addressToJumpTo != addresses[i])
+			{
+				continue;
+			}
+			else
+			{
+				addressToJumpTo = 0;
+			}
+			
 			if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
 			{
 				addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
@@ -202,7 +275,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				*result = function;
 				return 1;
 			}
-			else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR)
+			else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
 			{
 				*result = function;
 				return 1;
@@ -226,13 +299,9 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 				returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[returnFunctionIndex].addressOfReturnFunction);
 			}
 
-			if (returnFunctionIndex != -1)
+			if (returnFunctionIndex != -1 && functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE)
 			{
 				functions[i].returnType = functions[returnFunctionIndex].returnType;
-			}
-			else
-			{
-				return 0;
 			}
 		}
 	}
@@ -253,4 +322,88 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 	}
 
 	return -1;
+}
+
+static unsigned char getVariableType(struct Function* function, struct Operand* var, struct VariableType* result)
+{
+	struct DisassembledInstruction* currentInstruction = &function->instructions[function->numOfInstructions - 1];
+
+	switch (currentInstruction->opcode) 
+	{
+	case MOVSS:
+	case CVTPS2PD:
+	case CVTSS2SD:
+		result->primitiveType = FLOAT_TYPE;
+		return 1;
+	case MOVSD:
+	case CVTPD2PS:
+	case CVTSD2SS:
+		result->primitiveType = DOUBLE_TYPE;
+		return 1;
+	}
+
+	
+	if (currentInstruction->operands[1].type == REGISTER)
+	{
+		if (handleIfVarIsPtr(function, currentInstruction->operands[1].reg, result))
+		{
+			return 1;
+		}
+	}
+
+	switch (var->memoryAddress.ptrSize)
+	{
+	case 1:
+		result->primitiveType = CHAR_TYPE;
+		break;
+	case 2:
+		result->primitiveType = SHORT_TYPE;
+		break;
+	case 4:
+		result->primitiveType = INT_TYPE;
+		break;
+	case 8:
+		result->primitiveType = LONG_LONG_TYPE;
+		break;
+	}
+
+	return 1;
+}
+
+static unsigned char handleIfVarIsPtr(struct Function* function, unsigned char reg, struct VariableType* result) 
+{
+	for (int i = function->numOfInstructions - 1; i >= 0; i--) 
+	{
+		struct DisassembledInstruction* currentInstruction = &function->instructions[i];
+		
+		if (currentInstruction->opcode == LEA && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, reg)) 
+		{
+			for (int i = 0; i < function->numOflocalVars; i++)
+			{
+				if (function->localVars[i].stackOffset == currentInstruction->operands[1].memoryAddress.constDisplacement) 
+				{
+					result->primitiveType = function->localVars[i].type.primitiveType;
+					result->numOfPtrs = function->localVars[i].type.numOfPtrs + 1;
+					return 1;
+				}
+			}
+
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
+struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset) 
+{
+	for (int i = 0; i < function->numOflocalVars; i++) 
+	{
+		if (function->localVars[i].stackOffset == stackOffset) 
+		{
+			return &function->localVars[i];
+		}
+	}
+
+	return 0;
 }

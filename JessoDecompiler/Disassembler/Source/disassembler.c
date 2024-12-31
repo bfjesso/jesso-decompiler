@@ -18,10 +18,14 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	result->group1Prefix = legacyPrefixes.group1;
-
 	struct REXPrefix rexPrefix = { 0, 0, 0, 0, 0 };
 	if (disassemblerOptions->is64BitMode && !handleREXPrefix(&bytes, maxBytesAddr, &rexPrefix))
+	{
+		return 0;
+	}
+
+	struct VEXPrefix vexPrefix = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	if (disassemblerOptions->is64BitMode && !vexPrefix.isValidVEX && !handleVEXPrefix(&bytes, maxBytesAddr, &vexPrefix))
 	{
 		return 0;
 	}
@@ -30,18 +34,19 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	unsigned char modRMByte = 0;
 	char hasGotModRM = 0;
 	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0 };
-	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &opcode))
+	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &opcode))
 	{
 		return 0;
 	}
 
-	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &result->operands))
+	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &vexPrefix, &result->operands))
 	{
 		return 0;
 	}
 
 	result->opcode = opcode.mnemonic;
 	result->numOfBytes = (bytes - startPoint);
+	result->group1Prefix = legacyPrefixes.group1;
 
 	return 1;
 }
@@ -59,11 +64,10 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	{
 		const char* group1PrefixStr = group1PrefixStrs[instruction->group1Prefix - LOCK];
 		unsigned char group1PrefixStrLen = strlen(group1PrefixStr);
-		if (bufferIndex + group1PrefixStrLen - 1 > bufferSize) { return 0; }
+
 		strcpy(buffer + bufferIndex, group1PrefixStr);
 		bufferIndex += group1PrefixStrLen;
 
-		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = ' ';
 		bufferIndex++;
 	}
@@ -71,21 +75,18 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	const char* mnemonicStr = mnemonicStrs[instruction->opcode];
 	unsigned char mnemonicStrLen = strlen(mnemonicStr);
 
-	if (bufferIndex + mnemonicStrLen - 1 > bufferSize) { return 0; }
 	strcpy(buffer + bufferIndex, mnemonicStr);
 	bufferIndex += mnemonicStrLen;
 
-	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = ' ';
 	bufferIndex++;
 
 	for (int i = 0; i < 3; i++) 
 	{
-		if (instruction->operands[i].type == NO_OPERAND) { break; }
+		if (instruction->operands[i].type == NO_OPERAND) { continue; }
 
 		if (i != 0) 
 		{
-			if (bufferIndex + 1 > bufferSize) { return 0; }
 			buffer[bufferIndex] = ',';
 			buffer[bufferIndex + 1] = ' ';
 			bufferIndex += 2;
@@ -105,14 +106,12 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 		case SEGMENT:
 			segmentStr = segmentStrs[currentOperand->segment];
 			segmentStrLen = strlen(segmentStr);
-			if (bufferIndex + segmentStrLen - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, segmentStr);
 			bufferIndex += segmentStrLen;
 			break;
 		case REGISTER:
 			registerStr = registerStrs[currentOperand->reg];
 			registerStrLen = strlen(registerStr);
-			if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, registerStr);
 			bufferIndex += registerStrLen;
 			break;
@@ -121,25 +120,23 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			break;
 		case IMMEDIATE:
 			sprintf(immediateBuffer, "0x%X", currentOperand->immediate);
-			if (bufferIndex + strlen(immediateBuffer) - 1 > bufferSize) { return 0; }
 			strcpy(buffer + bufferIndex, immediateBuffer);
 			bufferIndex += strlen(immediateBuffer);
 			break;
 		}
 	}
 
-	if (bufferIndex > bufferSize) { return 0; }
 	buffer[bufferIndex] = 0;
 	bufferIndex++;
 
-	return 1;
+	return bufferIndex <= bufferSize;
 }
 
 static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize, unsigned char* resultSize)
 {
 	int bufferIndex = 0;
 
-	if (memAddr->ptrSize != 0) 
+	if (memAddr->ptrSize != 0 && memAddr->ptrSize <= 10)
 	{
 		const char* ptrSizeStr = ptrSizeStrs[memAddr->ptrSize / 2];
 		unsigned char ptrSizeStrLen = strlen(ptrSizeStr);
@@ -329,7 +326,44 @@ static unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* ma
 	return 1;
 }
 
-static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct Opcode* result)
+static unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct VEXPrefix* result)
+{
+	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+	unsigned char byte0 = (*bytesPtr)[0];
+	unsigned char byte1 = (*bytesPtr)[1];
+	unsigned char byte2 = (*bytesPtr)[2];
+
+	if (byte0 == 0xC5) // two-byte form
+	{ 
+		result->r = (byte1 >> 7) & 0x01;
+		result->vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
+		result->l = (byte1 >> 2) & 0x01;
+		result->pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
+		
+		(*bytesPtr) += 2;
+		return 1; 
+	}
+	else if (byte0 == 0xC4) // three-byte form
+	{
+		result->r = (byte1 >> 7) & 0x01;
+		result->x = (byte1 >> 6) & 0x01;
+		result->b = (byte1 >> 5) & 0x01;
+		result->mmmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
+
+		result->w = (byte2 >> 7) & 0x01;
+		result->vvvv = (((byte2 >> 6) & 0x01) * 8) + (((byte2 >> 5) & 0x01) * 4) + (((byte2 >> 4) & 0x01) * 2) + ((byte2 >> 3) & 0x01);
+		result->l = (byte2 >> 2) & 0x01;
+		result->pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
+		
+		(*bytesPtr) += 3;
+		return 1;
+	}
+
+	return 1;
+}
+
+static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
@@ -353,7 +387,10 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		else if(((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
 			opcodeByte = (*bytesPtr)[1];
-			*result = twoByteOpcodeMap[opcodeByte];
+			unsigned char prefixByte = ((*bytesPtr) - 1)[0];
+			unsigned char prefixIndex = prefixByte == 0x66 ? 1 : prefixByte == 0xF3 ? 2 : prefixByte == 0xF2 ? 3 : 0;
+			if (prefixByte != 0) { legPrefixes->group1 = NO_PREFIX; }
+			*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
 			(*bytesPtr) += 2;
 		}
 		else 
@@ -461,7 +498,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	return 1;
 }
 
-static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Operand* result)
+static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Operand* result)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -784,6 +821,40 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4);
 			currentOperand->memoryAddress.constSegment = getUIntFromBytes(bytesPtr, 2);
 			break;
+		case Vps:
+		case Vpd:
+		case Vx:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Vss:
+		case Vsd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Wps:
+		case Wpd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Wss:
+		case Wsd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Hps:
+		case Hpd:
+		case Hx:
+			if (!vexPrefix->isValidVEX) { break; }
+			currentOperand->type = REGISTER;
+			currentOperand->reg = opcode->opcodeSuperscript == f256 ? (YMM0 + vexPrefix->vvvv) : (XMM0 + vexPrefix->vvvv);
+			break;
+		case Hss:
+		case Hsd:
+			if (!vexPrefix->isValidVEX) { break; }
+			currentOperand->type = REGISTER;
+			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
+			break;
 		}
 	}
 
@@ -813,16 +884,22 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		switch (operandSize)
 		{
 		case 1:
-			result->reg = (enum Register)(reg + AL);
+			result->reg = (reg + AL);
 			break;
 		case 2:
-			result->reg = (enum Register)(reg + AX);
+			result->reg = (reg + AX);
 			break;
 		case 4:
-			result->reg = (enum Register)(reg + EAX);
+			result->reg = (reg + EAX);
 			break;
 		case 8:
-			result->reg = (enum Register)(reg + RAX);
+			result->reg = (reg + RAX);
+			break;
+		case 16:
+			result->reg = (reg + XMM0);
+			break;
+		case 32:
+			result->reg = (reg + YMM0);
 			break;
 		}
 
@@ -831,7 +908,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 	else if (getRegOrSeg == 2)
 	{
 		result->type = SEGMENT;
-		result->segment = (enum Segment)reg;
+		result->segment = reg;
 
 		return 1;
 	}
@@ -842,28 +919,28 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		switch (rm)
 		{
 		case 0:
-			result->reg = operandSize == 8 ? RAX : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
+			result->reg = operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? RAX : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
 			break;
 		case 1:
-			result->reg = operandSize == 8 ? RCX : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
+			result->reg = operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? RCX : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
 			break;
 		case 2:
-			result->reg = operandSize == 8 ? RDX : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
+			result->reg = operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? RDX : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
 			break;
 		case 3:
-			result->reg = operandSize == 8 ? RBX : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
+			result->reg = operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? RBX : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
 			break;
 		case 4:
-			result->reg = operandSize == 8 ? RSP : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
+			result->reg = operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? RSP : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
 			break;
 		case 5:
-			result->reg = operandSize == 8 ? RBP : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
+			result->reg = operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? RBP : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
 			break;
 		case 6:
-			result->reg = operandSize == 8 ? RSI : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
+			result->reg = operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? RSI : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
 			break;
 		case 7:
-			result->reg = operandSize == 8 ? RDI : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
+			result->reg = operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? RDI : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
 			break;
 		}
 
