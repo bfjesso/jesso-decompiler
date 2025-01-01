@@ -29,7 +29,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			
 			function.addresses = &addresses[i];
 			function.instructions = &instructions[i];
-			function.numOfInstructions = 1;
+			function.numOfInstructions = 0;
 
 			function.returnType.primitiveType = VOID_TYPE;
 			function.returnType.numOfPtrs = 0;
@@ -45,241 +45,238 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			foundFirstInstruction = 1;
 		}
-		else
+
+		function.numOfInstructions++;
+
+		if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
+
+		// check for arguments
+		unsigned char overwrites = 0;
+		for (int j = 0; j < 3; j++)
 		{
-			function.numOfInstructions++;
+			struct Operand* currentOperand = &currentInstruction->operands[j];
 
-			if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
-
-			// check for arguments
-			for (int j = 0; j < 3; j++)
+			if (currentOperand->type == REGISTER)
 			{
-				struct Operand* currentOperand = &currentInstruction->operands[j];
-
-				if (currentOperand->type == REGISTER)
+				if (compareRegisters(currentOperand->reg, CX))
 				{
-					if (compareRegisters(currentOperand->reg, CX)) 
+					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
 					{
-						if (j == 0) 
-						{ 
-							initializedCX = 1; 
-						}
-						else if (!initializedCX)
-						{
-							function.regArgs[0].numOfPtrs = 0;
-							function.regArgs[0].isSigned = 1;
-							
-							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[0]))
-							{
-								return 0;
-							}
-							
-							function.numOfRegArgs++;
-							function.callingConvention = __FASTCALL;
-						}
+						initializedCX = 1;
 					}
-					else if (compareRegisters(currentOperand->reg, DX))
+					else if (!initializedCX)
 					{
-						if (j == 0)
-						{
-							initializedDX = 1;
-						}
-						else if (!initializedDX)
-						{
-							function.regArgs[1].numOfPtrs = 0;
-							function.regArgs[1].isSigned = 1;
-							
-							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[1]))
-							{
-								return 0;
-							}
-							
-							function.numOfRegArgs++;
-							function.callingConvention = __FASTCALL;
-						}
-					}
-					else if (compareRegisters(currentOperand->reg, R8))
-					{
-						if (j == 0)
-						{
-							initializedR8 = 1;
-						}
-						else if (!initializedR8)
-						{
-							function.regArgs[2].numOfPtrs = 0;
-							function.regArgs[2].isSigned = 1;
-							
-							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[2]))
-							{
-								return 0;
-							}
-							
-							function.numOfRegArgs++;
-							function.callingConvention = __FASTCALL;
-						}
-					}
-					else if (compareRegisters(currentOperand->reg, R9))
-					{
-						if (j == 0)
-						{
-							initializedR9 = 1;
-						}
-						else if (!initializedR9)
-						{
-							function.regArgs[3].numOfPtrs = 0;
-							function.regArgs[3].isSigned = 1;
-							
-							if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[3]))
-							{
-								return 0;
-							}
-							
-							function.numOfRegArgs++;
-							function.callingConvention = __FASTCALL;
-						}
-					}
-				}
-				else if (currentOperand->type == MEM_ADDRESS && compareRegisters(currentOperand->memoryAddress.reg, BP) && currentOperand->memoryAddress.constDisplacement > 0)
-				{
-					unsigned char alreadyFound = 0;
-					for (int j = 0; j < function.numOfStackArgs; j++)
-					{
-						if (function.stackArgBpOffsets[j] == currentOperand->memoryAddress.constDisplacement)
-						{
-							alreadyFound = 1;
-							break;
-						}
-					}
+						function.regArgs[0].numOfPtrs = 0;
+						function.regArgs[0].isSigned = 1;
 
-					if (!alreadyFound)
-					{
-						function.stackArgBpOffsets[function.numOfStackArgs] = currentOperand->memoryAddress.constDisplacement;
-
-						function.stackArgs[function.numOfStackArgs].numOfPtrs = 0;
-						function.stackArgs[function.numOfStackArgs].isSigned = 1;
-
-						if (!getVariableType(&function, currentOperand, &function.stackArgs[function.numOfStackArgs]))
-						{
-							return 0;
-						}
-						
-						function.numOfStackArgs++;
-					}
-
-					// sort
-					for (int j = 0; j < function.numOfStackArgs - 1; j++)
-					{
-						char swapped = 0;
-						for (int k = 0; k < function.numOfStackArgs - j - 1; k++)
-						{
-							if (function.stackArgBpOffsets[k] > function.stackArgBpOffsets[k + 1])
-							{
-								unsigned char temp = function.stackArgBpOffsets[k];
-								function.stackArgBpOffsets[k] = function.stackArgBpOffsets[k + 1];
-								function.stackArgBpOffsets[k + 1] = temp;
-
-								swapped = 1;
-							}
-						}
-						if (!swapped) { break; }
-					}
-				}
-			}
-
-			// check for local vars
-			if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP)) 
-			{
-				int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
-
-				if (currentInstruction->opcode <= MOV && displacement < 0)
-				{
-					unsigned char isAlreadyFound = 0;
-					for (int j = 0; j < function.numOflocalVars; j++)
-					{
-						if (function.localVars[j].stackOffset == displacement)
-						{
-							isAlreadyFound = 1;
-							break;
-						}
-					}
-
-					if (!isAlreadyFound)
-					{
-						function.localVars[function.numOflocalVars].stackOffset = displacement;
-
-						function.localVars[function.numOflocalVars].type.numOfPtrs = 0;
-						function.localVars[function.numOflocalVars].type.isSigned = 1;
-						
-						if (!getVariableType(&function, &currentInstruction->operands[0], &function.localVars[function.numOflocalVars].type))
+						if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[0]))
 						{
 							return 0;
 						}
 
-						function.numOflocalVars++;
+						function.numOfRegArgs++;
+						function.callingConvention = __FASTCALL;
+					}
+				}
+				else if (compareRegisters(currentOperand->reg, DX))
+				{
+					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					{
+						initializedDX = 1;
+					}
+					else if (!initializedDX)
+					{
+						function.regArgs[1].numOfPtrs = 0;
+						function.regArgs[1].isSigned = 1;
+
+						if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[1]))
+						{
+							return 0;
+						}
+
+						function.numOfRegArgs++;
+						function.callingConvention = __FASTCALL;
+					}
+				}
+				else if (compareRegisters(currentOperand->reg, R8))
+				{
+					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					{
+						initializedR8 = 1;
+					}
+					else if (!initializedR8)
+					{
+						function.regArgs[2].numOfPtrs = 0;
+						function.regArgs[2].isSigned = 1;
+
+						if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[2]))
+						{
+							return 0;
+						}
+
+						function.numOfRegArgs++;
+						function.callingConvention = __FASTCALL;
+					}
+				}
+				else if (compareRegisters(currentOperand->reg, R9))
+				{
+					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					{
+						initializedR9 = 1;
+					}
+					else if (!initializedR9)
+					{
+						function.regArgs[3].numOfPtrs = 0;
+						function.regArgs[3].isSigned = 1;
+
+						if (!getVariableType(&function, &currentInstruction->operands[0], &function.regArgs[3]))
+						{
+							return 0;
+						}
+
+						function.numOfRegArgs++;
+						function.callingConvention = __FASTCALL;
 					}
 				}
 			}
-			
-			// check for return value
-			if (currentInstruction->opcode <= MOV && currentInstruction->operands[0].type == REGISTER)
+			else if (isOperandStackArgument(currentOperand))
 			{
-				if (compareRegisters(currentInstruction->operands[0].reg, AX))
+				unsigned char alreadyFound = 0;
+				for (int j = 0; j < function.numOfStackArgs; j++)
 				{
-					function.returnType.numOfPtrs = 0;
-					function.returnType.isSigned = 1;
-					
-					if(!getVariableType(&function, &currentInstruction->operands[1], &function.returnType)) 
+					if (function.stackArgBpOffsets[j] == currentOperand->memoryAddress.constDisplacement)
+					{
+						alreadyFound = 1;
+						break;
+					}
+				}
+
+				if (!alreadyFound)
+				{
+					function.stackArgBpOffsets[function.numOfStackArgs] = currentOperand->memoryAddress.constDisplacement;
+
+					function.stackArgs[function.numOfStackArgs].numOfPtrs = 0;
+					function.stackArgs[function.numOfStackArgs].isSigned = 1;
+
+					if (!getVariableType(&function, currentOperand, &function.stackArgs[function.numOfStackArgs]))
 					{
 						return 0;
 					}
 
-					function.addressOfReturnFunction = 0;
+					function.numOfStackArgs++;
 				}
-			}
-			else if (currentInstruction->opcode == CALL_NEAR)
-			{
-				function.addressOfReturnFunction = addresses[i] + currentInstruction->operands[0].immediate;
-			}
-			else if (currentInstruction->opcode == FLD) 
-			{
-				function.returnType.primitiveType = FLOAT_TYPE;
-				function.returnType.numOfPtrs = 0;
 
-				function.addressOfReturnFunction = 0;
-			}
-
-			if (addressToJumpTo != 0 && addressToJumpTo != addresses[i])
-			{
-				continue;
-			}
-			else
-			{
-				addressToJumpTo = 0;
-			}
-			
-			if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
-			{
-				addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
-			}
-			else if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
-			{
-				if (function.callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
+				// sort
+				for (int j = 0; j < function.numOfStackArgs - 1; j++)
 				{
-					function.callingConvention = __STDCALL;
+					char swapped = 0;
+					for (int k = 0; k < function.numOfStackArgs - j - 1; k++)
+					{
+						if (function.stackArgBpOffsets[k] > function.stackArgBpOffsets[k + 1])
+						{
+							unsigned char temp = function.stackArgBpOffsets[k];
+							function.stackArgBpOffsets[k] = function.stackArgBpOffsets[k + 1];
+							function.stackArgBpOffsets[k + 1] = temp;
+
+							swapped = 1;
+						}
+					}
+					if (!swapped) { break; }
 				}
-				else if (function.numOfStackArgs != 0 && function.numOfRegArgs == 1)
+			}
+		}
+
+		// check for local vars
+		if (isOperandLocalVariable(&currentInstruction->operands[0]))
+		{
+			int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
+
+			unsigned char overwritesVarValue = 0;
+			if (doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwritesVarValue) && overwritesVarValue)
+			{
+				unsigned char isAlreadyFound = 0;
+				for (int j = 0; j < function.numOflocalVars; j++)
 				{
-					function.callingConvention = __THISCALL;
+					if (function.localVars[j].stackOffset == displacement)
+					{
+						isAlreadyFound = 1;
+						break;
+					}
 				}
 
-				*result = function;
-				return 1;
+				if (!isAlreadyFound)
+				{
+					function.localVars[function.numOflocalVars].stackOffset = displacement;
+
+					function.localVars[function.numOflocalVars].type.numOfPtrs = 0;
+					function.localVars[function.numOflocalVars].type.isSigned = 1;
+
+					if (!getVariableType(&function, &currentInstruction->operands[0], &function.localVars[function.numOflocalVars].type))
+					{
+						return 0;
+					}
+
+					function.numOflocalVars++;
+				}
 			}
-			else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
+		}
+
+		// check for return value
+		if (doesOpcodeModifyRegister(currentInstruction->opcode, AX, 0) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesOpcodeModifyOperand(currentInstruction->opcode, 0, 0)))
+		{
+			function.returnType.numOfPtrs = 0;
+			function.returnType.isSigned = 1;
+
+			if (!getVariableType(&function, &currentInstruction->operands[1], &function.returnType))
 			{
-				*result = function;
-				return 1;
+				return 0;
 			}
+
+			function.addressOfReturnFunction = 0;
+		}
+		else if (currentInstruction->opcode == CALL_NEAR)
+		{
+			function.addressOfReturnFunction = addresses[i] + currentInstruction->operands[0].immediate;
+		}
+		else if (currentInstruction->opcode == FLD)
+		{
+			function.returnType.primitiveType = FLOAT_TYPE;
+			function.returnType.numOfPtrs = 0;
+
+			function.addressOfReturnFunction = 0;
+		}
+
+		if (addressToJumpTo != 0 && addresses[i] < addressToJumpTo)
+		{
+			continue;
+		}
+		else
+		{
+			addressToJumpTo = 0;
+		}
+
+		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
+		{
+			addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
+		}
+		else if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
+		{
+			if (function.callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
+			{
+				function.callingConvention = __STDCALL;
+			}
+			else if (function.numOfStackArgs != 0 && function.numOfRegArgs == 1)
+			{
+				function.callingConvention = __THISCALL;
+			}
+
+			*result = function;
+			return 1;
+		}
+		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
+		{
+			*result = function;
+			return 1;
 		}
 	}
 
@@ -364,6 +361,9 @@ static unsigned char getVariableType(struct Function* function, struct Operand* 
 		break;
 	case 8:
 		result->primitiveType = LONG_LONG_TYPE;
+		break;
+	default:
+		result->primitiveType = INT_TYPE;
 		break;
 	}
 

@@ -525,7 +525,6 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		switch (currentOperandCode)
 		{
 		case NO_OPERAND_CODE:
-			return 1; // no more operands; done handling them all
 			break;
 		case ONE:
 			currentOperand->type = IMMEDIATE;

@@ -55,6 +55,8 @@ static unsigned char checkForReturnStatement(struct DisassembledInstruction* ins
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction);
 
+static unsigned char checkForFunctionCall(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, struct Function** calleeRef);
+
 static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result);
 
 static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result);
@@ -65,7 +67,16 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 
 static unsigned char decompileExpression(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned char targetReg, struct VariableType* type, char* resultBuffer, unsigned char resultBufferSize);
 
-static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, char* resultBuffer, unsigned char resultBufferSize);
+static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, struct LineOfC* result);
 
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
 
+static unsigned char getLastOperand(struct DisassembledInstruction* instruction);
+
+unsigned char isOperandStackArgument(struct Operand* operand);
+
+unsigned char isOperandLocalVariable(struct Operand* operand);
+
+unsigned char doesOpcodeModifyOperand(unsigned char opcode, unsigned char operandNum, unsigned char* overwrites);
+
+unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites);
