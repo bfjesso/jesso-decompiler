@@ -40,15 +40,37 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 	}
 
 	int scopeIndex = numOfScopes - 1;
-	struct Scope* nextScope = &scopes[scopeIndex];
+	struct Scope* nextScope = scopeIndex < 0 ? 0 : &scopes[scopeIndex];
 	struct Scope* currentScope = 0;
-	unsigned char scopesDepth = 0;
 
 	for (int i = functions[functionIndex].numOfInstructions - 1; i >= 0; i--)
 	{
-		if (numOfLinesDecompiled > resultBufferLen) { return 0; }
+		functions[functionIndex].instructions[i].hasBeenDecompiled = 0; // reset instructions incase this function has been decompiled before.
+	}
+
+	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
+	resultBuffer[numOfLinesDecompiled].indents = 0;
+	numOfLinesDecompiled++;
+
+	unsigned char scopesDepth = 1;
+
+	for (int i = functions[functionIndex].numOfInstructions - 1; i >= 0; i--)
+	{
+		if (numOfLinesDecompiled > resultBufferLen) 
+		{ 
+			return 0; 
+		}
 
 		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
+
+		if (i == functions[functionIndex].numOfInstructions - 1 && functions[functionIndex].returnType.primitiveType != VOID_TYPE)
+		{
+			if (decompileReturnStatement(functions, numOfFunctions, i, functionIndex, nextScope != 0 ? nextScope->end : currentScope != 0 ? currentScope->start : functions[functionIndex].addresses[0], &resultBuffer[numOfLinesDecompiled]))
+			{
+				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+				numOfLinesDecompiled++;
+			}
+		}
 
 		if (currentScope != 0 && functions[functionIndex].addresses[i] == currentScope->start)
 		{
@@ -58,46 +80,19 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 				numOfLinesDecompiled++;
 			}
-			
-			scopesDepth--;
 
-			if (scopesDepth == 0 && functions[functionIndex].numOflocalVars > 0)
-			{
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "");
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-				numOfLinesDecompiled++;
-				
-				if (!declareAllLocalVariables(&functions[functionIndex], resultBuffer, &numOfLinesDecompiled, resultBufferLen))
-				{
-					return 0;
-				}
-			}
+			scopesDepth--;
 
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 			numOfLinesDecompiled++;
 
-			if (scopesDepth == 0)
-			{
-				if (!generateFunctionHeader(&functions[functionIndex], functionName, &resultBuffer[numOfLinesDecompiled]))
-				{
-					return 0;
-				}
-				numOfLinesDecompiled++;
-
-				return numOfLinesDecompiled;
-			}
-			else if (!decompileCondition(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled]))
+			if (!decompileCondition(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled]))
 			{
 				return 0;
 			}
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 			numOfLinesDecompiled++;
-
-			if (currentInstruction->opcode == JMP_SHORT) // is an else
-			{
-				currentScope->lastScope->foundReturnStatement = currentScope->foundReturnStatement;
-			}
 
 			currentScope = currentScope->lastScope;
 		}
@@ -114,31 +109,23 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 			nextScope->lastScope = currentScope;
 			currentScope = nextScope;
 			nextScope = scopeIndex < 0 ? 0 : &scopes[scopeIndex];
-		}
 
-		if (currentScope == 0) { return 0; }
-
-		if (!currentScope->foundReturnStatement && checkForReturnStatement(&functions[functionIndex].instructions[i], functions[functionIndex].addresses[i], functions, numOfFunctions, functionIndex))
-		{
-			if (decompileReturnStatement(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled]))
+			if (functions[functionIndex].returnType.primitiveType != VOID_TYPE) 
 			{
-				currentScope->foundReturnStatement = 1;
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-				numOfLinesDecompiled++;
-			}
-			else
-			{
-				return 0;
+				if (decompileReturnStatement(functions, numOfFunctions, i, functionIndex, nextScope != 0 ? nextScope->end : currentScope->start, &resultBuffer[numOfLinesDecompiled]))
+				{
+					resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+					numOfLinesDecompiled++;
+				}
 			}
 		}
 
-		if (checkForAssignment(&functions[functionIndex].instructions[i])) 
+		if (checkForAssignment(&functions[functionIndex].instructions[i]))
 		{
 			struct LocalVariable* localVar = getLocalVarByOffset(&functions[functionIndex], currentInstruction->operands[0].memoryAddress.constDisplacement);
-			
+
 			if (localVar != 0 && decompileAssignment(functions, numOfFunctions, i, functionIndex, &localVar->type, &resultBuffer[numOfLinesDecompiled]))
 			{
-				currentScope->foundReturnStatement = 1;
 				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 				numOfLinesDecompiled++;
 			}
@@ -164,7 +151,29 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 		}
 	}
 
-	return 0;
+	if (functions[functionIndex].numOflocalVars > 0)
+	{
+		strcpy(resultBuffer[numOfLinesDecompiled].line, "");
+		resultBuffer[numOfLinesDecompiled].indents = 1;
+		numOfLinesDecompiled++;
+
+		if (!declareAllLocalVariables(&functions[functionIndex], resultBuffer, &numOfLinesDecompiled, resultBufferLen))
+		{
+			return 0;
+		}
+	}
+
+	strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
+	resultBuffer[numOfLinesDecompiled].indents = 0;
+	numOfLinesDecompiled++;
+
+	if (!generateFunctionHeader(&functions[functionIndex], functionName, &resultBuffer[numOfLinesDecompiled]))
+	{
+		return 0;
+	}
+	numOfLinesDecompiled++;
+
+	return numOfLinesDecompiled;
 }
 
 static unsigned short generateFunctionHeader(struct Function* function, const char* functionName, struct LineOfC* result) 
@@ -283,7 +292,6 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 			resultBuffer[resultBufferIndex].lastScope = 0;
 			resultBuffer[resultBufferIndex].start = function->addresses[i];
 			resultBuffer[resultBufferIndex].end = function->addresses[i] + currentInstruction->operands[0].immediate;
-			resultBuffer[resultBufferIndex].foundReturnStatement = 0;
 
 			for (int j = 0; j < function->numOfInstructions - 1; j++)
 			{
@@ -297,7 +305,6 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 						resultBuffer[resultBufferIndex].lastScope = 0;
 						resultBuffer[resultBufferIndex].start = function->addresses[j];
 						resultBuffer[resultBufferIndex].end = function->addresses[j] + function->instructions[j].operands[0].immediate;
-						resultBuffer[resultBufferIndex].foundReturnStatement = 0;
 					}
 
 					break;
@@ -308,13 +315,6 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 		}
 	}
 
-	resultBuffer[resultBufferIndex].lastScope = 0;
-	resultBuffer[resultBufferIndex].start = function->addresses[0];
-	resultBuffer[resultBufferIndex].end = function->addresses[function->numOfInstructions - 1];
-	resultBuffer[resultBufferIndex].foundReturnStatement = 0;
-
-	resultBufferIndex++;
-
 	*numOfScopesFound = resultBufferIndex;
 
 	return 1;
@@ -322,11 +322,9 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 
 static unsigned char checkForReturnStatement(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex)
 {
-	if (functions[functionIndex].returnType.primitiveType == VOID_TYPE) 
-	{
-		return 0;
-	}
-	else if (functions[functionIndex].returnType.primitiveType == FLOAT_TYPE || functions[functionIndex].returnType.primitiveType == DOUBLE_TYPE) 
+	if (instruction->hasBeenDecompiled) { return 0; }
+	
+	if (functions[functionIndex].returnType.primitiveType == FLOAT_TYPE || functions[functionIndex].returnType.primitiveType == DOUBLE_TYPE) 
 	{
 		if (instruction->opcode == FLD)
 		{
@@ -337,7 +335,7 @@ static unsigned char checkForReturnStatement(struct DisassembledInstruction* ins
 	{
 		char isFirstOperandAX = (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, AX));
 
-		if ((isFirstOperandAX && doesOpcodeModifyOperand(instruction->opcode, 0, 0)) || doesOpcodeModifyRegister(instruction->opcode, AX, 0))
+		if ((isFirstOperandAX && doesInstructionModifyOperand(instruction, 0, 0)) || doesOpcodeModifyRegister(instruction->opcode, AX, 0))
 		{
 			return 1;
 		}
@@ -360,7 +358,9 @@ static unsigned char checkForReturnStatement(struct DisassembledInstruction* ins
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
 {
-	if (instruction != 0 && doesOpcodeModifyOperand(instruction->opcode, 0, 0) && isOperandLocalVariable(&instruction->operands[0]))
+	if (instruction->hasBeenDecompiled) { return 0; }
+	
+	if (instruction != 0 && doesInstructionModifyOperand(instruction, 0, 0) && isOperandLocalVariable(&instruction->operands[0]))
 	{
 		return 1;
 	}
@@ -370,12 +370,14 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, struct Function** calleeRef) 
 {
+	if (instruction->hasBeenDecompiled) { return 0; }
+	
 	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
 	{
 		unsigned long long calleeAddress = address + instruction->operands[0].immediate;
 		int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
 
-		if (calleIndex == -1 || (instruction->opcode == CALL_NEAR && functions[calleIndex].returnType.primitiveType != VOID_TYPE)) // if the function does return something, it will be handled by an assignment
+		if (calleIndex == -1)
 		{
 			return 0;
 		}
@@ -397,6 +399,7 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 	if (currentInstruction->opcode == JMP_SHORT)
 	{
 		strcpy(result->line, "else");
+		currentInstruction->hasBeenDecompiled = 1;
 		return 1;
 	}
 	else
@@ -422,6 +425,8 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 			strcpy(compOperator, "<");
 			break;
 		}
+
+		currentInstruction->hasBeenDecompiled = 1;
 	}
 	
 	for (int i = startInstructionIndex - 1; i >= 0; i--)
@@ -449,6 +454,8 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 
 			sprintf(result->line, "if(%s %s %s)", operand1Str, compOperator, operand2Str);
 
+			currentInstruction->hasBeenDecompiled = 1;
+
 			return 1;
 		}
 	}
@@ -456,13 +463,36 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 	return 0;
 }
 
-static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result)
+static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result)
 {
 	char returnExpression[50] = { 0 };
-	
-	if (functions[functionIndex].instructions[startInstructionIndex].opcode == FLD) 
+
+	int newStartInstruction = -1;
+
+	for (int i = startInstructionIndex; i >= 0; i--)
 	{
-		if (!decompileOperand(functions, numOfFunctions, startInstructionIndex - 1, functionIndex, &functions[functionIndex].instructions[startInstructionIndex].operands[0], &functions[functionIndex].returnType, returnExpression, 50))
+		if (functions[functionIndex].addresses[i] <= scopeStart) 
+		{
+			break;
+		}
+		
+		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
+
+		if (checkForReturnStatement(currentInstruction, functions[functionIndex].addresses[i], functions, numOfFunctions, functionIndex)) 
+		{
+			newStartInstruction = i;
+			break;
+		}
+	}
+
+	if (newStartInstruction == -1) 
+	{
+		return 0;
+	}
+	
+	if (functions[functionIndex].instructions[newStartInstruction].opcode == FLD)
+	{
+		if (!decompileOperand(functions, numOfFunctions, newStartInstruction - 1, functionIndex, &functions[functionIndex].instructions[newStartInstruction].operands[0], &functions[functionIndex].returnType, returnExpression, 50))
 		{
 			return 0;
 		}
@@ -473,7 +503,7 @@ static unsigned char decompileReturnStatement(struct Function* functions, unsign
 		eax.type = REGISTER;
 		eax.reg = AX;
 
-		if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &eax, &functions[functionIndex].returnType, returnExpression, 50))
+		if (!decompileOperand(functions, numOfFunctions, newStartInstruction, functionIndex, &eax, &functions[functionIndex].returnType, returnExpression, 50))
 		{
 			return 0;
 		}
@@ -508,6 +538,8 @@ static unsigned char decompileAssignment(struct Function* functions, unsigned sh
 		return 0;
 	}
 	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
+
+	currentInstruction->hasBeenDecompiled = 1;
 
 	return 1;
 }
@@ -631,7 +663,7 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 		
 		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
 
-		if ((compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
+		if ((compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesInstructionModifyOperand(currentInstruction, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
 			char targetOperand = getLastOperand(currentInstruction);
 
@@ -639,6 +671,8 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 			{
 				strcpy(expressions[expressionIndex], ")0");
 				expressionIndex++;
+
+				currentInstruction->hasBeenDecompiled = 1;
 
 				finished = 1;
 				break;
@@ -658,6 +692,8 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 
 			sprintf(expressions[expressionIndex], ")%s%s", operationStr, operandStr);
 			expressionIndex++;
+
+			currentInstruction->hasBeenDecompiled = 1;
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
 		{
@@ -719,6 +755,9 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, struct LineOfC* result)
 {
 	struct DisassembledInstruction* firstInstruction = &functions[functionIndex].instructions[startInstructionIndex];
+
+	firstInstruction->hasBeenDecompiled = 1;
+
 	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
 	{
 		sprintf(result->line, "%s()", callee->name);
@@ -733,7 +772,7 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 		{
 			struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[j];
 
-			if (currentInstruction->operands[0].type == REGISTER && doesOpcodeModifyOperand(currentInstruction->opcode, 0, 0))
+			if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 			{
 				unsigned char reg = currentInstruction->operands[0].reg;
 
@@ -751,6 +790,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 					}
 
 					sprintf(result->line + strlen(result->line), "%s, ", argStr);
+
+					currentInstruction->hasBeenDecompiled = 1;
 
 					break;
 				}
@@ -775,12 +816,14 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 
 			sprintf(result->line + strlen(result->line), "%s, ", argStr);
 
+			currentInstruction->hasBeenDecompiled = 1;
+
 			stackArgsFound++;
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP))
 		{
 			unsigned char overwrites = 0;
-			if (doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
 				int operandIndex = getLastOperand(currentInstruction);
 
@@ -791,6 +834,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 				}
 
 				sprintf(result->line + strlen(result->line), "%s, ", argStr);
+
+				currentInstruction->hasBeenDecompiled = 1;
 
 				stackArgsFound++;
 			}
@@ -908,11 +953,17 @@ unsigned char isOperandLocalVariable(struct Operand* operand)
 	return operand->type == MEM_ADDRESS && compareRegisters(operand->memoryAddress.reg, BP) && operand->memoryAddress.constDisplacement < 0;
 }
 
-unsigned char doesOpcodeModifyOperand(unsigned char opcode, unsigned char operandNum, unsigned char* overwrites) 
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
 {
 	if (operandNum == 0) 
 	{
-		switch (opcode) 
+		if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
+		{
+			if (overwrites != 0) { *overwrites = 1; }
+			return 1;
+		}
+		
+		switch (instruction->opcode)
 		{
 		case MOV:
 		case MOVUPS:
@@ -954,6 +1005,31 @@ unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, 
 		{
 		case IDIV:
 			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2) 
+{
+	if(op1->type == op2->type)
+	{
+		struct MemoryAddress* m1 = &op1->memoryAddress;
+		struct MemoryAddress* m2 = &op2->memoryAddress;
+
+		switch (op1->type) 
+		{
+		case NO_OPERAND:
+			return 1;
+		case SEGMENT:
+			return op1->segment == op2->segment;
+		case REGISTER:
+			return op1->reg == op2->reg;
+		case MEM_ADDRESS:
+			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->segment == m2->segment;
+		case IMMEDIATE:
+			return op1->immediate == op2->immediate;
 		}
 	}
 

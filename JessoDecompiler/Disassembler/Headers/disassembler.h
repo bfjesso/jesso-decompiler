@@ -107,6 +107,7 @@ struct DisassembledInstruction
 	unsigned char group1Prefix;
 
 	unsigned char numOfBytes;
+	unsigned char hasBeenDecompiled;
 };
 
 static const char* group1PrefixStrs[] =

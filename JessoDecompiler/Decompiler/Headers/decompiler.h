@@ -25,7 +25,6 @@ struct Scope
 	struct Scope* lastScope;
 	unsigned long long start;
 	unsigned long long end;
-	unsigned char foundReturnStatement;
 };
 
 #include "../Headers/functions.h"
@@ -59,7 +58,7 @@ static unsigned char checkForFunctionCall(struct DisassembledInstruction* instru
 
 static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result);
 
-static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result);
+static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result);
 
 static unsigned char decompileAssignment(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct VariableType* type, struct LineOfC* result);
 
@@ -77,6 +76,8 @@ unsigned char isOperandStackArgument(struct Operand* operand);
 
 unsigned char isOperandLocalVariable(struct Operand* operand);
 
-unsigned char doesOpcodeModifyOperand(unsigned char opcode, unsigned char operandNum, unsigned char* overwrites);
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
 
 unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites);
+
+static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);

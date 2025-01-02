@@ -60,7 +60,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			{
 				if (compareRegisters(currentOperand->reg, CX))
 				{
-					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 					{
 						initializedCX = 1;
 					}
@@ -80,7 +80,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				}
 				else if (compareRegisters(currentOperand->reg, DX))
 				{
-					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 					{
 						initializedDX = 1;
 					}
@@ -100,7 +100,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				}
 				else if (compareRegisters(currentOperand->reg, R8))
 				{
-					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 					{
 						initializedR8 = 1;
 					}
@@ -120,7 +120,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				}
 				else if (compareRegisters(currentOperand->reg, R9))
 				{
-					if (j == 0 && doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwrites) && overwrites)
+					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 					{
 						initializedR9 = 1;
 					}
@@ -192,7 +192,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
 
 			unsigned char overwritesVarValue = 0;
-			if (doesOpcodeModifyOperand(currentInstruction->opcode, 0, &overwritesVarValue) && overwritesVarValue)
+			if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
 			{
 				unsigned char isAlreadyFound = 0;
 				for (int j = 0; j < function.numOflocalVars; j++)
@@ -222,7 +222,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		}
 
 		// check for return value
-		if (doesOpcodeModifyRegister(currentInstruction->opcode, AX, 0) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesOpcodeModifyOperand(currentInstruction->opcode, 0, 0)))
+		if (doesOpcodeModifyRegister(currentInstruction->opcode, AX, 0) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesInstructionModifyOperand(currentInstruction, 0, 0)))
 		{
 			function.returnType.numOfPtrs = 0;
 			function.returnType.isSigned = 1;
