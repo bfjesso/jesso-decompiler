@@ -2,6 +2,7 @@
 #include "../Headers/guiUtils.h"
 #include <wx/grid.h>
 #include "../Headers/disassembleBytesMenu.h"
+#include "../Headers/dataViewerMenu.h"
 #include "../../Disassembler/Headers/disassembler.h"
 #include "../../Decompiler/Headers/decompiler.h"
 
@@ -12,6 +13,7 @@ public:
 
 	wxMenuBar* menuBar = nullptr;
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
+	DataViewer* dataViewerMenu = nullptr;
 
 	wxButton* openFileButton = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
@@ -40,6 +42,7 @@ public:
 	{
 		MainWindowID,
 		OpenBytesDisassemblerID,
+		OpenDataViewerID,
 		OpenFileButtonID,
 		DisassembleFileButtonID,
 		DecompileButtonID

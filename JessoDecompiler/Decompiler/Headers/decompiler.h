@@ -81,3 +81,5 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites);
 
 static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);
+
+static unsigned char getTypeOfMemAddr(unsigned char opcode, struct MemoryAddress* memAddr, struct VariableType* result);

@@ -124,7 +124,15 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 		{
 			struct LocalVariable* localVar = getLocalVarByOffset(&functions[functionIndex], currentInstruction->operands[0].memoryAddress.constDisplacement);
 
-			if (localVar != 0 && decompileAssignment(functions, numOfFunctions, i, functionIndex, &localVar->type, &resultBuffer[numOfLinesDecompiled]))
+			struct VariableType memAddrType = { 0 };
+			memAddrType.numOfPtrs = 0;
+			memAddrType.isSigned = 1;
+			if (!getTypeOfMemAddr(currentInstruction->opcode, &currentInstruction->operands[0].memoryAddress, &memAddrType))
+			{
+				return 0;
+			}
+
+			if (decompileAssignment(functions, numOfFunctions, i, functionIndex, localVar != 0 ? &localVar->type : &memAddrType, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 				numOfLinesDecompiled++;
@@ -360,7 +368,7 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 {
 	if (instruction->hasBeenDecompiled) { return 0; }
 	
-	if (instruction != 0 && doesInstructionModifyOperand(instruction, 0, 0) && isOperandLocalVariable(&instruction->operands[0]))
+	if (doesInstructionModifyOperand(instruction, 0, 0) && instruction->operands[0].type == MEM_ADDRESS) 
 	{
 		return 1;
 	}
@@ -663,7 +671,7 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 		
 		struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[i];
 
-		if ((compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesInstructionModifyOperand(currentInstruction, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
+		if ((currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesInstructionModifyOperand(currentInstruction, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
 			char targetOperand = getLastOperand(currentInstruction);
 
@@ -1034,4 +1042,42 @@ static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 	}
 
 	return 0;
+}
+
+static unsigned char getTypeOfMemAddr(unsigned char opcode, struct MemoryAddress* memAddr, struct VariableType* result)
+{
+	switch (opcode)
+	{
+	case MOVSS:
+	case CVTPS2PD:
+	case CVTSS2SD:
+		result->primitiveType = FLOAT_TYPE;
+		return 1;
+	case MOVSD:
+	case CVTPD2PS:
+	case CVTSD2SS:
+		result->primitiveType = DOUBLE_TYPE;
+		return 1;
+	}
+
+	switch (memAddr->ptrSize)
+	{
+	case 1:
+		result->primitiveType = CHAR_TYPE;
+		break;
+	case 2:
+		result->primitiveType = SHORT_TYPE;
+		break;
+	case 4:
+		result->primitiveType = INT_TYPE;
+		break;
+	case 8:
+		result->primitiveType = LONG_LONG_TYPE;
+		break;
+	default:
+		result->primitiveType = INT_TYPE;
+		break;
+	}
+
+	return 1;
 }

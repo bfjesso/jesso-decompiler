@@ -14,6 +14,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	menuBar = new wxMenuBar();
 	bytesDisassemblerMenu = new BytesDisassembler();
+	dataViewerMenu = new DataViewer();
 
 	wxMenu* toolMenu = new wxMenu();
 
@@ -21,6 +22,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	openHexCalculator->SetBackgroundColour(foregroundColor);
 	openHexCalculator->SetTextColour(textColor);
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
+
+	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
+	openHexCalculator->SetBackgroundColour(foregroundColor);
+	openHexCalculator->SetTextColour(textColor);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition()); }, OpenDataViewerID);
 
 	menuBar->Append(toolMenu, "Tools");
 	this->SetMenuBar(menuBar);
@@ -112,6 +118,7 @@ void MainGui::GetFilePath(wxCommandEvent& e)
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
 	{
 		currentFilePath = openDllDialog.GetPath();
+		dataViewerMenu->currentFilePath = currentFilePath;
 
 		if (!currentFilePath.empty())
 		{
@@ -300,5 +307,6 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 void MainGui::CloseApp(wxCloseEvent& e)
 {
 	bytesDisassemblerMenu->Destroy();
+	dataViewerMenu->Destroy();
 	Destroy();
 }
