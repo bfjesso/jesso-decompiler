@@ -65,3 +65,37 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 
 	return reg1 == reg2;
 }
+
+unsigned char getSizeOfRegister(enum Register reg) // in bytes
+{
+	if (reg >= AL && reg <= R15B) 
+	{
+		return 1;
+	}
+	else if (reg >= AX && reg <= IP) 
+	{
+		return 2;
+	}
+	else if (reg >= EAX && reg <= EIP) 
+	{
+		return 4;
+	}
+	else if ((reg >= RAX && reg <= R15) || (reg >= MM0 && reg <= MM7))
+	{
+		return 8;
+	}
+	else if (reg >= ST0 && reg <= ST7)
+	{
+		return 10;
+	}
+	else if (reg >= XMM0 && reg <= XMM7) 
+	{
+		return 16;
+	}
+	else if (reg >= YMM0 && reg <= YMM7) 
+	{
+		return 32;
+	}
+
+	return 0;
+}

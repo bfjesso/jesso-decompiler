@@ -10,16 +10,9 @@ enum CallingConvention
 	__THISCALL
 };
 
-struct VariableType
-{
-	unsigned char primitiveType;
-	unsigned char isSigned;
-	unsigned char numOfPtrs;
-};
-
 struct LocalVariable 
 {
-	struct VariableType type;
+	unsigned char type;
 	int stackOffset;
 };
 
@@ -31,16 +24,16 @@ struct Function
 
 	char name[20];
 
-	struct VariableType returnType;
+	unsigned char returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function
 
 	unsigned char callingConvention;
 
 	unsigned char numOfRegArgs;
-	struct VariableType regArgs[4];
+	unsigned char regArgTypes[4];
 
 	unsigned char numOfStackArgs;
-	struct VariableType stackArgs[6];
+	unsigned char stackArgTypes[6];
 	unsigned char stackArgBpOffsets[6];
 
 	unsigned char numOflocalVars;
@@ -61,6 +54,4 @@ extern "C"
 }
 #endif
 
-static unsigned char getVariableType(struct Function* function, struct Operand* var, struct VariableType* result);
-
-static unsigned char handleIfVarIsPtr(struct Function* function, unsigned char reg, struct VariableType* result);
+unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand);

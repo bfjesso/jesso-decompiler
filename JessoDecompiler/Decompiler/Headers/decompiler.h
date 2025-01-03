@@ -3,15 +3,15 @@
 
 enum PrimitiveType
 {
+	VOID_TYPE,
+	
 	CHAR_TYPE,
 	SHORT_TYPE,
 	INT_TYPE,
 	LONG_LONG_TYPE,
 
 	FLOAT_TYPE,
-	DOUBLE_TYPE,
-
-	VOID_TYPE
+	DOUBLE_TYPE
 };
 
 struct LineOfC 
@@ -46,8 +46,6 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
 
-static unsigned char variableTypeToStr(struct VariableType* varType, char* buffer, unsigned char bufferLen);
-
 static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen, unsigned char* numOfScopesFound);
 
 static unsigned char checkForReturnStatement(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex);
@@ -60,17 +58,17 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 
 static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result);
 
-static unsigned char decompileAssignment(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct VariableType* type, struct LineOfC* result);
+static unsigned char decompileAssignment(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned char type, struct LineOfC* result);
 
-static unsigned char decompileOperand(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Operand* operand, struct VariableType* type, char* resultBuffer, unsigned char resultBufferSize);
+static unsigned char decompileOperand(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Operand* operand, unsigned char type, char* resultBuffer, unsigned char resultBufferSize);
 
-static unsigned char decompileExpression(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned char targetReg, struct VariableType* type, char* resultBuffer, unsigned char resultBufferSize);
+static unsigned char decompileExpression(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize);
 
 static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, struct LineOfC* result);
 
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
 
-static unsigned char getLastOperand(struct DisassembledInstruction* instruction);
+unsigned char getLastOperand(struct DisassembledInstruction* instruction);
 
 unsigned char isOperandStackArgument(struct Operand* operand);
 
@@ -81,5 +79,3 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites);
 
 static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);
-
-static unsigned char getTypeOfMemAddr(unsigned char opcode, struct MemoryAddress* memAddr, struct VariableType* result);

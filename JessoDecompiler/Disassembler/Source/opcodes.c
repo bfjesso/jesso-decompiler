@@ -8,6 +8,7 @@ const char* mnemonicStrs[] =
 	"SUB", "AND", "OR", "XOR", "SHL", "SHR", 
 
 	"CVTPS2PD", "CVTPD2PS", "CVTSS2SD", "CVTSD2SS",
+	"COMISS", "COMISD",
 	
 	"IMUL", "IDIV",
 
