@@ -23,8 +23,10 @@ struct LineOfC
 struct Scope
 {
 	struct Scope* lastScope;
-	unsigned long long start;
-	unsigned long long end;
+	unsigned long long start; // the conditional jmp (Jcc)
+	unsigned long long end; // the last instruction of the scope
+	short orJccInstructionIndex;
+	unsigned char isElseIf;
 };
 
 #include "../Headers/functions.h"
@@ -54,7 +56,7 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, struct Function** calleeRef);
 
-static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result);
+static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Scope* scope, struct LineOfC* result);
 
 static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result);
 

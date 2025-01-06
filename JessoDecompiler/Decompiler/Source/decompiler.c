@@ -33,14 +33,14 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 	int numOfLinesDecompiled = 0;
 	
 	struct Scope scopes[10];
-	unsigned char numOfScopes = 1;
+	unsigned char numOfScopes = 0;
 	if(!getAllScopes(&functions[functionIndex], scopes, 10, &numOfScopes))
 	{
 		return 0;
 	}
 
-	int scopeIndex = numOfScopes - 1;
-	struct Scope* nextScope = scopeIndex < 0 ? 0 : &scopes[scopeIndex];
+	int scopeIndex = 0;
+	struct Scope* nextScope = numOfScopes == 0 ? 0 : &scopes[scopeIndex];
 	struct Scope* currentScope = 0;
 
 	for (int i = functions[functionIndex].numOfInstructions - 1; i >= 0; i--)
@@ -72,32 +72,37 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 			}
 		}
 
-		if (currentScope != 0 && functions[functionIndex].addresses[i] == currentScope->start)
+		for (int j = 0; j < numOfScopes; j++)
 		{
-			if (resultBuffer[numOfLinesDecompiled - 1].line[0] == '}')
+			if (functions[functionIndex].addresses[i] == scopes[j].start) 
 			{
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "return;");
+				if (resultBuffer[numOfLinesDecompiled - 1].line[0] == '}')
+				{
+					strcpy(resultBuffer[numOfLinesDecompiled].line, "return;");
+					resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+					numOfLinesDecompiled++;
+				}
+
+				scopesDepth--;
+
+				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
 				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
 				numOfLinesDecompiled++;
+
+				if (!decompileCondition(functions, numOfFunctions, i, functionIndex, &scopes[j], &resultBuffer[numOfLinesDecompiled]))
+				{
+					return 0;
+				}
+				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+				numOfLinesDecompiled++;
+
+				currentScope = currentScope != 0 ? currentScope->lastScope : 0;
+
+				break;
 			}
-
-			scopesDepth--;
-
-			strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-			numOfLinesDecompiled++;
-
-			if (!decompileCondition(functions, numOfFunctions, i, functionIndex, &resultBuffer[numOfLinesDecompiled]))
-			{
-				return 0;
-			}
-			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-			numOfLinesDecompiled++;
-
-			currentScope = currentScope->lastScope;
 		}
 
-		if (nextScope != 0 && functions[functionIndex].addresses[i] == nextScope->end)
+		while (nextScope != 0 && functions[functionIndex].addresses[i] == nextScope->end)
 		{
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
 			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
@@ -108,11 +113,8 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 			nextScope->lastScope = currentScope;
 			currentScope = nextScope;
 
-			do 
-			{
-				scopeIndex--;
-				nextScope = scopeIndex < 0 ? 0 : &scopes[scopeIndex];
-			} while (nextScope != 0 && nextScope->end > functions[functionIndex].addresses[i]);
+			scopeIndex++;
+			nextScope = scopeIndex >= numOfScopes ? 0 : &scopes[scopeIndex];
 			
 			if (functions[functionIndex].returnType != VOID_TYPE) 
 			{
@@ -260,36 +262,62 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen, unsigned char* numOfScopesFound)
 {
 	unsigned char resultBufferIndex = 0;
+	unsigned long long lastJmpDstAddress = 0;
 	
-	for (int i = 0; i < function->numOfInstructions - 1; i++)
+	for (int i = function->numOfInstructions - 1; i > 0; i--)
 	{
 		struct DisassembledInstruction* currentInstruction = &function->instructions[i];
 
-		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JZ_SHORT)
+		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
 		{
 			if (resultBufferIndex >= resultBufferLen) { return 0; }
+
+			unsigned long long jmpDst = function->addresses[i] + currentInstruction->operands[0].immediate;
+
+			if (currentInstruction->opcode == JMP_SHORT)
+			{
+				if (lastJmpDstAddress == jmpDst)
+				{
+					continue;
+				}
+				else
+				{
+					lastJmpDstAddress = jmpDst;
+				}
+			}
 			
 			resultBuffer[resultBufferIndex].lastScope = 0;
 			resultBuffer[resultBufferIndex].start = function->addresses[i];
-			resultBuffer[resultBufferIndex].end = function->addresses[i] + currentInstruction->operands[0].immediate;
+			resultBuffer[resultBufferIndex].end = jmpDst;
+			resultBuffer[resultBufferIndex].orJccInstructionIndex = -1;
+			resultBuffer[resultBufferIndex].isElseIf = 0;
 
-			for (int j = 0; j < function->numOfInstructions - 1; j++)
+			// get the address of the instruction right before the one jumped to
+			for(int j = i; j < function->numOfInstructions - 1; j++)
 			{
-				if (function->addresses[j + 1] == resultBuffer[resultBufferIndex].end)
+				if(function->addresses[j + 1] == jmpDst)
 				{
 					resultBuffer[resultBufferIndex].end = function->addresses[j];
-
-					if (function->instructions[j].opcode == JMP_SHORT) 
+					
+					// check for else if
+					if (function->instructions[j].opcode == JMP_SHORT && resultBufferIndex > 0 && resultBuffer[resultBufferIndex].end != resultBuffer[resultBufferIndex - 1].end)
 					{
-						resultBufferIndex++;
-						resultBuffer[resultBufferIndex].lastScope = 0;
-						resultBuffer[resultBufferIndex].start = function->addresses[j];
-						resultBuffer[resultBufferIndex].end = function->addresses[j] + function->instructions[j].operands[0].immediate;
+						if (function->addresses[j] + function->instructions[j].operands[0].immediate > resultBuffer[resultBufferIndex - 1].end) 
+						{
+							resultBuffer[resultBufferIndex - 1].isElseIf = 1;
+						}
 					}
-
+					else if (function->instructions[j].opcode >= JA_SHORT && function->instructions[j].opcode <= JZ_SHORT) // check for ||
+					{
+						resultBufferIndex--;
+						resultBuffer[resultBufferIndex].orJccInstructionIndex = i;
+					}
+					
 					break;
 				}
 			}
+
+			i--;
 
 			resultBufferIndex++;
 		}
@@ -370,11 +398,11 @@ static unsigned char checkForFunctionCall(struct DisassembledInstruction* instru
 	return 0;
 }
 
-static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct LineOfC* result)
+static unsigned char decompileCondition(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Scope* scope, struct LineOfC* result)
 {
 	struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[startInstructionIndex];
 
-	char compOperator[3] = { 0 };
+	char compOperator1[3] = { 0 };
 	
 	if (currentInstruction->opcode == JMP_SHORT)
 	{
@@ -387,29 +415,60 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 		switch (currentInstruction->opcode) 
 		{
 		case JZ_SHORT:
-			strcpy(compOperator, "!=");
+			strcpy(compOperator1, "!=");
 			break;
 		case JNZ_SHORT:
-			strcpy(compOperator, "==");
+			strcpy(compOperator1, "==");
 			break;
 		case JG_SHORT:
-			strcpy(compOperator, "<=");
+			strcpy(compOperator1, "<=");
 			break;
 		case JL_SHORT:
-			strcpy(compOperator, ">=");
+			strcpy(compOperator1, ">=");
 			break;
 		case JLE_SHORT:
 		case JBE_SHORT:
-			strcpy(compOperator, ">");
+			strcpy(compOperator1, ">");
 			break;
 		case JGE_SHORT:
-			strcpy(compOperator, "<");
+			strcpy(compOperator1, "<");
 			break;
 		}
 
 		currentInstruction->hasBeenDecompiled = 1;
 	}
+
+	char compOperator2[3] = { 0 };
+	if(scope->orJccInstructionIndex != -1)
+	{
+		switch (functions[functionIndex].instructions[scope->orJccInstructionIndex].opcode)
+		{
+		case JZ_SHORT:
+			strcpy(compOperator2, "==");
+			break;
+		case JNZ_SHORT:
+			strcpy(compOperator2, "!=");
+			break;
+		case JG_SHORT:
+			strcpy(compOperator2, ">=");
+			break;
+		case JL_SHORT:
+			strcpy(compOperator2, "<=");
+			break;
+		case JLE_SHORT:
+		case JBE_SHORT:
+			strcpy(compOperator2, "<");
+			break;
+		case JGE_SHORT:
+			strcpy(compOperator2, ">");
+			break;
+		}
+
+		functions[functionIndex].instructions[scope->orJccInstructionIndex].hasBeenDecompiled = 1;
+	}
 	
+	char condition1[50] = { 0 };
+
 	for (int i = startInstructionIndex - 1; i >= 0; i--)
 	{
 		currentInstruction = &functions[functionIndex].instructions[i];
@@ -442,15 +501,69 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 				return 0;
 			}
 
-			sprintf(result->line, "if(%s %s %s)", operand1Str, compOperator, operand2Str);
+			sprintf(condition1, "%s %s %s", operand1Str, compOperator1, operand2Str);
 
 			currentInstruction->hasBeenDecompiled = 1;
 
-			return 1;
+			break;
 		}
 	}
 
-	return 0;
+	char condition2[50] = { 0 };
+
+	if (scope->orJccInstructionIndex != -1) 
+	{
+		for (int i = scope->orJccInstructionIndex - 1; i >= 0; i--)
+		{
+			currentInstruction = &functions[functionIndex].instructions[i];
+
+			unsigned char type = 0;
+			switch (currentInstruction->opcode)
+			{
+			case CMP:
+				type = INT_TYPE;
+				break;
+			case COMISS:
+				type = FLOAT_TYPE;
+				break;
+			case COMISD:
+				type = DOUBLE_TYPE;
+				break;
+			}
+
+			if (type != 0)
+			{
+				char operand1Str[50] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], type, operand1Str, 50))
+				{
+					return 0;
+				}
+
+				char operand2Str[50] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[1], type, operand2Str, 50))
+				{
+					return 0;
+				}
+
+				sprintf(condition2, "%s %s %s || ", operand1Str, compOperator2, operand2Str);
+
+				currentInstruction->hasBeenDecompiled = 1;
+
+				break;
+			}
+		}
+	}
+
+	if (scope->isElseIf) 
+	{
+		sprintf(result->line, "else if(%s%s)", condition2, condition1);
+	}
+	else 
+	{
+		sprintf(result->line, "if(%s%s)", condition2, condition1);
+	}
+
+	return 1;
 }
 
 static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result)
@@ -703,7 +816,7 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 
 	for (int i = expressionIndex - 1; i >= expressionIndex - 2 && i >= 0; i--) // remove last two )
 	{
-		char temp[50] = { 0 };
+		char temp[100] = { 0 };
 		strcpy(temp, expressions[i] + 1);
 		expressions[i][0] = 0;
 		strcpy(expressions[i], temp);
@@ -786,8 +899,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			char argStr[20] = { 0 };
-			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], callee->stackArgTypes[stackArgsFound], argStr, 20))
+			char argStr[50] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], callee->stackArgTypes[stackArgsFound], argStr, 50))
 			{
 				return 0;
 			}
@@ -805,8 +918,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 			{
 				int operandIndex = getLastOperand(currentInstruction);
 
-				char argStr[20] = { 0 };
-				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[operandIndex], callee->stackArgTypes[stackArgsFound], argStr, 20))
+				char argStr[50] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[operandIndex], callee->stackArgTypes[stackArgsFound], argStr, 50))
 				{
 					return 0;
 				}
