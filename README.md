@@ -1,5 +1,6 @@
-# Jesso-Decompiler: C decompiler for Windows. 
+# Jesso-Decompiler: C decompiler for Windows and Linux. 
 Given intel machine code, the bytes will be disassembled and decompiled into a C program.
+There is a GUI program for Windows made using wxWidgets (https://wxwidgets.org/), and I am currently working on a CLI version for Linux.
 
 # This is a work in progress. 
 I am focusing on delevoping the decompiler now, even though my disassembler is not fully comprehensive of the intel instruction set. 
