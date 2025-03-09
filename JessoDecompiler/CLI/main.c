@@ -18,102 +18,124 @@ void printHelp()
 	printf("-dc, --decompile: decompile bytes into C.\n");
 }
 
-unsigned char parseStringBytes(char* str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
+unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, unsigned char isX64)
 {
-	int strLen = strlen(str);
-	if (strLen < 2 || strLen % 2 != 0)
-	{
-		return 0;
-	}
-
-	int currentByteIndex = 0;
-	for (int i = 0; i < strLen-1; i += 2)
-	{
-		if (currentByteIndex > bytesBufferLen - 1)
-		{
-			return 0;
-		}
-
-		char subStr[2];
-		strncpy(subStr, str + i, 2);
-		bytesBuffer[currentByteIndex] = (unsigned char)strtol(subStr, 0, 16);
-
-		currentByteIndex++;
-	}
-
-	return currentByteIndex;
-}
-
-unsigned char disassembleStringBytes(char* bytesStr, unsigned char isX64)
-{
-	unsigned char bytes[100];
-	unsigned char numOfBytes = parseStringBytes(bytesStr, bytes, 100);
 	if(numOfBytes == 0)
 	{
-		printf("Failed to parse bytes. Enter them in the format: 0FBE450B....\n");
 		return 0;
 	}
 
 	struct DisassemblerOptions options;
 	options.is64BitMode = isX64;
 
+	unsigned int currentIndex = 0;
+
 	struct DisassembledInstruction currentInstruction;
-	if (disassembleInstruction(bytes, bytes + numOfBytes - 1, &options, &currentInstruction))
+	while (disassembleInstruction(bytes + currentIndex, bytes + numOfBytes - 1, &options, &currentInstruction))
 	{
 		char buffer[50];
 		if (instructionToStr(&currentInstruction, buffer, 50))
 		{
 			printf("%s\n", buffer);
+			currentIndex += currentInstruction.numOfBytes;
 		}
 		else 
 		{
-			printf("Error converting instruction to string.\n");
-			printf("The opcode is likely not handled in the disassembler.\n");
+			printf("Error converting instruction to string. Bytes: ");
+			for(int i = 0; i < currentInstruction.numOfBytes; i++)
+			{
+				printf("0x%02X ", bytes[currentIndex + i]);
+			}
+			printf("\nThe opcode is likely not handled in the disassembler.\n");
+			return 0;
 		}
 	}
-	else
-	{
-		printf("Error disassembling the bytes.\n");
-	}
-
-	return 0;
-
+	
+	return 1;
 }
 
-unsigned char disassembleFile(char* filePath, unsigned char isX64)
+unsigned char disassembleStringBytes(char* str, unsigned char isX64)
 {
-#if isX64
-#define ElfW(type) Elf64_ ## type
-#else
-#define ElfW(type) Elf32_ ## type
-#endif
+	const unsigned char bytesBufferLen = 100;	
+	unsigned char bytes[bytesBufferLen];
 	
-	ElfW(Ehdr) elfHeader;
-	ElfW(Shdr) textSectionHeader;
+	int strLen = strlen(str);
+	if (strLen < 2 || strLen % 2 != 0)
+	{
+		return 0;
+	}
+
+	int numOfBytes = 0;
+	for (int i = 0; i < strLen-1; i += 2)
+	{
+		if (numOfBytes > bytesBufferLen - 1)
+		{
+			return 0;
+		}
+
+		char subStr[2];
+		strncpy(subStr, str + i, 2);
+		bytes[numOfBytes] = (unsigned char)strtol(subStr, 0, 16);
+
+		numOfBytes++;
+	}
+	
+	if(numOfBytes == 0)
+	{
+		printf("Failed to parse bytes. Enter them in the format: 0FBE450B....\n");
+		return 0;
+	}
+
+	return disassembleBytes(bytes, numOfBytes, isX64);
+}
+
+unsigned char disassembleFile64(char* filePath)
+{
+	Elf64_Ehdr elfHeader;
+	Elf64_Shdr sectionHeader;
 	FILE* file = fopen(filePath, "r");
+
+	unsigned char result = 0;
 
 	if(file)
 	{
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		
+		Elf64_Shdr nameStrTable;
+		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
+		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
+
+		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
+		fseek(file, nameStrTable.sh_offset, SEEK_SET);
+		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
 		if(memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
 			for(int i = 0; i < elfHeader.e_shnum; i++)
 			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(textSectionHeader), SEEK_SET);
-				fread(&textSectionHeader, 1, sizeof(textSectionHeader), file);
+				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
-				printf("Section %d: %s\n", i, textSectionHeader.sh_name);
+				if(strcmp(sectionNames + sectionHeader.sh_name, ".text") == 0)
+				{
+					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
+					fseek(file, sectionHeader.sh_offset, SEEK_SET);
+					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1);
+					free(textSectionBytes);
+				}
 			}
 		}
 		else
 		{
 			printf("Not a valid ELF binary.\n");
 			close(file);
+			free(sectionNames);
 			return 0;
 		}
 
 		close(file);
+		free(sectionNames);
 	}
 	else
 	{
@@ -121,8 +143,10 @@ unsigned char disassembleFile(char* filePath, unsigned char isX64)
 		return 0;
 	}
 
-	return 1;
+	return result;
 }
+
+unsigned char disassembleFile32(char* filePath) { return 1; }
 
 int main(int argc, char* argv[])
 {
@@ -170,7 +194,8 @@ int main(int argc, char* argv[])
 			
 			if(isReadingFile)
 			{
-				if(!disassembleFile(disassemblyInput, isX64))
+				unsigned char result = isX64 ? disassembleFile64(disassemblyInput) : disassembleFile32(disassemblyInput);
+				if(!result)
 				{
 					printf("Failed to disassemble file.\n");
 					return 0;
