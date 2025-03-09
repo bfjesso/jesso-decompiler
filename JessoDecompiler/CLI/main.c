@@ -8,8 +8,13 @@
 
 void printHelp()
 {
-	printf("-h, --help: print this menu.\n");
-	printf("-da, --disassemble: disassemble bytes into intel-style assembly.\n");
+	printf("-h, --help: print this menu.\n\n");
+
+	printf("-da, --disassemble: disassemble file or bytes into intel-style assembly.\n");
+	printf("\tjdc -da [OPTIONS], [FILE PATH OR BYTES]\n\n");
+	printf("\t-f: disassemble a file's .text section rather than a string of bytes.\n\n");
+	printf("\t-x86: disassemble assuming the bytes or file are 32-bit.\n\n");
+
 	printf("-dc, --decompile: decompile bytes into C.\n");
 }
 
