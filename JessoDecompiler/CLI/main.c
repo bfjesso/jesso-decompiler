@@ -14,11 +14,13 @@ void printHelp()
 	printf("\tjdc -da [OPTIONS], [FILE PATH OR BYTES]\n\n");
 	printf("\t-f: disassemble a file's .text section rather than a string of bytes.\n\n");
 	printf("\t-x86: disassemble assuming the bytes or file are 32-bit.\n\n");
+	printf("\t-a: show addresses (offset from .text section).\n\n");
+	printf("\t-b: show bytes for each instruction.\n\n");
 
 	printf("-dc, --decompile: decompile bytes into C.\n");
 }
 
-unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, unsigned char isX64)
+unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, unsigned char isX64, unsigned char showAddresses, unsigned char showBytes)
 {
 	if(numOfBytes == 0)
 	{
@@ -36,7 +38,24 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 		char buffer[50];
 		if (instructionToStr(&currentInstruction, buffer, 50))
 		{
-			printf("%s\n", buffer);
+			if(showAddresses) 
+			{	
+				printf("0x%X\t", currentIndex);
+			}
+
+			printf("%s", buffer); // assembly
+
+			if(showBytes)
+			{
+				printf(";\t");
+				for(int i = 0; i < currentInstruction.numOfBytes; i++)
+				{
+					printf("0x%X ", bytes[currentIndex + i]);
+				}	
+			}
+			
+			printf("\n");
+
 			currentIndex += currentInstruction.numOfBytes;
 		}
 		else 
@@ -54,7 +73,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 	return 1;
 }
 
-unsigned char disassembleStringBytes(char* str, unsigned char isX64)
+unsigned char disassembleStringBytes(char* str, unsigned char isX64, unsigned char showAddresses, unsigned char showBytes)
 {
 	const unsigned char bytesBufferLen = 100;	
 	unsigned char bytes[bytesBufferLen];
@@ -86,10 +105,10 @@ unsigned char disassembleStringBytes(char* str, unsigned char isX64)
 		return 0;
 	}
 
-	return disassembleBytes(bytes, numOfBytes, isX64);
+	return disassembleBytes(bytes, numOfBytes, isX64, showAddresses, showBytes);
 }
 
-unsigned char disassembleFile64(char* filePath)
+unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, unsigned char showBytes)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -121,7 +140,7 @@ unsigned char disassembleFile64(char* filePath)
 					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
 					fseek(file, sectionHeader.sh_offset, SEEK_SET);
 					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1);
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, showAddresses, showBytes);
 					free(textSectionBytes);
 				}
 			}
@@ -146,7 +165,8 @@ unsigned char disassembleFile64(char* filePath)
 	return result;
 }
 
-unsigned char disassembleFile32(char* filePath) { return 1; }
+// this should be a copy of disassembleFile64, but using the 32-bit Elf types
+unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, unsigned char showBytes) { return 1; }
 
 int main(int argc, char* argv[])
 {
@@ -155,6 +175,8 @@ int main(int argc, char* argv[])
 		unsigned char isDisassembling = 0;
 		unsigned char isReadingFile = 0;
 		unsigned char isX64 = 1;
+		unsigned char showAddresses = 0;
+		unsigned char showBytes = 0;
 		char* disassemblyInput = 0;
 		
 		for(int i = 1; i < argc; i++)
@@ -177,6 +199,15 @@ int main(int argc, char* argv[])
 			{
 				isX64 = 0;
 			}
+			else if(strcmp(argv[i], "-a") == 0)
+			{
+				showAddresses = 1;
+			}
+			else if(strcmp(argv[i], "-b") == 0)
+			{
+				showBytes = 1;
+			}
+
 			else if(i == argc - 1)
 			{
 				disassemblyInput = argv[i];
@@ -194,14 +225,17 @@ int main(int argc, char* argv[])
 			
 			if(isReadingFile)
 			{
-				unsigned char result = isX64 ? disassembleFile64(disassemblyInput) : disassembleFile32(disassemblyInput);
+				unsigned char result = 0;
+				if(isX64) { result = disassembleFile64(disassemblyInput, showAddresses, showBytes);   }
+				else { result = disassembleFile32(disassemblyInput, showAddresses, showBytes);   }
+				
 				if(!result)
 				{
 					printf("Failed to disassemble file.\n");
 					return 0;
 				}
 			}
-			else if(!disassembleStringBytes(disassemblyInput, isX64))
+			else if(!disassembleStringBytes(disassemblyInput, isX64, showAddresses, showBytes))
 			{
 				printf("Failed to disassemble bytes.\n");
 				return 0;
