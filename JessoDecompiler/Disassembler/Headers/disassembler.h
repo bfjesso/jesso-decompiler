@@ -154,6 +154,6 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 
 static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result);
 
-static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result);
+static unsigned char handleSIB(unsigned char** bytesPtr, struct Operand* result);
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);

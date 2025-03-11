@@ -47,7 +47,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 
 			if(showBytes)
 			{
-				printf(";\t");
+				printf(";%+15s", "");
 				for(int i = 0; i < currentInstruction.numOfBytes; i++)
 				{
 					printf("0x%X ", bytes[currentIndex + i]);
@@ -148,12 +148,12 @@ unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, uns
 		else
 		{
 			printf("Not a valid ELF binary.\n");
-			close(file);
+			fclose(file);
 			free(sectionNames);
 			return 0;
 		}
 
-		close(file);
+		fclose(file);
 		free(sectionNames);
 	}
 	else

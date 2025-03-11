@@ -39,7 +39,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &vexPrefix, &result->operands))
+	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &vexPrefix, (struct Operand*)(&result->operands)))
 	{
 		return 0;
 	}
@@ -59,7 +59,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 		return 0;
 	}
 	
-	int bufferIndex = 0;
+	unsigned char bufferIndex = 0;
 
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
@@ -1244,7 +1244,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 	return 1;
 }
 
-static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result)
+static unsigned char handleSIB(unsigned char** bytesPtr, struct Operand* result)
 {
 	unsigned char sibByte = (*bytesPtr)[0];
 	(*bytesPtr)++;
@@ -1269,7 +1269,7 @@ static unsigned char* handleSIB(unsigned char** bytesPtr, struct Operand* result
 	}
 	
 
-	return result;
+	return 1;
 }
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize)
