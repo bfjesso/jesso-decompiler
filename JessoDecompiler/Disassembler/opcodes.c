@@ -1,4 +1,4 @@
-#include "../Headers/opcodes.h"
+#include "opcodes.h"
 
 const char* mnemonicStrs[] =
 {

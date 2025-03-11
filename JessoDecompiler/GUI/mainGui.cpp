@@ -1,5 +1,5 @@
-#include "../Headers/mainGui.h"
-#include "../../PEHandler/Headers/peHandler.h"
+#include "mainGui.h"
+#include "../PEHandler/peHandler.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)

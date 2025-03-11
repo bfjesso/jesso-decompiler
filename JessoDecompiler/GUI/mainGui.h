@@ -1,10 +1,10 @@
 #pragma once
-#include "../Headers/guiUtils.h"
+#include "guiUtils.h"
 #include <wx/grid.h>
-#include "../Headers/disassembleBytesMenu.h"
-#include "../Headers/dataViewerMenu.h"
-#include "../../Disassembler/Headers/disassembler.h"
-#include "../../Decompiler/Headers/decompiler.h"
+#include "disassembleBytesMenu.h"
+#include "dataViewerMenu.h"
+#include "../Disassembler/disassembler.h"
+#include "../Decompiler/decompiler.h"
 
 class MainGui : public wxFrame, public Utils
 {

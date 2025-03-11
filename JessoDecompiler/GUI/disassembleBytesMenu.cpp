@@ -1,5 +1,5 @@
-#include "../Headers/disassembleBytesMenu.h"
-#include "../../Disassembler/Headers/disassembler.h"
+#include "disassembleBytesMenu.h"
+#include "../Disassembler/disassembler.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassembler, wxFrame)
 EVT_CLOSE(CloseMenu)

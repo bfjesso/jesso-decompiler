@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Disassembler/Headers/disassembler.h"
+#include "../Disassembler/disassembler.h"
 
 enum PrimitiveType
 {
@@ -29,7 +29,7 @@ struct Scope
 	unsigned char isElseIf;
 };
 
-#include "../Headers/functions.h"
+#include "functions.h"
 
 #ifdef __cplusplus
 extern "C"

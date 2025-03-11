@@ -1,4 +1,4 @@
-#include "../Headers/registers.h"
+#include "registers.h"
 
 const char* segmentStrs[] =
 {

@@ -1,6 +1,6 @@
-#include "../Headers/decompiler.h"
-#include "../../Disassembler/Headers/opcodes.h"
-#include "../../Disassembler/Headers/registers.h"
+#include "decompiler.h"
+#include "../Disassembler/opcodes.h"
+#include "../Disassembler/registers.h"
 
 #include <stdio.h>
 #include <string.h>

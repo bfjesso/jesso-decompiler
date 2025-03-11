@@ -1,4 +1,4 @@
-#include "../Headers/guiUtils.h"
+#include "guiUtils.h"
 
 void Utils::CopyToClipboard(const char* txt)
 {

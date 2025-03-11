@@ -1,5 +1,5 @@
 #pragma once
-#include "../Headers/guiUtils.h"
+#include "guiUtils.h"
 
 class DataViewer : public wxFrame, public Utils
 {

@@ -1,6 +1,6 @@
 #pragma once
-#include "../../Disassembler/Headers/disassembler.h"
-#include "../Headers/decompiler.h"
+#include "../Disassembler/disassembler.h"
+#include "decompiler.h"
 
 enum CallingConvention
 {

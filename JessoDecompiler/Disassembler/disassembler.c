@@ -1,9 +1,9 @@
-#include "../Headers/disassembler.h"
-#include "../Headers/registers.h"
-#include "../Headers/oneByteOpcodeMap.h"
-#include "../Headers/twoByteOpcodeMap.h"
-#include "../Headers/extendedOpcodeMap.h"
-#include "../Headers/escapeOpcodeMaps.h"
+#include "disassembler.h"
+#include "registers.h"
+#include "oneByteOpcodeMap.h"
+#include "twoByteOpcodeMap.h"
+#include "extendedOpcodeMap.h"
+#include "escapeOpcodeMaps.h"
 
 #include <stdio.h>
 #include <string.h>

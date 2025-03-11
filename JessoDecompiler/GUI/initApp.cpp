@@ -1,4 +1,4 @@
-#include "../Headers/initApp.h"
+#include "initApp.h"
 
 wxIMPLEMENT_APP(App);
 
