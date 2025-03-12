@@ -855,6 +855,11 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->type = REGISTER;
 			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
 			break;
+		case A_BYTE:
+			currentOperand->type = IMMEDIATE;
+			currentOperand->immediate = is64BitMode ? 0x64 : 0x32; // ???
+			(*bytesPtr)++;
+			break;
 		}
 	}
 
