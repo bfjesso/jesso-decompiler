@@ -82,6 +82,19 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	buffer[bufferIndex] = ' ';
 	bufferIndex++;
 
+	if(instruction->opcode == ALIGNMENT)
+	{
+		char sizeBuffer[4];
+		sprintf(sizeBuffer, "0X%X", instruction->numOfBytes);
+		strcpy(buffer + bufferIndex, sizeBuffer);
+		bufferIndex += strlen(sizeBuffer);
+
+		buffer[bufferIndex] = 0;
+		bufferIndex++;
+
+		return bufferIndex <= bufferSize;
+	}
+
 	for (int i = 0; i < 3; i++) 
 	{
 		if (instruction->operands[i].type == NO_OPERAND) { continue; }
@@ -120,7 +133,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			if (!memAddressToStr(&currentOperand->memoryAddress, buffer + bufferIndex, bufferSize - bufferIndex, &bufferIndex)) { return 0; }
 			break;
 		case IMMEDIATE:
-			sprintf(immediateBuffer, "0x%X", currentOperand->immediate);
+			sprintf(immediateBuffer, "0X%X", currentOperand->immediate);
 			strcpy(buffer + bufferIndex, immediateBuffer);
 			bufferIndex += strlen(immediateBuffer);
 			break;
@@ -167,7 +180,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	else if (memAddr->constSegment != 0) 
 	{
 		static char hexSeg[20];
-		sprintf(hexSeg, "0x%X", memAddr->constSegment);
+		sprintf(hexSeg, "0X%X", memAddr->constSegment);
 
 		if (bufferIndex + strlen(hexSeg) - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, hexSeg);
@@ -222,11 +235,11 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 		char constDisp[20];
 		if (memAddr->constDisplacement < 0) 
 		{
-			sprintf(constDisp, "-0x%X", -memAddr->constDisplacement);
+			sprintf(constDisp, "-0X%X", -memAddr->constDisplacement);
 		}
 		else 
 		{
-			sprintf(constDisp, "0x%X", memAddr->constDisplacement);
+			sprintf(constDisp, "0X%X", memAddr->constDisplacement);
 		}
 
 		if (buffer[bufferIndex - 1] != '[' && memAddr->constDisplacement >= 0)

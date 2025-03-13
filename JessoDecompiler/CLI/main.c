@@ -40,7 +40,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 		{	
 			printf("%#-*X", 15, currentIndex + startAddr);
 		}
-		
+
 		if(showOnlyBytes)
 		{
 			for(int i = 0; i < currentInstruction.numOfBytes; i++)
@@ -79,7 +79,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 			return 0;
 		}
 	}
-	
+
 	return 1;
 }
 
