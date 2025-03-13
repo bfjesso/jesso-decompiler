@@ -257,7 +257,7 @@ static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned cha
 	result->group3 = NO_PREFIX;
 	result->group4 = NO_PREFIX;
 	
-	for (int i = 0; i < 4; i++) // up to four prefixes
+	while(1)
 	{
 		if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
@@ -856,9 +856,11 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
 			break;
 		case A_BYTE:
-			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = is64BitMode ? 0x64 : 0x32; // ???
 			(*bytesPtr)++;
+			break;
+		case ALIGN:
+			if((*bytesPtr)[0] == 0x80) { (*bytesPtr) += 5; }
+			else if((*bytesPtr)[0] == 0x84) { (*bytesPtr) += 6; }
 			break;
 		}
 	}
