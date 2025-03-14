@@ -30,3 +30,4 @@ If you run the CLI with the -h or --help flag, you will get a list of flags that
     -ob: this will only show the bytes of each instruction and not the assembly.
 
 ```
+![Disassemly output of test32 in the CLI](./cli-screenshot.png)
