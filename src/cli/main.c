@@ -3,8 +3,8 @@
 #include <string.h>
 #include <elf.h>
 
-#include "../Disassembler/disassembler.h"
-#include "../Decompiler/decompiler.h"
+#include "../disassembler/disassembler.h"
+#include "../decompiler/decompiler.h"
 
 void printHelp()
 {

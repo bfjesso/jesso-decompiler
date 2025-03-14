@@ -1,6 +1,6 @@
 #include "functions.h"
-#include "../Disassembler/opcodes.h"
-#include "../Disassembler/registers.h"
+#include "../disassembler/opcodes.h"
+#include "../disassembler/registers.h"
 
 unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
 {

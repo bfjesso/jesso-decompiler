@@ -1,5 +1,5 @@
 #pragma once
-#include "../Disassembler/disassembler.h"
+#include "../disassembler/disassembler.h"
 #include "decompiler.h"
 
 enum CallingConvention

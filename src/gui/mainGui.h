@@ -3,8 +3,8 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
-#include "../Disassembler/disassembler.h"
-#include "../Decompiler/decompiler.h"
+#include "../disassembler/disassembler.h"
+#include "../decompiler/decompiler.h"
 
 class MainGui : public wxFrame, public Utils
 {
