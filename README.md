@@ -1,7 +1,7 @@
 # Jesso Decompiler: A C decompiler for Windows and Linux
-The Jesso Decompiler is a tool that will generate readable C code from a compiled binary. The Jesso Decompiler can either read from a file, or parse a given string
+The Jesso Decompiler is a tool that will generate readable C code from a compiled binary. It can either read from a file, or parse a given string
 of bytes. The command line interface for Linux will handle reading from an ELF binary, and the Windows graphical user interface will handle reading a
-portable executable file. All machine code must be x86-64 architecture, and when generating assembly output, it will be in Intel style syntax. The GUI for Windows
+portable executable file. All bytes must be in x86-64 machine code, and when generating assembly output, it will be in Intel style syntax. The GUI for Windows
 is made using wxWidgets (https://wxwidgets.org). 
 
 # Installation
