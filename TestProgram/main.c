@@ -3,12 +3,12 @@ int sub(int a, int b)
 	return a - b;
 }
 
-int __stdcall multiply(int a, int b)
+int __attribute__((stdcall)) multiply(int a, int b)
 {
 	return a * b;
 }
 
-int __fastcall divide(int a, int b)
+int __attribute__((fastcall)) divide(int a, int b)
 {
 	return a / b;
 }
