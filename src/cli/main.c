@@ -21,7 +21,7 @@ void printHelp()
 	printf("-dc, --decompile: decompile bytes into C.\n");
 }
 
-unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, unsigned char isX64, unsigned char showAddresses, unsigned long long startAddr, unsigned char showBytes, unsigned char showOnlyBytes)
+unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, unsigned char isX64, unsigned char showAddresses, unsigned long long startAddr, unsigned char showBytes, unsigned char showOnlyBytes)
 {
 	if(numOfBytes == 0)
 	{
@@ -49,6 +49,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 			}
 			currentIndex += currentInstruction.numOfBytes;
 			printf("\n");
+			memset(&currentInstruction, 0, sizeof(currentInstruction));
 			continue;
 		}
 	
@@ -78,6 +79,8 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned char numOfBytes, u
 			printf("\nThe opcode is likely not handled in the disassembler.\n");
 			return 0;
 		}
+
+		memset(&currentInstruction, 0, sizeof(currentInstruction));
 	}
 
 	return 1;
@@ -150,7 +153,7 @@ unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, uns
 					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
 					fseek(file, sectionHeader.sh_offset, SEEK_SET);
 					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes);
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
 					free(textSectionBytes);
 				}
 			}
@@ -176,7 +179,62 @@ unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, uns
 }
 
 // this should be a copy of disassembleFile64, but using the 32-bit Elf types
-unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes) { return 1; }
+unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
+{
+	Elf32_Ehdr elfHeader;
+	Elf32_Shdr sectionHeader;
+	FILE* file = fopen(filePath, "r");
+
+	unsigned char result = 0;
+
+	if(file)
+	{
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		
+		Elf32_Shdr nameStrTable;
+		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
+		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
+
+		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
+		fseek(file, nameStrTable.sh_offset, SEEK_SET);
+		fread(sectionNames, 1, nameStrTable.sh_size, file);
+
+		if(memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		{
+			for(int i = 0; i < elfHeader.e_shnum; i++)
+			{
+				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+				if(strcmp(sectionNames + sectionHeader.sh_name, ".text") == 0)
+				{
+					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
+					fseek(file, sectionHeader.sh_offset, SEEK_SET);
+					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 0, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
+					free(textSectionBytes);
+				}
+			}
+		}
+		else
+		{
+			printf("Not a valid ELF binary.\n");
+			fclose(file);
+			free(sectionNames);
+			return 0;
+		}
+
+		fclose(file);
+		free(sectionNames);
+	}
+	else
+	{
+		printf("Failed to open file.\n");
+		return 0;
+	}
+
+	return result;
+}
 
 int main(int argc, char* argv[])
 {
