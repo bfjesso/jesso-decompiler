@@ -240,6 +240,7 @@ int main(int argc, char* argv[])
 {
 	if(argc > 1)
 	{	
+		unsigned char isDecompiling = 0;
 		unsigned char isDisassembling = 0;
 		unsigned char isReadingFile = 0;
 		unsigned char isX64 = 1;
@@ -254,7 +255,13 @@ int main(int argc, char* argv[])
 			{
 				printHelp();
 				return 0;
-			}	
+			}
+
+			if(strcmp(argv[i], "-dc") == 0 || strcmp(argv[i], "--decompile") == 0)
+			{
+				isDecompiling = 1;
+				break;
+			}
 
 			if(strcmp(argv[i], "-da") == 0 || strcmp(argv[i], "--disassemble") == 0)
 			{
@@ -285,6 +292,28 @@ int main(int argc, char* argv[])
 				disassemblyInput = argv[i];
 			}
 			
+		}
+
+		if(isDecompiling)
+		{
+			printf("(jdc) ");
+			char userInput[50];
+			while(scanf("%s", userInput) && strcmp(userInput, "q") != 0)
+			{	
+				if(strcmp(userInput, "h") == 0)
+				{
+					printf("l: list all functions\n");
+					printf("q: exit\n");
+				}
+				else
+				{
+					printf("Unrecognized command.\n");
+				}
+
+				printf("(jdc) ");
+			}
+
+			return 0;
 		}
 
 		if(isDisassembling)
