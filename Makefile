@@ -1,11 +1,13 @@
-jdc: ./src/cli/main.c ./src/disassembler/disassembler.c ./src/disassembler/disassembler.h
-	gcc ./src/cli/main.c -o main.o -c
-	gcc -c -fdiagnostics-color=always ./src/disassembler/*.c 2>&1 | less -R
+jdc: ./src/cli/main.c ./src/disassembler/disassembler.c ./src/decompiler/decompiler.c
+	gcc -c -w ./src/cli/main.c -o main.o
+	gcc -c -w ./src/disassembler/*.c
+	gcc -c -w ./src/decompiler/*.c
 	gcc *.o -o ./bin/linux/jdc
 
-debug-jdc: ./src/cli/main.c ./src/disassembler/disassembler.c ./src/disassembler/disassembler.h
-	gcc -g ./src/cli/main.c -o main.o -c
-	gcc -g -c -fdiagnostics-color=always ./src/disassembler/*.c 2>&1 | less -R
+debug-jdc: ./src/cli/main.c ./src/disassembler/disassembler.c ./src/decompiler/decompiler.c
+	gcc -g -c -w ./src/cli/main.c -o main.o
+	gcc -g -c -w ./src/disassembler/*.c
+	gcc -g -c -w ./src/decompiler/*.c
 	gcc *.o -o ./bin/linux/debug-jdc
 
 clean:

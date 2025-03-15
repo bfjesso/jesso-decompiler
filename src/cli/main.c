@@ -11,22 +11,26 @@ void printHelp()
 	printf("-h, --help: print this menu.\n\n");
 
 	printf("-da, --disassemble: disassemble file or bytes into intel-style assembly.\n");
-	printf("\tjdc -da [OPTIONS], [FILE PATH OR BYTES]\n\n");
+	printf("\tjdc -da [OPTIONS] [FILE PATH OR BYTES]\n\n");
 	printf("\t-f: disassemble a file's .text section rather than a string of bytes.\n\n");
 	printf("\t-x86: disassemble assuming the bytes or file are 32-bit.\n\n");
 	printf("\t-a: show addresses (file offset).\n\n");
 	printf("\t-b: show bytes for each instruction.\n\n");
 	printf("\t-ob: show only bytes for each instruction (no disassembly).\n\n");
 
-	printf("-dc, --decompile: decompile bytes into C.\n");
+	printf("-dc, --decompile: decompile functions into C.\n");
+	printf("\tjdc -dc [OPTIONS] [FILE PATH]\n\n");
+	printf("\t-x86: decompile assuming the file is 32-bit.\n\n");
 }
 
-unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, unsigned char isX64, unsigned char showAddresses, unsigned long long startAddr, unsigned char showBytes, unsigned char showOnlyBytes)
+unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, unsigned char isX64, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned long long startAddr, unsigned char showBytes, unsigned char showOnlyBytes)
 {
 	if(numOfBytes == 0)
 	{
 		return 0;
 	}
+
+	*(numOfInstructions) = 0;
 
 	struct DisassemblerOptions options;
 	options.is64BitMode = isX64;
@@ -36,6 +40,23 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 	struct DisassembledInstruction currentInstruction;
 	while (disassembleInstruction(bytes + currentIndex, bytes + numOfBytes - 1, &options, &currentInstruction))
 	{
+		if(!print)
+		{
+			if(!instructionsBufferRef || !(*instructionsBufferRef) || !(*addressesBufferRef) || !numOfInstructions)
+			{
+				printf("Bad ptr passed to disassembleBytes.\n");
+				return 0;
+			}
+
+			(*instructionsBufferRef)[*numOfInstructions] = currentInstruction;
+			(*addressesBufferRef)[*numOfInstructions] = startAddr + currentIndex;
+
+			currentIndex += currentInstruction.numOfBytes;	
+			(*numOfInstructions)++;
+			memset(&currentInstruction, 0, sizeof(currentInstruction));
+			continue;
+		}
+
 		if(showAddresses) 
 		{	
 			printf("%#-*X", 15, currentIndex + startAddr);
@@ -118,10 +139,10 @@ unsigned char disassembleStringBytes(char* str, unsigned char isX64)
 		return 0;
 	}
 
-	return disassembleBytes(bytes, numOfBytes, isX64, 0, 0, 0, 0);
+	return disassembleBytes(bytes, numOfBytes, isX64, 0, 0, 0, 1, 0, 0, 0, 0);
 }
 
-unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
+unsigned char disassembleFile64(char* filePath, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -153,7 +174,12 @@ unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, uns
 					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
 					fseek(file, sectionHeader.sh_offset, SEEK_SET);
 					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
+					if(!print)
+					{
+						*instructionsBufferRef = (struct DisassembledInstruction*)malloc(sectionHeader.sh_size * sizeof(struct DisassembledInstruction)); // to be safe, assume each byte is one instruction
+						*addressesBufferRef = (unsigned long long*)malloc(sectionHeader.sh_size * sizeof(unsigned long long));
+					}
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
 					free(textSectionBytes);
 				}
 			}
@@ -179,7 +205,7 @@ unsigned char disassembleFile64(char* filePath, unsigned char showAddresses, uns
 }
 
 // this should be a copy of disassembleFile64, but using the 32-bit Elf types
-unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
+unsigned char disassembleFile32(char* filePath, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
 {
 	Elf32_Ehdr elfHeader;
 	Elf32_Shdr sectionHeader;
@@ -211,7 +237,12 @@ unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, uns
 					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
 					fseek(file, sectionHeader.sh_offset, SEEK_SET);
 					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 0, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
+					if(!print)
+					{
+						*instructionsBufferRef = (struct DisassembledInstruction*)malloc(sectionHeader.sh_size * sizeof(struct DisassembledInstruction)); // to be safe, assume each byte is one instruction
+						*addressesBufferRef = (unsigned long long*)malloc(sectionHeader.sh_size * sizeof(unsigned long long));
+					}
+					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 0, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
 					free(textSectionBytes);
 				}
 			}
@@ -236,6 +267,34 @@ unsigned char disassembleFile32(char* filePath, unsigned char showAddresses, uns
 	return result;
 }
 
+unsigned char findAllFunctions(struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct Function** functionsBufferRef, int functionsBufferLen, int* numOfFunctions) 
+{
+	if(!functionsBufferRef || !(*functionsBufferRef)) { return 0; }
+	
+	*numOfFunctions = 0;
+
+	struct Function currentFunction = {};
+	int instructionIndex = 0;
+	while (findNextFunction(&instructions[instructionIndex], &addresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex) && *numOfFunctions < functionsBufferLen)
+	{
+		currentFunction.name[0] = 0;
+		sprintf(currentFunction.name, "func%X", (*currentFunction.addresses));
+
+		numOfInstructions -= currentFunction.numOfInstructions;
+
+		(*functionsBufferRef)[*(numOfFunctions)] = currentFunction;
+		(*numOfFunctions)++;
+	}
+
+	if ((*numOfFunctions) > 0) 
+	{
+		fixAllFunctionReturnTypes(*functionsBufferRef, *(numOfFunctions));
+		return 1;
+	}
+
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	if(argc > 1)
@@ -247,7 +306,7 @@ int main(int argc, char* argv[])
 		unsigned char showAddresses = 0;
 		unsigned char showBytes = 0;
 		unsigned char showOnlyBytes = 0;
-		char* disassemblyInput = 0;
+		char* input = 0;
 		
 		for(int i = 1; i < argc; i++)
 		{
@@ -260,10 +319,8 @@ int main(int argc, char* argv[])
 			if(strcmp(argv[i], "-dc") == 0 || strcmp(argv[i], "--decompile") == 0)
 			{
 				isDecompiling = 1;
-				break;
 			}
-
-			if(strcmp(argv[i], "-da") == 0 || strcmp(argv[i], "--disassemble") == 0)
+			else if(strcmp(argv[i], "-da") == 0 || strcmp(argv[i], "--disassemble") == 0)
 			{
 				isDisassembling = 1;	
 			}
@@ -289,36 +346,114 @@ int main(int argc, char* argv[])
 			}
 			else if(i == argc - 1)
 			{
-				disassemblyInput = argv[i];
+				input = argv[i];
 			}
 			
 		}
 
 		if(isDecompiling)
 		{
+			if(!input)
+			{
+				printf("You need to pass a file path to decompile.\n");
+				return 0;
+			}	
+			
+			struct DisassembledInstruction* instructions = 0;
+			unsigned long long* addresses = 0;
+			int numOfInstructions = 0;
+			unsigned char result;
+			if(isX64) { result = disassembleFile64(input, &instructions, &addresses, &numOfInstructions, 0, showAddresses, showBytes, showOnlyBytes); }
+			else { result = disassembleFile32(input, &instructions, &addresses, &numOfInstructions, 0, showAddresses, showBytes, showOnlyBytes); }
+
+			if(!result || !instructions || numOfInstructions == 0)
+			{
+				printf("Error disassembling the file.\n");
+				if(instructions) { free(instructions); }
+				if(addresses) { free(addresses); }
+				return 0;
+			}
+
+			int numOfFunctions = 0;
+			struct Function* functions = (struct Function*)malloc(100 * sizeof(struct Function));
+			if(!findAllFunctions(instructions, addresses, numOfInstructions, &functions, 100, &numOfFunctions))
+			{
+				printf("Failed to find all functions.\n");
+				if(instructions) { free(instructions); }
+				if(addresses) { free(addresses); }
+				if(functions) { free(functions); }
+				return 0;
+			}
+
 			printf("(jdc) ");
+
 			char userInput[50];
 			while(scanf("%s", userInput) && strcmp(userInput, "q") != 0)
 			{	
 				if(strcmp(userInput, "h") == 0)
 				{
 					printf("l: list all functions\n");
+					printf("s: select function to decompile\n");
 					printf("q: exit\n");
+				}
+				else if(strcmp(userInput, "l") == 0)
+				{
+					printf("Index\tName\n");
+					for(int i = 0; i < numOfFunctions; i++)
+					{
+						printf("%d\t", i);
+						printf("%s\n", functions[i].name);
+					}
+				}
+				else if(strcmp(userInput, "s") == 0)
+				{
+					int functionNum = 0;
+					printf("Enter function to decompile (index): ");
+					if(!scanf("%d", &functionNum) || functionNum < 0 || functionNum >= numOfFunctions)
+					{
+						printf("Enter a valid index. Use l to list all functions.\n");
+						printf("(jdc) ");
+						continue;
+					}
+
+					struct LineOfC decompiledFunction[100];
+					unsigned short numOfLinesDecompiled = decompileFunction(functions, numOfFunctions, functionNum, functions[functionNum].name, decompiledFunction, 100);
+					if (numOfLinesDecompiled == 0)
+					{
+						printf("Error decompiling %s\n", functions[functionNum].name);
+						printf("(jdc) ");
+						continue;
+					}
+
+					for (int i = numOfLinesDecompiled - 1; i >= 0; i--)
+					{
+						for (int j = 0; j < decompiledFunction[i].indents; j++) 
+						{
+							printf("\t");
+						}
+						
+						printf(decompiledFunction[i].line);
+						printf("\n");
+					}	
 				}
 				else
 				{
-					printf("Unrecognized command.\n");
+					printf("Unrecognized command. Use h for help.\n");
 				}
 
 				printf("(jdc) ");
 			}
 
+			if(instructions) { free(instructions); }
+			if(addresses) { free(addresses); }
+			if(functions) { free(functions); }
+			
 			return 0;
 		}
 
 		if(isDisassembling)
 		{
-			if(!disassemblyInput)
+			if(!input)
 			{
 				printf("You need to either pass a string of bytes, or a file path to disassemble.\n");
 				return 0;
@@ -327,8 +462,8 @@ int main(int argc, char* argv[])
 			if(isReadingFile)
 			{
 				unsigned char result = 0;
-				if(isX64) { result = disassembleFile64(disassemblyInput, showAddresses, showBytes, showOnlyBytes); }
-				else { result = disassembleFile32(disassemblyInput, showAddresses, showBytes, showOnlyBytes); }
+				if(isX64) { result = disassembleFile64(input, 0, 0, 0, 1, showAddresses, showBytes, showOnlyBytes); }
+				else { result = disassembleFile32(input, 0, 0, 0, 1, showAddresses, showBytes, showOnlyBytes); }
 				
 				if(!result)
 				{
@@ -336,7 +471,7 @@ int main(int argc, char* argv[])
 					return 0;
 				}
 			}
-			else if(!disassembleStringBytes(disassemblyInput, isX64))
+			else if(!disassembleStringBytes(input, isX64))
 			{
 				printf("Failed to disassemble bytes.\n");
 				return 0;

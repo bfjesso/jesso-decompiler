@@ -36,8 +36,6 @@ extern "C"
 {
 #endif
 
-	const char* callingConventionStrs[];
-	
 	unsigned short decompileFunction(struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
 
 #ifdef __cplusplus
