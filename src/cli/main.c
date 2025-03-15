@@ -61,6 +61,29 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 			memset(&currentInstruction, 0, sizeof(currentInstruction));
 			continue;
 		}
+		else if(currentIndex == 0)
+		{
+			if(showOnlyBytes)
+			{
+				printf("Bytes");
+			}
+			else
+			{
+				if(showAddresses)
+				{	
+					printf("%-*s", 15, "Address");
+				}
+
+				printf("%-*s", 50, "Assembly");
+				
+				if(showBytes)
+				{	
+					printf("Bytes");
+				}
+			}
+
+			printf("\n");
+		}
 
 		if(showAddresses) 
 		{	
