@@ -10,9 +10,11 @@ void printHelp()
 {
 	printf("-h, --help: print this menu.\n\n");
 
+	printf("When disassembling or decompiling a file, the .text section is what will be read.\n\n");
+
 	printf("-da, --disassemble: disassemble file or bytes into intel-style assembly.\n");
 	printf("\tjdc -da [OPTIONS] [FILE PATH OR BYTES]\n\n");
-	printf("\t-f: disassemble a file's .text section rather than a string of bytes.\n\n");
+	printf("\t-s: disassemble a string of bytes rather than a file.\n\n");
 	printf("\t-x86: disassemble assuming the bytes or file are 32-bit.\n\n");
 	printf("\t-a: show addresses (file offset).\n\n");
 	printf("\t-b: show bytes for each instruction.\n\n");
@@ -301,7 +303,7 @@ int main(int argc, char* argv[])
 	{	
 		unsigned char isDecompiling = 0;
 		unsigned char isDisassembling = 0;
-		unsigned char isReadingFile = 0;
+		unsigned char isReadingFile = 1;
 		unsigned char isX64 = 1;
 		unsigned char showAddresses = 0;
 		unsigned char showBytes = 0;
@@ -324,9 +326,9 @@ int main(int argc, char* argv[])
 			{
 				isDisassembling = 1;	
 			}
-			else if(strcmp(argv[i], "-f") == 0)
+			else if(strcmp(argv[i], "-s") == 0)
 			{
-				isReadingFile = 1;
+				isReadingFile = 0;
 			}
 			else if(strcmp(argv[i], "-x86") == 0)
 			{
@@ -398,10 +400,11 @@ int main(int argc, char* argv[])
 				}
 				else if(strcmp(userInput, "l") == 0)
 				{
-					printf("Index\tName\n");
+					printf("Index\tAddress\tName\n");
 					for(int i = 0; i < numOfFunctions; i++)
 					{
 						printf("%d\t", i);
+						printf("%#X\t", functions[i].addresses[0]);
 						printf("%s\n", functions[i].name);
 					}
 				}
