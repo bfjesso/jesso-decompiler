@@ -32,8 +32,6 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 		return 0;
 	}
 
-	*(numOfInstructions) = 0;
-
 	struct DisassemblerOptions options;
 	options.is64BitMode = isX64;
 
@@ -48,6 +46,11 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 			{
 				printf("Bad ptr passed to disassembleBytes.\n");
 				return 0;
+			}
+			
+			if(currentIndex == 0)
+			{
+				*(numOfInstructions) = 0;
 			}
 
 			(*instructionsBufferRef)[*numOfInstructions] = currentInstruction;
