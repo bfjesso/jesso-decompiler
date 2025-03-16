@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <elf.h>
 
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
+#include "../elf-handler/elfHandler.h"
 
 void printHelp()
 {
@@ -170,128 +170,28 @@ unsigned char disassembleStringBytes(char* str, unsigned char isX64)
 	return disassembleBytes(bytes, numOfBytes, isX64, 0, 0, 0, 1, 0, 0, 0, 0);
 }
 
-unsigned char disassembleFile64(char* filePath, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
+unsigned char disassembleFile(char* filePath, unsigned char isX64, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
 {
-	Elf64_Ehdr elfHeader;
-	Elf64_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
+	char* bytes;
 
-	unsigned char result = 0;
-
-	if(file)
+	int sectionSize = 0;
+	if(isX64) { sectionSize = getSectionBytesByName64(filePath, ".text", &bytes); }
+	else { sectionSize = getSectionBytesByName32(filePath, ".text", &bytes); }
+	
+	if(sectionSize == 0)
 	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-		
-		Elf64_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
-
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
-		fread(sectionNames, 1, nameStrTable.sh_size, file);
-
-		if(memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			for(int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if(strcmp(sectionNames + sectionHeader.sh_name, ".text") == 0)
-				{
-					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
-					fseek(file, sectionHeader.sh_offset, SEEK_SET);
-					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					if(!print)
-					{
-						*instructionsBufferRef = (struct DisassembledInstruction*)malloc(sectionHeader.sh_size * sizeof(struct DisassembledInstruction)); // to be safe, assume each byte is one instruction
-						*addressesBufferRef = (unsigned long long*)malloc(sectionHeader.sh_size * sizeof(unsigned long long));
-					}
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 1, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
-					free(textSectionBytes);
-				}
-			}
-		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			free(sectionNames);
-			return 0;
-		}
-
-		fclose(file);
-		free(sectionNames);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
 		return 0;
 	}
-
-	return result;
-}
-
-// this should be a copy of disassembleFile64, but using the 32-bit Elf types
-unsigned char disassembleFile32(char* filePath, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned char showBytes, unsigned char showOnlyBytes)
-{
-	Elf32_Ehdr elfHeader;
-	Elf32_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
-
-	unsigned char result = 0;
-
-	if(file)
+	
+	if(!print)
 	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-		
-		Elf32_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
-
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
-		fread(sectionNames, 1, nameStrTable.sh_size, file);
-
-		if(memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			for(int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if(strcmp(sectionNames + sectionHeader.sh_name, ".text") == 0)
-				{
-					unsigned char* textSectionBytes = (unsigned char*)malloc(sectionHeader.sh_size);
-					fseek(file, sectionHeader.sh_offset, SEEK_SET);
-					fread(textSectionBytes, 1, sectionHeader.sh_size, file);
-					if(!print)
-					{
-						*instructionsBufferRef = (struct DisassembledInstruction*)malloc(sectionHeader.sh_size * sizeof(struct DisassembledInstruction)); // to be safe, assume each byte is one instruction
-						*addressesBufferRef = (unsigned long long*)malloc(sectionHeader.sh_size * sizeof(unsigned long long));
-					}
-					result = disassembleBytes(textSectionBytes, sectionHeader.sh_size, 0, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionHeader.sh_offset, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
-					free(textSectionBytes);
-				}
-			}
-		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			free(sectionNames);
-			return 0;
-		}
-
-		fclose(file);
-		free(sectionNames);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
+		*instructionsBufferRef = (struct DisassembledInstruction*)malloc(sectionSize * sizeof(struct DisassembledInstruction)); // to be safe, assume each byte is one instruction
+		*addressesBufferRef = (unsigned long long*)malloc(sectionSize * sizeof(unsigned long long));
 	}
 
+	unsigned char result = disassembleBytes(bytes, sectionSize, isX64, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionSize, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
+	free(bytes);
+	
 	return result;
 }
 
@@ -390,9 +290,7 @@ int main(int argc, char* argv[])
 			struct DisassembledInstruction* instructions = 0;
 			unsigned long long* addresses = 0;
 			int numOfInstructions = 0;
-			unsigned char result;
-			if(isX64) { result = disassembleFile64(input, &instructions, &addresses, &numOfInstructions, 0, showAddresses, showBytes, showOnlyBytes); }
-			else { result = disassembleFile32(input, &instructions, &addresses, &numOfInstructions, 0, showAddresses, showBytes, showOnlyBytes); }
+			unsigned char result = disassembleFile(input, isX64, &instructions, &addresses, &numOfInstructions, 0, showAddresses, showBytes, showOnlyBytes);
 
 			if(!result || !instructions || numOfInstructions == 0)
 			{
@@ -490,11 +388,7 @@ int main(int argc, char* argv[])
 			
 			if(isReadingFile)
 			{
-				unsigned char result = 0;
-				if(isX64) { result = disassembleFile64(input, 0, 0, 0, 1, showAddresses, showBytes, showOnlyBytes); }
-				else { result = disassembleFile32(input, 0, 0, 0, 1, showAddresses, showBytes, showOnlyBytes); }
-				
-				if(!result)
+				if(!disassembleFile(input, isX64, 0, 0, 0, 1, showAddresses, showBytes, showOnlyBytes))
 				{
 					printf("Failed to disassemble file.\n");
 					return 0;
