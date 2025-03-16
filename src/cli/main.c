@@ -175,8 +175,9 @@ unsigned char disassembleFile(char* filePath, unsigned char isX64, struct Disass
 	char* bytes;
 
 	int sectionSize = 0;
-	if(isX64) { sectionSize = getSectionBytesByName64(filePath, ".text", &bytes); }
-	else { sectionSize = getSectionBytesByName32(filePath, ".text", &bytes); }
+	unsigned long long startAddress = 0;
+	if(isX64) { sectionSize = getSectionBytesByName64(filePath, ".text", &bytes, &startAddress); }
+	else { sectionSize = getSectionBytesByName32(filePath, ".text", &bytes, &startAddress); }
 	
 	if(sectionSize == 0)
 	{
@@ -189,7 +190,7 @@ unsigned char disassembleFile(char* filePath, unsigned char isX64, struct Disass
 		*addressesBufferRef = (unsigned long long*)malloc(sectionSize * sizeof(unsigned long long));
 	}
 
-	unsigned char result = disassembleBytes(bytes, sectionSize, isX64, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, sectionSize, showBytes, showOnlyBytes); // 1 needs to be 0 in 32-bit function
+	unsigned char result = disassembleBytes(bytes, sectionSize, isX64, instructionsBufferRef, addressesBufferRef, numOfInstructions, print, showAddresses, startAddress, showBytes, showOnlyBytes);
 	free(bytes);
 	
 	return result;

@@ -3,7 +3,7 @@
 #include <string.h>
 #include "elfHandler.h"
 
-unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBufferRef)
+unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBufferRef, unsigned long long* startAddress)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -36,6 +36,7 @@ unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBuf
 					
 					fclose(file);
 					free(sectionNames);
+					*startAddress = sectionHeader.sh_offset;
 					return sectionHeader.sh_size;
 				}
 			}
@@ -62,7 +63,7 @@ unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBuf
 	return 0;
 }
 
-unsigned int getSectionBytesByName32(char* filePath, char* name, char** bytesBufferRef)
+unsigned int getSectionBytesByName32(char* filePath, char* name, char** bytesBufferRef, unsigned long long* startAddress)
 {
 	Elf32_Ehdr elfHeader;
 	Elf32_Shdr sectionHeader;
@@ -95,6 +96,7 @@ unsigned int getSectionBytesByName32(char* filePath, char* name, char** bytesBuf
 					
 					fclose(file);
 					free(sectionNames);
+					*startAddress = sectionHeader.sh_offset;
 					return sectionHeader.sh_size;
 				}
 			}
