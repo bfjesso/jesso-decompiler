@@ -18,16 +18,33 @@ make jdc
 
 ```
 
-# Usage
+# CLI Usage
 If you run the CLI with the -h or --help flag, you will get a list of flags that can be used with the Jesso Decompiler.
 ```
-
--da or --disassemble: This is used if you only want to disassemble machine code and not decompile. By default, a string of bytes is expected as the final argument.
-    -f: this flag will disassemble a file as input rather than a string of bytes. This expects the path to be passed as the final argument.
-    -x86: this will disassemble the input assuming that it is x86 machine code rather than x64.
-    -a: this will show the address of each instruction in the assembly output.
-    -b: this will show the bytes of each instruction in the assembly output.
-    -ob: this will only show the bytes of each instruction and not the assembly.
+./jdc -h
 
 ```
+# Disassembling
+If you only want to disassemlble, you can do using the -da or --disassemble flag.
+By default, it will accept a file path as the final argument. If you want to disassemble a literal string of bytes, you can do so with the -s flag.
+```bash
+
+# if the file is 32-bit or you want jdc to interpret a string of bytes as x86 machine code, use the -x86 flag.
+./jdc -da -x86 ./test32 # disassembling a 32-bit elf binary
+./jdc -da -s 55 # disassemble the byte 0x55
+
+```
+When disassembling a file, the program will look for the ".text" section and read the bytes from there. Same applies when decompiling.
+
 ![Disassemly output of test32 in the CLI](./cli-screenshot.png)
+
+# Decompiling
+To use the decompiler, run jdc with the -dc or --decompile flag.
+```bash
+
+./jdc -dc -x86 ./test32 # decompiling a 32-bit elf binary
+
+```
+This will then prompt for further input. Use h for help.
+To list all functions that jdc identified, use l.
+To decompile a function, use s. Then, enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
