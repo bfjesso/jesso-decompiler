@@ -344,6 +344,11 @@ int main(int argc, char* argv[])
 						continue;
 					}
 
+					char showLineNumsInput[2];
+					printf("Show line numbers? (y/n): ");
+					scanf("%s", showLineNumsInput);
+					char showLineNums = strcmp(showLineNumsInput, "y") == 0;
+
 					struct LineOfC decompiledFunction[100];
 					unsigned short numOfLinesDecompiled = decompileFunction(functions, numOfFunctions, functionNum, functions[functionNum].name, decompiledFunction, 100);
 					if (numOfLinesDecompiled == 0)
@@ -355,6 +360,11 @@ int main(int argc, char* argv[])
 
 					for (int i = numOfLinesDecompiled - 1; i >= 0; i--)
 					{
+						if(showLineNums)
+						{
+							printf("%d\t", numOfLinesDecompiled - i);
+						}
+
 						for (int j = 0; j < decompiledFunction[i].indents; j++) 
 						{
 							printf("\t");
