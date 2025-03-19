@@ -36,7 +36,7 @@ By default, it will accept a file path as the final argument. If you want to dis
 ```
 When disassembling a file, the program will look for the ".text" section and read the bytes from there. Same applies when decompiling.
 
-![Disassemly output of test32 in the CLI](./cli-screenshot.png)
+![Disassemly output of test32 in the CLI](./da-screenshot.png)
 
 # Decompiling
 To use the decompiler, run jdc with the -dc or --decompile flag.
@@ -48,3 +48,6 @@ To use the decompiler, run jdc with the -dc or --decompile flag.
 This will then prompt for further input. Use h for help.
 To list all functions that jdc identified, use l.
 To decompile a function, use s. Then, enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
+
+![Decompiling a function from test32 in the CLI](./dc-screenshot.png)
+
