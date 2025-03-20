@@ -29,8 +29,8 @@ If you only want to disassemlble, you can do using the -da or --disassemble flag
 By default, it will accept a file path as the final argument. If you want to disassemble a literal string of bytes, you can do so with the -s flag.
 ```bash
 
-# if the file is 32-bit or you want jdc to interpret a string of bytes as x86 machine code, use the -x86 flag.
-./jdc -da -x86 ./test32 # disassembling a 32-bit elf binary
+# jdc will identify the architecture of the elf binary. If you want, you can use -x86 or -x64 to override this.
+./jdc -da ./test32 # disassembling an elf binary
 ./jdc -da -s 55 # disassemble the byte 0x55
 
 ```
