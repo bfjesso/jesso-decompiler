@@ -15,6 +15,7 @@ void printHelp()
 	printf("-da, --disassemble: disassemble file or bytes into intel-style assembly.\n");
 	printf("\tjdc -da [OPTIONS] [FILE PATH OR BYTES]\n\n");
 	printf("\t-s: disassemble a string of bytes rather than a file.\n\n");
+	printf("\t-x64: disassemble assuming the bytes or file are 64-bit.\n\n");
 	printf("\t-x86: disassemble assuming the bytes or file are 32-bit.\n\n");
 	printf("\t-a: show addresses (file offset).\n\n");
 	printf("\t-b: show bytes for each instruction.\n\n");
@@ -22,6 +23,7 @@ void printHelp()
 
 	printf("-dc, --decompile: decompile functions into C.\n");
 	printf("\tjdc -dc [OPTIONS] [FILE PATH]\n\n");
+	printf("\t-x64: decompile assuming the file is 64-bit.\n\n");
 	printf("\t-x86: decompile assuming the file is 32-bit.\n\n");
 }
 
@@ -231,7 +233,7 @@ int main(int argc, char* argv[])
 		unsigned char isDecompiling = 0;
 		unsigned char isDisassembling = 0;
 		unsigned char isReadingFile = 1;
-		unsigned char isX64 = 1;
+		unsigned char isX64 = 2;
 		unsigned char showAddresses = 0;
 		unsigned char showBytes = 0;
 		unsigned char showOnlyBytes = 0;
@@ -256,6 +258,10 @@ int main(int argc, char* argv[])
 			else if(strcmp(argv[i], "-s") == 0)
 			{
 				isReadingFile = 0;
+			}
+			else if(strcmp(argv[i], "-x64") == 0)
+			{
+				isX64 = 1;
 			}
 			else if(strcmp(argv[i], "-x86") == 0)
 			{
@@ -286,8 +292,17 @@ int main(int argc, char* argv[])
 			{
 				printf("You need to pass a file path to decompile.\n");
 				return 0;
-			}	
-			
+			}
+
+			if(isX64 == 2)
+			{
+				if(!isFileX64(input, &isX64))
+				{
+					printf("Failed to determine file architecture.\n");
+					return 0;
+				}
+			}
+
 			struct DisassembledInstruction* instructions = 0;
 			unsigned long long* addresses = 0;
 			int numOfInstructions = 0;
@@ -395,6 +410,22 @@ int main(int argc, char* argv[])
 			{
 				printf("You need to either pass a string of bytes, or a file path to disassemble.\n");
 				return 0;
+			}
+
+			if(isX64 == 2)
+			{
+				if(isReadingFile)
+				{
+					if(!isFileX64(input, &isX64))
+					{
+						printf("Failed to determine file architecture.\n");
+						return 0;
+					}
+				}
+				else
+				{
+					isX64 = 1;
+				}
 			}
 			
 			if(isReadingFile)

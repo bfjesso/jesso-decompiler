@@ -3,6 +3,36 @@
 #include <string.h>
 #include "elfHandler.h"
 
+unsigned char isFileX64(char* filePath, unsigned char* isX64)
+{
+	FILE* file = fopen(filePath, "r");
+	if(file)
+	{
+		unsigned char e_ident[5];
+		fread(e_ident, 1, 5, file);
+		if(memcmp(e_ident, ELFMAG, SELFMAG) == 0)
+		{
+			*isX64 = e_ident[EI_CLASS] == ELFCLASS64;
+			fclose(file);
+			return 1;
+		}
+		else
+		{
+			printf("Not a valid ELF binary.\n");
+			fclose(file);
+			return 0;
+		}
+
+	}
+	else
+	{
+		printf("Failed to open file.\n");
+		return 0;
+	}
+
+	return 0;
+}
+
 unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBufferRef, unsigned long long* startAddress)
 {
 	Elf64_Ehdr elfHeader;
