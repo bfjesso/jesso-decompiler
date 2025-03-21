@@ -333,15 +333,18 @@ int main(int argc, char* argv[])
 			}
 
 			printf("(jdc) ");
+			
+			int functionNum = -1;
 
-			char userInput[50];
-			while(scanf("%s", userInput) && strcmp(userInput, "q") != 0)
+			char userInput[10];
+			while(scanf("%s", userInput)) 
 			{	
 				if(strcmp(userInput, "h") == 0)
 				{
 					printf("l: list all functions\n");
-					printf("s: select function to decompile\n");
-					printf("q: exit\n");
+					printf("s: select function\n");
+					printf("dc: decompile selected function\n");
+					printf("q: unselect function, exit if none selected\n");
 				}
 				else if(strcmp(userInput, "l") == 0)
 				{
@@ -355,51 +358,75 @@ int main(int argc, char* argv[])
 				}
 				else if(strcmp(userInput, "s") == 0)
 				{
-					int functionNum = 0;
 					printf("Enter function to decompile (index): ");
 					if(!scanf("%d", &functionNum) || functionNum < 0 || functionNum >= numOfFunctions)
 					{
 						printf("Enter a valid index. Use l to list all functions.\n");
-						printf("(jdc) ");
-						continue;
 					}
-
-					char showLineNumsInput[2];
-					printf("Show line numbers? (y/n): ");
-					scanf("%s", showLineNumsInput);
-					char showLineNums = strcmp(showLineNumsInput, "y") == 0;
-
-					struct LineOfC decompiledFunction[100];
-					unsigned short numOfLinesDecompiled = decompileFunction(functions, numOfFunctions, functionNum, functions[functionNum].name, decompiledFunction, 100);
-					if (numOfLinesDecompiled == 0)
+				}
+				else if(strcmp(userInput, "dc") == 0)
+				{
+					if(functionNum != -1)
 					{
-						printf("Error decompiling %s\n", functions[functionNum].name);
-						printf("(jdc) ");
-						continue;
+						char showLineNumsInput[2];
+						printf("Show line numbers? (y/n): ");
+						scanf("%s", showLineNumsInput);
+						char showLineNums = strcmp(showLineNumsInput, "y") == 0;
+
+						struct LineOfC decompiledFunction[100];
+						unsigned short numOfLinesDecompiled = decompileFunction(functions, numOfFunctions, functionNum, functions[functionNum].name, decompiledFunction, 100);
+						if (numOfLinesDecompiled != 0)
+						{
+							for (int i = numOfLinesDecompiled - 1; i >= 0; i--)
+							{
+								if(showLineNums)
+								{
+									printf("%d\t", numOfLinesDecompiled - i);
+								}
+
+								for (int j = 0; j < decompiledFunction[i].indents; j++) 
+								{
+									printf("\t");
+								}
+								
+								printf(decompiledFunction[i].line);
+								printf("\n");
+							}	
+						}
+						else
+						{
+							printf("Error decompiling %s\n", functions[functionNum].name);
+						}
 					}
-
-					for (int i = numOfLinesDecompiled - 1; i >= 0; i--)
+					else
 					{
-						if(showLineNums)
-						{
-							printf("%d\t", numOfLinesDecompiled - i);
-						}
-
-						for (int j = 0; j < decompiledFunction[i].indents; j++) 
-						{
-							printf("\t");
-						}
-						
-						printf(decompiledFunction[i].line);
-						printf("\n");
-					}	
+						printf("Please select a function to decompile using s.\n");
+					}
+				}
+				else if(strcmp(userInput, "q") == 0)
+				{
+					if(functionNum != -1)
+					{
+						functionNum = -1;
+					}
+					else
+					{
+						break;
+					}
 				}
 				else
 				{
 					printf("Unrecognized command. Use h for help.\n");
 				}
 
-				printf("(jdc) ");
+				if(functionNum != -1)
+				{
+					printf("(jdc, %s) ", functions[functionNum].name);
+				}
+				else
+				{
+					printf("(jdc) ");
+				}
 			}
 
 			if(instructions) { free(instructions); }
