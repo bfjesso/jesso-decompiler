@@ -22,7 +22,7 @@ struct Function
 	struct DisassembledInstruction* instructions;
 	unsigned short numOfInstructions;
 
-	char name[20];
+	char name[50];
 
 	unsigned char returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function

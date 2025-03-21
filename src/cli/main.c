@@ -25,6 +25,7 @@ void printHelp()
 	printf("\tjdc -dc [OPTIONS] [FILE PATH]\n\n");
 	printf("\t-x64: decompile assuming the file is 64-bit.\n\n");
 	printf("\t-x86: decompile assuming the file is 32-bit.\n\n");
+	printf("\t-ns: do not get symbols.\n\n");
 }
 
 unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, unsigned char isX64, struct DisassembledInstruction** instructionsBufferRef, unsigned long long** addressesBufferRef, int* numOfInstructions, unsigned char print, unsigned char showAddresses, unsigned long long startAddr, unsigned char showBytes, unsigned char showOnlyBytes)
@@ -237,6 +238,7 @@ int main(int argc, char* argv[])
 		unsigned char showAddresses = 0;
 		unsigned char showBytes = 0;
 		unsigned char showOnlyBytes = 0;
+		unsigned char getSymbols = 1;
 		char* input = 0;
 		
 		for(int i = 1; i < argc; i++)
@@ -278,6 +280,10 @@ int main(int argc, char* argv[])
 			else if(strcmp(argv[i], "-ob") == 0)
 			{
 				showOnlyBytes = 1;
+			}
+			else if(strcmp(argv[i], "-ns") == 0)
+			{
+				getSymbols = 0;
 			}
 			else if(i == argc - 1)
 			{
@@ -326,10 +332,13 @@ int main(int argc, char* argv[])
 				if(functions) { free(functions); }
 				return 0;
 			}
-			
-			for(int i = 0; i < numOfFunctions; i++)
+		
+			if(getSymbols)
 			{
-				getSymbolNameByValue(input, functions[i].addresses[0], functions[i].name);
+				for(int i = 0; i < numOfFunctions; i++)
+				{
+					getSymbolNameByValue(input, functions[i].addresses[0], functions[i].name);
+				}
 			}
 
 			printf("(jdc) ");
@@ -373,7 +382,7 @@ int main(int argc, char* argv[])
 						scanf("%s", showLineNumsInput);
 						char showLineNums = strcmp(showLineNumsInput, "y") == 0;
 
-						struct LineOfC decompiledFunction[100];
+						struct LineOfC* decompiledFunction = (struct LineOfC*)malloc(100 * sizeof(struct LineOfC));
 						unsigned short numOfLinesDecompiled = decompileFunction(functions, numOfFunctions, functionNum, functions[functionNum].name, decompiledFunction, 100);
 						if (numOfLinesDecompiled != 0)
 						{
@@ -397,6 +406,8 @@ int main(int argc, char* argv[])
 						{
 							printf("Error decompiling %s\n", functions[functionNum].name);
 						}
+
+						free(decompiledFunction);
 					}
 					else
 					{

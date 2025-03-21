@@ -473,7 +473,7 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 		functions[functionIndex].instructions[scope->orJccInstructionIndex].hasBeenDecompiled = 1;
 	}
 	
-	char condition1[50] = { 0 };
+	char condition1[100] = { 0 };
 
 	for (int i = startInstructionIndex - 1; i >= 0; i--)
 	{
@@ -495,13 +495,13 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 
 		if (type != 0)
 		{
-			char operand1Str[50] = { 0 };
+			char operand1Str[100] = { 0 };
 			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], type, operand1Str, 20))
 			{
 				return 0;
 			}
 
-			char operand2Str[50] = { 0 };
+			char operand2Str[100] = { 0 };
 			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[1], type, operand2Str, 20))
 			{
 				return 0;
@@ -515,7 +515,7 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 		}
 	}
 
-	char condition2[50] = { 0 };
+	char condition2[100] = { 0 };
 
 	if (scope->orJccInstructionIndex != -1) 
 	{
@@ -539,14 +539,14 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 
 			if (type != 0)
 			{
-				char operand1Str[50] = { 0 };
-				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], type, operand1Str, 50))
+				char operand1Str[100] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], type, operand1Str, 100))
 				{
 					return 0;
 				}
 
-				char operand2Str[50] = { 0 };
-				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[1], type, operand2Str, 50))
+				char operand2Str[100] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[1], type, operand2Str, 100))
 				{
 					return 0;
 				}
@@ -574,7 +574,7 @@ static unsigned char decompileCondition(struct Function* functions, unsigned sho
 
 static unsigned char decompileReturnStatement(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned long long scopeStart, struct LineOfC* result)
 {
-	char returnExpression[50] = { 0 };
+	char returnExpression[100] = { 0 };
 
 	int newStartInstruction = -1;
 
@@ -601,7 +601,7 @@ static unsigned char decompileReturnStatement(struct Function* functions, unsign
 	
 	if (functions[functionIndex].instructions[newStartInstruction].opcode == FLD)
 	{
-		if (!decompileOperand(functions, numOfFunctions, newStartInstruction - 1, functionIndex, &functions[functionIndex].instructions[newStartInstruction].operands[0], functions[functionIndex].returnType, returnExpression, 50))
+		if (!decompileOperand(functions, numOfFunctions, newStartInstruction - 1, functionIndex, &functions[functionIndex].instructions[newStartInstruction].operands[0], functions[functionIndex].returnType, returnExpression, 100))
 		{
 			return 0;
 		}
@@ -612,7 +612,7 @@ static unsigned char decompileReturnStatement(struct Function* functions, unsign
 		eax.type = REGISTER;
 		eax.reg = AX;
 
-		if (!decompileOperand(functions, numOfFunctions, newStartInstruction, functionIndex, &eax, functions[functionIndex].returnType, returnExpression, 50))
+		if (!decompileOperand(functions, numOfFunctions, newStartInstruction, functionIndex, &eax, functions[functionIndex].returnType, returnExpression, 100))
 		{
 			return 0;
 		}
@@ -628,15 +628,15 @@ static unsigned char decompileAssignment(struct Function* functions, unsigned sh
 {
 	struct DisassembledInstruction* currentInstruction = &functions[functionIndex].instructions[startInstructionIndex];
 	
-	char assignee[50] = { 0 };
-	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &currentInstruction->operands[0], type, assignee, 50)) 
+	char assignee[100] = { 0 };
+	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &currentInstruction->operands[0], type, assignee, 100)) 
 	{
 		return 0;
 	}
 
-	char valueToAssign[50] = { 0 };
+	char valueToAssign[100] = { 0 };
 	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, operand, type, valueToAssign, 50))
+	if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, operand, type, valueToAssign, 100))
 	{
 		return 0;
 	}
@@ -683,8 +683,8 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 			baseReg.type = REGISTER;
 			baseReg.reg = operand->memoryAddress.reg;
 			
-			char baseOperandStr[50] = { 0 };
-			if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &baseReg, type, baseOperandStr, 50)) 
+			char baseOperandStr[100] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, startInstructionIndex, functionIndex, &baseReg, type, baseOperandStr, 100)) 
 			{
 				return 0;
 			}
@@ -756,7 +756,7 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 
 static unsigned char decompileExpression(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
 {
-	char expressions[5][50];
+	char expressions[5][100];
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -785,8 +785,8 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 				break;
 			}
 
-			char operandStr[50] = { 0 };
-			if (!decompileOperand(functions, numOfFunctions, i - 1, functionIndex, &currentInstruction->operands[targetOperand], type, operandStr, 50))
+			char operandStr[100] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i - 1, functionIndex, &currentInstruction->operands[targetOperand], type, operandStr, 100))
 			{
 				return 0;
 			}
@@ -885,8 +885,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 
 				if (compareRegisters(reg, callee->regArgRegs[i]))
 				{
-					char argStr[50] = { 0 };
-					if (!decompileExpression(functions, numOfFunctions, j, functionIndex, reg, callee->regArgTypes[i], argStr, 50))
+					char argStr[100] = { 0 };
+					if (!decompileExpression(functions, numOfFunctions, j, functionIndex, reg, callee->regArgTypes[i], argStr, 100))
 					{
 						return 0;
 					}
@@ -910,8 +910,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			char argStr[50] = { 0 };
-			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], callee->stackArgTypes[stackArgsFound], argStr, 50))
+			char argStr[100] = { 0 };
+			if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[0], callee->stackArgTypes[stackArgsFound], argStr, 100))
 			{
 				return 0;
 			}
@@ -929,8 +929,8 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 			{
 				int operandIndex = getLastOperand(currentInstruction);
 
-				char argStr[50] = { 0 };
-				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[operandIndex], callee->stackArgTypes[stackArgsFound], argStr, 50))
+				char argStr[100] = { 0 };
+				if (!decompileOperand(functions, numOfFunctions, i, functionIndex, &currentInstruction->operands[operandIndex], callee->stackArgTypes[stackArgsFound], argStr, 100))
 				{
 					return 0;
 				}
