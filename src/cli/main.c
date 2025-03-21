@@ -326,6 +326,11 @@ int main(int argc, char* argv[])
 				if(functions) { free(functions); }
 				return 0;
 			}
+			
+			for(int i = 0; i < numOfFunctions; i++)
+			{
+				getSymbolNameByValue(input, functions[i].addresses[0], functions[i].name);
+			}
 
 			printf("(jdc) ");
 
