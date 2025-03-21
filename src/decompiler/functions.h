@@ -30,7 +30,8 @@ struct Function
 	unsigned char callingConvention;
 
 	unsigned char numOfRegArgs;
-	unsigned char regArgTypes[4];
+	unsigned char regArgRegs[11]; // the register that each arugment is
+	unsigned char regArgTypes[11]; // data types of arguments
 
 	unsigned char numOfStackArgs;
 	unsigned char stackArgTypes[6];

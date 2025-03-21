@@ -201,19 +201,25 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
 		char regArgStr[6];
-		switch (i)
+		switch (function->regArgRegs[i])
 		{
-		case 0:
+		case RCX: 
 			strcpy(regArgStr, "argCX");
 			break;
-		case 1:
+		case RDX:
 			strcpy(regArgStr, "argDX");
 			break;
-		case 2:
+		case R8:
 			strcpy(regArgStr, "argR8");
 			break;
-		case 3:
+		case R9:
 			strcpy(regArgStr, "argR9");
+			break;
+		case RDI:
+			strcpy(regArgStr, "argDI");
+			break;
+		case RSI:
+			strcpy(regArgStr, "argSI");
 			break;
 		}
 		
@@ -728,6 +734,16 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 				strcpy(resultBuffer, "argR9");
 				return 1;
 			}
+			else if (compareRegisters(operand->reg, DI))
+			{
+				strcpy(resultBuffer, "argDI");
+				return 1;
+			}
+			else if (compareRegisters(operand->reg, SI))
+			{
+				strcpy(resultBuffer, "argSI");
+				return 1;
+			}
 
 			strcpy(resultBuffer, registerStrs[operand->reg]);
 		}
@@ -867,12 +883,7 @@ static unsigned char decompileFunctionCall(struct Function* functions, unsigned 
 			{
 				unsigned char reg = currentInstruction->operands[0].reg;
 
-				char cxCheck = i == 0 && compareRegisters(reg, CX);
-				char dxCheck = i == 1 && compareRegisters(reg, DX);
-				char r8Check = i == 2 && compareRegisters(reg, R8);
-				char r9Check = i == 3 && compareRegisters(reg, R9);
-
-				if (cxCheck || dxCheck || r8Check || r9Check)
+				if (compareRegisters(reg, callee->regArgRegs[i]))
 				{
 					char argStr[50] = { 0 };
 					if (!decompileExpression(functions, numOfFunctions, j, functionIndex, reg, callee->regArgTypes[i], argStr, 50))

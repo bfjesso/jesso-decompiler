@@ -6,10 +6,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 {
 	struct Function function = { 0 };
 
-	unsigned char initializedCX = 0;
-	unsigned char initializedDX = 0;
-	unsigned char initializedR8 = 0;
-	unsigned char initializedR9 = 0;
+	unsigned char initializedRegs[11]; // index is i - RAX
+	for(int i = 0; i < 11; i++)
+	{
+		initializedRegs[i] = 0;
+	}
 
 	unsigned long long addressToJumpTo = 0;
 
@@ -46,6 +47,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		function.numOfInstructions++;
 
+		if(addresses[i] == 0x1139)
+		{
+			addresses[i] = 0x1139;
+		}
+
 		if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
 
 		// check for arguments
@@ -56,56 +62,23 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			if (currentOperand->type == REGISTER)
 			{
-				if (compareRegisters(currentOperand->reg, CX))
+				for(int k = RAX; k < R10; k++)
 				{
-					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+					if(k == RBP || k == RSP) { continue; }
+
+					if (compareRegisters(currentOperand->reg, k))
 					{
-						initializedCX = 1;
-					}
-					else if (!initializedCX)
-					{
-						function.regArgTypes[0] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						function.numOfRegArgs++;
-						function.callingConvention = __FASTCALL;
-					}
-				}
-				else if (compareRegisters(currentOperand->reg, DX))
-				{
-					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
-					{
-						initializedDX = 1;
-					}
-					else if (!initializedDX)
-					{
-						function.regArgTypes[1] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						function.numOfRegArgs++;
-						function.callingConvention = __FASTCALL;
-					}
-				}
-				else if (compareRegisters(currentOperand->reg, R8))
-				{
-					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
-					{
-						initializedR8 = 1;
-					}
-					else if (!initializedR8)
-					{
-						function.regArgTypes[2] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						function.numOfRegArgs++;
-						function.callingConvention = __FASTCALL;
-					}
-				}
-				else if (compareRegisters(currentOperand->reg, R9))
-				{
-					if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
-					{
-						initializedR9 = 1;
-					}
-					else if (!initializedR9)
-					{
-						function.regArgTypes[3] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						function.numOfRegArgs++;
-						function.callingConvention = __FASTCALL;
+						if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+						{
+							initializedRegs[k - RAX] = 1;
+						}
+						else if (!initializedRegs[k - RAX])
+						{
+							function.regArgRegs[function.numOfRegArgs] = k;
+							function.regArgTypes[function.numOfRegArgs] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+							function.numOfRegArgs++;
+							function.callingConvention = __FASTCALL;
+						}
 					}
 				}
 			}
