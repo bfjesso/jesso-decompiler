@@ -47,11 +47,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		function.numOfInstructions++;
 
-		if(addresses[i] == 0x1139)
-		{
-			addresses[i] = 0x1139;
-		}
-
 		if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
 
 		// check for arguments

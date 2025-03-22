@@ -57,7 +57,7 @@ unsigned char getSymbolNameByValue(char* filePath, unsigned long long value, cha
 	{
 		Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
 		
-		if(symbol->st_value == value)
+		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
 			strcpy(nameBuffer, stringBytes + symbol->st_name);
 			free(stringBytes);
