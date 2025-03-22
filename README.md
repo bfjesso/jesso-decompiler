@@ -29,25 +29,26 @@ If you only want to disassemlble, you can do using the -da or --disassemble flag
 By default, it will accept a file path as the final argument. If you want to disassemble a literal string of bytes, you can do so with the -s flag.
 ```bash
 
-# jdc will identify the architecture of the elf binary. If you want, you can use -x86 or -x64 to override this.
+# jdc will identify the architecture of an elf binary. If you want, you can use -x86 or -x64 to override this.
 ./jdc -da ./test32 # disassembling an elf binary
-./jdc -da -s 55 # disassemble the byte 0x55
+./jdc -da -s 55 # disassemble the byte 0x55. it will assume x64 if not overridden.
 
 ```
-When disassembling a file, the program will look for the ".text" section and read the bytes from there. Same applies when decompiling.
+When disassembling a file, jdc will look for the ".text" section and read the bytes from there. Same applies when decompiling.
 
 ![Disassemly output of test32 in the CLI](./da-screenshot.png)
 
 # Decompiling
 To use the decompiler, run jdc with the -dc or --decompile flag.
+By default, jdc will search the binary for symbols and apply them to function names. To disable this, use the -ns flag.
 ```bash
 
-./jdc -dc -x86 ./test32 # decompiling a 32-bit elf binary
+./jdc -dc ./test32 # decompiling a 32-bit elf binary
 
 ```
 This will then prompt for further input. Use h for help.
 To list all functions that jdc identified, use l.
-To decompile a function, use s. Then, enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
+To decompile a function, first select it with s and enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
+Once a function is selected, you can use dc to print the decompilation.
 
 ![Decompiling a function from test32 in the CLI](./dc-screenshot.png)
-
