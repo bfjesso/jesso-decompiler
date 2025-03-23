@@ -5,7 +5,7 @@
 
 enum Mnemonic
 {
-	MOVUPS, MOVUPD, MOVSS, MOVSD, MOVSX, MOV, 
+	MOVUPS, MOVUPD, MOVSS, MOVSD, MOVSX, MOVD, VMOVD, MOV, 
 	LEA, 
 	ADDPS, ADDPD, ADDSS, ADDSD, ADD, ALIGNMENT, 
 	SUB, AND, OR, XOR, SHL, SHR, 
@@ -50,7 +50,7 @@ enum OperandCode
 	rAX_r8, rCX_r9, rDX_r10, rBX_r11, rSP_r12, rBP_r13, rSI_r14, rDI_r15,
 	AL_R8B, CL_R9B, DL_R10B, BL_R11B, AH_R12B, CH_R13B, DH_R14B, BH_R15B,
 	ST0_CODE, ST1_CODE, ST2_CODE, ST3_CODE, ST4_CODE, ST5_CODE, ST6_CODE, ST7_CODE,
-	Eb, Ev, Ew, Ep,
+	Eb, Ev, Ew, Ep, Ey,
 	Gb, Gv, Gz, Gw,
 	M, Mw, Md, Mp, Ma, Mq, Mt,
 	Ib, Iv, Iz, Iw,
@@ -60,7 +60,8 @@ enum OperandCode
 	Ob, Ov,
 	Sw,
 	Ap,
-	Vps, Vpd, Vx, Vss, Vsd, 
+	Pd,
+	Vps, Vpd, Vx, Vss, Vsd, Vy,
 	Wps, Wpd, Wss, Wsd,
 	Hps, Hpd, Hx, Hss, Hsd,
 	

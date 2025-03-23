@@ -2,7 +2,7 @@
 
 const char* mnemonicStrs[] =
 {
-	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOV", 
+	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOVD", "VMOVD", "MOV", 
 	"LEA",
 	"ADDPS", "ADDPD", "ADDSS", "ADDSD", "ADD", "ALIGNMENT",
 	"SUB", "AND", "OR", "XOR", "SHL", "SHR", 

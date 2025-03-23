@@ -58,7 +58,7 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 
 			(*instructionsBufferRef)[*numOfInstructions] = currentInstruction;
 			(*addressesBufferRef)[*numOfInstructions] = startAddr + currentIndex;
-
+			
 			currentIndex += currentInstruction.numOfBytes;	
 			(*numOfInstructions)++;
 			memset(&currentInstruction, 0, sizeof(currentInstruction));
@@ -133,6 +133,13 @@ unsigned char disassembleBytes(unsigned char* bytes, unsigned int numOfBytes, un
 		}
 
 		memset(&currentInstruction, 0, sizeof(currentInstruction));
+	}
+
+	if(currentIndex < numOfBytes)
+	{
+		printf("Failed to disassemble all bytes...\n");
+		printf("Num of bytes disassemled: %d\n", currentIndex);
+		printf("Total num of bytes: %d\n", numOfBytes);
 	}
 
 	return 1;
