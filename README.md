@@ -14,7 +14,7 @@ Assuming you have git, gcc, and make installed, you can compile the Jesso Decomp
 Just clone the git repository, cd into it, and then run "make jdc". This will compile the CLI and place it in bin/linux
 ```bash
 
-git clone https://github.com/Jesso4906/jesso-decompiler.git
+git clone https://github.com/bfjesso/jesso-decompiler.git
 cd jesso-decompiler
 make jdc
 
