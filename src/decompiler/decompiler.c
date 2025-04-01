@@ -167,7 +167,7 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 		}
 	}
 
-	if (functions[functionIndex].numOflocalVars > 0)
+	if (functions[functionIndex].numOfLocalVars > 0)
 	{
 		strcpy(resultBuffer[numOfLinesDecompiled].line, "");
 		resultBuffer[numOfLinesDecompiled].indents = 1;
@@ -255,7 +255,7 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen)
 {
-	for (int i = 0; i < function->numOflocalVars; i++)
+	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
 		sprintf(resultBuffer[*resultBufferIndex].line, "%s var%X;", primitiveTypeStrs[function->localVars[i].type], -function->localVars[i].stackOffset);
 		resultBuffer[*resultBufferIndex].indents = 1;

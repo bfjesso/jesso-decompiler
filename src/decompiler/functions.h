@@ -37,7 +37,7 @@ struct Function
 	unsigned char stackArgTypes[6];
 	unsigned char stackArgBpOffsets[6];
 
-	unsigned char numOflocalVars;
+	unsigned char numOfLocalVars;
 	struct LocalVariable localVars[50];
 };
 

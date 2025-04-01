@@ -40,7 +40,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			function.numOfRegArgs = 0;
 			function.numOfStackArgs = 0;
-			function.numOflocalVars = 0;
+			function.numOfLocalVars = 0;
 
 			foundFirstInstruction = 1;
 		}
@@ -125,7 +125,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
 			{
 				unsigned char isAlreadyFound = 0;
-				for (int j = 0; j < function.numOflocalVars; j++)
+				for (int j = 0; j < function.numOfLocalVars; j++)
 				{
 					if (function.localVars[j].stackOffset == displacement)
 					{
@@ -136,9 +136,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!isAlreadyFound)
 				{
-					function.localVars[function.numOflocalVars].stackOffset = displacement;
-					function.localVars[function.numOflocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-					function.numOflocalVars++;
+					function.localVars[function.numOfLocalVars].stackOffset = displacement;
+					function.localVars[function.numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+					function.numOfLocalVars++;
 				}
 			}
 		}
@@ -291,7 +291,7 @@ unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand)
 
 struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset) 
 {
-	for (int i = 0; i < function->numOflocalVars; i++) 
+	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
 		if (function->localVars[i].stackOffset == stackOffset) 
 		{

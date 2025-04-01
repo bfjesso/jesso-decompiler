@@ -380,6 +380,41 @@ int main(int argc, char* argv[])
 						printf("Enter a valid index. Use l to list all functions.\n");
 					}
 				}
+				else if(strcmp(userInput, "p") == 0)
+				{
+					if(functionNum != -1)
+					{
+						printf("Address: %#X\n", functions[functionNum].addresses[0]);
+						printf("Number of instructions: %d\n", functions[functionNum].numOfInstructions);
+						printf("Name: %s\n", functions[functionNum].name);
+						printf("Number of register arguments: %d\n", functions[functionNum].numOfRegArgs);
+						printf("Number of register stack: %d\n", functions[functionNum].numOfStackArgs);
+						printf("Number of local variables: %d\n", functions[functionNum].numOfLocalVars);
+					}
+					else
+					{
+						printf("Please select a function using s.\n");
+					}
+				}
+				else if(strcmp(userInput, "da") == 0)
+				{
+					if(functionNum != -1)
+					{
+						for(int i = 0; i < functions[functionNum].numOfInstructions; i++)
+						{
+							char buffer[50];
+							if (instructionToStr(&functions[functionNum].instructions[i], buffer, 50))
+							{
+								printf("%#-*X", 15, functions[functionNum].addresses[i]);
+								printf("%s\n", buffer);
+							}
+						}
+					}
+					else
+					{
+						printf("Please select a function using s.");
+					}
+				}
 				else if(strcmp(userInput, "dc") == 0)
 				{
 					if(functionNum != -1)
