@@ -360,6 +360,8 @@ int main(int argc, char* argv[])
 					printf("l: list all functions\n");
 					printf("s: select function\n");
 					printf("dc: decompile selected function\n");
+					printf("p: print some information about the selected function");
+					printf("da: disassemble selected function.");
 					printf("q: unselect function, exit if none selected\n");
 				}
 				else if(strcmp(userInput, "l") == 0)
