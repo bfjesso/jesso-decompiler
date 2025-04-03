@@ -54,6 +54,10 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 	{
 		return (reg2 == SI || reg2 == ESI || reg2 == RSI);
 	}
+	else if (reg1 == IP || reg1 == EIP || reg1 == RIP)
+	{
+		return (reg2 == IP || reg2 == EIP || reg2 == RIP);
+	}
 	else if (reg1 == DI || reg1 == EDI || reg1 == RDI)
 	{
 		return (reg2 == DI || reg2 == EDI || reg2 == RDI);

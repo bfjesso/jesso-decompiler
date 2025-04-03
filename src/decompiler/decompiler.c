@@ -661,6 +661,10 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 				sprintf(resultBuffer, "arg%X", operand->memoryAddress.constDisplacement);
 			}
 		}
+		else if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			sprintf(resultBuffer, "*(%s*)(0x%X)", primitiveTypeStrs[type], functions[functionIndex].addresses[startInstructionIndex+1] + operand->memoryAddress.constDisplacement);
+		}
 		else if (operand->memoryAddress.reg == NO_REG) 
 		{
 			sprintf(resultBuffer, "*(%s*)(0x%X)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
