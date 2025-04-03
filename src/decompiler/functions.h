@@ -1,5 +1,6 @@
 #pragma once
 #include "../disassembler/disassembler.h"
+#include "../disassembler/registers.h"
 #include "decompiler.h"
 
 enum CallingConvention
@@ -30,8 +31,8 @@ struct Function
 	unsigned char callingConvention;
 
 	unsigned char numOfRegArgs;
-	unsigned char regArgRegs[11]; // the register that each arugment is
-	unsigned char regArgTypes[11]; // data types of arguments
+	unsigned char regArgRegs[NO_REG-RAX]; // the register that each arugment is
+	unsigned char regArgTypes[NO_REG-RAX]; // data types of arguments
 
 	unsigned char numOfStackArgs;
 	unsigned char stackArgTypes[6];

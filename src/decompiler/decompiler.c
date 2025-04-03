@@ -200,27 +200,15 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
-		char regArgStr[6];
-		switch (function->regArgRegs[i])
+		char regArgStr[10];
+
+		if (function->regArgRegs[i] >= RAX && function->regArgRegs[i] <= RIP)
 		{
-		case RCX: 
-			strcpy(regArgStr, "argCX");
-			break;
-		case RDX:
-			strcpy(regArgStr, "argDX");
-			break;
-		case R8:
-			strcpy(regArgStr, "argR8");
-			break;
-		case R9:
-			strcpy(regArgStr, "argR9");
-			break;
-		case RDI:
-			strcpy(regArgStr, "argDI");
-			break;
-		case RSI:
-			strcpy(regArgStr, "argSI");
-			break;
+			sprintf(regArgStr, "arg%s", registerStrs[(function->regArgRegs[i]-RAX)+AX]);
+		} 
+		else 
+		{
+			sprintf(regArgStr, "arg%s", registerStrs[function->regArgRegs[i]]);
 		}
 		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
@@ -717,35 +705,33 @@ static unsigned char decompileOperand(struct Function* functions, unsigned short
 			if (compareRegisters(operand->reg, CX))
 			{
 				strcpy(resultBuffer, "argCX");
-				return 1;
 			}
 			else if (compareRegisters(operand->reg, DX))
 			{
 				strcpy(resultBuffer, "argDX");
-				return 1;
 			}
 			else if (compareRegisters(operand->reg, R8))
 			{
 				strcpy(resultBuffer, "argR8");
-				return 1;
 			}
 			else if (compareRegisters(operand->reg, R9))
 			{
 				strcpy(resultBuffer, "argR9");
-				return 1;
 			}
 			else if (compareRegisters(operand->reg, DI))
 			{
 				strcpy(resultBuffer, "argDI");
-				return 1;
 			}
 			else if (compareRegisters(operand->reg, SI))
 			{
 				strcpy(resultBuffer, "argSI");
-				return 1;
+			}
+			else 
+			{
+				sprintf(resultBuffer, "arg%s", registerStrs[operand->reg]);
 			}
 
-			strcpy(resultBuffer, registerStrs[operand->reg]);
+			return 1;
 		}
 
 		return 1;

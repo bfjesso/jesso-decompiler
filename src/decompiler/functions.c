@@ -6,8 +6,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 {
 	struct Function function = { 0 };
 
-	unsigned char initializedRegs[11]; // index is i - RAX
-	for(int i = 0; i < 11; i++)
+	unsigned char initializedRegs[NO_REG-RAX]; // index is (i - RAX)
+	for(int i = 0; i < NO_REG-RAX; i++)
 	{
 		initializedRegs[i] = 0;
 	}
@@ -57,7 +57,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			if (currentOperand->type == REGISTER)
 			{
-				for(int k = RAX; k < R10; k++)
+				for(int k = RAX; k < NO_REG; k++)
 				{
 					if(k == RBP || k == RSP) { continue; }
 
