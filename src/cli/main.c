@@ -490,8 +490,7 @@ int main(int argc, char* argv[])
 			
 			return 0;
 		}
-
-		if(isDisassembling)
+		else if(isDisassembling)
 		{
 			if(!input)
 			{
