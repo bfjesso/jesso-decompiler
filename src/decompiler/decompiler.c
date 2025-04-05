@@ -1063,6 +1063,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		case MOVSS:
 		case MOVSD:
 		case MOVSX:
+		case MOVZX:
 		case LEA:
 		case CVTPS2PD:
 		case CVTPD2PS:
