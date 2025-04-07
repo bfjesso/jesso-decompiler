@@ -957,6 +957,7 @@ static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssi
 	case MOVSS: 
 	case MOVSD:
 	case MOVSX:
+	case MOVZX:
 		if (getAssignment) { strcpy(resultBuffer, " = "); }
 		else { strcpy(resultBuffer, ""); }
 		return 1;
@@ -1015,7 +1016,7 @@ static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssi
 		else { strcpy(resultBuffer, "(float)"); }
 		return 1;
 	}
-	
+
 	return 0;
 }
 
