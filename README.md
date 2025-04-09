@@ -51,6 +51,6 @@ By default, jdc will search the binary for symbols and apply them to function na
 This will then prompt for further input. Use h for help.
 To list all functions that jdc identified, use l.
 To decompile a function, first select it with s and enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
-Once a function is selected, you can use dc to print the decompilation.
+Once a function is selected, you can use dc to print the decompilation. It will ask if you want it to show line numbers for the decompiled function.
 
 ![Decompiling a function from test32 in the CLI](./dc-screenshot.png)
