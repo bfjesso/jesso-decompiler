@@ -23,6 +23,7 @@ make jdc
 # CLI Usage
 If you run the CLI with the -h or --help flag, you will get a list of flags that can be used with the Jesso Decompiler.
 ```bash
+
 ./jdc -h
 
 ```
