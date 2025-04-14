@@ -4,7 +4,7 @@ of bytes. The command line interface for Linux will handle reading from an ELF b
 portable executable file. All bytes must be in x86-64 machine code, and when generating assembly output, it will be in Intel style syntax. The GUI for Windows
 is made using wxWidgets (https://wxwidgets.org).
 
-This is still a work in progress.
+This is still a work in progress. Decompiling conditions (if statements and loops) is currently being worked on. The disassembler is also not yet fully comprehensive of the Intel instruction set.
 
 # Installation
 If you do not want to compile it yourself, there are precompiled binaries already in bin. "JessoDecompiler.exe" is the GUI application for windows, and "jdc" is 
