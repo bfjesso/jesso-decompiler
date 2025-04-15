@@ -34,7 +34,7 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 	
 	struct Scope scopes[10];
 	unsigned char numOfScopes = 0;
-	if(!getAllScopes(&functions[functionIndex], scopes, 10, &numOfScopes))
+	if(!getAllScopes(&functions[functionIndex], scopes, 10, &numOfScopes)) 
 	{
 		return 0;
 	}
@@ -312,6 +312,12 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 			}
 
 			i--;
+
+			printf("Scope index: %d\n", resultBufferIndex);
+			printf("Start: %#X\n", resultBuffer[resultBufferIndex].start);
+			printf("End: %#X\n", resultBuffer[resultBufferIndex].end);
+			printf("orJccInstructionIndex: %d\n", resultBuffer[resultBufferIndex].orJccInstructionIndex);
+			printf("isElseIf: %d\n\n", resultBuffer[resultBufferIndex].isElseIf);
 
 			resultBufferIndex++;
 		}
