@@ -33,11 +33,7 @@ unsigned short decompileFunction(struct Function* functions, unsigned short numO
 	int numOfLinesDecompiled = 0;
 	
 	struct Scope scopes[10];
-	unsigned char numOfScopes = 0;
-	if(!getAllScopes(&functions[functionIndex], scopes, 10, &numOfScopes)) 
-	{
-		return 0;
-	}
+	unsigned char numOfScopes = getAllScopes(&functions[functionIndex], scopes, 10);
 
 	int scopeIndex = 0;
 	struct Scope* nextScope = numOfScopes == 0 ? 0 : &scopes[scopeIndex];
@@ -253,7 +249,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 	return 1;
 }
 
-static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen, unsigned char* numOfScopesFound)
+static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen)
 {
 	unsigned char resultBufferIndex = 0;
 	unsigned long long lastJmpDstAddress = 0;
@@ -294,7 +290,7 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 					resultBuffer[resultBufferIndex].end = function->addresses[j];
 					
 					// check for else if
-					if (function->instructions[j].opcode == JMP_SHORT && resultBufferIndex > 0 && resultBuffer[resultBufferIndex].end != resultBuffer[resultBufferIndex - 1].end)
+					if (resultBufferIndex > 0 && function->instructions[j].opcode == JMP_SHORT && resultBufferIndex > 0 && resultBuffer[resultBufferIndex].end != resultBuffer[resultBufferIndex - 1].end)
 					{
 						if (function->addresses[j] + function->instructions[j].operands[0].immediate > resultBuffer[resultBufferIndex - 1].end) 
 						{
@@ -323,9 +319,7 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 		}
 	}
 
-	*numOfScopesFound = resultBufferIndex;
-
-	return 1;
+	return resultBufferIndex;
 }
 
 static unsigned char checkForReturnStatement(struct DisassembledInstruction* instruction, unsigned long long address, struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex)
