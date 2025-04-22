@@ -300,7 +300,7 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 					else if (function->instructions[j].opcode >= JA_SHORT && function->instructions[j].opcode <= JZ_SHORT) // check for ||
 					{
 						resultBufferIndex--;
-						resultBuffer[resultBufferIndex].orJccInstructionIndex = i;
+						resultBuffer[resultBufferIndex].orJccInstructionIndex = i; // this needs to be updated to support more than one || condition. :435
 					}
 					
 					break;
