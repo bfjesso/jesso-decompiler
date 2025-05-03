@@ -33,7 +33,7 @@ unsigned char isFileX64(char* filePath, unsigned char* isX64)
 	return 0;
 }
 
-unsigned char getSymbolNameByValue(char* filePath, unsigned long long value, char* nameBuffer)
+unsigned char getSymbolNameByValue64(char* filePath, unsigned long long value, char* nameBuffer)
 {
 	char* stringBytes = 0;
 	unsigned long long startAddress = 0;
@@ -73,6 +73,48 @@ unsigned char getSymbolNameByValue(char* filePath, unsigned long long value, cha
 
 	return 0;
 }
+
+unsigned char getSymbolNameByValue32(char* filePath, unsigned long long value, char* nameBuffer)
+{
+	char* stringBytes = 0;
+	unsigned long long startAddress = 0;
+	if(!getSectionBytesByName32(filePath, ".strtab", &stringBytes, &startAddress))
+	{
+		printf("Failed to find .strtab section.\n");
+		return 0;
+	}
+
+	char* bytes = 0;
+	unsigned int symtabSize = getSectionBytesByName32(filePath, ".symtab", &bytes, &startAddress);
+	if(!symtabSize)
+	{
+		printf("Failed to find .symtab section.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	int i = 0;
+	while(i < symtabSize)
+	{
+		Elf32_Sym* symbol = (Elf32_Sym*)(bytes + i);
+		
+		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
+		{
+			strcpy(nameBuffer, stringBytes + symbol->st_name);
+			free(stringBytes);
+			free(bytes);
+			return 1;
+		}
+
+		i += sizeof(Elf32_Sym);
+	}
+	
+	free(stringBytes);
+	free(bytes);
+
+	return 0;
+}
+
 
 unsigned int getSectionBytesByName64(char* filePath, char* name, char** bytesBufferRef, unsigned long long* startAddress)
 {

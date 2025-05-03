@@ -344,7 +344,8 @@ int main(int argc, char* argv[])
 			{
 				for(int i = 0; i < numOfFunctions; i++)
 				{
-					getSymbolNameByValue(input, functions[i].addresses[0], functions[i].name);
+					if(isX64) { getSymbolNameByValue64(input, functions[i].addresses[0], functions[i].name); }
+					else { getSymbolNameByValue32(input, functions[i].addresses[0], functions[i].name); }
 				}
 			}
 
