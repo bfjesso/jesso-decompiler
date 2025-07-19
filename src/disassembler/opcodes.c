@@ -1,6 +1,6 @@
 #include "opcodes.h"
 
-const char* mnemonicStrs[] =
+extern const char* mnemonicStrs[] =
 {
 	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOVD", "VMOVD", "MOV", 
 	"LEA",

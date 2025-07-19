@@ -8,6 +8,23 @@
 #include <stdio.h>
 #include <string.h>
 
+static const char* group1PrefixStrs[] =
+{
+	"LOCK",
+	"REPNZ",
+	"REPZ"
+};
+
+static const char* ptrSizeStrs[] =
+{
+	"BYTE PTR",
+	"WORD PTR",
+	"DWORD PTR",
+	"FWORD PTR",
+	"QWORD PTR",
+	"TBYTE PTR"
+};
+
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	unsigned char* startPoint = bytes;

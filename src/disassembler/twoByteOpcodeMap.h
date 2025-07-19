@@ -1,8 +1,8 @@
 #pragma once
 #include "opcodes.h" 
 
-// The information in this file comes from the
-//	Intel 64 and IA-32 architectures software developer's manual
+// Intel 64 and IA-32 Architectures Software Developer’s Manuals:
+//	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
 // This map is not complete; only some of the opcodes are implemented as of now
 

@@ -111,23 +111,6 @@ struct DisassembledInstruction
 	unsigned char hasBeenDecompiled;
 };
 
-static const char* group1PrefixStrs[] =
-{
-	"LOCK",
-	"REPNZ",
-	"REPZ"
-};
-
-static const char* ptrSizeStrs[] =
-{
-	"BYTE PTR",
-	"WORD PTR",
-	"DWORD PTR",
-	"FWORD PTR",
-	"QWORD PTR",
-	"TBYTE PTR"
-};
-
 #ifdef __cplusplus
 extern "C"
 {

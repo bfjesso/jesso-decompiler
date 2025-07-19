@@ -1,5 +1,5 @@
 #include "dataViewerMenu.h"
-#include "../PEHandler/peHandler.h"
+#include "../pe-handler/peHandler.h"
 
 wxBEGIN_EVENT_TABLE(DataViewer, wxFrame)
 EVT_CLOSE(CloseMenu)

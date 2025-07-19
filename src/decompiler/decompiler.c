@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const char* primitiveTypeStrs[] =
+static const char* primitiveTypeStrs[] =
 {
 	"void",
 	
@@ -16,14 +16,6 @@ const char* primitiveTypeStrs[] =
 
 	"float",
 	"double"
-};
-
-const char* callingConventionStrs[] =
-{
-	"__cdecl",
-	"__stdcall",
-	"__fastcall",
-	"__thiscall"
 };
 
 unsigned short decompileFunction(struct Function* functions, unsigned short numOfFunctions, unsigned short functionIndex, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen)

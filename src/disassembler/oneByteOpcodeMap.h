@@ -1,8 +1,8 @@
 #pragma once
 #include "opcodes.h" 
 
-// The information in this file comes from the
-//	Intel 64 and IA-32 architectures software developer's manual
+// Intel 64 and IA-32 Architectures Software Developer’s Manuals:
+//	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
 // Appendix A: A.3 table A-2
 const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
@@ -212,7 +212,7 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ RET_FAR, -1, Iw, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                     // 0xCA
 	{ RET_FAR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },        // 0xCB
 	{ INT3, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0xCC
-	{ INT, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                         // 0xCD
+	{ _INT, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                        // 0xCD
 	{ INTO, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                      // 0xCE
 	{ IRET, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0xCF; alternate mnemonics: IRETD, IRETQ
 	{ EXTENDED_OPCODE, 2, Eb, ONE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                          // 0xD0; an extended opcode
@@ -235,18 +235,18 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ LOOPZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                                  // 0xE1; alternate mnemonics: LOOPE
 	{ LOOP, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                                   // 0xE2
 	{ JRCXZ, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                                  // 0xE3
-	{ IN, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                  // 0xE4
-	{ IN, -1, rAX, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0xE5
-	{ OUT, -1, Ib, AL_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0xE6
-	{ OUT, -1, Ib, rAX, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0xE7
+	{ _IN, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0xE4
+	{ _IN, -1, rAX, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0xE5
+	{ _OUT, -1, Ib, AL_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                // 0xE6
+	{ _OUT, -1, Ib, rAX, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0xE7
 	{ CALL_NEAR, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                              // 0xE8
 	{ JMP_NEAR, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                               // 0xE9
 	{ JMP_FAR, -1, Ap, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                // 0xEA
 	{ JMP_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                              // 0xEB
-	{ IN, -1, AL_CODE, DX_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                             // 0xEC
-	{ IN, -1, rAX, DX_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0xED
-	{ OUT, -1, DX_CODE, AL_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                            // 0xEE
-	{ OUT, -1, DX_CODE, rAX, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                // 0xEF
+	{ _IN, -1, AL_CODE, DX_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                            // 0xEC
+	{ _IN, -1, rAX, DX_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                // 0xED
+	{ _OUT, -1, DX_CODE, AL_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                           // 0xEE
+	{ _OUT, -1, DX_CODE, rAX, NO_OPERAND_CODE, NO_SUPERSCRIPT },                               // 0xEF
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0xF0; not an opcode: LOCK prefix
 	{ INT1, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0xF1
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0xF2; not an opcode: REPNZ prefix
@@ -264,4 +264,4 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ EXTENDED_OPCODE, 4, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // 0xFE; an extended opcode
 	{ EXTENDED_OPCODE, 5, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }  // 0xFF; an extended opcode
 };
-const struct Opcode alternateX63 = { MOVSXD, -1, Gv, Ev, NO_OPERAND_CODE, o64 };			// 0x63 when 64-bit mode
+const struct Opcode alternateX63 = { MOVSXD, -1, Gv, Ev, NO_OPERAND_CODE, o64 };               // 0x63 when 64-bit mode

@@ -1,8 +1,8 @@
 #pragma once
 #include "opcodes.h"
 
-// The information in this file comes from the
-//	Intel 64 and IA-32 architectures software developer's manual
+// Intel 64 and IA-32 Architectures Software Developer’s Manuals:
+//	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
 // Appendix A: A.4.2 table A-6
 // any NO_OPERAND_CODE means that the operand code will be what is in the regular opcode map

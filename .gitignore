@@ -1,2 +1,5 @@
 /bin/linux/test
 /bin/linux/debug-jdc
+/.vs
+/tmp
+*.pdb

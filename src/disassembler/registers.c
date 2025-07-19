@@ -1,6 +1,6 @@
 #include "registers.h"
 
-const char* segmentStrs[] =
+extern const char* segmentStrs[] =
 {
 	"CS",
 	"SS",
@@ -10,7 +10,7 @@ const char* segmentStrs[] =
 	"GS"
 };
 
-const char* registerStrs[] =
+extern const char* registerStrs[] =
 {
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
 	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",

@@ -11,6 +11,14 @@ enum CallingConvention
 	__THISCALL
 };
 
+static const char* callingConventionStrs[] =
+{
+	"__cdecl",
+	"__stdcall",
+	"__fastcall",
+	"__thiscall"
+};
+
 struct LocalVariable 
 {
 	unsigned char type;
