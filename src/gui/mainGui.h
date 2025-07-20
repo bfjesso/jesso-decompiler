@@ -18,6 +18,7 @@ public:
 	wxButton* openFileButton = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
 	wxButton* disassembleFileButton = nullptr;
+	wxButton* analyzeFileButton = nullptr;
 	wxListBox* disassemblyListBox = nullptr;
 
 	wxListBox* decompilationListBox = nullptr;
@@ -45,12 +46,16 @@ public:
 		OpenDataViewerID,
 		OpenFileButtonID,
 		DisassembleFileButtonID,
-		DecompileButtonID
+		AnalyzeFileButtonID
 	};
 
-	void GetFilePath(wxCommandEvent& e);
+	void OpenFileButton(wxCommandEvent& e);
 
-	void DisassembleCodeSection(wxCommandEvent& e);
+	void DisassembleButton(wxCommandEvent& e);
+
+	void AnalyzeButton(wxCommandEvent& e);
+
+	void DisassembleCodeSection(unsigned int numOfBytesToRead);
 
 	void DecompileFunction(unsigned short functionIndex, const char* name);
 

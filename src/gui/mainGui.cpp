@@ -3,8 +3,9 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)
-EVT_BUTTON(DisassembleFileButtonID, DisassembleCodeSection)
-EVT_BUTTON(OpenFileButtonID, GetFilePath)
+EVT_BUTTON(DisassembleFileButtonID, DisassembleButton)
+EVT_BUTTON(AnalyzeFileButtonID, AnalyzeButton)
+EVT_BUTTON(OpenFileButtonID, OpenFileButton)
 EVT_GRID_CELL_RIGHT_CLICK(RightClickOptions)
 wxEND_EVENT_TABLE()
 
@@ -45,6 +46,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleFileButton->SetOwnForegroundColour(textColor);
+
+	analyzeFileButton = new wxButton(this, AnalyzeFileButtonID, "Analyze", wxPoint(0, 0), wxSize(75, 25));
+	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
+	analyzeFileButton->SetOwnForegroundColour(textColor);
 
 	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
@@ -95,6 +100,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer->AddStretchSpacer();
 
 	row2Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(analyzeFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row2Sizer->AddStretchSpacer();
 
 	row3Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
@@ -111,7 +117,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	SetSizer(vSizer);
 }
 
-void MainGui::GetFilePath(wxCommandEvent& e)
+void MainGui::OpenFileButton(wxCommandEvent& e)
 {
 	wxFileDialog openDllDialog(this, "Choose PE file", "", "", "EXE and DLL files (*.exe;*.dll)|*.exe;*.dll", wxFD_FILE_MUST_EXIST);
 
@@ -137,16 +143,16 @@ void MainGui::GetFilePath(wxCommandEvent& e)
 	openDllDialog.Close(true);
 }
 
-void MainGui::DisassembleCodeSection(wxCommandEvent& e)
+void MainGui::DisassembleButton(wxCommandEvent& e) 
 {
 	if (currentFilePath.empty())
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
-	
+
 	unsigned int numOfBytesToRead = 1;
-	if (!numOfbytesInputTextCtrl->GetValue().ToUInt(&numOfBytesToRead)) 
+	if (!numOfbytesInputTextCtrl->GetValue().ToUInt(&numOfBytesToRead))
 	{
 		wxMessageBox("Invalid number of bytes to read", "Can't read number of bytes input");
 		return;
@@ -159,7 +165,27 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
+	
+	DisassembleCodeSection(numOfBytesToRead);
+}
 
+void MainGui::AnalyzeButton(wxCommandEvent& e) 
+{
+	if (currentFilePath.empty())
+	{
+		wxMessageBox("No file opened", "Can't analyze");
+		return;
+	}
+
+	functions.clear();
+	functions.shrink_to_fit();
+	functionsGrid->ClearGrid();
+	
+	FindAllFunctions();
+}
+
+void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
+{
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER codeSection = { 0 };
 	const wchar_t* filePath = currentFilePath.c_str().AsWChar();
@@ -205,8 +231,6 @@ void MainGui::DisassembleCodeSection(wxCommandEvent& e)
 	}
 
 	delete[] bytes;
-
-	FindAllFunctions();
 }
 
 void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
@@ -242,10 +266,6 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 
 void MainGui::FindAllFunctions() 
 {
-	functions.clear();
-	functions.shrink_to_fit();
-	functionsGrid->ClearGrid();
-	
 	int numOfInstructions = disassembledInstructions.size();
 
 	int functionNum = 0;
