@@ -122,7 +122,9 @@ void MainGui::GetFilePath(wxCommandEvent& e)
 
 		if (!currentFilePath.empty())
 		{
-			this->SetTitle("Jesso Decompiler x64 - opened file " + openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1));
+			wxString fileName = openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1);
+			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
+			wxMessageBox(fileName + " has been opened. It can now be disassembled and analyzed.", "Successfully opened the file");
 		}
 		else
 		{
