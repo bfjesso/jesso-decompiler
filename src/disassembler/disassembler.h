@@ -140,3 +140,13 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 static unsigned char handleSIB(unsigned char** bytesPtr, struct Operand* result);
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);
+
+unsigned char getLastOperand(struct DisassembledInstruction* instruction);
+
+unsigned char isOperandStackArgument(struct Operand* operand);
+
+unsigned char isOperandLocalVariable(struct Operand* operand);
+
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
+
+unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);

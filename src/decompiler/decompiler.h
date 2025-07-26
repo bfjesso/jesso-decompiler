@@ -67,15 +67,3 @@ static unsigned char decompileExpression(struct Function* functions, unsigned sh
 static unsigned char decompileFunctionCall(struct Function* functions, unsigned short numOfFunctions, unsigned short startInstructionIndex, unsigned short functionIndex, struct Function* callee, struct LineOfC* result);
 
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
-
-unsigned char getLastOperand(struct DisassembledInstruction* instruction);
-
-unsigned char isOperandStackArgument(struct Operand* operand);
-
-unsigned char isOperandLocalVariable(struct Operand* operand);
-
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
-
-unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites);
-
-static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);
