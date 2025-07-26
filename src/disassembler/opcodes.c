@@ -1,4 +1,5 @@
 #include "opcodes.h"
+#include "registers.h"
 
 extern const char* mnemonicStrs[] =
 {
@@ -32,3 +33,17 @@ extern const char* mnemonicStrs[] =
 	"WAIT",
 	"XCHG", "XLAT",
 };
+
+unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites)
+{
+	if (compareRegisters(reg, AX))
+	{
+		switch (opcode)
+		{
+		case IDIV:
+			return 1;
+		}
+	}
+
+	return 0;
+}

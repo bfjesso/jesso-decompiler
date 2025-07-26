@@ -1083,20 +1083,6 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites) // some opcodes may modify a register even if it isn't an operand
-{
-	if (compareRegisters(reg, AX)) 
-	{
-		switch (opcode) 
-		{
-		case IDIV:
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 static unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2) 
 {
 	if(op1->type == op2->type)
