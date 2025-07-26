@@ -1,4 +1,5 @@
-/bin/linux/test
+test32
+test64
 /bin/linux/debug-jdc
 /.vs
 /tmp
