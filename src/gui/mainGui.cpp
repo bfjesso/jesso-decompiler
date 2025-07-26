@@ -243,8 +243,14 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 
 	decompilationListBox->Clear();
 
+	DecompilationParameters params = {};
+	params.functions = &functions[0];
+	params.numOfFunctions = functions.size();
+	params.currentFunc = &functions[functionIndex];
+	params.startInstructionIndex = 0;
+
 	LineOfC decompiledFunction[100];
-	unsigned short numOfLinesDecompiled = decompileFunction(&functions[0], functions.size(), functionIndex, name, decompiledFunction, 100);
+	unsigned short numOfLinesDecompiled = decompileFunction(params, name, decompiledFunction, 100);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
