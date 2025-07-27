@@ -815,9 +815,10 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			if (params.functions[calleeIndex].returnType == VOID_TYPE) { continue; }
 
 			params.startInstructionIndex = i;
+			struct Function* callee = &(params.functions[calleeIndex]);
 
 			struct LineOfC functionCall = { 0 };
-			if (!decompileFunctionCall(params, calleeIndex, &functionCall))
+			if (!decompileFunctionCall(params, callee, &functionCall))
 			{
 				return 0;
 			}
@@ -862,10 +863,9 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 	return 1;
 }
 
-static unsigned char decompileFunctionCall(struct DecompilationParameters params, int calleeIndex, struct LineOfC* result)
+static unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct LineOfC* result)
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	struct Function* callee = &(params.functions[calleeIndex]);
 
 	firstInstruction->hasBeenDecompiled = 1;
 

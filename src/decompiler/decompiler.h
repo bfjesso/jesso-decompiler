@@ -72,6 +72,6 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 
 static unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize);
 
-static unsigned char decompileFunctionCall(struct DecompilationParameters params, int calleeIndex, struct LineOfC* result);
+static unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct LineOfC* result);
 
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
