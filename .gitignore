@@ -1,6 +1,7 @@
 test32
 test64
-/bin/linux/debug-jdc
+debug-jdc
+debug-jdc.exe
 /.vs
 /tmp
 *.pdb

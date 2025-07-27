@@ -177,6 +177,12 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 		return;
 	}
 
+	if (disassembledInstructions.size() == 0) 
+	{
+		wxMessageBox("File not disassembled", "Can't analyze");
+		return;
+	}
+
 	functions.clear();
 	functions.shrink_to_fit();
 	functionsGrid->ClearGrid();
@@ -278,7 +284,7 @@ void MainGui::FindAllFunctions()
 
 	Function currentFunction = {};
 	int instructionIndex = 0;
-	while (findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex))
 	{
 		numOfInstructions -= currentFunction.numOfInstructions;
 
