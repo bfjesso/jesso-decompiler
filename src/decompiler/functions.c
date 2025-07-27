@@ -6,11 +6,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 {
 	struct Function function = { 0 };
 
-	unsigned char initializedRegs[NO_REG-RAX]; // index is (i - RAX)
-	for(int i = 0; i < NO_REG-RAX; i++)
-	{
-		initializedRegs[i] = 0;
-	}
+	unsigned char initializedRegs[NO_REG - RAX] = { 0 }; // index is (i - RAX)
 
 	unsigned long long addressToJumpTo = 0;
 
@@ -91,7 +87,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!alreadyFound)
 				{
-					function.stackArgBpOffsets[function.numOfStackArgs] = currentOperand->memoryAddress.constDisplacement;
+					function.stackArgBpOffsets[function.numOfStackArgs] = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
 					function.stackArgTypes[function.numOfStackArgs] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 					function.numOfStackArgs++;
 				}
@@ -119,7 +115,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		// check for local vars
 		if (isOperandLocalVariable(&currentInstruction->operands[0]))
 		{
-			int displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
+			long long displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
 
 			unsigned char overwritesVarValue = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
@@ -136,7 +132,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!isAlreadyFound)
 				{
-					function.localVars[function.numOfLocalVars].stackOffset = displacement;
+					function.localVars[function.numOfLocalVars].stackOffset = (int)displacement;
 					function.localVars[function.numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 					function.numOfLocalVars++;
 				}

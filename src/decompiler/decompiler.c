@@ -119,7 +119,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 		if (checkForAssignment(&(params.currentFunc->instructions[i])))
 		{
-			struct LocalVariable* localVar = getLocalVarByOffset(params.currentFunc, currentInstruction->operands[0].memoryAddress.constDisplacement);
+			struct LocalVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
 
 			unsigned char type = 0;
 			if (!localVar) 
@@ -657,20 +657,20 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 		{
 			if (operand->memoryAddress.constDisplacement < 0)
 			{
-				sprintf(resultBuffer, "var%X", -operand->memoryAddress.constDisplacement);
+				sprintf(resultBuffer, "var%llX", -operand->memoryAddress.constDisplacement);
 			}
 			else
 			{
-				sprintf(resultBuffer, "arg%X", operand->memoryAddress.constDisplacement);
+				sprintf(resultBuffer, "arg%llX", operand->memoryAddress.constDisplacement);
 			}
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			sprintf(resultBuffer, "*(%s*)(0x%X)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex+1] + operand->memoryAddress.constDisplacement);
+			sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex+1] + operand->memoryAddress.constDisplacement);
 		}
 		else if (operand->memoryAddress.reg == NO_REG) 
 		{
-			sprintf(resultBuffer, "*(%s*)(0x%X)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
+			sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
 		}
 		else 
 		{
@@ -686,7 +686,7 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 
 			if (operand->memoryAddress.constDisplacement != 0) 
 			{
-				sprintf(resultBuffer, "*(%s*)(%s + 0x%X)", primitiveTypeStrs[type], baseOperandStr, operand->memoryAddress.constDisplacement);
+				sprintf(resultBuffer, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr, operand->memoryAddress.constDisplacement);
 			}
 			else 
 			{
@@ -749,7 +749,7 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 
 static unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
 {
-	char expressions[5][100];
+	char expressions[5][100] = { 0 };
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -871,7 +871,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 	
 	sprintf(result->line, "%s(", callee->name);
 
-	unsigned long long ogStartInstructionIndex = params.startInstructionIndex;
+	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{

@@ -62,7 +62,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	}
 
 	result->opcode = opcode.mnemonic;
-	result->numOfBytes = (bytes - startPoint);
+	result->numOfBytes = (unsigned char)(bytes - startPoint);
 	result->group1Prefix = legacyPrefixes.group1;
 	result->hasBeenDecompiled = 0;
 
@@ -81,7 +81,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
 		const char* group1PrefixStr = group1PrefixStrs[instruction->group1Prefix - LOCK];
-		unsigned char group1PrefixStrLen = strlen(group1PrefixStr);
+		unsigned char group1PrefixStrLen = (unsigned char)strlen(group1PrefixStr);
 
 		strcpy(buffer + bufferIndex, group1PrefixStr);
 		bufferIndex += group1PrefixStrLen;
@@ -91,7 +91,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	}
 
 	const char* mnemonicStr = mnemonicStrs[instruction->opcode];
-	unsigned char mnemonicStrLen = strlen(mnemonicStr);
+	unsigned char mnemonicStrLen = (unsigned char)strlen(mnemonicStr);
 
 	strcpy(buffer + bufferIndex, mnemonicStr);
 	bufferIndex += mnemonicStrLen;
@@ -104,7 +104,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 		char sizeBuffer[4];
 		sprintf(sizeBuffer, "0X%X", instruction->numOfBytes);
 		strcpy(buffer + bufferIndex, sizeBuffer);
-		bufferIndex += strlen(sizeBuffer);
+		bufferIndex += (unsigned char)strlen(sizeBuffer);
 
 		buffer[bufferIndex] = 0;
 		bufferIndex++;
@@ -136,13 +136,13 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 		{
 		case SEGMENT:
 			segmentStr = segmentStrs[currentOperand->segment];
-			segmentStrLen = strlen(segmentStr);
+			segmentStrLen = (unsigned char)strlen(segmentStr);
 			strcpy(buffer + bufferIndex, segmentStr);
 			bufferIndex += segmentStrLen;
 			break;
 		case REGISTER:
 			registerStr = registerStrs[currentOperand->reg];
-			registerStrLen = strlen(registerStr);
+			registerStrLen = (unsigned char)strlen(registerStr);
 			strcpy(buffer + bufferIndex, registerStr);
 			bufferIndex += registerStrLen;
 			break;
@@ -150,9 +150,9 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			if (!memAddressToStr(&currentOperand->memoryAddress, buffer + bufferIndex, bufferSize - bufferIndex, &bufferIndex)) { return 0; }
 			break;
 		case IMMEDIATE:
-			sprintf(immediateBuffer, "0X%X", currentOperand->immediate);
+			sprintf(immediateBuffer, "0X%llX", currentOperand->immediate);
 			strcpy(buffer + bufferIndex, immediateBuffer);
-			bufferIndex += strlen(immediateBuffer);
+			bufferIndex += (unsigned char)strlen(immediateBuffer);
 			break;
 		}
 	}
@@ -170,7 +170,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	if (memAddr->ptrSize != 0 && memAddr->ptrSize <= 10)
 	{
 		const char* ptrSizeStr = ptrSizeStrs[memAddr->ptrSize / 2];
-		unsigned char ptrSizeStrLen = strlen(ptrSizeStr);
+		unsigned char ptrSizeStrLen = (unsigned char)strlen(ptrSizeStr);
 
 		if (bufferIndex + ptrSizeStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, ptrSizeStr);
@@ -184,7 +184,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	if (memAddr->segment != NO_SEGMENT) 
 	{
 		const char* segmentStr = segmentStrs[memAddr->segment];
-		unsigned char segmentStrLen = strlen(segmentStr);
+		unsigned char segmentStrLen = (unsigned char)strlen(segmentStr);
 		
 		if (bufferIndex + segmentStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, segmentStr);
@@ -201,7 +201,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 
 		if (bufferIndex + strlen(hexSeg) - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, hexSeg);
-		bufferIndex += strlen(hexSeg);
+		bufferIndex += (int)strlen(hexSeg);
 
 		if (bufferIndex > bufferSize) { return 0; }
 		buffer[bufferIndex] = ':';
@@ -215,7 +215,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	if (memAddr->reg != NO_REG) 
 	{
 		const char* registerStr = registerStrs[memAddr->reg];
-		unsigned char registerStrLen = strlen(registerStrs[memAddr->reg]);
+		unsigned char registerStrLen = (unsigned char)strlen(registerStrs[memAddr->reg]);
 		
 		if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, registerStr);
@@ -240,7 +240,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 		bufferIndex++;
 		
 		const char* registerStr = registerStrs[memAddr->regDisplacement];
-		unsigned char registerStrLen = strlen(registerStrs[memAddr->regDisplacement]);
+		unsigned char registerStrLen = (unsigned char)strlen(registerStrs[memAddr->regDisplacement]);
 
 		if (bufferIndex + registerStrLen - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, registerStr);
@@ -252,11 +252,11 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 		char constDisp[20];
 		if (memAddr->constDisplacement < 0) 
 		{
-			sprintf(constDisp, "-0X%X", -memAddr->constDisplacement);
+			sprintf(constDisp, "-0X%llX", -memAddr->constDisplacement);
 		}
 		else 
 		{
-			sprintf(constDisp, "0X%X", memAddr->constDisplacement);
+			sprintf(constDisp, "0X%llX", memAddr->constDisplacement);
 		}
 
 		if (buffer[bufferIndex - 1] != '[' && memAddr->constDisplacement >= 0)
@@ -268,7 +268,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 
 		if (bufferIndex + strlen(constDisp) - 1 > bufferSize) { return 0; }
 		strcpy(buffer + bufferIndex, constDisp);
-		bufferIndex += strlen(constDisp);
+		bufferIndex += (int)strlen(constDisp);
 	}
 
 	if (bufferIndex > bufferSize) { return 0; }
@@ -460,7 +460,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		unsigned char modRMByte = (*bytesPtr)[0];
 		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
 
-		struct Opcode* extendedOpcode = &extendedOpcodeMap[result->extensionGroup][reg];
+		const struct Opcode* extendedOpcode = &extendedOpcodeMap[result->extensionGroup][reg];
 
 		result->mnemonic = extendedOpcode->mnemonic;
 
@@ -853,7 +853,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			if (((*bytesPtr) + 5) > maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4);
-			currentOperand->memoryAddress.constSegment = getUIntFromBytes(bytesPtr, 2);
+			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Pd:
 			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 3, 4, 0, 0, currentOperand)) { return 0; }
@@ -1329,7 +1329,7 @@ static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned ch
 
 	for (int i = 0; i < resultSize; i++)
 	{
-		result += ((*bytesPtr)[0] << (8 * i));
+		result += ((unsigned long long)(*bytesPtr)[0] << (8 * i));
 		(*bytesPtr)++;
 	}
 

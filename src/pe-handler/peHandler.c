@@ -63,7 +63,7 @@ static unsigned char readCodeSection32(HANDLE file, unsigned char* buffer, unsig
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { CloseHandle(file); return 0; }
 	
 	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	uintptr_t imageNtHeadersAddress = dosHeader.e_lfanew;
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -72,7 +72,7 @@ static unsigned char readCodeSection32(HANDLE file, unsigned char* buffer, unsig
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		uintptr_t sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -102,7 +102,7 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { CloseHandle(file); return 0; }
 
 	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	uintptr_t imageNtHeadersAddress = dosHeader.e_lfanew;
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -111,7 +111,7 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		uintptr_t sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -141,7 +141,7 @@ static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsig
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { CloseHandle(file); return 0; }
 
 	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	uintptr_t imageNtHeadersAddress = dosHeader.e_lfanew;
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -150,7 +150,7 @@ static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsig
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		uintptr_t sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -180,7 +180,7 @@ static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsig
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { CloseHandle(file); return 0; }
 
 	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	uintptr_t imageNtHeadersAddress = dosHeader.e_lfanew;
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { CloseHandle(file); return 0; }
 
@@ -189,7 +189,7 @@ static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsig
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		uintptr_t sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { CloseHandle(file); return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { CloseHandle(file); return 0; }
 

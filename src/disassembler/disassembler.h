@@ -80,7 +80,7 @@ struct MemoryAddress
 	unsigned char reg;
 	unsigned char scale; // if SIB byte
 	unsigned char regDisplacement;
-	int constDisplacement;
+	long long constDisplacement;
 };
 
 struct Operand

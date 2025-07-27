@@ -86,12 +86,12 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	{
 	case 0:
 	{
-		for (int i = 0; i < numOfBytesToRead; i++) 
+		for (unsigned int i = 0; i < numOfBytesToRead; i++) 
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			char dataStr[50];
 			if (hexCheckBox->IsChecked()) 
@@ -109,12 +109,12 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 1:
 	{
-		for (int i = 0; i < numOfBytesToRead; i += 2)
+		for (unsigned int i = 0; i < numOfBytesToRead; i += 2)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			char dataStr[50];
 			if (hexCheckBox->IsChecked())
@@ -132,12 +132,12 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 2:
 	{
-		for (int i = 0; i < numOfBytesToRead; i += 4)
+		for (unsigned int i = 0; i < numOfBytesToRead; i += 4)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			char dataStr[50];
 			if (hexCheckBox->IsChecked())
@@ -155,21 +155,21 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 3:
 	{
-		for (int i = 0; i < numOfBytesToRead; i += 8)
+		for (unsigned int i = 0; i < numOfBytesToRead; i += 8)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			char dataStr[50];
 			if (hexCheckBox->IsChecked())
 			{
-				sprintf(dataStr, "%X", *(long long*)(bytes + i));
+				sprintf(dataStr, "%llX", *(long long*)(bytes + i));
 			}
 			else
 			{
-				sprintf(dataStr, "%d", *(long long*)(bytes + i));
+				sprintf(dataStr, "%lld", *(long long*)(bytes + i));
 			}
 
 			dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
@@ -178,12 +178,12 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 4:
 	{
-		for (int i = 0; i < numOfBytesToRead; i += 4)
+		for (unsigned int i = 0; i < numOfBytesToRead; i += 4)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(float*)(bytes + i)));
 		}
@@ -191,12 +191,12 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 5:
 	{
-		for (int i = 0; i < numOfBytesToRead; i += 8)
+		for (unsigned int i = 0; i < numOfBytesToRead; i += 8)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
 			char addressStr[10];
-			sprintf(addressStr, "%X", address);
+			sprintf(addressStr, "%llX", address);
 
 			dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(double*)(bytes + i)));
 		}

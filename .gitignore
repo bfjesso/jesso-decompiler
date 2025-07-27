@@ -5,3 +5,4 @@ debug-jdc.exe
 /.vs
 /tmp
 *.pdb
+*.lastcodeanalysissucceeded
