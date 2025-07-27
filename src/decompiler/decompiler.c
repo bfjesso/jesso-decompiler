@@ -298,7 +298,7 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 					else if (function->instructions[j].opcode >= JA_SHORT && function->instructions[j].opcode <= JZ_SHORT) // check for ||
 					{
 						resultBufferIndex--;
-						resultBuffer[resultBufferIndex].orJccInstructionIndex = i; // this needs to be updated to support more than one || condition. :435
+						resultBuffer[resultBufferIndex].orJccInstructionIndex = i; // this needs to be updated to support more than one || condition in decompileCondition
 					}
 					
 					break;
@@ -306,12 +306,6 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 			}
 
 			i--;
-
-			printf("Scope index: %d\n", resultBufferIndex);
-			printf("Start: %#X\n", resultBuffer[resultBufferIndex].start);
-			printf("End: %#X\n", resultBuffer[resultBufferIndex].end);
-			printf("orJccInstructionIndex: %d\n", resultBuffer[resultBufferIndex].orJccInstructionIndex);
-			printf("isElseIf: %d\n\n", resultBuffer[resultBufferIndex].isElseIf);
 
 			resultBufferIndex++;
 		}
