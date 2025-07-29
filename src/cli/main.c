@@ -430,6 +430,7 @@ int main(int argc, char* argv[])
 						struct DecompilationParameters params = {};
 						params.functions = functions;
 						params.numOfFunctions = numOfFunctions;
+						params.currentFunc = &functions[functionNum];
 						params.startInstructionIndex = 0;
 
 						struct LineOfC* decompiledFunction = (struct LineOfC*)malloc(100 * sizeof(struct LineOfC));
