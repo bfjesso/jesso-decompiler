@@ -21,6 +21,8 @@ static const char* primitiveTypeStrs[] =
 unsigned short decompileFunction(struct DecompilationParameters params, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
 {
 	if (resultBufferLen < 4) { return 0; }
+
+	resetDecompilationState(params.currentFunc);
 	
 	int numOfLinesDecompiled = 0;
 	
@@ -30,11 +32,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 	int scopeIndex = 0;
 	struct Scope* nextScope = numOfScopes == 0 ? 0 : &scopes[scopeIndex];
 	struct Scope* currentScope = 0;
-
-	for (int i = params.currentFunc->numOfInstructions - 1; i >= 0; i--)
-	{
-		params.currentFunc->instructions[i].hasBeenDecompiled = 0; // reset instructions incase this function has been decompiled before.
-	}
 
 	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
 	resultBuffer[numOfLinesDecompiled].indents = 0;

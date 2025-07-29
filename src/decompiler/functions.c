@@ -220,6 +220,14 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
+void resetDecompilationState(struct Function* function)
+{
+	for (int i = 0; i < function->numOfInstructions; i++)
+	{
+		function->instructions[i].hasBeenDecompiled = 0;
+	}
+}
+
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address)
 {
 	while (low <= high)
