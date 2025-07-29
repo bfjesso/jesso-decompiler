@@ -772,24 +772,24 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case Ib:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, 1);
+			currentOperand->immediate = (char)getUIntFromBytes(bytesPtr, 1);
 			break;
 		case Iv:
 			operandSize = legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
+			currentOperand->immediate = (long long)getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iz:
 			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
+			currentOperand->immediate = (int)getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iw:
 			if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, 2);
+			currentOperand->immediate = (short)getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Yb:
 			currentOperand->type = MEM_ADDRESS;
@@ -824,26 +824,26 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case Jb:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (unsigned char)(getUIntFromBytes(bytesPtr, 1) + ((*bytesPtr) - startBytePtr)); // add instruction size
+			currentOperand->immediate = (char)(getUIntFromBytes(bytesPtr, 1) + ((*bytesPtr) - startBytePtr)); // add instruction size
 			break;
 		case Jz:
 			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize) + ((*bytesPtr) - startBytePtr); // add instruction size
+			currentOperand->immediate = (int)getUIntFromBytes(bytesPtr, operandSize) + ((*bytesPtr) - startBytePtr); // add instruction size
 			break;
 		case Ob:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = legPrefixes->group2 == NO_PREFIX ? DS : (enum Segment)legPrefixes->group2;
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 1);
+			currentOperand->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1);
 			break;
 		case Ov:
 			operandSize = legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.segment = legPrefixes->group2 == NO_PREFIX ? DS : (enum Segment)legPrefixes->group2;
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, operandSize);
+			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Sw:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 2, 2, 0, is64BitMode, currentOperand)) { return 0; }
@@ -852,7 +852,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case Ap:
 			if (((*bytesPtr) + 5) > maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4);
+			currentOperand->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4);
 			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Pd:
@@ -1033,7 +1033,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 6:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 7:
 				result->memoryAddress.reg = BX;
@@ -1050,45 +1050,45 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 1:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 2:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 3:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 4:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = SI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 5:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = DI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 6:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 7:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			}
 
@@ -1102,45 +1102,45 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 1:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 2:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 3:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 4:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = SI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 5:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = DI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 6:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BP;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			case 7:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = BX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 2); // disp16
+				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(bytesPtr, 2); // disp16
 				break;
 			}
 
@@ -1176,7 +1176,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				if (is64bitMode) { result->memoryAddress.reg = RIP; }
 				else { result->memoryAddress.segment = DS; }
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 6:
 				result->memoryAddress.reg = ESI;
@@ -1195,42 +1195,42 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			case 0:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EAX;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 1:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ECX;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 2:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDX;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 3:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBX;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 4:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 				handleSIB(bytesPtr, result);
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 5:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBP;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 6:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ESI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			case 7:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDI;
-				result->memoryAddress.constDisplacement = (signed char)getUIntFromBytes(bytesPtr, 1); // disp8
+				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
 				break;
 			}
 
@@ -1243,42 +1243,42 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			case 0:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EAX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 1:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ECX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 2:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 3:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBX;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 4:
 				if (((*bytesPtr) + 4) > maxBytesAddr) { return 0; }
 				handleSIB(bytesPtr, result);
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 5:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EBP;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 6:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = ESI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			case 7:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
 				result->memoryAddress.reg = EDI;
-				result->memoryAddress.constDisplacement = getUIntFromBytes(bytesPtr, 4); // disp32
+				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 				break;
 			}
 

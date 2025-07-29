@@ -90,7 +90,7 @@ struct Operand
 		unsigned char segment;
 		unsigned char reg;
 		struct MemoryAddress memoryAddress;
-		unsigned long long immediate;
+		long long immediate;
 	};
 
 	unsigned char type;
