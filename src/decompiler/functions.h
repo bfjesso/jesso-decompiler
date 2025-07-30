@@ -59,6 +59,7 @@ extern "C"
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
 	void resetDecompilationState(struct Function* function);
 	int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
+	int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
 	struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 
 #ifdef __cplusplus

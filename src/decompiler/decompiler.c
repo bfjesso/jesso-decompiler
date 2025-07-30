@@ -48,82 +48,75 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 		numOfLinesDecompiled++;
 	}
 
-	unsigned char scopesDepth = 1;
+	int* jccEndpoints[20] = { 0 };
+	int jccEndpointsLen = 0;
+	int jccEndpointIndex = -1; // num of indents can be derived from this
 
-	struct DisassembledInstruction* lastJccEndpoint = 0;
+	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
 
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
-		if (numOfLinesDecompiled > resultBufferLen) 
-		{ 
-			return 0; 
+		if (numOfLinesDecompiled > resultBufferLen)
+		{
+			return 0;
 		}
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (i == params.currentFunc->numOfInstructions - 1 && params.currentFunc->returnType != VOID_TYPE)
+		if (jccEndpointIndex > -1 && i == jccEndpoints[jccEndpointIndex])
 		{
-			params.startInstructionIndex = i;
-			if (decompileReturnStatement(params, nextScope != 0 ? nextScope->end : currentScope != 0 ? currentScope->start : params.currentFunc->addresses[0], &resultBuffer[numOfLinesDecompiled]))
-			{
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-				numOfLinesDecompiled++;
-			}
-		}
+			jccEndpointIndex--;
 
-		for (int j = 0; j < numOfScopes; j++)
-		{
-			if (params.currentFunc->addresses[i] == scopes[j].start)
-			{
-				if (resultBuffer[numOfLinesDecompiled - 1].line[0] == '}')
-				{
-					strcpy(resultBuffer[numOfLinesDecompiled].line, "return;");
-					resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-					numOfLinesDecompiled++;
-				}
-
-				scopesDepth--;
-
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-				numOfLinesDecompiled++;
-
-				params.startInstructionIndex = i;
-				if (!decompileCondition(params, &scopes[j], &resultBuffer[numOfLinesDecompiled]))
-				{
-					return 0;
-				}
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-				numOfLinesDecompiled++;
-
-				currentScope = currentScope != 0 ? currentScope->lastScope : 0;
-
-				break;
-			}
-		}
-
-		while (nextScope != 0 && params.currentFunc->addresses[i] == nextScope->end)
-		{
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-			resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+			resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
 			numOfLinesDecompiled++;
 
-			scopesDepth++;
+			isInUnreachableState = 0;
+		}
 
-			nextScope->lastScope = currentScope;
-			currentScope = nextScope;
+		if (isInUnreachableState) { continue; }
 
-			scopeIndex++;
-			nextScope = scopeIndex >= numOfScopes ? 0 : &scopes[scopeIndex];
-			
-			if (params.currentFunc->returnType != VOID_TYPE)
+		params.startInstructionIndex = i;
+		if (checkForReturnStatement(params)) 
+		{
+			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
 			{
-				params.startInstructionIndex = i;
-				if (decompileReturnStatement(params, nextScope != 0 ? nextScope->end : currentScope->start, &resultBuffer[numOfLinesDecompiled]))
-				{
-					resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
-					numOfLinesDecompiled++;
-				}
+				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
+				numOfLinesDecompiled++;
+			}
+			else 
+			{
+				return 0;
+			}
+		}
+
+		if (checkForCondition(currentInstruction)) 
+		{
+			unsigned long long jmpDst = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;
+			int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+			if (jmpDstIndex < 1) 
+			{ 
+				return 0; 
+			}
+
+			jccEndpointIndex++;
+			jccEndpointsLen++;
+
+			jccEndpoints[jccEndpointIndex] = jmpDstIndex;
+
+			params.startInstructionIndex = i;
+			if (decompileCondition(params, jccEndpoints, jccEndpointsLen, &resultBuffer[numOfLinesDecompiled])) 
+			{
+				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 1;
+				numOfLinesDecompiled++;
+
+				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
+				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 1;
+				numOfLinesDecompiled++;
+			}
+			else 
+			{
+				return 0;
 			}
 		}
 
@@ -144,7 +137,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			params.startInstructionIndex = i;
 			if (decompileAssignment(params, type, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
 				numOfLinesDecompiled++;
 			}
 			else
@@ -155,12 +148,12 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 		struct Function* callee;
 		params.startInstructionIndex = i;
-		if (checkForFunctionCall(params, &callee))
+		if (checkForFunctionCall(params, &callee) && callee->returnType == VOID_TYPE) // if it does return something, this call will be decompiled later when its return value is used
 		{
 			params.startInstructionIndex = i;
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = scopesDepth;
+				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
 				strcpy(resultBuffer[numOfLinesDecompiled].line + strlen(resultBuffer[numOfLinesDecompiled].line), ";");
 				numOfLinesDecompiled++;
 			}
@@ -168,6 +161,11 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			{
 				return 0;
 			}
+		}
+
+		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
+		{
+			isInUnreachableState = 1;
 		}
 	}
 
@@ -239,74 +237,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 	return 1;
 }
 
-static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen)
-{
-	unsigned char resultBufferIndex = 0;
-	unsigned long long lastJmpDstAddress = 0;
-	
-	for (int i = function->numOfInstructions - 1; i > 0; i--)
-	{
-		struct DisassembledInstruction* currentInstruction = &function->instructions[i];
-
-		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
-		{
-			if (resultBufferIndex >= resultBufferLen) { return 0; }
-
-			unsigned long long jmpDst = function->addresses[i] + currentInstruction->operands[0].immediate;
-
-			if (currentInstruction->opcode == JMP_SHORT)
-			{
-				if (lastJmpDstAddress == jmpDst)
-				{
-					continue;
-				}
-				else
-				{
-					lastJmpDstAddress = jmpDst;
-				}
-			}
-			
-			resultBuffer[resultBufferIndex].lastScope = 0;
-			resultBuffer[resultBufferIndex].start = function->addresses[i];
-			resultBuffer[resultBufferIndex].end = jmpDst;
-			resultBuffer[resultBufferIndex].orJccInstructionIndex = -1;
-			resultBuffer[resultBufferIndex].isElseIf = 0;
-
-			// get the address of the instruction right before the one jumped to
-			for(int j = i; j < function->numOfInstructions - 1; j++)
-			{
-				if(function->addresses[j + 1] == jmpDst)
-				{
-					resultBuffer[resultBufferIndex].end = function->addresses[j];
-					
-					// check for else if
-					if (resultBufferIndex > 0 && function->instructions[j].opcode == JMP_SHORT && resultBufferIndex > 0 && resultBuffer[resultBufferIndex].end != resultBuffer[resultBufferIndex - 1].end)
-					{
-						if (function->addresses[j] + function->instructions[j].operands[0].immediate > resultBuffer[resultBufferIndex - 1].end) 
-						{
-							resultBuffer[resultBufferIndex - 1].isElseIf = 1;
-						}
-					}
-					else if (function->instructions[j].opcode >= JA_SHORT && function->instructions[j].opcode <= JZ_SHORT) // check for ||
-					{
-						resultBufferIndex--;
-						resultBuffer[resultBufferIndex].orJccInstructionIndex = i; // this needs to be updated to support more than one || condition in decompileCondition
-					}
-					
-					break;
-				}
-			}
-
-			i--;
-
-			resultBufferIndex++;
-		}
-	}
-
-	return resultBufferIndex;
-}
-
-static unsigned char modifiesReturnRegister(struct DecompilationParameters params)
+static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
@@ -345,9 +276,53 @@ static unsigned char modifiesReturnRegister(struct DecompilationParameters param
 	return 0;
 }
 
-static unsigned char checkForReturnStatement() 
+static unsigned char checkForCondition(struct DisassembledInstruction* instruction)
 {
+	if (instruction->hasBeenDecompiled == 1) 
+	{
+		return 0;
+	}
 	
+	if (instruction->opcode >= JA_SHORT && instruction->opcode <= JMP_SHORT)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+static unsigned char checkForReturnStatement(struct DecompilationParameters params)
+{
+	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	
+	if (instruction->opcode == RET_NEAR || instruction->opcode == RET_FAR) 
+	{
+		return 1;
+	}
+
+	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
+	if (instruction->opcode == JMP_SHORT) 
+	{
+		unsigned long long jmpDst = params.currentFunc->addresses[params.startInstructionIndex] + instruction->operands[0].immediate;
+
+		int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+		for (int i = jmpDstIndex; i < params.currentFunc->numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
+		{
+			params.startInstructionIndex = i;
+
+			if (checkForReturnStatement(params)) 
+			{
+				return 1;
+			}
+
+			if (checkForAssignment(&(params.currentFunc->instructions[i])) || doesInstructionModifyReturnRegister(params))
+			{
+				return 0;
+			}
+		}
+	}
+
+	return 0;
 }
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
@@ -387,13 +362,13 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 	return 0;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters params, struct Scope* scope, struct LineOfC* result)
+static unsigned char decompileCondition(struct DecompilationParameters params, int* jccEndpoints, int jccEndpointsLen, struct LineOfC* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	char compOperator1[3] = { 0 };
+	char compOperator[3] = { 0 };
 	
-	if (currentInstruction->opcode == JMP_SHORT)
+	if (currentInstruction->opcode == JMP_SHORT) // maybe goto?
 	{
 		strcpy(result->line, "else");
 		currentInstruction->hasBeenDecompiled = 1;
@@ -404,59 +379,30 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		switch (currentInstruction->opcode) 
 		{
 		case JZ_SHORT:
-			strcpy(compOperator1, "!=");
+			strcpy(compOperator, "!=");
 			break;
 		case JNZ_SHORT:
-			strcpy(compOperator1, "==");
+			strcpy(compOperator, "==");
 			break;
 		case JG_SHORT:
-			strcpy(compOperator1, "<=");
+			strcpy(compOperator, "<=");
 			break;
 		case JL_SHORT:
-			strcpy(compOperator1, ">=");
+			strcpy(compOperator, ">=");
 			break;
 		case JLE_SHORT:
 		case JBE_SHORT:
-			strcpy(compOperator1, ">");
+			strcpy(compOperator, ">");
 			break;
 		case JGE_SHORT:
-			strcpy(compOperator1, "<");
+			strcpy(compOperator, "<");
 			break;
 		}
 
 		currentInstruction->hasBeenDecompiled = 1;
 	}
-
-	char compOperator2[3] = { 0 };
-	if(scope->orJccInstructionIndex != -1)
-	{
-		switch (params.currentFunc->instructions[scope->orJccInstructionIndex].opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator2, "==");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator2, "!=");
-			break;
-		case JG_SHORT:
-			strcpy(compOperator2, ">=");
-			break;
-		case JL_SHORT:
-			strcpy(compOperator2, "<=");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator2, "<");
-			break;
-		case JGE_SHORT:
-			strcpy(compOperator2, ">");
-			break;
-		}
-
-		params.currentFunc->instructions[scope->orJccInstructionIndex].hasBeenDecompiled = 1;
-	}
 	
-	char condition1[100] = { 0 };
+	char condition[100] = { 0 };
 
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 	{
@@ -492,7 +438,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 				return 0;
 			}
 
-			sprintf(condition1, "%s %s %s", operand1Str, compOperator1, operand2Str);
+			sprintf(condition, "%s %s %s", operand1Str, compOperator, operand2Str);
 
 			currentInstruction->hasBeenDecompiled = 1;
 
@@ -500,80 +446,38 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		}
 	}
 
-	char condition2[100] = { 0 };
-
-	if (scope->orJccInstructionIndex != -1) 
+	// check for else if. checking if the last conditional jump ended with a jmp short to the same destination as the current jcc's final direct jump
+	if (jccEndpointsLen > 1)
 	{
-		for (int i = scope->orJccInstructionIndex - 1; i >= 0; i--)
+		struct DisassembledInstruction* lastEndpointInstruction = &(params.currentFunc->instructions[jccEndpoints[jccEndpointsLen - 2]]);
+		struct DisassembledInstruction* currentEndpointInstruction = &(params.currentFunc->instructions[jccEndpoints[jccEndpointsLen]]);
+		if (lastEndpointInstruction->opcode == JMP_SHORT && currentEndpointInstruction->opcode == JMP_SHORT)
 		{
-			currentInstruction = &(params.currentFunc->instructions[i]);
-
-			unsigned char type = 0;
-			switch (currentInstruction->opcode)
+			unsigned long long jmpDst1 = params.currentFunc->addresses[jccEndpoints[jccEndpointsLen - 2] - 1] + lastEndpointInstruction->operands[0].immediate;
+			unsigned long long jmpDst2 = params.currentFunc->addresses[jccEndpoints[jccEndpointsLen] - 1] + lastEndpointInstruction->operands[0].immediate;
+			if (jmpDst1 == jmpDst2) 
 			{
-			case CMP:
-				type = INT_TYPE;
-				break;
-			case COMISS:
-				type = FLOAT_TYPE;
-				break;
-			case COMISD:
-				type = DOUBLE_TYPE;
-				break;
-			}
-
-			if (type != 0)
-			{
-				params.startInstructionIndex = i;
-				
-				char operand1Str[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 100))
-				{
-					return 0;
-				}
-
-				char operand2Str[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 100))
-				{
-					return 0;
-				}
-
-				sprintf(condition2, "%s %s %s || ", operand1Str, compOperator2, operand2Str);
-
-				currentInstruction->hasBeenDecompiled = 1;
-
-				break;
+				sprintf(result->line, "else if(%s)", condition);
+				return 1;
 			}
 		}
 	}
 
-	if (scope->isElseIf) 
-	{
-		sprintf(result->line, "else if(%s%s)", condition2, condition1);
-	}
-	else 
-	{
-		sprintf(result->line, "if(%s%s)", condition2, condition1);
-	}
-
+	sprintf(result->line, "if(%s)", condition);
 	return 1;
 }
 
-static unsigned char decompileReturnStatement(struct DecompilationParameters params, unsigned long long scopeStart, struct LineOfC* result)
+static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)
 {
 	char returnExpression[100] = { 0 };
 
 	int newStartInstruction = -1;
 
+	// find where a return register is first being modified
 	for (int i = params.startInstructionIndex; i >= 0; i--)
 	{
-		if (params.currentFunc->addresses[i] <= scopeStart)
-		{
-			break;
-		}
-		
 		params.startInstructionIndex = i;
-		if (modifiesReturnRegister(params))
+		if (doesInstructionModifyReturnRegister(params))
 		{
 			newStartInstruction = i;
 			break;

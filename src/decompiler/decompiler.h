@@ -20,15 +20,6 @@ struct LineOfC
 	unsigned char indents;
 };
 
-struct Scope
-{
-	struct Scope* lastScope;
-	unsigned long long start; // the conditional jmp (Jcc)
-	unsigned long long end; // the last instruction of the scope
-	short orJccInstructionIndex;
-	unsigned char isElseIf;
-};
-
 #include "functions.h"
 
 struct DecompilationParameters
@@ -54,18 +45,20 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
 
-static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen);
-
 // params.startInstructionIndex is the index for the instruction in question
-static unsigned char modifiesReturnRegister(struct DecompilationParameters params); 
+static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params);
+
+static unsigned char checkForCondition(struct DisassembledInstruction* instruction);
+
+static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction);
 
 static unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 
-static unsigned char decompileCondition(struct DecompilationParameters params, struct Scope* scope, struct LineOfC* result);
+static unsigned char decompileCondition(struct DecompilationParameters params, int* jccEndpoints, int jccEndpointsLen, struct LineOfC* result);
 
-static unsigned char decompileReturnStatement(struct DecompilationParameters params, unsigned long long scopeStart, struct LineOfC* result);
+static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
 static unsigned char decompileAssignment(struct DecompilationParameters params, unsigned char type, struct LineOfC* result);
 
