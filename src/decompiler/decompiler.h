@@ -56,7 +56,8 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 static unsigned char getAllScopes(struct Function* function, struct Scope* resultBuffer, unsigned char resultBufferLen);
 
-static unsigned char checkForReturnStatement(struct DecompilationParameters params);
+// params.startInstructionIndex is the index for the instruction in question
+static unsigned char modifiesReturnRegister(struct DecompilationParameters params); 
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction);
 

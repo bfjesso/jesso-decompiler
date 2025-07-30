@@ -25,21 +25,34 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 	resetDecompilationState(params.currentFunc);
 	
 	int numOfLinesDecompiled = 0;
-	
-	struct Scope scopes[10];
-	unsigned char numOfScopes = getAllScopes(params.currentFunc, scopes, 10);
 
-	int scopeIndex = 0;
-	struct Scope* nextScope = numOfScopes == 0 ? 0 : &scopes[scopeIndex];
-	struct Scope* currentScope = 0;
+	if (!generateFunctionHeader(params.currentFunc, functionName, &resultBuffer[numOfLinesDecompiled]))
+	{
+		return 0;
+	}
+	numOfLinesDecompiled++;
 
-	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
+	strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
 	resultBuffer[numOfLinesDecompiled].indents = 0;
 	numOfLinesDecompiled++;
 
+	if (params.currentFunc->numOfLocalVars > 0)
+	{
+		if (!declareAllLocalVariables(params.currentFunc, resultBuffer, &numOfLinesDecompiled, resultBufferLen))
+		{
+			return 0;
+		}
+
+		strcpy(resultBuffer[numOfLinesDecompiled].line, "");
+		resultBuffer[numOfLinesDecompiled].indents = 1;
+		numOfLinesDecompiled++;
+	}
+
 	unsigned char scopesDepth = 1;
 
-	for (int i = params.currentFunc->numOfInstructions - 1; i >= 0; i--)
+	struct DisassembledInstruction* lastJccEndpoint = 0;
+
+	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		if (numOfLinesDecompiled > resultBufferLen) 
 		{ 
@@ -158,26 +171,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 		}
 	}
 
-	if (params.currentFunc->numOfLocalVars > 0)
-	{
-		strcpy(resultBuffer[numOfLinesDecompiled].line, "");
-		resultBuffer[numOfLinesDecompiled].indents = 1;
-		numOfLinesDecompiled++;
-
-		if (!declareAllLocalVariables(params.currentFunc, resultBuffer, &numOfLinesDecompiled, resultBufferLen))
-		{
-			return 0;
-		}
-	}
-
-	strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
+	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
 	resultBuffer[numOfLinesDecompiled].indents = 0;
-	numOfLinesDecompiled++;
-
-	if (!generateFunctionHeader(params.currentFunc, functionName, &resultBuffer[numOfLinesDecompiled]))
-	{
-		return 0;
-	}
 	numOfLinesDecompiled++;
 
 	return numOfLinesDecompiled;
@@ -311,7 +306,7 @@ static unsigned char getAllScopes(struct Function* function, struct Scope* resul
 	return resultBufferIndex;
 }
 
-static unsigned char checkForReturnStatement(struct DecompilationParameters params)
+static unsigned char modifiesReturnRegister(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
@@ -348,6 +343,11 @@ static unsigned char checkForReturnStatement(struct DecompilationParameters para
 	}
 	
 	return 0;
+}
+
+static unsigned char checkForReturnStatement() 
+{
+	
 }
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
@@ -573,7 +573,7 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 		}
 		
 		params.startInstructionIndex = i;
-		if (checkForReturnStatement(params))
+		if (modifiesReturnRegister(params))
 		{
 			newStartInstruction = i;
 			break;
