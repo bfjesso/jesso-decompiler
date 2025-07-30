@@ -23,7 +23,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 	if (resultBufferLen < 4) { return 0; }
 
 	resetDecompilationState(params.currentFunc);
-	
+
 	int numOfLinesDecompiled = 0;
 
 	if (!generateFunctionHeader(params.currentFunc, functionName, &resultBuffer[numOfLinesDecompiled]))
@@ -48,9 +48,11 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 		numOfLinesDecompiled++;
 	}
 
-	int* jccEndpoints[20] = { 0 };
-	int jccEndpointsLen = 0;
-	int jccEndpointIndex = -1; // num of indents can be derived from this
+	struct Condition conditions[20] = { 0 };
+	int numOfConditions = getAllConditions(params, conditions);
+	int conditionIndex = -1; 
+
+	unsigned char numOfIndents = 1;
 
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
 
@@ -63,12 +65,13 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (jccEndpointIndex > -1 && i == jccEndpoints[jccEndpointIndex])
+		if (conditionIndex > -1 && i == conditions[conditionIndex].dstIndex)
 		{
-			jccEndpointIndex--;
+			// conditionIndex--; // needs to be calculated ?
+			numOfIndents--;
 
 			strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-			resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
+			resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 			numOfLinesDecompiled++;
 
 			isInUnreachableState = 0;
@@ -81,7 +84,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 		{
 			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
 			}
 			else 
@@ -90,34 +93,26 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			}
 		}
 
-		if (checkForCondition(currentInstruction)) 
+		if (checkForCondition(i, conditions, numOfConditions))
 		{
-			unsigned long long jmpDst = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;
-			int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
-			if (jmpDstIndex < 1) 
-			{ 
-				return 0; 
-			}
-
-			jccEndpointIndex++;
-			jccEndpointsLen++;
-
-			jccEndpoints[jccEndpointIndex] = jmpDstIndex;
+			conditionIndex++;
 
 			params.startInstructionIndex = i;
-			if (decompileCondition(params, jccEndpoints, jccEndpointsLen, &resultBuffer[numOfLinesDecompiled])) 
+			if (decompileCondition(params, conditions[conditionIndex].type, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 1;
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
 
 				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 1;
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
 			}
 			else 
 			{
 				return 0;
 			}
+
+			numOfIndents++;
 		}
 
 		if (checkForAssignment(&(params.currentFunc->instructions[i])))
@@ -137,7 +132,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			params.startInstructionIndex = i;
 			if (decompileAssignment(params, type, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
 			}
 			else
@@ -153,7 +148,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			params.startInstructionIndex = i;
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = jccEndpointIndex + 2;
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				strcpy(resultBuffer[numOfLinesDecompiled].line + strlen(resultBuffer[numOfLinesDecompiled].line), ";");
 				numOfLinesDecompiled++;
 			}
@@ -237,6 +232,88 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 	return 1;
 }
 
+static int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
+{
+	// not hadling && and || yet
+	// also not handling for or while loops yet
+
+
+	// find all conditional jumps
+	int jccIndexes[20] = { 0 };
+	int jccDstIndexes[20] = { 0 }; // the index of the instruction jumped to by the jcc
+	int exitDstIndexes[20] = { 0 }; // if the last instruction of the condition is a jmp, this is the index of the instruction jumped to by that jmp
+	int jccCount = 0;
+	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	{
+		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
+
+		if (instruction->opcode >= JA_SHORT && instruction->opcode < JMP_SHORT) 
+		{
+			jccIndexes[jccCount] = i;
+
+			// getting index of instruction jumped to by jcc (minus one)
+			unsigned long long jccDst = params.currentFunc->addresses[i] + instruction->operands[0].immediate;
+			int jccDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jccDst);
+			jccDstIndexes[jccCount] = jccDstIndex;
+
+			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
+			if (params.currentFunc->instructions[jccDstIndex - 1].opcode == JMP_SHORT) 
+			{
+				unsigned long long jmpDst = params.currentFunc->addresses[jccDstIndex - 1] + params.currentFunc->instructions[jccDstIndex - 1].operands[0].immediate;
+				int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+				exitDstIndexes[jccCount] = jmpDstIndex;
+			}
+			else 
+			{
+				exitDstIndexes[jccCount] = -1;
+			}
+			
+			jccCount++;
+		}
+	}
+
+	// set types
+	int conditionsIndex = 0;
+	for (int i = 0; i < jccCount; i++) 
+	{
+		conditionsBuffer[conditionsIndex].jccIndex = jccIndexes[i];
+		conditionsBuffer[conditionsIndex].dstIndex = jccDstIndexes[i];
+		
+		if (i > 0 && exitDstIndexes[i] != -1 && exitDstIndexes[i - 1] == exitDstIndexes[i])
+		{
+			conditionsBuffer[conditionsIndex].type = ELSE_IF_CT;
+		}
+		else
+		{
+			conditionsBuffer[conditionsIndex].type = IF_CT;
+
+			// add else
+			if (i > 0 && exitDstIndexes[i - 1] != -1)
+			{
+				conditionsIndex++;
+
+				conditionsBuffer[conditionsIndex].jccIndex = jccDstIndexes[i - 1];
+				conditionsBuffer[conditionsIndex].dstIndex = exitDstIndexes[i - 1];
+				conditionsBuffer[conditionsIndex].type = ELSE_CT;
+			}
+		}
+
+		conditionsIndex++;
+	}
+
+	// add else
+	if (exitDstIndexes[jccCount - 1] != -1)
+	{
+		conditionsBuffer[conditionsIndex].jccIndex = jccDstIndexes[jccCount - 1];
+		conditionsBuffer[conditionsIndex].dstIndex = exitDstIndexes[jccCount - 1];
+		conditionsBuffer[conditionsIndex].type = ELSE_CT;
+
+		conditionsIndex++;
+	}
+
+	return conditionsIndex;
+}
+
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
@@ -276,16 +353,14 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 	return 0;
 }
 
-static unsigned char checkForCondition(struct DisassembledInstruction* instruction)
+static unsigned char checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions)
 {
-	if (instruction->hasBeenDecompiled == 1) 
+	for (int i = 0; i < numOfConditions; i++) 
 	{
-		return 0;
-	}
-	
-	if (instruction->opcode >= JA_SHORT && instruction->opcode <= JMP_SHORT)
-	{
-		return 1;
+		if (conditions[i].jccIndex == instructionIndex) 
+		{
+			return 1;
+		}
 	}
 
 	return 0;
@@ -362,13 +437,13 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 	return 0;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters params, int* jccEndpoints, int jccEndpointsLen, struct LineOfC* result)
+static unsigned char decompileCondition(struct DecompilationParameters params, unsigned char conditionType, struct LineOfC* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	char compOperator[3] = { 0 };
-	
-	if (currentInstruction->opcode == JMP_SHORT) // maybe goto?
+
+	if (conditionType == ELSE_CT)
 	{
 		strcpy(result->line, "else");
 		currentInstruction->hasBeenDecompiled = 1;
@@ -376,7 +451,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 	}
 	else
 	{
-		switch (currentInstruction->opcode) 
+		switch (currentInstruction->opcode)
 		{
 		case JZ_SHORT:
 			strcpy(compOperator, "!=");
@@ -401,7 +476,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 
 		currentInstruction->hasBeenDecompiled = 1;
 	}
-	
+
 	char condition[100] = { 0 };
 
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
@@ -409,7 +484,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		currentInstruction = &(params.currentFunc->instructions[i]);
 
 		unsigned char type = 0;
-		switch (currentInstruction->opcode) 
+		switch (currentInstruction->opcode)
 		{
 		case CMP:
 			type = INT_TYPE;
@@ -425,7 +500,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		if (type != 0)
 		{
 			params.startInstructionIndex = i;
-			
+
 			char operand1Str[100] = { 0 };
 			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 20))
 			{
@@ -446,24 +521,15 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		}
 	}
 
-	// check for else if. checking if the last conditional jump ended with a jmp short to the same destination as the current jcc's final direct jump
-	if (jccEndpointsLen > 1)
+	if (conditionType == IF_CT)
 	{
-		struct DisassembledInstruction* lastEndpointInstruction = &(params.currentFunc->instructions[jccEndpoints[jccEndpointsLen - 2]]);
-		struct DisassembledInstruction* currentEndpointInstruction = &(params.currentFunc->instructions[jccEndpoints[jccEndpointsLen]]);
-		if (lastEndpointInstruction->opcode == JMP_SHORT && currentEndpointInstruction->opcode == JMP_SHORT)
-		{
-			unsigned long long jmpDst1 = params.currentFunc->addresses[jccEndpoints[jccEndpointsLen - 2] - 1] + lastEndpointInstruction->operands[0].immediate;
-			unsigned long long jmpDst2 = params.currentFunc->addresses[jccEndpoints[jccEndpointsLen] - 1] + lastEndpointInstruction->operands[0].immediate;
-			if (jmpDst1 == jmpDst2) 
-			{
-				sprintf(result->line, "else if(%s)", condition);
-				return 1;
-			}
-		}
+		sprintf(result->line, "if(%s)", condition);
+	}
+	else 
+	{
+		sprintf(result->line, "else if(%s)", condition);
 	}
 
-	sprintf(result->line, "if(%s)", condition);
 	return 1;
 }
 

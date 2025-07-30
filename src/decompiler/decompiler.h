@@ -20,6 +20,20 @@ struct LineOfC
 	unsigned char indents;
 };
 
+enum ConditionType 
+{
+	IF_CT,
+	ELSE_IF_CT,
+	ELSE_CT
+};
+
+struct Condition 
+{
+	int jccIndex;
+	int dstIndex; // this is actually the index of the instruction right before the one jumped to by the jcc
+	unsigned char type;
+};
+
 #include "functions.h"
 
 struct DecompilationParameters
@@ -45,10 +59,12 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
 
+static int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer);
+
 // params.startInstructionIndex is the index for the instruction in question
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params);
 
-static unsigned char checkForCondition(struct DisassembledInstruction* instruction);
+static unsigned char checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
 static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
@@ -56,7 +72,7 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 
-static unsigned char decompileCondition(struct DecompilationParameters params, int* jccEndpoints, int jccEndpointsLen, struct LineOfC* result);
+static unsigned char decompileCondition(struct DecompilationParameters params, unsigned char conditionType, struct LineOfC* result);
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
