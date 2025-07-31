@@ -115,7 +115,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			conditionIndex++;
 
 			params.startInstructionIndex = i;
-			if (decompileCondition(params, conditions[conditionIndex].type, &resultBuffer[numOfLinesDecompiled]))
+			if (decompileCondition(params, &conditions[conditionIndex], &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
@@ -302,6 +302,23 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 		conditionsBuffer[conditionsIndex].jccIndex = jccIndexes[i];
 		conditionsBuffer[conditionsIndex].dstIndex = jccDstIndexes[i];
 		
+		// check for &&
+		int andCount = 0;
+		for (int j = i + 1; j < jccCount; j++) 
+		{
+			if (jccDstIndexes[i] == jccDstIndexes[j]) 
+			{
+				conditionsBuffer[conditionsIndex].andJccIndexes[andCount] = jccIndexes[j];
+				andCount++;
+			}
+			else 
+			{
+				break;
+			}
+		}
+		conditionsBuffer[conditionsIndex].numOfAnds = andCount;
+		
+		// check for else if
 		if (i > 0 && exitDstIndexes[i] != -1 && exitDstIndexes[i - 1] == exitDstIndexes[i])
 		{
 			conditionsBuffer[conditionsIndex].type = ELSE_IF_CT;
@@ -322,10 +339,11 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 		}
 
 		conditionsIndex++;
-	}
 
+		i += andCount;
+	}
 	// add else
-	if (exitDstIndexes[jccCount - 1] != -1)
+	if (jccCount > 0 && exitDstIndexes[jccCount - 1] != -1)
 	{
 		conditionsBuffer[conditionsIndex].jccIndex = jccDstIndexes[jccCount - 1];
 		conditionsBuffer[conditionsIndex].dstIndex = exitDstIndexes[jccCount - 1];
@@ -460,47 +478,79 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 	return 0;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters params, unsigned char conditionType, struct LineOfC* result)
+static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result)
+{
+	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	if (condition->type == ELSE_CT)
+	{
+		strcpy(result->line, "else");
+		return 1;
+	}
+
+	char conditionExpression[100] = { 0 };
+	if (!decompileConditionExpression(params, conditionExpression))
+	{
+		return 0;
+	}
+
+	for (int i = 0; i < condition->numOfAnds; i++) 
+	{
+		char currentConditionExpression[100] = { 0 };
+		params.startInstructionIndex = condition->andJccIndexes[i];
+		if (!decompileConditionExpression(params, currentConditionExpression)) 
+		{
+			return 0;
+		}
+
+		strcat(conditionExpression, " && ");
+		strcat(conditionExpression, currentConditionExpression);
+	}
+
+	if (condition->type == IF_CT)
+	{
+		sprintf(result->line, "if(%s)", conditionExpression);
+	}
+	else 
+	{
+		sprintf(result->line, "else if(%s)", conditionExpression);
+	}
+
+	return 1;
+}
+
+static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer) 
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	char compOperator[3] = { 0 };
-
-	if (conditionType == ELSE_CT)
+	
+	switch (currentInstruction->opcode)
 	{
-		strcpy(result->line, "else");
-		currentInstruction->hasBeenDecompiled = 1;
-		return 1;
-	}
-	else
-	{
-		switch (currentInstruction->opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator, "!=");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator, "==");
-			break;
-		case JG_SHORT:
-			strcpy(compOperator, "<=");
-			break;
-		case JL_SHORT:
-			strcpy(compOperator, ">=");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator, ">");
-			break;
-		case JGE_SHORT:
-			strcpy(compOperator, "<");
-			break;
-		}
-
-		currentInstruction->hasBeenDecompiled = 1;
+	case JZ_SHORT:
+		strcpy(compOperator, "!=");
+		break;
+	case JNZ_SHORT:
+		strcpy(compOperator, "==");
+		break;
+	case JG_SHORT:
+		strcpy(compOperator, "<=");
+		break;
+	case JL_SHORT:
+		strcpy(compOperator, ">=");
+		break;
+	case JLE_SHORT:
+	case JBE_SHORT:
+		strcpy(compOperator, ">");
+		break;
+	case JGE_SHORT:
+		strcpy(compOperator, "<");
+		break;
+	default:
+		return 0;
 	}
 
-	char condition[100] = { 0 };
+	currentInstruction->hasBeenDecompiled = 1;
 
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 	{
@@ -536,24 +586,15 @@ static unsigned char decompileCondition(struct DecompilationParameters params, u
 				return 0;
 			}
 
-			sprintf(condition, "%s %s %s", operand1Str, compOperator, operand2Str);
+			sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
 
 			currentInstruction->hasBeenDecompiled = 1;
 
-			break;
+			return 1;
 		}
 	}
 
-	if (conditionType == IF_CT)
-	{
-		sprintf(result->line, "if(%s)", condition);
-	}
-	else 
-	{
-		sprintf(result->line, "else if(%s)", condition);
-	}
-
-	return 1;
+	return 0;
 }
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)

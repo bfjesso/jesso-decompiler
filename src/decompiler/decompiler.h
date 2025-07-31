@@ -30,8 +30,14 @@ enum ConditionType
 struct Condition 
 {
 	int jccIndex;
-	int dstIndex; // this is actually the index of the instruction right before the one jumped to by the jcc
+	int dstIndex;
 	unsigned char type;
+
+	int andJccIndexes[3];
+	unsigned char numOfAnds;
+
+	int orJccIndexes[3];
+	unsigned char numOfOrs;
 };
 
 #include "functions.h"
@@ -72,7 +78,9 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 
-static unsigned char decompileCondition(struct DecompilationParameters params, unsigned char conditionType, struct LineOfC* result);
+static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result);
+
+static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer);
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
