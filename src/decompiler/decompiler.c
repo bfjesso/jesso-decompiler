@@ -52,6 +52,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 	int numOfConditions = getAllConditions(params, conditions);
 	int conditionIndex = -1; 
 
+	unsigned char isConditionEmpty = 0; // used to check if there is an empty condition that should be removed
+
 	unsigned char numOfIndents = 1;
 
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
@@ -70,11 +72,24 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			// conditionIndex--; // needs to be calculated ?
 			numOfIndents--;
 
-			strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-			resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-			numOfLinesDecompiled++;
-
+			if (isConditionEmpty) 
+			{
+				// remove the condition and the {
+				numOfLinesDecompiled--;
+				resultBuffer[numOfLinesDecompiled].line[0] = 0;
+				numOfLinesDecompiled--;
+				resultBuffer[numOfLinesDecompiled].line[0] = 0;
+			}
+			else 
+			{
+				strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+			}
+			
 			isInUnreachableState = 0;
+
+			isConditionEmpty = 0;
 		}
 
 		if (isInUnreachableState) { continue; }
@@ -86,6 +101,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
+
+				isConditionEmpty = 0;
 			}
 			else 
 			{
@@ -106,6 +123,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
+
+				isConditionEmpty = 1;
 			}
 			else 
 			{
@@ -134,6 +153,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
+
+				isConditionEmpty = 0;
 			}
 			else
 			{
@@ -151,6 +172,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				strcpy(resultBuffer[numOfLinesDecompiled].line + strlen(resultBuffer[numOfLinesDecompiled].line), ";");
 				numOfLinesDecompiled++;
+
+				isConditionEmpty = 0;
 			}
 			else
 			{
