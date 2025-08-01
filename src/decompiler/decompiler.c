@@ -257,14 +257,8 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 static int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
 {
-	// not hadling && and || yet
-	// also not handling for or while loops yet
-
-
 	// find all conditional jumps
-	int jccIndexes[20] = { 0 };
-	int jccDstIndexes[20] = { 0 }; // the index of the instruction jumped to by the jcc
-	int exitDstIndexes[20] = { 0 }; // if the last instruction of the condition is a jmp, this is the index of the instruction jumped to by that jmp
+	struct Condition allJccs[20] = { 0 };
 	int jccCount = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
@@ -272,87 +266,143 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 
 		if (instruction->opcode >= JA_SHORT && instruction->opcode < JMP_SHORT) 
 		{
-			jccIndexes[jccCount] = i;
+			allJccs[jccCount].jccIndex = i;
 
 			// getting index of instruction jumped to by jcc (minus one)
 			unsigned long long jccDst = params.currentFunc->addresses[i] + instruction->operands[0].immediate;
 			int jccDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jccDst);
-			jccDstIndexes[jccCount] = jccDstIndex;
+			allJccs[jccCount].dstIndex = jccDstIndex;
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			if (params.currentFunc->instructions[jccDstIndex - 1].opcode == JMP_SHORT) 
 			{
 				unsigned long long jmpDst = params.currentFunc->addresses[jccDstIndex - 1] + params.currentFunc->instructions[jccDstIndex - 1].operands[0].immediate;
 				int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
-				exitDstIndexes[jccCount] = jmpDstIndex;
+				allJccs[jccCount].exitIndex = jmpDstIndex;
 			}
 			else 
 			{
-				exitDstIndexes[jccCount] = -1;
+				allJccs[jccCount].exitIndex = -1;
 			}
 			
 			jccCount++;
 		}
 	}
 
+	struct Condition condencedConditions[20] = { 0 };
+	int numOfConditions = condenceConditions(allJccs, jccCount, condencedConditions);
+
 	// set types
-	int conditionsIndex = 0;
-	for (int i = 0; i < jccCount; i++) 
+	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array
+	for (int i = 0; i < numOfConditions; i++)
 	{
-		conditionsBuffer[conditionsIndex].jccIndex = jccIndexes[i];
-		conditionsBuffer[conditionsIndex].dstIndex = jccDstIndexes[i];
-		
-		// check for &&
-		int andCount = 0;
-		for (int j = i + 1; j < jccCount; j++) 
-		{
-			if (jccDstIndexes[i] == jccDstIndexes[j]) 
-			{
-				conditionsBuffer[conditionsIndex].andJccIndexes[andCount] = jccIndexes[j];
-				andCount++;
-			}
-			else 
-			{
-				break;
-			}
-		}
-		conditionsBuffer[conditionsIndex].numOfAnds = andCount;
-		
 		// check for else if
-		if (i > 0 && exitDstIndexes[i] != -1 && exitDstIndexes[i - 1] == exitDstIndexes[i])
+		if (i > 0 && condencedConditions[i].exitIndex != -1 && condencedConditions[i - 1].exitIndex == condencedConditions[i].exitIndex)
 		{
+			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
 			conditionsBuffer[conditionsIndex].type = ELSE_IF_CT;
 		}
 		else
 		{
-			conditionsBuffer[conditionsIndex].type = IF_CT;
-
-			// add else
-			if (i > 0 && exitDstIndexes[i - 1] != -1)
+			// check if last condition has an else and add it if so
+			if (i > 0 && condencedConditions[i - 1].exitIndex != -1)
 			{
-				conditionsIndex++;
-
-				conditionsBuffer[conditionsIndex].jccIndex = jccDstIndexes[i - 1];
-				conditionsBuffer[conditionsIndex].dstIndex = exitDstIndexes[i - 1];
+				conditionsBuffer[conditionsIndex].jccIndex = condencedConditions[i - 1].dstIndex;
+				conditionsBuffer[conditionsIndex].dstIndex = condencedConditions[i - 1].exitIndex;
 				conditionsBuffer[conditionsIndex].type = ELSE_CT;
+
+				conditionsIndex++;
 			}
+			else 
+			{
+				memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
+				conditionsBuffer[conditionsIndex].type = IF_CT;
+			}	
 		}
 
 		conditionsIndex++;
-
-		i += andCount;
 	}
-	// add else
-	if (jccCount > 0 && exitDstIndexes[jccCount - 1] != -1)
+	// check if last condition has an else and add it if so
+	if (numOfConditions > 0 && condencedConditions[numOfConditions - 1].exitIndex != -1)
 	{
-		conditionsBuffer[conditionsIndex].jccIndex = jccDstIndexes[jccCount - 1];
-		conditionsBuffer[conditionsIndex].dstIndex = exitDstIndexes[jccCount - 1];
+		conditionsBuffer[conditionsIndex].jccIndex = condencedConditions[numOfConditions - 1].dstIndex;
+		conditionsBuffer[conditionsIndex].dstIndex = condencedConditions[numOfConditions - 1].exitIndex;
 		conditionsBuffer[conditionsIndex].type = ELSE_CT;
 
 		conditionsIndex++;
 	}
 
 	return conditionsIndex;
+}
+
+static int condenceConditions(struct Condition* conditions, int numOfConditions, struct Condition* newConditionsBuffer)
+{	
+	int newConditionsIndex = 0;
+	
+	for (int i = 0; i < numOfConditions; i++) 
+	{
+		memcpy(&newConditionsBuffer[newConditionsIndex], &conditions[i], sizeof(struct Condition));
+
+		// check for ||. a group of ORs is a series of Jccs that all go to the same destination (like ANDs), but the last one in the series has a Jcc as the instruction right before its destination
+		int orCount = 0;
+		for (int j = i + 1; j < numOfConditions; j++)
+		{
+			if (conditions[i].dstIndex == conditions[j].dstIndex)
+			{
+				newConditionsBuffer[newConditionsIndex].orJccIndexes[orCount] = conditions[j].jccIndex; // even though this could be part of an AND, orCoun will be set to 0 if its not so this will be ignored
+				orCount++;
+			}
+			else if(conditions[j - 1].dstIndex - 1 == conditions[j].jccIndex)
+			{
+				newConditionsBuffer[newConditionsIndex].orJccIndexes[orCount] = conditions[j].jccIndex;
+				newConditionsBuffer[newConditionsIndex].dstIndex = conditions[j].dstIndex;
+				newConditionsBuffer[newConditionsIndex].exitIndex = conditions[j].exitIndex;
+				orCount++;
+				break;
+			}
+			else 
+			{
+				orCount = 0;
+				break;
+			}
+		}
+		if (orCount > 0) 
+		{
+			if (conditions[numOfConditions - 2].dstIndex - 1 != conditions[numOfConditions - 1].jccIndex) // need to check last one
+			{
+				orCount = 0;
+			}
+			else 
+			{
+				newConditionsBuffer[newConditionsIndex].numOfOrs = orCount;
+				i += orCount;
+			}
+		}
+		
+		// check for &&. a group of ANDs is a series of Jccs that all go to the same destination
+		if (orCount == 0) 
+		{
+			int andCount = 0;
+			for (int j = i + 1; j < numOfConditions; j++)
+			{
+				if (conditions[i].dstIndex == conditions[j].dstIndex)
+				{
+					newConditionsBuffer[newConditionsIndex].andJccIndexes[andCount] = conditions[j].jccIndex;
+					andCount++;
+				}
+				else
+				{
+					break;
+				}
+			}
+			newConditionsBuffer[newConditionsIndex].numOfAnds = andCount;
+			i += andCount;
+		}
+
+		newConditionsIndex++;
+	}
+
+	return newConditionsIndex;
 }
 
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
@@ -480,8 +530,6 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 
 static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result)
 {
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-
 	if (condition->type == ELSE_CT)
 	{
 		strcpy(result->line, "else");
@@ -489,22 +537,46 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 	}
 
 	char conditionExpression[100] = { 0 };
-	if (!decompileConditionExpression(params, conditionExpression))
-	{
-		return 0;
-	}
 
-	for (int i = 0; i < condition->numOfAnds; i++) 
+	if (condition->numOfOrs > 0) 
 	{
-		char currentConditionExpression[100] = { 0 };
-		params.startInstructionIndex = condition->andJccIndexes[i];
-		if (!decompileConditionExpression(params, currentConditionExpression)) 
+		if (!decompileConditionExpression(params, conditionExpression, 0))
 		{
 			return 0;
 		}
 
-		strcat(conditionExpression, " && ");
-		strcat(conditionExpression, currentConditionExpression);
+		for (int i = 0; i < condition->numOfOrs; i++)
+		{
+			char currentConditionExpression[100] = { 0 };
+			params.startInstructionIndex = condition->orJccIndexes[i];
+			if (!decompileConditionExpression(params, currentConditionExpression, i == condition->numOfOrs - 1))
+			{
+				return 0;
+			}
+
+			strcat(conditionExpression, " || ");
+			strcat(conditionExpression, currentConditionExpression);
+		}
+	}
+	else 
+	{
+		if (!decompileConditionExpression(params, conditionExpression, 1))
+		{
+			return 0;
+		}
+
+		for (int i = 0; i < condition->numOfAnds; i++)
+		{
+			char currentConditionExpression[100] = { 0 };
+			params.startInstructionIndex = condition->andJccIndexes[i];
+			if (!decompileConditionExpression(params, currentConditionExpression, 1))
+			{
+				return 0;
+			}
+
+			strcat(conditionExpression, " && ");
+			strcat(conditionExpression, currentConditionExpression);
+		}
 	}
 
 	if (condition->type == IF_CT)
@@ -519,35 +591,65 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 	return 1;
 }
 
-static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer) 
+static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	char compOperator[3] = { 0 };
 	
-	switch (currentInstruction->opcode)
+	if (invertOperator) 
 	{
-	case JZ_SHORT:
-		strcpy(compOperator, "!=");
-		break;
-	case JNZ_SHORT:
-		strcpy(compOperator, "==");
-		break;
-	case JG_SHORT:
-		strcpy(compOperator, "<=");
-		break;
-	case JL_SHORT:
-		strcpy(compOperator, ">=");
-		break;
-	case JLE_SHORT:
-	case JBE_SHORT:
-		strcpy(compOperator, ">");
-		break;
-	case JGE_SHORT:
-		strcpy(compOperator, "<");
-		break;
-	default:
-		return 0;
+		switch (currentInstruction->opcode)
+		{
+		case JZ_SHORT:
+			strcpy(compOperator, "!=");
+			break;
+		case JNZ_SHORT:
+			strcpy(compOperator, "==");
+			break;
+		case JG_SHORT:
+			strcpy(compOperator, "<=");
+			break;
+		case JL_SHORT:
+			strcpy(compOperator, ">=");
+			break;
+		case JLE_SHORT:
+		case JBE_SHORT:
+			strcpy(compOperator, ">");
+			break;
+		case JGE_SHORT:
+			strcpy(compOperator, "<");
+			break;
+		default:
+			return 0;
+		}
+	}
+	else 
+	{
+		switch (currentInstruction->opcode)
+		{
+		case JZ_SHORT:
+			strcpy(compOperator, "==");
+			break;
+		case JNZ_SHORT:
+			strcpy(compOperator, "!=");
+			break;
+		case JG_SHORT:
+			strcpy(compOperator, ">");
+			break;
+		case JL_SHORT:
+			strcpy(compOperator, "<");
+			break;
+		case JLE_SHORT:
+		case JBE_SHORT:
+			strcpy(compOperator, "<=");
+			break;
+		case JGE_SHORT:
+			strcpy(compOperator, ">=");
+			break;
+		default:
+			return 0;
+		}
 	}
 
 	currentInstruction->hasBeenDecompiled = 1;

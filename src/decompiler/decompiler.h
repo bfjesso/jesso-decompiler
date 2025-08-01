@@ -30,7 +30,8 @@ enum ConditionType
 struct Condition 
 {
 	int jccIndex;
-	int dstIndex;
+	int dstIndex; // the index of the instruction jumped to by the jcc
+	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp
 	unsigned char type;
 
 	int andJccIndexes[3];
@@ -80,7 +81,7 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 
 static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result);
 
-static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer);
+static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
