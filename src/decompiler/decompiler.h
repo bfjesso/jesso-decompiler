@@ -71,7 +71,7 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 // params.startInstructionIndex is the index for the instruction in question
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params);
 
-static unsigned char checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
+static int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
 static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
