@@ -108,7 +108,6 @@ struct DisassembledInstruction
 	unsigned char group1Prefix;
 
 	unsigned char numOfBytes;
-	unsigned char hasBeenDecompiled;
 };
 
 #ifdef __cplusplus

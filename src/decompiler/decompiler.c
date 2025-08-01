@@ -22,8 +22,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 {
 	if (resultBufferLen < 4) { return 0; }
 
-	resetDecompilationState(params.currentFunc);
-
 	int numOfLinesDecompiled = 0;
 
 	if (!generateFunctionHeader(params.currentFunc, functionName, &resultBuffer[numOfLinesDecompiled]))
@@ -89,7 +87,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 				isInUnreachableState = 0;
 				isConditionEmpty = 0;
-				break; // because of condition condencing each condition in the buffer should have a unique dstIndex
 			}
 		}
 
@@ -276,7 +273,21 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			if (params.currentFunc->instructions[jccDstIndex - 1].opcode == JMP_SHORT)
 			{
-				unsigned long long jmpDst = params.currentFunc->addresses[jccDstIndex - 1] + params.currentFunc->instructions[jccDstIndex - 1].operands[0].immediate;
+				// sometimes compiler puts multiple jmps next to each other at the end?
+				int firstJmpIndex = jccDstIndex - 1;
+				for (int j = jccDstIndex - 2; j > i; j--)
+				{
+					if (params.currentFunc->instructions[j].opcode == JMP_SHORT) 
+					{
+						firstJmpIndex = j;
+					}
+					else 
+					{
+						break;
+					}
+				}
+				
+				unsigned long long jmpDst = params.currentFunc->addresses[firstJmpIndex] + params.currentFunc->instructions[firstJmpIndex].operands[0].immediate;
 				int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 				allJccs[jccCount].exitIndex = jmpDstIndex;
 			}
@@ -297,7 +308,9 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 	for (int i = 0; i < numOfConditions; i++)
 	{
 		// check for else if
-		if (i > 0 && condencedConditions[i].exitIndex != -1 && condencedConditions[i - 1].exitIndex == condencedConditions[i].exitIndex)
+		if (i > 0 && condencedConditions[i].exitIndex != -1 && 
+			condencedConditions[i - 1].exitIndex == condencedConditions[i].exitIndex && 
+			condencedConditions[i].dstIndex > condencedConditions[i - 1].dstIndex) // also have to check that its not nested
 		{
 			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
 			conditionsBuffer[conditionsIndex].type = ELSE_IF_CT;
@@ -408,8 +421,6 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
 	
-	if (instruction->hasBeenDecompiled) { return 0; }
-	
 	if (params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE)
 	{
 		if (instruction->opcode == FLD)
@@ -491,8 +502,6 @@ static unsigned char checkForReturnStatement(struct DecompilationParameters para
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
 {
-	if (instruction->hasBeenDecompiled) { return 0; }
-	
 	if (doesInstructionModifyOperand(instruction, 0, 0) && instruction->operands[0].type == MEM_ADDRESS) 
 	{
 		return 1;
@@ -505,8 +514,6 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
-	
-	if (instruction->hasBeenDecompiled) { return 0; }
 	
 	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
 	{
@@ -650,8 +657,6 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 		}
 	}
 
-	currentInstruction->hasBeenDecompiled = 1;
-
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
@@ -687,8 +692,6 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 			}
 
 			sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
-
-			currentInstruction->hasBeenDecompiled = 1;
 
 			return 1;
 		}
@@ -769,8 +772,6 @@ static unsigned char decompileAssignment(struct DecompilationParameters params, 
 		return 0;
 	}
 	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
-
-	currentInstruction->hasBeenDecompiled = 1;
 
 	return 1;
 }
@@ -903,8 +904,6 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 				strcpy(expressions[expressionIndex], ")0");
 				expressionIndex++;
 
-				currentInstruction->hasBeenDecompiled = 1;
-
 				finished = 1;
 				break;
 			}
@@ -925,8 +924,6 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 			sprintf(expressions[expressionIndex], ")%s%s", operationStr, operandStr);
 			expressionIndex++;
-
-			// currentInstruction->hasBeenDecompiled = 1;
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
 		{
@@ -992,8 +989,6 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	firstInstruction->hasBeenDecompiled = 1;
-
 	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
 	{
 		sprintf(result->line, "%s()", callee->name);
@@ -1026,8 +1021,6 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 
 					sprintf(result->line + strlen(result->line), "%s, ", argStr);
 
-					currentInstruction->hasBeenDecompiled = 1;
-
 					break;
 				}
 			}
@@ -1053,8 +1046,6 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 
 			sprintf(result->line + strlen(result->line), "%s, ", argStr);
 
-			currentInstruction->hasBeenDecompiled = 1;
-
 			stackArgsFound++;
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP))
@@ -1073,8 +1064,6 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 				}
 
 				sprintf(result->line + strlen(result->line), "%s, ", argStr);
-
-				currentInstruction->hasBeenDecompiled = 1;
 
 				stackArgsFound++;
 			}

@@ -57,7 +57,6 @@ extern "C"
 
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex);
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
-	void resetDecompilationState(struct Function* function);
 	int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 	int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
 	struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
