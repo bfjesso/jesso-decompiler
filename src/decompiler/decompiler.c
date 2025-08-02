@@ -619,6 +619,8 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		params.startInstructionIndex = condition->combinedCondition->jccIndex;
 		if (decompileCondition(params, condition->combinedCondition, &combinedConditionExpression)) 
 		{
+			wrapStrInParentheses(conditionExpression);
+			
 			if (condition->combinationLogicType == AND_LT) 
 			{
 				strcat(conditionExpression, " && ");
@@ -950,7 +952,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 		{
 			break;
 		}
-		
+
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
 		if ((currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesInstructionModifyOperand(currentInstruction, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
@@ -959,7 +961,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 			if (currentInstruction->opcode == XOR && compareRegisters(currentInstruction->operands[1].reg, targetReg))
 			{
-				strcpy(expressions[expressionIndex], ")0");
+				strcpy(expressions[expressionIndex], "0");
 				expressionIndex++;
 
 				finished = 1;
@@ -980,7 +982,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 				return 0;
 			}
 
-			sprintf(expressions[expressionIndex], ")%s%s", operationStr, operandStr);
+			sprintf(expressions[expressionIndex], "%s%s", operationStr, operandStr);
 			expressionIndex++;
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
@@ -1003,7 +1005,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 				return 0;
 			}
 
-			sprintf(expressions[expressionIndex], ")%s", functionCall.line);
+			sprintf(expressions[expressionIndex], "%s", functionCall.line);
 
 			expressionIndex++;
 
@@ -1014,30 +1016,19 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 	if (!finished) { return 0; }
 
-	for (int i = expressionIndex - 1; i >= expressionIndex - 2 && i >= 0; i--) // remove last two )
+	for (int i = expressionIndex - 1; i >= 0; i--) 
 	{
-		char temp[100] = { 0 };
-		strcpy(temp, expressions[i] + 1);
-		expressions[i][0] = 0;
-		strcpy(expressions[i], temp);
-	}
-
-	if (expressionIndex > 1) 
-	{
-		for (int i = 0; i < expressionIndex - 1; i++)
+		if (i < expressionIndex - 2)
 		{
-			strcpy(resultBuffer + strlen(resultBuffer), "(");
+			wrapStrInParentheses(resultBuffer);
 		}
-	}
-	
-	for (int i = expressionIndex - 1; i >= 0; i--)
-	{
-		strcpy(resultBuffer + strlen(resultBuffer), expressions[i]);
+
+		strcat(resultBuffer, expressions[i]);
 	}
 
 	if (expressionIndex > 1) 
-	{ 
-		strcpy(resultBuffer + strlen(resultBuffer), ")"); 
+	{
+		wrapStrInParentheses(resultBuffer);
 	}
 
 	return 1;
@@ -1212,4 +1203,17 @@ static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssi
 	}
 
 	return 0;
+}
+
+static void wrapStrInParentheses(char* str) 
+{
+	int len = strlen(str);
+
+	for (int i = len; i > 0; i--)
+	{
+		str[i] = str[i - 1];
+	}
+
+	str[0] = '(';
+	strcat(str, ")");
 }
