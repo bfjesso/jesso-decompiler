@@ -1,5 +1,7 @@
 #include "conditions.h"
 
+#include <string.h>
+
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
 {
 	// find all conditional jumps
@@ -57,7 +59,12 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array
 	for (int i = 0; i < numOfConditions; i++)
 	{
-		if (condencedConditions[i].isCombinedByOther) { continue; }
+		if (condencedConditions[i].isCombinedByOther) 
+		{ 
+			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
+			conditionsIndex++;
+			continue; 
+		}
 
 		// check for else if
 		if (i > 0 && condencedConditions[i].exitIndex != -1 &&
@@ -170,13 +177,13 @@ int condenceConditions(struct Condition* conditions, int numOfConditions, struct
 
 void combineConditions(struct Condition* conditions, int numOfConditions)
 {
-	for (int i = 0; i < numOfConditions - 1; i++)
+	for (int i = 0; i < numOfConditions - 2; i++)
 	{
 		if (conditions[i].dstIndex == conditions[i + 1].dstIndex)
 		{
 			conditions[i].dstIndex = conditions[i + 1].dstIndex;
 			conditions[i].exitIndex = conditions[i + 1].exitIndex;
-			conditions[i].combinedCondition = &conditions[i + 1];
+			conditions[i].combinedConditionIndex = i + 1;
 			conditions[i].combinationLogicType = AND_LT;
 			conditions[i + 1].isCombinedByOther = 1;
 			i++;
@@ -185,7 +192,7 @@ void combineConditions(struct Condition* conditions, int numOfConditions)
 		{
 			conditions[i].dstIndex = conditions[i + 1].dstIndex;
 			conditions[i].exitIndex = conditions[i + 1].exitIndex;
-			conditions[i].combinedCondition = &conditions[i + 1];
+			conditions[i].combinedConditionIndex = i + 1;
 			conditions[i].combinationLogicType = OR_LT;
 			conditions[i + 1].isCombinedByOther = 1;
 			i++;

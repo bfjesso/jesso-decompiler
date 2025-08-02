@@ -56,7 +56,7 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 
-static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result);
+static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);
 
 static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
 

@@ -112,7 +112,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 		if (conditionIndex != -1)
 		{
 			params.startInstructionIndex = i;
-			if (decompileCondition(params, &conditions[conditionIndex], &resultBuffer[numOfLinesDecompiled]))
+			if (decompileCondition(params, conditions, conditionIndex, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
@@ -356,9 +356,9 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 	return 0;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* condition, struct LineOfC* result)
+static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result)
 {
-	if (condition->conditionType == ELSE_CT)
+	if (conditions[conditionIndex].conditionType == ELSE_CT)
 	{
 		strcpy(result->line, "else");
 		return 1;
@@ -366,20 +366,18 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 
 	char conditionExpression[100] = { 0 };
 
-	if (condition->otherJccsLogicType == OR_LT) 
+	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
-		struct Condition* test = condition;
-		
 		if (!decompileConditionExpression(params, conditionExpression, 0))
 		{
 			return 0;
 		}
 
-		for (int i = 0; i < condition->numOfOtherJccs; i++)
+		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
 			char currentConditionExpression[100] = { 0 };
-			params.startInstructionIndex = condition->otherJccIndexes[i];
-			if (!decompileConditionExpression(params, currentConditionExpression, i == condition->numOfOtherJccs - 1))
+			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
+			if (!decompileConditionExpression(params, currentConditionExpression, i == conditions[conditionIndex].numOfOtherJccs - 1))
 			{
 				return 0;
 			}
@@ -395,10 +393,10 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 			return 0;
 		}
 
-		for (int i = 0; i < condition->numOfOtherJccs; i++) 
+		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
 			char currentConditionExpression[100] = { 0 };
-			params.startInstructionIndex = condition->otherJccIndexes[i];
+			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
 			if (!decompileConditionExpression(params, currentConditionExpression, 1))
 			{
 				return 0;
@@ -410,14 +408,14 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 	}
 
 	struct LineOfC combinedConditionExpression = { 0 };
-	if (condition->combinedCondition) 
+	if (conditions[conditionIndex].combinedConditionIndex)
 	{
-		params.startInstructionIndex = condition->combinedCondition->jccIndex;
-		if (decompileCondition(params, condition->combinedCondition, &combinedConditionExpression)) 
+		params.startInstructionIndex = conditions[conditions[conditionIndex].combinedConditionIndex].jccIndex;
+		if (decompileCondition(params, conditions, conditions[conditionIndex].combinedConditionIndex, &combinedConditionExpression))
 		{
 			wrapStrInParentheses(conditionExpression);
 			
-			if (condition->combinationLogicType == AND_LT) 
+			if (conditions[conditionIndex].combinationLogicType == AND_LT)
 			{
 				strcat(conditionExpression, " && ");
 			}
@@ -434,13 +432,13 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		}
 	}
 
-	if (condition->isCombinedByOther)
+	if (conditions[conditionIndex].isCombinedByOther)
 	{
 		strcpy(result->line, conditionExpression);
 		return 1;
 	}
 
-	if (condition->conditionType == IF_CT)
+	if (conditions[conditionIndex].conditionType == IF_CT)
 	{
 		sprintf(result->line, "if(%s)", conditionExpression);
 	}
@@ -1003,7 +1001,7 @@ static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssi
 
 static void wrapStrInParentheses(char* str) 
 {
-	int len = strlen(str);
+	int len = (int)strlen(str);
 
 	for (int i = len; i > 0; i--)
 	{

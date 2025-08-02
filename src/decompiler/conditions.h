@@ -26,7 +26,7 @@ struct Condition // a Condition struct will be a series of conditions all connec
 	unsigned char numOfOtherJccs;
 	unsigned char otherJccsLogicType;
 
-	struct Condition* combinedCondition;
+	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
 	unsigned char combinationLogicType;
 	unsigned char isCombinedByOther; // is this struct referenced in another one by combinedCondition
 };
