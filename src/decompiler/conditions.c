@@ -15,7 +15,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 		{
 			allJccs[jccCount].jccIndex = i;
 
-			// getting index of instruction jumped to by jcc (minus one)
+			// getting index of instruction jumped to by jcc
 			unsigned long long jccDst = params.currentFunc->addresses[i] + instruction->operands[0].immediate;
 			int jccDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jccDst);
 			allJccs[jccCount].dstIndex = jccDstIndex;
@@ -50,88 +50,41 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 		}
 	}
 
-	struct Condition condencedConditions[20] = { 0 };
-	int numOfConditions = condenceConditions(allJccs, jccCount, condencedConditions);
+	struct Condition conditions[20] = { 0 };
+	int numOfConditions = getAndsAndOrs(allJccs, jccCount, conditions);
 
-	combineConditions(condencedConditions, numOfConditions);
+	combineConditions(conditions, numOfConditions);
 
-	// set types
-	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array
-	for (int i = 0; i < numOfConditions; i++)
-	{
-		if (condencedConditions[i].isCombinedByOther) 
-		{ 
-			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
-			conditionsIndex++;
-			continue; 
-		}
-
-		// check for else if
-		if (i > 0 && condencedConditions[i].exitIndex != -1 &&
-			condencedConditions[i - 1].exitIndex == condencedConditions[i].exitIndex &&
-			condencedConditions[i].dstIndex > condencedConditions[i - 1].dstIndex) // also have to check that its not nested
-		{
-			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = ELSE_IF_CT;
-		}
-		else
-		{
-			// check if last condition has an else and add it if so
-			if (i > 0 && condencedConditions[i - 1].exitIndex != -1)
-			{
-				conditionsBuffer[conditionsIndex].jccIndex = condencedConditions[i - 1].dstIndex;
-				conditionsBuffer[conditionsIndex].dstIndex = condencedConditions[i - 1].exitIndex;
-				conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
-
-				conditionsIndex++;
-			}
-
-			memcpy(&conditionsBuffer[conditionsIndex], &condencedConditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = IF_CT;
-		}
-
-		conditionsIndex++;
-	}
-	// check if last condition has an else and add it if so
-	if (numOfConditions > 0 && condencedConditions[numOfConditions - 1].exitIndex != -1)
-	{
-		conditionsBuffer[conditionsIndex].jccIndex = condencedConditions[numOfConditions - 1].dstIndex;
-		conditionsBuffer[conditionsIndex].dstIndex = condencedConditions[numOfConditions - 1].exitIndex;
-		conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
-
-		conditionsIndex++;
-	}
-
-	return conditionsIndex;
+	return setConditionTypes(conditions, numOfConditions, conditionsBuffer);
 }
 
-int condenceConditions(struct Condition* conditions, int numOfConditions, struct Condition* newConditionsBuffer)
+int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* conditionsBuffer)
 {
 	int newConditionsIndex = 0;
 
 	for (int i = 0; i < numOfConditions; i++)
 	{
-		memcpy(&newConditionsBuffer[newConditionsIndex], &conditions[i], sizeof(struct Condition));
+		memcpy(&conditionsBuffer[newConditionsIndex], &allJccs[i], sizeof(struct Condition));
 
 		// check for ||. a group of ORs is a series of Jccs that all go to the same destination (like ANDs), but the last one in the series has a Jcc as the instruction right before its destination
 		int orCount = 0;
 		unsigned char reachedEnd = 0;
 		for (int j = i + 1; j < numOfConditions; j++)
 		{
-			if (conditions[i].dstIndex == conditions[j].dstIndex)
+			if (allJccs[i].dstIndex == allJccs[j].dstIndex)
 			{
-				newConditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = conditions[j].jccIndex; // this could be part of an AND, but orCount will be set to 0 if its not so this will be ignored or overwritten
+				conditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = allJccs[j].jccIndex; // this could be part of an AND, but orCount will be set to 0 if its not so this will be ignored or overwritten
 				orCount++;
 			}
-			else if (conditions[j - 1].dstIndex - 1 == conditions[j].jccIndex)
+			else if (allJccs[j - 1].dstIndex - 1 == allJccs[j].jccIndex)
 			{
-				newConditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = conditions[j].jccIndex;
-				newConditionsBuffer[newConditionsIndex].dstIndex = conditions[j].dstIndex;
-				newConditionsBuffer[newConditionsIndex].exitIndex = conditions[j].exitIndex;
+				conditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = allJccs[j].jccIndex;
+				conditionsBuffer[newConditionsIndex].dstIndex = allJccs[j].dstIndex;
+				conditionsBuffer[newConditionsIndex].exitIndex = allJccs[j].exitIndex;
 				orCount++;
 
-				newConditionsBuffer[newConditionsIndex].otherJccsLogicType = OR_LT;
-				newConditionsBuffer[newConditionsIndex].numOfOtherJccs = orCount;
+				conditionsBuffer[newConditionsIndex].otherJccsLogicType = OR_LT;
+				conditionsBuffer[newConditionsIndex].numOfOtherJccs = orCount;
 				i += orCount;
 
 				break;
@@ -154,10 +107,10 @@ int condenceConditions(struct Condition* conditions, int numOfConditions, struct
 			int andCount = 0;
 			for (int j = i + 1; j < numOfConditions; j++)
 			{
-				if (conditions[i].dstIndex == conditions[j].dstIndex)
+				if (allJccs[i].dstIndex == allJccs[j].dstIndex)
 				{
-					newConditionsBuffer[newConditionsIndex].otherJccsLogicType = AND_LT;
-					newConditionsBuffer[newConditionsIndex].otherJccIndexes[andCount] = conditions[j].jccIndex;
+					conditionsBuffer[newConditionsIndex].otherJccsLogicType = AND_LT;
+					conditionsBuffer[newConditionsIndex].otherJccIndexes[andCount] = allJccs[j].jccIndex;
 					andCount++;
 				}
 				else
@@ -165,7 +118,7 @@ int condenceConditions(struct Condition* conditions, int numOfConditions, struct
 					break;
 				}
 			}
-			newConditionsBuffer[newConditionsIndex].numOfOtherJccs = andCount;
+			conditionsBuffer[newConditionsIndex].numOfOtherJccs = andCount;
 			i += andCount;
 		}
 
@@ -198,6 +151,57 @@ void combineConditions(struct Condition* conditions, int numOfConditions)
 			i++;
 		}
 	}
+}
+
+int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer)
+{
+	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array of conditions
+	for (int i = 0; i < numOfConditions; i++)
+	{
+		if (conditions[i].isCombinedByOther)
+		{
+			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
+			conditionsIndex++;
+			continue;
+		}
+
+		// check for else if
+		if (i > 0 && conditions[i].exitIndex != -1 &&
+			conditions[i - 1].exitIndex == conditions[i].exitIndex &&
+			conditions[i].dstIndex > conditions[i - 1].dstIndex) // also have to check that its not nested
+		{
+			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
+			conditionsBuffer[conditionsIndex].conditionType = ELSE_IF_CT;
+		}
+		else
+		{
+			// check if last condition has an else and add it if so
+			if (i > 0 && conditions[i - 1].exitIndex != -1)
+			{
+				conditionsBuffer[conditionsIndex].jccIndex = conditions[i - 1].dstIndex;
+				conditionsBuffer[conditionsIndex].dstIndex = conditions[i - 1].exitIndex;
+				conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
+
+				conditionsIndex++;
+			}
+
+			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
+			conditionsBuffer[conditionsIndex].conditionType = IF_CT;
+		}
+
+		conditionsIndex++;
+	}
+	// check if last condition has an else and add it if so
+	if (numOfConditions > 0 && conditions[numOfConditions - 1].exitIndex != -1)
+	{
+		conditionsBuffer[conditionsIndex].jccIndex = conditions[numOfConditions - 1].dstIndex;
+		conditionsBuffer[conditionsIndex].dstIndex = conditions[numOfConditions - 1].exitIndex;
+		conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
+
+		conditionsIndex++;
+	}
+
+	return conditionsIndex;
 }
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions)

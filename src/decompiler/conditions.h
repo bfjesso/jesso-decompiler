@@ -15,28 +15,31 @@ enum LogicalType
 	OR_LT
 };
 
-struct Condition // a Condition struct will be a series of conditions all connected by either &&s or ||s. if combinedCondition is not null
+struct Condition
 {
 	int jccIndex;
 	int dstIndex; // the index of the instruction jumped to by the jcc
-	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp
+	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp. this field is only used while getting all conditions
 	unsigned char conditionType;
 
-	int otherJccIndexes[3];
+	int otherJccIndexes[3]; // these will be either all connected by && or ||
 	unsigned char numOfOtherJccs;
 	unsigned char otherJccsLogicType;
 
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
-	unsigned char combinationLogicType;
-	unsigned char isCombinedByOther; // is this struct referenced in another one by combinedCondition
+	unsigned char combinationLogicType; // OR or AND
+	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
 };
 
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer);
 
-// this will combine a list of all Jccs into groups of ORs or ANDs
-int condenceConditions(struct Condition* conditions, int numOfConditions, struct Condition* newConditionsBuffer);
+// this function sets the otherJccIndexes by finding series of &&s and ||s
+int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* newConditionsBuffer);
 
-// this will go through the conditions and them into single complex conditions if applicable
+// this will go through the conditions and combine them into single conditions if applicable
 void combineConditions(struct Condition* conditions, int numOfConditions);
+
+// set types as if or else if. This function will also find and add elses to the conditions buffer
+int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer);
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
