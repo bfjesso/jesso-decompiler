@@ -56,13 +56,17 @@ extern "C"
 #endif
 
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex);
+	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
-	int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
-	int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
-	struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 
 #ifdef __cplusplus
 }
 #endif
+
+int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
+
+int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
+
+struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 
 unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand);

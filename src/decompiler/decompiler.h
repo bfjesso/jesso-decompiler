@@ -20,36 +20,6 @@ struct LineOfC
 	unsigned char indents;
 };
 
-enum ConditionType 
-{
-	IF_CT,
-	ELSE_IF_CT,
-	ELSE_CT
-};
-
-enum LogicalType 
-{
-	NONE_LT,
-	AND_LT,
-	OR_LT
-};
-
-struct Condition // a Condition struct will be a series of conditions all connected by either &&s or ||s. if combinedCondition is not null
-{
-	int jccIndex;
-	int dstIndex; // the index of the instruction jumped to by the jcc
-	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp
-	unsigned char conditionType;
-
-	int otherJccIndexes[3];
-	unsigned char numOfOtherJccs;
-	unsigned char otherJccsLogicType;
-	
-	struct Condition* combinedCondition;
-	unsigned char combinationLogicType;
-	unsigned char isCombinedByOther; // is this struct referenced in another one by combinedCondition
-};
-
 #include "functions.h"
 
 struct DecompilationParameters
@@ -59,6 +29,8 @@ struct DecompilationParameters
 	struct Function* currentFunc; // function being decompiled
 	unsigned short startInstructionIndex; // index of instruction to start decompiling from
 };
+
+#include "conditions.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -75,18 +47,8 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
 
-static int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer);
-
-// this will combine a list of all Jccs into groups of ORs or ANDs
-static int condenceConditions(struct Condition* conditions, int numOfConditions, struct Condition* newConditionsBuffer);
-
-// this will go through the conditions and them into single complex conditions if applicable
-static void combineConditions(struct Condition* conditions, int numOfConditions);
-
 // params.startInstructionIndex is the index for the instruction in question
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params);
-
-static int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
 static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
