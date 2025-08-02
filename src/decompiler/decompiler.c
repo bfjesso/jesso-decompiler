@@ -749,35 +749,57 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if ((currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, targetReg) && doesInstructionModifyOperand(currentInstruction, 0, &finished)) || doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
+		if ((currentInstruction->operands[0].type == REGISTER && 
+			compareRegisters(currentInstruction->operands[0].reg, targetReg) && 
+			doesInstructionModifyOperand(currentInstruction, 0, &finished)) 
+			|| doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
 			char targetOperand = getLastOperand(currentInstruction);
+
+			params.startInstructionIndex = i - 1;
 
 			if (currentInstruction->opcode == XOR && compareRegisters(currentInstruction->operands[1].reg, targetReg))
 			{
 				strcpy(expressions[expressionIndex], "0");
 				expressionIndex++;
 
-				finished = 1;
 				break;
 			}
-
-			params.startInstructionIndex = i - 1;
-
-			char operandStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[targetOperand], type, operandStr, 100))
+			else if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND) 
 			{
-				return 0;
-			}
+				char operandStr1[100] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[1], type, operandStr1, 100))
+				{
+					return 0;
+				}
+				char operandStr2[100] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[2], type, operandStr2, 100))
+				{
+					return 0;
+				}
 
-			char operationStr[20] = { 0 };
-			if (!getOperationStr(currentInstruction->opcode, 0, operationStr))
+				sprintf(expressions[expressionIndex], "(%s * %s)", operandStr1, operandStr2);
+				expressionIndex++;
+
+				break;
+			}
+			else 
 			{
-				return 0;
-			}
+				char operandStr[100] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], type, operandStr, 100))
+				{
+					return 0;
+				}
 
-			sprintf(expressions[expressionIndex], "%s%s", operationStr, operandStr);
-			expressionIndex++;
+				char operationStr[20] = { 0 };
+				if (!getOperationStr(currentInstruction->opcode, 0, operationStr))
+				{
+					return 0;
+				}
+
+				sprintf(expressions[expressionIndex], "%s%s", operationStr, operandStr);
+				expressionIndex++;
+			}
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
 		{

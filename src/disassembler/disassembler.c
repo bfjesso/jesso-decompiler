@@ -1365,12 +1365,6 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 {
 	if (operandNum == 0)
 	{
-		if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
-		{
-			if (overwrites != 0) { *overwrites = 1; }
-			return 1;
-		}
-
 		switch (instruction->opcode)
 		{
 		case MOV:
@@ -1397,8 +1391,12 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		case OR:
 		case SHL:
 		case SHR:
+			return 1;
 		case IMUL:
+			if (overwrites != 0 && instruction->operands[2].type != NO_OPERAND) { *overwrites = 1; }
+			return 1;
 		case XOR:
+			if (overwrites != 0 && areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) { *overwrites = 1; }
 			return 1;
 		}
 	}
