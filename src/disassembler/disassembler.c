@@ -64,7 +64,6 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	result->opcode = opcode.mnemonic;
 	result->numOfBytes = (unsigned char)(bytes - startPoint);
 	result->group1Prefix = legacyPrefixes.group1;
-	result->hasBeenDecompiled = 0;
 
 	return 1;
 }

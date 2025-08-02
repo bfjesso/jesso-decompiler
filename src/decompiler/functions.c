@@ -220,14 +220,7 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-void resetDecompilationState(struct Function* function)
-{
-	for (int i = 0; i < function->numOfInstructions; i++)
-	{
-		function->instructions[i].hasBeenDecompiled = 0;
-	}
-}
-
+// returns index of function, -1 if not found
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address)
 {
 	while (low <= high)
@@ -237,6 +230,22 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 		if (*functions[mid].addresses == address) { return mid; }
 
 		if (*functions[mid].addresses < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
+// returns index of instruction, -1 if not found
+int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address) 
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (function->addresses[mid] == address) { return mid; }
+
+		if (function->addresses[mid] < address) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 

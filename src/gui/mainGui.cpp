@@ -272,7 +272,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 			str = "    " + str;
 		}
 
-		decompilationListBox->InsertItems(1, &str, 0);
+		decompilationListBox->Append(str);
 	}
 }
 
