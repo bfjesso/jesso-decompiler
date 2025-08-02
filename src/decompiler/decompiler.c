@@ -309,6 +309,8 @@ static int getAllConditions(struct DecompilationParameters params, struct Condit
 	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array
 	for (int i = 0; i < numOfConditions; i++)
 	{
+		if (condencedConditions[i].isCombinedByOther) { continue; }
+		
 		// check for else if
 		if (i > 0 && condencedConditions[i].exitIndex != -1 && 
 			condencedConditions[i - 1].exitIndex == condencedConditions[i].exitIndex && 
