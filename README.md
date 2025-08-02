@@ -1,11 +1,12 @@
 # Jesso Decompiler: A C decompiler for Windows and Linux
-The Jesso Decompiler is a tool that will generate readable C code from a compiled binary. It can either read from a file, or parse a given string
+Jesso Decompiler is a tool that generates C code from a compiled binary. It can either read from a file, or parse a given string
 of bytes. The command line interface for Linux will handle reading from an ELF binary, and the Windows graphical user interface will handle reading a
 portable executable file. All bytes must be in x86-64 machine code, and when generating assembly output, it will be in Intel style syntax. The GUI for Windows
 is made using [wxWidgets](https://wxwidgets.org).
 
-This is still a work in progress. Decompiling conditions (if statements and loops) is currently being worked on. 
-The disassembler is also not yet fully comprehensive of the Intel instruction set.
+The decompiler is still a work in progress, and the disassembler is not yet fully comprehensive of the Intel instruction set.
+
+![Screenshot of Windows GUI](./screenshot.png)
 
 # Installation
 If you do not want to compile it yourself, there are precompiled binaries already in bin. "jdc.exe" is the GUI application for windows, and "jdc" is 
@@ -31,7 +32,7 @@ If you run the CLI with the -h or --help flag, you will get a list of flags that
 ./jdc -h
 
 ```
-# Disassembling
+## Disassembling
 If you only want to disassemlble, you can do using the -da or --disassemble flag.
 By default, it will accept a file path as the final argument. If you want to disassemble a literal string of bytes, you can do so with the -s flag.
 ```bash
@@ -43,9 +44,7 @@ By default, it will accept a file path as the final argument. If you want to dis
 ```
 When disassembling a file, jdc will look for the ".text" section and read the bytes from there. Same applies when decompiling.
 
-![Disassemly output of test32 in the CLI](./da-screenshot.png)
-
-# Decompiling
+## Decompiling
 To use the decompiler, run jdc with the -dc or --decompile flag.
 By default, jdc will search the binary for symbols and apply them to function names. To disable this, use the -ns flag.
 ```bash
@@ -57,5 +56,3 @@ This will then prompt for further input. Use h for help.
 To list all functions that jdc identified, use l.
 To decompile a function, first select it with s and enter the index of the function when prompted. Listing all the functions with l will show each functions's index.
 Once a function is selected, you can use dc to print the decompilation. It will ask if you want it to show line numbers for the decompiled function.
-
-![Decompiling a function from test32 in the CLI](./dc-screenshot.png)
