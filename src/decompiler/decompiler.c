@@ -167,7 +167,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				strcpy(resultBuffer[numOfLinesDecompiled].line + strlen(resultBuffer[numOfLinesDecompiled].line), ";");
+				strcat(resultBuffer[numOfLinesDecompiled].line, ";");
 				numOfLinesDecompiled++;
 
 				isConditionEmpty = 0;
@@ -235,7 +235,7 @@ static unsigned short generateFunctionHeader(struct Function* function, const ch
 		}
 	}
 
-	strcpy(result->line + strlen(result->line), ")");
+	strcat(result->line, ")");
 
 	return 1;
 }
@@ -942,7 +942,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 	}
 	else 
 	{
-		strcpy(result->line + strlen(result->line), ")");
+		strcat(result->line, ")");
 	}
 	
 	return 1;
