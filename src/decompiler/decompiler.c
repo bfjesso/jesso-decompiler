@@ -64,6 +64,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
+		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
 		{
 			if (!conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
@@ -90,6 +91,29 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			}
 		}
 
+		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
+		if (conditionIndex != -1)
+		{
+			params.startInstructionIndex = i;
+			if (decompileCondition(params, conditions, conditionIndex, &resultBuffer[numOfLinesDecompiled]))
+			{
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+
+				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+
+				isConditionEmpty = 1;
+			}
+			else
+			{
+				return 0;
+			}
+
+			numOfIndents++;
+		}
+
 		if (isInUnreachableState) { continue; }
 
 		params.startInstructionIndex = i;
@@ -106,29 +130,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			{
 				return 0;
 			}
-		}
-
-		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
-		if (conditionIndex != -1)
-		{
-			params.startInstructionIndex = i;
-			if (decompileCondition(params, conditions, conditionIndex, &resultBuffer[numOfLinesDecompiled]))
-			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
-				isConditionEmpty = 1;
-			}
-			else 
-			{
-				return 0;
-			}
-
-			numOfIndents++;
 		}
 
 		if (checkForAssignment(&(params.currentFunc->instructions[i])))
@@ -438,7 +439,11 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		return 1;
 	}
 
-	if (conditions[conditionIndex].conditionType == IF_CT)
+	if (conditions[conditionIndex].conditionType == WHILE_CT)
+	{
+		sprintf(result->line, "while(%s)", conditionExpression);
+	}
+	else if (conditions[conditionIndex].conditionType == IF_CT)
 	{
 		sprintf(result->line, "if(%s)", conditionExpression);
 	}

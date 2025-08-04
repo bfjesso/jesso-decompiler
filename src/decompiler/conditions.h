@@ -5,7 +5,8 @@ enum ConditionType
 {
 	IF_CT,
 	ELSE_IF_CT,
-	ELSE_CT
+	ELSE_CT,
+	WHILE_CT
 };
 
 enum LogicalType
