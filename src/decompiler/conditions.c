@@ -58,7 +58,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	return setConditionTypes(conditions, numOfConditions, conditionsBuffer);
 }
 
-int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* conditionsBuffer)
+static int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* conditionsBuffer)
 {
 	int newConditionsIndex = 0;
 
@@ -128,7 +128,7 @@ int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Conditi
 	return newConditionsIndex;
 }
 
-void combineConditions(struct Condition* conditions, int numOfConditions)
+static void combineConditions(struct Condition* conditions, int numOfConditions)
 {
 	for (int i = 0; i < numOfConditions - 2; i++)
 	{
@@ -153,7 +153,7 @@ void combineConditions(struct Condition* conditions, int numOfConditions)
 	}
 }
 
-int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer)
+static int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer)
 {
 	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array of conditions
 	for (int i = 0; i < numOfConditions; i++)
