@@ -441,15 +441,15 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 
 	if (conditions[conditionIndex].conditionType == WHILE_CT)
 	{
-		sprintf(result->line, "while(%s)", conditionExpression);
+		sprintf(result->line, "while (%s)", conditionExpression);
 	}
 	else if (conditions[conditionIndex].conditionType == IF_CT)
 	{
-		sprintf(result->line, "if(%s)", conditionExpression);
+		sprintf(result->line, "if (%s)", conditionExpression);
 	}
 	else 
 	{
-		sprintf(result->line, "else if(%s)", conditionExpression);
+		sprintf(result->line, "else if (%s)", conditionExpression);
 	}
 
 	return 1;
