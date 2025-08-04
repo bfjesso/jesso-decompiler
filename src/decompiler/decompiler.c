@@ -105,6 +105,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 				numOfLinesDecompiled++;
 
 				isConditionEmpty = 1;
+				isInUnreachableState = 0;
 			}
 			else
 			{
@@ -132,22 +133,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 			}
 		}
 
-		if (checkForAssignment(&(params.currentFunc->instructions[i])))
+		if (checkForAssignment(currentInstruction))
 		{
-			struct LocalVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
-
-			unsigned char type = 0;
-			if (!localVar) 
-			{
-				type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-			}
-			else 
-			{
-				type = localVar->type;
-			}
-
 			params.startInstructionIndex = i;
-			if (decompileAssignment(params, type, &resultBuffer[numOfLinesDecompiled]))
+			if (decompileAssignment(params, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
@@ -439,9 +428,40 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		return 1;
 	}
 
-	if (conditions[conditionIndex].conditionType == WHILE_CT)
+	if (conditions[conditionIndex].conditionType == LOOP_CT)
 	{
-		sprintf(result->line, "while (%s)", conditionExpression);
+		// check for for loop
+		if (params.currentFunc->instructions[conditions[conditionIndex].exitIndex - 1].opcode == JMP_SHORT)
+		{
+			struct LineOfC assignmentExpression = { 0 };
+			for (int i = conditions[conditionIndex].exitIndex; i < conditions[conditionIndex].jccIndex; i++) 
+			{
+				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+				if (checkForAssignment(currentInstruction))
+				{
+					params.startInstructionIndex = i;
+					if (decompileAssignment(params, &assignmentExpression))
+					{
+						break;
+					}
+					else 
+					{
+						return 0;
+					}
+				}
+			}
+			int len = strlen(assignmentExpression.line);
+			if (len > 0) 
+			{
+				assignmentExpression.line[len - 1] = 0; // remove ;
+			}
+			
+			sprintf(result->line, "for (; %s; %s)", conditionExpression, assignmentExpression.line);
+		}
+		else 
+		{
+			sprintf(result->line, "while (%s)", conditionExpression);
+		}
 	}
 	else if (conditions[conditionIndex].conditionType == IF_CT)
 	{
@@ -608,9 +628,20 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 	return 1;
 }
 
-static unsigned char decompileAssignment(struct DecompilationParameters params, unsigned char type, struct LineOfC* result)
+static unsigned char decompileAssignment(struct DecompilationParameters params, struct LineOfC* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	struct LocalVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
+	unsigned char type = 0;
+	if (!localVar)
+	{
+		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+	}
+	else
+	{
+		type = localVar->type;
+	}
 	
 	char assignee[100] = { 0 };
 	if (!decompileOperand(params, &currentInstruction->operands[0], type, assignee, 100)) 

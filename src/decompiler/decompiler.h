@@ -62,7 +62,7 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
-static unsigned char decompileAssignment(struct DecompilationParameters params, unsigned char type, struct LineOfC* result);
+static unsigned char decompileAssignment(struct DecompilationParameters params, struct LineOfC* result);
 
 static unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, unsigned char type, char* resultBuffer, unsigned char resultBufferSize);
 

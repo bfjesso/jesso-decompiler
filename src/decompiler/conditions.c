@@ -165,11 +165,11 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 			continue;
 		}
 
-		// check for while loops
+		// check for loops
 		if (conditions[i].exitIndex < conditions[i].jccIndex) 
 		{
 			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = WHILE_CT;
+			conditionsBuffer[conditionsIndex].conditionType = LOOP_CT;
 		}
 		else if (i > 0 && conditions[i].exitIndex != -1 &&
 			conditions[i - 1].exitIndex == conditions[i].exitIndex && // check for else if
@@ -181,7 +181,7 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 		else
 		{
 			// check if last if condition has an else and add it if so
-			if (i > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != WHILE_CT && conditions[i - 1].exitIndex != -1)
+			if (i > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != LOOP_CT && conditions[i - 1].exitIndex != -1)
 			{
 				conditionsBuffer[conditionsIndex].jccIndex = conditions[i - 1].dstIndex;
 				conditionsBuffer[conditionsIndex].dstIndex = conditions[i - 1].exitIndex;
@@ -196,7 +196,7 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 
 		conditionsIndex++;
 	}
-	if (numOfConditions > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != WHILE_CT && conditions[numOfConditions - 1].exitIndex != -1)
+	if (numOfConditions > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
 	{
 		conditionsBuffer[conditionsIndex].jccIndex = conditions[numOfConditions - 1].dstIndex;
 		conditionsBuffer[conditionsIndex].dstIndex = conditions[numOfConditions - 1].exitIndex;
