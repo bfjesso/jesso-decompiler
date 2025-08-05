@@ -157,7 +157,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				strcat(resultBuffer[numOfLinesDecompiled].line, ";");
 				numOfLinesDecompiled++;
 
 				isConditionEmpty = 0;
@@ -884,7 +883,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 
 	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
 	{
-		sprintf(result->line, "%s()", callee->name);
+		sprintf(result->line, "%s();", callee->name);
 		return 1;
 	}
 
@@ -979,6 +978,8 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 	{
 		strcat(result->line, ")");
 	}
+
+	strcat(result->line, ";");
 	
 	return 1;
 }
