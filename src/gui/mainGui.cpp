@@ -239,7 +239,7 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 	delete[] bytes;
 }
 
-void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
+void MainGui::DecompileFunction(unsigned short functionIndex)
 {
 	if (currentFilePath.empty())
 	{
@@ -256,7 +256,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex, const char* name)
 	params.startInstructionIndex = 0;
 
 	LineOfC decompiledFunction[100];
-	unsigned short numOfLinesDecompiled = decompileFunction(params, name, decompiledFunction, 100);
+	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
@@ -329,7 +329,7 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	menu.Append(decompile);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
 		{
-			DecompileFunction(row, functionsGrid->GetCellValue(row, 2).c_str().AsChar());
+			DecompileFunction(row);
 		}, 100);
 
 	wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");

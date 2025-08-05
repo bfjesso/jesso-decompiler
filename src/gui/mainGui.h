@@ -57,7 +57,7 @@ public:
 
 	void DisassembleCodeSection(unsigned int numOfBytesToRead);
 
-	void DecompileFunction(unsigned short functionIndex, const char* name);
+	void DecompileFunction(unsigned short functionIndex);
 
 	void FindAllFunctions();
 

@@ -434,7 +434,7 @@ int main(int argc, char* argv[])
 						params.startInstructionIndex = 0;
 
 						struct LineOfC* decompiledFunction = (struct LineOfC*)malloc(100 * sizeof(struct LineOfC));
-						unsigned short numOfLinesDecompiled = decompileFunction(params, functions[functionNum].name, decompiledFunction, 100);
+						unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
 						if (numOfLinesDecompiled != 0)
 						{
 							for (int i = numOfLinesDecompiled - 1; i >= 0; i--)

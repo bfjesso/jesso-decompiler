@@ -37,13 +37,13 @@ extern "C"
 {
 #endif
 
-	unsigned short decompileFunction(struct DecompilationParameters params, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
+	unsigned short decompileFunction(struct DecompilationParameters params, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
 
 #ifdef __cplusplus
 }
 #endif
 
-static unsigned short generateFunctionHeader(struct Function* function, const char* functionName, struct LineOfC* result);
+static unsigned short generateFunctionHeader(struct Function* function, struct LineOfC* result);
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
 

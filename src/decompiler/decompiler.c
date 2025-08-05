@@ -18,13 +18,13 @@ static const char* primitiveTypeStrs[] =
 	"double"
 };
 
-unsigned short decompileFunction(struct DecompilationParameters params, const char* functionName, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
+unsigned short decompileFunction(struct DecompilationParameters params, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
 {
 	if (resultBufferLen < 4) { return 0; }
 
 	int numOfLinesDecompiled = 0;
 
-	if (!generateFunctionHeader(params.currentFunc, functionName, &resultBuffer[numOfLinesDecompiled]))
+	if (!generateFunctionHeader(params.currentFunc, &resultBuffer[numOfLinesDecompiled]))
 	{
 		return 0;
 	}
@@ -151,7 +151,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 
 		struct Function* callee;
 		params.startInstructionIndex = i;
-		if (checkForFunctionCall(params, &callee) && callee->returnType == VOID_TYPE) // if it does return something, this call will be decompiled later when its return value is used
+		if (checkForFunctionCall(params, &callee))
 		{
 			params.startInstructionIndex = i;
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
@@ -181,9 +181,9 @@ unsigned short decompileFunction(struct DecompilationParameters params, const ch
 	return numOfLinesDecompiled;
 }
 
-static unsigned short generateFunctionHeader(struct Function* function, const char* functionName, struct LineOfC* result) 
+static unsigned short generateFunctionHeader(struct Function* function, struct LineOfC* result) 
 {
-	sprintf(result->line, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], functionName);
+	sprintf(result->line, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name);
 
 	result->indents = 0;
 
