@@ -70,6 +70,8 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 static unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct LineOfC* result);
 
+static int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr);
+
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
 
 static void wrapStrInParentheses(char* str);

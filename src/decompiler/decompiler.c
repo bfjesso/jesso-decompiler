@@ -848,16 +848,8 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 			if (params.functions[calleeIndex].returnType == VOID_TYPE) { continue; }
 
-			params.startInstructionIndex = i;
-			struct Function* callee = &(params.functions[calleeIndex]);
-
-			struct LineOfC functionCall = { 0 };
-			if (!decompileFunctionCall(params, callee, &functionCall))
-			{
-				return 0;
-			}
-
-			sprintf(expressions[expressionIndex], "%s", functionCall.line);
+			int callNum = getFunctionCallNumber(params, calleeAddress);
+			sprintf(expressions[expressionIndex], "%sRetVal%d", params.functions[calleeIndex].name, callNum);
 
 			expressionIndex++;
 
@@ -895,8 +887,15 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 		sprintf(result->line, "%s()", callee->name);
 		return 1;
 	}
+
+	if (callee->returnType != VOID_TYPE) 
+	{
+		unsigned long long calleeAddress = params.currentFunc->addresses[params.startInstructionIndex] + firstInstruction->operands[0].immediate;
+		int callNum = getFunctionCallNumber(params, calleeAddress);
+		sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[callee->returnType], callee->name, callNum);
+	}
 	
-	sprintf(result->line, "%s(", callee->name);
+	sprintf(&(result->line[strlen(result->line)]), "%s(", callee->name);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
@@ -982,6 +981,24 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 	}
 	
 	return 1;
+}
+
+static int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr) 
+{
+	int result = 0;
+	
+	for (int i = 0; i < params.currentFunc->numOfInstructions; i++) 
+	{
+		if (params.currentFunc->instructions[i].opcode == CALL_NEAR || params.currentFunc->instructions[i].opcode == CALL_FAR) 
+		{
+			if (params.currentFunc->addresses[i] + params.currentFunc->instructions[i].operands[0].immediate == callAddr) 
+			{
+				result++;
+			}
+		}
+	}
+
+	return result;
 }
 
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer) 
