@@ -7,8 +7,8 @@ extern "C"
 {
 #endif
 
-	unsigned char readCodeSection(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase, unsigned char* is64Bit);
-	unsigned char readDataSection(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+	unsigned char readCodeSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase);
+	unsigned char readDataSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
 
 #ifdef __cplusplus
 }

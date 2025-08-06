@@ -31,7 +31,8 @@ public:
 	wxBoxSizer* row4Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	wxString currentFilePath;
+	HANDLE currentFile = 0;
+	unsigned char is64Bit;
 	uintptr_t imageBase;
 
 	std::vector<uintptr_t> instructionAddresses;

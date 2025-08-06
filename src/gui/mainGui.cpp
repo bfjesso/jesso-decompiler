@@ -123,11 +123,30 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
 	{
-		currentFilePath = openDllDialog.GetPath();
-		dataViewerMenu->currentFilePath = currentFilePath;
-
-		if (!currentFilePath.empty())
+		CloseHandle(currentFile);
+		
+		wxString filePath = openDllDialog.GetPath();
+		if (!filePath.empty())
 		{
+			HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+			if (!file || file == INVALID_HANDLE_VALUE)
+			{
+				this->SetTitle("Jesso Decompiler x64");
+				wxMessageBox("Error opening the file", "Failed to get handle to file");
+				currentFile = 0;
+				return;
+			}
+
+			currentFile = file;
+			dataViewerMenu->currentFile = file;
+
+			DWORD binaryType = 0;
+			if (GetBinaryTypeW(filePath.c_str().AsWChar(), &binaryType))
+			{
+				is64Bit = binaryType == SCS_64BIT_BINARY;
+				dataViewerMenu->is64Bit = is64Bit;
+			}
+			
 			wxString fileName = openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 			wxMessageBox(fileName + " has been opened. It can now be disassembled and analyzed.", "Successfully opened the file");
@@ -136,6 +155,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		{
 			this->SetTitle("Jesso Decompiler x64");
 			wxMessageBox("Error opening the file", "Failed to open file");
+			currentFile = 0;
 			return;
 		}
 	}
@@ -145,7 +165,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 
 void MainGui::DisassembleButton(wxCommandEvent& e) 
 {
-	if (currentFilePath.empty())
+	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
@@ -171,7 +191,7 @@ void MainGui::DisassembleButton(wxCommandEvent& e)
 
 void MainGui::AnalyzeButton(wxCommandEvent& e) 
 {
-	if (currentFilePath.empty())
+	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
@@ -194,9 +214,7 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 {
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER codeSection = { 0 };
-	const wchar_t* filePath = currentFilePath.c_str().AsWChar();
-	unsigned char is64Bit = 0;
-	if (!readCodeSection(filePath, bytes, numOfBytesToRead, &codeSection, &imageBase, &is64Bit))
+	if (!readCodeSection(currentFile, is64Bit, bytes, numOfBytesToRead, &codeSection, &imageBase))
 	{
 		wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 
@@ -241,7 +259,7 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 
 void MainGui::DecompileFunction(unsigned short functionIndex)
 {
-	if (currentFilePath.empty())
+	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
 	{
 		wxMessageBox("No file opened", "Can't decompile");
 		return;
@@ -343,6 +361,8 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	CloseHandle(currentFile);
+	
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
 	Destroy();

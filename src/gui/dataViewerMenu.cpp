@@ -55,7 +55,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 
 void DataViewer::LoadData(wxCommandEvent& e) 
 {
-	if (currentFilePath.empty())
+	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
 	{
 		wxMessageBox("No file opened", "Can't load data");
 		return;
@@ -73,8 +73,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	unsigned char* bytes = new unsigned char[numOfBytesToRead];
 	IMAGE_SECTION_HEADER dataSection = { 0 };
 	uintptr_t imageBase = 0;
-	const wchar_t* filePath = currentFilePath.c_str().AsWChar();
-	if (!readDataSection(filePath, bytes, numOfBytesToRead, &dataSection, &imageBase))
+	if (!readDataSection(currentFile, is64Bit, bytes, numOfBytesToRead, &dataSection, &imageBase))
 	{
 		wxMessageBox("Error reading bytes from file data section", "Can't load data");
 

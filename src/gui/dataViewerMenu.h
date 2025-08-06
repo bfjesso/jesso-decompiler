@@ -17,7 +17,8 @@ public:
 	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	wxString currentFilePath = "";
+	HANDLE currentFile = 0;
+	unsigned char is64Bit;
 
 	const char* dataTypeStrs[6] = 
 	{
