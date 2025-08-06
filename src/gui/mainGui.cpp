@@ -316,15 +316,15 @@ void MainGui::FindAllFunctions()
 
 			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[currentFunction.callingConvention]));
 
-			sprintf(addressStr, "%llX", (*currentFunction.addresses) - imageBase);
-			functionsGrid->SetCellValue(functionNum, 2, "func" + wxString(addressStr));
+			currentFunction.name[0] = 0;
+			if (!getSymbolByValue(currentFile, is64Bit, *currentFunction.addresses, currentFunction.name))
+			{
+				sprintf(currentFunction.name, "func%llX", (*currentFunction.addresses) - imageBase);
+			}
 		}
 
-		currentFunction.name[0] = 0;
-		strcpy(currentFunction.name, functionsGrid->GetCellValue(functionNum, 2).c_str().AsChar());
-
+		functionsGrid->SetCellValue(functionNum, 2, wxString(currentFunction.name));
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(currentFunction.numOfInstructions));
-		
 		functions.push_back(currentFunction);
 		functionNum++;
 	}

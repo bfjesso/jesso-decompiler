@@ -9,6 +9,7 @@ extern "C"
 
 	unsigned char readCodeSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase);
 	unsigned char readDataSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+	unsigned char getSymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, char* buffer);
 
 #ifdef __cplusplus
 }
@@ -21,3 +22,7 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
 
 static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+
+static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer);
+
+static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer);
