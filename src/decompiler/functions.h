@@ -19,10 +19,18 @@ static const char* callingConventionStrs[] =
 	"__thiscall"
 };
 
-struct LocalVariable 
+struct RegisterVariable
+{
+	unsigned char type;
+	unsigned char reg;
+	char name[20];
+};
+
+struct StackVariable 
 {
 	unsigned char type;
 	int stackOffset;
+	char name[20];
 };
 
 struct Function
@@ -38,16 +46,14 @@ struct Function
 
 	unsigned char callingConvention;
 
+	struct RegisterVariable regArgs[NO_REG - RAX];
 	unsigned char numOfRegArgs;
-	unsigned char regArgRegs[NO_REG-RAX]; // the register that each arugment is
-	unsigned char regArgTypes[NO_REG-RAX]; // data types of arguments
 
+	struct StackVariable stackArgs[6];
 	unsigned char numOfStackArgs;
-	unsigned char stackArgTypes[6];
-	unsigned char stackArgBpOffsets[6];
 
+	struct StackVariable localVars[20];
 	unsigned char numOfLocalVars;
-	struct LocalVariable localVars[50];
 };
 
 #ifdef __cplusplus
@@ -67,6 +73,12 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 
 int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
 
-struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
+struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
+
+struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
+
+struct RegisterVariable* getRegArgByReg(struct Function* function, unsigned char reg);
 
 unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand);
+
+static void initializeFunctionVarNames(struct Function* function);

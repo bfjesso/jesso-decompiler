@@ -188,39 +188,25 @@ static unsigned short generateFunctionHeader(struct Function* function, struct L
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
-		char regArgStr[10];
-
-		if (function->regArgRegs[i] >= RAX && function->regArgRegs[i] <= RIP)
-		{
-			sprintf(regArgStr, "arg%s", registerStrs[(function->regArgRegs[i]-RAX)+AX]);
-		} 
-		else 
-		{
-			sprintf(regArgStr, "arg%s", registerStrs[function->regArgRegs[i]]);
-		}
-		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->regArgTypes[i]], regArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name);
 		}
 		else 
 		{
-			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->regArgTypes[i]], regArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name);
 		}
 	}
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		char stackArgStr[10];
-		sprintf(stackArgStr, "arg%X", function->stackArgBpOffsets[i]);
-		
 		if (i == function->numOfStackArgs - 1)
 		{
-			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->stackArgTypes[i]], stackArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name);
 		}
 		else
 		{
-			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->stackArgTypes[i]], stackArgStr);
+			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name);
 		}
 	}
 
@@ -631,7 +617,7 @@ static unsigned char decompileAssignment(struct DecompilationParameters params, 
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	struct LocalVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
+	struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
 	unsigned char type = 0;
 	if (!localVar)
 	{
@@ -674,15 +660,31 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
-		if (compareRegisters(operand->memoryAddress.reg, EBP)) 
+		if (compareRegisters(operand->memoryAddress.reg, BP)) 
 		{
 			if (operand->memoryAddress.constDisplacement < 0)
 			{
-				sprintf(resultBuffer, "var%llX", -operand->memoryAddress.constDisplacement);
+				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, operand->memoryAddress.constDisplacement);
+				if (localVar) 
+				{
+					strcpy(resultBuffer, localVar->name);
+				}
+				else 
+				{
+					return 0;
+				}
 			}
 			else
 			{
-				sprintf(resultBuffer, "arg%llX", operand->memoryAddress.constDisplacement);
+				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, operand->memoryAddress.constDisplacement);
+				if (stackArg)
+				{
+					strcpy(resultBuffer, stackArg->name);
+				}
+				else
+				{
+					return 0;
+				}
 			}
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
@@ -728,38 +730,17 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 		
 		if (!decompileExpression(params, operand->reg, type, resultBuffer, resultBufferSize))
 		{
-			// thiscall or fastcall argument
-
-			if (compareRegisters(operand->reg, CX))
+			// register argument
+			struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, operand->reg);
+			if (regArg)
 			{
-				strcpy(resultBuffer, "argCX");
-			}
-			else if (compareRegisters(operand->reg, DX))
-			{
-				strcpy(resultBuffer, "argDX");
-			}
-			else if (compareRegisters(operand->reg, R8))
-			{
-				strcpy(resultBuffer, "argR8");
-			}
-			else if (compareRegisters(operand->reg, R9))
-			{
-				strcpy(resultBuffer, "argR9");
-			}
-			else if (compareRegisters(operand->reg, DI))
-			{
-				strcpy(resultBuffer, "argDI");
-			}
-			else if (compareRegisters(operand->reg, SI))
-			{
-				strcpy(resultBuffer, "argSI");
+				strcpy(resultBuffer, regArg->name);
+				return 1;
 			}
 			else 
 			{
-				sprintf(resultBuffer, "arg%s", registerStrs[operand->reg]);
+				return 0;
 			}
-
-			return 1;
 		}
 
 		return 1;
@@ -908,12 +889,12 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 			{
 				unsigned char reg = currentInstruction->operands[0].reg;
 
-				if (compareRegisters(reg, callee->regArgRegs[i]))
+				if (compareRegisters(reg, callee->regArgs[i].reg))
 				{
 					params.startInstructionIndex = j;
 					
 					char argStr[100] = { 0 };
-					if (!decompileExpression(params, reg, callee->regArgTypes[i], argStr, 100))
+					if (!decompileExpression(params, reg, callee->regArgs[i].type, argStr, 100))
 					{
 						return 0;
 					}
@@ -938,7 +919,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 			params.startInstructionIndex = i;
 			
 			char argStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgTypes[stackArgsFound], argStr, 100))
+			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, argStr, 100))
 			{
 				return 0;
 			}
@@ -957,7 +938,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 				params.startInstructionIndex = i;
 
 				char argStr[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgTypes[stackArgsFound], argStr, 100))
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, argStr, 100))
 				{
 					return 0;
 				}

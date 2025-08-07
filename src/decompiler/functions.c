@@ -2,6 +2,8 @@
 #include "../disassembler/opcodes.h"
 #include "../disassembler/registers.h"
 
+#include <stdio.h>
+
 unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
 {
 	struct Function function = { 0 };
@@ -26,17 +28,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			
 			function.addresses = &addresses[i];
 			function.instructions = &instructions[i];
-			function.numOfInstructions = 0;
-
-			function.returnType = VOID_TYPE;
-
-			function.addressOfReturnFunction = 0;
-
-			function.callingConvention = __CDECL;
-
-			function.numOfRegArgs = 0;
-			function.numOfStackArgs = 0;
-			function.numOfLocalVars = 0;
 
 			foundFirstInstruction = 1;
 		}
@@ -65,8 +56,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 						}
 						else if (!initializedRegs[k - RAX])
 						{
-							function.regArgRegs[function.numOfRegArgs] = k;
-							function.regArgTypes[function.numOfRegArgs] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+							function.regArgs[function.numOfRegArgs].reg = k;
+							function.regArgs[function.numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 							function.numOfRegArgs++;
 							function.callingConvention = __FASTCALL;
 						}
@@ -78,7 +69,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				unsigned char alreadyFound = 0;
 				for (int j = 0; j < function.numOfStackArgs; j++)
 				{
-					if (function.stackArgBpOffsets[j] == currentOperand->memoryAddress.constDisplacement)
+					if (function.stackArgs[j].stackOffset == currentOperand->memoryAddress.constDisplacement)
 					{
 						alreadyFound = 1;
 						break;
@@ -87,8 +78,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!alreadyFound)
 				{
-					function.stackArgBpOffsets[function.numOfStackArgs] = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
-					function.stackArgTypes[function.numOfStackArgs] = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+					function.stackArgs[function.numOfStackArgs].stackOffset = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
+					function.stackArgs[function.numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 					function.numOfStackArgs++;
 				}
 
@@ -98,11 +89,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 					char swapped = 0;
 					for (int k = 0; k < function.numOfStackArgs - j - 1; k++)
 					{
-						if (function.stackArgBpOffsets[k] > function.stackArgBpOffsets[k + 1])
+						if (function.stackArgs[k].stackOffset > function.stackArgs[k + 1].stackOffset)
 						{
-							unsigned char temp = function.stackArgBpOffsets[k];
-							function.stackArgBpOffsets[k] = function.stackArgBpOffsets[k + 1];
-							function.stackArgBpOffsets[k + 1] = temp;
+							unsigned char temp = function.stackArgs[k].stackOffset;
+							function.stackArgs[k].stackOffset = function.stackArgs[k + 1].stackOffset;
+							function.stackArgs[k + 1].stackOffset = temp;
 
 							swapped = 1;
 						}
@@ -183,11 +174,13 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				function.callingConvention = __THISCALL;
 			}
 
+			initializeFunctionVarNames(&function);
 			*result = function;
 			return 1;
 		}
 		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
 		{
+			initializeFunctionVarNames(&function);
 			*result = function;
 			return 1;
 		}
@@ -302,15 +295,66 @@ unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand)
 	return VOID_TYPE;
 }
 
-struct LocalVariable* getLocalVarByOffset(struct Function* function, int stackOffset) 
+struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset)
 {
-	for (int i = 0; i < function->numOfLocalVars; i++) 
+	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
-		if (function->localVars[i].stackOffset == stackOffset) 
+		if (function->localVars[i].stackOffset == stackOffset)
 		{
 			return &function->localVars[i];
 		}
 	}
 
 	return 0;
+}
+
+struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset)
+{
+	for (int i = 0; i < function->numOfStackArgs; i++) 
+	{
+		if (function->stackArgs[i].stackOffset == stackOffset) 
+		{
+			return &function->stackArgs[i];
+		}
+	}
+
+	return 0;
+}
+
+struct RegisterVariable* getRegArgByReg(struct Function* function, unsigned char reg) 
+{
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		if (compareRegisters(function->regArgs[i].reg, reg))
+		{
+			return &function->regArgs[i];
+		}
+	}
+
+	return 0;
+}
+
+static void initializeFunctionVarNames(struct Function* function) 
+{
+	for (int i = 0; i < function->numOfRegArgs; i++) 
+	{
+		if (function->regArgs[i].reg >= RAX && function->regArgs[i].reg <= RIP) 
+		{
+			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg - 18]); // make it DX rather than RDX for example
+		}
+		else 
+		{
+			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg]);
+		}
+	}
+
+	for (int i = 0; i < function->numOfStackArgs; i++)
+	{
+		sprintf(function->stackArgs[i].name, "arg%X", function->stackArgs[i].stackOffset);
+	}
+
+	for (int i = 0; i < function->numOfLocalVars; i++)
+	{
+		sprintf(function->localVars[i].name, "var%X", -function->localVars[i].stackOffset);
+	}
 }
