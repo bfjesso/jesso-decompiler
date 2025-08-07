@@ -124,6 +124,16 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
 	{
 		CloseHandle(currentFile);
+		currentFile = 0;
+		disassemblyListBox->Clear();
+		instructionAddresses.clear();
+		instructionAddresses.shrink_to_fit();
+		disassembledInstructions.clear();
+		disassembledInstructions.shrink_to_fit();
+		functions.clear();
+		functions.shrink_to_fit();
+		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
+		decompilationListBox->Clear();
 		
 		wxString filePath = openDllDialog.GetPath();
 		if (!filePath.empty())
@@ -205,7 +215,8 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 	functions.clear();
 	functions.shrink_to_fit();
-	functionsGrid->ClearGrid();
+	functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
+	decompilationListBox->Clear();
 	
 	FindAllFunctions();
 }
