@@ -73,7 +73,7 @@ static unsigned char readCodeSection32(HANDLE file, unsigned char* buffer, unsig
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
+		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
 		{
 			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
@@ -108,7 +108,7 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
+		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
 		{
 			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
@@ -143,7 +143,7 @@ static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsig
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfData)
 		{
 			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
@@ -186,12 +186,10 @@ static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsig
 
 			BOOL result = ReadFile(file, buffer, bufferSize, 0, 0);
 			
-
 			return result;
 		}
 	}
 
-	
 	return 0;
 }
 

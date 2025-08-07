@@ -132,9 +132,13 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		disassembledInstructions.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
-		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
 		decompilationListBox->Clear();
-		
+		int rows = functionsGrid->GetNumberRows();
+		if (rows > 0)
+		{
+			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
+		}
+
 		wxString filePath = openDllDialog.GetPath();
 		if (!filePath.empty())
 		{
@@ -215,8 +219,12 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 	functions.clear();
 	functions.shrink_to_fit();
-	functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
 	decompilationListBox->Clear();
+	int rows = functionsGrid->GetNumberRows();
+	if (rows > 0)
+	{
+		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
+	}
 	
 	FindAllFunctions();
 }
