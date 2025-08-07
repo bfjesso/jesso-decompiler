@@ -3,6 +3,7 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
+#include "functionPropertiesMenu.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
 
@@ -14,6 +15,7 @@ public:
 	wxMenuBar* menuBar = nullptr;
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
+	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
 	wxButton* openFileButton = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
@@ -32,8 +34,8 @@ public:
 	wxBoxSizer* vSizer = nullptr;
 
 	HANDLE currentFile = 0;
-	unsigned char is64Bit;
-	uintptr_t imageBase;
+	unsigned char is64Bit = 0;
+	uintptr_t imageBase = 0;
 
 	std::vector<uintptr_t> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;

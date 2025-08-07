@@ -369,10 +369,15 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 			DecompileFunction(row);
 		}, 100);
 
-	wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");
+	wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
+	editProperties->SetBackgroundColour(foregroundColor);
+	editProperties->SetTextColour(textColor);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(); functionPropertiesMenu->OpenMenu(GetPosition(), &functions[row]); }, 101);
+
+	wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
 	cpyAddr->SetBackgroundColour(foregroundColor);
 	cpyAddr->SetTextColour(textColor);
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 101);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
