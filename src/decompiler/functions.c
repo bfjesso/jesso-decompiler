@@ -82,24 +82,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 					function.stackArgs[function.numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 					function.numOfStackArgs++;
 				}
-
-				// sort
-				for (int j = 0; j < function.numOfStackArgs - 1; j++)
-				{
-					char swapped = 0;
-					for (int k = 0; k < function.numOfStackArgs - j - 1; k++)
-					{
-						if (function.stackArgs[k].stackOffset > function.stackArgs[k + 1].stackOffset)
-						{
-							unsigned char temp = function.stackArgs[k].stackOffset;
-							function.stackArgs[k].stackOffset = function.stackArgs[k + 1].stackOffset;
-							function.stackArgs[k + 1].stackOffset = temp;
-
-							swapped = 1;
-						}
-					}
-					if (!swapped) { break; }
-				}
 			}
 		}
 
@@ -175,12 +157,14 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			}
 
 			initializeFunctionVarNames(&function);
+			sortFunctionArguments(&function);
 			*result = function;
 			return 1;
 		}
 		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
 		{
 			initializeFunctionVarNames(&function);
+			sortFunctionArguments(&function);
 			*result = function;
 			return 1;
 		}
@@ -356,5 +340,55 @@ static void initializeFunctionVarNames(struct Function* function)
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
 		sprintf(function->localVars[i].name, "var%X", -function->localVars[i].stackOffset);
+	}
+}
+
+static void sortFunctionArguments(struct Function* function) 
+{
+	// order for fastcall should be RCX, RDX, R8, R9
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		if (compareRegisters(function->regArgs[i].reg, RCX)) 
+		{
+			struct RegisterVariable temp = function->regArgs[0];
+			function->regArgs[0] = function->regArgs[i];
+			function->regArgs[i] = temp;
+		}
+		else if (compareRegisters(function->regArgs[i].reg, RDX) && function->numOfRegArgs > 1)
+		{
+			struct RegisterVariable temp = function->regArgs[1];
+			function->regArgs[1] = function->regArgs[i];
+			function->regArgs[i] = temp;
+		}
+		else if (compareRegisters(function->regArgs[i].reg, R8) && function->numOfRegArgs > 2)
+		{
+			struct RegisterVariable temp = function->regArgs[2];
+			function->regArgs[2] = function->regArgs[i];
+			function->regArgs[i] = temp;
+		}
+		else if (compareRegisters(function->regArgs[i].reg, R9) && function->numOfRegArgs > 3)
+		{
+			struct RegisterVariable temp = function->regArgs[3];
+			function->regArgs[3] = function->regArgs[i];
+			function->regArgs[i] = temp;
+		}
+	}
+
+	// order should be from least to greatest stack offset
+	for (int i = 0; i < function->numOfStackArgs - 1; i++)
+	{
+		char swapped = 0;
+		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
+		{
+			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
+			{
+				struct StackVariable temp = function->stackArgs[j];
+				function->stackArgs[j] = function->stackArgs[j + 1];
+				function->stackArgs[j + 1] = temp;
+
+				swapped = 1;
+			}
+		}
+		if (!swapped) { break; }
 	}
 }

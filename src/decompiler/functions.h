@@ -82,3 +82,5 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, unsigned char
 unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand);
 
 static void initializeFunctionVarNames(struct Function* function);
+
+static void sortFunctionArguments(struct Function* function);
