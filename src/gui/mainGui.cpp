@@ -375,7 +375,7 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
 	editProperties->SetBackgroundColour(foregroundColor);
 	editProperties->SetTextColour(textColor);
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(); functionPropertiesMenu->OpenMenu(GetPosition(), this, row); }, 101);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
 
 	wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
 	cpyAddr->SetBackgroundColour(foregroundColor);
@@ -401,26 +401,22 @@ wxBEGIN_EVENT_TABLE(FunctionPropertiesMenu, wxFrame)
 EVT_CLOSE(CloseMenu)
 wxEND_EVENT_TABLE()
 
-FunctionPropertiesMenu::FunctionPropertiesMenu() : wxFrame(nullptr, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
+FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, int funcIndex) : wxFrame(nullptr, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
 {
+	Function* function = &(main->functions[funcIndex]);
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	functionNameLabel = new wxStaticText(this, wxID_ANY, "Function Name");
 	functionNameLabel->SetOwnForegroundColour(textColor);
 
-	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(100, 25));
+	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, function->name, wxPoint(0, 0), wxSize(100, 25));
 	functionNameTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	functionNameTextCtrl->SetOwnForegroundColour(textColor);
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
-}
-
-void FunctionPropertiesMenu::OpenMenu(wxPoint position, MainGui* main, int funcIndex)
-{
-	Function* function = &(main->functions[funcIndex]);
 
 	vSizer->Add(functionNameLabel, 0, wxEXPAND);
-	functionNameTextCtrl->SetValue(function->name);
 	vSizer->Add(functionNameTextCtrl, 0, wxEXPAND);
 
 	if (function->numOfRegArgs > 0)

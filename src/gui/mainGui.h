@@ -77,7 +77,7 @@ public:
 class FunctionPropertiesMenu : public wxFrame, public Utils
 {
 public:
-	FunctionPropertiesMenu();
+	FunctionPropertiesMenu(wxPoint position, MainGui* main, int funcIndex);
 
 	wxStaticText* functionNameLabel = nullptr;
 	wxTextCtrl* functionNameTextCtrl;
@@ -95,8 +95,6 @@ public:
 	{
 		MainWindowID
 	};
-
-	void OpenMenu(wxPoint position, MainGui* main, int funcIndex);
 
 	void CloseMenu(wxCloseEvent& e);
 
