@@ -3,9 +3,10 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
-#include "functionPropertiesMenu.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
+
+class FunctionPropertiesMenu;
 
 class MainGui : public wxFrame, public Utils
 {
@@ -41,6 +42,8 @@ public:
 	std::vector<DisassembledInstruction> disassembledInstructions;
 
 	std::vector<Function> functions;
+
+	int currentDecompiledFunc = -1;
 	
 	enum ids 
 	{
@@ -67,6 +70,35 @@ public:
 	void RightClickOptions(wxGridEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
+
+	wxDECLARE_EVENT_TABLE();
+};
+
+class FunctionPropertiesMenu : public wxFrame, public Utils
+{
+public:
+	FunctionPropertiesMenu();
+
+	wxStaticText* functionNameLabel = nullptr;
+	wxTextCtrl* functionNameTextCtrl;
+
+	std::vector<wxTextCtrl*> regArgNameTextCtrls;
+	std::vector<wxTextCtrl*> stackArgNameTextCtrls;
+	std::vector<wxTextCtrl*> localVarNameTextCtrls;
+
+	wxBoxSizer* vSizer = nullptr;
+
+	MainGui* mainGui = nullptr;
+	int functionIndex = -1;
+
+	enum ids
+	{
+		MainWindowID
+	};
+
+	void OpenMenu(wxPoint position, MainGui* main, int funcIndex);
+
+	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };

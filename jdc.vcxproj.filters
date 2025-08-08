@@ -57,9 +57,6 @@
     <ClCompile Include="src\decompiler\conditions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\functionPropertiesMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -111,9 +108,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\conditions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gui\functionPropertiesMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
