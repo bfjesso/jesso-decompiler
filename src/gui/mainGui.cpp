@@ -153,10 +153,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 				return;
 			}
 
-			PEImport* tmpImports = (PEImport*)malloc(sizeof(PEImport) * 50);
-			int numOfImports = getAllImports(file, is64Bit, tmpImports, 50);
-			imports.insert(imports.end(), tmpImports, &tmpImports[numOfImports]);
-			delete[] tmpImports;
+			numOfImports = getAllImports(file, is64Bit, imports, importsBufferMaxSize);
 
 			currentFile = file;
 			dataViewerMenu->currentFile = file;

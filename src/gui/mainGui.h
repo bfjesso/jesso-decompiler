@@ -39,7 +39,9 @@ public:
 	unsigned char is64Bit = 0;
 	uintptr_t imageBase = 0;
 
-	std::vector<PEImport> imports;
+	static const int importsBufferMaxSize = 50;
+	PEImport imports[importsBufferMaxSize] = { 0 };
+	int numOfImports = 0;
 
 	std::vector<uintptr_t> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;
