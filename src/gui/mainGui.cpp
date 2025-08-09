@@ -1,5 +1,4 @@
 #include "mainGui.h"
-#include "../pe-handler/peHandler.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(CloseApp)
@@ -130,6 +129,8 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		instructionAddresses.shrink_to_fit();
 		disassembledInstructions.clear();
 		disassembledInstructions.shrink_to_fit();
+		imports.clear();
+		imports.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
 		decompilationListBox->Clear();
@@ -151,6 +152,11 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 				currentFile = 0;
 				return;
 			}
+
+			PEImport* tmpImports = (PEImport*)malloc(sizeof(PEImport) * 50);
+			int numOfImports = getAllImports(file, is64Bit, tmpImports, 50);
+			imports.insert(imports.end(), tmpImports, &tmpImports[numOfImports]);
+			delete[] tmpImports;
 
 			currentFile = file;
 			dataViewerMenu->currentFile = file;

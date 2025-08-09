@@ -3,6 +3,7 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
+#include "../pe-handler/peHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
 
@@ -37,6 +38,8 @@ public:
 	HANDLE currentFile = 0;
 	unsigned char is64Bit = 0;
 	uintptr_t imageBase = 0;
+
+	std::vector<PEImport> imports;
 
 	std::vector<uintptr_t> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;
