@@ -21,11 +21,14 @@ struct LineOfC
 };
 
 #include "functions.h"
+#include "../importedFunctions.h"
 
 struct DecompilationParameters
 {
-	struct Function* functions; // all functions
-	unsigned short numOfFunctions; // length of functions array
+	struct Function* functions;
+	unsigned short numOfFunctions;
+	struct ImportedFunction* imports;
+	unsigned short numOfImports;
 	struct Function* currentFunc; // function being decompiled
 	unsigned short startInstructionIndex; // index of instruction to start decompiling from
 };
@@ -56,6 +59,8 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 
+static int checkForImportCall(struct DecompilationParameters params);
+
 static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);
 
 static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
@@ -69,6 +74,8 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 static unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize);
 
 static unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct LineOfC* result);
+
+static unsigned char decompileImportCall(struct DecompilationParameters params, const char* name, struct LineOfC* result);
 
 static int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr);
 

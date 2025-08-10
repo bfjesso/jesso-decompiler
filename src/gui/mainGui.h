@@ -40,7 +40,7 @@ public:
 	uintptr_t imageBase = 0;
 
 	static const int importsBufferMaxSize = 50;
-	PEImport imports[importsBufferMaxSize] = { 0 };
+	ImportedFunction imports[importsBufferMaxSize] = { 0 };
 	int numOfImports = 0;
 
 	std::vector<uintptr_t> instructionAddresses;

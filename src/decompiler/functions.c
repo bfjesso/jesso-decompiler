@@ -6,8 +6,6 @@
 
 unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
 {
-	struct Function function = { 0 };
-
 	unsigned char initializedRegs[NO_REG - RAX] = { 0 }; // index is (i - RAX)
 
 	unsigned long long addressToJumpTo = 0;
@@ -26,15 +24,18 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				continue;
 			}
 			
-			function.addresses = &addresses[i];
-			function.instructions = &instructions[i];
+			result->addresses = &addresses[i];
+			result->instructions = &instructions[i];
 
 			foundFirstInstruction = 1;
 		}
 
-		function.numOfInstructions++;
+		result->numOfInstructions++;
 
-		if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP) { continue; }
+		if (currentInstruction->opcode == CALL_NEAR) 
+		{
+			initializedRegs[0] = 1; // AX
+		}
 
 		// check for arguments
 		unsigned char overwrites = 0;
@@ -56,10 +57,10 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 						}
 						else if (!initializedRegs[k - RAX])
 						{
-							function.regArgs[function.numOfRegArgs].reg = k;
-							function.regArgs[function.numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-							function.numOfRegArgs++;
-							function.callingConvention = __FASTCALL;
+							result->regArgs[result->numOfRegArgs].reg = k;
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+							result->numOfRegArgs++;
+							result->callingConvention = __FASTCALL;
 						}
 					}
 				}
@@ -67,9 +68,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			else if (isOperandStackArgument(currentOperand))
 			{
 				unsigned char alreadyFound = 0;
-				for (int j = 0; j < function.numOfStackArgs; j++)
+				for (int j = 0; j < result->numOfStackArgs; j++)
 				{
-					if (function.stackArgs[j].stackOffset == currentOperand->memoryAddress.constDisplacement)
+					if (result->stackArgs[j].stackOffset == currentOperand->memoryAddress.constDisplacement)
 					{
 						alreadyFound = 1;
 						break;
@@ -78,9 +79,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!alreadyFound)
 				{
-					function.stackArgs[function.numOfStackArgs].stackOffset = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
-					function.stackArgs[function.numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-					function.numOfStackArgs++;
+					result->stackArgs[result->numOfStackArgs].stackOffset = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
+					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+					result->numOfStackArgs++;
 				}
 			}
 		}
@@ -94,9 +95,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
 			{
 				unsigned char isAlreadyFound = 0;
-				for (int j = 0; j < function.numOfLocalVars; j++)
+				for (int j = 0; j < result->numOfLocalVars; j++)
 				{
-					if (function.localVars[j].stackOffset == displacement)
+					if (result->localVars[j].stackOffset == displacement)
 					{
 						isAlreadyFound = 1;
 						break;
@@ -105,9 +106,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!isAlreadyFound)
 				{
-					function.localVars[function.numOfLocalVars].stackOffset = (int)displacement;
-					function.localVars[function.numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-					function.numOfLocalVars++;
+					result->localVars[result->numOfLocalVars].stackOffset = (int)displacement;
+					result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+					result->numOfLocalVars++;
 				}
 			}
 		}
@@ -119,17 +120,21 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
 			if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[0]; }
 
-			function.returnType = getTypeOfOperand(currentInstruction->opcode, operand);
-			function.addressOfReturnFunction = 0;
+			result->returnType = getTypeOfOperand(currentInstruction->opcode, operand);
+			result->addressOfReturnFunction = 0;
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
 		{
-			function.addressOfReturnFunction = addresses[i] + currentInstruction->operands[0].immediate;
+			unsigned long long calleeAddress = addresses[i] + currentInstruction->operands[0].immediate;
+			if (calleeAddress != addresses[0]) // check for recursive function
+			{
+				result->addressOfReturnFunction = calleeAddress;
+			}
 		}
 		else if (currentInstruction->opcode == FLD)
 		{
-			function.returnType = FLOAT_TYPE;
-			function.addressOfReturnFunction = 0;
+			result->returnType = FLOAT_TYPE;
+			result->addressOfReturnFunction = 0;
 		}
 
 		if (addressToJumpTo != 0 && addresses[i] < addressToJumpTo)
@@ -147,25 +152,23 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		}
 		else if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
 		{
-			if (function.callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
+			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{
-				function.callingConvention = __STDCALL;
+				result->callingConvention = __STDCALL;
 			}
-			else if (function.numOfStackArgs != 0 && function.numOfRegArgs == 1)
+			else if (result->numOfStackArgs != 0 && result->numOfRegArgs == 1)
 			{
-				function.callingConvention = __THISCALL;
+				result->callingConvention = __THISCALL;
 			}
 
-			initializeFunctionVarNames(&function);
-			sortFunctionArguments(&function);
-			*result = function;
+			initializeFunctionVarNames(result);
+			sortFunctionArguments(result);
 			return 1;
 		}
 		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
 		{
-			initializeFunctionVarNames(&function);
-			sortFunctionArguments(&function);
-			*result = function;
+			initializeFunctionVarNames(result);
+			sortFunctionArguments(result);
 			return 1;
 		}
 	}
@@ -177,14 +180,15 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
-		struct Function* currentFunc = &functions[i];
 		if (functions[i].addressOfReturnFunction != 0)
 		{
 			int returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[i].addressOfReturnFunction);
 
+			struct Function* f = 0;
 			while (returnFunctionIndex != -1 && functions[returnFunctionIndex].addressOfReturnFunction != 0)
 			{
 				returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[returnFunctionIndex].addressOfReturnFunction);
+				f = &functions[returnFunctionIndex];
 			}
 
 			if (returnFunctionIndex != -1 && functions[returnFunctionIndex].returnType != VOID_TYPE)

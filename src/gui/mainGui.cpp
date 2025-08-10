@@ -129,8 +129,6 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		instructionAddresses.shrink_to_fit();
 		disassembledInstructions.clear();
 		disassembledInstructions.shrink_to_fit();
-		imports.clear();
-		imports.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
 		decompilationListBox->Clear();
@@ -293,10 +291,12 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	DecompilationParameters params = {};
 	params.functions = &functions[0];
 	params.numOfFunctions = functions.size();
+	params.imports = imports;
+	params.numOfImports = numOfImports;
 	params.currentFunc = &functions[functionIndex];
 	params.startInstructionIndex = 0;
 
-	LineOfC decompiledFunction[100];
+	LineOfC decompiledFunction[100] = { 0 };
 	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
 	if (numOfLinesDecompiled == 0)
 	{
@@ -325,34 +325,38 @@ void MainGui::FindAllFunctions()
 
 	int functionNum = 0;
 
-	Function currentFunction = {};
+	functions.push_back({ 0 });
+	
 	int instructionIndex = 0;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &currentFunction, &instructionIndex))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex))
 	{
-		numOfInstructions -= currentFunction.numOfInstructions;
+		numOfInstructions -= functions[functionNum].numOfInstructions;
 
 		functionsGrid->AppendRows(1);
 
-		if (currentFunction.addresses) 
+		if (functions[functionNum].addresses) 
 		{
 			char addressStr[10];
-			sprintf(addressStr, "%llX", *currentFunction.addresses);
+			sprintf(addressStr, "%llX", *functions[functionNum].addresses);
 			functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
 
-			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[currentFunction.callingConvention]));
+			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
 
-			currentFunction.name[0] = 0;
-			if (!getSymbolByValue(currentFile, is64Bit, *currentFunction.addresses, currentFunction.name))
+			functions[functionNum].name[0] = 0;
+			if (!getSymbolByValue(currentFile, is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
 			{
-				sprintf(currentFunction.name, "func%llX", (*currentFunction.addresses) - imageBase);
+				sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
 			}
 		}
 
-		functionsGrid->SetCellValue(functionNum, 2, wxString(currentFunction.name));
-		functionsGrid->SetCellValue(functionNum, 3, std::to_string(currentFunction.numOfInstructions));
-		functions.push_back(currentFunction);
+		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name));
+		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
+
+		functions.push_back({ 0 });
 	}
+
+	functions.pop_back(); // remove last empty one
 
 	if (functions.size() > 0) 
 	{

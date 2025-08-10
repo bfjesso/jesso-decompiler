@@ -167,6 +167,24 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			}
 		}
 
+		params.startInstructionIndex = i;
+		int importIndex = checkForImportCall(params);
+		if (importIndex != -1) 
+		{
+			params.startInstructionIndex = i;
+			if (decompileImportCall(params, params.imports[importIndex].name, &resultBuffer[numOfLinesDecompiled]))
+			{
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+
+				isConditionEmpty = 0;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
 		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
 		{
 			isInUnreachableState = 1;
@@ -232,12 +250,9 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
 	
-	if (params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE)
+	if ((params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE) && instruction->opcode == FLD)
 	{
-		if (instruction->opcode == FLD)
-		{
-			return 1;
-		}
+		return 1;
 	}
 	else 
 	{
@@ -254,7 +269,7 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 
 			if (calleIndex == -1 || params.functions[calleIndex].returnType == VOID_TYPE)
 			{
-				return 0;
+				return checkForImportCall(params) != -1;
 			}
 
 			return 1;
@@ -329,6 +344,26 @@ static unsigned char checkForFunctionCall(struct DecompilationParameters params,
 	}
 
 	return 0;
+}
+
+static int checkForImportCall(struct DecompilationParameters params)
+{
+	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
+
+	if (instruction->opcode == CALL_NEAR)
+	{
+		unsigned long long calleeAddress = instruction->operands[0].memoryAddress.constDisplacement;
+		for (int i = 0; i < params.numOfImports; i++) 
+		{
+			if (params.imports[i].address == calleeAddress) 
+			{
+				return i;
+			}
+		}
+	}
+
+	return -1;
 }
 
 static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result)
@@ -566,6 +601,12 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)
 {
+	if (params.currentFunc->returnType == VOID_TYPE) 
+	{
+		strcpy(result->line, "return;");
+		return 1;
+	}
+	
 	char returnExpression[100] = { 0 };
 
 	int newStartInstruction = -1;
@@ -821,20 +862,37 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 		{
 			unsigned long long calleeAddress = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-			if (calleeIndex == -1)
+
+			if (calleeIndex != -1)
 			{
-				return 0;
+				if (params.functions[calleeIndex].returnType == VOID_TYPE) { continue; }
+
+				int callNum = getFunctionCallNumber(params, calleeAddress);
+				sprintf(expressions[expressionIndex], "%sRetVal%d", params.functions[calleeIndex].name, callNum);
+				expressionIndex++;
+				finished = 1;
+				break;
 			}
+			else 
+			{
+				// checking for imported function call
+				params.startInstructionIndex = i;
+				int importIndex = checkForImportCall(params);
 
-			if (params.functions[calleeIndex].returnType == VOID_TYPE) { continue; }
-
-			int callNum = getFunctionCallNumber(params, calleeAddress);
-			sprintf(expressions[expressionIndex], "%sRetVal%d", params.functions[calleeIndex].name, callNum);
-
-			expressionIndex++;
-
-			finished = 1;
-			break;
+				if (importIndex != -1) 
+				{
+					calleeAddress = currentInstruction->operands[0].memoryAddress.constDisplacement;
+					int callNum = getFunctionCallNumber(params, calleeAddress);
+					sprintf(expressions[expressionIndex], "%sRetVal%d", params.imports[importIndex].name, callNum);
+					expressionIndex++;
+					finished = 1;
+					break;
+				}
+				else 
+				{
+					return 0;
+				}
+			}
 		}
 	}
 
@@ -965,6 +1023,117 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 	return 1;
 }
 
+static unsigned char decompileImportCall(struct DecompilationParameters params, const char* name, struct LineOfC* result) 
+{
+	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	// right now this works by checking if AX is ever accessed without being assigned after the call and until the next function call
+	unsigned char returnType = VOID_TYPE;
+	for (int i = params.startInstructionIndex + 1; i < params.currentFunc->numOfInstructions; i++)
+	{
+		if (params.currentFunc->instructions[i].opcode == CALL_NEAR) 
+		{
+			break;
+		}
+		
+		char isDone = 0;
+		for (int j = 0; j < 3; j++) 
+		{
+			struct Operand* op = &(params.currentFunc->instructions[i].operands[j]);
+			if (op->type == REGISTER && compareRegisters(op->reg, AX)) 
+			{
+				if (!doesInstructionModifyOperand(&(params.currentFunc->instructions[i]), j, 0)) 
+				{
+					returnType = getTypeOfOperand(params.currentFunc->instructions[i].opcode, op);
+				}
+				isDone = 1;
+			}
+		}
+		if (isDone) 
+		{
+			break;
+		}
+	}
+
+	if (returnType != VOID_TYPE)
+	{
+		unsigned long long calleeAddress = firstInstruction->operands[0].memoryAddress.constDisplacement;
+		int callNum = getFunctionCallNumber(params, calleeAddress);
+		sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[returnType], name, callNum);
+	}
+
+	sprintf(&(result->line[strlen(result->line)]), "%s(", name);
+
+	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
+
+	int stackArgsFound = 0;
+	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
+	{
+		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->opcode == CALL_NEAR || currentInstruction->opcode == JMP_NEAR) 
+		{
+			break;
+		}
+
+		if (currentInstruction->opcode == PUSH)
+		{
+			if (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, BP)) 
+			{
+				break;
+			}
+
+			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
+			
+			params.startInstructionIndex = i;
+			char argStr[100] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, argStr, 100))
+			{
+				return 0;
+			}
+
+			sprintf(result->line + strlen(result->line), "%s, ", argStr);
+
+			stackArgsFound++;
+		}
+		else if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP))
+		{
+			unsigned char overwrites = 0;
+			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+			{
+				int operandIndex = getLastOperand(currentInstruction);
+
+				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex]);
+
+				params.startInstructionIndex = i;
+				char argStr[100] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, argStr, 100))
+				{
+					return 0;
+				}
+
+				sprintf(result->line + strlen(result->line), "%s, ", argStr);
+
+				stackArgsFound++;
+			}
+		}
+	}
+
+	if (stackArgsFound != 0)
+	{
+		result->line[strlen(result->line) - 2] = ')';
+		result->line[strlen(result->line) - 1] = 0;
+	}
+	else
+	{
+		strcat(result->line, ")");
+	}
+
+	strcat(result->line, ";");
+
+	return 1;
+}
+
 static int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr) 
 {
 	int result = 0;
@@ -973,7 +1142,8 @@ static int getFunctionCallNumber(struct DecompilationParameters params, unsigned
 	{
 		if (params.currentFunc->instructions[i].opcode == CALL_NEAR || params.currentFunc->instructions[i].opcode == CALL_FAR) 
 		{
-			if (params.currentFunc->addresses[i] + params.currentFunc->instructions[i].operands[0].immediate == callAddr) 
+			if (params.currentFunc->addresses[i] + params.currentFunc->instructions[i].operands[0].immediate == callAddr ||
+				params.currentFunc->instructions[i].operands[0].memoryAddress.constDisplacement == callAddr) // check for imported func call
 			{
 				result++;
 			}

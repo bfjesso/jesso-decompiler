@@ -203,6 +203,7 @@
     <ClInclude Include="src\gui\guiUtils.h" />
     <ClInclude Include="src\gui\initApp.h" />
     <ClInclude Include="src\gui\mainGui.h" />
+    <ClInclude Include="src\importedFunctions.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

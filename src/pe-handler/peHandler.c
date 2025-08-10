@@ -51,7 +51,7 @@ unsigned char getSymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, 
 	}
 }
 
-int getAllImports(HANDLE file, unsigned char is64Bit, struct PEImport* buffer, int bufferLen)
+int getAllImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
 {
 	if (!file || file == INVALID_HANDLE_VALUE)
 	{
@@ -305,7 +305,7 @@ static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer)
 	return 0;
 }
 
-static int getAllImports32(HANDLE file, struct PEImport* buffer, int bufferLen)
+static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -366,7 +366,7 @@ static int getAllImports32(HANDLE file, struct PEImport* buffer, int bufferLen)
 					buffer[bufferIndex].name[49] = 0;
 				}
 
-				buffer[bufferIndex].address = importDescriptor.FirstThunk + j;
+				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
 
 				bufferIndex++;
 
