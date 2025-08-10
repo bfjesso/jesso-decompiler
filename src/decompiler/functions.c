@@ -218,15 +218,15 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 }
 
 // returns index of instruction, -1 if not found
-int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address) 
+int findInstructionByAddress(unsigned long long* addresses, int low, int high, unsigned long long address) 
 {
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
 
-		if (function->addresses[mid] == address) { return mid; }
+		if (addresses[mid] == address) { return mid; }
 
-		if (function->addresses[mid] < address) { low = mid + 1; }
+		if (addresses[mid] < address) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 

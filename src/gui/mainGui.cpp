@@ -296,6 +296,10 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.currentFunc = &functions[functionIndex];
 	params.startInstructionIndex = 0;
 
+	params.allInstructions = disassembledInstructions.data();
+	params.allAddresses = instructionAddresses.data();
+	params.totalNumOfInstructions = disassembledInstructions.size();
+
 	LineOfC decompiledFunction[100] = { 0 };
 	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
 	if (numOfLinesDecompiled == 0)

@@ -26,11 +26,17 @@ struct LineOfC
 struct DecompilationParameters
 {
 	struct Function* functions;
-	unsigned short numOfFunctions;
+	int numOfFunctions;
+
 	struct ImportedFunction* imports;
-	unsigned short numOfImports;
+	int numOfImports;
+
 	struct Function* currentFunc; // function being decompiled
-	unsigned short startInstructionIndex; // index of instruction to start decompiling from
+	int startInstructionIndex; // index of instruction to start decompiling from
+
+	struct DisassembledInstruction* allInstructions;
+	unsigned long long* allAddresses;
+	int totalNumOfInstructions;
 };
 
 #include "conditions.h"
@@ -82,3 +88,5 @@ static int getFunctionCallNumber(struct DecompilationParameters params, unsigned
 static unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
 
 static void wrapStrInParentheses(char* str);
+
+static unsigned long long resolveJmpChain(struct DecompilationParameters params, struct DisassembledInstruction* instruction, unsigned long long address);

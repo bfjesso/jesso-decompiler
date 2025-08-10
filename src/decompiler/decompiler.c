@@ -351,9 +351,10 @@ static int checkForImportCall(struct DecompilationParameters params)
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
 
-	if (instruction->opcode == CALL_NEAR)
+	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
 	{
-		unsigned long long calleeAddress = instruction->operands[0].memoryAddress.constDisplacement;
+		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
+
 		for (int i = 0; i < params.numOfImports; i++) 
 		{
 			if (params.imports[i].address == calleeAddress) 
@@ -1237,4 +1238,27 @@ static void wrapStrInParentheses(char* str)
 
 	str[0] = '(';
 	strcat(str, ")");
+}
+
+// returns address of final instruction jumped to that isnt a jmp
+static unsigned long long resolveJmpChain(struct DecompilationParameters params, struct DisassembledInstruction* instruction, unsigned long long address)
+{
+	unsigned long long jmpAddress = address + instruction->operands[0].immediate;
+	if (instruction->operands[0].type == MEM_ADDRESS)
+	{
+		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
+	}
+
+	int instructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, jmpAddress);
+	if (instructionIndex != -1)
+	{
+		struct DisassembledInstruction* jmpInstruction = &(params.allInstructions[instructionIndex]);
+		if (instructionIndex != params.startInstructionIndex && (jmpInstruction->opcode == CALL_NEAR || jmpInstruction->opcode == JMP_NEAR)) 
+		{
+			params.startInstructionIndex = instructionIndex;
+			return resolveJmpChain(params, jmpInstruction, params.allAddresses[instructionIndex]);
+		}
+	}
+
+	return jmpAddress;
 }

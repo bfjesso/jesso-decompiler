@@ -71,7 +71,7 @@ extern "C"
 
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 
-int findInstructionByAddress(struct Function* function, int low, int high, unsigned long long address);
+int findInstructionByAddress(unsigned long long* addresses, int low, int high, unsigned long long address);
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 
