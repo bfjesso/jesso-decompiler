@@ -719,7 +719,7 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
-		if (compareRegisters(operand->memoryAddress.reg, BP)) 
+		if (compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP))
 		{
 			if (operand->memoryAddress.constDisplacement < 0)
 			{
@@ -987,6 +987,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 		if (stackArgsFound == callee->numOfStackArgs) { break; }
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+		unsigned long long addr = params.currentFunc->addresses[i];
 
 		if (currentInstruction->opcode == PUSH)
 		{
@@ -1002,7 +1003,7 @@ static unsigned char decompileFunctionCall(struct DecompilationParameters params
 
 			stackArgsFound++;
 		}
-		else if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP))
+		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
@@ -1094,7 +1095,7 @@ static unsigned char decompileImportCall(struct DecompilationParameters params, 
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			if (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, BP)) 
+			if (currentInstruction->operands[0].type == REGISTER && (compareRegisters(currentInstruction->operands[0].reg, BP) || compareRegisters(currentInstruction->operands[0].reg, SP)))
 			{
 				break;
 			}
@@ -1112,7 +1113,7 @@ static unsigned char decompileImportCall(struct DecompilationParameters params, 
 
 			stackArgsFound++;
 		}
-		else if (currentInstruction->operands[0].type == MEM_ADDRESS && compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP))
+		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)

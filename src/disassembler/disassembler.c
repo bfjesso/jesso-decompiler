@@ -1353,12 +1353,14 @@ unsigned char getLastOperand(struct DisassembledInstruction* instruction)
 
 unsigned char isOperandStackArgument(struct Operand* operand)
 {
-	return operand->type == MEM_ADDRESS && compareRegisters(operand->memoryAddress.reg, BP) && operand->memoryAddress.constDisplacement > 0;
+	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement > 0 && 
+		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
 }
 
 unsigned char isOperandLocalVariable(struct Operand* operand)
 {
-	return operand->type == MEM_ADDRESS && compareRegisters(operand->memoryAddress.reg, BP) && operand->memoryAddress.constDisplacement < 0;
+	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement < 0 && 
+		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
 }
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)

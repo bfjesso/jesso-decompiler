@@ -88,31 +88,29 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 					result->numOfStackArgs++;
 				}
 			}
-		}
-
-		// check for local vars
-		if (isOperandLocalVariable(&currentInstruction->operands[0]))
-		{
-			long long displacement = currentInstruction->operands[0].memoryAddress.constDisplacement;
-
-			unsigned char overwritesVarValue = 0;
-			if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
+			else if (isOperandLocalVariable(currentOperand))
 			{
-				unsigned char isAlreadyFound = 0;
-				for (int j = 0; j < result->numOfLocalVars; j++)
-				{
-					if (result->localVars[j].stackOffset == displacement)
-					{
-						isAlreadyFound = 1;
-						break;
-					}
-				}
+				long long displacement = currentOperand->memoryAddress.constDisplacement;
 
-				if (!isAlreadyFound)
+				unsigned char overwritesVarValue = 0;
+				if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
 				{
-					result->localVars[result->numOfLocalVars].stackOffset = (int)displacement;
-					result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-					result->numOfLocalVars++;
+					unsigned char isAlreadyFound = 0;
+					for (int j = 0; j < result->numOfLocalVars; j++)
+					{
+						if (result->localVars[j].stackOffset == displacement)
+						{
+							isAlreadyFound = 1;
+							break;
+						}
+					}
+
+					if (!isAlreadyFound)
+					{
+						result->localVars[result->numOfLocalVars].stackOffset = (int)displacement;
+						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+						result->numOfLocalVars++;
+					}
 				}
 			}
 		}
@@ -150,7 +148,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			addressToJumpTo = 0;
 		}
 
-		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT)
+		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT && currentInstruction->operands[0].immediate > 0)
 		{
 			addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
 		}
