@@ -23,7 +23,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			{
 				continue;
 			}
-			
+
 			result->addresses = &addresses[i];
 			result->instructions = &instructions[i];
 
@@ -32,9 +32,13 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		result->numOfInstructions++;
 
-		if (currentInstruction->opcode == CALL_NEAR) 
+		if (currentInstruction->opcode == CALL_NEAR)
 		{
 			initializedRegs[0] = 1; // AX
+		}
+		else if (currentInstruction->opcode == POP) 
+		{
+			continue;
 		}
 
 		// check for arguments

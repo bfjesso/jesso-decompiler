@@ -513,6 +513,7 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 			strcpy(compOperator, "==");
 			break;
 		case JG_SHORT:
+		case JNB_SHORT:
 			strcpy(compOperator, "<=");
 			break;
 		case JL_SHORT:
@@ -557,9 +558,25 @@ static unsigned char decompileConditionExpression(struct DecompilationParameters
 		}
 	}
 
+	// looking for comparison opcode
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->opcode == TEST && areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
+		{
+			params.startInstructionIndex = i;
+
+			char operandStr[100] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 20))
+			{
+				return 0;
+			}
+
+			sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
+
+			return 1;
+		}
 
 		unsigned char type = 0;
 		switch (currentInstruction->opcode)
@@ -779,10 +796,8 @@ static unsigned char decompileOperand(struct DecompilationParameters params, str
 				strcpy(resultBuffer, regArg->name);
 				return 1;
 			}
-			else 
-			{
-				return 0;
-			}
+			
+			return 0;
 		}
 
 		return 1;
