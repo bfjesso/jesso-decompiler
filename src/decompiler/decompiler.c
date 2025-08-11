@@ -1,4 +1,5 @@
 #include "decompiler.h"
+#include "dataTypes.h"
 #include "../disassembler/opcodes.h"
 #include "../disassembler/registers.h"
 

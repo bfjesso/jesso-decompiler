@@ -183,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\conditions.h" />
+    <ClInclude Include="src\decompiler\dataTypes.h" />
     <ClInclude Include="src\decompiler\decompiler.h" />
     <ClInclude Include="src\decompiler\functions.h" />
     <ClInclude Include="src\disassembler\disassembler.h" />

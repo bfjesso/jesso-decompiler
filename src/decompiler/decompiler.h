@@ -1,27 +1,14 @@
 #pragma once
+#include "functions.h"
+#include "conditions.h"
 #include "../disassembler/disassembler.h"
-
-enum PrimitiveType
-{
-	VOID_TYPE,
-	
-	CHAR_TYPE,
-	SHORT_TYPE,
-	INT_TYPE,
-	LONG_LONG_TYPE,
-
-	FLOAT_TYPE,
-	DOUBLE_TYPE
-};
+#include "../importedFunctions.h"
 
 struct LineOfC 
 {
 	char line[150];
 	unsigned char indents;
 };
-
-#include "functions.h"
-#include "../importedFunctions.h"
 
 struct DecompilationParameters
 {
@@ -38,8 +25,6 @@ struct DecompilationParameters
 	unsigned long long* allAddresses;
 	int totalNumOfInstructions;
 };
-
-#include "conditions.h"
 
 #ifdef __cplusplus
 extern "C"

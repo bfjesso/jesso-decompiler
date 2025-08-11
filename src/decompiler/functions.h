@@ -1,7 +1,6 @@
 #pragma once
-#include "../disassembler/disassembler.h"
 #include "../disassembler/registers.h"
-#include "decompiler.h"
+#include "../disassembler/disassembler.h"
 
 enum CallingConvention
 {

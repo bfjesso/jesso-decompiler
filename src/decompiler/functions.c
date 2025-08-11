@@ -1,6 +1,6 @@
 #include "functions.h"
+#include "dataTypes.h"
 #include "../disassembler/opcodes.h"
-#include "../disassembler/registers.h"
 
 #include <stdio.h>
 
