@@ -238,6 +238,8 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 {
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
+		if ((*resultBufferIndex) >= resultBufferLen) { return 0; }
+		
 		sprintf(resultBuffer[*resultBufferIndex].line, "%s %s;", primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name);
 		resultBuffer[*resultBufferIndex].indents = 1;
 		(*resultBufferIndex)++;
