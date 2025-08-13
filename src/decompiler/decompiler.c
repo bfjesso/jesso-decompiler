@@ -280,7 +280,7 @@ static unsigned char checkForReturnStatement(struct DecompilationParameters para
 	{
 		unsigned long long jmpDst = params.currentFunc->addresses[params.startInstructionIndex] + instruction->operands[0].immediate;
 
-		int jmpDstIndex = findInstructionByAddress(params.currentFunc, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+		int jmpDstIndex = findInstructionByAddress(params.currentFunc->addresses, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 		for (int i = jmpDstIndex; i < params.currentFunc->numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
 		{
 			params.startInstructionIndex = i;
