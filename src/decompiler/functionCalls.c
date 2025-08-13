@@ -1,4 +1,5 @@
 #include "functionCalls.h"
+#include "expressions.h"
 #include "dataTypes.h"
 
 unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef)

@@ -224,7 +224,7 @@ static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer)
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
+	for (DWORD i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
 	{
 		IMAGE_SYMBOL symbol = { 0 };
 		LONG symbolAddress = (sizeof(IMAGE_SYMBOL) * i) + imageNtHeaders.FileHeader.PointerToSymbolTable;
@@ -240,7 +240,7 @@ static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer)
 				LONG nameAddress = strTableAddress + symbol.N.Name.Long;
 				if (SetFilePointer(file, nameAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
-				char tmpBuffer[50];
+				char tmpBuffer[50] = { 0 };
 				if (!ReadFile(file, tmpBuffer, 50, 0, 0)) { return 0; }
 				tmpBuffer[49] = 0;
 
@@ -271,7 +271,7 @@ static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer)
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
+	for (DWORD i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
 	{
 		IMAGE_SYMBOL symbol = { 0 };
 		LONG symbolAddress = (sizeof(IMAGE_SYMBOL) * i) + imageNtHeaders.FileHeader.PointerToSymbolTable;
@@ -287,7 +287,7 @@ static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer)
 				LONG nameAddress = strTableAddress + symbol.N.Name.Long;
 				if (SetFilePointer(file, nameAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
-				char tmpBuffer[50];
+				char tmpBuffer[50] = { 0 };
 				if (!ReadFile(file, tmpBuffer, 50, 0, 0)) { return 0; }
 				tmpBuffer[49] = 0;
 
@@ -325,9 +325,9 @@ static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int buf
 		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
 		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
 		
-		DWORD importDirectoryTableFileOffset = rvaToFileOffset(file, importDirectoryTableAddress);
+		DWORD importDirectoryTableFileOffset = (DWORD)rvaToFileOffset(file, importDirectoryTableAddress);
 
-		for (int i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
+		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 		{
 			IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
 			if (SetFilePointer(file, importDirectoryTableFileOffset + i, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -338,7 +338,7 @@ static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int buf
 				break;
 			}
 
-			DWORD importLookupTableFileOffset = rvaToFileOffset(file, importDescriptor.Characteristics);
+			DWORD importLookupTableFileOffset = (DWORD)rvaToFileOffset(file, importDescriptor.Characteristics);
 
 			int j = 0;
 			while (bufferIndex < bufferLen)
@@ -358,7 +358,7 @@ static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int buf
 				}
 				else // import by name
 				{
-					DWORD nameFileOffset = rvaToFileOffset(file, lookupValue + 2);
+					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
 					buffer[bufferIndex].name[0] = 0;

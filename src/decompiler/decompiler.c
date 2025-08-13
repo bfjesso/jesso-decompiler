@@ -416,7 +416,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 					}
 				}
 			}
-			int len = strlen(assignmentExpression.line);
+			int len = (int)(strlen(assignmentExpression.line));
 			if (len > 0) 
 			{
 				assignmentExpression.line[len - 1] = 0; // remove ;

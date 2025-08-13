@@ -1,4 +1,5 @@
 #include "expressions.h"
+#include "functionCalls.h"
 #include "dataTypes.h"
 
 unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
@@ -14,7 +15,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		{
 			if (operand->memoryAddress.constDisplacement < 0)
 			{
-				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, operand->memoryAddress.constDisplacement);
+				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (localVar)
 				{
 					strcpy(resultBuffer, localVar->name);
@@ -26,7 +27,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			}
 			else
 			{
-				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, operand->memoryAddress.constDisplacement);
+				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (stackArg)
 				{
 					strcpy(resultBuffer, stackArg->name);
