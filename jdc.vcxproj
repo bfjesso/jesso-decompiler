@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -163,7 +163,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\decompiler\conditions.c" />
+    <ClCompile Include="src\decompiler\dataTypes.c" />
+    <ClCompile Include="src\decompiler\decompilationUtils.c" />
+    <ClCompile Include="src\decompiler\expressions.c" />
     <ClCompile Include="src\decompiler\decompiler.c" />
+    <ClCompile Include="src\decompiler\functionCalls.c" />
     <ClCompile Include="src\decompiler\functions.c" />
     <ClCompile Include="src\disassembler\disassembler.c" />
     <ClCompile Include="src\disassembler\opcodes.c" />
@@ -184,7 +188,10 @@
   <ItemGroup>
     <ClInclude Include="src\decompiler\conditions.h" />
     <ClInclude Include="src\decompiler\dataTypes.h" />
+    <ClInclude Include="src\decompiler\decompilationUtils.h" />
+    <ClInclude Include="src\decompiler\expressions.h" />
     <ClInclude Include="src\decompiler\decompiler.h" />
+    <ClInclude Include="src\decompiler\functionCalls.h" />
     <ClInclude Include="src\decompiler\functions.h" />
     <ClInclude Include="src\disassembler\disassembler.h" />
     <ClInclude Include="src\disassembler\escapeOpcodeMaps.h" />

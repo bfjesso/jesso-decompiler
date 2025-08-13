@@ -1,5 +1,5 @@
 #pragma once
-#include "decompiler.h"
+#include "decompilationUtils.h"
 
 enum ConditionType
 {

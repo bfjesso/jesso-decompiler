@@ -57,6 +57,18 @@
     <ClCompile Include="src\decompiler\conditions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decompiler\expressions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decompiler\dataTypes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decompiler\decompilationUtils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decompiler\functionCalls.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -114,6 +126,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\dataTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\expressions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\decompilationUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\functionCalls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

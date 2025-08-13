@@ -12,3 +12,5 @@ enum PrimitiveType
 	FLOAT_TYPE,
 	DOUBLE_TYPE
 };
+
+extern const char* primitiveTypeStrs[];
