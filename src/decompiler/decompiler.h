@@ -26,8 +26,6 @@ static unsigned char checkForAssignment(struct DisassembledInstruction* instruct
 
 static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);
 
-static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
-
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 
 static unsigned char decompileAssignment(struct DecompilationParameters params, struct LineOfC* result);

@@ -1,4 +1,6 @@
 #include "decompiler.h"
+#include "expressions.h"
+#include "functionCalls.h"
 #include "dataTypes.h"
 #include "../disassembler/opcodes.h"
 #include "../disassembler/registers.h"
@@ -322,7 +324,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
-		if (!decompileConditionExpression(params, conditionExpression, 0))
+		if (!decompileComparison(params, conditionExpression, 0))
 		{
 			return 0;
 		}
@@ -331,7 +333,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		{
 			char currentConditionExpression[100] = { 0 };
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
-			if (!decompileConditionExpression(params, currentConditionExpression, i == conditions[conditionIndex].numOfOtherJccs - 1))
+			if (!decompileComparison(params, currentConditionExpression, i == conditions[conditionIndex].numOfOtherJccs - 1))
 			{
 				return 0;
 			}
@@ -342,7 +344,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 	}
 	else 
 	{
-		if (!decompileConditionExpression(params, conditionExpression, 1)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
+		if (!decompileComparison(params, conditionExpression, 1)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
 		{
 			return 0;
 		}
@@ -351,7 +353,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 		{
 			char currentConditionExpression[100] = { 0 };
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
-			if (!decompileConditionExpression(params, currentConditionExpression, 1))
+			if (!decompileComparison(params, currentConditionExpression, 1))
 			{
 				return 0;
 			}
@@ -437,127 +439,6 @@ static unsigned char decompileCondition(struct DecompilationParameters params, s
 	}
 
 	return 1;
-}
-
-static unsigned char decompileConditionExpression(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator)
-{
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-
-	char compOperator[3] = { 0 };
-	
-	if (invertOperator) 
-	{
-		switch (currentInstruction->opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator, "!=");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator, "==");
-			break;
-		case JG_SHORT:
-		case JNB_SHORT:
-			strcpy(compOperator, "<=");
-			break;
-		case JL_SHORT:
-			strcpy(compOperator, ">=");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator, ">");
-			break;
-		case JGE_SHORT:
-			strcpy(compOperator, "<");
-			break;
-		default:
-			return 0;
-		}
-	}
-	else 
-	{
-		switch (currentInstruction->opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator, "==");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator, "!=");
-			break;
-		case JG_SHORT:
-			strcpy(compOperator, ">");
-			break;
-		case JL_SHORT:
-			strcpy(compOperator, "<");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator, "<=");
-			break;
-		case JGE_SHORT:
-			strcpy(compOperator, ">=");
-			break;
-		default:
-			return 0;
-		}
-	}
-
-	// looking for comparison opcode
-	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
-	{
-		currentInstruction = &(params.currentFunc->instructions[i]);
-
-		if (currentInstruction->opcode == TEST && areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
-		{
-			params.startInstructionIndex = i;
-
-			char operandStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 20))
-			{
-				return 0;
-			}
-
-			sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
-
-			return 1;
-		}
-
-		unsigned char type = 0;
-		switch (currentInstruction->opcode)
-		{
-		case CMP:
-			type = INT_TYPE;
-			break;
-		case COMISS:
-			type = FLOAT_TYPE;
-			break;
-		case COMISD:
-			type = DOUBLE_TYPE;
-			break;
-		}
-
-		if (type != 0)
-		{
-			params.startInstructionIndex = i;
-
-			char operand1Str[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 20))
-			{
-				return 0;
-			}
-
-			char operand2Str[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 20))
-			{
-				return 0;
-			}
-
-			sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
-
-			return 1;
-		}
-	}
-
-	return 0;
 }
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)

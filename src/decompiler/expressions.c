@@ -222,3 +222,124 @@ unsigned char decompileExpression(struct DecompilationParameters params, unsigne
 
 	return 1;
 }
+
+unsigned char decompileComparison(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator)
+{
+	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	char compOperator[3] = { 0 };
+
+	if (invertOperator)
+	{
+		switch (currentInstruction->opcode)
+		{
+		case JZ_SHORT:
+			strcpy(compOperator, "!=");
+			break;
+		case JNZ_SHORT:
+			strcpy(compOperator, "==");
+			break;
+		case JG_SHORT:
+		case JNB_SHORT:
+			strcpy(compOperator, "<=");
+			break;
+		case JL_SHORT:
+			strcpy(compOperator, ">=");
+			break;
+		case JLE_SHORT:
+		case JBE_SHORT:
+			strcpy(compOperator, ">");
+			break;
+		case JGE_SHORT:
+			strcpy(compOperator, "<");
+			break;
+		default:
+			return 0;
+		}
+	}
+	else
+	{
+		switch (currentInstruction->opcode)
+		{
+		case JZ_SHORT:
+			strcpy(compOperator, "==");
+			break;
+		case JNZ_SHORT:
+			strcpy(compOperator, "!=");
+			break;
+		case JG_SHORT:
+			strcpy(compOperator, ">");
+			break;
+		case JL_SHORT:
+			strcpy(compOperator, "<");
+			break;
+		case JLE_SHORT:
+		case JBE_SHORT:
+			strcpy(compOperator, "<=");
+			break;
+		case JGE_SHORT:
+			strcpy(compOperator, ">=");
+			break;
+		default:
+			return 0;
+		}
+	}
+
+	// looking for comparison opcode
+	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
+	{
+		currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->opcode == TEST && areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1]))
+		{
+			params.startInstructionIndex = i;
+
+			char operandStr[100] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 20))
+			{
+				return 0;
+			}
+
+			sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
+
+			return 1;
+		}
+
+		unsigned char type = 0;
+		switch (currentInstruction->opcode)
+		{
+		case CMP:
+			type = INT_TYPE;
+			break;
+		case COMISS:
+			type = FLOAT_TYPE;
+			break;
+		case COMISD:
+			type = DOUBLE_TYPE;
+			break;
+		}
+
+		if (type != 0)
+		{
+			params.startInstructionIndex = i;
+
+			char operand1Str[100] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 20))
+			{
+				return 0;
+			}
+
+			char operand2Str[100] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 20))
+			{
+				return 0;
+			}
+
+			sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
+
+			return 1;
+		}
+	}
+
+	return 0;
+}
