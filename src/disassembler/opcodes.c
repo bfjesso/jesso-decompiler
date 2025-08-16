@@ -13,6 +13,8 @@ extern const char* mnemonicStrs[] =
 	
 	"IMUL", "IDIV",
 
+	"CMOVO", "CMOVNO", "CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVP", "CMOVNP", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
+
 	"AAA", "AAD", "AAM", "AAS", "ADC", "ARPL",
 	"BOUND",
 	"CALL FAR", "CALL NEAR", "CDQ", "CLC", "CLD", "CLI", "CLTS", "CMC", "CMP", "CMPS", "CMPXCHG", "CPUID", "CWDE",
