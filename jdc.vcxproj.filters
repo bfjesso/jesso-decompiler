@@ -69,6 +69,9 @@
     <ClCompile Include="src\decompiler\functionCalls.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decompiler\assignment.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -135,6 +138,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\functionCalls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\assignment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

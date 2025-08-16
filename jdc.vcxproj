@@ -162,6 +162,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\decompiler\assignment.c" />
     <ClCompile Include="src\decompiler\conditions.c" />
     <ClCompile Include="src\decompiler\dataTypes.c" />
     <ClCompile Include="src\decompiler\decompilationUtils.c" />
@@ -186,6 +187,7 @@
     <ClCompile Include="src\pe-handler\peHandler.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\decompiler\assignment.h" />
     <ClInclude Include="src\decompiler\conditions.h" />
     <ClInclude Include="src\decompiler\dataTypes.h" />
     <ClInclude Include="src\decompiler\decompilationUtils.h" />

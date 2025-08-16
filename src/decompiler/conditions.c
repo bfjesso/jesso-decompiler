@@ -1,5 +1,6 @@
 #include "conditions.h"
 #include "expressions.h"
+#include "assignment.h"
 
 #include <string.h>
 

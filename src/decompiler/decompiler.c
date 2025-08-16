@@ -1,5 +1,6 @@
 #include "decompiler.h"
 #include "expressions.h"
+#include "assignment.h"
 #include "functionCalls.h"
 #include "conditions.h"
 #include "dataTypes.h"
@@ -303,16 +304,6 @@ static unsigned char checkForReturnStatement(struct DecompilationParameters para
 	return 0;
 }
 
-static unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
-{
-	if (doesInstructionModifyOperand(instruction, 0, 0) && instruction->operands[0].type == MEM_ADDRESS) 
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)
 {
 	if (params.currentFunc->returnType == VOID_TYPE) 
@@ -364,44 +355,6 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 	
 
 	sprintf(result->line, "return %s;", returnExpression);
-
-	return 1;
-}
-
-static unsigned char decompileAssignment(struct DecompilationParameters params, struct LineOfC* result)
-{
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-
-	struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
-	unsigned char type = 0;
-	if (!localVar)
-	{
-		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-	}
-	else
-	{
-		type = localVar->type;
-	}
-	
-	char assignee[100] = { 0 };
-	if (!decompileOperand(params, &currentInstruction->operands[0], type, assignee, 100)) 
-	{
-		return 0;
-	}
-
-	char valueToAssign[100] = { 0 };
-	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-	if (!decompileOperand(params, operand, type, valueToAssign, 100))
-	{
-		return 0;
-	}
-
-	char assignmentStr[20] = { 0 };
-	if (!getOperationStr(currentInstruction->opcode, 1, assignmentStr))
-	{
-		return 0;
-	}
-	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
 
 	return 1;
 }
