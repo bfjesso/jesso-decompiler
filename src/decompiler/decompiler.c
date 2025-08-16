@@ -46,6 +46,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
+		params.startInstructionIndex = i;
+
 		if (numOfLinesDecompiled > resultBufferLen)
 		{
 			return 0;
@@ -80,10 +82,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			}
 		}
 
+		// checking for begining of condition
 		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
 		if (conditionIndex != -1)
 		{
-			params.startInstructionIndex = i;
 			if (decompileCondition(params, conditions, conditionIndex, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
@@ -106,7 +108,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 
 		if (isInUnreachableState) { continue; }
 
-		params.startInstructionIndex = i;
 		if (checkForReturnStatement(params)) 
 		{
 			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
@@ -124,7 +125,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 
 		if (checkForAssignment(currentInstruction))
 		{
-			params.startInstructionIndex = i;
 			if (decompileAssignment(params, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
@@ -139,10 +139,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		}
 
 		struct Function* callee;
-		params.startInstructionIndex = i;
 		if (checkForFunctionCall(params, &callee))
 		{
-			params.startInstructionIndex = i;
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
@@ -156,11 +154,9 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			}
 		}
 
-		params.startInstructionIndex = i;
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1) 
 		{
-			params.startInstructionIndex = i;
 			if (decompileImportCall(params, params.imports[importIndex].name, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
