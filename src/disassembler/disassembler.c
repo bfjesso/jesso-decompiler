@@ -398,6 +398,8 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
 	unsigned char opcodeByte = 0;
+
+	*result = twoByteOpcodeMap[0x80][0];
 	
 	// check the opcode map in use
 	if ((*bytesPtr)[0] == 0x0F)
