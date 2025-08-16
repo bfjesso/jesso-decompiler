@@ -98,7 +98,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	return 0;
 }
 
-unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
+static unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
 {
 	char expressions[5][100] = { 0 };
 	int expressionIndex = 0;

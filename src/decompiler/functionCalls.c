@@ -61,7 +61,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 					params.startInstructionIndex = j;
 
 					char argStr[100] = { 0 };
-					if (!decompileExpression(params, reg, callee->regArgs[i].type, argStr, 100))
+					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, argStr, 100))
 					{
 						return 0;
 					}

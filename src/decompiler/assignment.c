@@ -1,3 +1,4 @@
+#include "expressions.h"
 #include "assignment.h"
 
 unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
