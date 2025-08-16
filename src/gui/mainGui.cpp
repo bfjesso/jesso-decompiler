@@ -253,13 +253,13 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 	{
 		uintptr_t address = imageBase + codeSection.VirtualAddress + currentIndex;
 
-		char addressStr[10];
+		char addressStr[10] = { 0 };
 		sprintf(addressStr, "%llX", address);
 
 		currentIndex += currentInstruction.numOfBytes;
 		
-		char buffer[50];
-		if (instructionToStr(&currentInstruction, buffer, 50))
+		char buffer[100] = { 0 };
+		if (instructionToStr(&currentInstruction, buffer, 100))
 		{
 			disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
 

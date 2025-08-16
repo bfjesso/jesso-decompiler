@@ -4,6 +4,8 @@
 // Intel 64 and IA-32 Architectures Software Developer’s Manuals:
 //	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
+// This map isn't complete
+
 // Appendix A: A.4.2 table A-6
 // any NO_OPERAND_CODE means that the operand code will be what is in the regular opcode map
 const struct Opcode extendedOpcodeMap[18][8] = // [group index][ModR/M bits 3-5]
