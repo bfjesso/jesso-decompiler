@@ -44,3 +44,5 @@ static void combineConditions(struct Condition* conditions, int numOfConditions)
 static int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer);
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
+
+unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);

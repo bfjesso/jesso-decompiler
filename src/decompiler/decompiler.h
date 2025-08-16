@@ -1,6 +1,5 @@
 #pragma once
 #include "decompilationUtils.h"
-#include "conditions.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -23,8 +22,6 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
 static unsigned char checkForAssignment(struct DisassembledInstruction* instruction);
-
-static unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);
 
 static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
 

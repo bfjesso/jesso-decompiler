@@ -1,4 +1,5 @@
 #include "conditions.h"
+#include "expressions.h"
 
 #include <string.h>
 
@@ -219,4 +220,133 @@ int checkForCondition(int instructionIndex, struct Condition* conditions, int nu
 	}
 
 	return -1;
+}
+
+unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result)
+{
+	if (conditions[conditionIndex].conditionType == ELSE_CT)
+	{
+		strcpy(result->line, "else");
+		return 1;
+	}
+
+	char conditionExpression[100] = { 0 };
+
+	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
+	{
+		if (!decompileComparison(params, conditionExpression, 0))
+		{
+			return 0;
+		}
+
+		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
+		{
+			char currentConditionExpression[100] = { 0 };
+			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
+			if (!decompileComparison(params, currentConditionExpression, i == conditions[conditionIndex].numOfOtherJccs - 1))
+			{
+				return 0;
+			}
+
+			strcat(conditionExpression, " || ");
+			strcat(conditionExpression, currentConditionExpression);
+		}
+	}
+	else
+	{
+		if (!decompileComparison(params, conditionExpression, 1)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
+		{
+			return 0;
+		}
+
+		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
+		{
+			char currentConditionExpression[100] = { 0 };
+			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
+			if (!decompileComparison(params, currentConditionExpression, 1))
+			{
+				return 0;
+			}
+
+			strcat(conditionExpression, " && ");
+			strcat(conditionExpression, currentConditionExpression);
+		}
+	}
+
+	struct LineOfC combinedConditionExpression = { 0 };
+	if (conditions[conditionIndex].combinedConditionIndex)
+	{
+		params.startInstructionIndex = conditions[conditions[conditionIndex].combinedConditionIndex].jccIndex;
+		if (decompileCondition(params, conditions, conditions[conditionIndex].combinedConditionIndex, &combinedConditionExpression))
+		{
+			wrapStrInParentheses(conditionExpression);
+
+			if (conditions[conditionIndex].combinationLogicType == AND_LT)
+			{
+				strcat(conditionExpression, " && ");
+			}
+			else
+			{
+				strcat(conditionExpression, " || ");
+			}
+
+			strcat(conditionExpression, combinedConditionExpression.line);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	if (conditions[conditionIndex].isCombinedByOther)
+	{
+		strcpy(result->line, conditionExpression);
+		return 1;
+	}
+
+	if (conditions[conditionIndex].conditionType == LOOP_CT)
+	{
+		// check for for loop
+		if (params.currentFunc->instructions[conditions[conditionIndex].exitIndex - 1].opcode == JMP_SHORT)
+		{
+			struct LineOfC assignmentExpression = { 0 };
+			for (int i = conditions[conditionIndex].exitIndex; i < conditions[conditionIndex].jccIndex; i++)
+			{
+				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+				if (checkForAssignment(currentInstruction))
+				{
+					params.startInstructionIndex = i;
+					if (decompileAssignment(params, &assignmentExpression))
+					{
+						break;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+			}
+			int len = (int)(strlen(assignmentExpression.line));
+			if (len > 0)
+			{
+				assignmentExpression.line[len - 1] = 0; // remove ;
+			}
+
+			sprintf(result->line, "for (; %s; %s)", conditionExpression, assignmentExpression.line);
+		}
+		else
+		{
+			sprintf(result->line, "while (%s)", conditionExpression);
+		}
+	}
+	else if (conditions[conditionIndex].conditionType == IF_CT)
+	{
+		sprintf(result->line, "if (%s)", conditionExpression);
+	}
+	else
+	{
+		sprintf(result->line, "else if (%s)", conditionExpression);
+	}
+
+	return 1;
 }
