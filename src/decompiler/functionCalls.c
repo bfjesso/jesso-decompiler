@@ -162,7 +162,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 	unsigned char returnType = VOID_TYPE;
 	for (int i = params.startInstructionIndex + 1; i < params.currentFunc->numOfInstructions; i++)
 	{
-		if (params.currentFunc->instructions[i].opcode == CALL_NEAR)
+		enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
+		if (opcode == CALL_NEAR || opcode == JMP_NEAR || opcode == JMP_SHORT)
 		{
 			break;
 		}
@@ -202,7 +203,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->opcode == CALL_NEAR || currentInstruction->opcode == JMP_NEAR)
+		if (currentInstruction->opcode == CALL_NEAR || currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_SHORT)
 		{
 			break;
 		}
@@ -269,7 +270,7 @@ int getFunctionCallNumber(struct DecompilationParameters params, unsigned long l
 {
 	int result = 0;
 
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	for (int i = 0; i < params.startInstructionIndex; i++)
 	{
 		if (params.currentFunc->instructions[i].opcode == CALL_NEAR || params.currentFunc->instructions[i].opcode == CALL_FAR)
 		{

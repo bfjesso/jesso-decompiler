@@ -178,6 +178,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 		}
 		else if (currentInstruction->opcode == CALL_NEAR)
 		{
+			params.startInstructionIndex = i;
 			unsigned long long calleeAddress = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
@@ -192,7 +193,6 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			else
 			{
 				// checking for imported function call
-				params.startInstructionIndex = i;
 				int importIndex = checkForImportCall(params);
 
 				if (importIndex != -1)
