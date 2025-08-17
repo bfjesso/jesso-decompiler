@@ -2,7 +2,7 @@
 #include "functionCalls.h"
 #include "dataTypes.h"
 
-unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
+unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -98,7 +98,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	return 0;
 }
 
-static unsigned char decompileExpression(struct DecompilationParameters params, unsigned char targetReg, unsigned char type, char* resultBuffer, unsigned char resultBufferSize)
+static unsigned char decompileExpression(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
 {
 	char expressions[5][100] = { 0 };
 	int expressionIndex = 0;

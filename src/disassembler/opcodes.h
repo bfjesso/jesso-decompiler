@@ -87,10 +87,10 @@ enum OpcodeSuperscript
 
 struct Opcode
 {
-	unsigned int mnemonic;
+	enum Mnemonic mnemonic;
 	char extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
-	unsigned char operands[3];
-	unsigned char opcodeSuperscript;
+	enum OperandCode operands[3];
+	enum OpcodeSuperscript opcodeSuperscript;
 };
 
 extern const char* mnemonicStrs[];

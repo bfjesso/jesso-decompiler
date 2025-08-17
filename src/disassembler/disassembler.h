@@ -37,10 +37,10 @@ enum OperandType
 
 struct LegacyPrefixes
 {
-	unsigned char group1;
-	unsigned char group2;
-	unsigned char group3;
-	unsigned char group4;
+	enum LegacyPrefix group1;
+	enum LegacyPrefix group2;
+	enum LegacyPrefix group3;
+	enum LegacyPrefix group4;
 };
 
 struct REXPrefix
@@ -77,7 +77,7 @@ struct MemoryAddress
 	unsigned char segment;
 	unsigned short constSegment;
 
-	unsigned char reg;
+	enum Register reg;
 	unsigned char scale; // if SIB byte
 	unsigned char regDisplacement;
 	long long constDisplacement;
@@ -87,13 +87,13 @@ struct Operand
 {
 	union
 	{
-		unsigned char segment;
-		unsigned char reg;
+		enum Segment segment;
+		enum Register reg;
 		struct MemoryAddress memoryAddress;
 		long long immediate;
 	};
 
-	unsigned char type;
+	enum OperandType type;
 };
 
 struct DisassemblerOptions
@@ -103,9 +103,9 @@ struct DisassemblerOptions
 
 struct DisassembledInstruction
 {
-	unsigned int opcode;
+	enum Mnemonic opcode;
 	struct Operand operands[3];
-	unsigned char group1Prefix;
+	enum LegacyPrefix group1Prefix;
 
 	unsigned char numOfBytes;
 };

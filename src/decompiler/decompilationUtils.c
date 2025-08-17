@@ -1,6 +1,6 @@
 #include "decompilationUtils.h"
 
-unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer)
+unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer)
 {
 	switch (opcode)
 	{

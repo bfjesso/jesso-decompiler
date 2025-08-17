@@ -28,7 +28,7 @@ struct DecompilationParameters
 	int totalNumOfInstructions;
 };
 
-unsigned char getOperationStr(unsigned char opcode, unsigned char getAssignment, char* resultBuffer);
+unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer);
 
 void wrapStrInParentheses(char* str);
 

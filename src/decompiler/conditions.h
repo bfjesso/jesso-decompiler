@@ -21,14 +21,14 @@ struct Condition
 	int jccIndex;
 	int dstIndex; // the index of the instruction jumped to by the jcc
 	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp. this field is only used while getting all conditions
-	unsigned char conditionType;
+	enum ConditionType conditionType;
 
 	int otherJccIndexes[3]; // these will be either all connected by && or ||
 	unsigned char numOfOtherJccs;
-	unsigned char otherJccsLogicType;
+	enum LogicalType otherJccsLogicType;
 
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
-	unsigned char combinationLogicType; // OR or AND
+	enum LogicalType combinationLogicType; // OR or AND
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
 };
 

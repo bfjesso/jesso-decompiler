@@ -20,14 +20,14 @@ static const char* callingConventionStrs[] =
 
 struct RegisterVariable
 {
-	unsigned char type;
-	unsigned char reg;
+	enum PrimitiveType type;
+	enum Register reg;
 	char name[20];
 };
 
 struct StackVariable 
 {
-	unsigned char type;
+	enum PrimitiveType type;
 	int stackOffset;
 	char name[20];
 };
@@ -40,10 +40,10 @@ struct Function
 
 	char name[50];
 
-	unsigned char returnType;
+	enum PrimitiveType returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function
 
-	unsigned char callingConvention;
+	enum CallingConvention callingConvention;
 
 	struct RegisterVariable regArgs[NO_REG - RAX];
 	unsigned char numOfRegArgs;
