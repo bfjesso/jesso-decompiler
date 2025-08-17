@@ -457,9 +457,43 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		if ((*bytesPtr) > maxBytesAddr) { return 0; }
 		
 		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char mod = (((modRMByte >> 7) & 0x01) * 2) + ((modRMByte >> 6) & 0x01);
 		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
+		unsigned char rm = (((modRMByte >> 2) & 0x01) * 4) + (((modRMByte >> 1) & 0x01) * 2) + ((modRMByte >> 0) & 0x01);
 
-		const struct Opcode* extendedOpcode = &extendedOpcodeMap[result->extensionGroup][reg];
+		const struct Opcode* extendedOpcode = 0;
+
+		if (result->extensionGroup < 7) 
+		{
+			extendedOpcode = &extendedOpcodeMapThroughGroupSix[result->extensionGroup][reg];
+		}
+		else if (result->extensionGroup == 7) 
+		{
+			if (mod == 3) // 11B
+			{
+				extendedOpcode = &extendedOpcodeMapGroup7With11B[reg][rm];
+			}
+		}
+		else if (result->extensionGroup == 8)
+		{
+			extendedOpcode = &extendedOpcodeMapGroup8[reg];
+		}
+		else if (result->extensionGroup == 11)
+		{
+			if (opcodeByte == 0xC6) 
+			{
+				extendedOpcode = &extendedOpcodeMapGroup11C6[reg];
+			}
+			else if (opcodeByte == 0xC7)
+			{
+				extendedOpcode = &extendedOpcodeMapGroup11C7[reg];
+			}
+		}
+
+		if (extendedOpcode == 0) 
+		{
+			return 0;
+		}
 
 		result->mnemonic = extendedOpcode->mnemonic;
 

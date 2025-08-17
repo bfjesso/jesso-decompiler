@@ -9,8 +9,8 @@
 // Appendix A: A.3 table A-3
 const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix; 1 - 0x66; 2 - 0xF3; 3 - 0xF2  (not all opcodes have different definitions for each prefix or any of them)
 {
-	{ NO_MNEMONIC, 6, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x00
-	{ NO_MNEMONIC, 7, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x01
+	{ EXTENDED_OPCODE, 6, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },  // 0x00
+	{ EXTENDED_OPCODE, 7, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },  // 0x01
 	{ LAR, -1, Gv, Ew, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x02
 	{ LSL, -1, Gv, Ew, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x03
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x04

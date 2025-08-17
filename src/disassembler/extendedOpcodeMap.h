@@ -4,11 +4,14 @@
 // Intel 64 and IA-32 Architectures Software Developer’s Manuals:
 //	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
-// This map isn't complete
+// This file isn't complete yet
 
 // Appendix A: A.4.2 table A-6
+
 // any NO_OPERAND_CODE means that the operand code will be what is in the regular opcode map
-const struct Opcode extendedOpcodeMap[18][8] = // [group index][ModR/M bits 3-5]
+
+// this is only up to group 6. These groups only depend on ModR/M bits 3-5
+const struct Opcode extendedOpcodeMapThroughGroupSix[7][8] = // [group index][ModR/M bits 3-5]
 {
 	{	// group 1
 		{ ADD, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -69,118 +72,8 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][ModR/M bits 3-5]
 		{ JMP_FAR, -1, Mp, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },
 		{ PUSH, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC }
-	},	// The groups after 5 are not implemented except for group 11, which is partially implemented for the MOV opcode
-	{	// group 6
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
 	},
-	{	// group 7
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 8
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 9
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 10
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 11
-		{ MOV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 12
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 13
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 14
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 15
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 16
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC }
-	},
-	{	// group 17
+	{	// group 6     ! This is not implemented yet
 		{ NO_MNEMONIC },
 		{ NO_MNEMONIC },
 		{ NO_MNEMONIC },
@@ -190,4 +83,78 @@ const struct Opcode extendedOpcodeMap[18][8] = // [group index][ModR/M bits 3-5]
 		{ NO_MNEMONIC },
 		{ NO_MNEMONIC }
 	}
+};
+
+// Group 7 where Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup7With11B[8][8] =  // [ModR/M bits 3-5][ModR/M bits 0-2]
+{
+	{
+		{ NO_MNEMONIC },
+		{ VMCALL, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMLAUNCH, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMRESUME, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMXOFF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
+	},
+	{
+		{ MONITOR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ MWAIT, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ CLAC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ STAC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ ENCLS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+	},
+	{
+		{ XGETBV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ XSETBV, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ VMFUNC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ XEND, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ XTEST, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ ENCLU, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+	},
+	// not completed
+};
+
+const struct Opcode extendedOpcodeMapGroup8[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ BT, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ BTS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ BTR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ BTC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// for opcode 0xC6
+const struct Opcode extendedOpcodeMapGroup11C6[8] = // [ModR/M bits 3-5]
+{
+	{ MOV, -1, Eb, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ XABORT, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// for opcode 0xC7
+const struct Opcode extendedOpcodeMapGroup11C7[8] = // [ModR/M bits 3-5]
+{
+	{ MOV, -1, Ev, Iz, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ XBEGIN, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 };
