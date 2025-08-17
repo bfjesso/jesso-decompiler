@@ -37,7 +37,7 @@ extern const char* mnemonicStrs[] =
 	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XORPD", "XORPS", "XSETBV", "XTEST"
 };
 
-unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites)
+unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, unsigned char* overwrites)
 {
 	if (compareRegisters(reg, AX))
 	{
