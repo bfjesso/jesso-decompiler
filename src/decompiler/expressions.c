@@ -148,6 +148,16 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 				break;
 			}
+			else if (currentInstruction->opcode == INC) 
+			{
+				strcpy(expressions[expressionIndex], " + 1");
+				expressionIndex++;
+			}
+			else if (currentInstruction->opcode == DEC)
+			{
+				strcpy(expressions[expressionIndex], " - 1");
+				expressionIndex++;
+			}
 			else
 			{
 				char operandStr[100] = { 0 };

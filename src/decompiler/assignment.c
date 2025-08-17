@@ -32,6 +32,17 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		return 0;
 	}
 
+	if (currentInstruction->opcode == INC) 
+	{
+		sprintf(result->line, "%s++;", assignee);
+		return 1;
+	}
+	else if (currentInstruction->opcode == DEC)
+	{
+		sprintf(result->line, "%s--;", assignee);
+		return 1;
+	}
+
 	char valueToAssign[100] = { 0 };
 	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
 	if (!decompileOperand(params, operand, type, valueToAssign, 100))
@@ -44,7 +55,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 	{
 		return 0;
 	}
-	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
 
+	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
 	return 1;
 }

@@ -1393,6 +1393,8 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		case OR:
 		case SHL:
 		case SHR:
+		case INC:
+		case DEC:
 			return 1;
 		case IMUL:
 			if (overwrites != 0 && instruction->operands[2].type != NO_OPERAND) { *overwrites = 1; }
