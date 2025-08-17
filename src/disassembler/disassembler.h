@@ -103,7 +103,7 @@ struct DisassemblerOptions
 
 struct DisassembledInstruction
 {
-	unsigned char opcode;
+	unsigned int opcode;
 	struct Operand operands[3];
 	unsigned char group1Prefix;
 

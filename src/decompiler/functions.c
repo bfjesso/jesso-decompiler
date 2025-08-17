@@ -41,7 +41,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			continue;
 		}
 
-		// check for arguments
+		// checking all operands for arguments or local variables
 		unsigned char overwrites = 0;
 		for (int j = 0; j < 3; j++)
 		{
