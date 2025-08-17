@@ -181,10 +181,8 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			unsigned long long calleeAddress = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
-			if (calleeIndex != -1)
+			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)
 			{
-				if (params.functions[calleeIndex].returnType == VOID_TYPE) { continue; }
-
 				int callNum = getFunctionCallNumber(params, calleeAddress);
 				sprintf(expressions[expressionIndex], "%sRetVal%d", params.functions[calleeIndex].name, callNum);
 				expressionIndex++;
