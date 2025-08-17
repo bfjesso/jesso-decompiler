@@ -39,11 +39,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 	int numOfConditions = getAllConditions(params, conditions);
 
 	unsigned char isConditionEmpty = 0; // used to check if there is an empty condition that should be removed
-
 	unsigned char numOfIndents = 1;
-
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
-
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
@@ -108,24 +105,11 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 
 		if (isInUnreachableState) { continue; }
 
-		if (checkForReturnStatement(params)) 
+		struct Function* callee;
+		int importIndex = checkForImportCall(params);
+		if (importIndex != -1)
 		{
-			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
-			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
-				isConditionEmpty = 0;
-			}
-			else 
-			{
-				return 0;
-			}
-		}
-
-		if (checkForAssignment(currentInstruction))
-		{
-			if (decompileAssignment(params, &resultBuffer[numOfLinesDecompiled]))
+			if (decompileImportCall(params, params.imports[importIndex].name, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
@@ -137,9 +121,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 				return 0;
 			}
 		}
-
-		struct Function* callee;
-		if (checkForFunctionCall(params, &callee))
+		else if (checkForFunctionCall(params, &callee))
 		{
 			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
 			{
@@ -153,11 +135,23 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 				return 0;
 			}
 		}
-
-		int importIndex = checkForImportCall(params);
-		if (importIndex != -1) 
+		else if (checkForReturnStatement(params)) 
 		{
-			if (decompileImportCall(params, params.imports[importIndex].name, &resultBuffer[numOfLinesDecompiled]))
+			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
+			{
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+
+				isConditionEmpty = 0;
+			}
+			else 
+			{
+				return 0;
+			}
+		}
+		else if (checkForAssignment(currentInstruction))
+		{
+			if (decompileAssignment(params, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;
