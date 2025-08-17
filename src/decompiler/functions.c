@@ -235,7 +235,7 @@ int findInstructionByAddress(unsigned long long* addresses, int low, int high, u
 	return -1;
 }
 
-unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand)
+unsigned char getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 {
 	switch (opcode)
 	{
@@ -311,7 +311,7 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 	return 0;
 }
 
-struct RegisterVariable* getRegArgByReg(struct Function* function, unsigned char reg) 
+struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg)
 {
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{

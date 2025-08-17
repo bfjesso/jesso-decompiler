@@ -775,7 +775,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			hasGotModRM = 1;
 			break;
 		case M:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 0, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Mw:

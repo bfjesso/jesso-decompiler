@@ -76,9 +76,9 @@ struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOf
 
 struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
 
-struct RegisterVariable* getRegArgByReg(struct Function* function, unsigned char reg);
+struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
-unsigned char getTypeOfOperand(unsigned char opcode, struct Operand* operand);
+unsigned char getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
 static void initializeFunctionVarNames(struct Function* function);
 
