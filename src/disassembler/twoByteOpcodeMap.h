@@ -111,7 +111,12 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x54
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x55
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x56
-	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },		// 0x57
+	{                                                                                           // 0x57
+		{ XORPS, -1, Vps, Hps, Wps, NO_SUPERSCRIPT },
+		{ XORPD, -1, Vpd, Hpd, Wpd, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	},
 	{                                                                                           // 0x58
 		{ ADDPS, -1, Vps, Hps, Wps, NO_SUPERSCRIPT },
 		{ ADDPD, -1, Vpd, Hpd, Wpd, NO_SUPERSCRIPT },

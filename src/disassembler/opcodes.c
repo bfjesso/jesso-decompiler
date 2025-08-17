@@ -33,7 +33,7 @@ extern const char* mnemonicStrs[] =
 	"SAHF", "SAR", "SBB", "SCAS", "SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNO", "SETNP", "SETNS", "SETNZ", "SETO", "SETP", "SETS", "SETZ", "STC", "STD", "STI", "STOS", "SYSCALL", "SYSRET", 
 	"TEST",
 	"WAIT", "WBINVD",
-	"XCHG", "XLAT",
+	"XCHG", "XLAT", "XORPD", "XORPS",
 };
 
 unsigned char doesOpcodeModifyRegister(unsigned char opcode, unsigned char reg, unsigned char* overwrites)
