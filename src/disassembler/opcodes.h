@@ -1,4 +1,5 @@
 #pragma once
+#include "registers.h"
 
 // Intel 64 and IA-32 Architectures Software Developer’s Manuals:
 //	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html

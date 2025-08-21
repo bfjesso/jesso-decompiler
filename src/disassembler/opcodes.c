@@ -1,5 +1,4 @@
 #include "opcodes.h"
-#include "registers.h"
 
 extern const char* mnemonicStrs[] =
 {

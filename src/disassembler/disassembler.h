@@ -1,5 +1,6 @@
 #pragma once
 #include "opcodes.h"
+#include "registers.h"
 
 enum LegacyPrefix
 {
