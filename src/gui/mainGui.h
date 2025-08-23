@@ -48,6 +48,9 @@ public:
 
 	std::vector<Function> functions;
 
+	unsigned char* dataSectionBytes = nullptr;
+	IMAGE_SECTION_HEADER dataSection = { 0 };
+
 	int currentDecompiledFunc = -1;
 	
 	enum ids 
@@ -65,6 +68,8 @@ public:
 	void DisassembleButton(wxCommandEvent& e);
 
 	void AnalyzeButton(wxCommandEvent& e);
+
+	void LoadData();
 
 	void DisassembleCodeSection(unsigned int numOfBytesToRead);
 

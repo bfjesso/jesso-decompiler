@@ -3,14 +3,15 @@
 
 wxBEGIN_EVENT_TABLE(DataViewer, wxFrame)
 EVT_CLOSE(CloseMenu)
-EVT_BUTTON(LoadDataButtonID, LoadData)
+EVT_CHOICE(DataTypeChoiceID, UpdateDataList)
+EVT_CHECKBOX(HexCheckBoxID, UpdateDataList)
 wxEND_EVENT_TABLE()
 
 DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	dataTypeChoice = new wxChoice(this, wxID_ANY, wxPoint(0, 0), wxSize(120, 50), wxArrayString(6, dataTypeStrs));
+	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(6, dataTypeStrs));
 	dataTypeChoice->SetSelection(0);
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
@@ -20,12 +21,8 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
 	numOfbytesInputTextCtrl->SetToolTip("Number of bytes to read from the file's code section");
 
-	hexCheckBox = new wxCheckBox(this, wxID_ANY, "Hexadecimal");
+	hexCheckBox = new wxCheckBox(this, HexCheckBoxID, "Hexadecimal");
 	hexCheckBox->SetOwnForegroundColour(textColor);
-
-	loadDataButton = new wxButton(this, LoadDataButtonID, "Load Data", wxPoint(0, 0), wxSize(75, 25));
-	loadDataButton->SetOwnBackgroundColour(foregroundColor);
-	loadDataButton->SetOwnForegroundColour(textColor);
 
 	dataListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
 	dataListBox->SetOwnBackgroundColour(foregroundColor);
@@ -41,7 +38,6 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	row1Sizer->Add(dataTypeChoice, 0, wxALL, 10);
 	row1Sizer->Add(numOfbytesInputTextCtrl, 0, wxTOP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(loadDataButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row2Sizer->Add(hexCheckBox, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row3Sizer->Add(dataListBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
@@ -53,39 +49,26 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	SetSizer(vSizer);
 }
 
-void DataViewer::LoadData(wxCommandEvent& e) 
+void DataViewer::UpdateDataList(wxCommandEvent& e) 
 {
-	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
-	{
-		wxMessageBox("No file opened", "Can't load data");
-		return;
-	}
+	LoadData();
+}
 
-	unsigned int numOfBytesToRead = 1;
-	if (!numOfbytesInputTextCtrl->GetValue().ToUInt(&numOfBytesToRead))
+void DataViewer::LoadData()
+{
+	if (!bytes)
 	{
-		wxMessageBox("Invalid number of bytes to read", "Can't read number of bytes input");
+		wxMessageBox("No data section bytes", "Can't load data");
 		return;
 	}
 
 	dataListBox->Clear();
 
-	unsigned char* bytes = new unsigned char[numOfBytesToRead];
-	IMAGE_SECTION_HEADER dataSection = { 0 };
-	uintptr_t imageBase = 0;
-	if (!readDataSection(currentFile, is64Bit, bytes, numOfBytesToRead, &dataSection, &imageBase))
-	{
-		wxMessageBox("Error reading bytes from file data section", "Can't load data");
-
-		delete[] bytes;
-		return;
-	}
-
 	switch (dataTypeChoice->GetSelection())
 	{
 	case 0:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i++) 
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i++)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -108,7 +91,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 1:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i += 2)
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 2)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -131,7 +114,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 2:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i += 4)
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 4)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -154,7 +137,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 3:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i += 8)
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 8)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -177,7 +160,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 4:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i += 4)
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 4)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -190,7 +173,7 @@ void DataViewer::LoadData(wxCommandEvent& e)
 	}
 	case 5:
 	{
-		for (unsigned int i = 0; i < numOfBytesToRead; i += 8)
+		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 8)
 		{
 			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
 
@@ -202,17 +185,21 @@ void DataViewer::LoadData(wxCommandEvent& e)
 		break;
 	}
 	}
-
-	delete[] bytes;
 }
 
-void DataViewer::OpenMenu(wxPoint position)
+void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, IMAGE_SECTION_HEADER dataSec, unsigned char* dataBytes)
 {
 	position.x += 10;
 	position.y += 10;
 	SetPosition(position);
 	Show();
 	Raise();
+
+	imageBase = imageBas;
+	dataSection = dataSec;
+	bytes = dataBytes;
+
+	LoadData();
 }
 
 void DataViewer::CloseMenu(wxCloseEvent& e) // stops this frame from being destroyed and the data being lost

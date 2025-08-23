@@ -26,7 +26,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
 	openHexCalculator->SetBackgroundColour(foregroundColor);
 	openHexCalculator->SetTextColour(textColor);
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition()); }, OpenDataViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSection, dataSectionBytes); }, OpenDataViewerID);
 
 	menuBar->Append(toolMenu, "Tools");
 	this->SetMenuBar(menuBar);
@@ -154,13 +154,11 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 			numOfImports = getAllImports(file, is64Bit, imports, importsBufferMaxSize);
 
 			currentFile = file;
-			dataViewerMenu->currentFile = file;
 
 			DWORD binaryType = 0;
 			if (GetBinaryTypeW(filePath.c_str().AsWChar(), &binaryType))
 			{
 				is64Bit = binaryType == SCS_64BIT_BINARY;
-				dataViewerMenu->is64Bit = is64Bit;
 			}
 			
 			wxString fileName = openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1);
@@ -229,6 +227,43 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	}
 	
 	FindAllFunctions();
+
+	memset(&dataSection, 0, sizeof(dataSection));
+	if (dataSectionBytes)
+	{
+		delete[] dataSectionBytes;
+	}
+
+	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
+	if (answer == wxYES) 
+	{
+		LoadData();
+	}
+}
+
+void MainGui::LoadData()
+{
+	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
+	{
+		wxMessageBox("No file opened", "Can't load data");
+		return;
+	}
+
+	if (!getDataSectionHeader(currentFile, is64Bit, &dataSection))
+	{
+		wxMessageBox("Error getting data section header", "Can't get data section header");
+		return;
+	}
+
+	dataSectionBytes = new unsigned char[dataSection.SizeOfRawData];
+	
+	if (!readDataSection(currentFile, dataSectionBytes, &dataSection))
+	{
+		wxMessageBox("Error reading bytes from file data section", "Can't load data");
+
+		delete[] dataSectionBytes;
+		return;
+	}
 }
 
 void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
@@ -299,6 +334,10 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.allInstructions = disassembledInstructions.data();
 	params.allAddresses = instructionAddresses.data();
 	params.totalNumOfInstructions = disassembledInstructions.size();
+
+	params.dataSectionAddress = imageBase + dataSection.VirtualAddress;
+	params.dataSectionSize = dataSection.SizeOfRawData;
+	params.dataSectionByte = dataSectionBytes;
 
 	LineOfC decompiledFunction[100] = { 0 };
 	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
@@ -399,6 +438,11 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	if (dataSectionBytes) 
+	{
+		delete[] dataSectionBytes;
+	}
+	
 	CloseHandle(currentFile);
 	
 	bytesDisassemblerMenu->Destroy();

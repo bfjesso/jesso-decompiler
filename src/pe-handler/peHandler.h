@@ -9,7 +9,8 @@ extern "C"
 #endif
 
 	unsigned char readCodeSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase);
-	unsigned char readDataSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+	unsigned char getDataSectionHeader(HANDLE file, unsigned char is64Bit, IMAGE_SECTION_HEADER* result);
+	unsigned char readDataSection(HANDLE file, unsigned char* buffer, IMAGE_SECTION_HEADER* dataSection);
 	unsigned char getSymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, char* buffer);
 	int getAllImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
@@ -21,9 +22,9 @@ static unsigned char readCodeSection32(HANDLE file, unsigned char* buffer, unsig
 
 static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase);
 
-static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+static unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result);
 
-static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase);
+static unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result);
 
 static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer);
 

@@ -26,6 +26,10 @@ struct DecompilationParameters
 	struct DisassembledInstruction* allInstructions;
 	unsigned long long* allAddresses;
 	int totalNumOfInstructions;
+
+	unsigned long long dataSectionAddress;
+	int dataSectionSize;
+	unsigned char* dataSectionByte;
 };
 
 unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer);

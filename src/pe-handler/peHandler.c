@@ -17,7 +17,7 @@ unsigned char readCodeSection(HANDLE file, unsigned char is64Bit, unsigned char*
 	}
 }
 
-unsigned char readDataSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase)
+unsigned char getDataSectionHeader(HANDLE file, unsigned char is64Bit, IMAGE_SECTION_HEADER* result)
 {
 	if (!file || file == INVALID_HANDLE_VALUE)
 	{
@@ -26,12 +26,18 @@ unsigned char readDataSection(HANDLE file, unsigned char is64Bit, unsigned char*
 
 	if (is64Bit)
 	{
-		return readDataSection64(file, buffer, bufferSize, dataSection, imageBase);
+		return getDataSectionHeader64(file, result);
 	}
 	else
 	{
-		return readDataSection32(file, buffer, bufferSize, dataSection, imageBase);
+		return getDataSectionHeader32(file, result);
 	}
+}
+
+unsigned char readDataSection(HANDLE file, unsigned char* buffer, IMAGE_SECTION_HEADER* dataSection)
+{
+	if (SetFilePointer(file, dataSection->PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	return ReadFile(file, buffer, dataSection->SizeOfRawData, 0, 0);
 }
 
 unsigned char getSymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, char* buffer)
@@ -139,7 +145,7 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 	return 0;
 }
 
-static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase)
+static unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -152,8 +158,6 @@ static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsig
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	*imageBase = imageNtHeaders.OptionalHeader.ImageBase;
-
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
@@ -161,20 +165,17 @@ static unsigned char readDataSection32(HANDLE file, unsigned char* buffer, unsig
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfData)
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
 		{
-			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
-			*dataSection = sectionHeader;
-
-			return ReadFile(file, buffer, bufferSize, 0, 0);
+			*result = sectionHeader;
+			return 1;
 		}
 	}
 
 	return 0;
 }
 
-static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* dataSection, uintptr_t* imageBase)
+static unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -187,8 +188,6 @@ static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsig
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	*imageBase = imageNtHeaders.OptionalHeader.ImageBase;
-
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
@@ -198,13 +197,8 @@ static unsigned char readDataSection64(HANDLE file, unsigned char* buffer, unsig
 
 		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
 		{
-			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
-			*dataSection = sectionHeader;
-
-			BOOL result = ReadFile(file, buffer, bufferSize, 0, 0);
-			
-			return result;
+			*result = sectionHeader;
+			return 1;
 		}
 	}
 

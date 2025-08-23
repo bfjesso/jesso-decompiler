@@ -9,7 +9,6 @@ public:
 	wxChoice* dataTypeChoice = nullptr;
 	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
 	wxCheckBox* hexCheckBox = nullptr;
-	wxButton* loadDataButton = nullptr;
 	wxListBox* dataListBox = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
@@ -17,8 +16,9 @@ public:
 	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	HANDLE currentFile = 0;
-	unsigned char is64Bit;
+	unsigned char* bytes = nullptr;
+	uintptr_t imageBase = 0;
+	IMAGE_SECTION_HEADER dataSection;
 
 	const char* dataTypeStrs[6] = 
 	{
@@ -33,12 +33,15 @@ public:
 	enum ids
 	{
 		MainWindowID,
-		LoadDataButtonID
+		DataTypeChoiceID,
+		HexCheckBoxID
 	};
 
-	void LoadData(wxCommandEvent& e);
+	void UpdateDataList(wxCommandEvent& e);
 
-	void OpenMenu(wxPoint position);
+	void LoadData();
+
+	void OpenMenu(wxPoint position, uintptr_t imageBas, IMAGE_SECTION_HEADER dataSec, unsigned char* dataBytes);
 
 	void CloseMenu(wxCloseEvent& e);
 
