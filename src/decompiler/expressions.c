@@ -6,7 +6,11 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 {
 	if (operand->type == IMMEDIATE)
 	{
-		sprintf(resultBuffer, "%llu", operand->immediate);
+		if (!getValueFromDataSection(params, type, operand->immediate, resultBuffer))
+		{
+			sprintf(resultBuffer, "%llu", operand->immediate);
+		}
+		
 		return 1;
 	}
 	else if (operand->type == MEM_ADDRESS)
@@ -44,7 +48,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
-			sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
+			if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, resultBuffer))
+			{
+				sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
+			}
 		}
 		else
 		{
@@ -96,6 +103,76 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	}
 
 	return 0;
+}
+
+static unsigned char getValueFromDataSection(struct DecompilationParameters params, enum PrimitiveType type, unsigned long long address, char* resultBuffer)
+{
+	if (address < params.dataSectionAddress) 
+	{
+		return 0;
+	}
+	
+	int dataSectionIndex = address - params.dataSectionAddress;
+
+	if (dataSectionIndex >= params.dataSectionSize) 
+	{
+		return 0;
+	}
+
+	// checking for pointer to see if it is a string
+	if (type == INT_TYPE || type == LONG_LONG_TYPE) 
+	{
+		char isString = 1;
+		
+		int len = 0;
+		char byte = 0;
+		do
+		{
+			byte = *(char*)(params.dataSectionByte + len + dataSectionIndex);
+			
+			if (byte == 0) 
+			{
+				break;
+			}
+			else if(len > 100 || byte > 126) // checking if byte is ascii and len isn't too long
+			{
+				isString = 0;
+				break;
+			}
+
+			len++;
+		} while (1);
+
+		if (isString && len > 0)
+		{
+			sprintf(resultBuffer, "\"%s\"", params.dataSectionByte + dataSectionIndex);
+			return 1;
+		}
+	}
+
+	switch (type) 
+	{
+	case CHAR_TYPE:
+		sprintf(resultBuffer, "%c", *(char*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	case SHORT_TYPE:
+		sprintf(resultBuffer, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	case INT_TYPE:
+		sprintf(resultBuffer, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	case LONG_LONG_TYPE:
+		sprintf(resultBuffer, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	case FLOAT_TYPE:
+		sprintf(resultBuffer, "%f", *(float*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	case DOUBLE_TYPE:
+		sprintf(resultBuffer, "%lf", *(double*)(params.dataSectionByte + dataSectionIndex));
+		break;
+	}
+
+	return 1;
 }
 
 static unsigned char decompileExpression(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
