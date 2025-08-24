@@ -83,25 +83,30 @@ unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit,
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
 
-	Elf64_Shdr codeSection;
 	if (is64Bit)
 	{ 
+		Elf64_Shdr codeSection;
 		if (!getSectionHeaderByName64(filePathChar, ".text", &codeSection))
 		{
 			return 0;
 		}
+
+		result->virtualAddress = codeSection.sh_addr;
+		result->fileOffset = codeSection.sh_offset;
+		result->size = codeSection.sh_size;
 	}
 	else 
 	{ 
+		Elf32_Shdr codeSection;
 		if (!getSectionHeaderByName32(filePathChar, ".text", &codeSection))
 		{
 			return 0;
 		}
-	}
 
-	result->virtualAddress = codeSection.sh_addr;
-	result->fileOffset = codeSection.sh_offset;
-	result->size = codeSection.sh_size;
+		result->virtualAddress = codeSection.sh_addr;
+		result->fileOffset = codeSection.sh_offset;
+		result->size = codeSection.sh_size;
+	}
 
 	return 1;
 #endif
@@ -138,25 +143,30 @@ unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit,
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
 
-	Elf64_Shdr dataSection;
 	if (is64Bit)
 	{
+		Elf64_Shdr dataSection;
 		if (!getSectionHeaderByName64(filePathChar, ".data", &dataSection))
 		{
 			return 0;
 		}
+
+		result->virtualAddress = dataSection.sh_addr;
+		result->fileOffset = dataSection.sh_offset;
+		result->size = dataSection.sh_size;
 	}
 	else
 	{
+		Elf32_Shdr dataSection;
 		if (!getSectionHeaderByName32(filePathChar, ".data", &dataSection))
 		{
 			return 0;
 		}
-	}
 
-	result->virtualAddress = dataSection.sh_addr;
-	result->fileOffset = dataSection.sh_offset;
-	result->size = dataSection.sh_size;
+		result->virtualAddress = dataSection.sh_addr;
+		result->fileOffset = dataSection.sh_offset;
+		result->size = dataSection.sh_size;
+	}
 
 	return 1;
 #endif
