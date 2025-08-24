@@ -13,12 +13,12 @@ debug-jdc: ./src/cli/main.c ./src/disassembler/disassembler.c ./src/decompiler/d
 	gcc *.o -o ./bin/linux/x64/debug-jdc
 
 jdc-gui:
-	g++ -c -w ./src/gui/mainGui.cpp `/home/jesso/Desktop/wxWidgets/buildgtk/wx-config --cxxflags --libs` -o main.o
+	g++ -c -w ./src/gui/*.cpp `../wxWidgets/buildgtk/wx-config --cxxflags --libs`
 	gcc -c -w ./src/disassembler/*.c
 	gcc -c -w ./src/decompiler/*.c
 	gcc -c -w ./src/elf-handler/*.c
-	gcc *.o -o ./bin/linux/x64/gui/jdc
+	gcc -c -w ./src/file-handler/*.c
+	g++ -o ./bin/linux/x64/gui/jdc *.o `../wxWidgets/buildgtk/wx-config --cxxflags --libs`
 
 clean:
 	rm *.o
-	rm ./src/disassembler/*.gch

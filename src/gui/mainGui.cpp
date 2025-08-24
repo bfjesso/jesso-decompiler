@@ -1,11 +1,11 @@
 #include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
-EVT_CLOSE(CloseApp)
-EVT_BUTTON(DisassembleFileButtonID, DisassembleButton)
-EVT_BUTTON(AnalyzeFileButtonID, AnalyzeButton)
-EVT_BUTTON(OpenFileButtonID, OpenFileButton)
-EVT_GRID_CELL_RIGHT_CLICK(RightClickOptions)
+EVT_CLOSE(MainGui::CloseApp)
+EVT_BUTTON(DisassembleFileButtonID, MainGui::DisassembleButton)
+EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
+EVT_BUTTON(OpenFileButtonID, MainGui::OpenFileButton)
+EVT_GRID_CELL_RIGHT_CLICK(MainGui::RightClickOptions)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(1300, 1000))
@@ -18,14 +18,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	wxMenu* toolMenu = new wxMenu();
 
-	wxMenuItem* openHexCalculator = toolMenu->Append(OpenBytesDisassemblerID, "Bytes Disassembler");
-	openHexCalculator->SetBackgroundColour(foregroundColor);
-	openHexCalculator->SetTextColour(textColor);
+	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes Disassembler");
+	// openBytesDisassembler->SetBackgroundColour(foregroundColor);
+	// openBytesDisassembler->SetTextColour(textColor);
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
 
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
-	openHexCalculator->SetBackgroundColour(foregroundColor);
-	openHexCalculator->SetTextColour(textColor);
+	// openDataViewer->SetBackgroundColour(foregroundColor);
+	// openDataViewer->SetTextColour(textColor);
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSection, dataSectionBytes); }, OpenDataViewerID);
 
 	menuBar->Append(toolMenu, "Tools");
@@ -112,9 +112,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 void MainGui::OpenFileButton(wxCommandEvent& e)
 {
-	wxFileDialog openDllDialog(this, "Choose PE file", "", "", "EXE and DLL files (*.exe;*.dll)|*.exe;*.dll", wxFD_FILE_MUST_EXIST);
+	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
 
-	if (openDllDialog.ShowModal() != wxID_CANCEL)
+	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
 		currentFilePath = "";
 		disassemblyListBox->Clear();
@@ -132,7 +132,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
 		}
 
-		wxString filePath = openDllDialog.GetPath();
+		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
 		{
 			currentFilePath = filePath;
@@ -148,7 +148,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
 			numOfImports = getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, importsBufferMaxSize);
 			
-			wxString fileName = openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1);
+			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 			wxMessageBox(fileName + " has been opened. It can now be disassembled and analyzed.", "Successfully opened the file");
 		}
@@ -161,7 +161,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		}
 	}
 
-	openDllDialog.Close(true);
+	openFileDialog.Close(true);
 }
 
 void MainGui::DisassembleButton(wxCommandEvent& e) 
@@ -272,7 +272,7 @@ void MainGui::DisassembleCodeSection()
 	unsigned int instructionNum = 1;
 	while (disassembleInstruction(&bytes[currentIndex], bytes + codeSection.size - 1, &options, &currentInstruction))
 	{
-		uintptr_t address = imageBase + codeSection.virtualAddress + currentIndex;
+		unsigned long long address = imageBase + codeSection.virtualAddress + currentIndex;
 
 		char addressStr[10] = { 0 };
 		sprintf(addressStr, "%llX", address);
@@ -400,8 +400,8 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	int row = e.GetRow(); // row right-clicked on
 
 	wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
-	decompile->SetBackgroundColour(foregroundColor);
-	decompile->SetTextColour(textColor);
+	// decompile->SetBackgroundColour(foregroundColor);
+	// decompile->SetTextColour(textColor);
 	menu.Append(decompile);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
 		{
@@ -409,13 +409,13 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 		}, 100);
 
 	wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
-	editProperties->SetBackgroundColour(foregroundColor);
-	editProperties->SetTextColour(textColor);
+	// editProperties->SetBackgroundColour(foregroundColor);
+	// editProperties->SetTextColour(textColor);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
 
 	wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
-	cpyAddr->SetBackgroundColour(foregroundColor);
-	cpyAddr->SetTextColour(textColor);
+	// cpyAddr->SetBackgroundColour(foregroundColor);
+	// cpyAddr->SetTextColour(textColor);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
@@ -437,7 +437,7 @@ void MainGui::CloseApp(wxCloseEvent& e)
 // Function Properties Menu
 
 wxBEGIN_EVENT_TABLE(FunctionPropertiesMenu, wxFrame)
-EVT_CLOSE(CloseMenu)
+EVT_CLOSE(FunctionPropertiesMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
 FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, int funcIndex) : wxFrame(nullptr, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))

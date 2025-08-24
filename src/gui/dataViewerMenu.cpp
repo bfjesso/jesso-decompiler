@@ -1,10 +1,9 @@
 #include "dataViewerMenu.h"
-#include "../pe-handler/peHandler.h"
 
 wxBEGIN_EVENT_TABLE(DataViewer, wxFrame)
-EVT_CLOSE(CloseMenu)
-EVT_CHOICE(DataTypeChoiceID, UpdateDataList)
-EVT_CHECKBOX(HexCheckBoxID, UpdateDataList)
+EVT_CLOSE(DataViewer::CloseMenu)
+EVT_CHOICE(DataTypeChoiceID, DataViewer::UpdateDataList)
+EVT_CHECKBOX(HexCheckBoxID, DataViewer::UpdateDataList)
 wxEND_EVENT_TABLE()
 
 DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))

@@ -15,7 +15,9 @@ unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
 #endif
 
 #ifdef linux
-	return isELFX64(filePath, isX64);
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+	return isELFX64(filePathChar, isX64);
 #endif
 }
 
@@ -78,23 +80,26 @@ unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit,
 #endif
 
 #ifdef linux
-	struct Elf64_Shdr codeSection = { 0 };
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	Elf64_Shdr codeSection;
 	if (is64Bit)
 	{ 
-		if (!getSectionHeaderByName64(filePath, ".text", &codeSection))
+		if (!getSectionHeaderByName64(filePathChar, ".text", &codeSection))
 		{
 			return 0;
 		}
 	}
 	else 
 	{ 
-		if (!getSectionHeaderByName32(filePath, ".text", &codeSection))
+		if (!getSectionHeaderByName32(filePathChar, ".text", &codeSection))
 		{
 			return 0;
 		}
 	}
 
-	result->address = codeSection.sh_addr;
+	result->virtualAddress = codeSection.sh_addr;
 	result->fileOffset = codeSection.sh_offset;
 	result->size = codeSection.sh_size;
 
@@ -130,23 +135,26 @@ unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit,
 #endif
 
 #ifdef linux
-	struct Elf64_Shdr dataSection = { 0 };
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	Elf64_Shdr dataSection;
 	if (is64Bit)
 	{
-		if (!getSectionHeaderByName64(filePath, ".data", &dataSection))
+		if (!getSectionHeaderByName64(filePathChar, ".data", &dataSection))
 		{
 			return 0;
 		}
 	}
 	else
 	{
-		if (!getSectionHeaderByName32(filePath, ".data", &dataSection))
+		if (!getSectionHeaderByName32(filePathChar, ".data", &dataSection))
 		{
 			return 0;
 		}
 	}
 
-	result->address = dataSection.sh_addr;
+	result->virtualAddress = dataSection.sh_addr;
 	result->fileOffset = dataSection.sh_offset;
 	result->size = dataSection.sh_size;
 
@@ -175,7 +183,10 @@ unsigned char readFileSection(const wchar_t* filePath, struct FileSection* secti
 #endif
 
 #ifdef linux
-	FILE* file = fopen(filePath, "r");
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	FILE* file = fopen(filePathChar, "r");
 	if (file)
 	{
 		fseek(file, section->fileOffset, SEEK_SET);
@@ -207,13 +218,16 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 #endif
 
 #ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
 	if (is64Bit)
 	{
-		return getELFSymbolByValue64(filePath, value, buffer);
+		return getELFSymbolByValue64(filePathChar, value, buffer);
 	}
 	else
 	{
-		return getELFSymbolByValue32(filePath, value, buffer);
+		return getELFSymbolByValue32(filePathChar, value, buffer);
 	}
 #endif
 }

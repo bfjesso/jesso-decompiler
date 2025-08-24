@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <elf.h>
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);

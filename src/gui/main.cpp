@@ -1,4 +1,4 @@
-#include "initApp.h"
+#include "main.h"
 
 wxIMPLEMENT_APP(App);
 

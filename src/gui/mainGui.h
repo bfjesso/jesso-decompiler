@@ -36,13 +36,13 @@ public:
 
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
-	uintptr_t imageBase = 0;
+	unsigned long long imageBase = 0;
 
 	static const int importsBufferMaxSize = 50;
 	ImportedFunction imports[importsBufferMaxSize] = { 0 };
 	int numOfImports = 0;
 
-	std::vector<uintptr_t> instructionAddresses;
+	std::vector<unsigned long long> instructionAddresses;
 	std::vector<DisassembledInstruction> disassembledInstructions;
 
 	std::vector<Function> functions;

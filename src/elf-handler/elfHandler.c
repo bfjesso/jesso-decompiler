@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "elfHandler.h"
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64)
@@ -35,25 +32,38 @@ unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 
 unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, char* nameBuffer)
 {
-	char* stringBytes = 0;
-	unsigned long long startAddress = 0;
-	if(!getSectionBytesByName64(filePath, ".strtab", &stringBytes, &startAddress))
+	Elf64_Shdr strtabSection;
+	if(!getSectionHeaderByName64(filePath, ".strtab", &strtabSection))
 	{
 		printf("Failed to find .strtab section.\n");
 		return 0;
 	}
 
-	char* bytes = 0;
-	unsigned int symtabSize = getSectionBytesByName64(filePath, ".symtab", &bytes, &startAddress);
-	if(!symtabSize)
+	char* stringBytes = (char*)malloc(strtabSection.sh_size);
+	if(!readSectionBytes64(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
-		printf("Failed to find .symtab section.\n");
+		printf("Failed to read .strtab section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
 
+	Elf64_Shdr symtabSection;
+	if(!getSectionHeaderByName64(filePath, ".symtab", &symtabSection))
+	{
+		printf("Failed to find .symtab section.\n");
+		return 0;
+	}
+
+	char* bytes = (char*)malloc(symtabSection.sh_size);
+	if(!readSectionBytes64(filePath, &symtabSection, bytes, symtabSection.sh_size))
+	{
+		printf("Failed to read .symtab section bytes.\n");
+		free(bytes);
+		return 0;
+	}
+
 	int i = 0;
-	while(i < symtabSize)
+	while(i < symtabSection.sh_size)
 	{
 		Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
 		
@@ -76,28 +86,41 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 
 unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, char* nameBuffer)
 {
-	char* stringBytes = 0;
-	unsigned long long startAddress = 0;
-	if(!getSectionBytesByName32(filePath, ".strtab", &stringBytes, &startAddress))
+	Elf32_Shdr strtabSection;
+	if(!getSectionHeaderByName32(filePath, ".strtab", &strtabSection))
 	{
 		printf("Failed to find .strtab section.\n");
 		return 0;
 	}
 
-	char* bytes = 0;
-	unsigned int symtabSize = getSectionBytesByName32(filePath, ".symtab", &bytes, &startAddress);
-	if(!symtabSize)
+	char* stringBytes = (char*)malloc(strtabSection.sh_size);
+	if(!readSectionBytes32(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
-		printf("Failed to find .symtab section.\n");
+		printf("Failed to read .strtab section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
 
+	Elf32_Shdr symtabSection;
+	if(!getSectionHeaderByName32(filePath, ".symtab", &symtabSection))
+	{
+		printf("Failed to find .symtab section.\n");
+		return 0;
+	}
+
+	char* bytes = (char*)malloc(symtabSection.sh_size);
+	if(!readSectionBytes32(filePath, &symtabSection, bytes, symtabSection.sh_size))
+	{
+		printf("Failed to read .symtab section bytes.\n");
+		free(bytes);
+		return 0;
+	}
+
 	int i = 0;
-	while(i < symtabSize)
+	while(i < symtabSection.sh_size)
 	{
 		Elf32_Sym* symbol = (Elf32_Sym*)(bytes + i);
-		
+
 		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
 			strcpy(nameBuffer, stringBytes + symbol->st_name);
@@ -108,7 +131,7 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 
 		i += sizeof(Elf32_Sym);
 	}
-	
+
 	free(stringBytes);
 	free(bytes);
 
@@ -235,7 +258,7 @@ unsigned char readSectionBytes64(const char* filePath, Elf64_Shdr* section, unsi
 	FILE* file = fopen(filePath, "r");
 	if (file) 
 	{
-		fseek(file, section.sh_offset, SEEK_SET);
+		fseek(file, section->sh_offset, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
 		return 1;
 	}
@@ -248,7 +271,7 @@ unsigned char readSectionBytes32(const char* filePath, Elf32_Shdr* section, unsi
 	FILE* file = fopen(filePath, "r");
 	if (file)
 	{
-		fseek(file, section.sh_offset, SEEK_SET);
+		fseek(file, section->sh_offset, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
 		return 1;
 	}

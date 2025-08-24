@@ -2,8 +2,8 @@
 #include "../disassembler/disassembler.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassembler, wxFrame)
-EVT_CLOSE(CloseMenu)
-EVT_BUTTON(DisassembleButtonID, DisassembleBytes)
+EVT_CLOSE(BytesDisassembler::CloseMenu)
+EVT_BUTTON(DisassembleButtonID, BytesDisassembler::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
 BytesDisassembler::BytesDisassembler() : wxFrame(nullptr, MainWindowID, "Bytes Disassembler", wxPoint(50, 50), wxSize(300, 175))
