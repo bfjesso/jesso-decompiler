@@ -5,7 +5,7 @@
 #endif
 
 #ifdef linux
-// #include "../elf-handler/elfHandler.h"
+#include "../elf-handler/elfHandler.h"
 #endif
 
 unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
@@ -57,11 +57,17 @@ unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit,
 
 	if(is64Bit)
 	{
-		getCodeSectionHeader64(file, &codeSection);
+		if (!getCodeSectionHeader64(file, &codeSection)) 
+		{
+			return 0;
+		}
 	}
 	else
 	{
-		getCodeSectionHeader32(file, &codeSection);
+		if (!getCodeSectionHeader32(file, &codeSection))
+		{
+			return 0;
+		}
 	}
 
 	result->virtualAddress = codeSection.VirtualAddress;
@@ -72,20 +78,27 @@ unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit,
 #endif
 
 #ifdef linux
-	/*if (isX64) 
+	struct Elf64_Shdr codeSection = { 0 };
+	if (is64Bit)
 	{ 
-		Elf64_Shdr sectionHeader;
-		if (getSectionHeaderByName64(filePath, ".text", &sectionHeader)) 
+		if (!getSectionHeaderByName64(filePath, ".text", &codeSection))
 		{
-			struct FileSection section = { 0 };
-			result->address = sectionHeader.;
-			result->size = codeSection.SizeOfRawData;
+			return 0;
 		}
 	}
 	else 
 	{ 
-		return getSectionBytesByName32(filePath, ".text", buffer, bufferSize);
-	}*/
+		if (!getSectionHeaderByName32(filePath, ".text", &codeSection))
+		{
+			return 0;
+		}
+	}
+
+	result->address = codeSection.sh_addr;
+	result->fileOffset = codeSection.sh_offset;
+	result->size = codeSection.sh_size;
+
+	return 1;
 #endif
 }
 
@@ -117,7 +130,27 @@ unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit,
 #endif
 
 #ifdef linux
-	return 0;
+	struct Elf64_Shdr dataSection = { 0 };
+	if (is64Bit)
+	{
+		if (!getSectionHeaderByName64(filePath, ".data", &dataSection))
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		if (!getSectionHeaderByName32(filePath, ".data", &dataSection))
+		{
+			return 0;
+		}
+	}
+
+	result->address = dataSection.sh_addr;
+	result->fileOffset = dataSection.sh_offset;
+	result->size = dataSection.sh_size;
+
+	return 1;
 #endif
 }
 
@@ -142,6 +175,14 @@ unsigned char readFileSection(const wchar_t* filePath, struct FileSection* secti
 #endif
 
 #ifdef linux
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		fseek(file, section->fileOffset, SEEK_SET);
+		fread(buffer, 1, bufferSize, file);
+		return 1;
+	}
+
 	return 0;
 #endif
 }
