@@ -183,7 +183,7 @@
     <ClCompile Include="src\gui\dataViewerMenu.cpp" />
     <ClCompile Include="src\gui\disassembleBytesMenu.cpp" />
     <ClCompile Include="src\gui\guiUtils.cpp" />
-    <ClCompile Include="src\gui\initApp.cpp" />
+    <ClCompile Include="src\gui\main.cpp" />
     <ClCompile Include="src\gui\mainGui.cpp" />
     <ClCompile Include="src\pe-handler\peHandler.c" />
   </ItemGroup>
@@ -213,7 +213,7 @@
     <ClInclude Include="src\gui\dataViewerMenu.h" />
     <ClInclude Include="src\gui\disassembleBytesMenu.h" />
     <ClInclude Include="src\gui\guiUtils.h" />
-    <ClInclude Include="src\gui\initApp.h" />
+    <ClInclude Include="src\gui\main.h" />
     <ClInclude Include="src\gui\mainGui.h" />
     <ClInclude Include="src\importedFunctions.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
