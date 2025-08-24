@@ -37,11 +37,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
 	openFileButton->SetOwnForegroundColour(textColor);
 
-	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "4096", wxPoint(0, 0), wxSize(100, 25));
-	numOfbytesInputTextCtrl->SetOwnBackgroundColour(foregroundColor);
-	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
-	numOfbytesInputTextCtrl->SetToolTip("Number of bytes to read from the file's code section");
-
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleFileButton->SetOwnForegroundColour(textColor);
@@ -95,7 +90,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(openFileButton, 0, wxALL, 10);
-	row1Sizer->Add(numOfbytesInputTextCtrl, 0, wxRIGHT | wxBOTTOM | wxTOP, 10);
 	row1Sizer->AddStretchSpacer();
 
 	row2Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
@@ -122,8 +116,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 
 	if (openDllDialog.ShowModal() != wxID_CANCEL)
 	{
-		CloseHandle(currentFile);
-		currentFile = 0;
+		currentFilePath = "";
 		disassemblyListBox->Clear();
 		instructionAddresses.clear();
 		instructionAddresses.shrink_to_fit();
@@ -142,24 +135,18 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		wxString filePath = openDllDialog.GetPath();
 		if (!filePath.empty())
 		{
-			HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-			if (!file || file == INVALID_HANDLE_VALUE)
+			currentFilePath = filePath;
+
+			if (!isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
 			{
 				this->SetTitle("Jesso Decompiler x64");
-				wxMessageBox("Error opening the file", "Failed to get handle to file");
-				currentFile = 0;
+				wxMessageBox("Error determining file architecture", "Failed to open file");
+				currentFilePath = "";
 				return;
 			}
 
-			numOfImports = getAllImports(file, is64Bit, imports, importsBufferMaxSize);
-
-			currentFile = file;
-
-			DWORD binaryType = 0;
-			if (GetBinaryTypeW(filePath.c_str().AsWChar(), &binaryType))
-			{
-				is64Bit = binaryType == SCS_64BIT_BINARY;
-			}
+			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
+			numOfImports = getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, importsBufferMaxSize);
 			
 			wxString fileName = openDllDialog.GetPath().Mid(openDllDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
@@ -169,7 +156,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		{
 			this->SetTitle("Jesso Decompiler x64");
 			wxMessageBox("Error opening the file", "Failed to open file");
-			currentFile = 0;
+			currentFilePath = "";
 			return;
 		}
 	}
@@ -179,16 +166,9 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 
 void MainGui::DisassembleButton(wxCommandEvent& e) 
 {
-	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
+	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
-		return;
-	}
-
-	unsigned int numOfBytesToRead = 1;
-	if (!numOfbytesInputTextCtrl->GetValue().ToUInt(&numOfBytesToRead))
-	{
-		wxMessageBox("Invalid number of bytes to read", "Can't read number of bytes input");
 		return;
 	}
 
@@ -200,12 +180,12 @@ void MainGui::DisassembleButton(wxCommandEvent& e)
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
 	
-	DisassembleCodeSection(numOfBytesToRead);
+	DisassembleCodeSection();
 }
 
 void MainGui::AnalyzeButton(wxCommandEvent& e) 
 {
-	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
+	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
@@ -237,27 +217,27 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
 	if (answer == wxYES) 
 	{
-		LoadData();
+		LoadDataSectionBytes();
 	}
 }
 
-void MainGui::LoadData()
+void MainGui::LoadDataSectionBytes()
 {
-	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
+	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't load data");
 		return;
 	}
 
-	if (!getDataSectionHeader(currentFile, is64Bit, &dataSection))
+	if (!getFileDataSection(currentFilePath.c_str().AsWChar(), is64Bit, &dataSection) || dataSection.size == 0)
 	{
 		wxMessageBox("Error getting data section header", "Can't get data section header");
 		return;
 	}
 
-	dataSectionBytes = new unsigned char[dataSection.SizeOfRawData];
+	dataSectionBytes = new unsigned char[dataSection.size];
 	
-	if (!readDataSection(currentFile, dataSectionBytes, &dataSection))
+	if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSection, is64Bit, dataSectionBytes, dataSection.size))
 	{
 		wxMessageBox("Error reading bytes from file data section", "Can't load data");
 
@@ -266,11 +246,17 @@ void MainGui::LoadData()
 	}
 }
 
-void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
+void MainGui::DisassembleCodeSection()
 {
-	unsigned char* bytes = new unsigned char[numOfBytesToRead];
-	IMAGE_SECTION_HEADER codeSection = { 0 };
-	if (!readCodeSection(currentFile, is64Bit, bytes, numOfBytesToRead, &codeSection, &imageBase))
+	struct FileSection codeSection = { 0 };
+	if (!getFileCodeSection(currentFilePath.c_str().AsWChar(), is64Bit, &codeSection) || codeSection.size == 0)
+	{
+		wxMessageBox("Error getting code section from file", "Can't disassemble");
+		return;
+	}
+	
+	unsigned char* bytes = new unsigned char[codeSection.size];
+	if (!readFileSection(currentFilePath.c_str().AsWChar(), &codeSection, is64Bit, bytes, codeSection.size))
 	{
 		wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 
@@ -284,9 +270,9 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 	struct DisassembledInstruction currentInstruction;
 	unsigned int currentIndex = 0;
 	unsigned int instructionNum = 1;
-	while (disassembleInstruction(&bytes[currentIndex], bytes + numOfBytesToRead - 1, &options, &currentInstruction))
+	while (disassembleInstruction(&bytes[currentIndex], bytes + codeSection.size - 1, &options, &currentInstruction))
 	{
-		uintptr_t address = imageBase + codeSection.VirtualAddress + currentIndex;
+		uintptr_t address = imageBase + codeSection.virtualAddress + currentIndex;
 
 		char addressStr[10] = { 0 };
 		sprintf(addressStr, "%llX", address);
@@ -315,7 +301,7 @@ void MainGui::DisassembleCodeSection(unsigned int numOfBytesToRead)
 
 void MainGui::DecompileFunction(unsigned short functionIndex)
 {
-	if (!currentFile || currentFile == INVALID_HANDLE_VALUE)
+	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't decompile");
 		return;
@@ -335,8 +321,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.allAddresses = instructionAddresses.data();
 	params.totalNumOfInstructions = disassembledInstructions.size();
 
-	params.dataSectionAddress = imageBase + dataSection.VirtualAddress;
-	params.dataSectionSize = dataSection.SizeOfRawData;
+	params.dataSectionAddress = imageBase + dataSection.virtualAddress;
+	params.dataSectionSize = dataSection.size;
 	params.dataSectionByte = dataSectionBytes;
 
 	LineOfC decompiledFunction[100] = { 0 };
@@ -386,7 +372,7 @@ void MainGui::FindAllFunctions()
 			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
 
 			functions[functionNum].name[0] = 0;
-			if (!getSymbolByValue(currentFile, is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
+			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
 			{
 				sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
 			}
@@ -442,8 +428,6 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	{
 		delete[] dataSectionBytes;
 	}
-	
-	CloseHandle(currentFile);
 	
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();

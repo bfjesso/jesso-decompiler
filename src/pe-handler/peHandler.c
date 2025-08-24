@@ -1,116 +1,34 @@
 #include "peHandler.h"
 
-unsigned char readCodeSection(HANDLE file, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase)
+unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64) 
 {
-	if (!file || file == INVALID_HANDLE_VALUE)
+	DWORD binaryType = 0;
+	if (GetBinaryTypeW(filePath, &binaryType))
 	{
-		return 0;
+		*isX64 = binaryType == SCS_64BIT_BINARY;
+		return 1;
 	}
 
-	if (is64Bit)
-	{
-		return readCodeSection64(file, buffer, bufferSize, codeSection, imageBase);
-	}
-	else
-	{
-		return readCodeSection32(file, buffer, bufferSize, codeSection, imageBase);
-	}
+	return 0;
 }
 
-unsigned char getDataSectionHeader(HANDLE file, unsigned char is64Bit, IMAGE_SECTION_HEADER* result)
-{
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	if (is64Bit)
-	{
-		return getDataSectionHeader64(file, result);
-	}
-	else
-	{
-		return getDataSectionHeader32(file, result);
-	}
-}
-
-unsigned char readDataSection(HANDLE file, unsigned char* buffer, IMAGE_SECTION_HEADER* dataSection)
-{
-	if (SetFilePointer(file, dataSection->PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	return ReadFile(file, buffer, dataSection->SizeOfRawData, 0, 0);
-}
-
-unsigned char getSymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, char* buffer)
-{
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	if (is64Bit)
-	{
-		return getSymbolByValue64(file, value, buffer);
-	}
-	else
-	{
-		return getSymbolByValue32(file, value, buffer);
-	}
-}
-
-int getAllImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
-{
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	if (is64Bit)
-	{
-		// return readCodeSection64(file, buffer, bufferSize, codeSection, imageBase);
-		return 0;
-	}
-	else
-	{
-		return getAllImports32(file, buffer, bufferLen);
-	}
-}
-
-static unsigned char readCodeSection32(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase) 
+unsigned long long getPEImageBase32(HANDLE file)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
 
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-	
+
 	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
 	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	*imageBase = imageNtHeaders.OptionalHeader.ImageBase;
-
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
-		{
-			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
-			*codeSection = sectionHeader;
-
-			return ReadFile(file, buffer, bufferSize, 0, 0);
-		}
-	}
-	
-	return 0;
+	return imageNtHeaders.OptionalHeader.ImageBase;
 }
 
-static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsigned int bufferSize, IMAGE_SECTION_HEADER* codeSection, uintptr_t* imageBase)
+unsigned long long getPEImageBase64(HANDLE file)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -123,7 +41,21 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	*imageBase = imageNtHeaders.OptionalHeader.ImageBase;
+	return imageNtHeaders.OptionalHeader.ImageBase;
+}
+
+unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+	
+	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
@@ -134,18 +66,49 @@ static unsigned char readCodeSection64(HANDLE file, unsigned char* buffer, unsig
 
 		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
 		{
-			if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+			// if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 
-			*codeSection = sectionHeader;
+			*result = sectionHeader;
 
-			return ReadFile(file, buffer, bufferSize, 0, 0);
+			// return ReadFile(file, buffer, bufferSize, 0, 0);
+			return 1;
 		}
 	}
 	
 	return 0;
 }
 
-static unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
+unsigned char getCodeSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+
+	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
+	{
+		IMAGE_SECTION_HEADER sectionHeader = { 0 };
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
+
+		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
+		{
+			*result = sectionHeader;
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
+unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -175,7 +138,7 @@ static unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* r
 	return 0;
 }
 
-static unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
+unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -205,7 +168,7 @@ static unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* r
 	return 0;
 }
 
-static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer)
+unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -252,7 +215,7 @@ static unsigned char getSymbolByValue32(HANDLE file, DWORD value, char* buffer)
 	return 0;
 }
 
-static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer)
+unsigned char getPESymbolByValue64(HANDLE file, DWORD value, char* buffer)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -299,7 +262,7 @@ static unsigned char getSymbolByValue64(HANDLE file, DWORD value, char* buffer)
 	return 0;
 }
 
-static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
+int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -372,7 +335,7 @@ static int getAllImports32(HANDLE file, struct ImportedFunction* buffer, int buf
 	return bufferIndex;
 }
 
-static unsigned long long rvaToFileOffset(HANDLE file, unsigned long long rva)
+unsigned long long rvaToFileOffset(HANDLE file, unsigned long long rva)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }

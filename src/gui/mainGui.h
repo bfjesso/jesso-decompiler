@@ -3,7 +3,7 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
-#include "../pe-handler/peHandler.h"
+#include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
 
@@ -20,7 +20,6 @@ public:
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
 	wxButton* openFileButton = nullptr;
-	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
 	wxButton* disassembleFileButton = nullptr;
 	wxButton* analyzeFileButton = nullptr;
 	wxListBox* disassemblyListBox = nullptr;
@@ -35,7 +34,7 @@ public:
 	wxBoxSizer* row4Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	HANDLE currentFile = 0;
+	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
 	uintptr_t imageBase = 0;
 
@@ -49,7 +48,7 @@ public:
 	std::vector<Function> functions;
 
 	unsigned char* dataSectionBytes = nullptr;
-	IMAGE_SECTION_HEADER dataSection = { 0 };
+	FileSection dataSection = { 0 };
 
 	int currentDecompiledFunc = -1;
 	
@@ -69,9 +68,9 @@ public:
 
 	void AnalyzeButton(wxCommandEvent& e);
 
-	void LoadData();
+	void LoadDataSectionBytes();
 
-	void DisassembleCodeSection(unsigned int numOfBytesToRead);
+	void DisassembleCodeSection();
 
 	void DecompileFunction(unsigned short functionIndex);
 

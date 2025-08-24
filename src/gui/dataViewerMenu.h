@@ -1,5 +1,6 @@
 #pragma once
 #include "guiUtils.h"
+#include "../file-handler/fileHandler.h"
 
 class DataViewer : public wxFrame, public Utils
 {
@@ -18,7 +19,7 @@ public:
 
 	unsigned char* bytes = nullptr;
 	uintptr_t imageBase = 0;
-	IMAGE_SECTION_HEADER dataSection;
+	FileSection dataSection;
 
 	const char* dataTypeStrs[6] = 
 	{
@@ -41,7 +42,7 @@ public:
 
 	void LoadData();
 
-	void OpenMenu(wxPoint position, uintptr_t imageBas, IMAGE_SECTION_HEADER dataSec, unsigned char* dataBytes);
+	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection dataSec, unsigned char* dataBytes);
 
 	void CloseMenu(wxCloseEvent& e);
 

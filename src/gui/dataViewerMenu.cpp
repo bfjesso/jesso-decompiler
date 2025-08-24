@@ -68,9 +68,9 @@ void DataViewer::LoadData()
 	{
 	case 0:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i++)
+		for (unsigned int i = 0; i < dataSection.size; i++)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -91,9 +91,9 @@ void DataViewer::LoadData()
 	}
 	case 1:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 2)
+		for (unsigned int i = 0; i < dataSection.size; i += 2)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -114,9 +114,9 @@ void DataViewer::LoadData()
 	}
 	case 2:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 4)
+		for (unsigned int i = 0; i < dataSection.size; i += 4)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -137,9 +137,9 @@ void DataViewer::LoadData()
 	}
 	case 3:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 8)
+		for (unsigned int i = 0; i < dataSection.size; i += 8)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -160,9 +160,9 @@ void DataViewer::LoadData()
 	}
 	case 4:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 4)
+		for (unsigned int i = 0; i < dataSection.size; i += 4)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -173,9 +173,9 @@ void DataViewer::LoadData()
 	}
 	case 5:
 	{
-		for (unsigned int i = 0; i < dataSection.SizeOfRawData; i += 8)
+		for (unsigned int i = 0; i < dataSection.size; i += 8)
 		{
-			uintptr_t address = imageBase + dataSection.VirtualAddress + i;
+			uintptr_t address = imageBase + dataSection.virtualAddress + i;
 
 			char addressStr[10];
 			sprintf(addressStr, "%llX", address);
@@ -187,7 +187,7 @@ void DataViewer::LoadData()
 	}
 }
 
-void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, IMAGE_SECTION_HEADER dataSec, unsigned char* dataBytes)
+void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection dataSec, unsigned char* dataBytes)
 {
 	position.x += 10;
 	position.y += 10;
