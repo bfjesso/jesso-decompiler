@@ -45,9 +45,6 @@
     <ClCompile Include="src\gui\guiUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\initApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\gui\mainGui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +70,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\file-handler\fileHandler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,9 +116,6 @@
     <ClInclude Include="src\gui\guiUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\initApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\gui\mainGui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -147,6 +144,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\file-handler\fileHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
