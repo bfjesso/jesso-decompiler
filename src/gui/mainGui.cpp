@@ -45,13 +45,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
+	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
 	// ---------------------
 
-	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
+	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
 
