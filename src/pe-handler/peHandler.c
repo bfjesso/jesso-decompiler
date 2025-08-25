@@ -66,11 +66,7 @@ unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
 
 		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
 		{
-			// if (SetFilePointer(file, sectionHeader.PointerToRawData, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
 			*result = sectionHeader;
-
-			// return ReadFile(file, buffer, bufferSize, 0, 0);
 			return 1;
 		}
 	}

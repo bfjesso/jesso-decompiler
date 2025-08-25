@@ -19,19 +19,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenu* toolMenu = new wxMenu();
 
 	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes Disassembler");
-	// openBytesDisassembler->SetBackgroundColour(foregroundColor);
-	// openBytesDisassembler->SetTextColour(textColor);
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
 
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
-	// openDataViewer->SetBackgroundColour(foregroundColor);
-	// openDataViewer->SetTextColour(textColor);
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSection, dataSectionBytes); }, OpenDataViewerID);
 
 	menuBar->Append(toolMenu, "Tools");
 	this->SetMenuBar(menuBar);
-
-	// ---------------------
 
 	openFileButton = new wxButton(this, OpenFileButtonID, "Open File", wxPoint(0, 0), wxSize(75, 25));
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
@@ -49,13 +43,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
-	// ---------------------
-
 	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
-
-	// ---------------------
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 9999));
 	functionsGrid->SetLabelBackgroundColour(backgroundColor);
@@ -80,8 +70,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->SetColSize(2, 200);
 	functionsGrid->SetColSize(3, 9999);
 	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-
-	// ---------------------
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -400,8 +388,6 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	int row = e.GetRow(); // row right-clicked on
 
 	wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
-	// decompile->SetBackgroundColour(foregroundColor);
-	// decompile->SetTextColour(textColor);
 	menu.Append(decompile);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
 		{
@@ -409,13 +395,9 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 		}, 100);
 
 	wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
-	// editProperties->SetBackgroundColour(foregroundColor);
-	// editProperties->SetTextColour(textColor);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
 
 	wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
-	// cpyAddr->SetBackgroundColour(foregroundColor);
-	// cpyAddr->SetTextColour(textColor);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
