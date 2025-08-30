@@ -263,7 +263,16 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 #endif
 
 #ifdef linux
-	// this is not implemented with ELF/linux yet
-	return 0;
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	if (is64Bit)
+	{
+		return getAllELFImports64(filePathChar, buffer, bufferLen);
+	}
+	else
+	{
+		return 0;
+	}
 #endif
 }
