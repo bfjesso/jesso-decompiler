@@ -395,5 +395,5 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 	free(dynsymBytes);
 	free(relapltBytes);
 
-	return 1;
+	return i;
 }
