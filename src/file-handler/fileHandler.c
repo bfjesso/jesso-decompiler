@@ -71,12 +71,11 @@ int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct F
 
 	if (is64Bit)
 	{ 
-		return getAllCodeSections64(filePathChar, buffer, bufferLen);
+		return getELFCodeSections64(filePathChar, buffer, bufferLen);
 	}
-	else 
+	else
 	{ 
-		// return getAllCodeSections32(filePathChar, buffer, bufferLen);
-		return 0;
+		return getELFCodeSections32(filePathChar, buffer, bufferLen);
 	}
 #endif
 }

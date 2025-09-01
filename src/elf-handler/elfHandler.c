@@ -138,7 +138,7 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 	return 0;
 }
 
-int getAllCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen)
+int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -149,6 +149,65 @@ int getAllCodeSections64(const char* filePath, struct FileSection* buffer, int b
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
 
 		Elf64_Shdr nameStrTable;
+		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
+		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
+
+		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
+		fseek(file, nameStrTable.sh_offset, SEEK_SET);
+		fread(sectionNames, 1, nameStrTable.sh_size, file);
+
+		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		{
+			int bufferIndex = 0;
+
+			for (int i = 0; i < elfHeader.e_shnum; i++)
+			{
+				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+				if (sectionHeader.sh_flags & SHF_EXECINSTR)
+				{
+					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
+					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
+					buffer[bufferIndex].size = sectionHeader.sh_size;
+					strcpy(buffer[bufferIndex].name, sectionNames + sectionHeader.sh_name);
+					bufferIndex++;
+				}
+			}
+
+			fclose(file);
+			return bufferIndex;
+		}
+		else
+		{
+			printf("Not a valid ELF binary.\n");
+			fclose(file);
+			return 0;
+		}
+
+		printf("Couldn't find section.\n");
+		fclose(file);
+	}
+	else
+	{
+		printf("Failed to open file.\n");
+		return 0;
+	}
+
+	return 0;
+}
+
+int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int bufferLen)
+{
+	Elf32_Ehdr elfHeader;
+	Elf32_Shdr sectionHeader;
+	FILE* file = fopen(filePath, "r");
+
+	if (file)
+	{
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+
+		Elf32_Shdr nameStrTable;
 		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
 		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
 
