@@ -4,7 +4,7 @@ extern const char* mnemonicStrs[] =
 {
 	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOVD", "VMOVD", "MOV", 
 	"LEA",
-	"ADDPS", "ADDPD", "ADDSS", "ADDSD", "ADD", "ALIGNMENT",
+	"ADDPS", "ADDPD", "ADDSS", "ADDSD", "ADD",
 	"SUB", "AND", "OR", "XOR", "SHL", "SHR", 
 
 	"CVTPS2PD", "CVTPD2PS", "CVTSS2SD", "CVTSD2SS",

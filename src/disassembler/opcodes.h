@@ -10,7 +10,7 @@ enum Mnemonic
 {
 	MOVUPS, MOVUPD, MOVSS, MOVSD, MOVSX, MOVD, VMOVD, MOV, 
 	LEA, 
-	ADDPS, ADDPD, ADDSS, ADDSD, ADD, ALIGNMENT, 
+	ADDPS, ADDPD, ADDSS, ADDSD, ADD,
 	SUB, AND, OR, XOR, SHL, SHR, 
 	
 	CVTPS2PD, CVTPD2PS, CVTSS2SD, CVTSD2SS,
@@ -71,7 +71,6 @@ enum OperandCode
 	Wps, Wpd, Wss, Wsd,
 	Hps, Hpd, Hx, Hss, Hsd,
 	
-	ALIGN,
 	A_BYTE, // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
 	NO_OPERAND_CODE
 };

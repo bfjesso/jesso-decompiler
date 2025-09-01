@@ -42,9 +42,8 @@ public:
 	ImportedFunction imports[importsBufferMaxSize] = { 0 };
 	int numOfImports = 0;
 
-	std::vector<std::vector<unsigned long long>> instructionAddresses;
-	std::vector<std::vector<DisassembledInstruction>> disassembledInstructions;
-	std::vector<FileSection> codeSections;
+	std::vector<unsigned long long> instructionAddresses;
+	std::vector<DisassembledInstruction> disassembledInstructions;
 
 	std::vector<Function> functions;
 

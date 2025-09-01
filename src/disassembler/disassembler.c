@@ -98,19 +98,6 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	buffer[bufferIndex] = ' ';
 	bufferIndex++;
 
-	if(instruction->opcode == ALIGNMENT)
-	{
-		char sizeBuffer[4];
-		sprintf(sizeBuffer, "0x%X", instruction->numOfBytes);
-		strcpy(buffer + bufferIndex, sizeBuffer);
-		bufferIndex += (unsigned char)strlen(sizeBuffer);
-
-		buffer[bufferIndex] = 0;
-		bufferIndex++;
-
-		return bufferIndex <= bufferSize;
-	}
-
 	for (int i = 0; i < 3; i++) 
 	{
 		if (instruction->operands[i].type == NO_OPERAND) { continue; }
@@ -929,10 +916,6 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			break;
 		case A_BYTE:
 			(*bytesPtr)++;
-			break;
-		case ALIGN:
-			if((*bytesPtr)[0] == 0x80) { (*bytesPtr) += 5; }
-			else if((*bytesPtr)[0] == 0x84) { (*bytesPtr) += 6; }
 			break;
 		}
 	}
