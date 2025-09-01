@@ -1,7 +1,7 @@
 #pragma once
 #include "functions.h"
 #include "../disassembler/disassembler.h"
-#include "../importedFunctions.h"
+#include "../fileStructs.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -125,7 +125,7 @@
     <ClInclude Include="src\decompiler\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\importedFunctions.h">
+    <ClInclude Include="src\fileStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\dataTypes.h">

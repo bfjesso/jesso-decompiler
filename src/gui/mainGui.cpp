@@ -167,8 +167,11 @@ void MainGui::DisassembleButton(wxCommandEvent& e)
 
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
+
+	codeSections.clear();
+	codeSections.shrink_to_fit();
 	
-	DisassembleCodeSection();
+	DisassembleCodeSections();
 }
 
 void MainGui::AnalyzeButton(wxCommandEvent& e) 
@@ -234,57 +237,67 @@ void MainGui::LoadDataSectionBytes()
 	}
 }
 
-void MainGui::DisassembleCodeSection()
+void MainGui::DisassembleCodeSections()
 {
-	struct FileSection codeSection = { 0 };
-	if (!getFileCodeSection(currentFilePath.c_str().AsWChar(), is64Bit, &codeSection) || codeSection.size == 0)
-	{
-		wxMessageBox("Error getting code section from file", "Can't disassemble");
-		return;
-	}
-	
-	unsigned char* bytes = new unsigned char[codeSection.size];
-	if (!readFileSection(currentFilePath.c_str().AsWChar(), &codeSection, is64Bit, bytes, codeSection.size))
-	{
-		wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
+	FileSection buffer[10];
+	int numOfCodeSections = getFileCodeSections(currentFilePath.c_str().AsWChar(), is64Bit, buffer, 10);
 
-		delete[] bytes;
+	if (numOfCodeSections == 0)
+	{
+		wxMessageBox("No code sections found in file", "Can't disassemble");
 		return;
 	}
 
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 
-	struct DisassembledInstruction currentInstruction;
-	unsigned int currentIndex = 0;
-	unsigned int instructionNum = 1;
-	while (disassembleInstruction(&bytes[currentIndex], bytes + codeSection.size - 1, &options, &currentInstruction))
+	for (int i = 0; i < numOfCodeSections; i++)
 	{
-		unsigned long long address = imageBase + codeSection.virtualAddress + currentIndex;
+		unsigned char* bytes = new unsigned char[buffer[i].size];
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &buffer[i], is64Bit, bytes, buffer[i].size))
+		{
+			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 
-		char addressStr[10] = { 0 };
-		sprintf(addressStr, "%llX", address);
+			delete[] bytes;
+			return;
+		}
 
-		currentIndex += currentInstruction.numOfBytes;
+		instructionAddresses.push_back({});
+		disassembledInstructions.push_back({});
+
+		struct DisassembledInstruction currentInstruction;
+		unsigned int currentIndex = 0;
+		unsigned int instructionNum = 1;
+		while (disassembleInstruction(&bytes[currentIndex], bytes + buffer[i].size - 1, &options, &currentInstruction))
+		{
+			unsigned long long address = imageBase + buffer[i].virtualAddress + currentIndex;
+
+			char addressStr[20] = { 0 };
+			sprintf(addressStr, "%s %llX", buffer[i].name, address);
+
+			currentIndex += currentInstruction.numOfBytes;
+
+			char buffer[100] = { 0 };
+			if (instructionToStr(&currentInstruction, buffer, 100))
+			{
+				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
+
+				instructionAddresses[i].push_back(address);
+				disassembledInstructions[i].push_back(currentInstruction);
+			}
+			else
+			{
+				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\tERROR");
+				break;
+			}
+
+			instructionNum++;
+		}
+
+		delete[] bytes;
 		
-		char buffer[100] = { 0 };
-		if (instructionToStr(&currentInstruction, buffer, 100))
-		{
-			disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
-
-			instructionAddresses.push_back(address);
-			disassembledInstructions.push_back(currentInstruction);
-		}
-		else 
-		{
-			disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\tERROR");
-			break;
-		}
-
-		instructionNum++;
+		codeSections.push_back(buffer[i]);
 	}
-
-	delete[] bytes;
 }
 
 void MainGui::DecompileFunction(unsigned short functionIndex)
@@ -297,7 +310,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	decompilationListBox->Clear();
 
-	DecompilationParameters params = {};
+	DecompilationParameters params = { 0 };
 	params.functions = &functions[0];
 	params.numOfFunctions = functions.size();
 	params.imports = imports;
@@ -305,9 +318,13 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.currentFunc = &functions[functionIndex];
 	params.startInstructionIndex = 0;
 
-	params.allInstructions = disassembledInstructions.data();
-	params.allAddresses = instructionAddresses.data();
-	params.totalNumOfInstructions = disassembledInstructions.size();
+	params.allInstructions = disassembledInstructions[0].data();
+	params.allAddresses = instructionAddresses[0].data();
+	for (int i = 0; i < codeSections.size(); i++) 
+	{
+		params.totalNumOfInstructions += disassembledInstructions[i].size();
+	}
+	
 
 	params.dataSectionAddress = imageBase + dataSection.virtualAddress;
 	params.dataSectionSize = dataSection.size;
@@ -338,42 +355,43 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 void MainGui::FindAllFunctions() 
 {
-	int numOfInstructions = disassembledInstructions.size();
-
 	int functionNum = 0;
-
-	functions.push_back({ 0 });
 	
-	int instructionIndex = 0;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex))
+	for (int i = 0; i < codeSections.size(); i++) 
 	{
-		numOfInstructions -= functions[functionNum].numOfInstructions;
-
-		functionsGrid->AppendRows(1);
-
-		if (functions[functionNum].addresses) 
+		int numOfInstructions = disassembledInstructions[i].size();
+		functions.push_back({ 0 });
+		int instructionIndex = 0;
+		while (instructionIndex < disassembledInstructions[i].size() && findNextFunction(&disassembledInstructions[i][instructionIndex], &instructionAddresses[i][instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex))
 		{
-			char addressStr[10];
-			sprintf(addressStr, "%llX", *functions[functionNum].addresses);
-			functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
+			numOfInstructions -= functions[functionNum].numOfInstructions;
 
-			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
+			functionsGrid->AppendRows(1);
 
-			functions[functionNum].name[0] = 0;
-			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
+			if (functions[functionNum].addresses)
 			{
-				sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
+				char addressStr[10];
+				sprintf(addressStr, "%llX", *functions[functionNum].addresses);
+				functionsGrid->SetCellValue(functionNum, 0, wxString(addressStr));
+
+				functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
+
+				functions[functionNum].name[0] = 0;
+				if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
+				{
+					sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
+				}
 			}
+
+			functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name));
+			functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
+			functionNum++;
+
+			functions.push_back({ 0 });
 		}
 
-		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name));
-		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
-		functionNum++;
-
-		functions.push_back({ 0 });
+		functions.pop_back(); // remove last empty one
 	}
-
-	functions.pop_back(); // remove last empty one
 
 	if (functions.size() > 0) 
 	{

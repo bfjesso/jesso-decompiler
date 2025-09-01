@@ -1,7 +1,7 @@
 #pragma once
 # define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "../importedFunctions.h"
+#include "../fileStructs.h"
 
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
 
@@ -9,9 +9,9 @@ unsigned long long getPEImageBase32(HANDLE file);
 
 unsigned long long getPEImageBase64(HANDLE file);
 
-unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result);
+int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
 
-unsigned char getCodeSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result);
+int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
 
 unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result);
 

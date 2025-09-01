@@ -1,13 +1,6 @@
 #pragma once
-#include "../importedFunctions.h"
+#include "../fileStructs.h"
 #include <wchar.h>
-
-struct FileSection 
-{
-	unsigned long long virtualAddress;
-	unsigned long long fileOffset;
-	int size;
-};
 
 #ifdef __cplusplus
 extern "C"
@@ -18,7 +11,7 @@ extern "C"
 
 	unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64Bit);
 
-	unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* result);
+	int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
 	unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* result);
 

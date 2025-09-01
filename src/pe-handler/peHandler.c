@@ -44,7 +44,7 @@ unsigned long long getPEImageBase64(HANDLE file)
 	return imageNtHeaders.OptionalHeader.ImageBase;
 }
 
-unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
+int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -57,6 +57,8 @@ unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
+	int bufferIndex = 0;
+
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
@@ -64,17 +66,26 @@ unsigned char getCodeSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
 		{
-			*result = sectionHeader;
-			return 1;
+			if (bufferIndex >= bufferLen)
+			{
+				break;
+			}
+			
+			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
+			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
+			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
+			strcpy(buffer[bufferIndex].name, sectionHeader.Name);
+			
+			bufferIndex++;
 		}
 	}
 	
-	return 0;
+	return bufferIndex;
 }
 
-unsigned char getCodeSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
+int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -87,6 +98,8 @@ unsigned char getCodeSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
+	int bufferIndex = 0;
+
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
@@ -94,14 +107,22 @@ unsigned char getCodeSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result)
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.VirtualAddress == imageNtHeaders.OptionalHeader.BaseOfCode)
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
 		{
-			*result = sectionHeader;
-			return 1;
+			if (bufferIndex >= bufferLen)
+			{
+				break;
+			}
+
+			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
+			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
+			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
+
+			bufferIndex++;
 		}
 	}
-	
-	return 0;
+
+	return bufferIndex;
 }
 
 unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result)

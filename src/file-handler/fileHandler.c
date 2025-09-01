@@ -46,7 +46,7 @@ unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64B
 #endif
 }
 
-unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* result)
+int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -55,28 +55,14 @@ unsigned char getFileCodeSection(const wchar_t* filePath, unsigned char is64Bit,
 		return 0;
 	}
 
-	IMAGE_SECTION_HEADER codeSection = { 0 };
-
 	if(is64Bit)
 	{
-		if (!getCodeSectionHeader64(file, &codeSection)) 
-		{
-			return 0;
-		}
+		return getCodeSectionHeaders64(file, buffer, bufferLen);
 	}
 	else
 	{
-		if (!getCodeSectionHeader32(file, &codeSection))
-		{
-			return 0;
-		}
+		return getCodeSectionHeaders32(file, buffer, bufferLen);
 	}
-
-	result->virtualAddress = codeSection.VirtualAddress;
-	result->fileOffset = codeSection.PointerToRawData;
-	result->size = codeSection.SizeOfRawData;
-
-	return 1;
 #endif
 
 #ifdef linux
