@@ -2,13 +2,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <elf.h>
-#include "../importedFunctions.h"
+#include "../fileStructs.h"
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);
 
 unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, char* nameBuffer);
 
 unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, char* nameBuffer);
+
+int getAllCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen);
+
+int getAllCodeSections32(const char* filePath, struct FileSection* buffer, int bufferLen);
 
 unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_Shdr* result);
 

@@ -31,7 +31,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	openFileButton->SetOwnBackgroundColour(foregroundColor);
 	openFileButton->SetOwnForegroundColour(textColor);
 
-	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
+	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleFileButton->SetOwnForegroundColour(textColor);
 
@@ -239,7 +239,7 @@ void MainGui::LoadDataSectionBytes()
 
 void MainGui::DisassembleCodeSections()
 {
-	FileSection buffer[10];
+	FileSection buffer[10] = { 0 };
 	int numOfCodeSections = getFileCodeSections(currentFilePath.c_str().AsWChar(), is64Bit, buffer, 10);
 
 	if (numOfCodeSections == 0)
@@ -280,14 +280,14 @@ void MainGui::DisassembleCodeSections()
 			char buffer[100] = { 0 };
 			if (instructionToStr(&currentInstruction, buffer, 100))
 			{
-				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
+				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t\t" + wxString(addressStr) + "\t\t" + wxString(buffer));
 
 				instructionAddresses[i].push_back(address);
 				disassembledInstructions[i].push_back(currentInstruction);
 			}
 			else
 			{
-				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + wxString(addressStr) + "\tERROR");
+				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t\t" + wxString(addressStr) + "\t\tERROR");
 				break;
 			}
 

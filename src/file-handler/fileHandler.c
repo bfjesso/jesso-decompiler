@@ -71,30 +71,13 @@ int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct F
 
 	if (is64Bit)
 	{ 
-		Elf64_Shdr codeSection;
-		if (!getSectionHeaderByName64(filePathChar, ".text", &codeSection))
-		{
-			return 0;
-		}
-
-		result->virtualAddress = codeSection.sh_addr;
-		result->fileOffset = codeSection.sh_offset;
-		result->size = codeSection.sh_size;
+		return getAllCodeSections64(filePathChar, buffer, bufferLen);
 	}
 	else 
 	{ 
-		Elf32_Shdr codeSection;
-		if (!getSectionHeaderByName32(filePathChar, ".text", &codeSection))
-		{
-			return 0;
-		}
-
-		result->virtualAddress = codeSection.sh_addr;
-		result->fileOffset = codeSection.sh_offset;
-		result->size = codeSection.sh_size;
+		// return getAllCodeSections32(filePathChar, buffer, bufferLen);
+		return 0;
 	}
-
-	return 1;
 #endif
 }
 
