@@ -93,6 +93,10 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, struct
 	if (instruction->operands[0].type == MEM_ADDRESS)
 	{
 		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
+		if(compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
+		{
+			jmpAddress += params.allAddresses[params.startInstructionIndex + 1];
+		}
 	}
 
 	int instructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, jmpAddress);
