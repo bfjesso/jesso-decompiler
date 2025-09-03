@@ -330,6 +330,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 			strcpy(compOperator, "<=");
 			break;
 		case JL_SHORT:
+		case JB_SHORT:
 			strcpy(compOperator, ">=");
 			break;
 		case JLE_SHORT:
@@ -358,6 +359,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 			strcpy(compOperator, ">");
 			break;
 		case JL_SHORT:
+		case JB_SHORT:
 			strcpy(compOperator, "<");
 			break;
 		case JLE_SHORT:
