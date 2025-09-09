@@ -107,14 +107,24 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 
 static unsigned char getValueFromDataSection(struct DecompilationParameters params, enum PrimitiveType type, unsigned long long address, char* resultBuffer)
 {
-	if (address < params.dataSectionAddress) 
+	if (address < params.imageBase + params.dataSections[0].virtualAddress)
 	{
 		return 0;
 	}
 	
-	int dataSectionIndex = address - params.dataSectionAddress;
+	int dataSectionIndex = -1;
+	int totalSize = 0;
+	for (int i = 0; i < params.numOfDataSections; i++)
+	{
+		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
+		{
+			dataSectionIndex = address - (params.imageBase + params.dataSections[i].virtualAddress);
+		}
 
-	if (dataSectionIndex >= params.dataSectionSize) 
+		totalSize += params.dataSections[i].size;
+	}
+
+	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
 	{
 		return 0;
 	}

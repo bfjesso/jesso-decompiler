@@ -13,7 +13,7 @@ extern "C"
 
 	int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-	unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* result);
+	int getFileDataSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
 	unsigned char readFileSection(const wchar_t* filePath, struct FileSection* section, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize);
 

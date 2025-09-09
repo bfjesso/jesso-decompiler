@@ -48,7 +48,9 @@ public:
 	std::vector<Function> functions;
 
 	unsigned char* dataSectionBytes = nullptr;
-	FileSection dataSection = { 0 };
+	static const int dataSectionsBufferSize = 10;
+	FileSection dataSections[dataSectionsBufferSize] = { 0 };
+	int numOfDataSections = 0;
 
 	int currentDecompiledFunc = -1;
 	

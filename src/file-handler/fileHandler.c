@@ -80,7 +80,7 @@ int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct F
 #endif
 }
 
-unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* result)
+int getFileDataSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -89,22 +89,14 @@ unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit,
 		return 0;
 	}
 
-	IMAGE_SECTION_HEADER dataSection = { 0 };
-
 	if (is64Bit)
 	{
-		getDataSectionHeader64(file, &dataSection);
+		return getDataSectionHeaders64(file, buffer, bufferLen);
 	}
 	else
 	{
-		getDataSectionHeader32(file, &dataSection);
+		return getDataSectionHeaders32(file, buffer, bufferLen);
 	}
-
-	result->virtualAddress = dataSection.VirtualAddress;
-	result->fileOffset = dataSection.PointerToRawData;
-	result->size = dataSection.SizeOfRawData;
-
-	return 1;
 #endif
 
 #ifdef linux
@@ -113,30 +105,12 @@ unsigned char getFileDataSection(const wchar_t* filePath, unsigned char is64Bit,
 
 	if (is64Bit)
 	{
-		Elf64_Shdr dataSection;
-		if (!getSectionHeaderByName64(filePathChar, ".data", &dataSection))
-		{
-			return 0;
-		}
-
-		result->virtualAddress = dataSection.sh_addr;
-		result->fileOffset = dataSection.sh_offset;
-		result->size = dataSection.sh_size;
+		return getELFDataSections64(filePathChar, buffer, bufferLen);
 	}
 	else
 	{
-		Elf32_Shdr dataSection;
-		if (!getSectionHeaderByName32(filePathChar, ".data", &dataSection))
-		{
-			return 0;
-		}
-
-		result->virtualAddress = dataSection.sh_addr;
-		result->fileOffset = dataSection.sh_offset;
-		result->size = dataSection.sh_size;
+		return getELFDataSections32(filePathChar, buffer, bufferLen);
 	}
-
-	return 1;
 #endif
 }
 

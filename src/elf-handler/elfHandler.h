@@ -14,6 +14,10 @@ int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int b
 
 int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int bufferLen);
 
+int getELFDataSections64(const char* filePath, struct FileSection* buffer, int bufferLen);
+
+int getELFDataSections32(const char* filePath, struct FileSection* buffer, int bufferLen);
+
 unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_Shdr* result);
 
 unsigned char getSectionHeaderByName32(const char* filePath, char* name, Elf32_Shdr* result);

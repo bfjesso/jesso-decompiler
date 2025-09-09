@@ -19,7 +19,8 @@ public:
 
 	unsigned char* bytes = nullptr;
 	uintptr_t imageBase = 0;
-	FileSection dataSection;
+	FileSection* dataSections;
+	int numOfDataSections = 0;
 
 	const char* dataTypeStrs[6] = 
 	{
@@ -42,7 +43,7 @@ public:
 
 	void LoadData();
 
-	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection dataSec, unsigned char* dataBytes);
+	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* dataSecs, int numOfDataSecs, unsigned char* dataBytes);
 
 	void CloseMenu(wxCloseEvent& e);
 

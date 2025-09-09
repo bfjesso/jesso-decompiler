@@ -13,9 +13,9 @@ int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 
 int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
 
-unsigned char getDataSectionHeader32(HANDLE file, IMAGE_SECTION_HEADER* result);
+int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
 
-unsigned char getDataSectionHeader64(HANDLE file, IMAGE_SECTION_HEADER* result);
+int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
 
 unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer);
 

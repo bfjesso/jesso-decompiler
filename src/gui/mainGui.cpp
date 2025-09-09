@@ -22,7 +22,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
 
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSection, dataSectionBytes); }, OpenDataViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
 
 	menuBar->Append(toolMenu, "Tools");
 	this->SetMenuBar(menuBar);
@@ -196,7 +196,7 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	
 	FindAllFunctions();
 
-	memset(&dataSection, 0, sizeof(dataSection));
+	numOfDataSections = 0;
 	if (dataSectionBytes)
 	{
 		delete[] dataSectionBytes;
@@ -217,20 +217,31 @@ void MainGui::LoadDataSectionBytes()
 		return;
 	}
 
-	if (!getFileDataSection(currentFilePath.c_str().AsWChar(), is64Bit, &dataSection) || dataSection.size == 0)
+	numOfDataSections = getFileDataSections(currentFilePath.c_str().AsWChar(), is64Bit, dataSections, dataSectionsBufferSize);
+
+	if (numOfDataSections == 0)
 	{
-		wxMessageBox("Error getting data section header", "Can't get data section header");
+		wxMessageBox("Failed to get any data section headers", "Can't get data section header");
 		return;
 	}
 
-	dataSectionBytes = new unsigned char[dataSection.size];
-	
-	if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSection, is64Bit, dataSectionBytes, dataSection.size))
+	int totalSize = 0;
+	for (int i = 0; i < numOfDataSections; i++) 
 	{
-		wxMessageBox("Error reading bytes from file data section", "Can't load data");
+		totalSize += dataSections[i].size;
+	}
 
-		delete[] dataSectionBytes;
-		return;
+	dataSectionBytes = new unsigned char[totalSize];
+	
+	for (int i = 0; i < numOfDataSections; i++)
+	{
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSections[i], is64Bit, dataSectionBytes + (i != 0 ? dataSections[i - 1].size : 0), dataSections[i].size))
+		{
+			wxMessageBox("Error reading bytes from file data section", "Can't load data");
+
+			delete[] dataSectionBytes;
+			return;
+		}
 	}
 }
 
@@ -314,8 +325,9 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.allAddresses = instructionAddresses.data();
 	params.totalNumOfInstructions = disassembledInstructions.size();
 	
-	params.dataSectionAddress = imageBase + dataSection.virtualAddress;
-	params.dataSectionSize = dataSection.size;
+	params.imageBase = imageBase;
+	params.dataSections = dataSections;
+	params.numOfDataSections = numOfDataSections;
 	params.dataSectionByte = dataSectionBytes;
 
 	LineOfC decompiledFunction[100] = { 0 };

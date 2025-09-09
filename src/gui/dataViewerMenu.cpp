@@ -11,7 +11,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	SetOwnBackgroundColour(backgroundColor);
 
 	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(6, dataTypeStrs));
-	dataTypeChoice->SetSelection(0);
+	dataTypeChoice->SetSelection(2);
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
 
@@ -37,7 +37,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	row1Sizer->Add(dataTypeChoice, 0, wxALL, 10);
 	row1Sizer->Add(numOfbytesInputTextCtrl, 0, wxTOP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(hexCheckBox, 0, wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(hexCheckBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
 	row3Sizer->Add(dataListBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
@@ -63,130 +63,136 @@ void DataViewer::LoadData()
 
 	dataListBox->Clear();
 
-	switch (dataTypeChoice->GetSelection())
+	int baseIndex = 0;
+	for (int j = 0; j < numOfDataSections; j++) 
 	{
-	case 0:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i++)
+		switch (dataTypeChoice->GetSelection())
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
-
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
-
-			char dataStr[50];
-			if (hexCheckBox->IsChecked()) 
-			{
-				sprintf(dataStr, "%X", bytes[i]);
-			}
-			else 
-			{
-				sprintf(dataStr, "%d", bytes[i]);
-			}
-
-			dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
-		}
-		break;
-	}
-	case 1:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i += 2)
+		case 0:
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
-
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
-
-			char dataStr[50];
-			if (hexCheckBox->IsChecked())
+			for (unsigned int i = 0; i < dataSections[j].size; i++)
 			{
-				sprintf(dataStr, "%X", *(short*)(bytes + i));
-			}
-			else
-			{
-				sprintf(dataStr, "%d", *(short*)(bytes + i));
-			}
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
-			dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
+
+				char dataStr[50];
+				if (hexCheckBox->IsChecked())
+				{
+					sprintf(dataStr, "%X", bytes[i + baseIndex]);
+				}
+				else
+				{
+					sprintf(dataStr, "%d", bytes[i + baseIndex]);
+				}
+
+				dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
+			}
+			break;
 		}
-		break;
-	}
-	case 2:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i += 4)
+		case 1:
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
-
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
-
-			char dataStr[50];
-			if (hexCheckBox->IsChecked())
+			for (unsigned int i = 0; i < dataSections[j].size; i += 2)
 			{
-				sprintf(dataStr, "%X", *(int*)(bytes + i));
-			}
-			else
-			{
-				sprintf(dataStr, "%d", *(int*)(bytes + i));
-			}
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
-			dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
+
+				char dataStr[50];
+				if (hexCheckBox->IsChecked())
+				{
+					sprintf(dataStr, "%X", *(short*)(bytes + baseIndex + i));
+				}
+				else
+				{
+					sprintf(dataStr, "%d", *(short*)(bytes + baseIndex + i));
+				}
+
+				dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
+			}
+			break;
 		}
-		break;
-	}
-	case 3:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i += 8)
+		case 2:
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
-
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
-
-			char dataStr[50];
-			if (hexCheckBox->IsChecked())
+			for (unsigned int i = 0; i < dataSections[j].size; i += 4)
 			{
-				sprintf(dataStr, "%llX", *(long long*)(bytes + i));
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
+
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
+
+				char dataStr[50];
+				if (hexCheckBox->IsChecked())
+				{
+					sprintf(dataStr, "%X", *(int*)(bytes + baseIndex + i));
+				}
+				else
+				{
+					sprintf(dataStr, "%d", *(int*)(bytes + baseIndex + i));
+				}
+
+				dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
 			}
-			else
+			break;
+		}
+		case 3:
+		{
+			for (unsigned int i = 0; i < dataSections[j].size; i += 8)
 			{
-				sprintf(dataStr, "%lld", *(long long*)(bytes + i));
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
+
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
+
+				char dataStr[50];
+				if (hexCheckBox->IsChecked())
+				{
+					sprintf(dataStr, "%llX", *(long long*)(bytes + baseIndex + i));
+				}
+				else
+				{
+					sprintf(dataStr, "%lld", *(long long*)(bytes + baseIndex + i));
+				}
+
+				dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
 			}
-
-			dataListBox->AppendString(wxString(addressStr) + "\t" + wxString(dataStr));
+			break;
 		}
-		break;
-	}
-	case 4:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i += 4)
+		case 4:
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
+			for (unsigned int i = 0; i < dataSections[j].size; i += 4)
+			{
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
 
-			dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(float*)(bytes + i)));
+				dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(float*)(bytes + baseIndex + i)));
+			}
+			break;
 		}
-		break;
-	}
-	case 5:
-	{
-		for (unsigned int i = 0; i < dataSection.size; i += 8)
+		case 5:
 		{
-			uintptr_t address = imageBase + dataSection.virtualAddress + i;
+			for (unsigned int i = 0; i < dataSections[j].size; i += 8)
+			{
+				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
-			char addressStr[10];
-			sprintf(addressStr, "%llX", address);
+				char addressStr[20];
+				sprintf(addressStr, "%s %llX", dataSections[j].name, address);
 
-			dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(double*)(bytes + i)));
+				dataListBox->AppendString(wxString(addressStr) + "\t" + std::to_string(*(double*)(bytes + baseIndex + i)));
+			}
+			break;
 		}
-		break;
-	}
+		}
+
+		baseIndex += dataSections[j].size;
 	}
 }
 
-void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection dataSec, unsigned char* dataBytes)
+void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* dataSecs, int numOfDataSecs, unsigned char* dataBytes)
 {
 	position.x += 10;
 	position.y += 10;
@@ -195,7 +201,8 @@ void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection data
 	Raise();
 
 	imageBase = imageBas;
-	dataSection = dataSec;
+	dataSections = dataSecs;
+	numOfDataSections = numOfDataSecs;
 	bytes = dataBytes;
 
 	LoadData();

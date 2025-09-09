@@ -27,8 +27,9 @@ struct DecompilationParameters
 	unsigned long long* allAddresses;
 	int totalNumOfInstructions;
 
-	unsigned long long dataSectionAddress;
-	int dataSectionSize;
+	unsigned long long imageBase;
+	struct FileSection* dataSections;
+	int numOfDataSections;
 	unsigned char* dataSectionByte;
 };
 
