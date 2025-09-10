@@ -8,13 +8,11 @@ public:
 	DataViewer();
 
 	wxChoice* dataTypeChoice = nullptr;
-	wxTextCtrl* numOfbytesInputTextCtrl = nullptr;
 	wxCheckBox* hexCheckBox = nullptr;
 	wxListBox* dataListBox = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
-	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	unsigned char* bytes = nullptr;

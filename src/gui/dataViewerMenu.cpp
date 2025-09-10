@@ -15,11 +15,6 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
 
-	numOfbytesInputTextCtrl = new wxTextCtrl(this, wxID_ANY, "1000", wxPoint(0, 0), wxSize(100, 25));
-	numOfbytesInputTextCtrl->SetOwnBackgroundColour(foregroundColor);
-	numOfbytesInputTextCtrl->SetOwnForegroundColour(textColor);
-	numOfbytesInputTextCtrl->SetToolTip("Number of bytes to read from the file's code section");
-
 	hexCheckBox = new wxCheckBox(this, HexCheckBoxID, "Hexadecimal");
 	hexCheckBox->SetOwnForegroundColour(textColor);
 
@@ -31,19 +26,15 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(dataTypeChoice, 0, wxALL, 10);
-	row1Sizer->Add(numOfbytesInputTextCtrl, 0, wxTOP | wxBOTTOM | wxRIGHT, 10);
+	row1Sizer->Add(hexCheckBox, 0, wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(hexCheckBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
-
-	row3Sizer->Add(dataListBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(dataListBox, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
 	vSizer->Add(row1Sizer, 0, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
-	vSizer->Add(row3Sizer, 0, wxEXPAND);
 
 	SetSizer(vSizer);
 }
@@ -80,7 +71,7 @@ void DataViewer::LoadData()
 				char dataStr[50];
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStr, "%X", bytes[i + baseIndex]);
+					sprintf(dataStr, "0x%X", bytes[i + baseIndex]);
 				}
 				else
 				{
@@ -103,7 +94,7 @@ void DataViewer::LoadData()
 				char dataStr[50];
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStr, "%X", *(short*)(bytes + baseIndex + i));
+					sprintf(dataStr, "0x%X", *(short*)(bytes + baseIndex + i));
 				}
 				else
 				{
@@ -126,7 +117,7 @@ void DataViewer::LoadData()
 				char dataStr[50];
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStr, "%X", *(int*)(bytes + baseIndex + i));
+					sprintf(dataStr, "0x%X", *(int*)(bytes + baseIndex + i));
 				}
 				else
 				{
@@ -149,7 +140,7 @@ void DataViewer::LoadData()
 				char dataStr[50];
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStr, "%llX", *(long long*)(bytes + baseIndex + i));
+					sprintf(dataStr, "0x%llX", *(long long*)(bytes + baseIndex + i));
 				}
 				else
 				{
