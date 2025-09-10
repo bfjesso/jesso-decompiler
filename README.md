@@ -33,13 +33,8 @@ disassembled instructions.
 Depending on if you run the Windows or Linux build of JDC, it will either handle PE (portable executable) files, or ELF (executable and linkable format)
 files. Either way, what JDC does is essentially the same:
 1. Find import information, including function names and addresses
-2. Get bytes from code section (usually ".text")
-3. Get bytes from data section for resolving constants in decompiler
-
-Right now to find the code section, jdc will search for the section named ".text" on Linux and use "imageNtHeaders.OptionalHeader.BaseOfCode" on 
-Windows. 
-For the data section, jdc looks for the section named ".data" on Linux and uses the section header's "Characteristics" field and checks for the flag
-"IMAGE_SCN_CNT_INITIALIZED_DATA".
+2. Get bytes from all sections with executable instructions (like ".text")
+3. Get bytes from all section with data for resolving constants in decompiler
 
 ## Disassembling
 
