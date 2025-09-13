@@ -9,7 +9,7 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 
 	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
 	{
-		unsigned long long calleeAddress = address + instruction->operands[0].immediate;
+		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
 		int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
 		if (calleIndex == -1)

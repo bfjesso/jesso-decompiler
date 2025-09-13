@@ -38,3 +38,5 @@ unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment,
 void wrapStrInParentheses(char* str);
 
 unsigned long long resolveJmpChain(struct DecompilationParameters params, struct DisassembledInstruction* instruction, unsigned long long address);
+
+unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result);

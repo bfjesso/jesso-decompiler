@@ -98,6 +98,13 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, struct
 			jmpAddress += params.allAddresses[params.startInstructionIndex + 1];
 		}
 	}
+	else if (instruction->operands[0].type == REGISTER)
+	{
+		if(!operandToValue(params, &instruction->operands[0], &jmpAddress))
+		{
+			return 0;
+		}
+	}
 
 	int instructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
@@ -111,4 +118,57 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, struct
 	}
 
 	return jmpAddress;
+}
+
+unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			*result = params.currentFunc->addresses[params.startInstructionIndex + 1] + operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else if (operand->memoryAddress.reg == NO_REG)
+		{
+			*result = operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else
+		{
+			struct Operand baseReg = { 0 };
+			baseReg.type = REGISTER;
+			baseReg.reg = operand->memoryAddress.reg;
+
+			unsigned long long regValue = 0;
+			if (!operandToValue(params, &baseReg, &regValue))
+			{
+				return 0;
+			}
+
+			*result = regValue + operand->memoryAddress.constDisplacement;
+		}
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		for(int i = params.startInstructionIndex - 1; i >= 0; i--)
+		{
+			if(params.currentFunc->instructions[i].opcode == MOV && compareRegisters(params.currentFunc->instructions[i].operands[0].reg, operand->reg))
+			{
+				params.startInstructionIndex = i;
+				return operandToValue(params, &params.currentFunc->instructions[i].operands[1], result);
+			}
+		}
+
+		return 0;
+	}
+
+	return 0;
 }
