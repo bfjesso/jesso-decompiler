@@ -61,7 +61,7 @@ void DataViewer::LoadData()
 		{
 		case 0:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i++)
+			for (int i = 0; i < dataSections[j].size; i++)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
@@ -84,7 +84,7 @@ void DataViewer::LoadData()
 		}
 		case 1:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i += 2)
+			for (int i = 0; i < dataSections[j].size; i += 2)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
@@ -107,7 +107,7 @@ void DataViewer::LoadData()
 		}
 		case 2:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i += 4)
+			for (int i = 0; i < dataSections[j].size; i += 4)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
@@ -130,7 +130,7 @@ void DataViewer::LoadData()
 		}
 		case 3:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i += 8)
+			for (int i = 0; i < dataSections[j].size; i += 8)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
@@ -153,7 +153,7 @@ void DataViewer::LoadData()
 		}
 		case 4:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i += 4)
+			for (int i = 0; i < dataSections[j].size; i += 4)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 
@@ -166,7 +166,7 @@ void DataViewer::LoadData()
 		}
 		case 5:
 		{
-			for (unsigned int i = 0; i < dataSections[j].size; i += 8)
+			for (int i = 0; i < dataSections[j].size; i += 8)
 			{
 				uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 

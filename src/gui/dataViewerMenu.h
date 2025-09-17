@@ -17,7 +17,7 @@ public:
 
 	unsigned char* bytes = nullptr;
 	uintptr_t imageBase = 0;
-	FileSection* dataSections;
+	FileSection* dataSections = nullptr;
 	int numOfDataSections = 0;
 
 	const char* dataTypeStrs[6] = 

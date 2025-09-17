@@ -332,7 +332,7 @@ static void initializeFunctionVarNames(struct Function* function)
 		{
 			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg - 18]); // make it DX rather than RDX for example
 		}
-		else 
+		else if(function->regArgs[i].reg >= 0 && function->regArgs[i].reg < NO_REG)
 		{
 			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg]);
 		}

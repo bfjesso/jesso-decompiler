@@ -123,7 +123,7 @@ unsigned char readFileSection(const wchar_t* filePath, struct FileSection* secti
 		return 0;
 	}
 
-	if (SetFilePointer(file, section->fileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+	if (SetFilePointer(file, (LONG)(section->fileOffset), NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 	{
 		CloseHandle(file);
 		return 0;

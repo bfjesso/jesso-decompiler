@@ -118,7 +118,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	{
 		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
 		{
-			dataSectionIndex = address - (params.imageBase + params.dataSections[i].virtualAddress);
+			dataSectionIndex = (int)(address - (params.imageBase + params.dataSections[i].virtualAddress));
 		}
 
 		totalSize += params.dataSections[i].size;
