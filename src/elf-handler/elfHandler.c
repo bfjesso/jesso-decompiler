@@ -515,7 +515,7 @@ unsigned char readSectionBytes32(const char* filePath, Elf32_Shdr* section, unsi
 	return 0;
 }
 
-unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, Elf64_Shdr* result)
+unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, int index, Elf64_Shdr* result)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -527,6 +527,8 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
+			int num = 0;
+
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
 				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
@@ -534,9 +536,14 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 
 				if (sectionHeader.sh_type == type)
 				{
-					*result = sectionHeader;
-					fclose(file);
-					return 1;
+					if(num == index)
+					{
+						*result = sectionHeader;
+						fclose(file);
+						return 1;
+					}
+
+					num++;
 				}
 			}
 		}
@@ -562,7 +569,7 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
-	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, &dynstrSection))
+	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
 	{
 		printf("Failed to find .dynstr section.\n");
 		return 0;
@@ -577,7 +584,7 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 	}
 
 	Elf64_Shdr dynsymSection;
-	if(!getSectionHeaderByType64(filePath, SHT_DYNSYM, &dynsymSection))
+	if(!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
 	{
 		printf("Failed to find .dynsym section.\n");
 		free(stringBytes);
@@ -593,43 +600,44 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 		return 0;
 	}
 
-	Elf64_Shdr relapltSection;
-	if(!getSectionHeaderByName64(filePath, ".rela.plt", &relapltSection))
+	int relaNum = 0;
+	Elf64_Shdr relaSection;
+	int bufferIndex = 0;
+	while(getSectionHeaderByType64(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
-		printf("Failed to find .dynamic section.\n");
-		free(stringBytes);
-		free(dynsymBytes);
-		return 0;
-	}
+		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		if(!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		{
+			printf("Failed to read rela section bytes.\n");
+			free(stringBytes);
+			free(dynsymBytes);
+			free(relaBytes);
+			return 0;
+		}
 
-	char* relapltBytes = (char*)malloc(relapltSection.sh_size);
-	if(!readSectionBytes64(filePath, &relapltSection, relapltBytes, relapltSection.sh_size))
-	{
-		printf("Failed to read .dynamic section bytes.\n");
-		free(stringBytes);
-		free(dynsymBytes);
-		free(relapltBytes);
-		return 0;
-	}
+		int i = 0;
+		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
+		{
+			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
+			int val = ELF64_R_SYM(rela->r_info);
+			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-	int i = 0;
-	while((i * sizeof(Elf64_Rela)) < relapltSection.sh_size && i < bufferLen)
-	{
-		Elf64_Rela* rela = (Elf64_Rela*)(relapltBytes + (i * sizeof(Elf64_Rela)));
-		int val = ELF64_R_SYM(rela->r_info);
-		Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+			buffer[bufferIndex].name[0] = 0;
+			strcpy(buffer[bufferIndex].name, stringBytes + symbol->st_name);
 
-		buffer[i].name[0] = 0;
-		strcpy(buffer[i].name, stringBytes + symbol->st_name);
+			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
-		buffer[i].address = (unsigned long long)(rela->r_offset);
+			bufferIndex++;
+			i++;
+		}
 
-		i++;
+		free(relaBytes);
+
+		relaNum++;
 	}
 
 	free(stringBytes);
 	free(dynsymBytes);
-	free(relapltBytes);
 
-	return i;
+	return bufferIndex;
 }
