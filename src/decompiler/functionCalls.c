@@ -203,9 +203,19 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->opcode == CALL_NEAR || currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_SHORT)
+		params.startInstructionIndex = i;
+		if (currentInstruction->opcode == JMP_SHORT || checkForImportCall(params) != -1) // stop looking for parameters if instruction is jmp or another import call with unknown parameters
 		{
 			break;
+		}
+		else if(currentInstruction->opcode == CALL_NEAR) // if call to function with known parameters check if it has any
+		{
+			unsigned long long calleeAddress = resolveJmpChain(params, currentInstruction, params.currentFunc->addresses[i]);
+			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+			if (calleIndex != -1 && (params.functions[calleIndex].numOfRegArgs > 0 || params.functions[calleIndex].numOfStackArgs > 0))
+			{
+				break;
+			}
 		}
 
 		if (currentInstruction->opcode == PUSH)
