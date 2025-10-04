@@ -168,7 +168,7 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 		}
 
 		// check for loops
-		if (conditions[i].exitIndex < conditions[i].jccIndex) 
+		if (conditions[i].exitIndex != -1 && conditions[i].exitIndex < conditions[i].jccIndex)
 		{
 			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
 			conditionsBuffer[conditionsIndex].conditionType = LOOP_CT;
