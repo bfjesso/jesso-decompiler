@@ -158,8 +158,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	// right now this works by checking if AX is ever accessed without being assigned after the call and until the next function call
-	unsigned char returnType = VOID_TYPE;
+	// checking if AX is ever accessed without being assigned after the call and until the next function call
+	unsigned char returnType = INT_TYPE; // assume it returns something by default
 	for (int i = params.startInstructionIndex + 1; i < params.currentFunc->numOfInstructions; i++)
 	{
 		enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
@@ -187,12 +187,9 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 		}
 	}
 
-	if (returnType != VOID_TYPE)
-	{
-		unsigned long long calleeAddress = firstInstruction->operands[0].memoryAddress.constDisplacement;
-		int callNum = getFunctionCallNumber(params, calleeAddress);
-		sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[returnType], name, callNum);
-	}
+	unsigned long long calleeAddress = firstInstruction->operands[0].memoryAddress.constDisplacement;
+	int callNum = getFunctionCallNumber(params, calleeAddress);
+	sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[returnType], name, callNum);
 
 	sprintf(&(result->line[strlen(result->line)]), "%s(", name);
 
