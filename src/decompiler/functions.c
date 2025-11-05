@@ -65,6 +65,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 							result->numOfRegArgs++;
 							result->callingConvention = __FASTCALL;
+							initializedRegs[k - RAX] = 1;
 						}
 					}
 				}
