@@ -118,7 +118,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	{
 		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
 		{
-			dataSectionIndex = (int)(address - (params.imageBase + params.dataSections[i].virtualAddress));
+			dataSectionIndex = (int)((totalSize + address) - (params.dataSections[i].virtualAddress + params.imageBase));
 		}
 
 		totalSize += params.dataSections[i].size;
@@ -163,7 +163,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	switch (type) 
 	{
 	case CHAR_TYPE:
-		sprintf(resultBuffer, "%c", *(char*)(params.dataSectionByte + dataSectionIndex));
+		sprintf(resultBuffer, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case SHORT_TYPE:
 		sprintf(resultBuffer, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
