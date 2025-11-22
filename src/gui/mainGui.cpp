@@ -43,7 +43,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
 	disassemblyListBox->SetOwnForegroundColour(textColor);
 
-	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
+	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 300));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
 
@@ -85,7 +85,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row2Sizer->AddStretchSpacer();
 
 	row3Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row3Sizer->AddStretchSpacer();
 	row3Sizer->Add(decompilationListBox, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row4Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
