@@ -60,8 +60,8 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 				{
 					params.startInstructionIndex = j;
 
-					char argStr[100] = { 0 };
-					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, argStr, 100))
+					char argStr[255] = { 0 };
+					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, argStr, 255))
 					{
 						return 0;
 					}
@@ -86,8 +86,8 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		{
 			params.startInstructionIndex = i;
 
-			char argStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, argStr, 100))
+			char argStr[255] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, argStr, 255))
 			{
 				return 0;
 			}
@@ -105,8 +105,8 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 				params.startInstructionIndex = i;
 
-				char argStr[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, argStr, 100))
+				char argStr[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, argStr, 255))
 				{
 					return 0;
 				}
@@ -225,8 +225,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
 			params.startInstructionIndex = i;
-			char argStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, argStr, 100))
+			char argStr[255] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, argStr, 255))
 			{
 				return 0;
 			}
@@ -245,8 +245,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex]);
 
 				params.startInstructionIndex = i;
-				char argStr[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, argStr, 100))
+				char argStr[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, argStr, 255))
 				{
 					return 0;
 				}

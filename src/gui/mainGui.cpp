@@ -281,8 +281,8 @@ void MainGui::DisassembleCodeSections()
 
 			currentIndex += currentInstruction.numOfBytes;
 
-			char buffer[100] = { 0 };
-			if (instructionToStr(&currentInstruction, buffer, 100))
+			char buffer[255] = { 0 };
+			if (instructionToStr(&currentInstruction, buffer, 255))
 			{
 				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + sections[i].name + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
 
@@ -329,8 +329,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.numOfDataSections = numOfDataSections;
 	params.dataSectionByte = dataSectionBytes;
 
-	LineOfC decompiledFunction[100] = { 0 };
-	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 100);
+	LineOfC decompiledFunction[255] = { 0 };
+	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 255);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");

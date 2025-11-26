@@ -231,7 +231,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		return 1;
 	}
 
-	char conditionExpression[100] = { 0 };
+	char conditionExpression[255] = { 0 };
 
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
@@ -242,7 +242,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 
 		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
-			char currentConditionExpression[100] = { 0 };
+			char currentConditionExpression[255] = { 0 };
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
 			if (!decompileComparison(params, currentConditionExpression, i == conditions[conditionIndex].numOfOtherJccs - 1))
 			{
@@ -262,7 +262,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 
 		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
-			char currentConditionExpression[100] = { 0 };
+			char currentConditionExpression[255] = { 0 };
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
 			if (!decompileComparison(params, currentConditionExpression, 1))
 			{

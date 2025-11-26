@@ -302,7 +302,7 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 		return 1;
 	}
 	
-	char returnExpression[100] = { 0 };
+	char returnExpression[255] = { 0 };
 
 	int newStartInstruction = -1;
 

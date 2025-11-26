@@ -26,8 +26,8 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		type = localVar->type;
 	}
 
-	char assignee[100] = { 0 };
-	if (!decompileOperand(params, &currentInstruction->operands[0], type, assignee, 100))
+	char assignee[255] = { 0 };
+	if (!decompileOperand(params, &currentInstruction->operands[0], type, assignee, 255))
 	{
 		return 0;
 	}
@@ -43,9 +43,9 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		return 1;
 	}
 
-	char valueToAssign[100] = { 0 };
+	char valueToAssign[255] = { 0 };
 	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-	if (!decompileOperand(params, operand, type, valueToAssign, 100))
+	if (!decompileOperand(params, operand, type, valueToAssign, 255))
 	{
 		return 0;
 	}

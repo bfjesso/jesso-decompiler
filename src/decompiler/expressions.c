@@ -59,8 +59,8 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			baseReg.type = REGISTER;
 			baseReg.reg = operand->memoryAddress.reg;
 
-			char baseOperandStr[100] = { 0 };
-			if (!decompileOperand(params, &baseReg, type, baseOperandStr, 100))
+			char baseOperandStr[255] = { 0 };
+			if (!decompileOperand(params, &baseReg, type, baseOperandStr, 255))
 			{
 				return 0;
 			}
@@ -187,7 +187,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 
 static unsigned char decompileExpression(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
 {
-	char expressions[5][100] = { 0 };
+	char expressions[5][255] = { 0 };
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -219,13 +219,13 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			}
 			else if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND)
 			{
-				char operandStr1[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], type, operandStr1, 100))
+				char operandStr1[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[1], type, operandStr1, 255))
 				{
 					return 0;
 				}
-				char operandStr2[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[2], type, operandStr2, 100))
+				char operandStr2[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[2], type, operandStr2, 255))
 				{
 					return 0;
 				}
@@ -247,8 +247,8 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			}
 			else
 			{
-				char operandStr[100] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], type, operandStr, 100))
+				char operandStr[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], type, operandStr, 255))
 				{
 					return 0;
 				}
@@ -393,8 +393,8 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 		{
 			params.startInstructionIndex = i;
 
-			char operandStr[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 20))
+			char operandStr[255] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 255))
 			{
 				return 0;
 			}
@@ -422,14 +422,14 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 		{
 			params.startInstructionIndex = i;
 
-			char operand1Str[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 20))
+			char operand1Str[255] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 255))
 			{
 				return 0;
 			}
 
-			char operand2Str[100] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 20))
+			char operand2Str[255] = { 0 };
+			if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 255))
 			{
 				return 0;
 			}
