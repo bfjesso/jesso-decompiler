@@ -8,7 +8,7 @@
 
 struct LineOfC
 {
-	char line[150];
+	char line[255];
 	unsigned char indents;
 };
 
