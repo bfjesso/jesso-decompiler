@@ -433,21 +433,43 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	wxMenu menu;
 
 	int row = e.GetRow(); // row right-clicked on
+	wxGrid* grid = (wxGrid*)(e.GetEventObject());
 
-	wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
-	menu.Append(decompile);
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
-		{
-			DecompileFunction(row);
-		}, 100);
+	if (grid == functionsGrid) 
+	{
+		wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
+		menu.Append(decompile);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
+			{
+				DecompileFunction(row);
+			}, 100);
 
-	wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
+		wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
 
-	wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
+		wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
 
-	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+	}
+	else if(grid == disassemblyGrid)
+	{
+		wxMenuItem* cpySect = new wxMenuItem(0, 100, "Copy Section");
+		menu.Append(cpySect);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
+			{
+				CopyToClipboard(disassemblyGrid->GetCellValue(row, 1));
+			}, 100);
+
+		wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 2)); }, 101);
+
+		wxMenuItem* cpyAsm = menu.Append(102, "Copy Assembly");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 3)); }, 102);
+
+		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+	}
+
 	e.Skip();
 }
 
