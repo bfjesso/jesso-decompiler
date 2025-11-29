@@ -22,7 +22,7 @@ public:
 	wxButton* openFileButton = nullptr;
 	wxButton* disassembleFileButton = nullptr;
 	wxButton* analyzeFileButton = nullptr;
-	wxListBox* disassemblyListBox = nullptr;
+	wxGrid* disassemblyGrid = nullptr;
 
 	wxListBox* decompilationListBox = nullptr;
 

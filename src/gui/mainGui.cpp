@@ -39,9 +39,29 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
-	disassemblyListBox->SetOwnBackgroundColour(foregroundColor);
-	disassemblyListBox->SetOwnForegroundColour(textColor);
+	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
+	disassemblyGrid->SetLabelBackgroundColour(backgroundColor);
+	disassemblyGrid->SetLabelTextColour(textColor);
+	disassemblyGrid->SetDefaultCellBackgroundColour(foregroundColor);
+	disassemblyGrid->SetDefaultCellTextColour(textColor);
+
+	disassemblyGrid->CreateGrid(0, 4);
+	disassemblyGrid->EnableGridLines(false);
+	disassemblyGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
+	disassemblyGrid->SetScrollRate(0, 10);
+	disassemblyGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	disassemblyGrid->DisableDragRowSize();
+	disassemblyGrid->EnableEditing(false);
+	disassemblyGrid->SetColLabelValue(0, "Index");
+	disassemblyGrid->SetColLabelValue(1, "Section");
+	disassemblyGrid->SetColLabelValue(2, "Address");
+	disassemblyGrid->SetColLabelValue(3, "Assembly");
+	disassemblyGrid->HideRowLabels();
+	disassemblyGrid->SetColSize(0, 50);
+	disassemblyGrid->SetColSize(1, 100);
+	disassemblyGrid->SetColSize(2, 100);
+	disassemblyGrid->SetColSize(3, 9999);
+	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 300));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
@@ -84,7 +104,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row2Sizer->Add(analyzeFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
 	row2Sizer->AddStretchSpacer();
 
-	row3Sizer->Add(disassemblyListBox, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row3Sizer->Add(disassemblyGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 	row3Sizer->Add(decompilationListBox, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row4Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
@@ -104,7 +124,6 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
 		currentFilePath = "";
-		disassemblyListBox->Clear();
 		instructionAddresses.clear();
 		instructionAddresses.shrink_to_fit();
 		disassembledInstructions.clear();
@@ -113,7 +132,13 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		functions.shrink_to_fit();
 		decompilationListBox->Clear();
 		currentDecompiledFunc = -1;
-		int rows = functionsGrid->GetNumberRows();
+
+		int rows = disassemblyGrid->GetNumberRows();
+		if (rows > 0)
+		{
+			disassemblyGrid->DeleteRows(0, disassemblyGrid->GetNumberRows());
+		}
+		rows = functionsGrid->GetNumberRows();
 		if (rows > 0)
 		{
 			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
@@ -159,7 +184,11 @@ void MainGui::DisassembleButton(wxCommandEvent& e)
 		return;
 	}
 
-	disassemblyListBox->Clear();
+	int rows = disassemblyGrid->GetNumberRows();
+	if (rows > 0)
+	{
+		disassemblyGrid->DeleteRows(0, disassemblyGrid->GetNumberRows());
+	}
 
 	instructionAddresses.clear();
 	instructionAddresses.shrink_to_fit();
@@ -258,6 +287,8 @@ void MainGui::DisassembleCodeSections()
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 
+	unsigned int instructionNum = 0;
+
 	for (int i = 0; i < numOfCodeSections; i++)
 	{
 		unsigned char* bytes = new unsigned char[sections[i].size];
@@ -271,7 +302,6 @@ void MainGui::DisassembleCodeSections()
 
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
-		unsigned int instructionNum = 1;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + sections[i].size - 1, &options, &currentInstruction))
 		{
 			unsigned long long address = imageBase + sections[i].virtualAddress + currentIndex;
@@ -281,17 +311,22 @@ void MainGui::DisassembleCodeSections()
 
 			currentIndex += currentInstruction.numOfBytes;
 
+			disassemblyGrid->AppendRows(1);
+			disassemblyGrid->SetCellValue(instructionNum, 0, std::to_string(instructionNum+1));
+			disassemblyGrid->SetCellValue(instructionNum, 1, sections[i].name);
+			disassemblyGrid->SetCellValue(instructionNum, 2, wxString(addressStr));
+
 			char buffer[255] = { 0 };
 			if (instructionToStr(&currentInstruction, buffer, 255))
 			{
-				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + sections[i].name + "\t" + wxString(addressStr) + "\t" + wxString(buffer));
+				disassemblyGrid->SetCellValue(instructionNum, 3, wxString(buffer));
 
 				instructionAddresses.push_back(address);
 				disassembledInstructions.push_back(currentInstruction);
 			}
 			else
 			{
-				disassemblyListBox->AppendString(std::to_string(instructionNum) + "\t" + sections[i].name + "\t" + wxString(addressStr) + "\tERROR");
+				disassemblyGrid->SetCellValue(instructionNum, 3,"ERROR");
 				break;
 			}
 
