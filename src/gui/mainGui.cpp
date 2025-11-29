@@ -364,11 +364,18 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.numOfDataSections = numOfDataSections;
 	params.dataSectionByte = dataSectionBytes;
 
-	LineOfC decompiledFunction[255] = { 0 };
+	LineOfC* decompiledFunction = new LineOfC[255];
+	if (!decompiledFunction) 
+	{
+		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
+		return;
+	}
+
 	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 255);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
+		delete[] decompiledFunction;
 		return;
 	}
 
@@ -385,6 +392,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	}
 
 	currentDecompiledFunc = functionIndex;
+
+	delete[] decompiledFunction;
 }
 
 void MainGui::FindAllFunctions() 
