@@ -33,6 +33,14 @@ struct StackVariable
 	char name[20];
 };
 
+struct FuncReturnVariable // variables that contain the reuturn value of another function call
+{
+	enum PrimitiveType type;
+	char callNum;
+	unsigned long long callAddr;
+	char name[20];
+};
+
 struct Function
 {
 	unsigned long long* addresses;
@@ -54,6 +62,9 @@ struct Function
 
 	struct StackVariable localVars[20];
 	unsigned char numOfLocalVars;
+
+	struct FuncReturnVariable returnVars[20];
+	unsigned char numOfReturnVars;
 };
 
 #ifdef __cplusplus
@@ -72,6 +83,8 @@ extern "C"
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 
 int findInstructionByAddress(unsigned long long* addresses, int low, int high, unsigned long long address);
+
+unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, int startInstructionIndex);
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 

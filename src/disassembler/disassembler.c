@@ -1449,3 +1449,55 @@ unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 
 	return 0;
 }
+
+unsigned char operandToValue(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			*result = addresses[startInstructionIndex + 1] + operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else if (operand->memoryAddress.reg == NO_REG)
+		{
+			*result = operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else
+		{
+			struct Operand baseReg = { 0 };
+			baseReg.type = REGISTER;
+			baseReg.reg = operand->memoryAddress.reg;
+
+			unsigned long long regValue = 0;
+			if (!operandToValue(instructions, addresses, startInstructionIndex, &baseReg, &regValue))
+			{
+				return 0;
+			}
+
+			*result = regValue + operand->memoryAddress.constDisplacement;
+		}
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		for (int i = startInstructionIndex - 1; i >= 0; i--)
+		{
+			if (instructions[i].opcode == MOV && compareRegisters(instructions[i].operands[0].reg, operand->reg))
+			{
+				return operandToValue(instructions, addresses, i, &(instructions[i].operands[1]), result);
+			}
+		}
+
+		return 0;
+	}
+
+	return 0;
+}

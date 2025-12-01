@@ -179,7 +179,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	return 0;
 }
 
-unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions) // if a function's return type was that of another function, it must be resolved
+unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions) // resolves if a function's return type depends on another function
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
@@ -204,6 +204,30 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
+unsigned char getAllFuncReturnVars(struct Function* functions, unsigned short numOfFunctions)
+{
+	for (int i = 0; i < numOfFunctions; i++)
+	{
+		for (int j = 0; j < functions[i].numOfInstructions; j++)
+		{
+			if (functions[i].instructions[j].opcode == CALL_NEAR)
+			{
+				unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
+				int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+
+				if (calleIndex == -1)
+				{
+					return 0;
+				}
+
+				*calleeRef = &(params.functions[calleIndex]);
+			}
+		}
+	}
+
+	return algo;
+}
+
 // returns index of function, -1 if not found
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address)
 {
@@ -218,6 +242,41 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 	}
 
 	return -1;
+}
+
+// returns address of final instruction jumped to that isnt a jmp
+unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, int startInstructionIndex)
+{
+	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
+
+	unsigned long long jmpAddress = addresses[startInstructionIndex] + instruction->operands[0].immediate;
+	if (instruction->operands[0].type == MEM_ADDRESS)
+	{
+		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
+		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
+		{
+			jmpAddress += addresses[startInstructionIndex + 1];
+		}
+	}
+	else if (instruction->operands[0].type == REGISTER)
+	{
+		if (!operandToValue(instructions, addresses, startInstructionIndex, &instruction->operands[0], &jmpAddress))
+		{
+			return 0;
+		}
+	}
+
+	int instructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, jmpAddress);
+	if (instructionIndex != -1)
+	{
+		struct DisassembledInstruction* jmpInstruction = &(instructions[instructionIndex]);
+		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == CALL_NEAR || jmpInstruction->opcode == JMP_NEAR))
+		{
+			return resolveJmpChain(instructions, addresses, numOfInstructions, instructionIndex);
+		}
+	}
+
+	return jmpAddress;
 }
 
 // returns index of instruction, -1 if not found
