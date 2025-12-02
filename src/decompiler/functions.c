@@ -32,7 +32,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		result->numOfInstructions++;
 
-		if (currentInstruction->opcode == CALL_NEAR)
+		if (isOpcodeCall(currentInstruction->opcode))
 		{
 			initializedRegs[0] = 1; // AX
 		}
@@ -126,7 +126,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			result->returnType = getTypeOfOperand(currentInstruction->opcode, operand);
 			result->addressOfReturnFunction = 0;
 		}
-		else if (currentInstruction->opcode == CALL_NEAR)
+		else if (isOpcodeCall(currentInstruction->opcode))
 		{
 			unsigned long long calleeAddress = addresses[i] + currentInstruction->operands[0].immediate;
 			if (calleeAddress != addresses[0]) // check for recursive function
@@ -210,7 +210,7 @@ unsigned char getAllFuncReturnVars(struct Function* functions, unsigned short nu
 	{
 		for (int j = 0; j < functions[i].numOfInstructions; j++)
 		{
-			if (functions[i].instructions[j].opcode == CALL_NEAR)
+			if (isOpcodeCall(functions[i].instructions[j].opcode))
 			{
 				unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
 				int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
@@ -270,7 +270,7 @@ unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions,
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(instructions[instructionIndex]);
-		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == CALL_NEAR || jmpInstruction->opcode == JMP_NEAR))
+		if (instructionIndex != startInstructionIndex && isOpcodeCall(jmpInstruction->opcode))
 		{
 			return resolveJmpChain(instructions, addresses, numOfInstructions, instructionIndex);
 		}

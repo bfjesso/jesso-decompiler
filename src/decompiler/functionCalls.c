@@ -7,7 +7,7 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
 
-	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
+	if (isOpcodeCall(instruction->opcode))
 	{
 		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
 		int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
@@ -138,7 +138,7 @@ int checkForImportCall(struct DecompilationParameters params)
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
 
-	if (instruction->opcode == CALL_NEAR || instruction->opcode == JMP_NEAR)
+	if (isOpcodeCall(instruction->opcode))
 	{
 		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
 
@@ -163,7 +163,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 	for (int i = params.startInstructionIndex + 1; i < params.currentFunc->numOfInstructions; i++)
 	{
 		enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
-		if (opcode == CALL_NEAR || opcode == JMP_NEAR || opcode == JMP_SHORT)
+		if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
 		{
 			break;
 		}
@@ -205,7 +205,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 		{
 			break;
 		}
-		else if(currentInstruction->opcode == CALL_NEAR) // if call to function with known parameters check if it has any
+		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params, currentInstruction, params.currentFunc->addresses[i]);
 			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
@@ -279,7 +279,7 @@ int getFunctionCallNumber(struct DecompilationParameters params, unsigned long l
 
 	for (int i = 0; i < params.startInstructionIndex; i++)
 	{
-		if (params.currentFunc->instructions[i].opcode == CALL_NEAR || params.currentFunc->instructions[i].opcode == CALL_FAR)
+		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
 			if (params.currentFunc->addresses[i] + params.currentFunc->instructions[i].operands[0].immediate == callAddr ||
 				params.currentFunc->instructions[i].operands[0].memoryAddress.constDisplacement == callAddr) // check for imported func call

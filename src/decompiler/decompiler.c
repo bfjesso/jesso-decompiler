@@ -243,7 +243,7 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 		{
 			return 1;
 		}
-		else if (instruction->opcode == CALL_NEAR)
+		else if (isOpcodeCall(instruction->opcode))
 		{
 			unsigned long long calleeAddress = address + instruction->operands[0].immediate;
 			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);

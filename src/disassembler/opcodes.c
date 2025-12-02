@@ -50,3 +50,13 @@ unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, 
 
 	return 0;
 }
+
+unsigned char isOpcodeCall(enum Mnemonic opcode)
+{
+	if (opcode == CALL_FAR || opcode == CALL_NEAR || opcode == JMP_FAR || opcode == JMP_NEAR) 
+	{
+		return 1;
+	}
+
+	return 0;
+}

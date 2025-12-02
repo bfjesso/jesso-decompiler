@@ -263,7 +263,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 				expressionIndex++;
 			}
 		}
-		else if (currentInstruction->opcode == CALL_NEAR)
+		else if (isOpcodeCall(currentInstruction->opcode))
 		{
 			params.startInstructionIndex = i;
 			unsigned long long calleeAddress = params.currentFunc->addresses[i] + currentInstruction->operands[0].immediate;

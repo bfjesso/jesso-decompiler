@@ -98,3 +98,5 @@ struct Opcode
 extern const char* mnemonicStrs[];
 
 unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, unsigned char* overwrites); // some opcodes may modify a register even if it isn't an operand
+
+unsigned char isOpcodeCall(enum Mnemonic opcode);
