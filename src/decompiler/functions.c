@@ -204,7 +204,7 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-unsigned char getAllFuncReturnVars(struct Function* functions, unsigned short numOfFunctions)
+unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions)
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
@@ -212,20 +212,44 @@ unsigned char getAllFuncReturnVars(struct Function* functions, unsigned short nu
 		{
 			if (isOpcodeCall(functions[i].instructions[j].opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
-				int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+				int currentInstructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, functions[i].addresses[j]);
+				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, currentInstructionIndex);
+				int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
 
-				if (calleIndex == -1)
+				if (calleIndex != -1)
 				{
-					return 0;
+					if(functions[calleIndex].returnType == VOID_TYPE) 
+					{ 
+						continue;
+					}
+					else 
+					{
+						functions[i].returnVars[functions[i].numOfReturnVars].type = functions[calleIndex].returnType;
+					}
+				}
+				else
+				{
+					functions[i].returnVars[functions[i].numOfReturnVars].type == INT_TYPE;
 				}
 
-				*calleeRef = &(params.functions[calleIndex]);
+				int callNum = 0;
+				for (int k = 0; k < functions[i].numOfReturnVars; k++) 
+				{
+					if (functions[i].returnVars[k].callAddr == calleeAddress) 
+					{
+						callNum++;
+					}
+				}
+
+				functions[i].returnVars[functions[i].numOfReturnVars].callAddr = calleeAddress;
+				functions[i].returnVars[functions[i].numOfReturnVars].callNum = callNum;
+				sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[i].name, callNum);
+				functions[i].numOfReturnVars++;
 			}
 		}
 	}
 
-	return algo;
+	return 1;
 }
 
 // returns index of function, -1 if not found

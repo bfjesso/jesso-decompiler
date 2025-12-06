@@ -21,7 +21,7 @@ struct DecompilationParameters
 	int numOfImports;
 
 	struct Function* currentFunc; // function being decompiled
-	int startInstructionIndex; // index of instruction to start decompiling from
+	int startInstructionIndex; // index of instruction to start decompiling from relative to function
 
 	struct DisassembledInstruction* allInstructions;
 	unsigned long long* allAddresses;

@@ -76,6 +76,8 @@ extern "C"
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
 
+	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions);
+
 #ifdef __cplusplus
 }
 #endif
