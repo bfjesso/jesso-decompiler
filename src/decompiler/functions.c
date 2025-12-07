@@ -244,10 +244,10 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 						if (imports[k].address == calleeAddress)
 						{
 							sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", imports[k].name, callNum);
+							functions[i].returnVars[functions[i].numOfReturnVars].type = INT_TYPE;
+							break;
 						}
 					}
-					
-					functions[i].returnVars[functions[i].numOfReturnVars].type == INT_TYPE;
 				}
 
 				functions[i].returnVars[functions[i].numOfReturnVars].callAddr = calleeAddress;
