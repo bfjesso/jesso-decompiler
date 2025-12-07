@@ -109,7 +109,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
-			if (decompileImportCall(params, params.imports[importIndex].name, &resultBuffer[numOfLinesDecompiled]))
+			if (decompileImportCall(params, importIndex, &resultBuffer[numOfLinesDecompiled]))
 			{
 				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
 				numOfLinesDecompiled++;

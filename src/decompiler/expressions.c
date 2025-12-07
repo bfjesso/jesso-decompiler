@@ -272,7 +272,11 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)
 			{
 				int callNum = getFunctionCallNumber(params, calleeAddress);
-				sprintf(expressions[expressionIndex], "%sRetVal%d", params.functions[calleeIndex].name, callNum);
+				struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
+				if (returnVar != 0)
+				{
+					sprintf(expressions[expressionIndex], "%s", returnVar->name);
+				}
 				expressionIndex++;
 				finished = 1;
 				break;
@@ -284,9 +288,13 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 
 				if (importIndex != -1)
 				{
-					calleeAddress = currentInstruction->operands[0].memoryAddress.constDisplacement;
+					calleeAddress = params.imports[importIndex].address;
 					int callNum = getFunctionCallNumber(params, calleeAddress);
-					sprintf(expressions[expressionIndex], "%sRetVal%d", params.imports[importIndex].name, callNum);
+					struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
+					if (returnVar != 0)
+					{
+						sprintf(expressions[expressionIndex], "%s", returnVar->name);
+					}
 					expressionIndex++;
 					finished = 1;
 					break;

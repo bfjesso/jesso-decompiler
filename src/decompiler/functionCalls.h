@@ -7,6 +7,6 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 int checkForImportCall(struct DecompilationParameters params);
 
-unsigned char decompileImportCall(struct DecompilationParameters params, const char* name, struct LineOfC* result);
+unsigned char decompileImportCall(struct DecompilationParameters params, int importIndex, struct LineOfC* result);
 
 int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr);

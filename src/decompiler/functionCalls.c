@@ -156,7 +156,7 @@ int checkForImportCall(struct DecompilationParameters params)
 	return -1;
 }
 
-unsigned char decompileImportCall(struct DecompilationParameters params, const char* name, struct LineOfC* result)
+unsigned char decompileImportCall(struct DecompilationParameters params, int importIndex, struct LineOfC* result)
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -189,7 +189,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 		}
 	}
 
-	unsigned long long calleeAddress = firstInstruction->operands[0].memoryAddress.constDisplacement;
+	unsigned long long calleeAddress = params.imports[importIndex].address;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 	if (returnVar != 0)
@@ -197,7 +197,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 		sprintf(result->line, "%s = ", returnVar->name);
 	}
 
-	sprintf(&(result->line[strlen(result->line)]), "%s(", name);
+	sprintf(&(result->line[strlen(result->line)]), "%s(", params.imports[importIndex].name);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
