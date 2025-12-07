@@ -204,7 +204,7 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions)
+unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports)
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
@@ -214,8 +214,17 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 			{
 				int currentInstructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, functions[i].addresses[j]);
 				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, currentInstructionIndex);
-				int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
 
+				int callNum = 0;
+				for (int k = 0; k < functions[i].numOfReturnVars; k++)
+				{
+					if (functions[i].returnVars[k].callAddr == calleeAddress)
+					{
+						callNum++;
+					}
+				}
+
+				int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
 				if (calleIndex != -1)
 				{
 					if(functions[calleIndex].returnType == VOID_TYPE) 
@@ -225,25 +234,24 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 					else 
 					{
 						functions[i].returnVars[functions[i].numOfReturnVars].type = functions[calleIndex].returnType;
+						sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[calleIndex].name, callNum);
 					}
 				}
 				else
 				{
-					functions[i].returnVars[functions[i].numOfReturnVars].type == INT_TYPE;
-				}
-
-				int callNum = 0;
-				for (int k = 0; k < functions[i].numOfReturnVars; k++) 
-				{
-					if (functions[i].returnVars[k].callAddr == calleeAddress) 
+					for (int k = 0; k < numOfImports; k++)
 					{
-						callNum++;
+						if (imports[k].address == calleeAddress)
+						{
+							sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", imports[k].name, callNum);
+						}
 					}
+					
+					functions[i].returnVars[functions[i].numOfReturnVars].type == INT_TYPE;
 				}
 
 				functions[i].returnVars[functions[i].numOfReturnVars].callAddr = calleeAddress;
 				functions[i].returnVars[functions[i].numOfReturnVars].callNum = callNum;
-				sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[calleIndex].name, callNum);
 				functions[i].numOfReturnVars++;
 			}
 		}

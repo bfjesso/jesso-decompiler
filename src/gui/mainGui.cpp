@@ -434,7 +434,7 @@ void MainGui::FindAllFunctions()
 	if (functions.size() > 0) 
 	{
 		fixAllFunctionReturnTypes(&functions[0], functions.size());
-		getAllFuncReturnVars(&functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size());
+		getAllFuncReturnVars(&functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports);
 	}
 }
 

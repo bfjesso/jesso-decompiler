@@ -1,6 +1,7 @@
 #pragma once
 #include "../disassembler/registers.h"
 #include "../disassembler/disassembler.h"
+#include "../fileStructs.h"
 #include "dataTypes.h"
 
 enum CallingConvention
@@ -76,7 +77,7 @@ extern "C"
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
 
-	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions);
+	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports);
 
 #ifdef __cplusplus
 }
