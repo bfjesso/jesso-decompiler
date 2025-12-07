@@ -243,7 +243,7 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 
 				functions[i].returnVars[functions[i].numOfReturnVars].callAddr = calleeAddress;
 				functions[i].returnVars[functions[i].numOfReturnVars].callNum = callNum;
-				sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[i].name, callNum);
+				sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[calleIndex].name, callNum);
 				functions[i].numOfReturnVars++;
 			}
 		}
