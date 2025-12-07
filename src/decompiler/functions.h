@@ -94,6 +94,8 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
+struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum, unsigned long long callAddr);
+
 unsigned char getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
 static void initializeFunctionVarNames(struct Function* function);

@@ -9,7 +9,8 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 
 	if (isOpcodeCall(instruction->opcode))
 	{
-		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
+		int currentInstructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, address);
+		unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
 		int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
 		if (calleIndex == -1)
@@ -35,11 +36,11 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		return 1;
 	}
 
-	if (callee->returnType != VOID_TYPE)
+	int callNum = getFunctionCallNumber(params, callee->addresses[0]);
+	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, callee->addresses[0]);
+	if (returnVar != 0)
 	{
-		unsigned long long calleeAddress = params.currentFunc->addresses[params.startInstructionIndex] + firstInstruction->operands[0].immediate;
-		int callNum = getFunctionCallNumber(params, calleeAddress);
-		sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[callee->returnType], callee->name, callNum);
+		sprintf(result->line, "%s = ", returnVar->name);
 	}
 
 	sprintf(&(result->line[strlen(result->line)]), "%s(", callee->name);
@@ -140,7 +141,8 @@ int checkForImportCall(struct DecompilationParameters params)
 
 	if (isOpcodeCall(instruction->opcode))
 	{
-		unsigned long long calleeAddress = resolveJmpChain(params, instruction, address);
+		int currentInstructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, address);
+		unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
 
 		for (int i = 0; i < params.numOfImports; i++)
 		{
@@ -189,7 +191,11 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 
 	unsigned long long calleeAddress = firstInstruction->operands[0].memoryAddress.constDisplacement;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
-	sprintf(result->line, "%s %sRetVal%d = ", primitiveTypeStrs[returnType], name, callNum);
+	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
+	if (returnVar != 0)
+	{
+		sprintf(result->line, "%s = ", returnVar->name);
+	}
 
 	sprintf(&(result->line[strlen(result->line)]), "%s(", name);
 
@@ -207,7 +213,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, const c
 		}
 		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params, currentInstruction, params.currentFunc->addresses[i]);
+			int currentInstructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, params.currentFunc->addresses[i]);
+			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
 			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			if (calleIndex != -1 && (params.functions[calleIndex].numOfRegArgs > 0 || params.functions[calleIndex].numOfStackArgs > 0))
 			{
