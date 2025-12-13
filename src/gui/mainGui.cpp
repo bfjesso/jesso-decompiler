@@ -570,6 +570,23 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		}
 	}
 
+	if (function->numOfReturnVars > 0)
+	{
+		wxStaticText* retVarLabel = new wxStaticText(this, wxID_ANY, "Returned Var Names");
+		retVarLabel->SetOwnForegroundColour(textColor);
+		vSizer->Add(retVarLabel, 0, wxEXPAND);
+		for (int i = 0; i < function->numOfReturnVars; i++)
+		{
+			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name, wxPoint(0, 0), wxSize(100, 25));
+			retVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
+			retVarTextCtrl->SetOwnForegroundColour(textColor);
+
+			vSizer->Add(retVarTextCtrl, 0, wxEXPAND);
+
+			retVarNameTextCtrls.push_back(retVarTextCtrl);
+		}
+	}
+
 	SetSizer(vSizer);
 
 	mainGui = main;
@@ -605,6 +622,12 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 	{
 		currentFunction->localVars[i].name[0] = 0;
 		strcpy(currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
+	}
+
+	for (int i = 0; i < currentFunction->numOfReturnVars; i++)
+	{
+		currentFunction->returnVars[i].name[0] = 0;
+		strcpy(currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	// update name in function grid

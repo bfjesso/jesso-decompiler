@@ -96,6 +96,7 @@ public:
 	std::vector<wxTextCtrl*> regArgNameTextCtrls;
 	std::vector<wxTextCtrl*> stackArgNameTextCtrls;
 	std::vector<wxTextCtrl*> localVarNameTextCtrls;
+	std::vector<wxTextCtrl*> retVarNameTextCtrls;
 
 	wxBoxSizer* vSizer = nullptr;
 
