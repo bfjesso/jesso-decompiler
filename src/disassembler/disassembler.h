@@ -149,6 +149,8 @@ unsigned char isOperandLocalVariable(struct Operand* operand);
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
 
+unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* isAccessed, unsigned char* operandNum);
+
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);
 
 unsigned char operandToValue(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, struct Operand* operand, unsigned long long* result);

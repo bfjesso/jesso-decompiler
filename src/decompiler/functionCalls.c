@@ -170,19 +170,13 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			break;
 		}
 
-		char isDone = 0;
-		for (int j = 0; j < 3; j++)
+		unsigned char isDone = 0;
+		unsigned char operandNum = 0;
+		if (!doesInstructionModifyRegister(&(params.currentFunc->instructions[i]), AX, &isDone, &operandNum))
 		{
-			struct Operand* op = &(params.currentFunc->instructions[i].operands[j]);
-			if (op->type == REGISTER && compareRegisters(op->reg, AX))
-			{
-				if (!doesInstructionModifyOperand(&(params.currentFunc->instructions[i]), j, 0))
-				{
-					returnType = getTypeOfOperand(params.currentFunc->instructions[i].opcode, op);
-				}
-				isDone = 1;
-			}
+			returnType = getTypeOfOperand(params.currentFunc->instructions[i].opcode, &(params.currentFunc->instructions[i].operands[operandNum]));
 		}
+
 		if (isDone)
 		{
 			break;

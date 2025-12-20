@@ -1425,6 +1425,32 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
+unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* isAccessed, unsigned char* operandNum)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		struct Operand* op = &(instruction->operands[i]);
+		if (op->type == REGISTER && compareRegisters(op->reg, reg))
+		{
+			if (isAccessed != 0) 
+			{
+				*isAccessed = 1;
+			}
+			if (operandNum != 0) 
+			{
+				*operandNum = i;
+			}
+			
+			if (doesInstructionModifyOperand(instruction, i, 0))
+			{
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 {
 	if (op1->type == op2->type)

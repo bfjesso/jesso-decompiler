@@ -212,6 +212,33 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 		{
 			if (isOpcodeCall(functions[i].instructions[j].opcode))
 			{
+				unsigned char isReturnVarUsed = 0;
+				for (int k = j + 1; k < functions[i].numOfInstructions; k++)
+				{
+					enum Mnemonic opcode = functions[i].instructions[k].opcode;
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
+					{
+						break;
+					}
+
+					unsigned char isAccessed = 0;
+					if (doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, &isAccessed, 0))
+					{
+						break;
+					}
+
+					if (isAccessed == 1)
+					{
+						isReturnVarUsed = 1;
+						break;
+					}
+				}
+
+				if (!isReturnVarUsed) 
+				{
+					continue;
+				}
+				
 				int currentInstructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, functions[i].addresses[j]);
 				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, currentInstructionIndex);
 

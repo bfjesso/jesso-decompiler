@@ -371,6 +371,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
+	memset(decompiledFunction, 0, 255 * sizeof(LineOfC));
+
 	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 255);
 	if (numOfLinesDecompiled == 0)
 	{
