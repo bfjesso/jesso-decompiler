@@ -23,7 +23,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 	resultBuffer[numOfLinesDecompiled].indents = 0;
 	numOfLinesDecompiled++;
 
-	if (params.currentFunc->numOfLocalVars > 0)
+	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnVars > 0)
 	{
 		if (!declareAllLocalVariables(params.currentFunc, resultBuffer, &numOfLinesDecompiled, resultBufferLen))
 		{
