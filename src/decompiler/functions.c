@@ -329,7 +329,7 @@ unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions,
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(instructions[instructionIndex]);
-		if (instructionIndex != startInstructionIndex && isOpcodeCall(jmpInstruction->opcode))
+		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
 		{
 			return resolveJmpChain(instructions, addresses, numOfInstructions, instructionIndex);
 		}
