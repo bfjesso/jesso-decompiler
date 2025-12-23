@@ -119,7 +119,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		}
 	}
 
-	if (callee->numOfRegArgs != 0 || callee->numOfStackArgs != 0)
+	if (result->line[strlen(result->line)-1] != '(')
 	{
 		result->line[strlen(result->line) - 2] = ')';
 		result->line[strlen(result->line) - 1] = 0;
