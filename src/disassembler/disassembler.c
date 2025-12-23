@@ -1425,17 +1425,31 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* isAccessed, unsigned char* operandNum)
+unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg) 
 {
 	for (int i = 0; i < 3; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
-			if (isAccessed != 0) 
-			{
-				*isAccessed = 1;
-			}
+			return 1;
+		}
+		else if (op->type == MEM_ADDRESS && compareRegisters(op->memoryAddress.reg, reg))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		struct Operand* op = &(instruction->operands[i]);
+		if (op->type == REGISTER && compareRegisters(op->reg, reg))
+		{
 			if (operandNum != 0) 
 			{
 				*operandNum = i;

@@ -221,15 +221,13 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 						break;
 					}
 
-					unsigned char isAccessed = 0;
-					if (doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, &isAccessed, 0))
+					if (doesInstructionAccessRegister(&(functions[i].instructions[k]), AX))
 					{
-						break;
-					}
+						if (!doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, 0))
+						{
+							isReturnVarUsed = 1;
+						}
 
-					if (isAccessed == 1)
-					{
-						isReturnVarUsed = 1;
 						break;
 					}
 				}
@@ -279,15 +277,14 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 									break;
 								}
 
-								unsigned char isDone = 0;
-								unsigned char operandNum = 0;
-								if (!doesInstructionModifyRegister(&(functions[i].instructions[l]), AX, &isDone, &operandNum))
+								if (doesInstructionAccessRegister(&(functions[i].instructions[l]), AX))
 								{
-									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
-								}
-
-								if (isDone)
-								{
+									unsigned char operandNum = 0;
+									if (!doesInstructionModifyRegister(&(functions[i].instructions[l]), AX, &operandNum)) 
+									{
+										returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
+									}
+									
 									break;
 								}
 							}
