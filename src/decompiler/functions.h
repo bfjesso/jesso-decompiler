@@ -24,14 +24,14 @@ struct RegisterVariable
 {
 	enum PrimitiveType type;
 	enum Register reg;
-	char name[20];
+	char name[50];
 };
 
 struct StackVariable 
 {
 	enum PrimitiveType type;
 	int stackOffset;
-	char name[20];
+	char name[50];
 };
 
 struct FuncReturnVariable // variables that contain the reuturn value of another function call
@@ -39,7 +39,7 @@ struct FuncReturnVariable // variables that contain the reuturn value of another
 	enum PrimitiveType type;
 	char callNum;
 	unsigned long long callAddr;
-	char name[20];
+	char name[50];
 };
 
 struct Function
