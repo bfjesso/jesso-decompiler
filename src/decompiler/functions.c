@@ -233,7 +233,6 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 						break;
 					}
 				}
-
 				if (!isReturnVarUsed) 
 				{
 					continue;
@@ -270,8 +269,31 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 					{
 						if (imports[k].address == calleeAddress)
 						{
+							// checking if AX is ever accessed without being assigned after the call and until the next function call
+							unsigned char returnType = INT_TYPE; // assume it returns something by default
+							for (int l = j + 1; i < functions[i].numOfInstructions; l++)
+							{
+								enum Mnemonic opcode = functions[i].instructions[l].opcode;
+								if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
+								{
+									break;
+								}
+
+								unsigned char isDone = 0;
+								unsigned char operandNum = 0;
+								if (!doesInstructionModifyRegister(&(functions[i].instructions[l]), AX, &isDone, &operandNum))
+								{
+									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
+								}
+
+								if (isDone)
+								{
+									break;
+								}
+							}
+							
 							sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", imports[k].name, callNum);
-							functions[i].returnVars[functions[i].numOfReturnVars].type = INT_TYPE;
+							functions[i].returnVars[functions[i].numOfReturnVars].type = returnType;
 							break;
 						}
 					}

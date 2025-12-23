@@ -160,29 +160,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	// checking if AX is ever accessed without being assigned after the call and until the next function call
-	unsigned char returnType = INT_TYPE; // assume it returns something by default
-	for (int i = params.startInstructionIndex + 1; i < params.currentFunc->numOfInstructions; i++)
-	{
-		enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
-		if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
-		{
-			break;
-		}
-
-		unsigned char isDone = 0;
-		unsigned char operandNum = 0;
-		if (!doesInstructionModifyRegister(&(params.currentFunc->instructions[i]), AX, &isDone, &operandNum))
-		{
-			returnType = getTypeOfOperand(params.currentFunc->instructions[i].opcode, &(params.currentFunc->instructions[i].operands[operandNum]));
-		}
-
-		if (isDone)
-		{
-			break;
-		}
-	}
-
 	unsigned long long calleeAddress = params.imports[importIndex].address;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
