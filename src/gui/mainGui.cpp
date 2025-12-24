@@ -7,7 +7,7 @@ EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
 EVT_GRID_CELL_RIGHT_CLICK(MainGui::RightClickOptions)
 wxEND_EVENT_TABLE()
 
-MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(1300, 1000))
+MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -40,7 +40,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
+	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
 	disassemblyGrid->SetLabelBackgroundColour(backgroundColor);
 	disassemblyGrid->SetLabelTextColour(textColor);
 	disassemblyGrid->SetDefaultCellBackgroundColour(foregroundColor);
@@ -64,13 +64,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(9999, 600), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
+	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
 	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	decompilationTextCtrl->SetOwnForegroundColour(textColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
 
-	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 9999));
+	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	functionsGrid->SetLabelBackgroundColour(backgroundColor);
 	functionsGrid->SetLabelTextColour(textColor);
 	functionsGrid->SetDefaultCellBackgroundColour(foregroundColor);
@@ -102,16 +102,16 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer->Add(disassembleFileButton, 0, wxALL, 10);
 	row1Sizer->Add(analyzeFileButton, 0, wxUP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassemblyGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row2Sizer->Add(decompilationTextCtrl, 0, wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(disassemblyGrid, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row2Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
 
-	row3Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row3Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
-	vSizer->Add(row1Sizer, 0, wxEXPAND);
-	vSizer->Add(row2Sizer, 0, wxEXPAND);
+	vSizer->Add(row1Sizer);
+	vSizer->Add(row2Sizer, 1, wxEXPAND);
 	vSizer->Add(row3Sizer, 0, wxEXPAND);
 
-	SetSizer(vSizer);
+	SetSizerAndFit(vSizer);
 }
 
 void MainGui::OpenFile()
