@@ -24,7 +24,7 @@ public:
 	wxButton* analyzeFileButton = nullptr;
 	wxGrid* disassemblyGrid = nullptr;
 
-	wxListBox* decompilationListBox = nullptr;
+	wxTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
 
@@ -81,6 +81,8 @@ public:
 	void RightClickOptions(wxGridEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
+
+	void ReplaceEscapeChars(wxString* str);
 
 	wxDECLARE_EVENT_TABLE();
 };

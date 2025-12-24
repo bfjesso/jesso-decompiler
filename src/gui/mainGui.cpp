@@ -63,11 +63,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 300));
-	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
-	decompilationListBox->SetOwnForegroundColour(textColor);
+	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(9999, 300), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
+	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
+	decompilationTextCtrl->SetOwnForegroundColour(textColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
-	decompilationListBox->SetFont(codeFont);
+	decompilationTextCtrl->SetFont(codeFont);
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 9999));
 	functionsGrid->SetLabelBackgroundColour(backgroundColor);
@@ -107,7 +107,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row2Sizer->AddStretchSpacer();
 
 	row3Sizer->Add(disassemblyGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row3Sizer->Add(decompilationListBox, 0, wxBOTTOM | wxRIGHT, 10);
+	row3Sizer->Add(decompilationTextCtrl, 0, wxBOTTOM | wxRIGHT, 10);
 
 	row4Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
@@ -132,7 +132,7 @@ void MainGui::OpenFileButton(wxCommandEvent& e)
 		disassembledInstructions.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
-		decompilationListBox->Clear();
+		decompilationTextCtrl->Clear();
 		currentDecompiledFunc = -1;
 
 		int rows = disassemblyGrid->GetNumberRows();
@@ -217,7 +217,7 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 	functions.clear();
 	functions.shrink_to_fit();
-	decompilationListBox->Clear();
+	decompilationTextCtrl->Clear();
 	int rows = functionsGrid->GetNumberRows();
 	if (rows > 0)
 	{
@@ -347,7 +347,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
-	decompilationListBox->Clear();
+	decompilationTextCtrl->Clear();
 
 	DecompilationParameters params = { 0 };
 	params.functions = &functions[0];
@@ -386,13 +386,15 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	for (int i = 0; i < numOfLinesDecompiled; i++)
 	{
 		wxString str = wxString(decompiledFunction[i].line);
+		ReplaceEscapeChars(&str);
 
 		for (int j = 0; j < decompiledFunction[i].indents; j++) 
 		{
 			str = "    " + str;
 		}
 
-		decompilationListBox->Append(str);
+		decompilationTextCtrl->AppendText(str);
+		decompilationTextCtrl->AppendText("\n");
 	}
 
 	currentDecompiledFunc = functionIndex;
@@ -497,6 +499,17 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
 	Destroy();
+}
+
+void MainGui::ReplaceEscapeChars(wxString* str) 
+{
+	str->Replace("\a", "\\a");
+	str->Replace("\b", "\\b");
+	str->Replace("\f", "\\f");
+	str->Replace("\n", "\\n");
+	str->Replace("\r", "\\r");
+	str->Replace("\t", "\\t");
+	str->Replace("\v", "\\v");
 }
 
 // Function Properties Menu
