@@ -4,7 +4,6 @@ wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
 EVT_BUTTON(DisassembleFileButtonID, MainGui::DisassembleButton)
 EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
-EVT_BUTTON(OpenFileButtonID, MainGui::OpenFileButton)
 EVT_GRID_CELL_RIGHT_CLICK(MainGui::RightClickOptions)
 wxEND_EVENT_TABLE()
 
@@ -16,20 +15,22 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	bytesDisassemblerMenu = new BytesDisassembler();
 	dataViewerMenu = new DataViewer();
 
+	wxMenu* fileMenu = new wxMenu();
+
+	wxMenuItem* openFile = fileMenu->Append(OpenFileID, "Open file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
+
 	wxMenu* toolMenu = new wxMenu();
 
-	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes Disassembler");
+	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
 
-	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data Viewer");
+	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
 
+	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
 	this->SetMenuBar(menuBar);
-
-	openFileButton = new wxButton(this, OpenFileButtonID, "Open File", wxPoint(0, 0), wxSize(75, 25));
-	openFileButton->SetOwnBackgroundColour(foregroundColor);
-	openFileButton->SetOwnForegroundColour(textColor);
 
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
@@ -39,7 +40,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
+	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
 	disassemblyGrid->SetLabelBackgroundColour(backgroundColor);
 	disassemblyGrid->SetLabelTextColour(textColor);
 	disassemblyGrid->SetDefaultCellBackgroundColour(foregroundColor);
@@ -63,7 +64,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(9999, 300), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
+	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(9999, 600), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
 	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	decompilationTextCtrl->SetOwnForegroundColour(textColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
@@ -83,9 +84,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->DisableDragRowSize();
 	functionsGrid->EnableEditing(false);
 	functionsGrid->SetColLabelValue(0, "Address");
-	functionsGrid->SetColLabelValue(1, "Calling Convention");
+	functionsGrid->SetColLabelValue(1, "Calling convention");
 	functionsGrid->SetColLabelValue(2, "Name");
-	functionsGrid->SetColLabelValue(3, "Number of Instructions");
+	functionsGrid->SetColLabelValue(3, "Number of instructions");
 	functionsGrid->HideRowLabels();
 	functionsGrid->SetColSize(0, 200);
 	functionsGrid->SetColSize(1, 200);
@@ -96,30 +97,24 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row4Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(openFileButton, 0, wxALL, 10);
-	row1Sizer->AddStretchSpacer();
+	row1Sizer->Add(disassembleFileButton, 0, wxALL, 10);
+	row1Sizer->Add(analyzeFileButton, 0, wxUP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassembleFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
-	row2Sizer->Add(analyzeFileButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
-	row2Sizer->AddStretchSpacer();
+	row2Sizer->Add(disassemblyGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row2Sizer->Add(decompilationTextCtrl, 0, wxBOTTOM | wxRIGHT, 10);
 
-	row3Sizer->Add(disassemblyGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row3Sizer->Add(decompilationTextCtrl, 0, wxBOTTOM | wxRIGHT, 10);
-
-	row4Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row3Sizer->Add(functionsGrid, 0, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
 	vSizer->Add(row1Sizer, 0, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
 	vSizer->Add(row3Sizer, 0, wxEXPAND);
-	vSizer->Add(row4Sizer, 0, wxEXPAND);
 
 	SetSizer(vSizer);
 }
 
-void MainGui::OpenFileButton(wxCommandEvent& e)
+void MainGui::OpenFile()
 {
 	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
 

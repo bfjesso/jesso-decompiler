@@ -19,7 +19,6 @@ public:
 	DataViewer* dataViewerMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
-	wxButton* openFileButton = nullptr;
 	wxButton* disassembleFileButton = nullptr;
 	wxButton* analyzeFileButton = nullptr;
 	wxGrid* disassemblyGrid = nullptr;
@@ -31,7 +30,6 @@ public:
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* row3Sizer = nullptr;
-	wxBoxSizer* row4Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxString currentFilePath = "";
@@ -59,12 +57,12 @@ public:
 		MainWindowID,
 		OpenBytesDisassemblerID,
 		OpenDataViewerID,
-		OpenFileButtonID,
+		OpenFileID,
 		DisassembleFileButtonID,
 		AnalyzeFileButtonID
 	};
 
-	void OpenFileButton(wxCommandEvent& e);
+	void OpenFile();
 
 	void DisassembleButton(wxCommandEvent& e);
 
