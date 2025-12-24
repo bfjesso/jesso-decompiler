@@ -66,6 +66,8 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationListBox = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 300));
 	decompilationListBox->SetOwnBackgroundColour(foregroundColor);
 	decompilationListBox->SetOwnForegroundColour(textColor);
+	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
+	decompilationListBox->SetFont(codeFont);
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(9999, 9999));
 	functionsGrid->SetLabelBackgroundColour(backgroundColor);
