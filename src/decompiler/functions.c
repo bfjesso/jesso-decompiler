@@ -234,6 +234,12 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 
 						break;
 					}
+
+					if (opcode == RET_NEAR || opcode == RET_FAR) 
+					{
+						isReturnVarUsed = 1;
+						break;
+					}
 				}
 				if (!isReturnVarUsed) 
 				{
