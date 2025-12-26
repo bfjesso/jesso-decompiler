@@ -198,6 +198,10 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 			{
 				functions[i].returnType = functions[returnFunctionIndex].returnType;
 			}
+			else 
+			{
+				functions[i].returnType = INT_TYPE; // assume something is returned if its an imported function
+			}
 		}
 	}
 
