@@ -527,98 +527,26 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
-		{
-			pos = text.find(function->localVars[i].name, start);
-			if (pos != wxNOT_FOUND)
-			{
-				int end = pos + strlen(function->localVars[i].name);
-
-				colorAttr.SetTextColour(localVarColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
-
-				start = end;
-			}
-			else
-			{
-				break;
-			}
-		}
+		ColorAllStrs(text, function->localVars[i].name, localVarColor);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
-		{
-			pos = text.find(function->returnVars[i].name, start);
-			if (pos != wxNOT_FOUND)
-			{
-				int end = pos + strlen(function->returnVars[i].name);
-
-				colorAttr.SetTextColour(localVarColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
-
-				start = end;
-			}
-			else
-			{
-				break;
-			}
-		}
+		ColorAllStrs(text, function->returnVars[i].name, localVarColor);
 	}
 
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
-		{
-			pos = text.find(wxString(primitiveTypeStrs[i]) + " ", start);
-			if (pos != wxNOT_FOUND) 
-			{
-				int end = pos + strlen(primitiveTypeStrs[i]);
-				
-				colorAttr.SetTextColour(primitiveTypeColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
-
-				start = end;
-			}
-			else 
-			{
-				break;
-			}
-		}
+		ColorAllStrs(text, wxString(primitiveTypeStrs[i]) + " ", primitiveTypeColor);
 	}
 
 	// keywords
 	const char* keywordStrs[6] = { "if ", "else if ", "else\n", "for ", "while ", "return " };
 	for (int i = 0; i < 6; i++)
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
-		{
-			pos = text.find(keywordStrs[i], start);
-			if (pos != wxNOT_FOUND)
-			{
-				int end = pos + strlen(keywordStrs[i]);
-
-				colorAttr.SetTextColour(keywordColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
-
-				start = end;
-			}
-			else
-			{
-				break;
-			}
-		} 
+		ColorAllStrs(text, keywordStrs[i], keywordColor);
 	}
 
 	// strings
@@ -642,48 +570,36 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
-		{
-			pos = text.find(wxString(functions[i].name) + "(", start);
-			if (pos != wxNOT_FOUND)
-			{
-				int end = pos + strlen(functions[i].name);
-
-				colorAttr.SetTextColour(functionColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
-
-				start = end;
-			}
-			else
-			{
-				break;
-			}
-		}
+		ColorAllStrs(text, wxString(functions[i].name) + "(", functionColor);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		int start = 0;
-		int pos = 0;
-		while (start < text.length())
+		ColorAllStrs(text, wxString(imports[i].name) + "(", importColor);
+	}
+}
+
+void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color) 
+{
+	int start = 0;
+	int pos = 0;
+	while (start < text.length())
+	{
+		pos = text.find(str, start);
+		if (pos != wxNOT_FOUND)
 		{
-			pos = text.find(wxString(imports[i].name) + "(", start);
-			if (pos != wxNOT_FOUND)
-			{
-				int end = pos + strlen(imports[i].name);
+			int end = pos + str.length();
 
-				colorAttr.SetTextColour(importColor);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+			wxRichTextAttr colorAttr;
+			colorAttr.SetTextColour(color);
+			decompilationTextCtrl->SetStyle(pos, end, colorAttr);
 
-				start = end;
-			}
-			else
-			{
-				break;
-			}
+			start = end;
+		}
+		else
+		{
+			break;
 		}
 	}
 }

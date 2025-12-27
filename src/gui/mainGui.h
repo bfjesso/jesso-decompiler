@@ -85,6 +85,8 @@ public:
 
 	void ApplySyntaxHighlighting(Function* function);
 
+	void ColorAllStrs(wxString text, wxString str, wxColour color);
+
 	wxDECLARE_EVENT_TABLE();
 };
 
