@@ -539,12 +539,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		ColorAllStrs(text, wxString(primitiveTypeStrs[i]) + " ", primitiveTypeColor);
+		ColorAllStrs(text, primitiveTypeStrs[i], primitiveTypeColor);
 	}
 
 	// keywords
-	const char* keywordStrs[6] = { "if ", "else if ", "else\n", "for ", "while ", "return " };
-	for (int i = 0; i < 6; i++)
+	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
+	for (int i = 0; i < 5; i++)
 	{
 		ColorAllStrs(text, keywordStrs[i], keywordColor);
 	}
@@ -570,13 +570,13 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, wxString(functions[i].name) + "(", functionColor);
+		ColorAllStrs(text, functions[i].name, functionColor);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, wxString(imports[i].name) + "(", importColor);
+		ColorAllStrs(text, imports[i].name, importColor);
 	}
 }
 
@@ -592,8 +592,13 @@ void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color)
 			int end = pos + str.length();
 
 			wxRichTextAttr colorAttr;
-			colorAttr.SetTextColour(color);
-			decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+			decompilationTextCtrl->GetStyle(pos, colorAttr);
+
+			if (colorAttr.GetTextColour() == textColor) // only apply color if it hasn't been colored yet
+			{
+				colorAttr.SetTextColour(color);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+			}
 
 			start = end;
 		}
