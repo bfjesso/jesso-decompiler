@@ -513,11 +513,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxColour localVarColor = wxColour(0, 240, 255);
 	wxColour argumentColor = wxColour(150, 150, 150);
+	wxColour functionColor = wxColour(255, 220, 70);
+	wxColour importColor = wxColour(255, 70, 70);
 	wxColour primitiveTypeColor = wxColour(0, 150, 255);
 	wxColour keywordColor = wxColour(255, 150, 255);
 	wxColour stringColor = wxColour(200, 130, 0);
-	wxColour functionColor = wxColour(255, 220, 70);
-	wxColour importColor = wxColour(255, 70, 70);
+	wxColour numberColor = wxColour(200, 230, 150);
 	
 	wxString text = decompilationTextCtrl->GetValue();
 
@@ -590,6 +591,13 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		{
 			break;
 		}
+	}
+
+	// numbers
+	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+	for (int i = 0; i < 17; i++)
+	{
+		ColorAllStrs(text, numberChars[i], numberColor);
 	}
 }
 
