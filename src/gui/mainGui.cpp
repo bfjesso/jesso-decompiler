@@ -512,6 +512,7 @@ void MainGui::ReplaceEscapeChars(wxString* str)
 void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxColour localVarColor = wxColour(0, 240, 255);
+	wxColour argumentColor = wxColour(150, 150, 150);
 	wxColour primitiveTypeColor = wxColour(0, 150, 255);
 	wxColour keywordColor = wxColour(255, 150, 255);
 	wxColour stringColor = wxColour(200, 130, 0);
@@ -534,6 +535,30 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
 		ColorAllStrs(text, function->returnVars[i].name, localVarColor);
+	}
+
+	// stack args
+	for (int i = 0; i < function->numOfStackArgs; i++)
+	{
+		ColorAllStrs(text, function->stackArgs[i].name, argumentColor);
+	}
+
+	// reg args
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		ColorAllStrs(text, function->regArgs[i].name, argumentColor);
+	}
+
+	// functions
+	for (int i = 0; i < functions.size(); i++)
+	{
+		ColorAllStrs(text, functions[i].name, functionColor);
+	}
+
+	// imports
+	for (int i = 0; i < numOfImports; i++)
+	{
+		ColorAllStrs(text, imports[i].name, importColor);
 	}
 
 	// primitive data types
@@ -565,18 +590,6 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		{
 			break;
 		}
-	}
-
-	// functions
-	for (int i = 0; i < functions.size(); i++)
-	{
-		ColorAllStrs(text, functions[i].name, functionColor);
-	}
-
-	// imports
-	for (int i = 0; i < numOfImports; i++)
-	{
-		ColorAllStrs(text, imports[i].name, importColor);
 	}
 }
 
