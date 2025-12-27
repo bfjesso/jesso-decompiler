@@ -5,7 +5,7 @@ wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
 EVT_BUTTON(DisassembleFileButtonID, MainGui::DisassembleButton)
 EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
-EVT_GRID_CELL_RIGHT_CLICK(MainGui::RightClickOptions)
+EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
@@ -69,6 +69,8 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
+	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void { DecompRightClickOptions(e); });
+
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	functionsGrid->SetLabelBackgroundColour(backgroundColor);
@@ -441,7 +443,7 @@ void MainGui::FindAllFunctions()
 	}
 }
 
-void MainGui::RightClickOptions(wxGridEvent& e)
+void MainGui::GridRightClickOptions(wxGridEvent& e)
 {
 	wxMenu menu;
 
@@ -486,6 +488,68 @@ void MainGui::RightClickOptions(wxGridEvent& e)
 	e.Skip();
 }
 
+void MainGui::DecompRightClickOptions(wxContextMenuEvent& e) 
+{
+	wxMenu menu;
+
+	const int ID_COPY = 100;
+	const int ID_SELECT_ALL = 101;
+	const int ID_CONVERT_NUMBER = 102;
+
+	long start;
+	long end;
+	decompilationTextCtrl->GetSelection(&start, &end);
+	wxString selection = "";
+
+	if (start != end)
+	{
+		selection = decompilationTextCtrl->GetValue().substr(start, end - start);
+
+		menu.Append(ID_COPY, "Copy");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
+
+		wxRichTextAttr colorAttr;
+		decompilationTextCtrl->GetStyle(start, colorAttr);
+
+		wxRichTextAttr colorAttr2;
+		decompilationTextCtrl->GetStyle(start - 1, colorAttr2);
+
+		wxRichTextAttr colorAttr3;
+		decompilationTextCtrl->GetStyle(end, colorAttr3);
+
+		if (colorAttr.GetTextColour() == numberColor && colorAttr2.GetTextColour() != numberColor && colorAttr3.GetTextColour() != numberColor)
+		{
+			long long num = 0;
+			if (selection.ToLongLong(&num, 10))
+			{
+				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					char numStr[50] = { 0 };
+					sprintf(numStr, "0x%llX", num);
+
+					decompilationTextCtrl->Replace(start, end, numStr);
+					}, ID_CONVERT_NUMBER);
+			}
+			else if (selection.ToLongLong(&num, 16))
+			{
+				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { decompilationTextCtrl->Replace(start, end, std::to_string(num)); }, ID_CONVERT_NUMBER);
+			}
+		}
+	}
+
+	
+	menu.Append(ID_SELECT_ALL, "Select all");
+	menu.Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+		decompilationTextCtrl->SetSelection(0, decompilationTextCtrl->GetLastPosition());
+		decompilationTextCtrl->SetFocus();
+		}, ID_SELECT_ALL);
+
+	
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
 void MainGui::CloseApp(wxCloseEvent& e)
 {
 	if (dataSectionBytes) 
@@ -511,15 +575,6 @@ void MainGui::ReplaceEscapeChars(wxString* str)
 
 void MainGui::ApplySyntaxHighlighting(Function* function)
 {
-	wxColour localVarColor = wxColour(0, 240, 255);
-	wxColour argumentColor = wxColour(150, 150, 150);
-	wxColour functionColor = wxColour(255, 220, 70);
-	wxColour importColor = wxColour(255, 70, 70);
-	wxColour primitiveTypeColor = wxColour(0, 150, 255);
-	wxColour keywordColor = wxColour(255, 150, 255);
-	wxColour stringColor = wxColour(200, 130, 0);
-	wxColour numberColor = wxColour(200, 230, 150);
-	
 	wxString text = decompilationTextCtrl->GetValue();
 
 	wxRichTextAttr colorAttr;

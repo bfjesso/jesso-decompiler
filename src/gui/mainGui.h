@@ -77,7 +77,9 @@ public:
 
 	void FindAllFunctions();
 
-	void RightClickOptions(wxGridEvent& e);
+	void GridRightClickOptions(wxGridEvent& e);
+
+	void DecompRightClickOptions(wxContextMenuEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
 
