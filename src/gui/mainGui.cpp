@@ -562,6 +562,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		ColorAllStrs(text, imports[i].name, importColor);
 	}
 
+	// calling conventions
+	for (int i = 0; i < 4; i++)
+	{
+		ColorAllStrs(text, callingConventionStrs[i], primitiveTypeColor);
+	}
+
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
