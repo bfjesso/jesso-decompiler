@@ -452,39 +452,36 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 
 	if (grid == functionsGrid) 
 	{
-		wxMenuItem* decompile = new wxMenuItem(0, 100, "Decompile");
-		menu.Append(decompile);
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
-			{
-				DecompileFunction(row);
-			}, 100);
+		const int ID_DECOMPILE = 100;
+		const int ID_EDIT_PROPERTIES= 101;
+		const int ID_COPY_ADDRESS = 102;
+		
+		menu.Append(ID_DECOMPILE, "Decompile");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
 
-		wxMenuItem* editProperties = menu.Append(101, "Edit Properties");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, 101);
+		menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
 
-		wxMenuItem* cpyAddr = menu.Append(102, "Copy Address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, 102);
-
-		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+		menu.Append(ID_COPY_ADDRESS, "Copy address");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
 	}
 	else if(grid == disassemblyGrid)
 	{
-		wxMenuItem* cpySect = new wxMenuItem(0, 100, "Copy Section");
-		menu.Append(cpySect);
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void
-			{
-				CopyToClipboard(disassemblyGrid->GetCellValue(row, 1));
-			}, 100);
+		const int ID_COPY_SECTION = 100;
+		const int ID_COPY_ADDRESS = 101;
+		const int ID_COPY_ASSEMBLY = 102;
+		
+		menu.Append(ID_COPY_SECTION, "Copy section");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 1)); }, ID_COPY_SECTION);
 
-		wxMenuItem* cpyAddr = menu.Append(101, "Copy Address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 2)); }, 101);
+		menu.Append(ID_COPY_ADDRESS, "Copy address");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 2)); }, ID_COPY_ADDRESS);
 
-		wxMenuItem* cpyAsm = menu.Append(102, "Copy Assembly");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 3)); }, 102);
-
-		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+		menu.Append(ID_COPY_ASSEMBLY, "Copy assembly");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 3)); }, ID_COPY_ASSEMBLY);	
 	}
 
+	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
 }
 
