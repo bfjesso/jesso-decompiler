@@ -15,6 +15,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar = new wxMenuBar();
 	bytesDisassemblerMenu = new BytesDisassembler();
 	dataViewerMenu = new DataViewer();
+	colorsMenu = new ColorsMenu();
 
 	wxMenu* fileMenu = new wxMenu();
 
@@ -29,8 +30,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
 
+	wxMenu* optionsMenu = new wxMenu();
+
+	wxMenuItem* colors = optionsMenu->Append(OpenColorsMenuID, "Syntax highlighting");
+	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
+
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
+	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
@@ -514,7 +521,7 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 		wxRichTextAttr colorAttr3;
 		decompilationTextCtrl->GetStyle(end, colorAttr3);
 
-		if (colorAttr.GetTextColour() == numberColor && colorAttr2.GetTextColour() != numberColor && colorAttr3.GetTextColour() != numberColor)
+		if (colorAttr.GetTextColour() == colorsMenu->numberColor && colorAttr2.GetTextColour() != colorsMenu->numberColor && colorAttr3.GetTextColour() != colorsMenu->numberColor)
 		{
 			long long num = 0;
 			if (selection.ToLongLong(&num, 10))
@@ -581,56 +588,56 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, localVarColor);
+		ColorAllStrs(text, function->localVars[i].name, colorsMenu->localVarColor);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, localVarColor);
+		ColorAllStrs(text, function->returnVars[i].name, colorsMenu->localVarColor);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, argumentColor);
+		ColorAllStrs(text, function->stackArgs[i].name, colorsMenu->argumentColor);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, argumentColor);
+		ColorAllStrs(text, function->regArgs[i].name, colorsMenu->argumentColor);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, functionColor);
+		ColorAllStrs(text, functions[i].name, colorsMenu->functionColor);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name, importColor);
+		ColorAllStrs(text, imports[i].name, colorsMenu->importColor);
 	}
 
 	// calling conventions
 	for (int i = 0; i < 4; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], primitiveTypeColor);
+		ColorAllStrs(text, callingConventionStrs[i], colorsMenu->primitiveTypeColor);
 	}
 
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], primitiveTypeColor);
+		ColorAllStrs(text, primitiveTypeStrs[i], colorsMenu->primitiveTypeColor);
 	}
 
 	// keywords
 	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
 	for (int i = 0; i < 5; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], keywordColor);
+		ColorAllStrs(text, keywordStrs[i], colorsMenu->keywordColor);
 	}
 
 	// strings
@@ -641,7 +648,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		int end = text.find("\"", pos + 1);
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
-			colorAttr.SetTextColour(stringColor);
+			colorAttr.SetTextColour(colorsMenu->stringColor);
 			decompilationTextCtrl->SetStyle(pos, end + 1, colorAttr);
 			start = end + 1;
 		}
@@ -655,7 +662,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
-		ColorAllStrs(text, numberChars[i], numberColor);
+		ColorAllStrs(text, numberChars[i], colorsMenu->numberColor);
 	}
 }
 

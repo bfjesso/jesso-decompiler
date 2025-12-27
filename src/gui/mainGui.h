@@ -4,6 +4,7 @@
 #include <wx/richtext/richtextctrl.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
+#include "colorsMenu.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
@@ -18,6 +19,7 @@ public:
 	wxMenuBar* menuBar = nullptr;
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
+	ColorsMenu* colorsMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
 	wxButton* disassembleFileButton = nullptr;
@@ -58,6 +60,7 @@ public:
 		MainWindowID,
 		OpenBytesDisassemblerID,
 		OpenDataViewerID,
+		OpenColorsMenuID,
 		OpenFileID,
 		DisassembleFileButtonID,
 		AnalyzeFileButtonID
