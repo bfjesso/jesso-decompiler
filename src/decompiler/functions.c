@@ -1,5 +1,4 @@
 #include "functions.h"
-#include "dataTypes.h"
 #include "../disassembler/opcodes.h"
 
 #include <stdio.h>

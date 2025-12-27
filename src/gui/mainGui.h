@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/grid.h>
+#include <wx/richtext/richtextctrl.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
 #include "../file-handler/fileHandler.h"
@@ -23,7 +24,7 @@ public:
 	wxButton* analyzeFileButton = nullptr;
 	wxGrid* disassemblyGrid = nullptr;
 
-	wxTextCtrl* decompilationTextCtrl = nullptr;
+	wxRichTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
 
@@ -81,6 +82,8 @@ public:
 	void CloseApp(wxCloseEvent& e);
 
 	void ReplaceEscapeChars(wxString* str);
+
+	void ApplySyntaxHighlighting(Function* function);
 
 	wxDECLARE_EVENT_TABLE();
 };

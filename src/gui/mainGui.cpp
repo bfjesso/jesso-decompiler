@@ -1,4 +1,5 @@
 #include "mainGui.h"
+#include "../decompiler/dataTypes.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
@@ -64,9 +65,8 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
+	decompilationTextCtrl = new wxRichTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxRE_READONLY | wxHSCROLL | wxRE_MULTILINE);
 	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
-	decompilationTextCtrl->SetOwnForegroundColour(textColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
 
@@ -392,6 +392,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		decompilationTextCtrl->AppendText("\n");
 	}
 
+	ApplySyntaxHighlighting(params.currentFunc);
+
 	currentDecompiledFunc = functionIndex;
 
 	delete[] decompiledFunction;
@@ -505,6 +507,185 @@ void MainGui::ReplaceEscapeChars(wxString* str)
 	str->Replace("\r", "\\r");
 	str->Replace("\t", "\\t");
 	str->Replace("\v", "\\v");
+}
+
+void MainGui::ApplySyntaxHighlighting(Function* function)
+{
+	wxColour localVarColor = wxColour(0, 240, 255);
+	wxColour primitiveTypeColor = wxColour(0, 150, 255);
+	wxColour keywordColor = wxColour(255, 150, 255);
+	wxColour stringColor = wxColour(200, 130, 0);
+	wxColour functionColor = wxColour(255, 220, 70);
+	wxColour importColor = wxColour(255, 70, 70);
+	
+	wxString text = decompilationTextCtrl->GetValue();
+
+	wxRichTextAttr colorAttr;
+	colorAttr.SetTextColour(textColor);
+	decompilationTextCtrl->SetStyle(0, text.length() - 1, colorAttr);
+
+	// local vars
+	for (int i = 0; i < function->numOfLocalVars; i++) 
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(function->localVars[i].name, start);
+			if (pos != wxNOT_FOUND)
+			{
+				int end = pos + strlen(function->localVars[i].name);
+
+				colorAttr.SetTextColour(localVarColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	// return vars
+	for (int i = 0; i < function->numOfReturnVars; i++)
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(function->returnVars[i].name, start);
+			if (pos != wxNOT_FOUND)
+			{
+				int end = pos + strlen(function->returnVars[i].name);
+
+				colorAttr.SetTextColour(localVarColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	// primitive data types
+	for (int i = 0; i < 7; i++) 
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(wxString(primitiveTypeStrs[i]) + " ", start);
+			if (pos != wxNOT_FOUND) 
+			{
+				int end = pos + strlen(primitiveTypeStrs[i]);
+				
+				colorAttr.SetTextColour(primitiveTypeColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else 
+			{
+				break;
+			}
+		}
+	}
+
+	// keywords
+	const char* keywordStrs[6] = { "if ", "else if ", "else\n", "for ", "while ", "return " };
+	for (int i = 0; i < 6; i++)
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(keywordStrs[i], start);
+			if (pos != wxNOT_FOUND)
+			{
+				int end = pos + strlen(keywordStrs[i]);
+
+				colorAttr.SetTextColour(keywordColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else
+			{
+				break;
+			}
+		} 
+	}
+
+	// strings
+	int start = 0;
+	while (start < text.length())
+	{
+		int pos = text.find("\"", start);
+		int end = text.find("\"", pos + 1);
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+		{
+			colorAttr.SetTextColour(stringColor);
+			decompilationTextCtrl->SetStyle(pos, end + 1, colorAttr);
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// functions
+	for (int i = 0; i < functions.size(); i++)
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(wxString(functions[i].name) + "(", start);
+			if (pos != wxNOT_FOUND)
+			{
+				int end = pos + strlen(functions[i].name);
+
+				colorAttr.SetTextColour(functionColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	// imports
+	for (int i = 0; i < numOfImports; i++)
+	{
+		int start = 0;
+		int pos = 0;
+		while (start < text.length())
+		{
+			pos = text.find(wxString(imports[i].name) + "(", start);
+			if (pos != wxNOT_FOUND)
+			{
+				int end = pos + strlen(imports[i].name);
+
+				colorAttr.SetTextColour(importColor);
+				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+
+				start = end;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
 }
 
 // Function Properties Menu

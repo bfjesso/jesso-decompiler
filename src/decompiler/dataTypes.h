@@ -13,4 +13,13 @@ enum PrimitiveType
 	DOUBLE_TYPE
 };
 
-extern const char* primitiveTypeStrs[];
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	extern const char* primitiveTypeStrs[];
+
+#ifdef __cplusplus
+}
+#endif
