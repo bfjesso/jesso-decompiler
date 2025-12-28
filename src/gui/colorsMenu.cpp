@@ -10,41 +10,41 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 
 	operatorColorLabel = new wxStaticText(this, wxID_ANY, "Operators");
 	operatorColorLabel->SetOwnForegroundColour(textColor);
-	operatorColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, operatorColor, wxPoint(0, 0), wxSize(150, 25));
+	operatorColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, operatorColor, wxPoint(0, 0), wxSize(250, 25));
 
 	localVarColorLabel = new wxStaticText(this, wxID_ANY, "Local variables");
 	localVarColorLabel->SetOwnForegroundColour(textColor);
-	localVarColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, localVarColor, wxPoint(0, 0), wxSize(150, 25));
+	localVarColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, localVarColor, wxPoint(0, 0), wxSize(250, 25));
 
 	argumentColorLabel = new wxStaticText(this, wxID_ANY, "Arguments");
 	argumentColorLabel->SetOwnForegroundColour(textColor);
-	argumentColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, argumentColor, wxPoint(0, 0), wxSize(150, 25));
+	argumentColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, argumentColor, wxPoint(0, 0), wxSize(250, 25));
 
 	functionColorLabel = new wxStaticText(this, wxID_ANY, "Functions");
 	functionColorLabel->SetOwnForegroundColour(textColor);
-	functionColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, functionColor, wxPoint(0, 0), wxSize(150, 25));
+	functionColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, functionColor, wxPoint(0, 0), wxSize(250, 25));
 
 	importColorLabel = new wxStaticText(this, wxID_ANY, "Imports");
 	importColorLabel->SetOwnForegroundColour(textColor);
-	importColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, importColor, wxPoint(0, 0), wxSize(150, 25));
+	importColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, importColor, wxPoint(0, 0), wxSize(250, 25));
 
 	primitiveTypeColorLabel = new wxStaticText(this, wxID_ANY, "Primitive types");
 	primitiveTypeColorLabel->SetOwnForegroundColour(textColor);
-	primitiveTypeColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, primitiveTypeColor, wxPoint(0, 0), wxSize(150, 25));
+	primitiveTypeColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, primitiveTypeColor, wxPoint(0, 0), wxSize(250, 25));
 
 	keywordColorLabel = new wxStaticText(this, wxID_ANY, "Keywords");
 	keywordColorLabel->SetOwnForegroundColour(textColor);
-	keywordColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, keywordColor, wxPoint(0, 0), wxSize(150, 25));
+	keywordColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, keywordColor, wxPoint(0, 0), wxSize(250, 25));
 
 	stringColorLabel = new wxStaticText(this, wxID_ANY, "Strings");
 	stringColorLabel->SetOwnForegroundColour(textColor);
-	stringColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, stringColor, wxPoint(0, 0), wxSize(150, 25));
+	stringColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, stringColor, wxPoint(0, 0), wxSize(250, 25));
 
 	numberColorLabel = new wxStaticText(this, wxID_ANY, "Numbers");
 	numberColorLabel->SetOwnForegroundColour(textColor);
-	numberColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, numberColor, wxPoint(0, 0), wxSize(150, 25));
+	numberColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, numberColor, wxPoint(0, 0), wxSize(250, 25));
 
-	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(150, 25));
+	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(250, 25));
 	applyButton->SetOwnBackgroundColour(foregroundColor);
 	applyButton->SetOwnForegroundColour(textColor);
 
