@@ -87,6 +87,8 @@ public:
 
 	void ReplaceEscapeChars(wxString* str);
 
+	char IsCharDigit(char c);
+
 	void ApplySyntaxHighlighting(Function* function);
 
 	void ColorAllStrs(wxString text, wxString str, wxColour color);

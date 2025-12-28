@@ -506,21 +506,13 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 
 	if (start != end)
 	{
-		selection = decompilationTextCtrl->GetValue().substr(start, end - start);
+		wxString text = decompilationTextCtrl->GetValue();
+		selection = text.substr(start, end - start);
 
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		wxTextAttr colorAttr;
-		decompilationTextCtrl->GetStyle(start, colorAttr);
-
-		wxTextAttr colorAttr2;
-		decompilationTextCtrl->GetStyle(start - 1, colorAttr2);
-
-		wxTextAttr colorAttr3;
-		decompilationTextCtrl->GetStyle(end, colorAttr3);
-
-		if (colorAttr.GetTextColour() == colorsMenu->numberColor && colorAttr2.GetTextColour() != colorsMenu->numberColor && colorAttr3.GetTextColour() != colorsMenu->numberColor)
+		if (!IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			if (selection.ToLongLong(&num, 10))
@@ -531,12 +523,23 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 					sprintf(numStr, "0x%llX", num);
 
 					decompilationTextCtrl->Replace(start, end, numStr);
+
+					wxTextAttr numColor;
+					numColor.SetTextColour(colorsMenu->numberColor);
+					decompilationTextCtrl->SetStyle(start, start + strlen(numStr), numColor);
 					}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToLongLong(&num, 16))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { decompilationTextCtrl->Replace(start, end, std::to_string(num)); }, ID_CONVERT_NUMBER);
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
+					wxString numStr = std::to_string(num);
+					decompilationTextCtrl->Replace(start, end, numStr);
+
+					wxTextAttr numColor;
+					numColor.SetTextColour(colorsMenu->numberColor);
+					decompilationTextCtrl->SetStyle(start, start + numStr.length(), numColor);
+					}, ID_CONVERT_NUMBER);
 			}
 		}
 	}
@@ -575,6 +578,11 @@ void MainGui::ReplaceEscapeChars(wxString* str)
 	str->Replace("\r", "\\r");
 	str->Replace("\t", "\\t");
 	str->Replace("\v", "\\v");
+}
+
+char MainGui::IsCharDigit(char c)
+{
+	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
 }
 
 void MainGui::ApplySyntaxHighlighting(Function* function)
