@@ -8,6 +8,10 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 {
 	SetOwnBackgroundColour(backgroundColor);
 
+	operatorColorLabel = new wxStaticText(this, wxID_ANY, "Operators");
+	operatorColorLabel->SetOwnForegroundColour(textColor);
+	operatorColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, operatorColor, wxPoint(0, 0), wxSize(150, 25));
+
 	localVarColorLabel = new wxStaticText(this, wxID_ANY, "Local variables");
 	localVarColorLabel->SetOwnForegroundColour(textColor);
 	localVarColorPickerCtrl = new wxColourPickerCtrl(this, wxID_ANY, localVarColor, wxPoint(0, 0), wxSize(150, 25));
@@ -46,6 +50,9 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
+	vSizer->Add(operatorColorLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
+	vSizer->Add(operatorColorPickerCtrl, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
+
 	vSizer->Add(localVarColorLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 	vSizer->Add(localVarColorPickerCtrl, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
 
@@ -77,6 +84,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 
 void ColorsMenu::ApplyColors(wxCommandEvent& e)
 {
+	operatorColor = operatorColorPickerCtrl->GetColour();
 	localVarColor = localVarColorPickerCtrl->GetColour();
 	argumentColor = argumentColorPickerCtrl->GetColour();
 	functionColor = functionColorPickerCtrl->GetColour();

@@ -583,7 +583,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	wxString text = decompilationTextCtrl->GetValue();
 
 	wxRichTextAttr colorAttr;
-	colorAttr.SetTextColour(textColor);
+	colorAttr.SetTextColour(colorsMenu->operatorColor);
 	decompilationTextCtrl->SetStyle(0, text.length() - 1, colorAttr);
 
 	// local vars
@@ -681,7 +681,7 @@ void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color)
 			wxRichTextAttr colorAttr;
 			decompilationTextCtrl->GetStyle(pos, colorAttr);
 
-			if (colorAttr.GetTextColour() == textColor) // only apply color if it hasn't been colored yet
+			if (colorAttr.GetTextColour() == colorsMenu->operatorColor) // only apply color if it hasn't been colored yet
 			{
 				colorAttr.SetTextColour(color);
 				decompilationTextCtrl->SetStyle(pos, end, colorAttr);

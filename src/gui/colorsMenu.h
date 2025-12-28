@@ -7,6 +7,9 @@ class ColorsMenu : public wxFrame, public Utils
 public:
 	ColorsMenu();
 
+	wxStaticText* operatorColorLabel = nullptr;
+	wxColourPickerCtrl* operatorColorPickerCtrl = nullptr;
+
 	wxStaticText* localVarColorLabel = nullptr;
 	wxColourPickerCtrl* localVarColorPickerCtrl = nullptr;
 
@@ -35,6 +38,7 @@ public:
 
 	wxBoxSizer* vSizer = nullptr;
 
+	wxColour operatorColor = wxColour(180, 180, 180);
 	wxColour localVarColor = wxColour(156, 220, 254);
 	wxColour argumentColor = wxColour(154, 154, 154);
 	wxColour functionColor = wxColour(220, 220, 170);
