@@ -563,6 +563,7 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
+	colorsMenu->Destroy();
 	Destroy();
 }
 
