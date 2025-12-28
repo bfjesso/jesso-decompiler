@@ -49,9 +49,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
 	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
-	disassemblyGrid->SetLabelBackgroundColour(backgroundColor);
+	disassemblyGrid->SetLabelBackgroundColour(foregroundColor);
 	disassemblyGrid->SetLabelTextColour(textColor);
-	disassemblyGrid->SetDefaultCellBackgroundColour(foregroundColor);
+	disassemblyGrid->SetDefaultCellBackgroundColour(gridColor);
 	disassemblyGrid->SetDefaultCellTextColour(textColor);
 
 	disassemblyGrid->CreateGrid(0, 4);
@@ -73,16 +73,16 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	decompilationTextCtrl = new wxRichTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxRE_READONLY | wxHSCROLL | wxRE_MULTILINE);
-	decompilationTextCtrl->SetOwnBackgroundColour(foregroundColor);
+	decompilationTextCtrl->SetOwnBackgroundColour(gridColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void { DecompRightClickOptions(e); });
 
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
-	functionsGrid->SetLabelBackgroundColour(backgroundColor);
+	functionsGrid->SetLabelBackgroundColour(foregroundColor);
 	functionsGrid->SetLabelTextColour(textColor);
-	functionsGrid->SetDefaultCellBackgroundColour(foregroundColor);
+	functionsGrid->SetDefaultCellBackgroundColour(gridColor);
 	functionsGrid->SetDefaultCellTextColour(textColor);
 
 	functionsGrid->CreateGrid(0, 4);

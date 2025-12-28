@@ -35,15 +35,15 @@ public:
 
 	wxBoxSizer* vSizer = nullptr;
 
-	wxColour localVarColor = wxColour(0, 240, 255);
-	wxColour argumentColor = wxColour(150, 150, 150);
-	wxColour functionColor = wxColour(255, 220, 70);
-	wxColour importColor = wxColour(255, 70, 70);
-	wxColour primitiveTypeColor = wxColour(0, 150, 255);
-	wxColour keywordColor = wxColour(255, 150, 255);
-	wxColour stringColor = wxColour(200, 130, 0);
-	wxColour numberColor = wxColour(200, 230, 150);
-
+	wxColour localVarColor = wxColour(156, 220, 254);
+	wxColour argumentColor = wxColour(154, 154, 154);
+	wxColour functionColor = wxColour(220, 220, 170);
+	wxColour importColor = wxColour(190, 183, 255);
+	wxColour primitiveTypeColor = wxColour(86, 156, 214);
+	wxColour keywordColor = wxColour(216, 160, 223);
+	wxColour stringColor = wxColour(232, 201, 187);
+	wxColour numberColor = wxColour(181, 206, 168);
+	
 	enum ids
 	{
 		MainWindowID,
