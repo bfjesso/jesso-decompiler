@@ -1,7 +1,6 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/grid.h>
-#include <wx/richtext/richtextctrl.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
 #include "colorsMenu.h"
@@ -26,7 +25,7 @@ public:
 	wxButton* analyzeFileButton = nullptr;
 	wxGrid* disassemblyGrid = nullptr;
 
-	wxRichTextCtrl* decompilationTextCtrl = nullptr;
+	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
 
@@ -92,7 +91,7 @@ public:
 
 	void ApplySyntaxHighlighting(Function* function);
 
-	void ColorAllStrs(wxString text, wxString str, wxColour color);
+	void ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color);
 
 	wxDECLARE_EVENT_TABLE();
 };

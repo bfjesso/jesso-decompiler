@@ -12,34 +12,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	menuBar = new wxMenuBar();
-	bytesDisassemblerMenu = new BytesDisassembler();
-	dataViewerMenu = new DataViewer();
-	colorsMenu = new ColorsMenu();
-
-	wxMenu* fileMenu = new wxMenu();
-
-	wxMenuItem* openFile = fileMenu->Append(OpenFileID, "Open file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
-
-	wxMenu* toolMenu = new wxMenu();
-
-	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
-
-	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
-
-	wxMenu* optionsMenu = new wxMenu();
-
-	wxMenuItem* colors = optionsMenu->Append(OpenColorsMenuID, "Syntax highlighting");
-	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
-
-	menuBar->Append(fileMenu, "File");
-	menuBar->Append(toolMenu, "Tools");
-	menuBar->Append(optionsMenu, "Options");
-	this->SetMenuBar(menuBar);
-
 	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
 	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleFileButton->SetOwnForegroundColour(textColor);
@@ -53,7 +25,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetLabelTextColour(textColor);
 	disassemblyGrid->SetDefaultCellBackgroundColour(gridColor);
 	disassemblyGrid->SetDefaultCellTextColour(textColor);
-
 	disassemblyGrid->CreateGrid(0, 4);
 	disassemblyGrid->EnableGridLines(false);
 	disassemblyGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
@@ -72,10 +43,20 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxRichTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxRE_READONLY | wxRE_MULTILINE);
-	decompilationTextCtrl->SetOwnBackgroundColour(gridColor);
-	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
-	decompilationTextCtrl->SetFont(codeFont);
+	decompilationTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 300));
+	decompilationTextCtrl->SetReadOnly(true);
+	decompilationTextCtrl->SetMarginWidth(1, 0);
+	decompilationTextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, codeFont);
+	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_DEFAULT, gridColor);
+	decompilationTextCtrl->StyleClearAll();
+	decompilationTextCtrl->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	decompilationTextCtrl->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+	decompilationTextCtrl->SetCaretForeground(textColor);
+	decompilationTextCtrl->SetCaretWidth(2);
+	decompilationTextCtrl->SetWrapMode(wxSTC_WRAP_NONE);
+	decompilationTextCtrl->SetScrollWidthTracking(true);
+	decompilationTextCtrl->SetScrollWidth(1);
+	decompilationTextCtrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void { DecompRightClickOptions(e); });
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
@@ -101,6 +82,34 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->SetColSize(2, 200);
 	functionsGrid->SetColSize(3, 9999);
 	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+
+	menuBar = new wxMenuBar();
+	bytesDisassemblerMenu = new BytesDisassembler();
+	dataViewerMenu = new DataViewer();
+	colorsMenu = new ColorsMenu(decompilationTextCtrl);
+
+	wxMenu* fileMenu = new wxMenu();
+
+	wxMenuItem* openFile = fileMenu->Append(OpenFileID, "Open file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
+
+	wxMenu* toolMenu = new wxMenu();
+
+	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
+
+	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
+
+	wxMenu* optionsMenu = new wxMenu();
+
+	wxMenuItem* colors = optionsMenu->Append(OpenColorsMenuID, "Syntax highlighting");
+	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
+
+	menuBar->Append(fileMenu, "File");
+	menuBar->Append(toolMenu, "Tools");
+	menuBar->Append(optionsMenu, "Options");
+	this->SetMenuBar(menuBar);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -135,7 +144,9 @@ void MainGui::OpenFile()
 		disassembledInstructions.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
-		decompilationTextCtrl->Clear();
+		decompilationTextCtrl->SetReadOnly(false);
+		decompilationTextCtrl->SetText("");
+		decompilationTextCtrl->SetReadOnly(true);
 		currentDecompiledFunc = -1;
 
 		int rows = disassemblyGrid->GetNumberRows();
@@ -220,7 +231,9 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 	functions.clear();
 	functions.shrink_to_fit();
-	decompilationTextCtrl->Clear();
+	decompilationTextCtrl->SetReadOnly(false);
+	decompilationTextCtrl->SetText("");
+	decompilationTextCtrl->SetReadOnly(true);
 	int rows = functionsGrid->GetNumberRows();
 	if (rows > 0)
 	{
@@ -350,7 +363,9 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
-	decompilationTextCtrl->Clear();
+	decompilationTextCtrl->SetReadOnly(false);
+	decompilationTextCtrl->SetText("");
+	decompilationTextCtrl->SetReadOnly(true);
 
 	DecompilationParameters params = { 0 };
 	params.functions = &functions[0];
@@ -386,6 +401,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
+	decompilationTextCtrl->SetReadOnly(false);
+
 	for (int i = 0; i < numOfLinesDecompiled; i++)
 	{
 		wxString str = wxString(decompiledFunction[i].line);
@@ -401,6 +418,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	}
 
 	ApplySyntaxHighlighting(params.currentFunc);
+
+	decompilationTextCtrl->SetReadOnly(true);
 
 	currentDecompiledFunc = functionIndex;
 
@@ -512,36 +531,32 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		wxRichTextAttr colorAttr;
-		decompilationTextCtrl->GetStyle(start, colorAttr);
-
-		if (colorAttr.GetTextColour() == colorsMenu->numberColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
+		if (decompilationTextCtrl->GetStyleAt(start) == ColorsMenu::NUMBER_COLOR && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			if (selection.ToLongLong(&num, 10))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					decompilationTextCtrl->SetReadOnly(false);
 					char numStr[50] = { 0 };
 					sprintf(numStr, "0x%llX", num);
-
 					decompilationTextCtrl->Replace(start, end, numStr);
-
-					wxRichTextAttr numColor;
-					numColor.SetTextColour(colorsMenu->numberColor);
-					decompilationTextCtrl->SetStyle(start, start + strlen(numStr), numColor);
+					decompilationTextCtrl->StartStyling(start);
+					decompilationTextCtrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					decompilationTextCtrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToLongLong(&num, 16))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
+					decompilationTextCtrl->SetReadOnly(false);
 					wxString numStr = std::to_string(num);
 					decompilationTextCtrl->Replace(start, end, numStr);
-
-					wxRichTextAttr numColor;
-					numColor.SetTextColour(colorsMenu->numberColor);
-					decompilationTextCtrl->SetStyle(start, start + numStr.length(), numColor);
+					decompilationTextCtrl->StartStyling(start);
+					decompilationTextCtrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					decompilationTextCtrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
 		}
@@ -592,63 +607,62 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxString text = decompilationTextCtrl->GetValue();
 
-	wxRichTextAttr colorAttr;
-	colorAttr.SetTextColour(colorsMenu->operatorColor);
-	decompilationTextCtrl->SetStyle(0, text.length() - 1, colorAttr);
+	decompilationTextCtrl->StartStyling(0);
+	decompilationTextCtrl->SetStyling(text.length(), ColorsMenu::OPERATOR_COLOR);
 
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, colorsMenu->localVarColor);
+		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::LOCAL_VAR_COLOR);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, colorsMenu->localVarColor);
+		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::LOCAL_VAR_COLOR);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, colorsMenu->argumentColor);
+		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::ARGUMENT_COLOR);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, colorsMenu->argumentColor);
+		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::ARGUMENT_COLOR);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, colorsMenu->functionColor);
+		ColorAllStrs(text, functions[i].name, ColorsMenu::FUNCTION_COLOR);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name, colorsMenu->importColor);
+		ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR);
 	}
 
 	// calling conventions
 	for (int i = 0; i < 4; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], colorsMenu->primitiveTypeColor);
+		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::PRIMITIVE_COLOR);
 	}
 
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], colorsMenu->primitiveTypeColor);
+		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::PRIMITIVE_COLOR);
 	}
 
 	// keywords
 	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
 	for (int i = 0; i < 5; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], colorsMenu->keywordColor);
+		ColorAllStrs(text, keywordStrs[i], ColorsMenu::KEYWORD_COLOR);
 	}
 
 	// strings
@@ -659,8 +673,9 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		int end = text.find("\"", pos + 1);
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
-			colorAttr.SetTextColour(colorsMenu->stringColor);
-			decompilationTextCtrl->SetStyle(pos, end + 1, colorAttr);
+			decompilationTextCtrl->StartStyling(pos);
+			decompilationTextCtrl->SetStyling(end - pos + 1, ColorsMenu::STRING_COLOR);
+
 			start = end + 1;
 		}
 		else
@@ -673,11 +688,11 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
-		ColorAllStrs(text, numberChars[i], colorsMenu->numberColor);
+		ColorAllStrs(text, numberChars[i], ColorsMenu::NUMBER_COLOR);
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color) 
+void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color)
 {
 	int start = 0;
 	int pos = 0;
@@ -688,13 +703,10 @@ void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color)
 		{
 			int end = pos + str.length();
 
-			wxRichTextAttr colorAttr;
-			decompilationTextCtrl->GetStyle(pos, colorAttr);
-
-			if (colorAttr.GetTextColour() == colorsMenu->operatorColor) // only apply color if it hasn't been colored yet
+			if (decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
-				colorAttr.SetTextColour(color);
-				decompilationTextCtrl->SetStyle(pos, end, colorAttr);
+				decompilationTextCtrl->StartStyling(pos);
+				decompilationTextCtrl->SetStyling(str.length(), color);
 			}
 
 			start = end;

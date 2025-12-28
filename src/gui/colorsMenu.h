@@ -1,11 +1,14 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/clrpicker.h>
+#include <wx/stc/stc.h>
 
 class ColorsMenu : public wxFrame, public Utils
 {
 public:
-	ColorsMenu();
+	ColorsMenu(wxStyledTextCtrl* textCtrl);
+
+	wxStyledTextCtrl* decompilationTextCtrl;
 
 	wxStaticText* operatorColorLabel = nullptr;
 	wxColourPickerCtrl* operatorColorPickerCtrl = nullptr;
@@ -38,15 +41,18 @@ public:
 
 	wxBoxSizer* vSizer = nullptr;
 
-	wxColour operatorColor = wxColour(180, 180, 180);
-	wxColour localVarColor = wxColour(156, 220, 254);
-	wxColour argumentColor = wxColour(154, 154, 154);
-	wxColour functionColor = wxColour(220, 220, 170);
-	wxColour importColor = wxColour(190, 183, 255);
-	wxColour primitiveTypeColor = wxColour(86, 156, 214);
-	wxColour keywordColor = wxColour(216, 160, 223);
-	wxColour stringColor = wxColour(232, 201, 187);
-	wxColour numberColor = wxColour(181, 206, 168);
+	enum SyntaxHighlights
+	{
+		OPERATOR_COLOR,
+		LOCAL_VAR_COLOR,
+		ARGUMENT_COLOR,
+		FUNCTION_COLOR,
+		IMPORT_COLOR,
+		PRIMITIVE_COLOR,
+		KEYWORD_COLOR,
+		STRING_COLOR,
+		NUMBER_COLOR 
+	};
 	
 	enum ids
 	{
@@ -54,7 +60,7 @@ public:
 		ApplyButtonID
 	};
 
-	void ApplyColors(wxCommandEvent& e);
+	void ApplyColors();
 
 	void OpenMenu(wxPoint position);
 
