@@ -72,12 +72,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxRichTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxRE_READONLY | wxHSCROLL | wxRE_MULTILINE);
+	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxTE_RICH2 | wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
 	decompilationTextCtrl->SetOwnBackgroundColour(gridColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void { DecompRightClickOptions(e); });
-
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -512,13 +511,13 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		wxRichTextAttr colorAttr;
+		wxTextAttr colorAttr;
 		decompilationTextCtrl->GetStyle(start, colorAttr);
 
-		wxRichTextAttr colorAttr2;
+		wxTextAttr colorAttr2;
 		decompilationTextCtrl->GetStyle(start - 1, colorAttr2);
 
-		wxRichTextAttr colorAttr3;
+		wxTextAttr colorAttr3;
 		decompilationTextCtrl->GetStyle(end, colorAttr3);
 
 		if (colorAttr.GetTextColour() == colorsMenu->numberColor && colorAttr2.GetTextColour() != colorsMenu->numberColor && colorAttr3.GetTextColour() != colorsMenu->numberColor)
@@ -582,7 +581,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxString text = decompilationTextCtrl->GetValue();
 
-	wxRichTextAttr colorAttr;
+	wxTextAttr colorAttr;
 	colorAttr.SetTextColour(colorsMenu->operatorColor);
 	decompilationTextCtrl->SetStyle(0, text.length() - 1, colorAttr);
 
@@ -678,7 +677,7 @@ void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color)
 		{
 			int end = pos + str.length();
 
-			wxRichTextAttr colorAttr;
+			wxTextAttr colorAttr;
 			decompilationTextCtrl->GetStyle(pos, colorAttr);
 
 			if (colorAttr.GetTextColour() == colorsMenu->operatorColor) // only apply color if it hasn't been colored yet
