@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/grid.h>
+#include <wx/richtext/richtextctrl.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
 #include "colorsMenu.h"
@@ -25,7 +26,7 @@ public:
 	wxButton* analyzeFileButton = nullptr;
 	wxGrid* disassemblyGrid = nullptr;
 
-	wxTextCtrl* decompilationTextCtrl = nullptr;
+	wxRichTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
 

@@ -72,7 +72,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyGrid->SetColSize(3, 9999);
 	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	decompilationTextCtrl = new wxTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxTE_RICH2 | wxTE_READONLY | wxHSCROLL | wxTE_MULTILINE);
+	decompilationTextCtrl = new wxRichTextCtrl(this, wxID_ANY, "", wxPoint(0, 0), wxSize(300, 300), wxRE_READONLY | wxRE_MULTILINE);
 	decompilationTextCtrl->SetOwnBackgroundColour(gridColor);
 	wxFont codeFont(wxFontInfo(10).FaceName("Cascadia Mono").Bold());
 	decompilationTextCtrl->SetFont(codeFont);
@@ -512,7 +512,7 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		wxTextAttr colorAttr;
+		wxRichTextAttr colorAttr;
 		decompilationTextCtrl->GetStyle(start, colorAttr);
 
 		if (colorAttr.GetTextColour() == colorsMenu->numberColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
@@ -527,7 +527,7 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 
 					decompilationTextCtrl->Replace(start, end, numStr);
 
-					wxTextAttr numColor;
+					wxRichTextAttr numColor;
 					numColor.SetTextColour(colorsMenu->numberColor);
 					decompilationTextCtrl->SetStyle(start, start + strlen(numStr), numColor);
 					}, ID_CONVERT_NUMBER);
@@ -539,7 +539,7 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 					wxString numStr = std::to_string(num);
 					decompilationTextCtrl->Replace(start, end, numStr);
 
-					wxTextAttr numColor;
+					wxRichTextAttr numColor;
 					numColor.SetTextColour(colorsMenu->numberColor);
 					decompilationTextCtrl->SetStyle(start, start + numStr.length(), numColor);
 					}, ID_CONVERT_NUMBER);
@@ -592,7 +592,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxString text = decompilationTextCtrl->GetValue();
 
-	wxTextAttr colorAttr;
+	wxRichTextAttr colorAttr;
 	colorAttr.SetTextColour(colorsMenu->operatorColor);
 	decompilationTextCtrl->SetStyle(0, text.length() - 1, colorAttr);
 
@@ -688,7 +688,7 @@ void MainGui::ColorAllStrs(wxString text, wxString str, wxColour color)
 		{
 			int end = pos + str.length();
 
-			wxTextAttr colorAttr;
+			wxRichTextAttr colorAttr;
 			decompilationTextCtrl->GetStyle(pos, colorAttr);
 
 			if (colorAttr.GetTextColour() == colorsMenu->operatorColor) // only apply color if it hasn't been colored yet
