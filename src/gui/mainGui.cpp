@@ -512,7 +512,10 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		if (!IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
+		wxTextAttr colorAttr;
+		decompilationTextCtrl->GetStyle(start, colorAttr);
+
+		if (colorAttr.GetTextColour() == colorsMenu->numberColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			if (selection.ToLongLong(&num, 10))
