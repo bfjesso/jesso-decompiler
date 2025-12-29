@@ -5,7 +5,7 @@ The GUI is made using [wxWidgets](https://wxwidgets.org).
 
 The decompiler is still a work in progress, and the disassembler is not yet fully comprehensive of the Intel instruction set.
 
-![Screenshot of GUI on Windows 10](./capture.png)
+![Screenshot of GUI on Windows 10](./screenshot.png)
 
 # Installation
 If you do not want to compile it yourself, there are precompiled binaries already in bin.
