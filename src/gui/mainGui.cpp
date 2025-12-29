@@ -593,7 +593,10 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR);
+		if(imports[i].name[0] != 0)
+		{
+			ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR);
+		}
 	}
 
 	// calling conventions
