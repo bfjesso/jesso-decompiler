@@ -20,44 +20,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
 	analyzeFileButton->SetOwnForegroundColour(textColor);
 
-	disassemblyGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
-	disassemblyGrid->SetLabelBackgroundColour(foregroundColor);
-	disassemblyGrid->SetLabelTextColour(textColor);
-	disassemblyGrid->SetDefaultCellBackgroundColour(gridColor);
-	disassemblyGrid->SetDefaultCellTextColour(textColor);
-	disassemblyGrid->CreateGrid(0, 4);
-	disassemblyGrid->EnableGridLines(false);
-	disassemblyGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
-	disassemblyGrid->SetScrollRate(0, 10);
-	disassemblyGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	disassemblyGrid->DisableDragRowSize();
-	disassemblyGrid->EnableEditing(false);
-	disassemblyGrid->SetColLabelValue(0, "Index");
-	disassemblyGrid->SetColLabelValue(1, "Section");
-	disassemblyGrid->SetColLabelValue(2, "Address");
-	disassemblyGrid->SetColLabelValue(3, "Assembly");
-	disassemblyGrid->HideRowLabels();
-	disassemblyGrid->SetColSize(0, 50);
-	disassemblyGrid->SetColSize(1, 100);
-	disassemblyGrid->SetColSize(2, 100);
-	disassemblyGrid->SetColSize(3, 9999);
-	disassemblyGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
+	SetUpStyledTextCtrl(disassemblyTextCtrl);
 
 	decompilationTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 300));
-	decompilationTextCtrl->SetReadOnly(true);
-	decompilationTextCtrl->SetMarginWidth(1, 0);
-	decompilationTextCtrl->StyleSetFont(wxSTC_STYLE_DEFAULT, codeFont);
-	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_DEFAULT, gridColor);
-	decompilationTextCtrl->StyleClearAll();
-	decompilationTextCtrl->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
-	decompilationTextCtrl->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-	decompilationTextCtrl->SetCaretForeground(textColor);
-	decompilationTextCtrl->SetCaretWidth(2);
-	decompilationTextCtrl->SetWrapMode(wxSTC_WRAP_NONE);
-	decompilationTextCtrl->SetScrollWidthTracking(true);
-	decompilationTextCtrl->SetScrollWidth(1);
-	decompilationTextCtrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
-	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void { DecompRightClickOptions(e); });
+	SetUpStyledTextCtrl(decompilationTextCtrl);
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -86,7 +53,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar = new wxMenuBar();
 	bytesDisassemblerMenu = new BytesDisassembler();
 	dataViewerMenu = new DataViewer();
-	colorsMenu = new ColorsMenu(decompilationTextCtrl);
+	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl);
 
 	wxMenu* fileMenu = new wxMenu();
 
@@ -119,7 +86,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row1Sizer->Add(disassembleFileButton, 0, wxALL, 10);
 	row1Sizer->Add(analyzeFileButton, 0, wxUP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassemblyGrid, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row2Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
 	row2Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
 
 	row3Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
@@ -144,17 +111,11 @@ void MainGui::OpenFile()
 		disassembledInstructions.shrink_to_fit();
 		functions.clear();
 		functions.shrink_to_fit();
-		decompilationTextCtrl->SetReadOnly(false);
-		decompilationTextCtrl->SetText("");
-		decompilationTextCtrl->SetReadOnly(true);
+		ClearStyledTextCtrl(disassemblyTextCtrl);
+		ClearStyledTextCtrl(decompilationTextCtrl);
 		currentDecompiledFunc = -1;
 
-		int rows = disassemblyGrid->GetNumberRows();
-		if (rows > 0)
-		{
-			disassemblyGrid->DeleteRows(0, disassemblyGrid->GetNumberRows());
-		}
-		rows = functionsGrid->GetNumberRows();
+		int rows = functionsGrid->GetNumberRows();
 		if (rows > 0)
 		{
 			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
@@ -200,11 +161,7 @@ void MainGui::DisassembleButton(wxCommandEvent& e)
 		return;
 	}
 
-	int rows = disassemblyGrid->GetNumberRows();
-	if (rows > 0)
-	{
-		disassemblyGrid->DeleteRows(0, disassemblyGrid->GetNumberRows());
-	}
+	ClearStyledTextCtrl(disassemblyTextCtrl);
 
 	instructionAddresses.clear();
 	instructionAddresses.shrink_to_fit();
@@ -231,9 +188,7 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 	functions.clear();
 	functions.shrink_to_fit();
-	decompilationTextCtrl->SetReadOnly(false);
-	decompilationTextCtrl->SetText("");
-	decompilationTextCtrl->SetReadOnly(true);
+	ClearStyledTextCtrl(decompilationTextCtrl);
 	int rows = functionsGrid->GetNumberRows();
 	if (rows > 0)
 	{
@@ -307,6 +262,8 @@ void MainGui::DisassembleCodeSections()
 
 	unsigned int instructionNum = 0;
 
+	disassemblyTextCtrl->SetReadOnly(false);
+
 	for (int i = 0; i < numOfCodeSections; i++)
 	{
 		unsigned char* bytes = new unsigned char[sections[i].size];
@@ -329,30 +286,42 @@ void MainGui::DisassembleCodeSections()
 
 			currentIndex += currentInstruction.numOfBytes;
 
-			disassemblyGrid->AppendRows(1);
-			disassemblyGrid->SetCellValue(instructionNum, 0, std::to_string(instructionNum+1));
-			disassemblyGrid->SetCellValue(instructionNum, 1, sections[i].name);
-			disassemblyGrid->SetCellValue(instructionNum, 2, wxString(addressStr));
+			int pos = disassemblyTextCtrl->GetLength() - 1;
+			wxString addressInfoStr = wxString(addressStr) + wxString(sections[i].name) + "\t";
+			disassemblyTextCtrl->AppendText(addressInfoStr);
+			disassemblyTextCtrl->StartStyling(pos);
+			disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::PRIMITIVE_COLOR);
+
+			pos += addressInfoStr.length() + 1;
 
 			char buffer[255] = { 0 };
 			if (instructionToStr(&currentInstruction, buffer, 255))
 			{
-				disassemblyGrid->SetCellValue(instructionNum, 3, wxString(buffer));
+				wxString asmStr = wxString(buffer);
+				disassemblyTextCtrl->AppendText(asmStr);
+				disassemblyTextCtrl->StartStyling(pos);
+				disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::OPERATOR_COLOR);
+
+				ApplyAsmHighlighting(pos, asmStr, &currentInstruction);
 
 				instructionAddresses.push_back(address);
 				disassembledInstructions.push_back(currentInstruction);
 			}
 			else
 			{
-				disassemblyGrid->SetCellValue(instructionNum, 3,"ERROR");
+				disassemblyTextCtrl->AppendText("ERROR");
 				break;
 			}
+
+			disassemblyTextCtrl->AppendText("\n");
 
 			instructionNum++;
 		}
 
 		delete[] bytes;
 	}
+
+	disassemblyTextCtrl->SetReadOnly(true);
 }
 
 void MainGui::DecompileFunction(unsigned short functionIndex)
@@ -363,9 +332,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
-	decompilationTextCtrl->SetReadOnly(false);
-	decompilationTextCtrl->SetText("");
-	decompilationTextCtrl->SetReadOnly(true);
+	ClearStyledTextCtrl(decompilationTextCtrl);
 
 	DecompilationParameters params = { 0 };
 	params.functions = &functions[0];
@@ -473,44 +440,25 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 	wxMenu menu;
 
 	int row = e.GetRow(); // row right-clicked on
-	wxGrid* grid = (wxGrid*)(e.GetEventObject());
 
-	if (grid == functionsGrid) 
-	{
-		const int ID_DECOMPILE = 100;
-		const int ID_EDIT_PROPERTIES= 101;
-		const int ID_COPY_ADDRESS = 102;
-		
-		menu.Append(ID_DECOMPILE, "Decompile");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
+	const int ID_DECOMPILE = 100;
+	const int ID_EDIT_PROPERTIES = 101;
+	const int ID_COPY_ADDRESS = 102;
 
-		menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
+	menu.Append(ID_DECOMPILE, "Decompile");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
 
-		menu.Append(ID_COPY_ADDRESS, "Copy address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
-	}
-	else if(grid == disassemblyGrid)
-	{
-		const int ID_COPY_SECTION = 100;
-		const int ID_COPY_ADDRESS = 101;
-		const int ID_COPY_ASSEMBLY = 102;
-		
-		menu.Append(ID_COPY_SECTION, "Copy section");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 1)); }, ID_COPY_SECTION);
+	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
 
-		menu.Append(ID_COPY_ADDRESS, "Copy address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 2)); }, ID_COPY_ADDRESS);
-
-		menu.Append(ID_COPY_ASSEMBLY, "Copy assembly");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(disassemblyGrid->GetCellValue(row, 3)); }, ID_COPY_ASSEMBLY);	
-	}
+	menu.Append(ID_COPY_ADDRESS, "Copy address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
 }
 
-void MainGui::DecompRightClickOptions(wxContextMenuEvent& e) 
+void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e) 
 {
 	wxMenu menu;
 
@@ -518,45 +466,47 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 	const int ID_SELECT_ALL = 101;
 	const int ID_CONVERT_NUMBER = 102;
 
+	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
+
 	long start;
 	long end;
-	decompilationTextCtrl->GetSelection(&start, &end);
+	ctrl->GetSelection(&start, &end);
 	wxString selection = "";
 
 	if (start != end)
 	{
-		wxString text = decompilationTextCtrl->GetValue();
+		wxString text = ctrl->GetValue();
 		selection = text.substr(start, end - start);
 
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		if (decompilationTextCtrl->GetStyleAt(start) == ColorsMenu::NUMBER_COLOR && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
+		if (ctrl->GetStyleAt(start) == ColorsMenu::NUMBER_COLOR && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			if (selection.ToLongLong(&num, 10))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					decompilationTextCtrl->SetReadOnly(false);
+					ctrl->SetReadOnly(false);
 					char numStr[50] = { 0 };
 					sprintf(numStr, "0x%llX", num);
-					decompilationTextCtrl->Replace(start, end, numStr);
-					decompilationTextCtrl->StartStyling(start);
-					decompilationTextCtrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
-					decompilationTextCtrl->SetReadOnly(true);
+					ctrl->Replace(start, end, numStr);
+					ctrl->StartStyling(start);
+					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToLongLong(&num, 16))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
-					decompilationTextCtrl->SetReadOnly(false);
+					ctrl->SetReadOnly(false);
 					wxString numStr = std::to_string(num);
-					decompilationTextCtrl->Replace(start, end, numStr);
-					decompilationTextCtrl->StartStyling(start);
-					decompilationTextCtrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
-					decompilationTextCtrl->SetReadOnly(true);
+					ctrl->Replace(start, end, numStr);
+					ctrl->StartStyling(start);
+					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
 		}
@@ -564,12 +514,10 @@ void MainGui::DecompRightClickOptions(wxContextMenuEvent& e)
 
 	
 	menu.Append(ID_SELECT_ALL, "Select all");
-	menu.Bind(wxEVT_MENU, [this](wxCommandEvent&) {
-		decompilationTextCtrl->SetSelection(0, decompilationTextCtrl->GetLastPosition());
-		decompilationTextCtrl->SetFocus();
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ctrl->SetSelection(0, ctrl->GetLastPosition());
+		ctrl->SetFocus();
 		}, ID_SELECT_ALL);
-
-	
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
@@ -692,6 +640,88 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 }
 
+void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction)
+{
+	disassemblyTextCtrl->StartStyling(pos);
+	disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::FUNCTION_COLOR);
+
+	// regs
+	int start = 0;
+	for (int i = 0; i < 3; i++) 
+	{
+		wxString regStr = "";
+		if (instruction->operands[i].type == REGISTER) 
+		{
+			regStr = wxString(registerStrs[instruction->operands[i].reg]);
+		}
+		else if (instruction->operands[i].type == MEM_ADDRESS && instruction->operands[i].memoryAddress.reg != NO_REG)
+		{
+			regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
+		}
+		else if (instruction->operands[i].type == MEM_ADDRESS && instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
+		{
+			regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
+		}
+
+		if (!regStr.IsEmpty()) 
+		{
+			int loc = str.find(regStr, start);
+			disassemblyTextCtrl->StartStyling(pos + loc);
+			disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::LOCAL_VAR_COLOR);
+			start += loc + regStr.length();
+		}
+
+		if (instruction->operands[i].type == MEM_ADDRESS)
+		{
+			// segment
+			if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT) 
+			{
+				wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
+				disassemblyTextCtrl->StartStyling(pos + str.find(segStr));
+				disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::IMPORT_COLOR);
+			}
+			
+			// ptr size
+			if (instruction->operands[i].memoryAddress.ptrSize != 0 && instruction->operands[i].memoryAddress.ptrSize <= 10)
+			{
+				wxString sizeStr = wxString(ptrSizeStrs[instruction->operands[i].memoryAddress.ptrSize / 2]);
+				disassemblyTextCtrl->StartStyling(pos + str.find(sizeStr));
+				disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::ARGUMENT_COLOR);
+			}
+		}
+	}
+
+	// numbers
+	start = 0;
+	while (start < str.length())
+	{
+		int num = str.find("0x", start);
+		if (num != wxNOT_FOUND)
+		{
+			int bracket = str.find("]", num + 1);
+			int space = str.find(" ", num + 1);
+			int end = str.length();
+			if (bracket != wxNOT_FOUND && (bracket < space || space == wxNOT_FOUND))
+			{
+				end = bracket;
+			}
+			else if (space != wxNOT_FOUND && (space < bracket || bracket == wxNOT_FOUND))
+			{
+				end = space;
+			}
+			
+			disassemblyTextCtrl->StartStyling(pos + num);
+			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::NUMBER_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
 void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color)
 {
 	int start = 0;
@@ -716,6 +746,31 @@ void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighli
 			break;
 		}
 	}
+}
+
+void MainGui::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl) 
+{
+	ctrl->SetReadOnly(true);
+	ctrl->SetMarginWidth(1, 0);
+	ctrl->StyleSetFont(wxSTC_STYLE_DEFAULT, codeFont);
+	ctrl->StyleSetBackground(wxSTC_STYLE_DEFAULT, gridColor);
+	ctrl->StyleClearAll();
+	ctrl->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	ctrl->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+	ctrl->SetCaretForeground(textColor);
+	ctrl->SetCaretWidth(2);
+	ctrl->SetWrapMode(wxSTC_WRAP_NONE);
+	ctrl->SetScrollWidthTracking(true);
+	ctrl->SetScrollWidth(1);
+	ctrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
+	ctrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
+}
+
+void MainGui::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
+{
+	ctrl->SetReadOnly(false);
+	ctrl->SetText("");
+	ctrl->SetReadOnly(true);
 }
 
 // Function Properties Menu

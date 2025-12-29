@@ -28,9 +28,18 @@ enum Register
 	NO_REG
 };
 
-extern const char* segmentStrs[];
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-extern const char* registerStrs[];
+	extern const char* segmentStrs[];
+
+	extern const char* registerStrs[];
+
+#ifdef __cplusplus
+}
+#endif
 
 unsigned char compareRegisters(enum Register reg1, enum Register reg2);
 

@@ -95,7 +95,16 @@ struct Opcode
 	enum OpcodeSuperscript opcodeSuperscript;
 };
 
-extern const char* mnemonicStrs[];
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	extern const char* mnemonicStrs[];
+
+#ifdef __cplusplus
+}
+#endif
 
 unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, unsigned char* overwrites); // some opcodes may modify a register even if it isn't an operand
 

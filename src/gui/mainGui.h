@@ -23,8 +23,8 @@ public:
 
 	wxButton* disassembleFileButton = nullptr;
 	wxButton* analyzeFileButton = nullptr;
-	wxGrid* disassemblyGrid = nullptr;
 
+	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
@@ -81,7 +81,7 @@ public:
 
 	void GridRightClickOptions(wxGridEvent& e);
 
-	void DecompRightClickOptions(wxContextMenuEvent& e);
+	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
 
@@ -91,7 +91,13 @@ public:
 
 	void ApplySyntaxHighlighting(Function* function);
 
+	void ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction);
+
 	void ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color);
+
+	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
+
+	void ClearStyledTextCtrl(wxStyledTextCtrl* ctrl);
 
 	wxDECLARE_EVENT_TABLE();
 };

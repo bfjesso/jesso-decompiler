@@ -15,7 +15,7 @@ static const char* group1PrefixStrs[] =
 	"REPZ"
 };
 
-static const char* ptrSizeStrs[] =
+extern const char* ptrSizeStrs[] =
 {
 	"BYTE PTR",
 	"WORD PTR",

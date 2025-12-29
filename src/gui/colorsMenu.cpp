@@ -4,11 +4,12 @@ wxBEGIN_EVENT_TABLE(ColorsMenu, wxFrame)
 EVT_CLOSE(ColorsMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-ColorsMenu::ColorsMenu(wxStyledTextCtrl* textCtrl) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
+ColorsMenu::ColorsMenu(wxStyledTextCtrl* textCtrl, wxStyledTextCtrl* textCtrl2) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	decompilationTextCtrl = textCtrl;
+	disassemblyTextCtrl = textCtrl;
+	decompilationTextCtrl = textCtrl2;
 
 	operatorColorLabel = new wxStaticText(this, wxID_ANY, "Operators");
 	operatorColorLabel->SetOwnForegroundColour(textColor);
@@ -49,7 +50,7 @@ ColorsMenu::ColorsMenu(wxStyledTextCtrl* textCtrl) : wxFrame(nullptr, MainWindow
 	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(250, 25));
 	applyButton->SetOwnBackgroundColour(foregroundColor);
 	applyButton->SetOwnForegroundColour(textColor);
-	applyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { ApplyColors(); });
+	applyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { ApplyColors(disassemblyTextCtrl); ApplyColors(decompilationTextCtrl); });
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -84,22 +85,23 @@ ColorsMenu::ColorsMenu(wxStyledTextCtrl* textCtrl) : wxFrame(nullptr, MainWindow
 
 	SetSizerAndFit(vSizer);
 
-	ApplyColors();
+	ApplyColors(disassemblyTextCtrl);
+	ApplyColors(decompilationTextCtrl);
 }
 
-void ColorsMenu::ApplyColors()
+void ColorsMenu::ApplyColors(wxStyledTextCtrl* ctrl)
 {
-	if (decompilationTextCtrl) 
+	if (ctrl)
 	{
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::OPERATOR_COLOR, operatorColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::LOCAL_VAR_COLOR, localVarColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::ARGUMENT_COLOR, argumentColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::FUNCTION_COLOR, functionColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::IMPORT_COLOR, importColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::PRIMITIVE_COLOR, primitiveTypeColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::KEYWORD_COLOR, keywordColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::STRING_COLOR, stringColorPickerCtrl->GetColour());
-		decompilationTextCtrl->StyleSetForeground(ColorsMenu::NUMBER_COLOR, numberColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::OPERATOR_COLOR, operatorColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::LOCAL_VAR_COLOR, localVarColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::ARGUMENT_COLOR, argumentColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::FUNCTION_COLOR, functionColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::IMPORT_COLOR, importColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::PRIMITIVE_COLOR, primitiveTypeColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::KEYWORD_COLOR, keywordColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::STRING_COLOR, stringColorPickerCtrl->GetColour());
+		ctrl->StyleSetForeground(ColorsMenu::NUMBER_COLOR, numberColorPickerCtrl->GetColour());
 	}
 }
 

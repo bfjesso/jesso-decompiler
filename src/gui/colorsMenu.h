@@ -6,9 +6,10 @@
 class ColorsMenu : public wxFrame, public Utils
 {
 public:
-	ColorsMenu(wxStyledTextCtrl* textCtrl);
+	ColorsMenu(wxStyledTextCtrl* textCtrl, wxStyledTextCtrl* textCtrl2);
 
-	wxStyledTextCtrl* decompilationTextCtrl;
+	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
+	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxStaticText* operatorColorLabel = nullptr;
 	wxColourPickerCtrl* operatorColorPickerCtrl = nullptr;
@@ -60,7 +61,7 @@ public:
 		ApplyButtonID
 	};
 
-	void ApplyColors();
+	void ApplyColors(wxStyledTextCtrl* ctrl);
 
 	void OpenMenu(wxPoint position);
 
