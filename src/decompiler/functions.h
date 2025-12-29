@@ -97,7 +97,7 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 
 struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum, unsigned long long callAddr);
 
-unsigned char getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
 static void initializeFunctionVarNames(struct Function* function);
 

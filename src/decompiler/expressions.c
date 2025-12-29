@@ -220,12 +220,12 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			else if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND)
 			{
 				char operandStr1[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], type, operandStr1, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), operandStr1, 255))
 				{
 					return 0;
 				}
 				char operandStr2[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[2], type, operandStr2, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[2], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[2]), operandStr2, 255))
 				{
 					return 0;
 				}
@@ -248,7 +248,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			else
 			{
 				char operandStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], type, operandStr, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[targetOperand]), operandStr, 255))
 				{
 					return 0;
 				}

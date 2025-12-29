@@ -368,15 +368,17 @@ int findInstructionByAddress(unsigned long long* addresses, int low, int high, u
 	return -1;
 }
 
-unsigned char getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 {
 	switch (opcode)
 	{
 	case MOVSS:
+	case ADDSS:
 	case CVTPS2PD:
 	case CVTSS2SD:
 		return FLOAT_TYPE;
 	case MOVSD:
+	case ADDSD:
 	case CVTPD2PS:
 	case CVTSD2SS:
 		return DOUBLE_TYPE;
