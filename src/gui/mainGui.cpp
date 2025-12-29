@@ -31,12 +31,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->SetLabelTextColour(textColor);
 	functionsGrid->SetDefaultCellBackgroundColour(gridColor);
 	functionsGrid->SetDefaultCellTextColour(textColor);
-
 	functionsGrid->CreateGrid(0, 4);
 	functionsGrid->EnableGridLines(false);
-	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
-	functionsGrid->SetScrollRate(0, 10);
 	functionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
+	functionsGrid->SetCellHighlightPenWidth(0);
+	functionsGrid->SetCellHighlightROPenWidth(0);
 	functionsGrid->DisableDragRowSize();
 	functionsGrid->EnableEditing(false);
 	functionsGrid->SetColLabelValue(0, "Address");
@@ -196,6 +196,8 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	}
 	
 	FindAllFunctions();
+
+	functionsGrid->SetLabelTextColour(textColor);
 
 	numOfDataSections = 0;
 	if (dataSectionBytes)
