@@ -219,24 +219,14 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 				for (int k = j + 1; k < functions[i].numOfInstructions; k++)
 				{
 					enum Mnemonic opcode = functions[i].instructions[k].opcode;
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
-					{
-						break;
-					}
-
-					if (doesInstructionAccessRegister(&(functions[i].instructions[k]), AX))
-					{
-						if (!doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, 0))
-						{
-							isReturnVarUsed = 1;
-						}
-
-						break;
-					}
-
-					if (opcode == RET_NEAR || opcode == RET_FAR) 
+					if (opcode == RET_NEAR || opcode == RET_FAR || doesInstructionAccessRegister(&(functions[i].instructions[k]), AX, 0))
 					{
 						isReturnVarUsed = 1;
+						break;
+					}
+
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(functions[i].instructions[k]), AX))
+					{
 						break;
 					}
 				}
@@ -286,14 +276,10 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 									break;
 								}
 
-								if (doesInstructionAccessRegister(&(functions[i].instructions[l]), AX))
+								unsigned char operandNum = 0;
+								if (doesInstructionAccessRegister(&(functions[i].instructions[l]), AX, &operandNum))
 								{
-									unsigned char operandNum = 0;
-									if (!doesInstructionModifyRegister(&(functions[i].instructions[l]), AX, &operandNum)) 
-									{
-										returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
-									}
-									
+									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
 									break;
 								}
 							}

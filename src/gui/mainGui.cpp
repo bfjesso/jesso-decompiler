@@ -34,6 +34,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->CreateGrid(0, 4);
 	functionsGrid->EnableGridLines(false);
 	functionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	functionsGrid->SetScrollRate(0, 10);
 	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
 	functionsGrid->SetCellHighlightPenWidth(0);
 	functionsGrid->SetCellHighlightROPenWidth(0);
