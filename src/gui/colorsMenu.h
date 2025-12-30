@@ -6,18 +6,57 @@
 class ColorsMenu : public wxFrame, public Utils
 {
 public:
-	ColorsMenu(wxStyledTextCtrl* textCtrl, wxStyledTextCtrl* textCtrl2);
+	ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl);
 
 	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
-	std::vector<wxColourPickerCtrl*> colorPickerCtrls;
+	wxStaticText* disassemblyLabel;
+	wxStaticText* decompilationLabel;
+
+	std::vector<wxColourPickerCtrl*> disassemblyColorPickerCtrls;
+	std::vector<wxColourPickerCtrl*> decompilationColorPickerCtrls;
 
 	wxButton* applyButton;
 
+	wxBoxSizer* disassemblySizer = nullptr;
+	wxBoxSizer* decompilationSizer = nullptr;
+	wxBoxSizer* hSizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	enum DecompilationColors
+	enum DisassemblyColor
+	{
+		PUNCTUATION_COLOR,
+		ADDRESS_COLOR,
+		OPCODE_COLOR,
+		REGISTER_COLOR,
+		SEGMENT_COLOR,
+		PTR_SIZE_COLOR,
+		CONSTANT_COLOR
+	};
+	const char* disassemblyColorNames[7] =
+	{
+		"Punctuation",
+		"Addresses",
+		"Opcodes",
+		"Registers",
+		"Segments",
+		"Pointer sizes",
+		"Constants"
+	};
+	wxColour defaultDisassemblyColors[7] =
+	{
+		wxColour(180, 180, 180),
+		wxColour(154, 154, 154),
+		wxColour(220, 220, 170),
+		wxColour(156, 220, 254),
+		wxColour(190, 183, 255),
+		wxColour(86, 156, 214),
+		wxColour(181, 206, 168)
+	};
+	const int numberOfDisassemblyColors = 7;
+
+	enum DecompilationColor
 	{
 		OPERATOR_COLOR,
 		LOCAL_VAR_COLOR,
@@ -61,7 +100,7 @@ public:
 		ApplyButtonID
 	};
 
-	void ApplyColors(wxStyledTextCtrl* ctrl);
+	void ApplyColors();
 
 	void OpenMenu(wxPoint position);
 

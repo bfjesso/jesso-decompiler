@@ -71,7 +71,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	wxMenu* optionsMenu = new wxMenu();
 
-	wxMenuItem* colors = optionsMenu->Append(OpenColorsMenuID, "Syntax highlighting");
+	wxMenuItem* colors = optionsMenu->Append(OpenColorsMenuID, "Colors");
 	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
 
 	menuBar->Append(fileMenu, "File");
@@ -293,7 +293,7 @@ void MainGui::DisassembleCodeSections()
 			wxString addressInfoStr = wxString(addressStr) + wxString(sections[i].name) + "\t";
 			disassemblyTextCtrl->AppendText(addressInfoStr);
 			disassemblyTextCtrl->StartStyling(pos);
-			disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::PRIMITIVE_COLOR);
+			disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
 
 			pos += addressInfoStr.length() + 1;
 
@@ -303,7 +303,7 @@ void MainGui::DisassembleCodeSections()
 				wxString asmStr = wxString(buffer);
 				disassemblyTextCtrl->AppendText(asmStr);
 				disassemblyTextCtrl->StartStyling(pos);
-				disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::OPERATOR_COLOR);
+				disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
 
 				ApplyAsmHighlighting(pos, asmStr, &currentInstruction);
 
@@ -484,7 +484,8 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		if (ctrl->GetStyleAt(start) == ColorsMenu::NUMBER_COLOR && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
+		int numColor = ctrl == disassemblyTextCtrl ? ColorsMenu::DisassemblyColor::CONSTANT_COLOR : ColorsMenu::DecompilationColor::NUMBER_COLOR;
+		if (ctrl->GetStyleAt(start) == numColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			unsigned long long unum = 0;
@@ -497,7 +498,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					sprintf(numStr, "0x%llX", num);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
-					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
@@ -509,7 +510,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					wxString numStr = std::to_string(num);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
-					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
@@ -522,7 +523,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					sprintf(numStr, "0x%llX", unum);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
-					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
@@ -534,7 +535,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					wxString numStr = std::to_string(unum);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
-					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
 			}
@@ -585,36 +586,36 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	wxString text = decompilationTextCtrl->GetValue();
 
 	decompilationTextCtrl->StartStyling(0);
-	decompilationTextCtrl->SetStyling(text.length(), ColorsMenu::OPERATOR_COLOR);
+	decompilationTextCtrl->SetStyling(text.length(), ColorsMenu::DecompilationColor::OPERATOR_COLOR);
 
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, ColorsMenu::FUNCTION_COLOR, 0);
+		ColorAllStrs(text, functions[i].name, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
 	}
 
 	// imports
@@ -622,27 +623,27 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	{
 		if(imports[i].name[0] != 0)
 		{
-			ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR, 0);
+			ColorAllStrs(text, imports[i].name, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 		}
 	}
 
 	// calling conventions
 	for (int i = 0; i < 4; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::PRIMITIVE_COLOR, 0);
+		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
 
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::PRIMITIVE_COLOR, 0);
+		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
 
 	// keywords
 	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
 	for (int i = 0; i < 5; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], ColorsMenu::KEYWORD_COLOR, 0);
+		ColorAllStrs(text, keywordStrs[i], ColorsMenu::DecompilationColor::KEYWORD_COLOR, 0);
 	}
 
 	// strings
@@ -654,7 +655,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			decompilationTextCtrl->StartStyling(pos);
-			decompilationTextCtrl->SetStyling(end - pos + 1, ColorsMenu::STRING_COLOR);
+			decompilationTextCtrl->SetStyling(end - pos + 1, ColorsMenu::DecompilationColor::STRING_COLOR);
 
 			start = end + 1;
 		}
@@ -668,14 +669,14 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
-		ColorAllStrs(text, numberChars[i], ColorsMenu::NUMBER_COLOR, 0);
+		ColorAllStrs(text, numberChars[i], ColorsMenu::DecompilationColor::NUMBER_COLOR, 0);
 	}
 }
 
 void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction)
 {
 	disassemblyTextCtrl->StartStyling(pos);
-	disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::FUNCTION_COLOR);
+	disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
 
 	// regs
 	int start = 0;
@@ -699,7 +700,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 		{
 			int loc = str.find(regStr, start);
 			disassemblyTextCtrl->StartStyling(pos + loc);
-			disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::LOCAL_VAR_COLOR);
+			disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
 			start += loc + regStr.length();
 		}
 
@@ -710,7 +711,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 			{
 				wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
 				disassemblyTextCtrl->StartStyling(pos + str.find(segStr));
-				disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::IMPORT_COLOR);
+				disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
 			}
 			
 			// ptr size
@@ -718,7 +719,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 			{
 				wxString sizeStr = wxString(ptrSizeStrs[instruction->operands[i].memoryAddress.ptrSize / 2]);
 				disassemblyTextCtrl->StartStyling(pos + str.find(sizeStr));
-				disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::ARGUMENT_COLOR);
+				disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
 			}
 		}
 	}
@@ -743,7 +744,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 			}
 			
 			disassemblyTextCtrl->StartStyling(pos + num);
-			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::NUMBER_COLOR);
+			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
 
 			start = end + 1;
 		}
@@ -754,7 +755,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColors color, unsigned char forceColor)
+void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
 	int start = 0;
 	int pos = 0;
@@ -765,7 +766,7 @@ void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::Decompilatio
 		{
 			int end = pos + str.length();
 
-			if (forceColor || decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
+			if (forceColor || decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				decompilationTextCtrl->StartStyling(pos);
 				decompilationTextCtrl->SetStyling(str.length(), color);
