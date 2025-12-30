@@ -754,7 +754,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color, unsigned char forceColor)
+void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColors color, unsigned char forceColor)
 {
 	int start = 0;
 	int pos = 0;

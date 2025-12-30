@@ -11,38 +11,13 @@ public:
 	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
-	wxStaticText* operatorColorLabel = nullptr;
-	wxColourPickerCtrl* operatorColorPickerCtrl = nullptr;
-
-	wxStaticText* localVarColorLabel = nullptr;
-	wxColourPickerCtrl* localVarColorPickerCtrl = nullptr;
-
-	wxStaticText* argumentColorLabel = nullptr;
-	wxColourPickerCtrl* argumentColorPickerCtrl = nullptr;
-
-	wxStaticText* functionColorLabel = nullptr;
-	wxColourPickerCtrl* functionColorPickerCtrl = nullptr;
-
-	wxStaticText* importColorLabel = nullptr;
-	wxColourPickerCtrl* importColorPickerCtrl = nullptr;
-
-	wxStaticText* primitiveTypeColorLabel = nullptr;
-	wxColourPickerCtrl* primitiveTypeColorPickerCtrl = nullptr;
-
-	wxStaticText* keywordColorLabel = nullptr;
-	wxColourPickerCtrl* keywordColorPickerCtrl = nullptr;
-
-	wxStaticText* stringColorLabel = nullptr;
-	wxColourPickerCtrl* stringColorPickerCtrl = nullptr;
-
-	wxStaticText* numberColorLabel = nullptr;
-	wxColourPickerCtrl* numberColorPickerCtrl = nullptr;
+	std::vector<wxColourPickerCtrl*> colorPickerCtrls;
 
 	wxButton* applyButton;
 
 	wxBoxSizer* vSizer = nullptr;
 
-	enum SyntaxHighlights
+	enum DecompilationColors
 	{
 		OPERATOR_COLOR,
 		LOCAL_VAR_COLOR,
@@ -54,6 +29,31 @@ public:
 		STRING_COLOR,
 		NUMBER_COLOR 
 	};
+	const char* decompColorNames[9] = 
+	{ 
+		"Operators",
+		"Local variables",
+		"Arguments",
+		"Functions",
+		"Imports",
+		"Primitive types",
+		"Keywords",
+		"Strings",
+		"Numbers"
+	};
+	wxColour defaultDecompColors[9] = 
+	{
+		wxColour(180, 180, 180),
+		wxColour(156, 220, 254),
+		wxColour(154, 154, 154),
+		wxColour(220, 220, 170),
+		wxColour(190, 183, 255),
+		wxColour(86, 156, 214),
+		wxColour(216, 160, 223),
+		wxColour(232, 201, 187),
+		wxColour(181, 206, 168)
+	};
+	const int numberOfDecompColors = 9;
 	
 	enum ids
 	{
