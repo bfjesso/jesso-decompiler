@@ -5,7 +5,7 @@
 
 unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
 {
-	unsigned char initializedRegs[NO_REG - RAX] = { 0 }; // index is (i - RAX)
+	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
 	unsigned long long addressToJumpTo = 0;
 	unsigned char canReturnNothing = 0;
@@ -36,7 +36,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		{
 			initializedRegs[0] = 1; // AX
 		}
-		else if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP)
+		else if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
 		{
 			continue;
 		}
@@ -49,7 +49,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			if (currentOperand->type == REGISTER)
 			{
-				for(int k = RAX; k <= R15; k++)
+				for(int k = RAX; k < ST0; k++)
 				{
 					if(k == RBP || k == RSP) { continue; }
 
