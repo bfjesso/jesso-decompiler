@@ -8,6 +8,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	unsigned char initializedRegs[NO_REG - RAX] = { 0 }; // index is (i - RAX)
 
 	unsigned long long addressToJumpTo = 0;
+	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
 	for (int i = 0; i < numOfInstructions; i++)
@@ -117,26 +118,33 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		// check for return value
 		overwrites = 0;
-		if ((doesOpcodeModifyRegister(currentInstruction->opcode, AX, &overwrites) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesInstructionModifyOperand(currentInstruction, 0, &overwrites))) && overwrites)
+		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
-			struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-			if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[0]; }
-
-			result->returnType = getTypeOfOperand(currentInstruction->opcode, operand);
-			result->addressOfReturnFunction = 0;
-		}
-		else if (isOpcodeCall(currentInstruction->opcode))
-		{
-			unsigned long long calleeAddress = addresses[i] + currentInstruction->operands[0].immediate;
-			if (calleeAddress != addresses[0]) // check for recursive function
+			if ((doesOpcodeModifyRegister(currentInstruction->opcode, AX, &overwrites) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesInstructionModifyOperand(currentInstruction, 0, &overwrites))) && overwrites)
 			{
-				result->addressOfReturnFunction = calleeAddress;
+				struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
+				if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[0]; }
+
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, operand);
+				result->addressOfReturnFunction = 0;
 			}
-		}
-		else if (currentInstruction->opcode == FLD)
-		{
-			result->returnType = FLOAT_TYPE;
-			result->addressOfReturnFunction = 0;
+			else if (isOpcodeCall(currentInstruction->opcode))
+			{
+				unsigned long long calleeAddress = addresses[i] + currentInstruction->operands[0].immediate;
+				if (calleeAddress != addresses[0]) // check for recursive function
+				{
+					result->addressOfReturnFunction = calleeAddress;
+				}
+			}
+			else if (currentInstruction->opcode == FLD)
+			{
+				result->returnType = FLOAT_TYPE;
+				result->addressOfReturnFunction = 0;
+			}
+			else if ((currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR) && result->returnType == VOID_TYPE)
+			{
+				canReturnNothing = 1;
+			}
 		}
 
 		if (addressToJumpTo != 0 && addresses[i] < addressToJumpTo)
