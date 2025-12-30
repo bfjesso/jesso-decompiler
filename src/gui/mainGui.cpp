@@ -487,6 +487,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 		if (ctrl->GetStyleAt(start) == ColorsMenu::NUMBER_COLOR && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
+			unsigned long long unum = 0;
 			if (selection.ToLongLong(&num, 10))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
@@ -506,6 +507,31 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
 					ctrl->SetReadOnly(false);
 					wxString numStr = std::to_string(num);
+					ctrl->Replace(start, end, numStr);
+					ctrl->StartStyling(start);
+					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetReadOnly(true);
+					}, ID_CONVERT_NUMBER);
+			}
+			else if (selection.ToULongLong(&unum, 10))
+			{
+				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					ctrl->SetReadOnly(false);
+					char numStr[50] = { 0 };
+					sprintf(numStr, "0x%llX", unum);
+					ctrl->Replace(start, end, numStr);
+					ctrl->StartStyling(start);
+					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
+					ctrl->SetReadOnly(true);
+					}, ID_CONVERT_NUMBER);
+			}
+			else if (selection.ToULongLong(&unum, 16))
+			{
+				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					ctrl->SetReadOnly(false);
+					wxString numStr = std::to_string(unum);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), ColorsMenu::NUMBER_COLOR);
