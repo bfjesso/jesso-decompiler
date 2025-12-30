@@ -1421,6 +1421,19 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			return 1;
 		}
 	}
+	else if (operandNum == 1) 
+	{
+		switch (instruction->opcode)
+		{
+		case XOR:
+			if (areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
+			{ 
+				if (overwrites != 0) { *overwrites = 1; }
+				return 1;
+			}
+			return 0;
+		}
+	}
 
 	return 0;
 }
