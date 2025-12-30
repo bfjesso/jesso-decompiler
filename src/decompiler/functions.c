@@ -35,7 +35,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		{
 			initializedRegs[0] = 1; // AX
 		}
-		else if (currentInstruction->opcode == POP) 
+		else if (currentInstruction->opcode == PUSH || currentInstruction->opcode == POP)
 		{
 			continue;
 		}
@@ -83,7 +83,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 				if (!alreadyFound)
 				{
-					result->stackArgs[result->numOfStackArgs].stackOffset = (unsigned char)(currentOperand->memoryAddress.constDisplacement);
+					result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
 					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 					result->numOfStackArgs++;
 				}
