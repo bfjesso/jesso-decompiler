@@ -48,7 +48,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 			if (currentOperand->type == REGISTER)
 			{
-				for(int k = RAX; k < NO_REG; k++)
+				for(int k = RAX; k <= R15; k++)
 				{
 					if(k == RBP || k == RSP) { continue; }
 
