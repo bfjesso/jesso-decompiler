@@ -3,7 +3,7 @@
 
 unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
 {
-	if (doesInstructionModifyOperand(instruction, 0, 0) && instruction->operands[0].type == MEM_ADDRESS)
+	if (instruction->operands[0].type == MEM_ADDRESS && !compareRegisters(instruction->operands[0].memoryAddress.reg, SP) && doesInstructionModifyOperand(instruction, 0, 0))
 	{
 		return 1;
 	}
