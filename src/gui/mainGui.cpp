@@ -564,31 +564,31 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::LOCAL_VAR_COLOR);
+		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::LOCAL_VAR_COLOR, 1);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::LOCAL_VAR_COLOR);
+		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::ARGUMENT_COLOR);
+		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::ARGUMENT_COLOR);
+		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, ColorsMenu::FUNCTION_COLOR);
+		ColorAllStrs(text, functions[i].name, ColorsMenu::FUNCTION_COLOR, 0);
 	}
 
 	// imports
@@ -596,27 +596,27 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	{
 		if(imports[i].name[0] != 0)
 		{
-			ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR);
+			ColorAllStrs(text, imports[i].name, ColorsMenu::IMPORT_COLOR, 0);
 		}
 	}
 
 	// calling conventions
 	for (int i = 0; i < 4; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::PRIMITIVE_COLOR);
+		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::PRIMITIVE_COLOR, 0);
 	}
 
 	// primitive data types
 	for (int i = 0; i < 7; i++) 
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::PRIMITIVE_COLOR);
+		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::PRIMITIVE_COLOR, 0);
 	}
 
 	// keywords
 	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
 	for (int i = 0; i < 5; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], ColorsMenu::KEYWORD_COLOR);
+		ColorAllStrs(text, keywordStrs[i], ColorsMenu::KEYWORD_COLOR, 0);
 	}
 
 	// strings
@@ -642,7 +642,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
-		ColorAllStrs(text, numberChars[i], ColorsMenu::NUMBER_COLOR);
+		ColorAllStrs(text, numberChars[i], ColorsMenu::NUMBER_COLOR, 0);
 	}
 }
 
@@ -728,7 +728,7 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color)
+void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color, unsigned char forceColor)
 {
 	int start = 0;
 	int pos = 0;
@@ -739,7 +739,7 @@ void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighli
 		{
 			int end = pos + str.length();
 
-			if (decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
+			if (forceColor || decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				decompilationTextCtrl->StartStyling(pos);
 				decompilationTextCtrl->SetStyling(str.length(), color);

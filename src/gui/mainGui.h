@@ -93,7 +93,7 @@ public:
 
 	void ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction);
 
-	void ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color);
+	void ColorAllStrs(wxString text, wxString str, ColorsMenu::SyntaxHighlights color, unsigned char forceColor);
 
 	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
 
