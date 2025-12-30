@@ -201,13 +201,16 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 				f = &functions[returnFunctionIndex];
 			}
 
-			if (returnFunctionIndex != -1 && functions[returnFunctionIndex].returnType != VOID_TYPE)
+			if (returnFunctionIndex != -1)
 			{
-				functions[i].returnType = functions[returnFunctionIndex].returnType;
+				if (functions[returnFunctionIndex].returnType != VOID_TYPE) 
+				{
+					functions[i].returnType = functions[returnFunctionIndex].returnType;
+				}
 			}
-			else 
+			else // probably an imported function
 			{
-				functions[i].returnType = INT_TYPE; // assume something is returned if its an imported function
+				functions[i].returnType = INT_TYPE; // assume something is returned
 			}
 		}
 	}
