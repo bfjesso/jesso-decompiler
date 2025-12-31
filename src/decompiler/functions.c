@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex, unsigned char is64Bit)
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
@@ -62,7 +62,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 						else if (!initializedRegs[k - RAX])
 						{
 							result->regArgs[result->numOfRegArgs].reg = k;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 							result->numOfRegArgs++;
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k - RAX] = 1;
@@ -85,7 +85,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				if (!alreadyFound)
 				{
 					result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
-					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 					result->numOfStackArgs++;
 				}
 			}
@@ -109,7 +109,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 					if (!isAlreadyFound)
 					{
 						result->localVars[result->numOfLocalVars].stackOffset = (int)displacement;
-						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 						result->numOfLocalVars++;
 					}
 				}
@@ -125,7 +125,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
 				if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[0]; }
 
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, operand);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, operand, is64Bit);
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
@@ -186,7 +186,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	return 0;
 }
 
-unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions) // resolves if a function's return type depends on another function
+unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit) // resolves if a function's return type depends on another function
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
@@ -210,7 +210,7 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 			}
 			else // probably an imported function
 			{
-				functions[i].returnType = INT_TYPE; // assume something is returned
+				functions[i].returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
 			}
 		}
 	}
@@ -218,7 +218,7 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports)
+unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit)
 {
 	for (int i = 0; i < numOfFunctions; i++)
 	{
@@ -278,7 +278,7 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 						if (imports[k].address == calleeAddress)
 						{
 							// checking if AX is ever accessed without being assigned after the call and until the next function call
-							unsigned char returnType = INT_TYPE; // assume it returns something by default
+							unsigned char returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume it returns something by default
 							for (int l = j + 1; i < functions[i].numOfInstructions; l++)
 							{
 								enum Mnemonic opcode = functions[i].instructions[l].opcode;
@@ -290,7 +290,7 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 								unsigned char operandNum = 0;
 								if (doesInstructionAccessRegister(&(functions[i].instructions[l]), AX, &operandNum))
 								{
-									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]));
+									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]), is64Bit);
 									break;
 								}
 							}
@@ -379,7 +379,7 @@ int findInstructionByAddress(unsigned long long* addresses, int low, int high, u
 	return -1;
 }
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit)
 {
 	switch (opcode)
 	{
@@ -399,7 +399,7 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 
 	if (operand->type == IMMEDIATE) 
 	{
-		return INT_TYPE;
+		return is64Bit ? LONG_LONG_TYPE : INT_TYPE;
 	}
 
 	unsigned char size = 0;

@@ -354,6 +354,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.numOfDataSections = numOfDataSections;
 	params.dataSectionByte = dataSectionBytes;
 
+	params.is64Bit = is64Bit;
+
 	LineOfC* decompiledFunction = new LineOfC[255];
 	if (!decompiledFunction) 
 	{
@@ -402,7 +404,7 @@ void MainGui::FindAllFunctions()
 	int numOfInstructions = disassembledInstructions.size();
 	functions.push_back({ 0 });
 	int instructionIndex = 0;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex, is64Bit))
 	{
 		numOfInstructions -= functions[functionNum].numOfInstructions;
 		functionsGrid->AppendRows(1);
@@ -433,8 +435,8 @@ void MainGui::FindAllFunctions()
 
 	if (functions.size() > 0) 
 	{
-		fixAllFunctionReturnTypes(&functions[0], functions.size());
-		getAllFuncReturnVars(&functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports);
+		fixAllFunctionReturnTypes(&functions[0], functions.size(), is64Bit);
+		getAllFuncReturnVars(&functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports, is64Bit);
 	}
 }
 

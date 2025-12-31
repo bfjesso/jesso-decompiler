@@ -73,11 +73,11 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex);
+	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
-	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions);
+	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
 
-	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports);
+	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit);
 
 #ifdef __cplusplus
 }
@@ -97,7 +97,7 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 
 struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum, unsigned long long callAddr);
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
 
 static void initializeFunctionVarNames(struct Function* function);
 

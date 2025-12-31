@@ -31,6 +31,8 @@ struct DecompilationParameters
 	struct FileSection* dataSections;
 	int numOfDataSections;
 	unsigned char* dataSectionByte;
+
+	unsigned char is64Bit;
 };
 
 unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer);

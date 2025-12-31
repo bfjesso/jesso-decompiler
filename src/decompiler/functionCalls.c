@@ -200,7 +200,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				break;
 			}
 
-			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
+			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0], params.is64Bit);
 
 			params.startInstructionIndex = i;
 			char argStr[255] = { 0 };
@@ -220,7 +220,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			{
 				int operandIndex = getLastOperand(currentInstruction);
 
-				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex]);
+				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex], params.is64Bit);
 
 				params.startInstructionIndex = i;
 				char argStr[255] = { 0 };
