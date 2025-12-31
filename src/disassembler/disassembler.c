@@ -484,9 +484,9 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 
 		result->mnemonic = extendedOpcode->mnemonic;
 
-		if (extendedOpcode->operands[0] != NO_OPERAND_CODE)
+		for (int i = 0; i < 3; i++)
 		{
-			for (int i = 0; i < 3; i++) 
+			if (extendedOpcode->operands[i] != NO_OPERAND_CODE)
 			{
 				result->operands[i] = extendedOpcode->operands[i];
 			}
