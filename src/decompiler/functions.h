@@ -64,7 +64,7 @@ struct Function
 	struct StackVariable localVars[100];
 	unsigned char numOfLocalVars;
 
-	struct FuncReturnVariable returnVars[20];
+	struct FuncReturnVariable returnVars[100];
 	unsigned char numOfReturnVars;
 };
 
