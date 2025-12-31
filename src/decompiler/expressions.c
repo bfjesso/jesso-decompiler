@@ -400,6 +400,12 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 
 		if (currentInstruction->opcode == TEST && areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1]))
 		{
+			if (params.currentFunc->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+			{
+				i--;
+				continue;
+			}
+			
 			params.startInstructionIndex = i;
 
 			char operandStr[255] = { 0 };
