@@ -212,8 +212,10 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 		bufferIndex++;
 
 		if (bufferIndex > bufferSize) { return 0; }
-		buffer[bufferIndex] = memAddr->scale + '0';
-		bufferIndex++;
+		char hexScale[20];
+		sprintf(hexScale, "0x%X", memAddr->scale);
+		strcpy(buffer + bufferIndex, hexScale);
+		bufferIndex += strlen(hexScale);
 	}
 
 	if (memAddr->regDisplacement != NO_REG)

@@ -685,25 +685,39 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	for (int i = 0; i < 3; i++) 
 	{
 		wxString regStr = "";
+		wxString regStr2 = "";
 		if (instruction->operands[i].type == REGISTER) 
 		{
 			regStr = wxString(registerStrs[instruction->operands[i].reg]);
 		}
-		else if (instruction->operands[i].type == MEM_ADDRESS && instruction->operands[i].memoryAddress.reg != NO_REG)
+		else if (instruction->operands[i].type == MEM_ADDRESS)
 		{
-			regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
+			if (instruction->operands[i].memoryAddress.reg != NO_REG) 
+			{
+				regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
+			}
+
+			if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
+			{
+				regStr2 = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
+			}
 		}
-		else if (instruction->operands[i].type == MEM_ADDRESS && instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
-		{
-			regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
-		}
+		
 
 		if (!regStr.IsEmpty()) 
 		{
 			int loc = str.find(regStr, start);
 			disassemblyTextCtrl->StartStyling(pos + loc);
 			disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-			start += loc + regStr.length();
+			start = loc + regStr.length();
+		}
+
+		if (!regStr2.IsEmpty())
+		{
+			int loc = str.find(regStr2, start);
+			disassemblyTextCtrl->StartStyling(pos + loc);
+			disassemblyTextCtrl->SetStyling(regStr2.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+			start = loc + regStr2.length();
 		}
 
 		if (instruction->operands[i].type == MEM_ADDRESS)
@@ -727,32 +741,32 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	}
 
 	// numbers
-	start = 0;
-	while (start < str.length())
+	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+	for (int i = 0; i < 17; i++)
 	{
-		int num = str.find("0x", start);
-		if (num != wxNOT_FOUND)
+		start = 0;
+		while (start < str.length())
 		{
-			int bracket = str.find("]", num + 1);
-			int space = str.find(" ", num + 1);
-			int end = str.length();
-			if (bracket != wxNOT_FOUND && (bracket < space || space == wxNOT_FOUND))
+			int end = str.find(numberChars[i], start);
+			if (end != wxNOT_FOUND)
 			{
-				end = bracket;
-			}
-			else if (space != wxNOT_FOUND && (space < bracket || bracket == wxNOT_FOUND))
-			{
-				end = space;
-			}
-			
-			disassemblyTextCtrl->StartStyling(pos + num);
-			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+				if (disassemblyTextCtrl->GetStyleAt(pos + end) == ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR)
+				{
+					disassemblyTextCtrl->StartStyling(pos + end);
+					disassemblyTextCtrl->SetStyling(strlen(numberChars[i]), ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+				}
 
-			start = end + 1;
-		}
-		else
-		{
-			break;
+				start = end + 1;
+			}
+			else
+			{
+				if (i == 0 && start == 0) // no 0x means there are no numbers
+				{
+					i = 99;
+				}
+				
+				break;
+			}
 		}
 	}
 }
