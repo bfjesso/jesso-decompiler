@@ -406,8 +406,20 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 			opcodeByte = (*bytesPtr)[1];
 			unsigned char prefixByte = ((*bytesPtr) - 1)[0];
 			unsigned char prefixIndex = prefixByte == 0x66 ? 1 : prefixByte == 0xF3 ? 2 : prefixByte == 0xF2 ? 3 : 0;
-			if (prefixByte != 0) { legPrefixes->group1 = NO_PREFIX; }
-			*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
+			if (prefixIndex != 0)
+			{ 
+				legPrefixes->group1 = NO_PREFIX; 
+			}
+			
+			if (twoByteOpcodeMap[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC) 
+			{
+				*result = twoByteOpcodeMap[opcodeByte][0];
+			}
+			else 
+			{
+				*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
+			}
+
 			(*bytesPtr) += 2;
 		}
 		else 
