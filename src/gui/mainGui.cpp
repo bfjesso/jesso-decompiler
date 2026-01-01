@@ -310,9 +310,9 @@ void MainGui::DisassembleCodeSections()
 				instructionAddresses.push_back(address);
 				disassembledInstructions.push_back(currentInstruction);
 			}
-			else
+
+			if(currentInstruction.opcode == NO_MNEMONIC)
 			{
-				disassemblyTextCtrl->AppendText("ERROR");
 				break;
 			}
 

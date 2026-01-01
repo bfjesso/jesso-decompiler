@@ -70,11 +70,6 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 
 unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize) // this will be in intel syntax
 {
-	if (instruction->opcode == NO_MNEMONIC) // the opcode is either not implemented in the disassembler or there was a bad instruction read
-	{
-		return 0;
-	}
-	
 	unsigned char bufferIndex = 0;
 
 	if (instruction->group1Prefix != NO_PREFIX) 
@@ -95,9 +90,6 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	strcpy(buffer + bufferIndex, mnemonicStr);
 	bufferIndex += mnemonicStrLen;
 
-	buffer[bufferIndex] = ' ';
-	bufferIndex++;
-
 	for (int i = 0; i < 3; i++) 
 	{
 		if (instruction->operands[i].type == NO_OPERAND) { continue; }
@@ -107,6 +99,11 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			buffer[bufferIndex] = ',';
 			buffer[bufferIndex + 1] = ' ';
 			bufferIndex += 2;
+		}
+		else 
+		{
+			buffer[bufferIndex] = ' ';
+			bufferIndex++;
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
@@ -578,6 +575,8 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		currentOperand->memoryAddress.constDisplacement = 0;
 		currentOperand->memoryAddress.constSegment = 0;
 		currentOperand->memoryAddress.scale = 1;
+
+		if (opcode->mnemonic == NO_MNEMONIC) { continue; }
 
 		char is64BitOperandSize = 0;
 		if (is64BitMode && opcode->opcodeSuperscript == d64 && legPrefixes->group3 != OSO) { is64BitOperandSize = 1; }
