@@ -75,12 +75,12 @@ struct VEXPrefix
 struct MemoryAddress
 {
 	unsigned char ptrSize;
-	unsigned char segment;
+	enum Segment segment;
 	unsigned short constSegment;
 
 	enum Register reg;
 	unsigned char scale; // if SIB byte
-	unsigned char regDisplacement;
+	enum Register regDisplacement;
 	long long constDisplacement;
 };
 
@@ -140,7 +140,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 
 static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result);
 
-static unsigned char handleSIB(unsigned char** bytesPtr, struct Operand* result);
+static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, struct Operand* result);
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);
 
