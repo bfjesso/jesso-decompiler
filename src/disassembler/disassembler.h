@@ -126,7 +126,7 @@ extern "C"
 }
 #endif
 
-static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer);
+static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize);
 
 static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result);
 

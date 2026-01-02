@@ -103,7 +103,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			strcat(buffer , registerStrs[currentOperand->reg]);
 			break;
 		case MEM_ADDRESS:
-			if (!memAddressToStr(&currentOperand->memoryAddress, buffer)) { return 0; }
+			if (!memAddressToStr(&currentOperand->memoryAddress, buffer, bufferSize)) { return 0; }
 			break;
 		case IMMEDIATE:
 			sprintf(immediateBuffer, "0x%llX", currentOperand->immediate);
@@ -115,7 +115,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 	return strlen(buffer) < bufferSize;
 }
 
-static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer)
+static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize)
 {
 	if (memAddr->ptrSize != 0 && memAddr->ptrSize <= 10)
 	{
@@ -182,7 +182,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 
 	strcat(buffer, "]");
 
-	return 1;
+	return strlen(buffer) < bufferSize;
 }
 
 static unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result)
