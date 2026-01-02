@@ -68,7 +68,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	return 1;
 }
 
-unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer) // this will be in intel syntax
+unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize) // this will be in intel syntax
 {
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
@@ -112,7 +112,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 		}
 	}
 
-	return 1;
+	return strlen(buffer) < bufferSize;
 }
 
 static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer)

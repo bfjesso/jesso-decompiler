@@ -120,7 +120,7 @@ extern "C"
 
 	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 	
-	unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer);
+	unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
 
 #ifdef __cplusplus
 }

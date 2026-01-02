@@ -298,7 +298,7 @@ void MainGui::DisassembleCodeSections()
 			pos += addressInfoStr.length() + 1;
 
 			char buffer[255] = { 0 };
-			if (instructionToStr(&currentInstruction, buffer))
+			if (instructionToStr(&currentInstruction, buffer, 255))
 			{
 				wxString asmStr = wxString(buffer);
 				disassemblyTextCtrl->AppendText(asmStr);
