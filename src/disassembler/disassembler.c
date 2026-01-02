@@ -659,67 +659,67 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->reg = ST7;
 			break;
 		case Eb:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 1, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 1, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ev:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ew:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ep:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ey:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gb:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 1, 0, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 1, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gv:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, 0, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gz:
-			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : 4, 0, is64BitMode, currentOperand)) { return 0; }
+			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, legPrefixes->group3 == OSO ? 2 : 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Gw:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 2, 0, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 2, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case M:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Mw:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 2, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Md:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 4, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ma:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 8, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 8, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Mp:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, legPrefixes->group3 == OSO ? 4 : 6, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Mq:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 8, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 8, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Mt:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 10, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 10, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ib:
@@ -799,7 +799,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Sw:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 2, 2, 0, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 2, 2, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ap:
@@ -809,29 +809,29 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Pd:
-			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 3, 4, 0, 0, currentOperand)) { return 0; }
+			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 3, 4, 0, 0, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Vps:
 		case Vpd:
 		case Vx:
 		case Vy:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Vss:
 		case Vsd:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 1, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Wps:
 		case Wpd:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Wss:
 		case Wsd:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 16, legPrefixes->group4 == ASO, is64BitMode, currentOperand)) { return 0; }
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, 0, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Hps:
@@ -856,7 +856,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 	return 1;
 }
 
-static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct Operand* result)
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result)
 {
 	unsigned char modRMByte = *modRMByteRef;
 
@@ -949,6 +949,8 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 
 	result->type = MEM_ADDRESS;
 	result->memoryAddress.ptrSize = operandSize;
+
+	unsigned char usedSIB = 0;
 
 	if (addressSizeOverride && !is64bitMode)
 	{
@@ -1119,7 +1121,8 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, result);
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
+				usedSIB = 1;
 				break;
 			case 5:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
@@ -1163,8 +1166,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, result);
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); // disp8
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
+				if (result->memoryAddress.constDisplacement == 0) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); } // disp8
+				usedSIB = 1;
 				break;
 			case 5:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
@@ -1211,8 +1215,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if (((*bytesPtr) + 4) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, result);
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
+				if (result->memoryAddress.constDisplacement == 0) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); } // disp32
+				usedSIB = 1;
 				break;
 			case 5:
 				if (((*bytesPtr) + 3) > maxBytesAddr) { return 0; }
@@ -1236,15 +1241,20 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		}
 	}
 
-	if (is64bitMode && !addressSizeOverride && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
+	if (!usedSIB && is64bitMode && !addressSizeOverride && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
 	{
-		result->memoryAddress.reg += (RAX - EAX);
+		result->memoryAddress.reg += (RAX - EAX); // to 64 bit register
+		
+		if (rexPrefix->isValidREX && rexPrefix->b)
+		{
+			result->memoryAddress.reg += (R8 - RAX);
+		}
 	}
 
 	return 1;
 }
 
-static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, struct Operand* result)
+static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, struct Operand* result)
 {
 	unsigned char sibByte = (*bytesPtr)[0];
 	(*bytesPtr)++;
@@ -1266,6 +1276,26 @@ static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, stru
 	else 
 	{
 		result->memoryAddress.reg = (enum Register)(base + EAX);
+	}
+
+	if (is64Bit)
+	{
+		// to 64 bit register
+		result->memoryAddress.reg += (RAX - EAX);
+		if (result->memoryAddress.regDisplacement != NO_REG) { result->memoryAddress.regDisplacement += (RAX - EAX); }
+
+		if (rexPrefix->isValidREX)
+		{
+			// 64 bit reg extensions
+			if (rexPrefix->x)
+			{
+				result->memoryAddress.reg += (R8 - RAX);
+			}
+			if (rexPrefix->b && result->memoryAddress.regDisplacement != NO_REG)
+			{
+				result->memoryAddress.regDisplacement += (R8 - RAX);
+			}
+		}
 	}
 	
 	if (base == 5)
