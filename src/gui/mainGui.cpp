@@ -741,32 +741,30 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 	}
 
 	// numbers
-	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
-	for (int i = 0; i < 17; i++)
+	start = 0;
+	while (start < str.length())
 	{
-		start = 0;
-		while (start < str.length())
+		int num = str.find("0x", start);
+		if (num != wxNOT_FOUND)
 		{
-			int end = str.find(numberChars[i], start);
-			if (end != wxNOT_FOUND)
+			int end = str.length();
+			for (int i = num + 2; i < end; i++) 
 			{
-				if (disassemblyTextCtrl->GetStyleAt(pos + end) == ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR)
+				if ((str[i] < '0' || str[i] > '9') && (str[i] < 'A' || str[i] > 'F')) 
 				{
-					disassemblyTextCtrl->StartStyling(pos + end);
-					disassemblyTextCtrl->SetStyling(strlen(numberChars[i]), ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+					end = i;
+					break;
 				}
+			}
 
-				start = end + 1;
-			}
-			else
-			{
-				if (i == 0 && start == 0) // no 0x means there are no numbers
-				{
-					i = 99;
-				}
-				
-				break;
-			}
+			disassemblyTextCtrl->StartStyling(pos + num);
+			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
 		}
 	}
 }
