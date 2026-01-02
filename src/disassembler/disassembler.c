@@ -898,6 +898,11 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
+		if (operandSize == 8 && rexPrefix->isValidREX && rexPrefix->r)
+		{
+			result->reg += (R8 - RAX);
+		}
+
 		return 1;
 	}
 	else if (getRegOrSeg == 2)
@@ -942,6 +947,11 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		case 7:
 			result->reg = operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? RDI : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
 			break;
+		}
+
+		if (operandSize == 8 && rexPrefix->isValidREX && rexPrefix->b)
+		{
+			result->reg += (R8 - RAX);
 		}
 
 		return 1;
