@@ -61,8 +61,8 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	struct DisassembledInstruction result;
 	if (disassembleInstruction(bytes, bytes + 15, &options, &result))
 	{
-		char buffer[50];
-		if (instructionToStr(&result, buffer, 50))
+		char buffer[255];
+		if (instructionToStr(&result, buffer))
 		{
 			disassemblyStaticText->SetLabel(buffer);
 		}
