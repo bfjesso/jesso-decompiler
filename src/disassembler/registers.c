@@ -106,11 +106,11 @@ unsigned char getSizeOfRegister(enum Register reg) // in bytes
 	{
 		return 1;
 	}
-	else if (reg >= AX && reg <= IP) 
+	else if (reg >= AX && reg <= R15W)
 	{
 		return 2;
 	}
-	else if (reg >= EAX && reg <= EIP) 
+	else if (reg >= EAX && reg <= R15D)
 	{
 		return 4;
 	}
