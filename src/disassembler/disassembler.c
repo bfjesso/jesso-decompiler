@@ -564,35 +564,35 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			break;
 		case rAX_r8:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R8 : (legPrefixes->group3 == OSO ? AX : (is64BitOperandSize ? RAX : EAX));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R8 : R8D) : (legPrefixes->group3 == OSO ? AX : (is64BitOperandSize ? RAX : EAX));
 			break;
 		case rCX_r9:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R9 : (legPrefixes->group3 == OSO ? CX : (is64BitOperandSize ? RCX : ECX));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R9 : R9D) : (legPrefixes->group3 == OSO ? CX : (is64BitOperandSize ? RCX : ECX));
 			break;
 		case rDX_r10:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R10 : (legPrefixes->group3 == OSO ? DX : (is64BitOperandSize ? RDX : EDX));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R10 : R10D) : (legPrefixes->group3 == OSO ? DX : (is64BitOperandSize ? RDX : EDX));
 			break;
 		case rBX_r11:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R11 : (legPrefixes->group3 == OSO ? BX : (is64BitOperandSize ? RBX : EBX));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R11 : R11D) : (legPrefixes->group3 == OSO ? BX : (is64BitOperandSize ? RBX : EBX));
 			break;
 		case rSP_r12:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R12 : (legPrefixes->group3 == OSO ? SP : (is64BitOperandSize ? RSP : ESP));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R12 : R12D) : (legPrefixes->group3 == OSO ? SP : (is64BitOperandSize ? RSP : ESP));
 			break;
 		case rBP_r13:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R13 : (legPrefixes->group3 == OSO ? BP : (is64BitOperandSize ? RBP : EBP));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R13 : R13D) : (legPrefixes->group3 == OSO ? BP : (is64BitOperandSize ? RBP : EBP));
 			break;
 		case rSI_r14:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R14 : (legPrefixes->group3 == OSO ? SI : (is64BitOperandSize ? RSI : ESI));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R14 : R14D) : (legPrefixes->group3 == OSO ? SI : (is64BitOperandSize ? RSI : ESI));
 			break;
 		case rDI_r15:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = rexPrefix->b ? R15 : (legPrefixes->group3 == OSO ? DI : (is64BitOperandSize ? RDI : EDI));
+			currentOperand->reg = rexPrefix->b ? (is64BitOperandSize ? R15 : R15D) : (legPrefixes->group3 == OSO ? DI : (is64BitOperandSize ? RDI : EDI));
 			break;
 		case AL_R8B:
 			currentOperand->type = REGISTER;
