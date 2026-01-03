@@ -284,11 +284,6 @@ void MainGui::DisassembleCodeSections()
 		{
 			unsigned long long address = imageBase + sections[i].virtualAddress + currentIndex;
 
-			if (address == 0x1400081FB)
-			{
-				int TTT = 1;
-			}
-
 			char addressStr[20] = { 0 };
 			sprintf(addressStr, "%llX", address);
 

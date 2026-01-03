@@ -51,7 +51,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	unsigned char modRMByte = 0;
 	char hasGotModRM = 0;
 	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0 };
-	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &opcode))
+	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &opcode))
 	{
 		return 0;
 	}
@@ -299,7 +299,7 @@ static unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* ma
 	return 1;
 }
 
-static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct Opcode* result)
+static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
@@ -354,6 +354,18 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		if (disassemblerOptions->is64BitMode && opcodeByte == 0x63)
 		{
 			*result = alternateX63;
+		}
+
+		if (result->mnemonic == CWDE)
+		{
+			if (legPrefixes->group1 == OSO) 
+			{
+				result->mnemonic = CBW;
+			}
+			else if (rexPrefix->w) 
+			{
+				result->mnemonic = CDQE;
+			}
 		}
 
 		(*bytesPtr)++;
