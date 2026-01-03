@@ -961,7 +961,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
-		if (rexPrefix->r)
+		if (rexPrefix->b)
 		{
 			result->reg = extendRegister(result->reg);
 		}
