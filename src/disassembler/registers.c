@@ -15,7 +15,9 @@ extern const char* registerStrs[] =
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
 	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
 	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", "IP",
+	"R8W", "R9W", "R10W", "R11W", "R12W", "R13W", "R14W", "R15W",
 	"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI", "EIP",
+	"R8D", "R9D", "R10D", "R11D", "R12D", "R13D", "R14D", "R15D",
 	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "RIP",
 	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
 	"ST(0)", "ST(1)", "ST(2)", "ST(3)", "ST(4)", "ST(5)", "ST(6)", "ST(7)",
@@ -62,9 +64,37 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 	{
 		return (reg2 == DI || reg2 == EDI || reg2 == RDI);
 	}
-	else if ((reg1 >= R8B && reg1 <= R15B) || (reg1 >= R8 && reg1 <= R15)) 
+	else if (reg1 == R8B || reg1 == R8W || reg1 == R8D || reg1 == R8) 
 	{
-		return ((reg2 >= R8B && reg2 <= R15B) || (reg2 >= R8 && reg2 <= R15));
+		return (reg2 == R8B || reg2 == R8W || reg2 == R8D || reg2 == R8);
+	}
+	else if (reg1 == R9B || reg1 == R9W || reg1 == R9D || reg1 == R9)
+	{
+		return (reg2 == R9B || reg2 == R9W || reg2 == R9D || reg2 == R9);
+	}
+	else if (reg1 == R10B || reg1 == R10W || reg1 == R10D || reg1 == R10)
+	{
+		return (reg2 == R10B || reg2 == R10W || reg2 == R10D || reg2 == R10);
+	}
+	else if (reg1 == R11B || reg1 == R11W || reg1 == R11D || reg1 == R11)
+	{
+		return (reg2 == R11B || reg2 == R11W || reg2 == R11D || reg2 == R11);
+	}
+	else if (reg1 == R12B || reg1 == R12W || reg1 == R12D || reg1 == R12)
+	{
+		return (reg2 == R12B || reg2 == R12W || reg2 == R12D || reg2 == R12);
+	}
+	else if (reg1 == R13B || reg1 == R13W || reg1 == R13D || reg1 == R13)
+	{
+		return (reg2 == R13B || reg2 == R13W || reg2 == R13D || reg2 == R13);
+	}
+	else if (reg1 == R14B || reg1 == R14W || reg1 == R14D || reg1 == R14)
+	{
+		return (reg2 == R14B || reg2 == R14W || reg2 == R14D || reg2 == R14);
+	}
+	else if (reg1 == R15B || reg1 == R15W || reg1 == R15D || reg1 == R15)
+	{
+		return (reg2 == R15B || reg2 == R15W || reg2 == R15D || reg2 == R15);
 	}
 
 	return reg1 == reg2;
@@ -102,4 +132,14 @@ unsigned char getSizeOfRegister(enum Register reg) // in bytes
 	}
 
 	return 0;
+}
+
+enum Register extendRegister(enum Register reg)
+{
+	return (enum Register)(reg + (R8 - RAX));
+}
+
+enum Register increaseRegisterSize(enum Register reg)
+{
+	return (enum Register)(reg + (RAX - EAX));
 }

@@ -17,7 +17,9 @@ enum Register
 	AL, CL, DL, BL, AH, CH, DH, BH,
 	R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B,
 	AX, CX, DX, BX, SP, BP, SI, DI, IP,
+	R8W, R9W, R10W, R11W, R12W, R13W, R14W, R15W,
 	EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI, EIP,
+	R8D, R9D, R10D, R11D, R12D, R13D, R14D, R15D,
 	RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI, RIP,
 	R8, R9, R10, R11, R12, R13, R14, R15,
 	ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7,
@@ -44,3 +46,7 @@ extern "C"
 unsigned char compareRegisters(enum Register reg1, enum Register reg2);
 
 unsigned char getSizeOfRegister(enum Register reg);
+
+enum Register extendRegister(enum Register reg);
+
+enum Register increaseRegisterSize(enum Register reg);

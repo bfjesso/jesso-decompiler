@@ -898,9 +898,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
-		if (operandSize == 8 && rexPrefix->isValidREX && rexPrefix->r)
+		if (rexPrefix->r)
 		{
-			result->reg += (R8 - RAX);
+			result->reg = extendRegister(result->reg);
 		}
 
 		return 1;
@@ -949,9 +949,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 			break;
 		}
 
-		if (operandSize == 8 && rexPrefix->isValidREX && rexPrefix->b)
+		if (rexPrefix->r)
 		{
-			result->reg += (R8 - RAX);
+			result->reg = extendRegister(result->reg);
 		}
 
 		return 1;
@@ -1253,11 +1253,11 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 
 	if (!usedSIB && is64bitMode && !addressSizeOverride && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
 	{
-		result->memoryAddress.reg += (RAX - EAX); // to 64 bit register
-		
-		if (rexPrefix->isValidREX && rexPrefix->b)
+		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
+
+		if (rexPrefix->b)
 		{
-			result->memoryAddress.reg += (R8 - RAX);
+			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
 	}
 
@@ -1290,21 +1290,19 @@ static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsi
 
 	if (is64Bit)
 	{
-		// to 64 bit register
-		result->memoryAddress.reg += (RAX - EAX);
-		if (result->memoryAddress.regDisplacement != NO_REG) { result->memoryAddress.regDisplacement += (RAX - EAX); }
+		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
+		if (result->memoryAddress.regDisplacement != NO_REG) 
+		{ 
+			result->memoryAddress.regDisplacement = increaseRegisterSize(result->memoryAddress.regDisplacement);
+		}
 
-		if (rexPrefix->isValidREX)
+		if (rexPrefix->x)
 		{
-			// 64 bit reg extensions
-			if (rexPrefix->x)
-			{
-				result->memoryAddress.reg += (R8 - RAX);
-			}
-			if (rexPrefix->b && result->memoryAddress.regDisplacement != NO_REG)
-			{
-				result->memoryAddress.regDisplacement += (R8 - RAX);
-			}
+			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
+		}
+		if (rexPrefix->b && result->memoryAddress.regDisplacement != NO_REG)
+		{
+			result->memoryAddress.regDisplacement = extendRegister(result->memoryAddress.regDisplacement);
 		}
 	}
 	
