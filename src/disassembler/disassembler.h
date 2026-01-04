@@ -111,6 +111,14 @@ struct DisassembledInstruction
 	unsigned char numOfBytes;
 };
 
+enum ModRMSelection
+{
+	GET_MEM_ADDRESS,
+	GET_REGISTER,
+	GET_SEGMENT,
+	GET_MMX_REG
+};
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -138,7 +146,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 
 static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Operand* result);
 
-static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, char getRegOrSeg, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result);
+static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, enum ModRMSelection selection, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result);
 
 static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, struct Operand* result);
 
