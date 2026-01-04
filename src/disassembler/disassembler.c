@@ -42,7 +42,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	}
 
 	struct VEXPrefix vexPrefix = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	if (disassemblerOptions->is64BitMode && !vexPrefix.isValidVEX && !handleVEXPrefix(&bytes, maxBytesAddr, &vexPrefix))
+	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !handleVEXPrefix(&bytes, maxBytesAddr, &vexPrefix))
 	{
 		return 0;
 	}
@@ -323,7 +323,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		else if(((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
 			opcodeByte = (*bytesPtr)[1];
-			unsigned char prefixByte = ((*bytesPtr) - 1)[0];
+			unsigned char prefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
 			unsigned char prefixIndex = prefixByte == 0x66 ? 1 : prefixByte == 0xF3 ? 2 : prefixByte == 0xF2 ? 3 : 0;
 			if (prefixIndex != 0)
 			{ 
