@@ -134,6 +134,32 @@ const struct Opcode extendedOpcodeMapGroup8[8] = // [ModR/M bits 3-5]
 	{ BTC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 };
 
+// group 9 with no prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup911B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ RDRAND, -1, Rv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ RDSEED, -1, Rv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// group 9 with 0xF3 prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup9F311B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ RDPID, -1, Rd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Rd/q
+};
+
 // group 11 for opcode 0xC6
 const struct Opcode extendedOpcodeMapGroup11C6[8] = // [ModR/M bits 3-5]
 {

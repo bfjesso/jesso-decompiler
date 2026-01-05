@@ -399,7 +399,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		}
 		else if (result->extensionGroup == 7) 
 		{
-			if (mod == 3) // 11B
+			if (mod == 0b11)
 			{
 				extendedOpcode = &extendedOpcodeMapGroup7With11B[reg][rm];
 			}
@@ -407,6 +407,20 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		else if (result->extensionGroup == 8)
 		{
 			extendedOpcode = &extendedOpcodeMapGroup8[reg];
+		}
+		else if (result->extensionGroup == 9) 
+		{
+			if (mod == 0b11) 
+			{
+				if (legPrefixByte == 0xF3) 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup9F311B[reg];
+				}
+				else 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup911B[reg];
+				}
+			}
 		}
 		else if (result->extensionGroup == 11)
 		{
@@ -852,6 +866,10 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			break;
 		case Ry:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Rv:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Cd:

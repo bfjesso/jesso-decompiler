@@ -55,6 +55,7 @@ extern const char* mnemonicStrs[] =
 	"FXSAVE", "FXRSTOR", "LDMXCSR", "STMXCSR", "XSAVE", "XRSTOR", "XSAVEOPT", "CLFLUSH",
 	"LFENCE", "MFENCE", "SFENCE",
 	"RDFSBASE", "RDGSBASE", "WRFSBASE", "WRGSBASE",
+	"RDRAND", "RDSEED", "RDPID",
 
 	"AAA", "AAD", "AAM", "AAS", "ADC", "ARPL",
 	"BOUND", "BSF", "BSR", "BSWAP", "BT", "BTC", "BTR", "BTS", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
