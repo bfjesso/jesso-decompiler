@@ -43,7 +43,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		// checking all operands for arguments or local variables
 		unsigned char overwrites = 0;
-		for (int j = 0; j < 3; j++)
+		for (int j = 0; j < 4; j++)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 
@@ -73,9 +73,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			else if (isOperandStackArgument(currentOperand))
 			{
 				unsigned char alreadyFound = 0;
-				for (int j = 0; j < result->numOfStackArgs; j++)
+				for (int k = 0; k < result->numOfStackArgs; k++)
 				{
-					if (result->stackArgs[j].stackOffset == currentOperand->memoryAddress.constDisplacement)
+					if (result->stackArgs[k].stackOffset == currentOperand->memoryAddress.constDisplacement)
 					{
 						alreadyFound = 1;
 						break;
@@ -97,9 +97,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
 				{
 					unsigned char isAlreadyFound = 0;
-					for (int j = 0; j < result->numOfLocalVars; j++)
+					for (int k = 0; k < result->numOfLocalVars; k++)
 					{
-						if (result->localVars[j].stackOffset == displacement)
+						if (result->localVars[k].stackOffset == displacement)
 						{
 							isAlreadyFound = 1;
 							break;

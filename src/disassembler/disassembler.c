@@ -78,7 +78,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 
 	strcat(buffer, mnemonicStrs[instruction->opcode]);
 
-	for (int i = 0; i < 3; i++) 
+	for (int i = 0; i < 4; i++) 
 	{
 		if (instruction->operands[i].type == NO_OPERAND) { continue; }
 
@@ -427,7 +427,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 
 		result->mnemonic = extendedOpcode->mnemonic;
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			if (extendedOpcode->operands[i] != NO_OPERAND_CODE)
 			{
@@ -494,7 +494,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 
 static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Operand* result)
 {
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		enum OperandCode currentOperandCode = opcode->operands[i];
 		struct Operand* currentOperand = &(result[i]);
@@ -694,6 +694,10 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 1, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Gd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Gv:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -704,6 +708,10 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			break;
 		case Gw:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 2, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Gy:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case M:
@@ -732,6 +740,16 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			break;
 		case Mt:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 10, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Mps:
+		case Mpd:
+		case Mx:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case My:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Ib:
@@ -810,6 +828,18 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->memoryAddress.segment = legPrefixes->group2 == NO_PREFIX ? DS : (enum Segment)legPrefixes->group2;
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(bytesPtr, operandSize);
 			break;
+		case Rd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Cd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_CONTROL_REG, 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Dd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_DEBUG_REG, 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Sw:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_SEGMENT, 2, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -821,44 +851,70 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Pd:
+		case Ppi:
+		case Pq:
 			if(!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MMX_REG, 4, 0, 0, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Qd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS_MMX, 4, 0, 0, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Qpi:
-			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MMX_REG, 8, 0, 0, rexPrefix, currentOperand)) { return 0; }
+		case Qq:
+		case Nq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS_MMX, 8, 0, 0, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Ups:
+		case Upd:
+		case Uq:
+		case Ux:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Udq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Vps:
 		case Vpd:
 		case Vx:
 		case Vy:
+		case Vq:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Vss:
 		case Vsd:
+		case Vdq:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Wps:
 		case Wpd:
+		case Wx:
+		case Wq:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Wss:
 		case Wsd:
+		case Wdq:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Hps:
 		case Hpd:
 		case Hx:
+		case Hq:
 			if (!vexPrefix->isValidVEX) { break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = opcode->opcodeSuperscript == f256 ? (YMM0 + vexPrefix->vvvv) : (XMM0 + vexPrefix->vvvv);
 			break;
 		case Hss:
 		case Hsd:
+		case Hdq:
 			if (!vexPrefix->isValidVEX) { break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
@@ -933,6 +989,30 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		result->reg = (reg + MM0);
 		return 1;
 	}
+	else if (selection == GET_CONTROL_REG)
+	{
+		if(rexPrefix->r)
+		{
+			result->reg = (reg + CR8);
+		}
+		else 
+		{
+			result->reg = (reg + CR0);
+		}
+		return 1;
+	}
+	else if (selection == GET_DEBUG_REG)
+	{
+		if (rexPrefix->r)
+		{
+			result->reg = (reg + DR8);
+		}
+		else
+		{
+			result->reg = (reg + DR0);
+		}
+		return 1;
+	}
 	else if (mod == 3)
 	{
 		result->type = REGISTER;
@@ -940,28 +1020,28 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 		switch (rm)
 		{
 		case 0:
-			result->reg = operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? RAX : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
+			result->reg = operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM0 : RAX) : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
 			break;
 		case 1:
-			result->reg = operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? RCX : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
+			result->reg = operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM1 : RCX) : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
 			break;
 		case 2:
-			result->reg = operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? RDX : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
+			result->reg = operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM2 : RDX) : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
 			break;
 		case 3:
-			result->reg = operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? RBX : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
+			result->reg = operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM3 : RBX) : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
 			break;
 		case 4:
-			result->reg = operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? RSP : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
+			result->reg = operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM4 : RSP) : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
 			break;
 		case 5:
-			result->reg = operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? RBP : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
+			result->reg = operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM5 : RBP) : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
 			break;
 		case 6:
-			result->reg = operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? RSI : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
+			result->reg = operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM6 : RSI) : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
 			break;
 		case 7:
-			result->reg = operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? RDI : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
+			result->reg = operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM7 : RDI) : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
 			break;
 		}
 
@@ -1360,7 +1440,7 @@ unsigned char getLastOperand(struct DisassembledInstruction* instruction)
 {
 	unsigned char result = 0;
 
-	for (int i = 2; i >= 0; i--)
+	for (int i = 3; i >= 0; i--)
 	{
 		if (instruction->operands[i].type != NO_OPERAND)
 		{
@@ -1444,7 +1524,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum)
 {
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (!doesInstructionModifyOperand(instruction, i, 0)) 
@@ -1470,7 +1550,7 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 
 unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg)
 {
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
