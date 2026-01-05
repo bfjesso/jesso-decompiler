@@ -139,10 +139,28 @@ unsigned char getSizeOfRegister(enum Register reg) // in bytes
 
 enum Register extendRegister(enum Register reg)
 {
-	return (enum Register)(reg + (R8 - RAX));
+	if (reg >= AL && reg <= BH) 
+	{
+		return (enum Register)(reg + (R8B - AL));
+	}
+	else 
+	{
+		return (enum Register)(reg + (R8 - RAX));
+	}
 }
 
 enum Register increaseRegisterSize(enum Register reg)
 {
-	return (enum Register)(reg + (RAX - EAX));
+	if (reg >= AL && reg <= BL)
+	{
+		return (enum Register)(reg + (AX - AL));
+	}
+	else if (reg >= AH && reg <= BH)
+	{
+		return (enum Register)(reg + (AX - AH));
+	}
+	else
+	{
+		return (enum Register)(reg + (RAX - EAX));
+	}
 }
