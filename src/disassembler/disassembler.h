@@ -105,7 +105,7 @@ struct DisassemblerOptions
 struct DisassembledInstruction
 {
 	enum Mnemonic opcode;
-	struct Operand operands[3];
+	struct Operand operands[4];
 	enum LegacyPrefix group1Prefix;
 
 	unsigned char numOfBytes;
@@ -151,7 +151,7 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 
 static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, enum ModRMSelection selection, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result);
 
-static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, struct Operand* result);
+static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, unsigned char* gotDisp, struct Operand* result);
 
 static unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);
 

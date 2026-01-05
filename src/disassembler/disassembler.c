@@ -303,6 +303,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
+	unsigned char legPrefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
 	unsigned char opcodeByte = 0;
 	
 	// check the opcode map in use
@@ -323,8 +324,7 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 		else if(((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
 			opcodeByte = (*bytesPtr)[1];
-			unsigned char prefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
-			unsigned char prefixIndex = prefixByte == 0x66 ? 1 : prefixByte == 0xF3 ? 2 : prefixByte == 0xF2 ? 3 : 0;
+			unsigned char prefixIndex = legPrefixByte == 0x66 ? 1 : legPrefixByte == 0xF3 ? 2 : legPrefixByte == 0xF2 ? 3 : 0;
 			if (prefixIndex != 0)
 			{ 
 				legPrefixes->group1 = NO_PREFIX; 
@@ -417,6 +417,24 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 			else if (opcodeByte == 0xC7)
 			{
 				extendedOpcode = &extendedOpcodeMapGroup11C7[reg];
+			}
+		}
+		else if (result->extensionGroup == 15) 
+		{
+			if (mod == 3) 
+			{
+				if (legPrefixByte == 0xF3) 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup15F311B[reg];
+				}
+				else 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1511B[reg];
+				}
+			}
+			else 
+			{
+				extendedOpcode = &extendedOpcodeMapGroup15[reg];
 			}
 		}
 
@@ -832,6 +850,10 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Ry:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Cd:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_CONTROL_REG, 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -1227,7 +1249,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if ((*bytesPtr) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, 0, result);
 				usedSIB = 1;
 				break;
 			case 5:
@@ -1272,8 +1294,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
-				if (result->memoryAddress.constDisplacement == 0) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); } // disp8
+				unsigned char gotDisp = 0;
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, &gotDisp, result);
+				if (!gotDisp) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(bytesPtr, 1); } // disp8
 				usedSIB = 1;
 				break;
 			case 5:
@@ -1321,8 +1344,9 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 				break;
 			case 4:
 				if (((*bytesPtr) + 4) > maxBytesAddr) { return 0; }
-				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, result);
-				if (result->memoryAddress.constDisplacement == 0) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); } // disp32
+				unsigned char gotDisp = 0;
+				handleSIB(bytesPtr, mod, is64bitMode, rexPrefix, &gotDisp, result);
+				if (!gotDisp) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); } // disp32
 				usedSIB = 1;
 				break;
 			case 5:
@@ -1360,7 +1384,7 @@ static unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxByt
 	return 1;
 }
 
-static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, struct Operand* result)
+static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, unsigned char* gotDisp, struct Operand* result)
 {
 	unsigned char sibByte = (*bytesPtr)[0];
 	(*bytesPtr)++;
@@ -1417,6 +1441,11 @@ static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsi
 		case 2:
 			result->memoryAddress.constDisplacement = (int)getUIntFromBytes(bytesPtr, 4); // disp32
 			break;
+		}
+
+		if (gotDisp) 
+		{ 
+			*gotDisp = 1; 
 		}
 	}
 
