@@ -52,7 +52,6 @@ ColorsMenu::ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* deco
 	hSizer->Add(decompilationSizer);
 
 	vSizer->Add(hSizer,0, wxCENTER);
-	vSizer->Add(applyButton, 0, wxCENTER | wxALL, 10);
 
 	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(250, 25));
 	applyButton->SetOwnBackgroundColour(foregroundColor);
