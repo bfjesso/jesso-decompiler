@@ -251,8 +251,7 @@ void MainGui::LoadDataSectionBytes()
 
 void MainGui::DisassembleCodeSections()
 {
-	FileSection sections[10] = { 0 };
-	int numOfCodeSections = getFileCodeSections(currentFilePath.c_str().AsWChar(), is64Bit, sections, 10);
+	numOfCodeSections = getFileCodeSections(currentFilePath.c_str().AsWChar(), is64Bit, codeSections, 10);
 
 	if (numOfCodeSections == 0)
 	{
@@ -269,8 +268,8 @@ void MainGui::DisassembleCodeSections()
 
 	for (int i = 0; i < numOfCodeSections; i++)
 	{
-		unsigned char* bytes = new unsigned char[sections[i].size];
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, bytes, sections[i].size))
+		unsigned char* bytes = new unsigned char[codeSections[i].size];
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &codeSections[i], is64Bit, bytes, codeSections[i].size))
 		{
 			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 
@@ -280,9 +279,9 @@ void MainGui::DisassembleCodeSections()
 
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
-		while (disassembleInstruction(&bytes[currentIndex], bytes + sections[i].size - 1, &options, &currentInstruction))
+		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction))
 		{
-			unsigned long long address = imageBase + sections[i].virtualAddress + currentIndex;
+			unsigned long long address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
 			char addressStr[20] = { 0 };
 			sprintf(addressStr, "%llX", address);
@@ -290,7 +289,7 @@ void MainGui::DisassembleCodeSections()
 			currentIndex += currentInstruction.numOfBytes;
 
 			int pos = disassemblyTextCtrl->GetLength() - 1;
-			wxString addressInfoStr = wxString(addressStr) + wxString(sections[i].name) + "\t";
+			wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[i].name) + "\t";
 			disassemblyTextCtrl->AppendText(addressInfoStr);
 			disassemblyTextCtrl->StartStyling(pos);
 			disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
@@ -404,8 +403,16 @@ void MainGui::FindAllFunctions()
 	int numOfInstructions = disassembledInstructions.size();
 	functions.push_back({ 0 });
 	int instructionIndex = 0;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, &functions[functionNum], &instructionIndex, is64Bit))
+	int codeSectionIndex = 1;
+	unsigned long long nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
 	{
+		if(instructionAddresses[instructionIndex] >= nextSectionStartAddress)
+		{
+			codeSectionIndex++;
+			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+		}
+
 		numOfInstructions -= functions[functionNum].numOfInstructions;
 		functionsGrid->AppendRows(1);
 

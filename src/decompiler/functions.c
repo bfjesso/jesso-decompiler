@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, struct Function* result, int* instructionIndex, unsigned char is64Bit)
+unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
@@ -13,6 +13,13 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	unsigned char foundFirstInstruction = 0;
 	for (int i = 0; i < numOfInstructions; i++)
 	{
+		if(addresses[i] == nextSectionStartAddress)
+		{
+			initializeFunctionVarNames(result);
+			sortFunctionArguments(result);
+			return 1;
+		}
+
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &instructions[i];

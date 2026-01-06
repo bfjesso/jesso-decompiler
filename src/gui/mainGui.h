@@ -52,6 +52,10 @@ public:
 	FileSection dataSections[dataSectionsBufferSize] = { 0 };
 	int numOfDataSections = 0;
 
+	static const int codeSectionsBufferSize = 10;
+	FileSection codeSections[codeSectionsBufferSize] = { 0 };
+	int numOfCodeSections = 0;
+
 	int currentDecompiledFunc = -1;
 	
 	enum ids 
