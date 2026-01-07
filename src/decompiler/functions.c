@@ -13,13 +13,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	unsigned char foundFirstInstruction = 0;
 	for (int i = 0; i < numOfInstructions; i++)
 	{
-		if(addresses[i] == nextSectionStartAddress)
-		{
-			initializeFunctionVarNames(result);
-			sortFunctionArguments(result);
-			return 1;
-		}
-
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &instructions[i];
@@ -182,7 +175,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3)
+		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3 || addresses[i + 1] == nextSectionStartAddress)
 		{
 			initializeFunctionVarNames(result);
 			sortFunctionArguments(result);
