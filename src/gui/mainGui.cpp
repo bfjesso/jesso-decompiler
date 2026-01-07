@@ -630,10 +630,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		if(imports[i].name[0] != 0)
-		{
-			ColorAllStrs(text, imports[i].name, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
-		}
+		ColorAllStrs(text, imports[i].name, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 	}
 
 	// calling conventions
@@ -778,6 +775,11 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 
 void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
+	if(str == "")
+	{
+		return;
+	}
+
 	int start = 0;
 	int pos = 0;
 	while (start < text.length())
