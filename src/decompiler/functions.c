@@ -26,7 +26,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		if (!foundFirstInstruction)
 		{
-			if (currentInstruction->opcode == INT3)
+			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
 			{
 				continue;
 			}
