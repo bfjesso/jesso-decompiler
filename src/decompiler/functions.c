@@ -175,7 +175,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == INT3 || addresses[i + 1] == nextSectionStartAddress)
+		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || addresses[i + 1] == nextSectionStartAddress)
 		{
 			initializeFunctionVarNames(result);
 			sortFunctionArguments(result);
