@@ -51,7 +51,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			{
 				for(int k = RAX; k < ST0; k++)
 				{
-					if(k == RBP || k == RSP) { continue; }
+					if(k == RBP || k == RSP || k == RIP) { continue; }
 
 					if (compareRegisters(currentOperand->reg, k))
 					{
@@ -61,12 +61,14 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 						}
 						else if (!initializedRegs[k - RAX])
 						{
-							result->regArgs[result->numOfRegArgs].reg = k;
+							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 							result->numOfRegArgs++;
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k - RAX] = 1;
 						}
+
+						break;
 					}
 				}
 			}
