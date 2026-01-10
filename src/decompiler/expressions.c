@@ -82,7 +82,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			strcpy(resultBuffer, registerStrs[operand->reg]);
 			return 1;
 		}
-		else if (compareRegisters(operand->memoryAddress.reg, IP))
+		else if (compareRegisters(operand->reg, IP))
 		{
 			sprintf(resultBuffer, "0x%llX", params.currentFunc->addresses[params.startInstructionIndex + 1]);
 			return 1;
