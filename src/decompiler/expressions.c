@@ -42,10 +42,6 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				}
 			}
 		}
-		else if (compareRegisters(operand->memoryAddress.reg, IP))
-		{
-			sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex + 1] + operand->memoryAddress.constDisplacement);
-		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
 			if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, resultBuffer))
