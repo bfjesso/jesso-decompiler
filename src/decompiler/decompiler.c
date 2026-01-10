@@ -257,9 +257,13 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 			unsigned long long calleeAddress = address + instruction->operands[0].immediate;
 			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
-			if (calleIndex == -1 || params.functions[calleIndex].returnType == VOID_TYPE)
+			if (calleIndex == -1)
 			{
 				return checkForImportCall(params) != -1;
+			}
+			else if(params.functions[calleIndex].returnType == VOID_TYPE)
+			{
+				return 0;
 			}
 
 			return 1;
