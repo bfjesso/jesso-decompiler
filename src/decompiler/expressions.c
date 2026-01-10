@@ -59,6 +59,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			baseReg.type = REGISTER;
 			baseReg.reg = operand->memoryAddress.reg;
 
+			params.startInstructionIndex--;
 			char baseOperandStr[255] = { 0 };
 			if (!decompileOperand(params, &baseReg, type, baseOperandStr, 255))
 			{
@@ -80,13 +81,18 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	}
 	else if (operand->type == REGISTER)
 	{
-		if (compareRegisters(operand->reg, BP) || compareRegisters(operand->reg, SP) || compareRegisters(operand->reg, IP))
+		if (compareRegisters(operand->reg, BP) || compareRegisters(operand->reg, SP))
 		{
 			strcpy(resultBuffer, registerStrs[operand->reg]);
 			return 1;
 		}
+		else if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			sprintf(resultBuffer, "0x%llX", params.currentFunc->addresses[params.startInstructionIndex + 1]);
+			return 1;
+		}
 
-		if (!decompileExpression(params, operand->reg, type, resultBuffer, resultBufferSize))
+		if (!decompileRegister(params, operand->reg, type, resultBuffer, resultBufferSize))
 		{
 			// register argument
 			struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, operand->reg);
@@ -185,7 +191,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	return 1;
 }
 
-static unsigned char decompileExpression(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
+static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
 {
 	char expressions[5][255] = { 0 };
 	int expressionIndex = 0;
@@ -206,10 +212,7 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			doesInstructionModifyOperand(currentInstruction, 0, &finished))
 			|| doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
-			char targetOperand = getLastOperand(currentInstruction);
-
-			params.startInstructionIndex = i - 1;
-
+			params.startInstructionIndex = i;
 			if (currentInstruction->opcode == XOR && compareRegisters(currentInstruction->operands[1].reg, targetReg))
 			{
 				strcpy(expressions[expressionIndex], "0");
@@ -247,8 +250,9 @@ static unsigned char decompileExpression(struct DecompilationParameters params, 
 			}
 			else
 			{
+				struct Operand* targetOperand = &currentInstruction->operands[getLastOperand(currentInstruction)];
 				char operandStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[targetOperand], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[targetOperand], params.is64Bit), operandStr, 255))
+				if (!decompileOperand(params, targetOperand, getTypeOfOperand(currentInstruction->opcode, targetOperand, params.is64Bit), operandStr, 255))
 				{
 					return 0;
 				}
