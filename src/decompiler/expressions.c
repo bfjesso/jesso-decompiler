@@ -212,8 +212,10 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			doesInstructionModifyOperand(currentInstruction, 0, &finished))
 			|| doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
-			params.startInstructionIndex = i;
-			if (currentInstruction->opcode == XOR && compareRegisters(currentInstruction->operands[1].reg, targetReg))
+			unsigned char areOperandsEqual = currentInstruction->operands[1].type == REGISTER && compareRegisters(currentInstruction->operands[1].reg, targetReg);
+			params.startInstructionIndex = areOperandsEqual ? i - 1 : i;
+
+			if (currentInstruction->opcode == XOR && areOperandsEqual)
 			{
 				strcpy(expressions[expressionIndex], "0");
 				expressionIndex++;
