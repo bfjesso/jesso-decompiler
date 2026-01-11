@@ -1529,6 +1529,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		case CVTPD2PS:
 		case CVTSS2SD:
 		case CVTSD2SS:
+		case STMXCSR:
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		case ADD:

@@ -42,6 +42,11 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		sprintf(result->line, "%s--;", assignee);
 		return 1;
 	}
+	else if (currentInstruction->opcode == STMXCSR) 
+	{
+		sprintf(result->line, "%s = stmxcsr();", assignee);
+		return 1;
+	}
 
 	char valueToAssign[255] = { 0 };
 	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
