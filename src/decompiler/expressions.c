@@ -197,6 +197,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
+	unsigned char isInUnreachableState = 0;
 
 	for (int i = params.startInstructionIndex; i >= 0; i--)
 	{
@@ -206,6 +207,20 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 		}
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
+		{
+			isInUnreachableState = 1;
+		}
+		else if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode < JMP_SHORT) 
+		{
+			isInUnreachableState = 0;
+		}
+
+		if (isInUnreachableState) 
+		{
+			continue;
+		}
 
 		if ((currentInstruction->operands[0].type == REGISTER &&
 			compareRegisters(currentInstruction->operands[0].reg, targetReg) &&
