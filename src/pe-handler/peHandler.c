@@ -148,7 +148,7 @@ int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA && !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE))
 		{
 			if (bufferIndex >= bufferLen)
 			{
@@ -189,7 +189,7 @@ int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA && !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE))
 		{
 			if (bufferIndex >= bufferLen)
 			{
