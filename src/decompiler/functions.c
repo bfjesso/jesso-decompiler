@@ -149,6 +149,15 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			}
 		}
 
+		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT && currentInstruction->operands[0].immediate > 0)
+		{
+			unsigned long long jumpAddr = addresses[i] + currentInstruction->operands[0].immediate;
+			if (jumpAddr > addressToJumpTo)
+			{
+				addressToJumpTo = jumpAddr;
+			}
+		}
+
 		if (addressToJumpTo != 0 && addresses[i] < addressToJumpTo)
 		{
 			continue;
@@ -158,11 +167,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			addressToJumpTo = 0;
 		}
 
-		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT && currentInstruction->operands[0].immediate > 0)
-		{
-			addressToJumpTo = addresses[i] + currentInstruction->operands[0].immediate;
-		}
-		else if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
+		
+		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{
