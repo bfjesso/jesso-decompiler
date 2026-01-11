@@ -93,7 +93,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 
 		struct Operand* currentOperand = &instruction->operands[i];
 
-		char immediateBuffer[20];
+		char immediateBuffer[20] = { 0 };
 		switch (currentOperand->type)
 		{
 		case SEGMENT:
@@ -130,7 +130,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	}
 	else if (memAddr->constSegment != 0) 
 	{
-		char hexSeg[20];
+		char hexSeg[20] = { 0 };
 		sprintf(hexSeg, "0x%X", memAddr->constSegment);
 
 		strcat(buffer, hexSeg);
@@ -148,7 +148,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	{
 		strcat(buffer, "*");
 
-		char hexScale[20];
+		char hexScale[20] = { 0 };
 		sprintf(hexScale, "0x%X", memAddr->scale);
 
 		strcat(buffer, hexScale);
@@ -162,7 +162,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 
 	if (memAddr->constDisplacement != 0) 
 	{
-		char constDisp[20];
+		char constDisp[20] = { 0 };
 		if (memAddr->constDisplacement < 0) 
 		{
 			sprintf(constDisp, "-0x%llX", -memAddr->constDisplacement);
@@ -787,24 +787,24 @@ static unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* max
 		case Ib:
 			if ((*bytesPtr) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (char)getUIntFromBytes(bytesPtr, 1);
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, 1);
 			break;
 		case Iv:
 			operandSize = legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (long long)getUIntFromBytes(bytesPtr, operandSize);
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iz:
 			operandSize = legPrefixes->group3 == OSO ? 2 : 4;
 			if (((*bytesPtr) + operandSize - 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (int)getUIntFromBytes(bytesPtr, operandSize);
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, operandSize);
 			break;
 		case Iw:
 			if (((*bytesPtr) + 1) > maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (short)getUIntFromBytes(bytesPtr, 2);
+			currentOperand->immediate = getUIntFromBytes(bytesPtr, 2);
 			break;
 		case Yb:
 			currentOperand->type = MEM_ADDRESS;
