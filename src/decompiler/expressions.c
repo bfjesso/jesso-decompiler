@@ -404,25 +404,48 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->opcode == TEST && areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1]))
+		if (currentInstruction->opcode == TEST)
 		{
-			if (params.currentFunc->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+			if (areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
 			{
-				i--;
-				continue;
-			}
-			
-			params.startInstructionIndex = i;
+				if (params.currentFunc->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+				{
+					i--;
+					continue;
+				}
 
-			char operandStr[255] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 255))
+				params.startInstructionIndex = i;
+
+				char operandStr[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 255))
+				{
+					return 0;
+				}
+
+				sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
+
+				return 1;
+			}
+			else 
 			{
-				return 0;
+				params.startInstructionIndex = i;
+
+				char operand1Str[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operand1Str, 255))
+				{
+					return 0;
+				}
+
+				char operand2Str[255] = { 0 };
+				if (!decompileOperand(params, &currentInstruction->operands[1], INT_TYPE, operand2Str, 255))
+				{
+					return 0;
+				}
+
+				sprintf(resultBuffer, "(%s & %s) %s 0", operand1Str, operand2Str, compOperator);
+
+				return 1;
 			}
-
-			sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
-
-			return 1;
 		}
 
 		unsigned char type = 0;
