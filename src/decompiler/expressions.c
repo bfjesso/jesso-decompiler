@@ -10,7 +10,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		{
 			if (operand->immediate > -10 && operand->immediate < 10) // this is just arbitrary
 			{
-				sprintf(resultBuffer, "%llu", operand->immediate);
+				sprintf(resultBuffer, "%lli", operand->immediate);
 			}
 			else 
 			{
