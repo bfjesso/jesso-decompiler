@@ -343,6 +343,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.numOfImports = numOfImports;
 	params.currentFunc = &functions[functionIndex];
 	params.startInstructionIndex = 0;
+	params.skipUpperBound = -1;
+	params.skipLowerBound = -1;
 
 	params.allInstructions = disassembledInstructions.data();
 	params.allAddresses = instructionAddresses.data();

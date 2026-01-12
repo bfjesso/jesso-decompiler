@@ -213,6 +213,12 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			break;
 		}
 
+		if (i == params.skipLowerBound) 
+		{
+			i = params.skipUpperBound;
+			continue;
+		}
+
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
 		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)

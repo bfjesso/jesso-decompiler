@@ -22,6 +22,10 @@ struct DecompilationParameters
 
 	struct Function* currentFunc; // function being decompiled
 	int startInstructionIndex; // index of instruction to start decompiling from relative to function
+	
+	// these are used when a condition has requiresJumpInDecomp
+	int skipUpperBound;
+	int skipLowerBound;
 
 	struct DisassembledInstruction* allInstructions;
 	unsigned long long* allAddresses;

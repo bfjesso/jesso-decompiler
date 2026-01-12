@@ -107,6 +107,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			{
 				originalIndex = i;
 				i = conditions[conditionIndex].dstIndex - 1;
+				params.skipUpperBound = originalIndex;
+				params.skipLowerBound = i;
 				continue;
 			}
 		}
@@ -178,6 +180,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			{
 				i = originalIndex;
 				originalIndex = -1;
+				params.skipUpperBound = -1;
+				params.skipLowerBound = -1;
 
 				numOfIndents--;
 				strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
@@ -346,6 +350,12 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 	// find where a return register is first being modified
 	for (int i = params.startInstructionIndex; i >= 0; i--)
 	{
+		if (i == params.skipLowerBound)
+		{
+			i = params.skipUpperBound;
+			continue;
+		}
+		
 		params.startInstructionIndex = i;
 		if (doesInstructionModifyReturnRegister(params))
 		{
