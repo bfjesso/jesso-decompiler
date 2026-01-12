@@ -8,7 +8,14 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	{
 		if (!getValueFromDataSection(params, type, operand->immediate, resultBuffer))
 		{
-			sprintf(resultBuffer, "%llu", operand->immediate);
+			if (operand->immediate > -10 && operand->immediate < 10) // this is just arbitrary
+			{
+				sprintf(resultBuffer, "%llu", operand->immediate);
+			}
+			else 
+			{
+				sprintf(resultBuffer, "0x%llX", operand->immediate);
+			}
 		}
 		
 		return 1;
