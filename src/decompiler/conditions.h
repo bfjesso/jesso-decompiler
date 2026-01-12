@@ -22,6 +22,7 @@ struct Condition
 	int dstIndex; // the index of the instruction jumped to by the jcc
 	int exitIndex; // if the last instruction of the condition (the one before dstIndex) is a jmp, this is the index of the instruction jumped to by that jmp. this field is only used while getting all conditions
 	enum ConditionType conditionType;
+	unsigned char requiresJumpInDecomp; // when the if statement cuts into another if statement
 
 	int otherJccIndexes[3]; // these will be either all connected by && or ||
 	unsigned char numOfOtherJccs;

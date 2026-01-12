@@ -41,6 +41,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 	unsigned char isConditionEmpty = 0; // used to check if there is an empty condition that should be removed
 	unsigned char numOfIndents = 1;
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
+	int originalIndex = -1;
+
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
@@ -55,7 +57,7 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
 		{
-			if (!conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
+			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
 			{
 				numOfIndents--;
 
@@ -79,7 +81,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			}
 		}
 
-		// checking for begining of condition
 		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
 		if (conditionIndex != -1)
 		{
@@ -101,6 +102,13 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			}
 
 			numOfIndents++;
+
+			if (conditions[conditionIndex].requiresJumpInDecomp)
+			{
+				originalIndex = i;
+				i = conditions[conditionIndex].dstIndex - 1;
+				continue;
+			}
 		}
 
 		if (isInUnreachableState) { continue; }
@@ -166,7 +174,23 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 
 		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
 		{
-			isInUnreachableState = 1;
+			if (originalIndex != -1) 
+			{
+				i = originalIndex;
+				originalIndex = -1;
+
+				numOfIndents--;
+				strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
+				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				numOfLinesDecompiled++;
+
+				isInUnreachableState = 0;
+				isConditionEmpty = 0;
+			}
+			else 
+			{
+				isInUnreachableState = 1;
+			}
 		}
 	}
 
