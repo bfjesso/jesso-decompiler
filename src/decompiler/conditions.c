@@ -218,12 +218,6 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 				{
 					conditionsBuffer[i].requiresJumpInDecomp = 1;
 
-					/*if (conditionsBuffer[i].combinationLogicType == AND_LT) { conditionsBuffer[i].combinationLogicType = OR_LT; }
-					else if (conditionsBuffer[i].combinationLogicType == OR_LT) { conditionsBuffer[i].combinationLogicType = AND_LT; }
-
-					if (conditionsBuffer[i].otherJccsLogicType == AND_LT) { conditionsBuffer[i].otherJccsLogicType = OR_LT; }
-					else if (conditionsBuffer[i].otherJccsLogicType == OR_LT) { conditionsBuffer[i].otherJccsLogicType = AND_LT; }*/
-
 					break;
 				}
 			}
@@ -254,11 +248,13 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		return 1;
 	}
 
+	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp;
+
 	char conditionExpression[255] = { 0 };
 
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
-		if (!decompileComparison(params, conditionExpression, conditions[conditionIndex].requiresJumpInDecomp))
+		if (!decompileComparison(params, conditionExpression, invertCondition))
 		{
 			return 0;
 		}
@@ -266,7 +262,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
 			unsigned char invertOperator = i == (conditions[conditionIndex].numOfOtherJccs - 1);
-			if (conditions[conditionIndex].requiresJumpInDecomp) 
+			if (invertCondition)
 			{
 				invertOperator = !invertOperator;
 			}
@@ -278,20 +274,13 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 				return 0;
 			}
 
-			if (!conditions[conditionIndex].requiresJumpInDecomp)
-			{
-				strcat(conditionExpression, " || ");
-			}
-			else 
-			{
-				strcat(conditionExpression, " && ");
-			}
+			strcat(conditionExpression, !invertCondition ? " || " : " && ");
 			strcat(conditionExpression, currentConditionExpression);
 		}
 	}
 	else
 	{
-		if (!decompileComparison(params, conditionExpression, !conditions[conditionIndex].requiresJumpInDecomp)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
+		if (!decompileComparison(params, conditionExpression, !invertCondition)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
 		{
 			return 0;
 		}
@@ -300,19 +289,12 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		{
 			char currentConditionExpression[255] = { 0 };
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
-			if (!decompileComparison(params, currentConditionExpression, !conditions[conditionIndex].requiresJumpInDecomp))
+			if (!decompileComparison(params, currentConditionExpression, !invertCondition))
 			{
 				return 0;
 			}
 
-			if (!conditions[conditionIndex].requiresJumpInDecomp)
-			{
-				strcat(conditionExpression, " && ");
-			}
-			else
-			{
-				strcat(conditionExpression, " || ");
-			}
+			strcat(conditionExpression, !invertCondition ? " && " : " || ");
 			strcat(conditionExpression, currentConditionExpression);
 		}
 	}
@@ -325,13 +307,13 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		{
 			wrapStrInParentheses(conditionExpression);
 
-			if (conditions[conditionIndex].combinationLogicType == AND_LT && !conditions[conditionIndex].requiresJumpInDecomp)
+			if (conditions[conditionIndex].combinationLogicType == AND_LT)
 			{
-				strcat(conditionExpression, " && ");
+				strcat(conditionExpression, !invertCondition ? " && " : " || ");
 			}
 			else
 			{
-				strcat(conditionExpression, " || ");
+				strcat(conditionExpression, !invertCondition ? " || " : " && ");
 			}
 
 			strcat(conditionExpression, combinedConditionExpression.line);
