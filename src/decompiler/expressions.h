@@ -8,3 +8,5 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize);
 
 unsigned char decompileComparison(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
+
+unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer);

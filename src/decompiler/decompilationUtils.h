@@ -39,6 +39,4 @@ struct DecompilationParameters
 	unsigned char is64Bit;
 };
 
-unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer);
-
 void wrapStrInParentheses(char* str);
