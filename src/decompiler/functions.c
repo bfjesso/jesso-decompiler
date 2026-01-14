@@ -245,7 +245,7 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 						break;
 					}
 
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(functions[i].instructions[k]), AX))
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, 0, 0))
 					{
 						break;
 					}
