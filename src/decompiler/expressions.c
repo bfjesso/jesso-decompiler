@@ -240,42 +240,12 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			doesInstructionModifyOperand(currentInstruction, 0, &finished))
 			|| doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
 		{
-			unsigned char areOperandsEqual = currentInstruction->operands[1].type == REGISTER && compareRegisters(currentInstruction->operands[1].reg, targetReg);
-			params.startInstructionIndex = areOperandsEqual ? i - 1 : i;
+			unsigned char areRegsEqual = currentInstruction->operands[1].type == REGISTER && compareRegisters(currentInstruction->operands[1].reg, targetReg);
+			params.startInstructionIndex = areRegsEqual ? i - 1 : i;
 
-			if (currentInstruction->opcode == XOR && areOperandsEqual)
+			unsigned char isOtherOpcode = 0;
+			if (handleOtherOperationStr(params, currentInstruction, expressions[expressionIndex], &isOtherOpcode) && isOtherOpcode)
 			{
-				strcpy(expressions[expressionIndex], "0");
-				expressionIndex++;
-
-				break;
-			}
-			else if (currentInstruction->opcode == IMUL && currentInstruction->operands[2].type != NO_OPERAND)
-			{
-				char operandStr1[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), operandStr1, 255))
-				{
-					return 0;
-				}
-				char operandStr2[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[2], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[2], params.is64Bit), operandStr2, 255))
-				{
-					return 0;
-				}
-
-				sprintf(expressions[expressionIndex], "(%s * %s)", operandStr1, operandStr2);
-				expressionIndex++;
-
-				break;
-			}
-			else if (currentInstruction->opcode == INC) 
-			{
-				strcpy(expressions[expressionIndex], " + 1");
-				expressionIndex++;
-			}
-			else if (currentInstruction->opcode == DEC)
-			{
-				strcpy(expressions[expressionIndex], " - 1");
 				expressionIndex++;
 			}
 			else
@@ -586,4 +556,43 @@ unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment,
 	}
 
 	return 0;
+}
+
+unsigned char handleOtherOperationStr(struct DecompilationParameters params, struct DisassembledInstruction* instruction, char* resultBuffer, unsigned char* isOtherOpcode)
+{
+	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	{
+		strcpy(resultBuffer, "0");
+	}
+	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+	{
+		char operandStr1[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
+		{
+			return 0;
+		}
+		char operandStr2[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
+		{
+			return 0;
+		}
+
+		sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2);
+	}
+	else if (instruction->opcode == INC)
+	{
+		strcpy(resultBuffer, " + 1");
+	}
+	else if (instruction->opcode == DEC)
+	{
+		strcpy(resultBuffer, " - 1");
+	}
+	else 
+	{
+		*isOtherOpcode = 0;
+		return 1;
+	}
+
+	*isOtherOpcode = 1;
+	return 1;
 }
