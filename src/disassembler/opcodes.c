@@ -81,20 +81,6 @@ extern const char* mnemonicStrs[] =
 	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XSETBV", "XTEST"
 };
 
-unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, unsigned char* overwrites)
-{
-	if (compareRegisters(reg, AX))
-	{
-		switch (opcode)
-		{
-		case IDIV:
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 unsigned char isOpcodeCall(enum Mnemonic opcode)
 {
 	if (opcode == CALL_FAR || opcode == CALL_NEAR || opcode == JMP_FAR || opcode == JMP_NEAR) 

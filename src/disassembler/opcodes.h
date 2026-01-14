@@ -155,6 +155,4 @@ extern "C"
 }
 #endif
 
-unsigned char doesOpcodeModifyRegister(enum Mnemonic opcode, enum Register reg, unsigned char* overwrites); // some opcodes may modify a register even if it isn't an operand
-
 unsigned char isOpcodeCall(enum Mnemonic opcode);

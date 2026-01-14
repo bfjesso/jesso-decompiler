@@ -274,9 +274,7 @@ static unsigned char doesInstructionModifyReturnRegister(struct DecompilationPar
 	}
 	else 
 	{
-		char isFirstOperandAX = (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, AX));
-
-		if ((isFirstOperandAX && doesInstructionModifyOperand(instruction, 0, 0)) || doesOpcodeModifyRegister(instruction->opcode, AX, 0))
+		if (doesInstructionModifyRegister(instruction, AX, 0, 0))
 		{
 			return 1;
 		}

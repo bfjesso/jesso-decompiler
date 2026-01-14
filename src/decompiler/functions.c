@@ -122,10 +122,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		overwrites = 0;
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
-			if ((doesOpcodeModifyRegister(currentInstruction->opcode, AX, &overwrites) || (currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, AX) && doesInstructionModifyOperand(currentInstruction, 0, &overwrites))) && overwrites)
+			unsigned char operandNum = 0;
+			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, &overwrites) && overwrites)
 			{
 				struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-				if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[0]; }
+				if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[operandNum]; }
 
 				result->returnType = getTypeOfOperand(currentInstruction->opcode, operand, is64Bit);
 				result->addressOfReturnFunction = 0;

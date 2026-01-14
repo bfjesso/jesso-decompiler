@@ -235,10 +235,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			continue;
 		}
 
-		if ((currentInstruction->operands[0].type == REGISTER &&
-			compareRegisters(currentInstruction->operands[0].reg, targetReg) &&
-			doesInstructionModifyOperand(currentInstruction, 0, &finished))
-			|| doesOpcodeModifyRegister(currentInstruction->opcode, targetReg, &finished))
+		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
 		{
 			unsigned char areRegsEqual = currentInstruction->operands[1].type == REGISTER && compareRegisters(currentInstruction->operands[1].reg, targetReg);
 			params.startInstructionIndex = areRegsEqual ? i - 1 : i;
