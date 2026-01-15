@@ -245,7 +245,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			{
 				expressionIndex++;
 			}
-			else
+			else if(!isOtherOpcode)
 			{
 				struct Operand* targetOperand = &currentInstruction->operands[getLastOperand(currentInstruction)];
 				char operandStr[255] = { 0 };
@@ -262,6 +262,10 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 				sprintf(expressions[expressionIndex], "%s%s", operationStr, operandStr);
 				expressionIndex++;
+			}
+			else 
+			{
+				return 0;
 			}
 		}
 		else if (compareRegisters(targetReg, AX) && isOpcodeCall(currentInstruction->opcode))
@@ -557,6 +561,8 @@ unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment,
 
 unsigned char handleOtherOperationStr(struct DecompilationParameters params, struct DisassembledInstruction* instruction, char* resultBuffer, unsigned char* isOtherOpcode)
 {
+	*isOtherOpcode = 1;
+	
 	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
 	{
 		strcpy(resultBuffer, "0");
@@ -587,9 +593,46 @@ unsigned char handleOtherOperationStr(struct DecompilationParameters params, str
 	else 
 	{
 		*isOtherOpcode = 0;
-		return 1;
 	}
 
+	return 1;
+}
+
+unsigned char decompileOperation(struct DecompilationParameters params, struct DisassembledInstruction* instruction, char* resultBuffer, unsigned char* isOtherOpcode)
+{
 	*isOtherOpcode = 1;
+
+	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	{
+		strcpy(resultBuffer, "0");
+	}
+	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+	{
+		char operandStr1[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
+		{
+			return 0;
+		}
+		char operandStr2[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
+		{
+			return 0;
+		}
+
+		sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2);
+	}
+	else if (instruction->opcode == INC)
+	{
+		strcpy(resultBuffer, " + 1");
+	}
+	else if (instruction->opcode == DEC)
+	{
+		strcpy(resultBuffer, " - 1");
+	}
+	else
+	{
+		*isOtherOpcode = 0;
+	}
+
 	return 1;
 }
