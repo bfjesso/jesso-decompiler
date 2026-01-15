@@ -9,4 +9,4 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 unsigned char decompileComparison(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator);
 
-unsigned char decompileOperation(struct DecompilationParameters params, unsigned char getAssignment, char* resultBuffer);
+unsigned char decompileOperation(struct DecompilationParameters params, enum PrimitiveType type, unsigned char getAssignment, char* resultBuffer);

@@ -396,11 +396,13 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	case ADDSS:
 	case CVTPS2PD:
 	case CVTSS2SD:
+	case COMISS:
 		return FLOAT_TYPE;
 	case MOVSD:
 	case ADDSD:
 	case CVTPD2PS:
 	case CVTSD2SS:
+	case COMISD:
 		return DOUBLE_TYPE;
 	}
 

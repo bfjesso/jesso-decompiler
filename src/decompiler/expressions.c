@@ -239,8 +239,15 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
 		{
-			if (decompileOperation(params, 0, expressions[expressionIndex]))
+			if (decompileOperation(params, type, 0, expressions[expressionIndex]))
 			{
+				if (finished && getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type)
+				{
+					char tmp[255] = { 0 };
+					strcpy(tmp, expressions[expressionIndex]);
+					sprintf(expressions[expressionIndex], "(%s)(%s)", primitiveTypeStrs[type], tmp);
+				}
+				
 				expressionIndex++;
 			}
 			else 
@@ -377,7 +384,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 				params.startInstructionIndex = i;
 
 				char operandStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operandStr, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operandStr, 255))
 				{
 					return 0;
 				}
@@ -391,13 +398,13 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 				params.startInstructionIndex = i;
 
 				char operand1Str[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[0], INT_TYPE, operand1Str, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operand1Str, 255))
 				{
 					return 0;
 				}
 
 				char operand2Str[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], INT_TYPE, operand2Str, 255))
+				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), operand2Str, 255))
 				{
 					return 0;
 				}
@@ -408,46 +415,29 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 			}
 		}
 
-		unsigned char type = 0;
-		switch (currentInstruction->opcode)
+		params.startInstructionIndex = i;
+
+		char operand1Str[255] = { 0 };
+		if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operand1Str, 255))
 		{
-		case CMP:
-			type = INT_TYPE;
-			break;
-		case COMISS:
-			type = FLOAT_TYPE;
-			break;
-		case COMISD:
-			type = DOUBLE_TYPE;
-			break;
+			return 0;
 		}
 
-		if (type != 0)
+		char operand2Str[255] = { 0 };
+		if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), operand2Str, 255))
 		{
-			params.startInstructionIndex = i;
-
-			char operand1Str[255] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, operand1Str, 255))
-			{
-				return 0;
-			}
-
-			char operand2Str[255] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[1], type, operand2Str, 255))
-			{
-				return 0;
-			}
-
-			sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
-
-			return 1;
+			return 0;
 		}
+
+		sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
+
+		return 1;
 	}
 
 	return 0;
 }
 
-unsigned char decompileOperation(struct DecompilationParameters params, unsigned char getAssignment, char* resultBuffer)
+unsigned char decompileOperation(struct DecompilationParameters params, enum PrimitiveType type, unsigned char getAssignment, char* resultBuffer)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -460,12 +450,12 @@ unsigned char decompileOperation(struct DecompilationParameters params, unsigned
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		char operandStr1[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
+		if (!decompileOperand(params, &instruction->operands[1], type, operandStr1, 255))
 		{
 			return 0;
 		}
 		char operandStr2[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
+		if (!decompileOperand(params, &instruction->operands[2], type, operandStr2, 255))
 		{
 			return 0;
 		}
@@ -483,14 +473,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, unsigned
 		}
 
 		char trueOperand[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), trueOperand, 255))
+		if (!decompileOperand(params, &instruction->operands[1], type, trueOperand, 255))
 		{
 			return 0;
 		}
 
 		params.startInstructionIndex--;
 		char falseOperand[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[0], getTypeOfOperand(instruction->opcode, &instruction->operands[0], params.is64Bit), falseOperand, 255))
+		if (!decompileOperand(params, &instruction->operands[0], type, falseOperand, 255))
 		{
 			return 0;
 		}
@@ -590,7 +580,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, unsigned
 	}
 
 	char operandStr[255] = { 0 };
-	if (!decompileOperand(params, secondOperand, getTypeOfOperand(instruction->opcode, secondOperand, params.is64Bit), operandStr, 255))
+	if (!decompileOperand(params, secondOperand, type, operandStr, 255))
 	{
 		return 0;
 	}

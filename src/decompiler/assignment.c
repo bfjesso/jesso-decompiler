@@ -33,7 +33,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 	}
 
 	char operation[255] = { 0 };
-	if (!decompileOperation(params, 1, operation))
+	if (!decompileOperation(params, type, 1, operation))
 	{
 		return 0;
 	}
