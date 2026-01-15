@@ -235,32 +235,12 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			continue;
 		}
 
+		params.startInstructionIndex = i;
+
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
 		{
-			unsigned char areRegsEqual = currentInstruction->operands[1].type == REGISTER && compareRegisters(currentInstruction->operands[1].reg, targetReg);
-			params.startInstructionIndex = areRegsEqual ? i - 1 : i;
-
-			unsigned char isOtherOpcode = 0;
-			if (handleOtherOperationStr(params, currentInstruction, expressions[expressionIndex], &isOtherOpcode) && isOtherOpcode)
+			if (decompileOperation(params, 0, expressions[expressionIndex]))
 			{
-				expressionIndex++;
-			}
-			else if(!isOtherOpcode)
-			{
-				struct Operand* targetOperand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-				char operandStr[255] = { 0 };
-				if (!decompileOperand(params, targetOperand, getTypeOfOperand(currentInstruction->opcode, targetOperand, params.is64Bit), operandStr, 255))
-				{
-					return 0;
-				}
-
-				char operationStr[20] = { 0 };
-				if (!getOperationStr(currentInstruction->opcode, 0, operationStr))
-				{
-					return 0;
-				}
-
-				sprintf(expressions[expressionIndex], "%s%s", operationStr, operandStr);
 				expressionIndex++;
 			}
 			else 
@@ -274,7 +254,6 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			
-			params.startInstructionIndex = i;
 			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)
 			{
 				int callNum = getFunctionCallNumber(params, calleeAddress);
@@ -486,9 +465,55 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 	return 0;
 }
 
-unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment, char* resultBuffer)
+unsigned char decompileOperation(struct DecompilationParameters params, unsigned char getAssignment, char* resultBuffer)
 {
-	switch (opcode)
+	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	{
+		if (getAssignment) { strcpy(resultBuffer, " = 0"); }
+		else { strcpy(resultBuffer, "0"); }
+		return 1;
+	}
+	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+	{
+		char operandStr1[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
+		{
+			return 0;
+		}
+		char operandStr2[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
+		{
+			return 0;
+		}
+
+		if (getAssignment) { sprintf(resultBuffer, " = (%s * %s)", operandStr1, operandStr2); }
+		else { sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2); }
+		return 1;
+	}
+	else if (instruction->opcode == INC)
+	{
+		if (getAssignment) { strcpy(resultBuffer, "++"); }
+		else { strcpy(resultBuffer, " + 1"); }
+		return 1;
+	}
+	else if (instruction->opcode == DEC)
+	{
+		if (getAssignment) { strcpy(resultBuffer, "--"); }
+		else { strcpy(resultBuffer, " - 1"); }
+		return 1;
+	}
+	else if (instruction->opcode == STMXCSR)
+	{
+		if (getAssignment) { strcpy(resultBuffer, " = stmxcsr()"); }
+		else { strcpy(resultBuffer, "stmxcsr()"); }
+		return 1;
+	}
+
+	// the rest of these opcodes should only be of the form where the first operand is the target operand, and the second is the value being used to modify it
+	char operationStr[20] = { 0 };
+	switch (instruction->opcode)
 	{
 	case MOV:
 	case MOVUPS:
@@ -497,142 +522,80 @@ unsigned char getOperationStr(enum Mnemonic opcode, unsigned char getAssignment,
 	case MOVSD:
 	case MOVSX:
 	case MOVZX:
-		if (getAssignment) { strcpy(resultBuffer, " = "); }
-		else { strcpy(resultBuffer, ""); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " = "); }
+		else { strcpy(operationStr, ""); }
+		break;
 	case LEA:
-		if (getAssignment) { strcpy(resultBuffer, " = &"); }
-		else { strcpy(resultBuffer, "&"); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " = &"); }
+		else { strcpy(operationStr, "&"); }
+		break;
 	case ADD:
 	case ADDPS:
 	case ADDPD:
 	case ADDSS:
 	case ADDSD:
-		if (getAssignment) { strcpy(resultBuffer, " += "); }
-		else { strcpy(resultBuffer, " + "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " += "); }
+		else { strcpy(operationStr, " + "); }
+		break;
 	case SUB:
-		if (getAssignment) { strcpy(resultBuffer, " -= "); }
-		else { strcpy(resultBuffer, " - "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " -= "); }
+		else { strcpy(operationStr, " - "); }
+		break;
 	case AND:
-		if (getAssignment) { strcpy(resultBuffer, " &= "); }
-		else { strcpy(resultBuffer, " & "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " &= "); }
+		else { strcpy(operationStr, " & "); }
+		break;
 	case OR:
-		if (getAssignment) { strcpy(resultBuffer, " |= "); }
-		else { strcpy(resultBuffer, " | "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " |= "); }
+		else { strcpy(operationStr, " | "); }
+		break;
 	case XOR:
-		if (getAssignment) { strcpy(resultBuffer, " ^= "); }
-		else { strcpy(resultBuffer, " ^ "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " ^= "); }
+		else { strcpy(operationStr, " ^ "); }
+		break;
 	case SHL:
-		if (getAssignment) { strcpy(resultBuffer, " <<= "); }
-		else { strcpy(resultBuffer, " << "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " <<= "); }
+		else { strcpy(operationStr, " << "); }
+		break;
 	case SHR:
-		if (getAssignment) { strcpy(resultBuffer, " >>= "); }
-		else { strcpy(resultBuffer, " >> "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " >>= "); }
+		else { strcpy(operationStr, " >> "); }
+		break;
 	case IMUL:
-		if (getAssignment) { strcpy(resultBuffer, " *= "); }
-		else { strcpy(resultBuffer, " * "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " *= "); }
+		else { strcpy(operationStr, " * "); }
+		break;
 	case IDIV:
-		if (getAssignment) { strcpy(resultBuffer, " /= "); }
-		else { strcpy(resultBuffer, " / "); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " /= "); }
+		else { strcpy(operationStr, " / "); }
+		break;
 	case CVTPS2PD:
 	case CVTSS2SD:
-		if (getAssignment) { strcpy(resultBuffer, " = (double)"); }
-		else { strcpy(resultBuffer, "(double)"); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " = (double)"); }
+		else { strcpy(operationStr, "(double)"); }
+		break;
 	case CVTPD2PS:
 	case CVTSD2SS:
-		if (getAssignment) { strcpy(resultBuffer, " = (float)"); }
-		else { strcpy(resultBuffer, "(float)"); }
-		return 1;
+		if (getAssignment) { strcpy(operationStr, " = (float)"); }
+		else { strcpy(operationStr, "(float)"); }
+		break;
+	default:
+		return 0;
 	}
 
-	return 0;
-}
-
-unsigned char handleOtherOperationStr(struct DecompilationParameters params, struct DisassembledInstruction* instruction, char* resultBuffer, unsigned char* isOtherOpcode)
-{
-	*isOtherOpcode = 1;
-	
-	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	struct Operand* secondOperand = &instruction->operands[1];
+	if (secondOperand->type == REGISTER)
 	{
-		strcpy(resultBuffer, "0");
-	}
-	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
-	{
-		char operandStr1[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
-		{
-			return 0;
-		}
-		char operandStr2[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
-		{
-			return 0;
-		}
-
-		sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2);
-	}
-	else if (instruction->opcode == INC)
-	{
-		strcpy(resultBuffer, " + 1");
-	}
-	else if (instruction->opcode == DEC)
-	{
-		strcpy(resultBuffer, " - 1");
-	}
-	else 
-	{
-		*isOtherOpcode = 0;
+		params.startInstructionIndex--; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
 	}
 
-	return 1;
-}
+	char operandStr[255] = { 0 };
+	if (!decompileOperand(params, secondOperand, getTypeOfOperand(instruction->opcode, secondOperand, params.is64Bit), operandStr, 255))
+	{
+		return 0;
+	}
 
-unsigned char decompileOperation(struct DecompilationParameters params, struct DisassembledInstruction* instruction, char* resultBuffer, unsigned char* isOtherOpcode)
-{
-	*isOtherOpcode = 1;
-
-	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
-	{
-		strcpy(resultBuffer, "0");
-	}
-	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
-	{
-		char operandStr1[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), operandStr1, 255))
-		{
-			return 0;
-		}
-		char operandStr2[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[2], getTypeOfOperand(instruction->opcode, &instruction->operands[2], params.is64Bit), operandStr2, 255))
-		{
-			return 0;
-		}
-
-		sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2);
-	}
-	else if (instruction->opcode == INC)
-	{
-		strcpy(resultBuffer, " + 1");
-	}
-	else if (instruction->opcode == DEC)
-	{
-		strcpy(resultBuffer, " - 1");
-	}
-	else
-	{
-		*isOtherOpcode = 0;
-	}
+	sprintf(resultBuffer, "%s%s", operationStr, operandStr);
 
 	return 1;
 }

@@ -32,35 +32,12 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		return 0;
 	}
 
-	if (currentInstruction->opcode == INC) 
-	{
-		sprintf(result->line, "%s++;", assignee);
-		return 1;
-	}
-	else if (currentInstruction->opcode == DEC)
-	{
-		sprintf(result->line, "%s--;", assignee);
-		return 1;
-	}
-	else if (currentInstruction->opcode == STMXCSR) 
-	{
-		sprintf(result->line, "%s = stmxcsr();", assignee);
-		return 1;
-	}
-
-	char valueToAssign[255] = { 0 };
-	struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-	if (!decompileOperand(params, operand, type, valueToAssign, 255))
+	char operation[255] = { 0 };
+	if (!decompileOperation(params, 1, operation))
 	{
 		return 0;
 	}
 
-	char assignmentStr[20] = { 0 };
-	if (!getOperationStr(currentInstruction->opcode, 1, assignmentStr))
-	{
-		return 0;
-	}
-
-	sprintf(result->line, "%s%s%s;", assignee, assignmentStr, valueToAssign);
+	sprintf(result->line, "%s%s;", assignee, operation);
 	return 1;
 }
