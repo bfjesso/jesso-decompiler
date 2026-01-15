@@ -317,64 +317,46 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	char compOperator[3] = { 0 };
-
-	if (invertOperator)
+	switch (currentInstruction->opcode)
 	{
-		switch (currentInstruction->opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator, "!=");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator, "==");
-			break;
-		case JG_SHORT:
-			strcpy(compOperator, "<=");
-			break;
-		case JL_SHORT:
-		case JB_SHORT:
-			strcpy(compOperator, ">=");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator, ">");
-			break;
-		case JGE_SHORT:
-		case JNB_SHORT:
-			strcpy(compOperator, "<");
-			break;
-		default:
-			return 0;
-		}
-	}
-	else
-	{
-		switch (currentInstruction->opcode)
-		{
-		case JZ_SHORT:
-			strcpy(compOperator, "==");
-			break;
-		case JNZ_SHORT:
-			strcpy(compOperator, "!=");
-			break;
-		case JG_SHORT:
-			strcpy(compOperator, ">");
-			break;
-		case JL_SHORT:
-		case JB_SHORT:
-			strcpy(compOperator, "<");
-			break;
-		case JLE_SHORT:
-		case JBE_SHORT:
-			strcpy(compOperator, "<=");
-			break;
-		case JGE_SHORT:
-		case JNB_SHORT:
-			strcpy(compOperator, ">=");
-			break;
-		default:
-			return 0;
-		}
+	case JZ_SHORT:
+	case CMOVZ:
+		if (invertOperator) { strcpy(compOperator, "!="); }
+		else { strcpy(compOperator, "=="); }
+		break;
+	case JNZ_SHORT:
+	case CMOVNZ:
+		if (invertOperator) { strcpy(compOperator, "=="); }
+		else { strcpy(compOperator, "!="); }
+		break;
+	case JG_SHORT:
+	case CMOVG:
+		if (invertOperator) { strcpy(compOperator, "<="); }
+		else { strcpy(compOperator, ">"); }
+		break;
+	case JL_SHORT:
+	case JB_SHORT:
+	case CMOVL:
+	case CMOVB:
+		if (invertOperator) { strcpy(compOperator, ">="); }
+		else { strcpy(compOperator, "<"); }
+		break;
+	case JLE_SHORT:
+	case JBE_SHORT:
+	case CMOVLE:
+	case CMOVBE:
+		if (invertOperator) { strcpy(compOperator, ">"); }
+		else { strcpy(compOperator, "<="); }
+		break;
+	case JGE_SHORT:
+	case JNB_SHORT:
+	case CMOVGE:
+	case CMOVNB:
+		if (invertOperator) { strcpy(compOperator, "<"); }
+		else { strcpy(compOperator, ">="); }
+		break;
+	default:
+		return 0;
 	}
 
 	// looking for comparison opcode
@@ -492,30 +474,48 @@ unsigned char decompileOperation(struct DecompilationParameters params, unsigned
 		else { sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2); }
 		return 1;
 	}
-	else if (instruction->opcode == INC)
+	else if (instruction->opcode >= CMOVO && instruction->opcode <= CMOVG) 
 	{
-		if (getAssignment) { strcpy(resultBuffer, "++"); }
-		else { strcpy(resultBuffer, " + 1"); }
-		return 1;
-	}
-	else if (instruction->opcode == DEC)
-	{
-		if (getAssignment) { strcpy(resultBuffer, "--"); }
-		else { strcpy(resultBuffer, " - 1"); }
-		return 1;
-	}
-	else if (instruction->opcode == STMXCSR)
-	{
-		if (getAssignment) { strcpy(resultBuffer, " = stmxcsr()"); }
-		else { strcpy(resultBuffer, "stmxcsr()"); }
+		char comparisonStr[255] = { 0 };
+		if (!decompileComparison(params, comparisonStr, 0)) 
+		{
+			return 0;
+		}
+
+		char trueOperand[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[1], getTypeOfOperand(instruction->opcode, &instruction->operands[1], params.is64Bit), trueOperand, 255))
+		{
+			return 0;
+		}
+
+		params.startInstructionIndex--;
+		char falseOperand[255] = { 0 };
+		if (!decompileOperand(params, &instruction->operands[0], getTypeOfOperand(instruction->opcode, &instruction->operands[0], params.is64Bit), falseOperand, 255))
+		{
+			return 0;
+		}
+
+		// conditional moves cant assign to a memory address, getAssignment must be 0
+		sprintf(resultBuffer, "(%s ? %s : %s)", comparisonStr, trueOperand, falseOperand);
 		return 1;
 	}
 
-	// the rest of these opcodes should only be of the form where the first operand is the target operand, and the second is the value being used to modify it
 	char operationStr[20] = { 0 };
 	switch (instruction->opcode)
 	{
-	case MOV:
+	case INC:
+		if (getAssignment) { strcpy(resultBuffer, "++"); }
+		else { strcpy(resultBuffer, " + 1"); }
+		return 1;
+	case DEC:
+		if (getAssignment) { strcpy(resultBuffer, "--"); }
+		else { strcpy(resultBuffer, " - 1"); }
+		return 1;
+	case STMXCSR:
+		if (getAssignment) { strcpy(resultBuffer, " = stmxcsr()"); }
+		else { strcpy(resultBuffer, "stmxcsr()"); }
+		return 1;
+	case MOV: // the rest of these opcodes should only be of the form where the first operand is the target operand, and the second is the value being used to modify it
 	case MOVUPS:
 	case MOVUPD:
 	case MOVSS:
