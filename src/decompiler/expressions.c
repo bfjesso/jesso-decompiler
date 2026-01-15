@@ -449,6 +449,8 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
+		params.startInstructionIndex--;
+
 		char operandStr1[255] = { 0 };
 		if (!decompileOperand(params, &instruction->operands[1], type, operandStr1, 255))
 		{
