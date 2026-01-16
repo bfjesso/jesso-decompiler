@@ -4,12 +4,16 @@
 #include "../fileStructs.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
-struct LineOfC
+const char* indent = "    ";
+
+struct JdcStr 
 {
-	char line[255];
-	unsigned char indents;
+	char* buffer;
+	int bufferSize;
 };
 
 struct DecompilationParameters
@@ -40,3 +44,15 @@ struct DecompilationParameters
 };
 
 void wrapStrInParentheses(char* str);
+
+unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src);
+
+unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
+
+unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
+
+unsigned char initializeJdcStr(struct JdcStr* jdcStr, int bufferSize);
+
+unsigned char freeJdcStr(struct JdcStr* jdcStr);
+
+static unsigned char resizeJdcStr(struct JdcStr* jdcStr);

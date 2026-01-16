@@ -6,19 +6,18 @@ extern "C"
 {
 #endif
 
-	unsigned short decompileFunction(struct DecompilationParameters params, struct LineOfC* resultBuffer, unsigned short resultBufferLen);
+	unsigned short decompileFunction(struct DecompilationParameters params, struct JdcStr* result);
 
 #ifdef __cplusplus
 }
 #endif
 
-static unsigned short generateFunctionHeader(struct Function* function, struct LineOfC* result);
+static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result);
 
-static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen);
+static unsigned char declareAllLocalVariables(struct Function* function, struct JdcStr* result);
 
-// params.startInstructionIndex is the index for the instruction in question
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params);
 
 static unsigned char checkForReturnStatement(struct DecompilationParameters params);
 
-static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result);
+static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct JdcStr* result);

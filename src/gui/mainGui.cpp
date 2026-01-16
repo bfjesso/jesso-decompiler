@@ -357,16 +357,14 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	params.is64Bit = is64Bit;
 
-	LineOfC* decompiledFunction = new LineOfC[255];
-	if (!decompiledFunction) 
+	struct JdcStr decompiledFunction = { 0 };
+	if (!initializeJdcStr(&decompiledFunction, 20000))
 	{
 		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
 		return;
 	}
 
-	memset(decompiledFunction, 0, 255 * sizeof(LineOfC));
-
-	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 255);
+	unsigned short numOfLinesDecompiled = decompileFunction(params, &decompiledFunction);
 	if (numOfLinesDecompiled == 0)
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
@@ -378,7 +376,7 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	for (int i = 0; i < numOfLinesDecompiled; i++)
 	{
-		wxString str = wxString(decompiledFunction[i].line);
+		wxString str = wxString(decompiledFunction[i].line.buffer);
 		ReplaceEscapeChars(&str);
 
 		for (int j = 0; j < decompiledFunction[i].indents; j++) 
