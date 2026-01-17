@@ -417,15 +417,14 @@ void MainGui::FindAllFunctions()
 	int instructionIndex = 0;
 	int codeSectionIndex = 1;
 	unsigned long long nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], &instructionAddresses[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
 	{
-		if(instructionAddresses[instructionIndex] >= nextSectionStartAddress)
+		if (instructionAddresses[instructionIndex] >= nextSectionStartAddress)
 		{
 			codeSectionIndex++;
 			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
 		}
 
-		numOfInstructions -= functions[functionNum].numOfInstructions;
 		functionsGrid->AppendRows(1);
 
 		if (functions[functionNum].addresses)
@@ -446,6 +445,11 @@ void MainGui::FindAllFunctions()
 		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name.buffer));
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
+
+		if (functionNum == 85) 
+		{
+			int TT = 0;
+		}
 
 		functions.push_back({ 0 });
 	}

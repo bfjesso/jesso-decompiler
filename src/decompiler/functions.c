@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
+unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
@@ -11,7 +11,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int i = startInstructionIndex; i < numOfInstructions; i++)
 	{
 		(*instructionIndex)++;
 
@@ -133,8 +133,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = addresses[i] + currentInstruction->operands[0].immediate;
-				if (calleeAddress != addresses[0]) // check for recursive function
+				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, i);
+				if (calleeAddress != result->addresses[0]) // check for recursive function
 				{
 					result->addressOfReturnFunction = calleeAddress;
 				}
@@ -203,11 +203,9 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 		{
 			int returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[i].addressOfReturnFunction);
 
-			struct Function* f = 0;
 			while (returnFunctionIndex != -1 && functions[returnFunctionIndex].addressOfReturnFunction != 0)
 			{
 				returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[returnFunctionIndex].addressOfReturnFunction);
-				f = &functions[returnFunctionIndex];
 			}
 
 			if (returnFunctionIndex != -1)
