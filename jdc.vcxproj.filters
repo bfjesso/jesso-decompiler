@@ -60,9 +60,6 @@
     <ClCompile Include="src\decompiler\dataTypes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decompiler\decompilationUtils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\decompiler\functionCalls.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -76,6 +73,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\colorsMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\jdc-str\jdcStr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -153,6 +153,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\colorsMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\jdc-str\jdcStr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

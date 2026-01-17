@@ -2,17 +2,7 @@
 #include "functions.h"
 #include "../disassembler/disassembler.h"
 #include "../fileStructs.h"
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-
-struct JdcStr 
-{
-	char* buffer;
-	int bufferSize;
-};
+#include "../jdc-str/jdcStr.h"
 
 struct DecompilationParameters
 {
@@ -40,28 +30,3 @@ struct DecompilationParameters
 
 	unsigned char is64Bit;
 };
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-	struct JdcStr initializeJdcStr();
-
-	unsigned char freeJdcStr(struct JdcStr* jdcStr);
-
-#ifdef __cplusplus
-}
-#endif
-
-unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr);
-
-unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src);
-
-unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
-
-unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
-
-static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
-
-static unsigned char resizeJdcStr(struct JdcStr* jdcStr);
