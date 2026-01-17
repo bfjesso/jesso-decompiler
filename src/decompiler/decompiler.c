@@ -167,6 +167,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				params.skipUpperBound = -1;
 				params.skipLowerBound = -1;
 
+				numOfIndents--;
 				addIndents(result, numOfIndents);
 				strcatJdc(result, "}\n");
 

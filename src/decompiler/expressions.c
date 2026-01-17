@@ -425,6 +425,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
 
+		params.startInstructionIndex = i;
 		if (currentInstruction->opcode == TEST)
 		{
 			if (areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
@@ -434,8 +435,6 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 					i--;
 					continue;
 				}
-
-				params.startInstructionIndex = i;
 
 				struct JdcStr operandStr = { 0 };
 				initializeJdcStr(&operandStr, 255);
@@ -452,8 +451,6 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 			}
 			else 
 			{
-				params.startInstructionIndex = i;
-
 				struct JdcStr operand1Str = { 0 };
 				initializeJdcStr(&operand1Str, 255);
 				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
@@ -478,31 +475,31 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 				return 1;
 			}
 		}
-
-		params.startInstructionIndex = i;
-
-		struct JdcStr operand1Str = { 0 };
-		initializeJdcStr(&operand1Str, 255);
-		if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+		else if (currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) 
 		{
-			freeJdcStr(&operand1Str);
-			return 0;
-		}
+			struct JdcStr operand1Str = { 0 };
+			initializeJdcStr(&operand1Str, 255);
+			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+			{
+				freeJdcStr(&operand1Str);
+				return 0;
+			}
 
-		struct JdcStr operand2Str = { 0 };
-		initializeJdcStr(&operand2Str, 255);
-		if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
-		{
+			struct JdcStr operand2Str = { 0 };
+			initializeJdcStr(&operand2Str, 255);
+			if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
+			{
+				freeJdcStr(&operand1Str);
+				freeJdcStr(&operand2Str);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
-			return 0;
+
+			return 1;
 		}
-
-		sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
-		freeJdcStr(&operand1Str);
-		freeJdcStr(&operand2Str);
-
-		return 1;
 	}
 
 	return 0;
@@ -577,7 +574,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		}
 
 		// conditional moves cant assign to a memory address, getAssignment must be 0
-		sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr, trueOperand, falseOperand);
+		sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, trueOperand.buffer, falseOperand.buffer);
 		freeJdcStr(&comparisonStr);
 		freeJdcStr(&trueOperand);
 		freeJdcStr(&falseOperand);
