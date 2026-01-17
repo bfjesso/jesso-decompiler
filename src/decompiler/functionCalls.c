@@ -32,7 +32,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
 	{
-		sprintfJdc(result, 1, "%s();", callee->name);
+		sprintfJdc(result, 1, "%s();", callee->name.buffer);
 		return 1;
 	}
 
@@ -40,10 +40,10 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, callee->addresses[0]);
 	if (returnVar != 0)
 	{
-		sprintfJdc(result, 1, "%s = ", returnVar->name);
+		sprintfJdc(result, 1, "%s = ", returnVar->name.buffer);
 	}
 
-	sprintfJdc(result, 1, "%s(", callee->name);
+	sprintfJdc(result, 1, "%s(", callee->name.buffer);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
@@ -170,10 +170,10 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 	if (returnVar != 0)
 	{
-		sprintfJdc(result, 1, "%s = ", returnVar->name);
+		sprintfJdc(result, 1, "%s = ", returnVar->name.buffer);
 	}
 
-	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name);
+	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name.buffer);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 

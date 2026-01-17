@@ -186,16 +186,9 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
 	}
-
-	functions.clear();
-	functions.shrink_to_fit();
-	ClearStyledTextCtrl(decompilationTextCtrl);
-	int rows = functionsGrid->GetNumberRows();
-	if (rows > 0)
-	{
-		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
-	}
 	
+	ClearData();
+
 	FindAllFunctions();
 
 	functionsGrid->SetLabelTextColour(textColor);
@@ -210,6 +203,39 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	if (answer == wxYES) 
 	{
 		LoadDataSectionBytes();
+	}
+}
+
+void MainGui::ClearData() 
+{
+	for (int i = 0; i < functions.size(); i++)
+	{
+		freeJdcStr(&functions[i].name);
+		for (int j = 0; j < functions[i].numOfRegArgs; j++)
+		{
+			freeJdcStr(&functions[i].regArgs[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfStackArgs; j++)
+		{
+			freeJdcStr(&functions[i].stackArgs[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfLocalVars; j++)
+		{
+			freeJdcStr(&functions[i].localVars[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfReturnVars; j++)
+		{
+			freeJdcStr(&functions[i].returnVars[j].name);
+		}
+	}
+
+	functions.clear();
+	functions.shrink_to_fit();
+	ClearStyledTextCtrl(decompilationTextCtrl);
+	int rows = functionsGrid->GetNumberRows();
+	if (rows > 0)
+	{
+		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
 	}
 }
 
@@ -406,14 +432,14 @@ void MainGui::FindAllFunctions()
 
 			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
 
-			functions[functionNum].name[0] = 0;
-			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
+			functions[functionNum].name = initializeJdcStr();
+			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, &functions[functionNum].name))
 			{
-				sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
+				sprintfJdc(&(functions[functionNum].name), 0, "func%llX", (*functions[functionNum].addresses) - imageBase);
 			}
 		}
 
-		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name));
+		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name.buffer));
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
 
@@ -571,37 +597,37 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->localVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->returnVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->stackArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->regArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
+		ColorAllStrs(text, functions[i].name.buffer, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
+		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 	}
 
 	// calling conventions
@@ -815,7 +841,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 	functionNameLabel = new wxStaticText(this, wxID_ANY, "Function Name");
 	functionNameLabel->SetOwnForegroundColour(textColor);
 
-	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, function->name, wxPoint(0, 0), wxSize(100, 25));
+	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, function->name.buffer, wxPoint(0, 0), wxSize(100, 25));
 	functionNameTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	functionNameTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -831,7 +857,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(regArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfRegArgs; i++)
 		{
-			wxTextCtrl* regArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regArgs[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* regArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			regArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			regArgTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -848,7 +874,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(stackArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfStackArgs; i++)
 		{
-			wxTextCtrl* stackArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackArgs[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* stackArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			stackArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			stackArgTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -865,7 +891,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(localVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfLocalVars; i++)
 		{
-			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->localVars[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->localVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			localVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			localVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -882,7 +908,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(retVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfReturnVars; i++)
 		{
-			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			retVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			retVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -908,35 +934,30 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 {
 	Function* currentFunction = &(mainGui->functions[functionIndex]);
 
-	currentFunction->name[0] = 0;
-	strcpy(currentFunction->name, functionNameTextCtrl->GetValue().c_str());
+	strcpyJdc(&currentFunction->name, functionNameTextCtrl->GetValue().c_str());
 
 	for (int i = 0; i < currentFunction->numOfRegArgs; i++)
 	{
-		currentFunction->regArgs[i].name[0] = 0;
-		strcpy(currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfStackArgs; i++)
 	{
-		currentFunction->stackArgs[i].name[0] = 0;
-		strcpy(currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfLocalVars; i++)
 	{
-		currentFunction->localVars[i].name[0] = 0;
-		strcpy(currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfReturnVars; i++)
 	{
-		currentFunction->returnVars[i].name[0] = 0;
-		strcpy(currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	// update name in function grid
-	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name);
+	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
 
 	// redecompile if it is currently in the decompilation box
 	if (mainGui->currentDecompiledFunc == functionIndex)

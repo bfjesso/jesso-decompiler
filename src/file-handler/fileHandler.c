@@ -150,7 +150,7 @@ unsigned char readFileSection(const wchar_t* filePath, struct FileSection* secti
 #endif
 }
 
-unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, unsigned int value, char* buffer)
+unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -161,11 +161,11 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 
 	if (is64Bit)
 	{
-		return getPESymbolByValue64(file, value, buffer);
+		return getPESymbolByValue64(file, value, result);
 	}
 	else 
 	{
-		return getPESymbolByValue32(file, value, buffer);
+		return getPESymbolByValue32(file, value, result);
 	}
 #endif
 
@@ -175,11 +175,11 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 
 	if (is64Bit)
 	{
-		return getELFSymbolByValue64(filePathChar, value, buffer);
+		return getELFSymbolByValue64(filePathChar, value, result);
 	}
 	else
 	{
-		return getELFSymbolByValue32(filePathChar, value, buffer);
+		return getELFSymbolByValue32(filePathChar, value, result);
 	}
 #endif
 }

@@ -277,7 +277,8 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 					else 
 					{
 						functions[i].returnVars[functions[i].numOfReturnVars].type = functions[calleIndex].returnType;
-						sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", functions[calleIndex].name, callNum);
+						functions[i].returnVars[functions[i].numOfReturnVars].name = initializeJdcStr();
+						sprintfJdc(&(functions[i].returnVars[functions[i].numOfReturnVars].name), 0, "%sRetVal%d", functions[calleIndex].name.buffer, callNum);
 					}
 				}
 				else
@@ -304,7 +305,8 @@ unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunction
 								}
 							}
 							
-							sprintf(functions[i].returnVars[functions[i].numOfReturnVars].name, "%sRetVal%d", imports[k].name, callNum);
+							functions[i].returnVars[functions[i].numOfReturnVars].name = initializeJdcStr();
+							sprintfJdc(&(functions[i].returnVars[functions[i].numOfReturnVars].name), 0, "%sRetVal%d", imports[k].name.buffer, callNum);
 							functions[i].returnVars[functions[i].numOfReturnVars].type = returnType;
 							break;
 						}
@@ -500,24 +502,20 @@ static void initializeFunctionVarNames(struct Function* function)
 {
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
-		if (function->regArgs[i].reg >= RAX && function->regArgs[i].reg <= RIP) 
-		{
-			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg - 18]); // make it DX rather than RDX for example
-		}
-		else if(function->regArgs[i].reg >= 0 && function->regArgs[i].reg < NO_REG)
-		{
-			sprintf(function->regArgs[i].name, "arg%s", registerStrs[function->regArgs[i].reg]);
-		}
+		function->regArgs[i].name = initializeJdcStr();
+		sprintfJdc(&(function->regArgs[i].name), 0, "arg%s", registerStrs[function->regArgs[i].reg]);
 	}
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		sprintf(function->stackArgs[i].name, "arg%X", function->stackArgs[i].stackOffset);
+		function->stackArgs[i].name = initializeJdcStr();
+		sprintfJdc(&(function->stackArgs[i].name), 0, "arg%X", function->stackArgs[i].stackOffset);
 	}
 
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
-		sprintf(function->localVars[i].name, "var%X", -function->localVars[i].stackOffset);
+		function->localVars[i].name = initializeJdcStr();
+		sprintfJdc(&(function->localVars[i].name), 0, "var%X", -function->localVars[i].stackOffset);
 	}
 }
 

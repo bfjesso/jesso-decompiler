@@ -2,7 +2,6 @@
 #include "functions.h"
 #include "../disassembler/disassembler.h"
 #include "../fileStructs.h"
-#include "../jdc-str/jdcStr.h"
 
 struct DecompilationParameters
 {

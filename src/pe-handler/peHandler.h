@@ -1,7 +1,9 @@
 #pragma once
+#include "../fileStructs.h"
+
 # define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "../fileStructs.h"
+
 
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
 
@@ -17,9 +19,9 @@ int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 
 int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
 
-unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer);
+unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result);
 
-unsigned char getPESymbolByValue64(HANDLE file, DWORD value, char* buffer);
+unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* result);
 
 int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
 

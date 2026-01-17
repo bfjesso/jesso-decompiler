@@ -208,7 +208,7 @@ int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 	return bufferIndex;
 }
 
-unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer)
+unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -241,11 +241,11 @@ unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer)
 				if (!ReadFile(file, tmpBuffer, 50, 0, 0)) { return 0; }
 				tmpBuffer[49] = 0;
 
-				strcpy(buffer, tmpBuffer);
+				strcpyJdc(result, tmpBuffer);
 			}
 			else 
 			{
-				strcpy(buffer, symbol.N.ShortName);
+				strcpyJdc(result, symbol.N.ShortName);
 			}
 
 			return 1;
@@ -255,7 +255,7 @@ unsigned char getPESymbolByValue32(HANDLE file, DWORD value, char* buffer)
 	return 0;
 }
 
-unsigned char getPESymbolByValue64(HANDLE file, DWORD value, char* buffer)
+unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* result)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -288,11 +288,11 @@ unsigned char getPESymbolByValue64(HANDLE file, DWORD value, char* buffer)
 				if (!ReadFile(file, tmpBuffer, 50, 0, 0)) { return 0; }
 				tmpBuffer[49] = 0;
 
-				strcpy(buffer, tmpBuffer);
+				strcpyJdc(result, tmpBuffer);
 			}
 			else
 			{
-				strcpy(buffer, symbol.N.ShortName);
+				strcpyJdc(result, symbol.N.ShortName);
 			}
 
 			return 1;
@@ -349,18 +349,16 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					break;
 				}
 
-				if (lookupValue & 0x80000000) // import by ordinal
+				buffer[bufferIndex].name = initializeJdcStr();
+				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
 				{
-					buffer[bufferIndex].name[0] = 0;
+					strcpyJdc(&buffer[bufferIndex].name, "");
 				}
 				else // import by name
 				{
 					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
-					buffer[bufferIndex].name[0] = 0;
-					if (!ReadFile(file, buffer[bufferIndex].name, 50, 0, 0)) { return 0; }
-					buffer[bufferIndex].name[49] = 0;
+					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
 				}
 
 				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;

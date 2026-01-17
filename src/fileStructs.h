@@ -1,8 +1,9 @@
 #pragma once
+#include "../jdc-str/jdcStr.h"
 
 struct ImportedFunction
 {
-	char name[50];
+	struct JdcStr name;
 	unsigned long long address;
 };
 

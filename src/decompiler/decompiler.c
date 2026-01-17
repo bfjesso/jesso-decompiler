@@ -194,7 +194,7 @@ static void addIndents(struct JdcStr* result, int numOfIndents)
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
 {
-	if (!sprintfJdc(result, 0, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name)) 
+	if (!sprintfJdc(result, 0, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name.buffer)) 
 	{
 		return 0;
 	}
@@ -203,14 +203,14 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	{
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name))
+			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
 			{
 				return 0;
 			}
 		}
 		else 
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name))
+			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
 			{
 				return 0;
 			}
@@ -221,14 +221,14 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	{
 		if (i == function->numOfStackArgs - 1)
 		{
-			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name))
+			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
 			{
 				return 0;
 			}
 		}
 		else
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name))
+			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
 			{
 				return 0;
 			}
@@ -242,7 +242,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 {
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name)) 
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name.buffer))
 		{
 			return 0;
 		}
@@ -250,7 +250,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->returnVars[i].type], function->returnVars[i].name)) 
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->returnVars[i].type], function->returnVars[i].name.buffer))
 		{
 			return 0;
 		}

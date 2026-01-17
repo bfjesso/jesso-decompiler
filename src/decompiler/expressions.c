@@ -27,7 +27,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (localVar)
 				{
-					strcpyJdc(result, localVar->name);
+					strcpyJdc(result, localVar->name.buffer);
 				}
 				else
 				{
@@ -39,7 +39,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (stackArg)
 				{
-					strcpyJdc(result, stackArg->name);
+					strcpyJdc(result, stackArg->name.buffer);
 				}
 				else
 				{
@@ -103,7 +103,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, operand->reg);
 			if (regArg)
 			{
-				return strcpyJdc(result, regArg->name);
+				return strcpyJdc(result, regArg->name.buffer);
 			}
 
 			return 0;
@@ -307,7 +307,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 				if (returnVar != 0)
 				{
-					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name);
+					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 				}
 				expressionIndex++;
 				finished = 1;
@@ -325,7 +325,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 					struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 					if (returnVar != 0)
 					{
-						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name);
+						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 					}
 					expressionIndex++;
 					finished = 1;

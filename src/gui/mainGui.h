@@ -75,6 +75,8 @@ public:
 
 	void AnalyzeButton(wxCommandEvent& e);
 
+	void ClearData();
+
 	void LoadDataSectionBytes();
 
 	void DisassembleCodeSections();
