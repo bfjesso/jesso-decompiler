@@ -282,7 +282,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 					struct JdcStr tmp = { 0 };
 					initializeJdcStr(&tmp, 255);
 					strcpyJdc(&tmp, expressions[expressionIndex].buffer);
-					sprintfJdc(&expressions[expressionIndex], "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
+					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
 					freeJdcStr(&tmp);
 				}
 				

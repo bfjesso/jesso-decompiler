@@ -244,7 +244,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 {
 	if (conditions[conditionIndex].conditionType == ELSE_CT)
 	{
-		return strcatJdc(result, "else\n");
+		return strcatJdc(result, "else");
 	}
 
 	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp;
