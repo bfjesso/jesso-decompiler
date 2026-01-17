@@ -3,22 +3,12 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
-EVT_BUTTON(DisassembleFileButtonID, MainGui::DisassembleButton)
-EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
 EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
-
-	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
-	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
-	disassembleFileButton->SetOwnForegroundColour(textColor);
-
-	analyzeFileButton = new wxButton(this, AnalyzeFileButtonID, "Analyze", wxPoint(0, 0), wxSize(75, 25));
-	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
-	analyzeFileButton->SetOwnForegroundColour(textColor);
 
 	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
@@ -61,6 +51,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenuItem* openFile = fileMenu->Append(OpenFileID, "Open file");
 	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
 
+	wxMenuItem* disassembleFile = fileMenu->Append(DisassembleFileID, "Disassemble file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { DisassembleFile(); }, DisassembleFileID);
+
+	wxMenuItem* analyzeFile = fileMenu->Append(AnalyzeFileID, "Analyze file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { AnalyzeFile(); }, AnalyzeFileID);
+
 	wxMenu* toolMenu = new wxMenu();
 
 	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
@@ -81,20 +77,15 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(disassembleFileButton, 0, wxALL, 10);
-	row1Sizer->Add(analyzeFileButton, 0, wxUP | wxBOTTOM | wxRIGHT, 10);
+	row1Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxALL, 10);
+	row1Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row2Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
-	row3Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-
-	vSizer->Add(row1Sizer);
-	vSizer->Add(row2Sizer, 1, wxEXPAND);
-	vSizer->Add(row3Sizer, 0, wxEXPAND);
+	vSizer->Add(row1Sizer, 1, wxEXPAND);
+	vSizer->Add(row2Sizer, 0, wxEXPAND);
 
 	SetSizerAndFit(vSizer);
 }
@@ -105,22 +96,7 @@ void MainGui::OpenFile()
 
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
-		currentFilePath = "";
-		instructionAddresses.clear();
-		instructionAddresses.shrink_to_fit();
-		disassembledInstructions.clear();
-		disassembledInstructions.shrink_to_fit();
-		functions.clear();
-		functions.shrink_to_fit();
-		ClearStyledTextCtrl(disassemblyTextCtrl);
-		ClearStyledTextCtrl(decompilationTextCtrl);
-		currentDecompiledFunc = -1;
-
-		int rows = functionsGrid->GetNumberRows();
-		if (rows > 0)
-		{
-			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
-		}
+		ClearData();
 
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
@@ -140,7 +116,18 @@ void MainGui::OpenFile()
 			
 			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
-			wxMessageBox(fileName + " has been opened. It can now be disassembled and analyzed.", "Successfully opened the file");
+
+			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
+			if (disassembleAnswer == wxYES)
+			{
+				DisassembleFile();
+
+				int analyzeAnswer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+				if (analyzeAnswer == wxYES)
+				{
+					AnalyzeFile();
+				}
+			}
 		}
 		else
 		{
@@ -154,40 +141,39 @@ void MainGui::OpenFile()
 	openFileDialog.Close(true);
 }
 
-void MainGui::DisassembleButton(wxCommandEvent& e) 
+void MainGui::DisassembleFile()
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
+	if (disassembledInstructions.size() > 0) 
+	{
+		wxMessageBox("File already disassembled", "Can't disassemble");
+		return;
+	}
 
-	ClearStyledTextCtrl(disassemblyTextCtrl);
-
-	instructionAddresses.clear();
-	instructionAddresses.shrink_to_fit();
-
-	disassembledInstructions.clear();
-	disassembledInstructions.shrink_to_fit();
-	
 	DisassembleCodeSections();
 }
 
-void MainGui::AnalyzeButton(wxCommandEvent& e) 
+void MainGui::AnalyzeFile() 
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
 	}
-
 	if (disassembledInstructions.size() == 0) 
 	{
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
 	}
-	
-	ClearData();
+	if (functions.size() > 0)
+	{
+		wxMessageBox("File already analyzed", "Can't analyze");
+		return;
+	}
 
 	FindAllFunctions();
 
@@ -208,6 +194,24 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 
 void MainGui::ClearData() 
 {
+	if (dataSectionBytes)
+	{
+		delete[] dataSectionBytes;
+	}
+	
+	ClearStyledTextCtrl(disassemblyTextCtrl);
+
+	instructionAddresses.clear();
+	instructionAddresses.shrink_to_fit();
+
+	disassembledInstructions.clear();
+	disassembledInstructions.shrink_to_fit();
+
+	for (int i = 0; i < numOfImports; i++) 
+	{
+		freeJdcStr(&imports[i].name);
+	}
+	
 	for (int i = 0; i < functions.size(); i++)
 	{
 		freeJdcStr(&functions[i].name);
@@ -571,11 +575,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
-	if (dataSectionBytes) 
-	{
-		delete[] dataSectionBytes;
-	}
-	
+	ClearData();
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
 	colorsMenu->Destroy();
