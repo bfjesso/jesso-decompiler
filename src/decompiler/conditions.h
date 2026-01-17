@@ -46,4 +46,4 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
-unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result);
+unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct JdcStr* result);

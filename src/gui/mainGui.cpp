@@ -3,22 +3,12 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
-EVT_BUTTON(DisassembleFileButtonID, MainGui::DisassembleButton)
-EVT_BUTTON(AnalyzeFileButtonID, MainGui::AnalyzeButton)
 EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
-
-	disassembleFileButton = new wxButton(this, DisassembleFileButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
-	disassembleFileButton->SetOwnBackgroundColour(foregroundColor);
-	disassembleFileButton->SetOwnForegroundColour(textColor);
-
-	analyzeFileButton = new wxButton(this, AnalyzeFileButtonID, "Analyze", wxPoint(0, 0), wxSize(75, 25));
-	analyzeFileButton->SetOwnBackgroundColour(foregroundColor);
-	analyzeFileButton->SetOwnForegroundColour(textColor);
 
 	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
@@ -61,6 +51,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenuItem* openFile = fileMenu->Append(OpenFileID, "Open file");
 	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
 
+	wxMenuItem* disassembleFile = fileMenu->Append(DisassembleFileID, "Disassemble file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { DisassembleFile(); }, DisassembleFileID);
+
+	wxMenuItem* analyzeFile = fileMenu->Append(AnalyzeFileID, "Analyze file");
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { AnalyzeFile(); }, AnalyzeFileID);
+
 	wxMenu* toolMenu = new wxMenu();
 
 	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
@@ -81,20 +77,15 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(disassembleFileButton, 0, wxALL, 10);
-	row1Sizer->Add(analyzeFileButton, 0, wxUP | wxBOTTOM | wxRIGHT, 10);
+	row1Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxALL, 10);
+	row1Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 10);
 
-	row2Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row2Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
-	row3Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-
-	vSizer->Add(row1Sizer);
-	vSizer->Add(row2Sizer, 1, wxEXPAND);
-	vSizer->Add(row3Sizer, 0, wxEXPAND);
+	vSizer->Add(row1Sizer, 1, wxEXPAND);
+	vSizer->Add(row2Sizer, 0, wxEXPAND);
 
 	SetSizerAndFit(vSizer);
 }
@@ -105,22 +96,7 @@ void MainGui::OpenFile()
 
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
-		currentFilePath = "";
-		instructionAddresses.clear();
-		instructionAddresses.shrink_to_fit();
-		disassembledInstructions.clear();
-		disassembledInstructions.shrink_to_fit();
-		functions.clear();
-		functions.shrink_to_fit();
-		ClearStyledTextCtrl(disassemblyTextCtrl);
-		ClearStyledTextCtrl(decompilationTextCtrl);
-		currentDecompiledFunc = -1;
-
-		int rows = functionsGrid->GetNumberRows();
-		if (rows > 0)
-		{
-			functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
-		}
+		ClearData();
 
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
@@ -140,7 +116,18 @@ void MainGui::OpenFile()
 			
 			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
-			wxMessageBox(fileName + " has been opened. It can now be disassembled and analyzed.", "Successfully opened the file");
+
+			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
+			if (disassembleAnswer == wxYES)
+			{
+				DisassembleFile();
+
+				int analyzeAnswer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+				if (analyzeAnswer == wxYES)
+				{
+					AnalyzeFile();
+				}
+			}
 		}
 		else
 		{
@@ -154,48 +141,40 @@ void MainGui::OpenFile()
 	openFileDialog.Close(true);
 }
 
-void MainGui::DisassembleButton(wxCommandEvent& e) 
+void MainGui::DisassembleFile()
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
+	if (disassembledInstructions.size() > 0) 
+	{
+		wxMessageBox("File already disassembled", "Can't disassemble");
+		return;
+	}
 
-	ClearStyledTextCtrl(disassemblyTextCtrl);
-
-	instructionAddresses.clear();
-	instructionAddresses.shrink_to_fit();
-
-	disassembledInstructions.clear();
-	disassembledInstructions.shrink_to_fit();
-	
 	DisassembleCodeSections();
 }
 
-void MainGui::AnalyzeButton(wxCommandEvent& e) 
+void MainGui::AnalyzeFile() 
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
 	}
-
 	if (disassembledInstructions.size() == 0) 
 	{
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
 	}
-
-	functions.clear();
-	functions.shrink_to_fit();
-	ClearStyledTextCtrl(decompilationTextCtrl);
-	int rows = functionsGrid->GetNumberRows();
-	if (rows > 0)
+	if (functions.size() > 0)
 	{
-		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
+		wxMessageBox("File already analyzed", "Can't analyze");
+		return;
 	}
-	
+
 	FindAllFunctions();
 
 	functionsGrid->SetLabelTextColour(textColor);
@@ -210,6 +189,57 @@ void MainGui::AnalyzeButton(wxCommandEvent& e)
 	if (answer == wxYES) 
 	{
 		LoadDataSectionBytes();
+	}
+}
+
+void MainGui::ClearData() 
+{
+	if (dataSectionBytes)
+	{
+		delete[] dataSectionBytes;
+	}
+	
+	ClearStyledTextCtrl(disassemblyTextCtrl);
+
+	instructionAddresses.clear();
+	instructionAddresses.shrink_to_fit();
+
+	disassembledInstructions.clear();
+	disassembledInstructions.shrink_to_fit();
+
+	for (int i = 0; i < numOfImports; i++) 
+	{
+		freeJdcStr(&imports[i].name);
+	}
+	
+	for (int i = 0; i < functions.size(); i++)
+	{
+		freeJdcStr(&functions[i].name);
+		for (int j = 0; j < functions[i].numOfRegArgs; j++)
+		{
+			freeJdcStr(&functions[i].regArgs[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfStackArgs; j++)
+		{
+			freeJdcStr(&functions[i].stackArgs[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfLocalVars; j++)
+		{
+			freeJdcStr(&functions[i].localVars[j].name);
+		}
+		for (int j = 0; j < functions[i].numOfReturnVars; j++)
+		{
+			freeJdcStr(&functions[i].returnVars[j].name);
+		}
+	}
+
+	functions.clear();
+	functions.shrink_to_fit();
+	ClearStyledTextCtrl(decompilationTextCtrl);
+	int rows = functionsGrid->GetNumberRows();
+	if (rows > 0)
+	{
+		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
 	}
 }
 
@@ -357,46 +387,26 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	params.is64Bit = is64Bit;
 
-	LineOfC* decompiledFunction = new LineOfC[255];
-	if (!decompiledFunction) 
+	struct JdcStr decompiledFunction = initializeJdcStr();
+	if (decompiledFunction.bufferSize == 0)
 	{
 		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
 		return;
 	}
 
-	memset(decompiledFunction, 0, 255 * sizeof(LineOfC));
-
-	unsigned short numOfLinesDecompiled = decompileFunction(params, decompiledFunction, 255);
-	if (numOfLinesDecompiled == 0)
+	if (!decompileFunction(params, &decompiledFunction))
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
-		delete[] decompiledFunction;
+		freeJdcStr(&decompiledFunction);
 		return;
 	}
 
 	decompilationTextCtrl->SetReadOnly(false);
-
-	for (int i = 0; i < numOfLinesDecompiled; i++)
-	{
-		wxString str = wxString(decompiledFunction[i].line);
-		ReplaceEscapeChars(&str);
-
-		for (int j = 0; j < decompiledFunction[i].indents; j++) 
-		{
-			str = "    " + str;
-		}
-
-		decompilationTextCtrl->AppendText(str);
-		decompilationTextCtrl->AppendText("\n");
-	}
-
+	decompilationTextCtrl->SetValue(decompiledFunction.buffer);
 	ApplySyntaxHighlighting(params.currentFunc);
-
 	decompilationTextCtrl->SetReadOnly(true);
-
 	currentDecompiledFunc = functionIndex;
-
-	delete[] decompiledFunction;
+	freeJdcStr(&decompiledFunction);
 }
 
 void MainGui::FindAllFunctions() 
@@ -407,15 +417,14 @@ void MainGui::FindAllFunctions()
 	int instructionIndex = 0;
 	int codeSectionIndex = 1;
 	unsigned long long nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[instructionIndex], &instructionAddresses[instructionIndex], numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], &instructionAddresses[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
 	{
-		if(instructionAddresses[instructionIndex] >= nextSectionStartAddress)
+		if (instructionAddresses[instructionIndex] >= nextSectionStartAddress)
 		{
 			codeSectionIndex++;
 			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
 		}
 
-		numOfInstructions -= functions[functionNum].numOfInstructions;
 		functionsGrid->AppendRows(1);
 
 		if (functions[functionNum].addresses)
@@ -426,14 +435,14 @@ void MainGui::FindAllFunctions()
 
 			functionsGrid->SetCellValue(functionNum, 1, wxString(callingConventionStrs[functions[functionNum].callingConvention]));
 
-			functions[functionNum].name[0] = 0;
-			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, functions[functionNum].name))
+			functions[functionNum].name = initializeJdcStr();
+			if (!getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[functionNum].addresses, &functions[functionNum].name))
 			{
-				sprintf(functions[functionNum].name, "func%llX", (*functions[functionNum].addresses) - imageBase);
+				sprintfJdc(&(functions[functionNum].name), 0, "func%llX", (*functions[functionNum].addresses) - imageBase);
 			}
 		}
 
-		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name));
+		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name.buffer));
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
 
@@ -565,26 +574,11 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
-	if (dataSectionBytes) 
-	{
-		delete[] dataSectionBytes;
-	}
-	
+	ClearData();
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
-}
-
-void MainGui::ReplaceEscapeChars(wxString* str) 
-{
-	str->Replace("\a", "\\a");
-	str->Replace("\b", "\\b");
-	str->Replace("\f", "\\f");
-	str->Replace("\n", "\\n");
-	str->Replace("\r", "\\r");
-	str->Replace("\t", "\\t");
-	str->Replace("\v", "\\v");
 }
 
 char MainGui::IsCharDigit(char c)
@@ -602,37 +596,37 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	// local vars
 	for (int i = 0; i < function->numOfLocalVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->localVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// return vars
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->returnVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->stackArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->regArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
 	for (int i = 0; i < functions.size(); i++)
 	{
-		ColorAllStrs(text, functions[i].name, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
+		ColorAllStrs(text, functions[i].name.buffer, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
+		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 	}
 
 	// calling conventions
@@ -846,7 +840,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 	functionNameLabel = new wxStaticText(this, wxID_ANY, "Function Name");
 	functionNameLabel->SetOwnForegroundColour(textColor);
 
-	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, function->name, wxPoint(0, 0), wxSize(100, 25));
+	functionNameTextCtrl = new wxTextCtrl(this, wxID_ANY, function->name.buffer, wxPoint(0, 0), wxSize(100, 25));
 	functionNameTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	functionNameTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -862,7 +856,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(regArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfRegArgs; i++)
 		{
-			wxTextCtrl* regArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regArgs[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* regArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			regArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			regArgTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -879,7 +873,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(stackArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfStackArgs; i++)
 		{
-			wxTextCtrl* stackArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackArgs[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* stackArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			stackArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			stackArgTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -896,7 +890,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(localVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfLocalVars; i++)
 		{
-			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->localVars[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->localVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			localVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			localVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -913,7 +907,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		vSizer->Add(retVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfReturnVars; i++)
 		{
-			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			retVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			retVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -939,35 +933,30 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 {
 	Function* currentFunction = &(mainGui->functions[functionIndex]);
 
-	currentFunction->name[0] = 0;
-	strcpy(currentFunction->name, functionNameTextCtrl->GetValue().c_str());
+	strcpyJdc(&currentFunction->name, functionNameTextCtrl->GetValue().c_str());
 
 	for (int i = 0; i < currentFunction->numOfRegArgs; i++)
 	{
-		currentFunction->regArgs[i].name[0] = 0;
-		strcpy(currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfStackArgs; i++)
 	{
-		currentFunction->stackArgs[i].name[0] = 0;
-		strcpy(currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfLocalVars; i++)
 	{
-		currentFunction->localVars[i].name[0] = 0;
-		strcpy(currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfReturnVars; i++)
 	{
-		currentFunction->returnVars[i].name[0] = 0;
-		strcpy(currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	// update name in function grid
-	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name);
+	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
 
 	// redecompile if it is currently in the decompilation box
 	if (mainGui->currentDecompiledFunc == functionIndex)

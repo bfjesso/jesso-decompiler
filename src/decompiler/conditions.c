@@ -240,22 +240,21 @@ int checkForCondition(int instructionIndex, struct Condition* conditions, int nu
 	return -1;
 }
 
-unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct LineOfC* result)
+unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct JdcStr* result)
 {
 	if (conditions[conditionIndex].conditionType == ELSE_CT)
 	{
-		strcpy(result->line, "else");
-		return 1;
+		return strcatJdc(result, "else");
 	}
 
 	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp;
 
-	char conditionExpression[255] = { 0 };
-
+	struct JdcStr conditionExpression = initializeJdcStr();
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
-		if (!decompileComparison(params, conditionExpression, invertCondition))
+		if (!decompileComparison(params, invertCondition, &conditionExpression))
 		{
+			freeJdcStr(&conditionExpression);
 			return 0;
 		}
 
@@ -267,66 +266,83 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 				invertOperator = !invertOperator;
 			}
 
-			char currentConditionExpression[255] = { 0 };
+			struct JdcStr currentConditionExpression = initializeJdcStr();
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
-			if (!decompileComparison(params, currentConditionExpression, invertOperator))
+			if (!decompileComparison(params, invertOperator, &currentConditionExpression))
 			{
+				freeJdcStr(&currentConditionExpression);
+				freeJdcStr(&conditionExpression);
 				return 0;
 			}
 
-			strcat(conditionExpression, !invertCondition ? " || " : " && ");
-			strcat(conditionExpression, currentConditionExpression);
+			strcatJdc(&conditionExpression, !invertCondition ? " || " : " && ");
+			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
+			freeJdcStr(&currentConditionExpression);
 		}
 	}
 	else
 	{
-		if (!decompileComparison(params, conditionExpression, !invertCondition)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
+		if (!decompileComparison(params, !invertCondition, &conditionExpression)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
 		{
+			freeJdcStr(&conditionExpression);
 			return 0;
 		}
 
 		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
-			char currentConditionExpression[255] = { 0 };
+			struct JdcStr currentConditionExpression = initializeJdcStr();
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
-			if (!decompileComparison(params, currentConditionExpression, !invertCondition))
+			if (!decompileComparison(params, !invertCondition, &currentConditionExpression))
 			{
+				freeJdcStr(&conditionExpression);
+				freeJdcStr(&currentConditionExpression);
 				return 0;
 			}
 
-			strcat(conditionExpression, !invertCondition ? " && " : " || ");
-			strcat(conditionExpression, currentConditionExpression);
+			strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
+			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
+			freeJdcStr(&currentConditionExpression);
 		}
 	}
 
-	struct LineOfC combinedConditionExpression = { 0 };
+	struct JdcStr combinedConditionExpression = initializeJdcStr();
 	if (conditions[conditionIndex].combinedConditionIndex)
 	{
 		params.startInstructionIndex = conditions[conditions[conditionIndex].combinedConditionIndex].jccIndex;
 		if (decompileCondition(params, conditions, conditions[conditionIndex].combinedConditionIndex, &combinedConditionExpression))
 		{
-			wrapStrInParentheses(conditionExpression);
+			if (!wrapJdcStrInParentheses(&conditionExpression)) 
+			{
+				freeJdcStr(&conditionExpression);
+				freeJdcStr(&combinedConditionExpression);
+				return 0;
+			}
 
 			if (conditions[conditionIndex].combinationLogicType == AND_LT)
 			{
-				strcat(conditionExpression, !invertCondition ? " && " : " || ");
+				strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
 			}
 			else
 			{
-				strcat(conditionExpression, !invertCondition ? " || " : " && ");
+				strcatJdc(&conditionExpression, !invertCondition ? " || " : " && ");
 			}
 
-			strcat(conditionExpression, combinedConditionExpression.line);
+			strcatJdc(&conditionExpression, combinedConditionExpression.buffer);
 		}
 		else
 		{
+			freeJdcStr(&conditionExpression);
+			freeJdcStr(&combinedConditionExpression);
 			return 0;
 		}
 	}
 
+	freeJdcStr(&combinedConditionExpression);
+
 	if (conditions[conditionIndex].isCombinedByOther)
 	{
-		strcpy(result->line, conditionExpression);
+		strcatJdc(result, conditionExpression.buffer);
+		freeJdcStr(&conditionExpression);
 		return 1;
 	}
 
@@ -335,7 +351,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		// check for for loop
 		if (params.currentFunc->instructions[conditions[conditionIndex].exitIndex - 1].opcode == JMP_SHORT)
 		{
-			struct LineOfC assignmentExpression = { 0 };
+			struct JdcStr assignmentExpression = initializeJdcStr();
 			for (int i = conditions[conditionIndex].exitIndex; i < conditions[conditionIndex].jccIndex; i++)
 			{
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
@@ -348,31 +364,29 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 					}
 					else
 					{
+						freeJdcStr(&conditionExpression);
+						freeJdcStr(&assignmentExpression);
 						return 0;
 					}
 				}
 			}
-			int len = (int)(strlen(assignmentExpression.line));
-			if (len > 0)
-			{
-				assignmentExpression.line[len - 1] = 0; // remove ;
-			}
-
-			sprintf(result->line, "for (; %s; %s)", conditionExpression, assignmentExpression.line);
+			
+			sprintfJdc(result, 1, "for (; %s; %s)", conditionExpression.buffer, assignmentExpression.buffer);
+			freeJdcStr(&assignmentExpression);
 		}
 		else
 		{
-			sprintf(result->line, "while (%s)", conditionExpression);
+			sprintfJdc(result, 1, "while (%s)", conditionExpression.buffer);
 		}
 	}
 	else if (conditions[conditionIndex].conditionType == IF_CT)
 	{
-		sprintf(result->line, "if (%s)", conditionExpression);
+		sprintfJdc(result, 1, "if (%s)", conditionExpression.buffer);
 	}
 	else
 	{
-		sprintf(result->line, "else if (%s)", conditionExpression);
+		sprintfJdc(result, 1, "else if (%s)", conditionExpression.buffer);
 	}
 
-	return 1;
+	return freeJdcStr(&conditionExpression);;
 }

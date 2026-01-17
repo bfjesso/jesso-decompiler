@@ -30,7 +30,7 @@ unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 	return 0;
 }
 
-unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, char* nameBuffer)
+unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result)
 {
 	Elf64_Shdr strtabSection;
 	if(!getSectionHeaderByName64(filePath, ".strtab", &strtabSection))
@@ -69,7 +69,7 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 		
 		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
-			strcpy(nameBuffer, stringBytes + symbol->st_name);
+			strcpyJdc(result, stringBytes + symbol->st_name);
 			free(stringBytes);
 			free(bytes);
 			return 1;
@@ -84,7 +84,7 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	return 0;
 }
 
-unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, char* nameBuffer)
+unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result)
 {
 	Elf32_Shdr strtabSection;
 	if(!getSectionHeaderByName32(filePath, ".strtab", &strtabSection))
@@ -123,7 +123,7 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 
 		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
-			strcpy(nameBuffer, stringBytes + symbol->st_name);
+			strcpyJdc(result, stringBytes + symbol->st_name);
 			free(stringBytes);
 			free(bytes);
 			return 1;
@@ -622,8 +622,8 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-			buffer[bufferIndex].name[0] = 0;
-			strcpy(buffer[bufferIndex].name, stringBytes + symbol->st_name);
+			buffer[bufferIndex].name = initializeJdcStr();
+			strcpyJdc(&buffer[bufferIndex].name, stringBytes + symbol->st_name);
 
 			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 

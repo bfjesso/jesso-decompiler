@@ -7,32 +7,23 @@
 #include "../disassembler/opcodes.h"
 #include "../disassembler/registers.h"
 
-unsigned short decompileFunction(struct DecompilationParameters params, struct LineOfC* resultBuffer, unsigned short resultBufferLen)
+const char* indent = "    ";
+
+unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
-	if (resultBufferLen < 4) { return 0; }
-
-	int numOfLinesDecompiled = 0;
-
-	if (!generateFunctionHeader(params.currentFunc, &resultBuffer[numOfLinesDecompiled]))
+	if (!generateFunctionHeader(params.currentFunc, result))
 	{
 		return 0;
 	}
-	numOfLinesDecompiled++;
 
-	strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-	resultBuffer[numOfLinesDecompiled].indents = 0;
-	numOfLinesDecompiled++;
+	strcatJdc(result, "{\n");
 
 	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnVars > 0)
 	{
-		if (!declareAllLocalVariables(params.currentFunc, resultBuffer, &numOfLinesDecompiled, resultBufferLen))
+		if (!declareAllLocalVariables(params.currentFunc, result))
 		{
 			return 0;
 		}
-
-		strcpy(resultBuffer[numOfLinesDecompiled].line, "");
-		resultBuffer[numOfLinesDecompiled].indents = 1;
-		numOfLinesDecompiled++;
 	}
 
 	struct Condition conditions[20] = { 0 };
@@ -47,11 +38,6 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 	{
 		params.startInstructionIndex = i;
 
-		if (numOfLinesDecompiled > resultBufferLen)
-		{
-			return 0;
-		}
-
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
 		// checking for end of condition
@@ -61,20 +47,23 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 			{
 				numOfIndents--;
 
-				if (isConditionEmpty)
-				{
-					// remove the condition and the {
-					numOfLinesDecompiled--;
-					resultBuffer[numOfLinesDecompiled].line[0] = 0;
-					numOfLinesDecompiled--;
-					resultBuffer[numOfLinesDecompiled].line[0] = 0;
-				}
-				else
-				{
-					strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-					resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-					numOfLinesDecompiled++;
-				}
+				//if (isConditionEmpty)
+				//{
+				//	// remove the condition and the {
+				//	numOfLinesDecompiled--;
+				//	resultBuffer[numOfLinesDecompiled].line[0] = 0;
+				//	numOfLinesDecompiled--;
+				//	resultBuffer[numOfLinesDecompiled].line[0] = 0;
+				//}
+				//else
+				//{
+				//	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
+				//	resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
+				//	numOfLinesDecompiled++;
+				//}
+
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "}\n");
 
 				isInUnreachableState = 0;
 				isConditionEmpty = 0;
@@ -84,15 +73,14 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
 		if (conditionIndex != -1)
 		{
-			if (decompileCondition(params, conditions, conditionIndex, &resultBuffer[numOfLinesDecompiled]))
+			addIndents(result, numOfIndents);
+			
+			if (decompileCondition(params, conditions, conditionIndex, result))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "{");
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
+				strcatJdc(result, "\n");
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "{\n");
+				
 				isConditionEmpty = 1;
 				isInUnreachableState = 0;
 			}
@@ -119,11 +107,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
-			if (decompileImportCall(params, importIndex, &resultBuffer[numOfLinesDecompiled]))
+			addIndents(result, numOfIndents);
+			if (decompileImportCall(params, importIndex, result))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
+				strcatJdc(result, "\n");
 				isConditionEmpty = 0;
 			}
 			else
@@ -133,11 +120,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		}
 		else if (checkForFunctionCall(params, &callee))
 		{
-			if (decompileFunctionCall(params, callee, &resultBuffer[numOfLinesDecompiled]))
+			addIndents(result, numOfIndents);
+			if (decompileFunctionCall(params, callee, result))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
+				strcatJdc(result, "\n");
 				isConditionEmpty = 0;
 			}
 			else
@@ -147,11 +133,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		}
 		else if (checkForReturnStatement(params)) 
 		{
-			if (decompileReturnStatement(params, &resultBuffer[numOfLinesDecompiled]))
+			addIndents(result, numOfIndents);
+			if (decompileReturnStatement(params, result))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
+				strcatJdc(result, "\n");
 				isConditionEmpty = 0;
 			}
 			else 
@@ -161,11 +146,10 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		}
 		else if (checkForAssignment(currentInstruction))
 		{
-			if (decompileAssignment(params, &resultBuffer[numOfLinesDecompiled]))
+			addIndents(result, numOfIndents);
+			if (decompileAssignment(params, result))
 			{
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
-
+				strcatJdc(result, ";\n");
 				isConditionEmpty = 0;
 			}
 			else
@@ -184,9 +168,8 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 				params.skipLowerBound = -1;
 
 				numOfIndents--;
-				strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-				resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				numOfLinesDecompiled++;
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "}\n");
 
 				isInUnreachableState = 0;
 				isConditionEmpty = 0;
@@ -198,28 +181,39 @@ unsigned short decompileFunction(struct DecompilationParameters params, struct L
 		}
 	}
 
-	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-	resultBuffer[numOfLinesDecompiled].indents = 0;
-	numOfLinesDecompiled++;
-
-	return numOfLinesDecompiled;
+	return strcatJdc(result, "}\n");
 }
 
-static unsigned short generateFunctionHeader(struct Function* function, struct LineOfC* result) 
+static void addIndents(struct JdcStr* result, int numOfIndents)
 {
-	sprintf(result->line, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name);
+	for (int i = 0; i < numOfIndents; i++)
+	{
+		strcatJdc(result, indent);
+	}
+}
 
-	result->indents = 0;
+static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
+{
+	if (!sprintfJdc(result, 0, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name.buffer)) 
+	{
+		return 0;
+	}
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name);
+			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
+			{
+				return 0;
+			}
 		}
 		else 
 		{
-			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name);
+			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
+			{
+				return 0;
+			}
 		}
 	}
 
@@ -227,40 +221,42 @@ static unsigned short generateFunctionHeader(struct Function* function, struct L
 	{
 		if (i == function->numOfStackArgs - 1)
 		{
-			sprintf(result->line + strlen(result->line), "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name);
+			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
+			{
+				return 0;
+			}
 		}
 		else
 		{
-			sprintf(result->line + strlen(result->line), "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name);
+			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
+			{
+				return 0;
+			}
 		}
 	}
 
-	strcat(result->line, ")");
-
-	return 1;
+	return strcatJdc(result, ")\n");
 }
 
-static unsigned char declareAllLocalVariables(struct Function* function, struct LineOfC* resultBuffer, int* resultBufferIndex, unsigned short resultBufferLen)
+static unsigned char declareAllLocalVariables(struct Function* function, struct JdcStr* result)
 {
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
-		if ((*resultBufferIndex) >= resultBufferLen) { return 0; }
-		
-		sprintf(resultBuffer[*resultBufferIndex].line, "%s %s;", primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name);
-		resultBuffer[*resultBufferIndex].indents = 1;
-		(*resultBufferIndex)++;
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name.buffer))
+		{
+			return 0;
+		}
 	}
 
 	for (int i = 0; i < function->numOfReturnVars; i++)
 	{
-		if ((*resultBufferIndex) >= resultBufferLen) { return 0; }
-
-		sprintf(resultBuffer[*resultBufferIndex].line, "%s %s;", primitiveTypeStrs[function->returnVars[i].type], function->returnVars[i].name);
-		resultBuffer[*resultBufferIndex].indents = 1;
-		(*resultBufferIndex)++;
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->returnVars[i].type], function->returnVars[i].name.buffer))
+		{
+			return 0;
+		}
 	}
 
-	return 1;
+	return strcatJdc(result, "\n");
 }
 
 static unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
@@ -333,16 +329,14 @@ static unsigned char checkForReturnStatement(struct DecompilationParameters para
 	return 0;
 }
 
-static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct LineOfC* result)
+static unsigned char decompileReturnStatement(struct DecompilationParameters params, struct JdcStr* result)
 {
 	if (params.currentFunc->returnType == VOID_TYPE) 
 	{
-		strcpy(result->line, "return;");
-		return 1;
+		return strcpyJdc(result, "return;");;
 	}
 	
-	char returnExpression[255] = { 0 };
-
+	struct JdcStr returnExpression = initializeJdcStr();
 	int newStartInstruction = -1;
 
 	// find where a return register is first being modified
@@ -370,8 +364,9 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 	if (params.currentFunc->instructions[newStartInstruction].opcode == FLD)
 	{
 		params.startInstructionIndex = newStartInstruction - 1;
-		if (!decompileOperand(params, &(params.currentFunc->instructions[newStartInstruction].operands[0]), params.currentFunc->returnType, returnExpression, 100))
+		if (!decompileOperand(params, &(params.currentFunc->instructions[newStartInstruction].operands[0]), params.currentFunc->returnType, &returnExpression))
 		{
+			freeJdcStr(&returnExpression);
 			return 0;
 		}
 	}
@@ -382,14 +377,16 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 		eax.reg = AX;
 
 		params.startInstructionIndex = newStartInstruction;
-		if (!decompileOperand(params, &eax, params.currentFunc->returnType, returnExpression, 100))
+		if (!decompileOperand(params, &eax, params.currentFunc->returnType, &returnExpression))
 		{
+			freeJdcStr(&returnExpression);
 			return 0;
 		}
 	}
 	
 
-	sprintf(result->line, "return %s;", returnExpression);
+	sprintfJdc(result, 1, "return %s;", returnExpression.buffer);
+	freeJdcStr(&returnExpression);
 
 	return 1;
 }

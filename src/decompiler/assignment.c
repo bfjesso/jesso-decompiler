@@ -11,7 +11,7 @@ unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
 	return 0;
 }
 
-unsigned char decompileAssignment(struct DecompilationParameters params, struct LineOfC* result)
+unsigned char decompileAssignment(struct DecompilationParameters params, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -26,18 +26,22 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		type = localVar->type;
 	}
 
-	char assignee[255] = { 0 };
-	if (!decompileOperand(params, &currentInstruction->operands[0], type, assignee, 255))
+	struct JdcStr assignee = initializeJdcStr();
+	if (!decompileOperand(params, &currentInstruction->operands[0], type, &assignee))
 	{
+		freeJdcStr(&assignee);
 		return 0;
 	}
 
-	char operation[255] = { 0 };
-	if (!decompileOperation(params, type, 1, operation))
+	struct JdcStr operation = initializeJdcStr();
+	if (!decompileOperation(params, type, 1, &operation))
 	{
+		freeJdcStr(&assignee);
+		freeJdcStr(&operation);
 		return 0;
 	}
 
-	sprintf(result->line, "%s%s;", assignee, operation);
-	return 1;
+	freeJdcStr(&assignee);
+	freeJdcStr(&operation);
+	return sprintfJdc(result, 1, "%s%s", assignee.buffer, operation.buffer);
 }

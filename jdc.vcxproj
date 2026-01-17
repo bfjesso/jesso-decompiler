@@ -165,7 +165,6 @@
     <ClCompile Include="src\decompiler\assignment.c" />
     <ClCompile Include="src\decompiler\conditions.c" />
     <ClCompile Include="src\decompiler\dataTypes.c" />
-    <ClCompile Include="src\decompiler\decompilationUtils.c" />
     <ClCompile Include="src\decompiler\expressions.c" />
     <ClCompile Include="src\decompiler\decompiler.c" />
     <ClCompile Include="src\decompiler\functionCalls.c" />
@@ -186,6 +185,7 @@
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\main.cpp" />
     <ClCompile Include="src\gui\mainGui.cpp" />
+    <ClCompile Include="src\jdc-str\jdcStr.c" />
     <ClCompile Include="src\pe-handler\peHandler.c" />
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +218,7 @@
     <ClInclude Include="src\gui\main.h" />
     <ClInclude Include="src\gui\mainGui.h" />
     <ClInclude Include="src\fileStructs.h" />
+    <ClInclude Include="src\jdc-str\jdcStr.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

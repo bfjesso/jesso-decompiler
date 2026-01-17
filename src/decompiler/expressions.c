@@ -2,20 +2,18 @@
 #include "functionCalls.h"
 #include "dataTypes.h"
 
-unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
+unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, enum PrimitiveType type, struct JdcStr* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
-		if (!getValueFromDataSection(params, type, operand->immediate, resultBuffer))
+		if (!getValueFromDataSection(params, type, operand->immediate, result))
 		{
 			if (operand->immediate > -10 && operand->immediate < 10) // this is just arbitrary
 			{
-				sprintf(resultBuffer, "%lli", operand->immediate);
+				return sprintfJdc(result, 0, "%lli", operand->immediate);
 			}
-			else 
-			{
-				sprintf(resultBuffer, "0x%llX", operand->immediate);
-			}
+
+			return sprintfJdc(result, 0, "0x%llX", operand->immediate);
 		}
 		
 		return 1;
@@ -29,7 +27,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (localVar)
 				{
-					strcpy(resultBuffer, localVar->name);
+					strcpyJdc(result, localVar->name.buffer);
 				}
 				else
 				{
@@ -41,7 +39,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (stackArg)
 				{
-					strcpy(resultBuffer, stackArg->name);
+					strcpyJdc(result, stackArg->name.buffer);
 				}
 				else
 				{
@@ -51,13 +49,13 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex + 1] + operand->memoryAddress.constDisplacement);
+			sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex + 1] + operand->memoryAddress.constDisplacement);
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
-			if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, resultBuffer))
+			if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, result))
 			{
-				sprintf(resultBuffer, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
+				sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
 			}
 		}
 		else
@@ -67,22 +65,24 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			baseReg.reg = operand->memoryAddress.reg;
 
 			params.startInstructionIndex--;
-			char baseOperandStr[255] = { 0 };
-			if (!decompileOperand(params, &baseReg, type, baseOperandStr, 255))
+			struct JdcStr baseOperandStr = initializeJdcStr();
+			if (!decompileOperand(params, &baseReg, getTypeOfOperand(NO_MNEMONIC, &baseReg, params.is64Bit), &baseOperandStr))
 			{
+				freeJdcStr(&baseOperandStr);
 				return 0;
 			}
 
 			if (operand->memoryAddress.constDisplacement != 0)
 			{
-				sprintf(resultBuffer, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr, operand->memoryAddress.constDisplacement);
+				sprintfJdc(result, 0, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
 			}
 			else
 			{
-				sprintf(resultBuffer, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr);
+				sprintfJdc(result, 0, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr.buffer);
 			}
-		}
 
+			freeJdcStr(&baseOperandStr);
+		}
 
 		return 1;
 	}
@@ -90,23 +90,20 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	{
 		if (compareRegisters(operand->reg, BP) || compareRegisters(operand->reg, SP))
 		{
-			strcpy(resultBuffer, registerStrs[operand->reg]);
-			return 1;
+			return strcpyJdc(result, registerStrs[operand->reg]);
 		}
 		else if (compareRegisters(operand->reg, IP))
 		{
-			sprintf(resultBuffer, "0x%llX", params.currentFunc->addresses[params.startInstructionIndex + 1]);
-			return 1;
+			return sprintfJdc(result, 0, "0x%llX", params.currentFunc->addresses[params.startInstructionIndex + 1]);
 		}
 
-		if (!decompileRegister(params, operand->reg, type, resultBuffer, resultBufferSize))
+		if (!decompileRegister(params, operand->reg, type, result))
 		{
 			// register argument
 			struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, operand->reg);
 			if (regArg)
 			{
-				strcpy(resultBuffer, regArg->name);
-				return 1;
+				return strcpyJdc(result, regArg->name.buffer);
 			}
 
 			return 0;
@@ -118,7 +115,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	return 0;
 }
 
-static unsigned char getValueFromDataSection(struct DecompilationParameters params, enum PrimitiveType type, unsigned long long address, char* resultBuffer)
+static unsigned char getValueFromDataSection(struct DecompilationParameters params, enum PrimitiveType type, unsigned long long address, struct JdcStr* result)
 {
 	if (address < params.imageBase + params.dataSections[0].virtualAddress)
 	{
@@ -143,13 +140,14 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	}
 
 	// checking for pointer to see if it is a string
-	if (type == INT_TYPE || type == LONG_LONG_TYPE) 
+	if (type == INT_TYPE || type == LONG_LONG_TYPE)
 	{
 		char isString = 1;
-		
+
+		struct JdcStr tmp = initializeJdcStr();
 		int len = 0;
 		char byte = 0;
-		do
+		while (1)
 		{
 			byte = *(char*)(params.dataSectionByte + len + dataSectionIndex);
 			
@@ -163,44 +161,79 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 				break;
 			}
 
+			char c[2] = { byte, 0 }; // so the byte is null terminated
+			switch (byte) 
+			{
+			case '\a':
+				strcatJdc(&tmp, "\\n");
+				break;
+			case '\b':
+				strcatJdc(&tmp, "\\b");
+				break;
+			case '\f':
+				strcatJdc(&tmp, "\\f");
+				break;
+			case '\n':
+				strcatJdc(&tmp, "\\n");
+				break;
+			case '\r':
+				strcatJdc(&tmp, "\\r");
+				break;
+			case '\t':
+				strcatJdc(&tmp, "\\t");
+				break;
+			case '\v':
+				strcatJdc(&tmp, "\\");
+				break;
+			default:
+				strcatJdc(&tmp, c);
+				break;
+			}
+
 			len++;
-		} while (1);
+		}
 
 		if (isString && len > 0)
 		{
-			sprintf(resultBuffer, "\"%s\"", params.dataSectionByte + dataSectionIndex);
-			return 1;
+			freeJdcStr(&tmp);
+			return sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
 		}
+
+		freeJdcStr(&tmp);
 	}
 
 	switch (type) 
 	{
 	case CHAR_TYPE:
-		sprintf(resultBuffer, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case SHORT_TYPE:
-		sprintf(resultBuffer, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case INT_TYPE:
-		sprintf(resultBuffer, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case LONG_LONG_TYPE:
-		sprintf(resultBuffer, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case FLOAT_TYPE:
-		sprintf(resultBuffer, "%f", *(float*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%f", *(float*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	case DOUBLE_TYPE:
-		sprintf(resultBuffer, "%lf", *(double*)(params.dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%lf", *(double*)(params.dataSectionByte + dataSectionIndex));
 		break;
 	}
 
 	return 1;
 }
 
-static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, char* resultBuffer, unsigned char resultBufferSize)
+static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result)
 {
-	char expressions[5][255] = { 0 };
+	struct JdcStr expressions[5] = { 0 };
+	for (int i = 0; i < 5; i++)
+	{
+		expressions[i] = initializeJdcStr();
+	}
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -239,19 +272,26 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
 		{
-			if (decompileOperation(params, type, 0, expressions[expressionIndex]))
+			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
-				if (finished && getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type)
+				if (finished && 
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type &&
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1]), params.is64Bit) != type)
 				{
-					char tmp[255] = { 0 };
-					strcpy(tmp, expressions[expressionIndex]);
-					sprintf(expressions[expressionIndex], "(%s)(%s)", primitiveTypeStrs[type], tmp);
+					struct JdcStr tmp = initializeJdcStr();
+					strcpyJdc(&tmp, expressions[expressionIndex].buffer);
+					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
+					freeJdcStr(&tmp);
 				}
 				
 				expressionIndex++;
 			}
 			else 
 			{
+				for (int i = 0; i < 5; i++)
+				{
+					freeJdcStr(&expressions[i]);
+				}
 				return 0;
 			}
 		}
@@ -267,7 +307,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 				if (returnVar != 0)
 				{
-					sprintf(expressions[expressionIndex], "%s", returnVar->name);
+					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 				}
 				expressionIndex++;
 				finished = 1;
@@ -285,7 +325,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 					struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 					if (returnVar != 0)
 					{
-						sprintf(expressions[expressionIndex], "%s", returnVar->name);
+						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 					}
 					expressionIndex++;
 					finished = 1;
@@ -293,33 +333,45 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				}
 				else
 				{
+					for (int i = 0; i < 5; i++)
+					{
+						freeJdcStr(&expressions[i]);
+					}
 					return 0;
 				}
 			}
 		}
 	}
 
-	if (!finished) { return 0; }
+	if (!finished) 
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			freeJdcStr(&expressions[i]);
+		}
+		return 0; 
+	}
 
 	for (int i = expressionIndex - 1; i >= 0; i--)
 	{
 		if (i < expressionIndex - 2)
 		{
-			wrapStrInParentheses(resultBuffer);
+			wrapJdcStrInParentheses(result);
 		}
 
-		strcat(resultBuffer, expressions[i]);
+		strcatJdc(result, expressions[i].buffer);
+		freeJdcStr(&expressions[i]);
 	}
 
 	if (expressionIndex > 1)
 	{
-		wrapStrInParentheses(resultBuffer);
+		wrapJdcStrInParentheses(result);
 	}
 
 	return 1;
 }
 
-unsigned char decompileComparison(struct DecompilationParameters params, char* resultBuffer, unsigned char invertOperator)
+unsigned char decompileComparison(struct DecompilationParameters params, unsigned char invertOperator, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -371,6 +423,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
 
+		params.startInstructionIndex = i;
 		if (currentInstruction->opcode == TEST)
 		{
 			if (areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
@@ -381,114 +434,138 @@ unsigned char decompileComparison(struct DecompilationParameters params, char* r
 					continue;
 				}
 
-				params.startInstructionIndex = i;
-
-				char operandStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operandStr, 255))
+				struct JdcStr operandStr = initializeJdcStr();
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operandStr))
 				{
+					freeJdcStr(&operandStr);
 					return 0;
 				}
 
-				sprintf(resultBuffer, "%s %s 0", operandStr, compOperator);
+				sprintfJdc(result, "%s %s 0", operandStr.buffer, compOperator);
+				freeJdcStr(&operandStr);
 
 				return 1;
 			}
 			else 
 			{
-				params.startInstructionIndex = i;
-
-				char operand1Str[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operand1Str, 255))
+				struct JdcStr operand1Str = initializeJdcStr();
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
 				{
+					freeJdcStr(&operand1Str);
 					return 0;
 				}
 
-				char operand2Str[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), operand2Str, 255))
+				struct JdcStr operand2Str = initializeJdcStr();
+				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
 				{
+					freeJdcStr(&operand1Str);
+					freeJdcStr(&operand2Str);
 					return 0;
 				}
 
-				sprintf(resultBuffer, "(%s & %s) %s 0", operand1Str, operand2Str, compOperator);
+				sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
+				freeJdcStr(&operand1Str);
+				freeJdcStr(&operand2Str);
 
 				return 1;
 			}
 		}
-
-		params.startInstructionIndex = i;
-
-		char operand1Str[255] = { 0 };
-		if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), operand1Str, 255))
+		else if (currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) 
 		{
-			return 0;
+			struct JdcStr operand1Str = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+			{
+				freeJdcStr(&operand1Str);
+				return 0;
+			}
+
+			struct JdcStr operand2Str = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
+			{
+				freeJdcStr(&operand1Str);
+				freeJdcStr(&operand2Str);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
+			freeJdcStr(&operand1Str);
+			freeJdcStr(&operand2Str);
+
+			return 1;
 		}
-
-		char operand2Str[255] = { 0 };
-		if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), operand2Str, 255))
-		{
-			return 0;
-		}
-
-		sprintf(resultBuffer, "%s %s %s", operand1Str, compOperator, operand2Str);
-
-		return 1;
 	}
 
 	return 0;
 }
 
-unsigned char decompileOperation(struct DecompilationParameters params, enum PrimitiveType type, unsigned char getAssignment, char* resultBuffer)
+unsigned char decompileOperation(struct DecompilationParameters params, enum PrimitiveType type, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
 	{
-		if (getAssignment) { strcpy(resultBuffer, " = 0"); }
-		else { strcpy(resultBuffer, "0"); }
+		if (getAssignment) { strcpyJdc(result, " = 0"); }
+		else { strcpyJdc(result, "0"); }
 		return 1;
 	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		params.startInstructionIndex--;
 
-		char operandStr1[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], type, operandStr1, 255))
+		struct JdcStr operandStr1 = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[1], type, &operandStr1))
 		{
-			return 0;
-		}
-		char operandStr2[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[2], type, operandStr2, 255))
-		{
+			freeJdcStr(&operandStr1);
 			return 0;
 		}
 
-		if (getAssignment) { sprintf(resultBuffer, " = (%s * %s)", operandStr1, operandStr2); }
-		else { sprintf(resultBuffer, "(%s * %s)", operandStr1, operandStr2); }
+		struct JdcStr operandStr2 = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[2], type, &operandStr2))
+		{
+			freeJdcStr(&operandStr1);
+			freeJdcStr(&operandStr2);
+			return 0;
+		}
+
+		if (getAssignment) { sprintfJdc(result, 0, " = (%s * %s)", operandStr1.buffer, operandStr2.buffer); }
+		else { sprintfJdc(result, 0, "(%s * %s)", operandStr1.buffer, operandStr2.buffer); }
+		freeJdcStr(&operandStr1);
+		freeJdcStr(&operandStr2);
+
 		return 1;
 	}
 	else if (instruction->opcode >= CMOVO && instruction->opcode <= CMOVG) 
 	{
-		char comparisonStr[255] = { 0 };
-		if (!decompileComparison(params, comparisonStr, 0)) 
+		struct JdcStr comparisonStr = initializeJdcStr();
+		if (!decompileComparison(params, 0, &comparisonStr))
 		{
+			freeJdcStr(&comparisonStr);
 			return 0;
 		}
 
-		char trueOperand[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[1], type, trueOperand, 255))
+		struct JdcStr trueOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[1], type, &trueOperand))
 		{
+			freeJdcStr(&comparisonStr);
+			freeJdcStr(&trueOperand);
 			return 0;
 		}
 
 		params.startInstructionIndex--;
-		char falseOperand[255] = { 0 };
-		if (!decompileOperand(params, &instruction->operands[0], type, falseOperand, 255))
+		struct JdcStr falseOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[0], type, &falseOperand))
 		{
+			freeJdcStr(&comparisonStr);
+			freeJdcStr(&trueOperand);
+			freeJdcStr(&falseOperand);
 			return 0;
 		}
 
 		// conditional moves cant assign to a memory address, getAssignment must be 0
-		sprintf(resultBuffer, "(%s ? %s : %s)", comparisonStr, trueOperand, falseOperand);
+		sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, trueOperand.buffer, falseOperand.buffer);
+		freeJdcStr(&comparisonStr);
+		freeJdcStr(&trueOperand);
+		freeJdcStr(&falseOperand);
 		return 1;
 	}
 
@@ -496,16 +573,16 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 	switch (instruction->opcode)
 	{
 	case INC:
-		if (getAssignment) { strcpy(resultBuffer, "++"); }
-		else { strcpy(resultBuffer, " + 1"); }
+		if (getAssignment) { strcpyJdc(result, "++"); }
+		else { strcpyJdc(result, " + 1"); }
 		return 1;
 	case DEC:
-		if (getAssignment) { strcpy(resultBuffer, "--"); }
-		else { strcpy(resultBuffer, " - 1"); }
+		if (getAssignment) { strcpyJdc(result, "--"); }
+		else { strcpyJdc(result, " - 1"); }
 		return 1;
 	case STMXCSR:
-		if (getAssignment) { strcpy(resultBuffer, " = stmxcsr()"); }
-		else { strcpy(resultBuffer, "stmxcsr()"); }
+		if (getAssignment) { strcpyJdc(result, " = stmxcsr()"); }
+		else { strcpyJdc(result, "stmxcsr()"); }
 		return 1;
 	case MOV: // the rest of these opcodes should only be of the form where the first operand is the target operand, and the second is the value being used to modify it
 	case MOVUPS:
@@ -581,13 +658,15 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		params.startInstructionIndex--; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
 	}
 
-	char operandStr[255] = { 0 };
-	if (!decompileOperand(params, secondOperand, type, operandStr, 255))
+	struct JdcStr operandStr = initializeJdcStr();
+	if (!decompileOperand(params, secondOperand, type, &operandStr))
 	{
+		freeJdcStr(&operandStr);
 		return 0;
 	}
 
-	sprintf(resultBuffer, "%s%s", operationStr, operandStr);
+	sprintfJdc(result, 0, "%s%s", operationStr, operandStr.buffer);
+	freeJdcStr(&operandStr);
 
 	return 1;
 }

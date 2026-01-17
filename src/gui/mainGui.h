@@ -21,9 +21,6 @@ public:
 	ColorsMenu* colorsMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
-	wxButton* disassembleFileButton = nullptr;
-	wxButton* analyzeFileButton = nullptr;
-
 	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
@@ -31,7 +28,6 @@ public:
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
-	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxString currentFilePath = "";
@@ -65,15 +61,19 @@ public:
 		OpenDataViewerID,
 		OpenColorsMenuID,
 		OpenFileID,
+		DisassembleFileID,
+		AnalyzeFileID,
 		DisassembleFileButtonID,
 		AnalyzeFileButtonID
 	};
 
 	void OpenFile();
 
-	void DisassembleButton(wxCommandEvent& e);
+	void DisassembleFile();
 
-	void AnalyzeButton(wxCommandEvent& e);
+	void AnalyzeFile();
+
+	void ClearData();
 
 	void LoadDataSectionBytes();
 
@@ -88,8 +88,6 @@ public:
 	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
-
-	void ReplaceEscapeChars(wxString* str);
 
 	char IsCharDigit(char c);
 

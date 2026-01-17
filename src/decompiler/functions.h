@@ -24,14 +24,14 @@ struct RegisterVariable
 {
 	enum PrimitiveType type;
 	enum Register reg;
-	char name[50];
+	struct JdcStr name;
 };
 
 struct StackVariable 
 {
 	enum PrimitiveType type;
 	int stackOffset;
-	char name[50];
+	struct JdcStr name;
 };
 
 struct FuncReturnVariable // variables that contain the reuturn value of another function call
@@ -39,7 +39,7 @@ struct FuncReturnVariable // variables that contain the reuturn value of another
 	enum PrimitiveType type;
 	char callNum;
 	unsigned long long callAddr;
-	char name[50];
+	struct JdcStr name;
 };
 
 struct Function
@@ -48,7 +48,7 @@ struct Function
 	struct DisassembledInstruction* instructions;
 	unsigned short numOfInstructions;
 
-	char name[50];
+	struct JdcStr name;
 
 	enum PrimitiveType returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function
@@ -73,7 +73,7 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, unsigned short numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
+	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
 

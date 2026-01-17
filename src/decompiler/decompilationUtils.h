@@ -3,15 +3,6 @@
 #include "../disassembler/disassembler.h"
 #include "../fileStructs.h"
 
-#include <stdio.h>
-#include <string.h>
-
-struct LineOfC
-{
-	char line[255];
-	unsigned char indents;
-};
-
 struct DecompilationParameters
 {
 	struct Function* functions;
@@ -38,5 +29,3 @@ struct DecompilationParameters
 
 	unsigned char is64Bit;
 };
-
-void wrapStrInParentheses(char* str);

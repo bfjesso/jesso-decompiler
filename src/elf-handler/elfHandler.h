@@ -1,14 +1,11 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <elf.h>
 #include "../fileStructs.h"
+#include <elf.h>
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);
 
-unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, char* nameBuffer);
+unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result);
 
-unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, char* nameBuffer);
+unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result);
 
 int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen);
 
