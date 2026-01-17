@@ -357,8 +357,8 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	params.is64Bit = is64Bit;
 
-	struct JdcStr decompiledFunction = { 0 };
-	if (!initializeJdcStr(&decompiledFunction, 20000))
+	struct JdcStr decompiledFunction = initializeJdcStr();
+	if (decompiledFunction.bufferSize == 0)
 	{
 		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
 		return;

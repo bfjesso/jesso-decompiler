@@ -26,16 +26,14 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 		type = localVar->type;
 	}
 
-	struct JdcStr assignee = { 0 };
-	initializeJdcStr(&assignee, 255);
+	struct JdcStr assignee = initializeJdcStr();
 	if (!decompileOperand(params, &currentInstruction->operands[0], type, &assignee))
 	{
 		freeJdcStr(&assignee);
 		return 0;
 	}
 
-	struct JdcStr operation = { 0 };
-	initializeJdcStr(&operation, 255);
+	struct JdcStr operation = initializeJdcStr();
 	if (!decompileOperation(params, type, 1, &operation))
 	{
 		freeJdcStr(&assignee);

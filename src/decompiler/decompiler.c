@@ -336,9 +336,7 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 		return strcpyJdc(result, "return;");;
 	}
 	
-	struct JdcStr returnExpression = { 0 };
-	initializeJdcStr(&returnExpression, 255);
-
+	struct JdcStr returnExpression = initializeJdcStr();
 	int newStartInstruction = -1;
 
 	// find where a return register is first being modified

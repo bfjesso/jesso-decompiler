@@ -65,8 +65,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			baseReg.reg = operand->memoryAddress.reg;
 
 			params.startInstructionIndex--;
-			struct JdcStr baseOperandStr = { 0 };
-			initializeJdcStr(&baseOperandStr, 255);
+			struct JdcStr baseOperandStr = initializeJdcStr();
 			if (!decompileOperand(params, &baseReg, getTypeOfOperand(NO_MNEMONIC, &baseReg, params.is64Bit), &baseOperandStr))
 			{
 				freeJdcStr(&baseOperandStr);
@@ -145,9 +144,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	{
 		char isString = 1;
 
-		struct JdcStr tmp = { 0 };
-		initializeJdcStr(&tmp, 255);
-
+		struct JdcStr tmp = initializeJdcStr();
 		int len = 0;
 		char byte = 0;
 		while (1)
@@ -235,7 +232,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 	struct JdcStr expressions[5] = { 0 };
 	for (int i = 0; i < 5; i++)
 	{
-		initializeJdcStr(&expressions[i], 255);
+		expressions[i] = initializeJdcStr();
 	}
 	int expressionIndex = 0;
 
@@ -281,8 +278,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type &&
 					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1]), params.is64Bit) != type)
 				{
-					struct JdcStr tmp = { 0 };
-					initializeJdcStr(&tmp, 255);
+					struct JdcStr tmp = initializeJdcStr();
 					strcpyJdc(&tmp, expressions[expressionIndex].buffer);
 					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
 					freeJdcStr(&tmp);
@@ -438,8 +434,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 					continue;
 				}
 
-				struct JdcStr operandStr = { 0 };
-				initializeJdcStr(&operandStr, 255);
+				struct JdcStr operandStr = initializeJdcStr();
 				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operandStr))
 				{
 					freeJdcStr(&operandStr);
@@ -453,16 +448,14 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 			}
 			else 
 			{
-				struct JdcStr operand1Str = { 0 };
-				initializeJdcStr(&operand1Str, 255);
+				struct JdcStr operand1Str = initializeJdcStr();
 				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
 				{
 					freeJdcStr(&operand1Str);
 					return 0;
 				}
 
-				struct JdcStr operand2Str = { 0 };
-				initializeJdcStr(&operand2Str, 255);
+				struct JdcStr operand2Str = initializeJdcStr();
 				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
 				{
 					freeJdcStr(&operand1Str);
@@ -479,16 +472,14 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		}
 		else if (currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) 
 		{
-			struct JdcStr operand1Str = { 0 };
-			initializeJdcStr(&operand1Str, 255);
+			struct JdcStr operand1Str = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
 			}
 
-			struct JdcStr operand2Str = { 0 };
-			initializeJdcStr(&operand2Str, 255);
+			struct JdcStr operand2Str = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
@@ -521,16 +512,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 	{
 		params.startInstructionIndex--;
 
-		struct JdcStr operandStr1 = { 0 };
-		initializeJdcStr(&operandStr1, 255);
+		struct JdcStr operandStr1 = initializeJdcStr();
 		if (!decompileOperand(params, &instruction->operands[1], type, &operandStr1))
 		{
 			freeJdcStr(&operandStr1);
 			return 0;
 		}
 
-		struct JdcStr operandStr2 = { 0 };
-		initializeJdcStr(&operandStr2, 255);
+		struct JdcStr operandStr2 = initializeJdcStr();
 		if (!decompileOperand(params, &instruction->operands[2], type, &operandStr2))
 		{
 			freeJdcStr(&operandStr1);
@@ -547,16 +536,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 	}
 	else if (instruction->opcode >= CMOVO && instruction->opcode <= CMOVG) 
 	{
-		struct JdcStr comparisonStr = { 0 };
-		initializeJdcStr(&comparisonStr, 255);
+		struct JdcStr comparisonStr = initializeJdcStr();
 		if (!decompileComparison(params, 0, &comparisonStr))
 		{
 			freeJdcStr(&comparisonStr);
 			return 0;
 		}
 
-		struct JdcStr trueOperand = { 0 };
-		initializeJdcStr(&trueOperand, 255);
+		struct JdcStr trueOperand = initializeJdcStr();
 		if (!decompileOperand(params, &instruction->operands[1], type, &trueOperand))
 		{
 			freeJdcStr(&comparisonStr);
@@ -565,8 +552,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		}
 
 		params.startInstructionIndex--;
-		struct JdcStr falseOperand = { 0 };
-		initializeJdcStr(&falseOperand, 255);
+		struct JdcStr falseOperand = initializeJdcStr();
 		if (!decompileOperand(params, &instruction->operands[0], type, &falseOperand))
 		{
 			freeJdcStr(&comparisonStr);
@@ -672,8 +658,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		params.startInstructionIndex--; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
 	}
 
-	struct JdcStr operandStr = { 0 };
-	initializeJdcStr(&operandStr, 255);
+	struct JdcStr operandStr = initializeJdcStr();
 	if (!decompileOperand(params, secondOperand, type, &operandStr))
 	{
 		freeJdcStr(&operandStr);

@@ -249,8 +249,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 
 	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp;
 
-	struct JdcStr conditionExpression = { 0 };
-	initializeJdcStr(&conditionExpression, 255);
+	struct JdcStr conditionExpression = initializeJdcStr();
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
 	{
 		if (!decompileComparison(params, invertCondition, &conditionExpression))
@@ -267,8 +266,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 				invertOperator = !invertOperator;
 			}
 
-			struct JdcStr currentConditionExpression = { 0 };
-			initializeJdcStr(&currentConditionExpression, 255);
+			struct JdcStr currentConditionExpression = initializeJdcStr();
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
 			if (!decompileComparison(params, invertOperator, &currentConditionExpression))
 			{
@@ -292,8 +290,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 
 		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
 		{
-			struct JdcStr currentConditionExpression = { 0 };
-			initializeJdcStr(&currentConditionExpression, 255);
+			struct JdcStr currentConditionExpression = initializeJdcStr();
 			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
 			if (!decompileComparison(params, !invertCondition, &currentConditionExpression))
 			{
@@ -308,8 +305,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		}
 	}
 
-	struct JdcStr combinedConditionExpression = { 0 };
-	initializeJdcStr(&combinedConditionExpression, 255);
+	struct JdcStr combinedConditionExpression = initializeJdcStr();
 	if (conditions[conditionIndex].combinedConditionIndex)
 	{
 		params.startInstructionIndex = conditions[conditions[conditionIndex].combinedConditionIndex].jccIndex;
@@ -355,8 +351,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		// check for for loop
 		if (params.currentFunc->instructions[conditions[conditionIndex].exitIndex - 1].opcode == JMP_SHORT)
 		{
-			struct JdcStr assignmentExpression = { 0 };
-			initializeJdcStr(&assignmentExpression, 255);
+			struct JdcStr assignmentExpression = initializeJdcStr();
 			for (int i = conditions[conditionIndex].exitIndex; i < conditions[conditionIndex].jccIndex; i++)
 			{
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);

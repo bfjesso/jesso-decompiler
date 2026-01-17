@@ -17,7 +17,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
-		if (jdcStr->buffer[jdcStr->bufferSize - 1] != 0)
+		if (strlen(src) >= jdcStr->bufferSize)
 		{
 			if (resizeJdcStr(jdcStr))
 			{
@@ -44,7 +44,7 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
-		if (jdcStr->buffer[jdcStr->bufferSize - 1] != 0)
+		if ((strlen(src) + strlen(jdcStr->buffer)) >= jdcStr->bufferSize)
 		{
 			if (resizeJdcStr(jdcStr))
 			{
@@ -69,35 +69,62 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 
 unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...)
 {
+	va_list args;
+	va_start(args, format);
+	return sprintfJdcArgs(jdcStr, cat, format, args);
+}
+
+static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args) 
+{
 	if (jdcStr && jdcStr->buffer)
 	{
-		va_list args;
-		va_start(args, format);
-
-		if (jdcStr->buffer[jdcStr->bufferSize - 1] != 0)
+		if (cat)
 		{
-			if (resizeJdcStr(jdcStr))
-			{
-				return sprintfJdc(jdcStr, format, args);
-			}
-			else 
+			int ogLen = strlen(jdcStr->buffer);
+			int result = vsnprintf(jdcStr->buffer + ogLen, jdcStr->bufferSize - ogLen, format, args);
+			if (result < 0)
 			{
 				return 0;
+			}
+			else if (result >= jdcStr->bufferSize - ogLen)
+			{
+				if (resizeJdcStr(jdcStr))
+				{
+					memset(jdcStr->buffer + ogLen, 0, jdcStr->bufferSize - ogLen);
+					return sprintfJdcArgs(jdcStr, 1, format, args);
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			else
+			{
+				return 1;
 			}
 		}
-
-		if (cat) 
+		else
 		{
-			if (vsnprintf(jdcStr->buffer + strlen(jdcStr->buffer), jdcStr->bufferSize - strlen(jdcStr->buffer), format, args) < 0)
+			int result = vsnprintf(jdcStr->buffer, jdcStr->bufferSize, format, args);
+			if (result < 0)
 			{
 				return 0;
 			}
-		}
-		else 
-		{
-			if (vsnprintf(jdcStr->buffer, jdcStr->bufferSize, format, args) < 0)
+			else if (result >= jdcStr->bufferSize)
 			{
-				return 0;
+				if (resizeJdcStr(jdcStr))
+				{
+					memset(jdcStr->buffer, 0, jdcStr->bufferSize);
+					return sprintfJdcArgs(jdcStr, 0, format, args);
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			else
+			{
+				return 1;
 			}
 		}
 
@@ -107,21 +134,17 @@ unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* f
 	return 0;
 }
 
-unsigned char initializeJdcStr(struct JdcStr* jdcStr, int bufferSize)
+struct JdcStr initializeJdcStr()
 {
-	if (jdcStr)
+	struct JdcStr result = { 0 };
+	
+	result.buffer = (char*)calloc(255, sizeof(char));
+	if (result.buffer)
 	{
-		jdcStr->buffer = (char*)calloc(bufferSize, sizeof(char));
-		if (jdcStr->buffer)
-		{
-			jdcStr->bufferSize = bufferSize;
-			return 1;
-		}
-
-		return 0;
+		result.bufferSize = 255;
 	}
 
-	return 0;
+	return result;
 }
 
 unsigned char freeJdcStr(struct JdcStr* jdcStr)

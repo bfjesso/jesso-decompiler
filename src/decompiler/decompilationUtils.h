@@ -46,7 +46,7 @@ extern "C"
 {
 #endif
 
-	unsigned char initializeJdcStr(struct JdcStr* jdcStr, int bufferSize);
+	struct JdcStr initializeJdcStr();
 
 	unsigned char freeJdcStr(struct JdcStr* jdcStr);
 
@@ -61,5 +61,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src);
 unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
 
 unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
+
+static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
 
 static unsigned char resizeJdcStr(struct JdcStr* jdcStr);
