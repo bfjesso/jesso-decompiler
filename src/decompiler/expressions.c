@@ -67,7 +67,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			params.startInstructionIndex--;
 			struct JdcStr baseOperandStr = { 0 };
 			initializeJdcStr(&baseOperandStr, 255);
-			if (!decompileOperand(params, &baseReg, type, &baseOperandStr))
+			if (!decompileOperand(params, &baseReg, getTypeOfOperand(NO_MNEMONIC, &baseReg, params.is64Bit), &baseOperandStr))
 			{
 				freeJdcStr(&baseOperandStr);
 				return 0;
@@ -277,7 +277,9 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 		{
 			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
-				if (finished && getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type)
+				if (finished && 
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type &&
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1]), params.is64Bit) != type)
 				{
 					struct JdcStr tmp = { 0 };
 					initializeJdcStr(&tmp, 255);

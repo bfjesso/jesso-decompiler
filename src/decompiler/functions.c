@@ -406,9 +406,11 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 		return DOUBLE_TYPE;
 	}
 
-	if (operand == 0) { return VOID_TYPE; }
-
-	if (operand->type == IMMEDIATE) 
+	if (!operand) 
+	{ 
+		return VOID_TYPE; 
+	}
+	else if (operand->type == IMMEDIATE) 
 	{
 		return is64Bit ? LONG_LONG_TYPE : INT_TYPE;
 	}
