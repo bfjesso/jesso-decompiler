@@ -149,7 +149,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			addIndents(result, numOfIndents);
 			if (decompileAssignment(params, result))
 			{
-				strcatJdc(result, "\n");
+				strcatJdc(result, ";\n");
 				isConditionEmpty = 0;
 			}
 			else

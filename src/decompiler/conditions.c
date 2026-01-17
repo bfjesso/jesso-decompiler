@@ -370,15 +370,6 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 					}
 				}
 			}
-
-			if (assignmentExpression.buffer) 
-			{
-				int len = (int)(strlen(assignmentExpression.buffer));
-				if (len > 0)
-				{
-					assignmentExpression.buffer[len - 1] = 0; // remove ;
-				}
-			}
 			
 			sprintfJdc(result, 1, "for (; %s; %s)", conditionExpression.buffer, assignmentExpression.buffer);
 			freeJdcStr(&assignmentExpression);

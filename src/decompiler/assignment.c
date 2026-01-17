@@ -43,5 +43,5 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 
 	freeJdcStr(&assignee);
 	freeJdcStr(&operation);
-	return sprintfJdc(result, 1, "%s%s;", assignee.buffer, operation.buffer);
+	return sprintfJdc(result, 1, "%s%s", assignee.buffer, operation.buffer);
 }
