@@ -26,13 +26,13 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 	return 0;
 }
 
-unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct LineOfC* result)
+unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct JdcStr* result)
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
 	{
-		sprintf(result->line, "%s();", callee->name);
+		sprintfJdc(result, 1, "%s();", callee->name);
 		return 1;
 	}
 
@@ -40,10 +40,10 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, callee->addresses[0]);
 	if (returnVar != 0)
 	{
-		sprintf(result->line, "%s = ", returnVar->name);
+		sprintfJdc(result, 1, "%s = ", returnVar->name);
 	}
 
-	sprintf(&(result->line[strlen(result->line)]), "%s(", callee->name);
+	sprintfJdc(result, 1, "%s(", callee->name);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
@@ -61,14 +61,16 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 				{
 					params.startInstructionIndex = j;
 
-					char argStr[255] = { 0 };
-					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, argStr, 255))
+					struct JdcStr argStr = { 0 };
+					initializeJdcStr(&argStr, 255);
+					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, &argStr))
 					{
+						freeJdcStr(&argStr);
 						return 0;
 					}
 
-					sprintf(result->line + strlen(result->line), "%s, ", argStr);
-
+					sprintfJdc(result, 1, "%s, ", argStr.buffer);
+					freeJdcStr(&argStr);
 					break;
 				}
 			}
@@ -87,13 +89,16 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		{
 			params.startInstructionIndex = i;
 
-			char argStr[255] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, argStr, 255))
+			struct JdcStr argStr = { 0 };
+			initializeJdcStr(&argStr, 255);
+			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, &argStr))
 			{
+				freeJdcStr(&argStr);
 				return 0;
 			}
 
-			sprintf(result->line + strlen(result->line), "%s, ", argStr);
+			sprintfJdc(result, 1, "%s, ", argStr.buffer);
+			freeJdcStr(&argStr);
 
 			stackArgsFound++;
 		}
@@ -106,30 +111,33 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 				params.startInstructionIndex = i;
 
-				char argStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, argStr, 255))
+				struct JdcStr argStr = { 0 };
+				initializeJdcStr(&argStr, 255);
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, &argStr))
 				{
+					freeJdcStr(&argStr);
 					return 0;
 				}
 
-				sprintf(result->line + strlen(result->line), "%s, ", argStr);
+				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				freeJdcStr(&argStr);
 
 				stackArgsFound++;
 			}
 		}
 	}
 
-	if (result->line[strlen(result->line)-1] != '(')
+	if (result->buffer[strlen(result->buffer)-1] != '(')
 	{
-		result->line[strlen(result->line) - 2] = ')';
-		result->line[strlen(result->line) - 1] = 0;
+		result->buffer[strlen(result->buffer) - 2] = ')';
+		result->buffer[strlen(result->buffer) - 1] = 0;
 	}
 	else
 	{
-		strcat(result->line, ")");
+		strcatJdc(result, ")");
 	}
 
-	strcat(result->line, ";");
+	strcatJdc(result, ";");
 
 	return 1;
 }
@@ -156,7 +164,7 @@ int checkForImportCall(struct DecompilationParameters params)
 	return -1;
 }
 
-unsigned char decompileImportCall(struct DecompilationParameters params, int importIndex, struct LineOfC* result)
+unsigned char decompileImportCall(struct DecompilationParameters params, int importIndex, struct JdcStr* result)
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -165,10 +173,10 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 	if (returnVar != 0)
 	{
-		sprintf(result->line, "%s = ", returnVar->name);
+		sprintfJdc(result, 1, "%s = ", returnVar->name);
 	}
 
-	sprintf(&(result->line[strlen(result->line)]), "%s(", params.imports[importIndex].name);
+	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name);
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
@@ -203,13 +211,16 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0], params.is64Bit);
 
 			params.startInstructionIndex = i;
-			char argStr[255] = { 0 };
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, argStr, 255))
+			struct JdcStr argStr = { 0 };
+			initializeJdcStr(&argStr, 255);
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, &argStr))
 			{
+				freeJdcStr(&argStr);
 				return 0;
 			}
 
-			sprintf(result->line + strlen(result->line), "%s, ", argStr);
+			sprintfJdc(result, 1, "%s, ", argStr.buffer);
+			freeJdcStr(&argStr);
 
 			stackArgsFound++;
 		}
@@ -223,13 +234,16 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex], params.is64Bit);
 
 				params.startInstructionIndex = i;
-				char argStr[255] = { 0 };
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, argStr, 255))
+				struct JdcStr argStr = { 0 };
+				initializeJdcStr(&argStr, 255);
+				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, &argStr))
 				{
+					freeJdcStr(&argStr);
 					return 0;
 				}
 
-				sprintf(result->line + strlen(result->line), "%s, ", argStr);
+				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				freeJdcStr(&argStr);
 
 				stackArgsFound++;
 			}
@@ -238,15 +252,15 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	if (stackArgsFound != 0)
 	{
-		result->line[strlen(result->line) - 2] = ')';
-		result->line[strlen(result->line) - 1] = 0;
+		result->buffer[strlen(result->buffer) - 2] = ')';
+		result->buffer[strlen(result->buffer) - 1] = 0;
 	}
 	else
 	{
-		strcat(result->line, ")");
+		strcat(result->buffer, ")");
 	}
 
-	strcat(result->line, ";");
+	strcat(result->buffer, ";");
 
 	return 1;
 }

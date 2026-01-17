@@ -364,37 +364,19 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 		return;
 	}
 
-	unsigned short numOfLinesDecompiled = decompileFunction(params, &decompiledFunction);
-	if (numOfLinesDecompiled == 0)
+	if (!decompileFunction(params, &decompiledFunction))
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
-		delete[] decompiledFunction;
+		freeJdcStr(&decompiledFunction);
 		return;
 	}
 
 	decompilationTextCtrl->SetReadOnly(false);
-
-	for (int i = 0; i < numOfLinesDecompiled; i++)
-	{
-		wxString str = wxString(decompiledFunction[i].line.buffer);
-		ReplaceEscapeChars(&str);
-
-		for (int j = 0; j < decompiledFunction[i].indents; j++) 
-		{
-			str = "    " + str;
-		}
-
-		decompilationTextCtrl->AppendText(str);
-		decompilationTextCtrl->AppendText("\n");
-	}
-
+	decompilationTextCtrl->SetValue(decompiledFunction.buffer);
 	ApplySyntaxHighlighting(params.currentFunc);
-
 	decompilationTextCtrl->SetReadOnly(true);
-
 	currentDecompiledFunc = functionIndex;
-
-	delete[] decompiledFunction;
+	freeJdcStr(&decompiledFunction);
 }
 
 void MainGui::FindAllFunctions() 

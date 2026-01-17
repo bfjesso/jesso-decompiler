@@ -6,11 +6,13 @@ extern "C"
 {
 #endif
 
-	unsigned short decompileFunction(struct DecompilationParameters params, struct JdcStr* result);
+	unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result);
 
 #ifdef __cplusplus
 }
 #endif
+
+static void addIndents(struct JdcStr* result, int numOfIndents);
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result);
 

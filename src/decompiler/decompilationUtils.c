@@ -1,16 +1,16 @@
 #include "decompilationUtils.h"
 
-void wrapStrInParentheses(char* str)
+unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 {
-	int len = (int)strlen(str);
+	int len = (int)strlen(jdcStr->buffer);
 
 	for (int i = len; i > 0; i--)
 	{
-		str[i] = str[i - 1];
+		jdcStr->buffer[i] = jdcStr->buffer[i - 1];
 	}
 
-	str[0] = '(';
-	strcat(str, ")");
+	jdcStr->buffer[0] = '(';
+	return strcatJdc(jdcStr, ")");
 }
 
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)

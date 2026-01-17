@@ -8,8 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-const char* indent = "    ";
-
 struct JdcStr 
 {
 	char* buffer;
@@ -43,16 +41,25 @@ struct DecompilationParameters
 	unsigned char is64Bit;
 };
 
-void wrapStrInParentheses(char* str);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	unsigned char initializeJdcStr(struct JdcStr* jdcStr, int bufferSize);
+
+	unsigned char freeJdcStr(struct JdcStr* jdcStr);
+
+#ifdef __cplusplus
+}
+#endif
+
+unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr);
 
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src);
 
 unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
 
 unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
-
-unsigned char initializeJdcStr(struct JdcStr* jdcStr, int bufferSize);
-
-unsigned char freeJdcStr(struct JdcStr* jdcStr);
 
 static unsigned char resizeJdcStr(struct JdcStr* jdcStr);
