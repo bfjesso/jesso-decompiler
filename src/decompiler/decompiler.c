@@ -333,7 +333,7 @@ static unsigned char decompileReturnStatement(struct DecompilationParameters par
 {
 	if (params.currentFunc->returnType == VOID_TYPE) 
 	{
-		return strcpyJdc(result, "return;");;
+		return strcatJdc(result, "return;");
 	}
 	
 	struct JdcStr returnExpression = initializeJdcStr();
