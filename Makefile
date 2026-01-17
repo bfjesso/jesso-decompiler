@@ -18,6 +18,7 @@ jdc-gui:
 	gcc -c -w ./src/decompiler/*.c
 	gcc -c -w ./src/elf-handler/*.c
 	gcc -c -w ./src/file-handler/*.c
+	gcc -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/jdc *.o `../wxWidgets/buildgtk/wx-config --cxxflags --libs all`
 
 debug-jdc-gui:
@@ -26,6 +27,7 @@ debug-jdc-gui:
 	gcc -g -O0 -c -w ./src/decompiler/*.c
 	gcc -g -O0 -c -w ./src/elf-handler/*.c
 	gcc -g -O0 -c -w ./src/file-handler/*.c
+	gcc -g -O0 -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/debug-jdc *.o `../wxWidgets/buildgtk/wx-config --cxxflags --libs all`
 
 clean:

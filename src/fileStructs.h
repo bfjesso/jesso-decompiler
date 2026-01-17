@@ -1,5 +1,5 @@
 #pragma once
-#include "../jdc-str/jdcStr.h"
+#include "./jdc-str/jdcStr.h"
 
 struct ImportedFunction
 {

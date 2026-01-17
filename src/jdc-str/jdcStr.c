@@ -29,7 +29,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 			}
 		}
 
-		if (strcpy_s(jdcStr->buffer, jdcStr->bufferSize, src) != 0)
+		if (!strcpy(jdcStr->buffer, src))
 		{
 			return 0;
 		}
@@ -56,7 +56,7 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 			}
 		}
 
-		if (strcat_s(jdcStr->buffer, jdcStr->bufferSize, src) != 0)
+		if (!strcat(jdcStr->buffer, src))
 		{
 			return 0;
 		}
@@ -71,13 +71,17 @@ unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* f
 {
 	va_list args;
 	va_start(args, format);
-	return sprintfJdcArgs(jdcStr, cat, format, args);
+	unsigned char result = sprintfJdcArgs(jdcStr, cat, format, args);
+	va_end(args);
+	return result;
 }
 
 static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
+		va_list copy;
+		va_copy(copy, args);
 		if (cat)
 		{
 			int ogLen = strlen(jdcStr->buffer);
@@ -90,8 +94,11 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 			{
 				if (resizeJdcStr(jdcStr))
 				{
-					memset(jdcStr->buffer + ogLen, 0, jdcStr->bufferSize - ogLen);
-					return sprintfJdcArgs(jdcStr, 1, format, args);
+					jdcStr->buffer[ogLen] = 0;
+
+					unsigned char result = sprintfJdcArgs(jdcStr, 1, format, copy);
+					va_end(copy);
+					return result;
 				}
 				else
 				{
@@ -114,8 +121,10 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 			{
 				if (resizeJdcStr(jdcStr))
 				{
-					memset(jdcStr->buffer, 0, jdcStr->bufferSize);
-					return sprintfJdcArgs(jdcStr, 0, format, args);
+					jdcStr->buffer[0] = 0;
+					unsigned char result = sprintfJdcArgs(jdcStr, 0, format, copy);
+					va_end(copy);
+					return result;
 				}
 				else
 				{
