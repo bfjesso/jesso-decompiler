@@ -89,8 +89,6 @@ public:
 
 	void CloseApp(wxCloseEvent& e);
 
-	void ReplaceEscapeChars(wxString* str);
-
 	char IsCharDigit(char c);
 
 	void ApplySyntaxHighlighting(Function* function);

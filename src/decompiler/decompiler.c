@@ -77,7 +77,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			
 			if (decompileCondition(params, conditions, conditionIndex, result))
 			{
-				strcatJdc(result, "\n{\n");
+				strcatJdc(result, "\n");
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "{\n");
 				
 				isConditionEmpty = 1;
 				isInUnreachableState = 0;

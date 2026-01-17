@@ -556,17 +556,6 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	Destroy();
 }
 
-void MainGui::ReplaceEscapeChars(wxString* str) 
-{
-	str->Replace("\a", "\\a");
-	str->Replace("\b", "\\b");
-	str->Replace("\f", "\\f");
-	str->Replace("\n", "\\n");
-	str->Replace("\r", "\\r");
-	str->Replace("\t", "\\t");
-	str->Replace("\v", "\\v");
-}
-
 char MainGui::IsCharDigit(char c)
 {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');

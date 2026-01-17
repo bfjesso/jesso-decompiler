@@ -141,10 +141,13 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	}
 
 	// checking for pointer to see if it is a string
-	if (type == INT_TYPE || type == LONG_LONG_TYPE) 
+	if (type == INT_TYPE || type == LONG_LONG_TYPE)
 	{
 		char isString = 1;
-		
+
+		struct JdcStr tmp = { 0 };
+		initializeJdcStr(&tmp, 255);
+
 		int len = 0;
 		char byte = 0;
 		while (1)
@@ -161,13 +164,45 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 				break;
 			}
 
+			char c[2] = { byte, 0 }; // so the byte is null terminated
+			switch (byte) 
+			{
+			case '\a':
+				strcatJdc(&tmp, "\\n");
+				break;
+			case '\b':
+				strcatJdc(&tmp, "\\b");
+				break;
+			case '\f':
+				strcatJdc(&tmp, "\\f");
+				break;
+			case '\n':
+				strcatJdc(&tmp, "\\n");
+				break;
+			case '\r':
+				strcatJdc(&tmp, "\\r");
+				break;
+			case '\t':
+				strcatJdc(&tmp, "\\t");
+				break;
+			case '\v':
+				strcatJdc(&tmp, "\\");
+				break;
+			default:
+				strcatJdc(&tmp, c);
+				break;
+			}
+
 			len++;
 		}
 
 		if (isString && len > 0)
 		{
-			return sprintfJdc(result, 0, "\"%s\"", params.dataSectionByte + dataSectionIndex);
+			freeJdcStr(&tmp);
+			return sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
 		}
+
+		freeJdcStr(&tmp);
 	}
 
 	switch (type) 
@@ -246,7 +281,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				{
 					struct JdcStr tmp = { 0 };
 					initializeJdcStr(&tmp, 255);
-					strcpyJdc(&tmp, &expressions[expressionIndex]);
+					strcpyJdc(&tmp, expressions[expressionIndex].buffer);
 					sprintfJdc(&expressions[expressionIndex], "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
 					freeJdcStr(&tmp);
 				}
