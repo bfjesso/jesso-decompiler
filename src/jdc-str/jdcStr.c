@@ -138,10 +138,10 @@ struct JdcStr initializeJdcStr()
 {
 	struct JdcStr result = { 0 };
 
-	result.buffer = (char*)calloc(255, sizeof(char));
+	result.buffer = (char*)calloc(25, sizeof(char));
 	if (result.buffer)
 	{
-		result.bufferSize = 255;
+		result.bufferSize = 25;
 	}
 
 	return result;
