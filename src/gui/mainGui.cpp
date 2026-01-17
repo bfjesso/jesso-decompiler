@@ -446,11 +446,6 @@ void MainGui::FindAllFunctions()
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
 
-		if (functionNum == 85) 
-		{
-			int TT = 0;
-		}
-
 		functions.push_back({ 0 });
 	}
 
