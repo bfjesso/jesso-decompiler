@@ -34,4 +34,6 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
 
 static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
 
+struct JdcStr copyJdcStr(struct JdcStr* strToCpy);
+
 static unsigned char resizeJdcStr(struct JdcStr* jdcStr);

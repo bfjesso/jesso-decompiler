@@ -403,10 +403,10 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 
 	decompilationTextCtrl->SetReadOnly(false);
 	decompilationTextCtrl->SetValue(decompiledFunction.buffer);
+	freeJdcStr(&decompiledFunction);
 	ApplySyntaxHighlighting(params.currentFunc);
 	decompilationTextCtrl->SetReadOnly(true);
 	currentDecompiledFunc = functionIndex;
-	freeJdcStr(&decompiledFunction);
 }
 
 void MainGui::FindAllFunctions() 

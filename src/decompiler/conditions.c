@@ -388,5 +388,5 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		sprintfJdc(result, 1, "else if (%s)", conditionExpression.buffer);
 	}
 
-	return freeJdcStr(&conditionExpression);;
+	return freeJdcStr(&conditionExpression);
 }

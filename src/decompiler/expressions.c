@@ -195,8 +195,9 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 
 		if (isString && len > 0)
 		{
-			freeJdcStr(&tmp);
-			return sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
+			
+			sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
+			return freeJdcStr(&tmp);
 		}
 
 		freeJdcStr(&tmp);
@@ -230,10 +231,6 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result)
 {
 	struct JdcStr expressions[5] = { 0 };
-	for (int i = 0; i < 5; i++)
-	{
-		expressions[i] = initializeJdcStr();
-	}
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -272,14 +269,14 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
 		{
+			expressions[expressionIndex] = initializeJdcStr();
 			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
 				if (finished && 
 					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type &&
 					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1]), params.is64Bit) != type)
 				{
-					struct JdcStr tmp = initializeJdcStr();
-					strcpyJdc(&tmp, expressions[expressionIndex].buffer);
+					struct JdcStr tmp = copyJdcStr(&expressions[expressionIndex]);
 					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
 					freeJdcStr(&tmp);
 				}
@@ -288,7 +285,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			}
 			else 
 			{
-				for (int i = 0; i < 5; i++)
+				for (int i = 0; i < expressionIndex; i++)
 				{
 					freeJdcStr(&expressions[i]);
 				}
@@ -307,6 +304,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 				if (returnVar != 0)
 				{
+					expressions[expressionIndex] = initializeJdcStr();
 					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 				}
 				expressionIndex++;
@@ -325,6 +323,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 					struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
 					if (returnVar != 0)
 					{
+						expressions[expressionIndex] = initializeJdcStr();
 						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
 					}
 					expressionIndex++;
@@ -333,7 +332,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				}
 				else
 				{
-					for (int i = 0; i < 5; i++)
+					for (int i = 0; i < expressionIndex; i++)
 					{
 						freeJdcStr(&expressions[i]);
 					}
@@ -345,7 +344,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 	if (!finished) 
 	{
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < expressionIndex; i++)
 		{
 			freeJdcStr(&expressions[i]);
 		}
@@ -441,7 +440,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 					return 0;
 				}
 
-				sprintfJdc(result, "%s %s 0", operandStr.buffer, compOperator);
+				sprintfJdc(result, 0, "%s %s 0", operandStr.buffer, compOperator);
 				freeJdcStr(&operandStr);
 
 				return 1;
