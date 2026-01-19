@@ -78,6 +78,9 @@
     <ClCompile Include="src\jdc-str\jdcStr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decompiler\returnStatements.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -156,6 +159,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\jdc-str\jdcStr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\returnStatements.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
