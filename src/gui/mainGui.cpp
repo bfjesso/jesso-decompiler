@@ -227,9 +227,9 @@ void MainGui::ClearData()
 		{
 			freeJdcStr(&functions[i].localVars[j].name);
 		}
-		for (int j = 0; j < functions[i].numOfReturnVars; j++)
+		for (int j = 0; j < functions[i].numOfReturnedVars; j++)
 		{
-			freeJdcStr(&functions[i].returnVars[j].name);
+			freeJdcStr(&functions[i].returnedVars[j].name);
 		}
 	}
 
@@ -386,13 +386,6 @@ void MainGui::DecompileFunction(int functionIndex)
 	params.dataSectionByte = dataSectionBytes;
 
 	params.is64Bit = is64Bit;
-
-	if (!params.currentFunc->hasGottenLocalVars)
-	{
-		getAllFuncLocalVars(params.currentFunc, is64Bit);
-		getAllFuncReturnVars(functionIndex, &functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports, is64Bit);
-		params.currentFunc->hasGottenLocalVars = 1;
-	}
 
 	struct JdcStr decompiledFunction = initializeJdcStr();
 	if (decompiledFunction.bufferSize == 0)
@@ -606,9 +599,9 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// return vars
-	for (int i = 0; i < function->numOfReturnVars; i++)
+	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
-		ColorAllStrs(text, function->returnVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->returnedVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
@@ -906,14 +899,14 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		}
 	}
 
-	if (function->numOfReturnVars > 0)
+	if (function->numOfReturnedVars > 0)
 	{
 		wxStaticText* retVarLabel = new wxStaticText(this, wxID_ANY, "Returned Var Names");
 		retVarLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(retVarLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfReturnVars; i++)
+		for (int i = 0; i < function->numOfReturnedVars; i++)
 		{
-			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnedVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			retVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			retVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -956,9 +949,9 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 		strcpyJdc(&currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
-	for (int i = 0; i < currentFunction->numOfReturnVars; i++)
+	for (int i = 0; i < currentFunction->numOfReturnedVars; i++)
 	{
-		strcpyJdc(&currentFunction->returnVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->returnedVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	// update name in function grid

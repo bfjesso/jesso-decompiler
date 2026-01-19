@@ -12,6 +12,10 @@ extern "C"
 }
 #endif
 
+static unsigned char getAllLocalVars(struct DecompilationParameters params);
+
+static unsigned char getAllReturnedVars(struct DecompilationParameters params);
+
 static void addIndents(struct JdcStr* result, int numOfIndents);
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result);

@@ -37,10 +37,10 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	}
 
 	int callNum = getFunctionCallNumber(params, callee->addresses[0]);
-	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, callee->addresses[0]);
-	if (returnVar != 0)
+	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->addresses[0]);
+	if (returnedVar != 0)
 	{
-		sprintfJdc(result, 1, "%s = ", returnVar->name.buffer);
+		sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 	}
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
@@ -167,10 +167,10 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	unsigned long long calleeAddress = params.imports[importIndex].address;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
-	struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
-	if (returnVar != 0)
+	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
+	if (returnedVar != 0)
 	{
-		sprintfJdc(result, 1, "%s = ", returnVar->name.buffer);
+		sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 	}
 
 	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name.buffer);

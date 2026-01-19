@@ -301,11 +301,11 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)
 			{
 				int callNum = getFunctionCallNumber(params, calleeAddress);
-				struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
-				if (returnVar != 0)
+				struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
+				if (returnedVar != 0)
 				{
 					expressions[expressionIndex] = initializeJdcStr();
-					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
+					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
 				}
 				expressionIndex++;
 				finished = 1;
@@ -320,11 +320,11 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 				{
 					calleeAddress = params.imports[importIndex].address;
 					int callNum = getFunctionCallNumber(params, calleeAddress);
-					struct FuncReturnVariable* returnVar = findReturnVar(params.currentFunc, callNum, calleeAddress);
-					if (returnVar != 0)
+					struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
+					if (returnedVar != 0)
 					{
 						expressions[expressionIndex] = initializeJdcStr();
-						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnVar->name.buffer);
+						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
 					}
 					expressionIndex++;
 					finished = 1;

@@ -34,7 +34,7 @@ struct StackVariable
 	struct JdcStr name;
 };
 
-struct FuncReturnVariable // variables that contain the reuturn value of another function call
+struct ReturnedVariable // variables that contain the reuturn value of another function call
 {
 	enum PrimitiveType type;
 	char callNum;
@@ -51,21 +51,21 @@ struct Function
 	struct JdcStr name;
 
 	enum PrimitiveType returnType;
-	unsigned long long addressOfReturnFunction; // if the function's return value is that of another function, this will be the address of that function
+	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
 
 	enum CallingConvention callingConvention;
 
-	struct RegisterVariable regArgs[NO_REG - RAX];
+	struct RegisterVariable regArgs[ST0 - RAX];
 	unsigned char numOfRegArgs;
 
 	struct StackVariable stackArgs[6];
 	unsigned char numOfStackArgs;
 
-	unsigned char hasGottenLocalVars; // returnVars count for this too
+	unsigned char hasGottenLocalVars; // returnedVars count for this too
 	struct StackVariable localVars[100];
 	unsigned char numOfLocalVars;
-	struct FuncReturnVariable returnVars[100];
-	unsigned char numOfReturnVars;
+	struct ReturnedVariable returnedVars[100];
+	unsigned char numOfReturnedVars;
 };
 
 #ifdef __cplusplus
@@ -76,10 +76,6 @@ extern "C"
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
-
-	unsigned char getAllFuncLocalVars(struct Function* function, unsigned char is64Bit);
-
-	unsigned char getAllFuncReturnVars(int functionIndex, struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit);
 
 #ifdef __cplusplus
 }
@@ -97,7 +93,7 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
-struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum, unsigned long long callAddr);
+struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr);
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
 
