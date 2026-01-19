@@ -429,9 +429,23 @@ static unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBy
 				extendedOpcode = &extendedOpcodeMapGroup11C7[reg];
 			}
 		}
+		else if (result->extensionGroup == 14)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0x66)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup146611B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1411B[reg];
+				}
+			}
+		}
 		else if (result->extensionGroup == 15) 
 		{
-			if (mod == 3) 
+			if (mod == 0b11)
 			{
 				if (legPrefixByte == 0xF3) 
 				{

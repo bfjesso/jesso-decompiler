@@ -41,7 +41,7 @@ extern const char* mnemonicStrs[] =
 
 	"SHUFPS", "SHUFPD",
 
-	"PSRLW", "PSRLD", "PSRLQ",
+	"PSRLW", "PSRLD", "PSRLQ", "PSRLDQ", "PSLLDQ",
 
 	"PSUBUSB", "PSUBUSW",
 	"PMINUB",

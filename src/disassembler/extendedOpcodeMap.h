@@ -186,6 +186,32 @@ const struct Opcode extendedOpcodeMapGroup11C7[8] = // [ModR/M bits 3-5]
 	{ XBEGIN, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 };
 
+// group 14 with no prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup1411B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLQ, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSLLQ, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+};
+
+// group 14 with 0x66 prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup146611B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ PSRLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSLLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ PSLLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+};
+
 // group 15 with no prefix and Mod 7,6 is not 11B
 const struct Opcode extendedOpcodeMapGroup15[8] = // [ModR/M bits 3-5]
 {
