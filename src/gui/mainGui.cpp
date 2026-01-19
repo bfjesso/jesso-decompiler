@@ -339,7 +339,8 @@ void MainGui::DisassembleCodeSections()
 
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
-		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction))
+		unsigned char isOpcodeInvalid = 0;
+		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &isOpcodeInvalid))
 		{
 			unsigned long long address = imageBase + codeSections[i].virtualAddress + currentIndex;
 			currentIndex += currentInstruction.numOfBytes;
@@ -355,6 +356,11 @@ void MainGui::DisassembleCodeSections()
 				asmStr = wxString(buffer);
 			}
 
+			if (isOpcodeInvalid)
+			{
+				asmStr += " ; invalid opcode";
+			}
+
 			int pos = disassemblyTextCtrl->GetLength() - 1;
 			disassemblyTextCtrl->AppendText(addressInfoStr);
 			disassemblyTextCtrl->StartStyling(pos);
@@ -368,8 +374,6 @@ void MainGui::DisassembleCodeSections()
 
 			ApplyAsmHighlighting(pos, asmStr, (DisassembledInstruction*)(&currentInstruction));
 
-			disassemblyTextCtrl->AppendText("\n");
-
 			instructionAddresses.push_back(address);
 			disassembledInstructions.push_back(currentInstruction);
 
@@ -382,6 +386,8 @@ void MainGui::DisassembleCodeSections()
 			{
 				break;
 			}
+
+			disassemblyTextCtrl->AppendText("\n");
 
 			instructionNum++;
 		}
