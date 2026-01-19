@@ -4,13 +4,25 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 {
 	int len = (int)strlen(jdcStr->buffer);
 
+	if (len >= jdcStr->bufferSize - 2) 
+	{
+		if (resizeJdcStr(jdcStr)) 
+		{
+			return wrapJdcStrInParentheses(jdcStr);
+		}
+
+		return 0;
+	}
+
 	for (int i = len; i > 0; i--)
 	{
 		jdcStr->buffer[i] = jdcStr->buffer[i - 1];
 	}
 
 	jdcStr->buffer[0] = '(';
-	return strcatJdc(jdcStr, ")");
+	jdcStr->buffer[len + 1] = ')';
+	jdcStr->buffer[len + 2] = 0;
+	return 1;
 }
 
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
@@ -28,6 +40,8 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 				return 0;
 			}
 		}
+
+		memset(jdcStr->buffer, 0, jdcStr->bufferSize);
 
 		if (!strcpy(jdcStr->buffer, src))
 		{
@@ -110,6 +124,8 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 		}
 		else
 		{
+			memset(jdcStr->buffer, 0, jdcStr->bufferSize);
+
 			int result = vsnprintf(jdcStr->buffer, jdcStr->bufferSize, format, args);
 			if (result < 0)
 			{
