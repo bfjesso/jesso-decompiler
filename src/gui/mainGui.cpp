@@ -1,3 +1,4 @@
+#include <thread>
 #include "mainGui.h"
 #include "../decompiler/dataTypes.h"
 
@@ -10,6 +11,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 {
 	SetOwnBackgroundColour(backgroundColor);
 
+	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
+	statusStaticText->SetOwnForegroundColour(textColor);
+	
 	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
 
@@ -79,11 +83,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxALL, 10);
-	row1Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 10);
+	row1Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
+	row1Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
 
 	row2Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
 
+	vSizer->Add(statusStaticText, 0, wxTOP | wxLEFT, 10);
 	vSizer->Add(row1Sizer, 1, wxEXPAND);
 	vSizer->Add(row2Sizer, 0, wxEXPAND);
 
@@ -92,6 +97,17 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 void MainGui::OpenFile()
 {
+	if (isDisassembling)
+	{
+		wxMessageBox("Currently disassembling", "Can't open file");
+		return;
+	}
+	if (isAnalyzing)
+	{
+		wxMessageBox("Currently analyzing", "Can't open file");
+		return;
+	}
+	
 	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
 
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
@@ -121,12 +137,6 @@ void MainGui::OpenFile()
 			if (disassembleAnswer == wxYES)
 			{
 				DisassembleFile();
-
-				int analyzeAnswer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
-				if (analyzeAnswer == wxYES)
-				{
-					AnalyzeFile();
-				}
 			}
 		}
 		else
@@ -148,13 +158,29 @@ void MainGui::DisassembleFile()
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
+	if (isDisassembling)
+	{
+		wxMessageBox("Currently disassembling", "Can't disassemble");
+		return;
+	}
+	if (isAnalyzing)
+	{
+		wxMessageBox("Currently analyzing", "Can't disassemble");
+		return;
+	}
 	if (disassembledInstructions.size() > 0) 
 	{
 		wxMessageBox("File already disassembled", "Can't disassemble");
 		return;
 	}
 
-	DisassembleCodeSections();
+	isDisassembling = 1;
+
+	std::thread t = std::thread([&]() -> void { DisassembleCodeSections(); });
+	if (t.joinable()) 
+	{
+		t.detach();
+	}
 }
 
 void MainGui::AnalyzeFile() 
@@ -169,26 +195,28 @@ void MainGui::AnalyzeFile()
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
 	}
+	if (isDisassembling)
+	{
+		wxMessageBox("Currently disassembling", "Can't analyze");
+		return;
+	}
+	if (isAnalyzing)
+	{
+		wxMessageBox("Currently analyzing", "Can't analyze");
+		return;
+	}
 	if (functions.size() > 0)
 	{
 		wxMessageBox("File already analyzed", "Can't analyze");
 		return;
 	}
+	
+	isAnalyzing = 1;
 
-	FindAllFunctions();
-
-	functionsGrid->SetLabelTextColour(textColor);
-
-	numOfDataSections = 0;
-	if (dataSectionBytes)
+	std::thread t = std::thread([&]() -> void { FindAllFunctions(); });
+	if (t.joinable())
 	{
-		delete[] dataSectionBytes;
-	}
-
-	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
-	if (answer == wxYES) 
-	{
-		LoadDataSectionBytes();
+		t.detach();
 	}
 }
 
@@ -285,6 +313,7 @@ void MainGui::DisassembleCodeSections()
 
 	if (numOfCodeSections == 0)
 	{
+		isDisassembling = 0;
 		wxMessageBox("No code sections found in file", "Can't disassemble");
 		return;
 	}
@@ -292,52 +321,61 @@ void MainGui::DisassembleCodeSections()
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 
-	unsigned int instructionNum = 0;
-
-	disassemblyTextCtrl->SetReadOnly(false);
-
 	for (int i = 0; i < numOfCodeSections; i++)
 	{
 		unsigned char* bytes = new unsigned char[codeSections[i].size];
 		if (!readFileSection(currentFilePath.c_str().AsWChar(), &codeSections[i], is64Bit, bytes, codeSections[i].size))
 		{
+			isDisassembling = 0;
 			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
-
 			delete[] bytes;
 			return;
 		}
+
+		disassemblyTextCtrl->SetReadOnly(false);
+		disassemblyTextCtrl->Freeze();
+
+		int instructionNum = 0;
 
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction))
 		{
 			unsigned long long address = imageBase + codeSections[i].virtualAddress + currentIndex;
+			currentIndex += currentInstruction.numOfBytes;
 
 			char addressStr[20] = { 0 };
 			sprintf(addressStr, "%llX", address);
+			wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[i].name) + "\t";
 
-			currentIndex += currentInstruction.numOfBytes;
+			char buffer[255] = { 0 };
+			wxString asmStr = "";
+			if (instructionToStr(&currentInstruction, buffer, 255))
+			{
+				asmStr = wxString(buffer);
+			}
 
 			int pos = disassemblyTextCtrl->GetLength() - 1;
-			wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[i].name) + "\t";
 			disassemblyTextCtrl->AppendText(addressInfoStr);
 			disassemblyTextCtrl->StartStyling(pos);
 			disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
 
 			pos += addressInfoStr.length() + 1;
 
-			char buffer[255] = { 0 };
-			if (instructionToStr(&currentInstruction, buffer, 255))
+			disassemblyTextCtrl->AppendText(asmStr);
+			disassemblyTextCtrl->StartStyling(pos);
+			disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
+
+			ApplyAsmHighlighting(pos, asmStr, (DisassembledInstruction*)(&currentInstruction));
+
+			disassemblyTextCtrl->AppendText("\n");
+
+			instructionAddresses.push_back(address);
+			disassembledInstructions.push_back(currentInstruction);
+
+			if (instructionNum % 1000 == 0)
 			{
-				wxString asmStr = wxString(buffer);
-				disassemblyTextCtrl->AppendText(asmStr);
-				disassemblyTextCtrl->StartStyling(pos);
-				disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
-
-				ApplyAsmHighlighting(pos, asmStr, &currentInstruction);
-
-				instructionAddresses.push_back(address);
-				disassembledInstructions.push_back(currentInstruction);
+				statusStaticText->SetLabelText("Status: disassembling " + wxString(addressStr));
 			}
 
 			if(currentInstruction.opcode == NO_MNEMONIC)
@@ -345,15 +383,23 @@ void MainGui::DisassembleCodeSections()
 				break;
 			}
 
-			disassemblyTextCtrl->AppendText("\n");
-
 			instructionNum++;
 		}
+
+		disassemblyTextCtrl->Thaw();
+		disassemblyTextCtrl->SetReadOnly(true);
 
 		delete[] bytes;
 	}
 
-	disassemblyTextCtrl->SetReadOnly(true);
+	isDisassembling = 0;
+	statusStaticText->SetLabelText("Status: idle");
+
+	int analyzeAnswer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+	if (analyzeAnswer == wxYES)
+	{
+		AnalyzeFile();
+	}
 }
 
 void MainGui::DecompileFunction(int functionIndex)
@@ -411,6 +457,8 @@ void MainGui::DecompileFunction(int functionIndex)
 
 void MainGui::FindAllFunctions() 
 {
+	functionsGrid->Freeze();
+	
 	int functionNum = 0;
 	int numOfInstructions = disassembledInstructions.size();
 	functions.push_back({ 0 });
@@ -440,6 +488,8 @@ void MainGui::FindAllFunctions()
 			{
 				sprintfJdc(&(functions[functionNum].name), 0, "func%llX", (*functions[functionNum].addresses) - imageBase);
 			}
+
+			statusStaticText->SetLabelText("Status: analyzing " + wxString(addressStr));
 		}
 
 		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name.buffer));
@@ -455,6 +505,24 @@ void MainGui::FindAllFunctions()
 	{
 		fixAllFunctionReturnTypes(&functions[0], functions.size(), is64Bit);
 	}
+
+	functionsGrid->Thaw();
+	functionsGrid->SetLabelTextColour(textColor);
+	statusStaticText->SetLabelText("Status: idle");
+
+	numOfDataSections = 0;
+	if (dataSectionBytes)
+	{
+		delete[] dataSectionBytes;
+	}
+
+	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
+	if (answer == wxYES)
+	{
+		LoadDataSectionBytes();
+	}
+
+	isAnalyzing = 0;
 }
 
 void MainGui::GridRightClickOptions(wxGridEvent& e)
@@ -573,6 +641,23 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	if (isDisassembling)
+	{
+		int closeAnswer = wxMessageBox("The opened file is currently being disassembled.", "Are you sure you want to close?", wxYES_NO, this);
+		if (closeAnswer == wxNO)
+		{
+			return;
+		}
+	}
+	if (isAnalyzing)
+	{
+		int closeAnswer = wxMessageBox("The opened file is currently being analyzed.", "Are you sure you want to close?", wxYES_NO, this);
+		if (closeAnswer == wxNO)
+		{
+			return;
+		}
+	}
+	
 	ClearData();
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();

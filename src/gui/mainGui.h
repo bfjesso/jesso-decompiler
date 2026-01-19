@@ -21,6 +21,8 @@ public:
 	ColorsMenu* colorsMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
+	wxStaticText* statusStaticText = nullptr;
+
 	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
 
@@ -29,6 +31,9 @@ public:
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
+
+	unsigned char isDisassembling = 0;
+	unsigned char isAnalyzing = 0;
 
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
