@@ -356,7 +356,7 @@ void MainGui::DisassembleCodeSections()
 	disassemblyTextCtrl->SetReadOnly(true);
 }
 
-void MainGui::DecompileFunction(unsigned short functionIndex)
+void MainGui::DecompileFunction(int functionIndex)
 {
 	if (currentFilePath == "")
 	{
@@ -386,6 +386,13 @@ void MainGui::DecompileFunction(unsigned short functionIndex)
 	params.dataSectionByte = dataSectionBytes;
 
 	params.is64Bit = is64Bit;
+
+	if (!params.currentFunc->hasGottenLocalVars)
+	{
+		getAllFuncLocalVars(params.currentFunc, is64Bit);
+		getAllFuncReturnVars(functionIndex, &functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports, is64Bit);
+		params.currentFunc->hasGottenLocalVars = 1;
+	}
 
 	struct JdcStr decompiledFunction = initializeJdcStr();
 	if (decompiledFunction.bufferSize == 0)
@@ -454,7 +461,6 @@ void MainGui::FindAllFunctions()
 	if (functions.size() > 0) 
 	{
 		fixAllFunctionReturnTypes(&functions[0], functions.size(), is64Bit);
-		getAllFuncReturnVars(&functions[0], functions.size(), &disassembledInstructions[0], &instructionAddresses[0], disassembledInstructions.size(), imports, numOfImports, is64Bit);
 	}
 }
 

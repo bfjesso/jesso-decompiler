@@ -79,7 +79,7 @@ public:
 
 	void DisassembleCodeSections();
 
-	void DecompileFunction(unsigned short functionIndex);
+	void DecompileFunction(int functionIndex);
 
 	void FindAllFunctions();
 

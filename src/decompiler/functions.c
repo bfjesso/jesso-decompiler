@@ -41,7 +41,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			continue;
 		}
 
-		// checking all operands for arguments or local variables
+		// checking all operands for arguments
 		unsigned char overwrites = 0;
 		for (int j = 0; j < 4; j++)
 		{
@@ -63,6 +63,9 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 						{
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
+							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->reg]);
+
 							result->numOfRegArgs++;
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k - RAX] = 1;
@@ -88,32 +91,10 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				{
 					result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
 					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+					result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
+					sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", result->stackArgs[result->numOfStackArgs].stackOffset);
+
 					result->numOfStackArgs++;
-				}
-			}
-			else if (isOperandLocalVariable(currentOperand))
-			{
-				long long displacement = currentOperand->memoryAddress.constDisplacement;
-
-				unsigned char overwritesVarValue = 0;
-				if (doesInstructionModifyOperand(currentInstruction, 0, &overwritesVarValue) && overwritesVarValue)
-				{
-					unsigned char isAlreadyFound = 0;
-					for (int k = 0; k < result->numOfLocalVars; k++)
-					{
-						if (result->localVars[k].stackOffset == displacement)
-						{
-							isAlreadyFound = 1;
-							break;
-						}
-					}
-
-					if (!isAlreadyFound)
-					{
-						result->localVars[result->numOfLocalVars].stackOffset = (int)displacement;
-						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
-						result->numOfLocalVars++;
-					}
 				}
 			}
 		}
@@ -180,13 +161,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				result->callingConvention = __THISCALL;
 			}
 
-			initializeFunctionVarNames(result);
 			sortFunctionArguments(result);
 			return 1;
 		}
 		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || addresses[i + 1] == nextSectionStartAddress)
 		{
-			initializeFunctionVarNames(result);
 			sortFunctionArguments(result);
 			return 1;
 		}
@@ -225,96 +204,133 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit)
+unsigned char getAllFuncLocalVars(struct Function* function, unsigned char is64Bit)
 {
-	for (int i = 0; i < numOfFunctions; i++)
+	for (int i = 0; i < function->numOfInstructions; i++)
 	{
-		for (int j = 0; j < functions[i].numOfInstructions; j++)
-		{
-			if (isOpcodeCall(functions[i].instructions[j].opcode))
-			{
-				unsigned char isReturnVarUsed = 0;
-				for (int k = j + 1; k < functions[i].numOfInstructions; k++)
-				{
-					enum Mnemonic opcode = functions[i].instructions[k].opcode;
-					if (opcode == RET_NEAR || opcode == RET_FAR || doesInstructionAccessRegister(&(functions[i].instructions[k]), AX, 0))
-					{
-						isReturnVarUsed = 1;
-						break;
-					}
+		struct DisassembledInstruction* currentInstruction = &function->instructions[i];
 
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(functions[i].instructions[k]), AX, 0, 0))
+		for (int j = 0; j < 4; j++) 
+		{
+			struct Operand* currentOperand = &currentInstruction->operands[j];
+			if (isOperandLocalVariable(currentOperand))
+			{
+				long long displacement = currentOperand->memoryAddress.constDisplacement;
+
+				unsigned char isAlreadyFound = 0;
+				for (int k = 0; k < function->numOfLocalVars; k++)
+				{
+					if (function->localVars[k].stackOffset == displacement)
 					{
+						isAlreadyFound = 1;
 						break;
 					}
 				}
-				if (!isReturnVarUsed) 
+
+				if (!isAlreadyFound)
+				{
+					function->localVars[function->numOfLocalVars].stackOffset = (int)displacement;
+					function->localVars[function->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+					function->localVars[function->numOfLocalVars].name = initializeJdcStr();
+					sprintfJdc(&(function->localVars[function->numOfLocalVars].name), 0, "var%X", -(int)displacement);
+
+					function->numOfLocalVars++;
+				}
+			}
+		}
+	}
+
+	return 1;
+}
+
+unsigned char getAllFuncReturnVars(int functionIndex, struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit)
+{
+	struct Function* function = &functions[functionIndex];
+	for (int i = 0; i < function->numOfInstructions; i++)
+	{
+		if (isOpcodeCall(function->instructions[i].opcode))
+		{
+			unsigned char isReturnVarUsed = 0;
+			for (int j = i + 1; j < function->numOfInstructions; j++)
+			{
+				enum Mnemonic opcode = function->instructions[j].opcode;
+				if (opcode == RET_NEAR || opcode == RET_FAR || doesInstructionAccessRegister(&(function->instructions[j]), AX, 0))
+				{
+					isReturnVarUsed = 1;
+					break;
+				}
+
+				if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(function->instructions[j]), AX, 0, 0))
+				{
+					break;
+				}
+			}
+			if (!isReturnVarUsed)
+			{
+				continue;
+			}
+
+			int currentInstructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, function->addresses[i]);
+			unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, currentInstructionIndex);
+
+			int callNum = 0;
+			for (int j = 0; j < function->numOfReturnVars; j++)
+			{
+				if (function->returnVars[j].callAddr == calleeAddress)
+				{
+					callNum++;
+				}
+			}
+
+			int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
+			if (calleIndex != -1)
+			{
+				if (functions[calleIndex].returnType == VOID_TYPE)
 				{
 					continue;
 				}
-				
-				int currentInstructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, functions[i].addresses[j]);
-				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, currentInstructionIndex);
-
-				int callNum = 0;
-				for (int k = 0; k < functions[i].numOfReturnVars; k++)
-				{
-					if (functions[i].returnVars[k].callAddr == calleeAddress)
-					{
-						callNum++;
-					}
-				}
-
-				int calleIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, calleeAddress);
-				if (calleIndex != -1)
-				{
-					if(functions[calleIndex].returnType == VOID_TYPE) 
-					{ 
-						continue;
-					}
-					else 
-					{
-						functions[i].returnVars[functions[i].numOfReturnVars].type = functions[calleIndex].returnType;
-						functions[i].returnVars[functions[i].numOfReturnVars].name = initializeJdcStr();
-						sprintfJdc(&(functions[i].returnVars[functions[i].numOfReturnVars].name), 0, "%sRetVal%d", functions[calleIndex].name.buffer, callNum);
-					}
-				}
 				else
 				{
-					for (int k = 0; k < numOfImports; k++)
+					function->returnVars[function->numOfReturnVars].type = functions[calleIndex].returnType;
+					function->returnVars[function->numOfReturnVars].name = initializeJdcStr();
+					sprintfJdc(&(function->returnVars[function->numOfReturnVars].name), 0, "%sRetVal%d", functions[calleIndex].name.buffer, callNum);
+				}
+			}
+			else
+			{
+				for (int j = 0; j < numOfImports; j++)
+				{
+					if (imports[j].address == calleeAddress)
 					{
-						if (imports[k].address == calleeAddress)
+						// checking if AX is ever accessed without being assigned after the call and until the next function call
+						unsigned char returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume it returns something by default
+						for (int k = i + 1; i < function->numOfInstructions; k++)
 						{
-							// checking if AX is ever accessed without being assigned after the call and until the next function call
-							unsigned char returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume it returns something by default
-							for (int l = j + 1; i < functions[i].numOfInstructions; l++)
+							enum Mnemonic opcode = function->instructions[k].opcode;
+							if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
 							{
-								enum Mnemonic opcode = functions[i].instructions[l].opcode;
-								if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
-								{
-									break;
-								}
-
-								unsigned char operandNum = 0;
-								if (doesInstructionAccessRegister(&(functions[i].instructions[l]), AX, &operandNum))
-								{
-									returnType = getTypeOfOperand(functions[i].instructions[l].opcode, &(functions[i].instructions[l].operands[operandNum]), is64Bit);
-									break;
-								}
+								break;
 							}
-							
-							functions[i].returnVars[functions[i].numOfReturnVars].name = initializeJdcStr();
-							sprintfJdc(&(functions[i].returnVars[functions[i].numOfReturnVars].name), 0, "%sRetVal%d", imports[k].name.buffer, callNum);
-							functions[i].returnVars[functions[i].numOfReturnVars].type = returnType;
-							break;
+
+							unsigned char operandNum = 0;
+							if (doesInstructionAccessRegister(&(function->instructions[k]), AX, &operandNum))
+							{
+								returnType = getTypeOfOperand(function->instructions[k].opcode, &(function->instructions[k].operands[operandNum]), is64Bit);
+								break;
+							}
 						}
+
+						function->returnVars[function->numOfReturnVars].name = initializeJdcStr();
+						sprintfJdc(&(function->returnVars[function->numOfReturnVars].name), 0, "%sRetVal%d", imports[j].name.buffer, callNum);
+						function->returnVars[function->numOfReturnVars].type = returnType;
+						break;
 					}
 				}
-
-				functions[i].returnVars[functions[i].numOfReturnVars].callAddr = calleeAddress;
-				functions[i].returnVars[functions[i].numOfReturnVars].callNum = callNum;
-				functions[i].numOfReturnVars++;
 			}
+
+			function->returnVars[function->numOfReturnVars].callAddr = calleeAddress;
+			function->returnVars[function->numOfReturnVars].callNum = callNum;
+			function->numOfReturnVars++;
 		}
 	}
 
@@ -494,27 +510,6 @@ struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum
 	}
 
 	return 0;
-}
-
-static void initializeFunctionVarNames(struct Function* function) 
-{
-	for (int i = 0; i < function->numOfRegArgs; i++) 
-	{
-		function->regArgs[i].name = initializeJdcStr();
-		sprintfJdc(&(function->regArgs[i].name), 0, "arg%s", registerStrs[function->regArgs[i].reg]);
-	}
-
-	for (int i = 0; i < function->numOfStackArgs; i++)
-	{
-		function->stackArgs[i].name = initializeJdcStr();
-		sprintfJdc(&(function->stackArgs[i].name), 0, "arg%X", function->stackArgs[i].stackOffset);
-	}
-
-	for (int i = 0; i < function->numOfLocalVars; i++)
-	{
-		function->localVars[i].name = initializeJdcStr();
-		sprintfJdc(&(function->localVars[i].name), 0, "var%X", -function->localVars[i].stackOffset);
-	}
 }
 
 static void sortFunctionArguments(struct Function* function) 

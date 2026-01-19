@@ -61,9 +61,9 @@ struct Function
 	struct StackVariable stackArgs[6];
 	unsigned char numOfStackArgs;
 
+	unsigned char hasGottenLocalVars; // returnVars count for this too
 	struct StackVariable localVars[100];
 	unsigned char numOfLocalVars;
-
 	struct FuncReturnVariable returnVars[100];
 	unsigned char numOfReturnVars;
 };
@@ -77,7 +77,9 @@ extern "C"
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
 
-	unsigned char getAllFuncReturnVars(struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit);
+	unsigned char getAllFuncLocalVars(struct Function* function, unsigned char is64Bit);
+
+	unsigned char getAllFuncReturnVars(int functionIndex, struct Function* functions, int numOfFunctions, struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, struct ImportedFunction* imports, int numOfImports, unsigned char is64Bit);
 
 #ifdef __cplusplus
 }
@@ -98,7 +100,5 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 struct FuncReturnVariable* findReturnVar(struct Function* function, char callNum, unsigned long long callAddr);
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
-
-static void initializeFunctionVarNames(struct Function* function);
 
 static void sortFunctionArguments(struct Function* function);
