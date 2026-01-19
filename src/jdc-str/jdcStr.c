@@ -27,7 +27,7 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
-	if (jdcStr && jdcStr->buffer)
+	if (jdcStr && jdcStr->buffer && src)
 	{
 		if (strlen(src) >= jdcStr->bufferSize)
 		{
@@ -56,7 +56,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 
 unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 {
-	if (jdcStr && jdcStr->buffer)
+	if (jdcStr && jdcStr->buffer && src)
 	{
 		if ((strlen(src) + strlen(jdcStr->buffer)) >= jdcStr->bufferSize)
 		{
