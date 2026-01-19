@@ -24,7 +24,7 @@ public:
 
 	void DisassembleBytes(wxCommandEvent& e);
 
-	bool ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
+	int ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
 
 	void OpenMenu(wxPoint position);
 

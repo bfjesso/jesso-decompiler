@@ -48,8 +48,9 @@ BytesDisassembler::BytesDisassembler() : wxFrame(nullptr, MainWindowID, "Bytes D
 
 void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 {
-	unsigned char bytes[15];
-	if (!ParseStringBytes(bytesTextCtrl->GetValue(), bytes, 15))
+	unsigned char bytes[15] = { 0 };
+	int numOfBytes = ParseStringBytes(bytesTextCtrl->GetValue(), bytes, 15);
+	if (numOfBytes == 0)
 	{
 		wxMessageBox("Failed to parse bytes", "Can't disassemble");
 		return;
@@ -60,9 +61,9 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 
 	struct DisassembledInstruction result;
 	unsigned char isOpcodeInvalid = 0;
-	if (disassembleInstruction(bytes, bytes + 15, &options, &result, &isOpcodeInvalid))
+	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result, &isOpcodeInvalid))
 	{
-		char buffer[255];
+		char buffer[255] = { 0 };
 		if (instructionToStr(&result, buffer, 255))
 		{
 			if (isOpcodeInvalid) 
@@ -85,7 +86,7 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	}
 }
 
-bool BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
+int BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
 {
 	str.Replace(" ", "", true);
 	str.Replace("\\", "", true);
@@ -95,7 +96,7 @@ bool BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffe
 	int strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0)
 	{
-		return false;
+		return 0;
 	}
 
 	int currentByte = 0;
@@ -103,13 +104,13 @@ bool BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffe
 	{
 		if (currentByte > bytesBufferLen - 1)
 		{
-			return false;
+			return 0;
 		}
 
 		unsigned int byte = 0;
 		if (!str.SubString(i, i + 1).ToUInt(&byte, 16))
 		{
-			return false;
+			return 0;
 		}
 
 		bytesBuffer[currentByte] = (unsigned char)byte;
@@ -117,7 +118,7 @@ bool BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffe
 		currentByte++;
 	}
 
-	return true;
+	return currentByte;
 }
 
 void BytesDisassembler::OpenMenu(wxPoint position)
