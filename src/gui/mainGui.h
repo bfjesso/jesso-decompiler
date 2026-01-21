@@ -32,9 +32,6 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	unsigned char isDisassembling = 0;
-	unsigned char isAnalyzing = 0;
-
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
 	unsigned long long imageBase = 0;
@@ -87,6 +84,12 @@ public:
 	void DecompileFunction(int functionIndex);
 
 	void FindAllFunctions();
+
+	void UpdateDisassemblyTextCtrl();
+
+	void UpdateFunctionsGrid();
+
+	void GetFunctionSymbols();
 
 	void GridRightClickOptions(wxGridEvent& e);
 
