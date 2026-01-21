@@ -171,7 +171,12 @@
     <ClCompile Include="src\decompiler\functions.c" />
     <ClCompile Include="src\decompiler\returnStatements.c" />
     <ClCompile Include="src\disassembler\disassembler.c" />
+    <ClCompile Include="src\disassembler\disassemblyUtils.c" />
+    <ClCompile Include="src\disassembler\mnemonics.c" />
+    <ClCompile Include="src\disassembler\modRM.c" />
     <ClCompile Include="src\disassembler\opcodes.c" />
+    <ClCompile Include="src\disassembler\operands.c" />
+    <ClCompile Include="src\disassembler\prefixes.c" />
     <ClCompile Include="src\disassembler\registers.c" />
     <ClCompile Include="src\elf-handler\elfHandler.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -200,10 +205,15 @@
     <ClInclude Include="src\decompiler\functions.h" />
     <ClInclude Include="src\decompiler\returnStatements.h" />
     <ClInclude Include="src\disassembler\disassembler.h" />
+    <ClInclude Include="src\disassembler\disassemblyUtils.h" />
     <ClInclude Include="src\disassembler\escapeOpcodeMaps.h" />
     <ClInclude Include="src\disassembler\extendedOpcodeMap.h" />
+    <ClInclude Include="src\disassembler\mnemonics.h" />
+    <ClInclude Include="src\disassembler\modRM.h" />
     <ClInclude Include="src\disassembler\oneByteOpcodeMap.h" />
     <ClInclude Include="src\disassembler\opcodes.h" />
+    <ClInclude Include="src\disassembler\operands.h" />
+    <ClInclude Include="src\disassembler\prefixes.h" />
     <ClInclude Include="src\disassembler\registers.h" />
     <ClInclude Include="src\disassembler\twoByteOpcodeMap.h" />
     <ClInclude Include="src\elf-handler\elfHandler.h">

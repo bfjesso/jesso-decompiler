@@ -1,92 +1,242 @@
+#include "disassembler.h"
 #include "opcodes.h"
+#include "mnemonics.h"
+#include "prefixes.h"
 
-extern const char* mnemonicStrs[] =
+#include "oneByteOpcodeMap.h"
+#include "twoByteOpcodeMap.h"
+#include "extendedOpcodeMap.h"
+#include "escapeOpcodeMaps.h"
+
+unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Opcode* result)
 {
-	"ERROR",
+	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
-	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOVD", "MOVAPS", "MOVAPD", "MOVLPS", "MOVLPD", "MOVSLDUP", "MOVDDUP", "MOVHPS", "MOVHPD", "MOVSHDUP", "MOVNTPS", "MOVNTPD", "MOVMSKPS", "MOVMSKPD", "MOVS", "MOVSXD", "MOVZX", "MOVQ", "MOVDQA", "MOVDQU", "MOVNTI", "MOVQ2DQ", "MOVDQ2Q", "PMOVMSKB", "MOVNTQ", "MOVNTDQ", "MASKMOVQ", "MASKMOVDQU", "MOV",
-	"LEA",
-	"ADDPS", "ADDPD", "ADDSS", "ADDSD", "HADDPD", "HADDPS", "XADD", "PADDQ", "ADD",
-	"SUB", "AND", "OR", "XOR", "SHL", "SHR", "SHLD", "SHRD",
+	unsigned char legPrefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
+	unsigned char opcodeByte = 0;
 
-	"CVTPS2PD", "CVTPD2PS", "CVTSS2SD", "CVTSD2SS", "CVTPI2PS", "CVTPI2PD", "CVTSI2SS", "CVTSI2SD", "CVTTPS2PI", "CVTTPD2PI", "CVTTSS2SI", "CVTTSD2SI", "CVTPS2PI", "CVTPD2PI", "CVTSS2SI", "CVTSD2SI", "CVTDQ2PS", "CVTPS2DQ", "CVTTPS2DQ", "CVTTPD2DQ", "CVTDQ2PD", "CVTPD2DQ",
-	"CMP", "COMISS", "COMISD",
-	
-	"IMUL", "IDIV",
-
-	"MULPS", "MULPD", "MULSS", "MULSD",
-	"PMULLW",
-
-	"CMOVO", "CMOVNO", "CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVP", "CMOVNP", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
-
-	"SQRTPS", "SQRTPD", "SQRTSS", "SQRTSD", "RSQRTPS", "RSQRTSS",
-
-	"ANDPS", "ANDPD", "ANDNPS", "ANDNPD", "PAND", "PANDN",
-	"ORPS", "ORPD", "XORPD", "XORPS",
-	"SUBPS", "SUBPD", "SUBSS", "SUBSD", "HSUBPD", "HSUBPS",
-	"MINPS", "MINPD", "MINSS", "MINSD",
-	"DIVPS", "DIVPD", "DIVSS", "DIVSD",
-	"MAXPS", "MAXPD", "MAXSS", "MAXSD",
-
-	"ADDSUBPD", "ADDSUBPS",
-
-	"PUNPCKLBW", "PUNPCKLWD", "PUNPCKLDQ", "PACKSSWB", "PACKUSWB", "PUNPCKHBW", "PUNPCKHWD", "PUNPCKHDQ", "PACKSSDW", "PUNPCKLQDQ", "PUNPCKHQDQ",
-	"PCMPGTB", "PCMPGTW", "PCMPGTD",
-
-	"PSHUFW", "PSHUFD", "PSHUFHW", "PSHUFLW",
-
-	"PCMPEQB", "PCMPEQW", "PCMPEQD",
-
-	"CMPPS", "CMPPD", "CMPSS", "CMPSD",
-
-	"SHUFPS", "SHUFPD",
-
-	"PSRLW", "PSRLD", "PSRLQ", "PSRLDQ", "PSLLDQ",
-
-	"PSUBUSB", "PSUBUSW",
-	"PMINUB",
-	"PADDUSB", "PADDUSW",
-	"PMAXUB",
-	"PAVGB", "PSRAW", "PSRAD", "PAVGW", "PMULHUW", "PMULHW",
-	"PSUBSB", "PSUBSW", "PMINSW", "POR", "PADDSB", "PADDSW", "PMAXSW", "PXOR",
-	"PSLLW", "PSLLD", "PSLLQ", "PMULUDQ", "PMADDWD", "PSADBW",
-	"PSUBB", "PSUBW", "PSUBD", "PSUBQ", "PADDB", "PADDW", "PADDD",
-
-	"FXSAVE", "FXRSTOR", "LDMXCSR", "STMXCSR", "XSAVE", "XRSTOR", "XSAVEOPT", "CLFLUSH",
-	"LFENCE", "MFENCE", "SFENCE",
-	"RDFSBASE", "RDGSBASE", "WRFSBASE", "WRGSBASE",
-	"RDRAND", "RDSEED", "RDPID",
-
-	"AAA", "AAD", "AAM", "AAS", "ADC", "ARPL",
-	"BOUND", "BSF", "BSR", "BSWAP", "BT", "BTC", "BTR", "BTS", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
-	"CALL FAR", "CALL NEAR", "CDQ", "CLAC", "CLC", "CLD", "CLI", "CLTS", "CMC", "CMPS", "CMPXCHG", "CPUID", "CBW", "CWDE", "CDQE", 
-	"DAA", "DAS", "DEC", "DIV",
-	"EMMS", "ENCLS", "ENCLU", "ENDBR", "ENTER",
-	"F2XM1", "FABS", "FADD", "FADDP", "FBLD", "FBSTP", "FCHS", "FCLEX", "FCMOVB", "FCMOVBE", "FCMOVE", "FCMOVNB", "FCMOVNBE", "FCMOVNE", "FCMOVNU", "FCMOVU", "FCOM", "FCOMI", "FCOMIP", "FCOMP", "FCOMPP", "FCOS", "FDECSTP", "FDIV", "FDIVP", "FDIVR", "FDIVRP", "FFREE", "FIADD", "FICOM", "FICOMP", "FIDIV", "FIDIVR", "FILD", "FIMUL", "FINCSTP", "FINIT", "FIST", "FISTP", "FISTTP", "FISUB", "FISUBR", "FLD", "FLD1", "FLDCW", "FLDENV", "FLDL2E", "FLDL2T", "FLDLG2", "FLDLN2", "FLDPI", "FLDZ", "FMUL", "FMULP", "FNOP", "FPATAN", "FPREM", "FPREM1", "FPTAN", "FRNDINT", "FRSTOR", "FSAVE", "FSCALE", "FSIN", "FSINCOS", "FSQRT", "FST", "FSTCW", "FSTENV", "FSTP", "FSTSW", "FSUB", "FSUBP", "FSUBR", "FSUBRP", "FTST", "FUCOM", "FUCOMI", "FUCOMIP", "FUCOMP", "FUCOMPP", "FXAM", "FXCH", "FXTRACT", "FYL2X", "FYL2XP1", 
-	"GETSEC",
-	"HLT",
-	"IN", "INC", "INS", "INT", "INT1", "INT3", "INTO", "INVD", "IRET",
-	"JA SHORT", "JB SHORT", "JBE SHORT", "JG SHORT", "JL SHORT", "JLE SHORT", "JNB SHORT", "JGE SHORT", "JNO SHORT", "JNP SHORT", "JNS SHORT", "JNZ SHORT", "JO SHORT", "JP SHORT", "JS SHORT", "JZ SHORT", "JMP SHORT", "JMP FAR", "JMP NEAR", "JRCXZ", "JMPE",
-	"LAHF", "LAR", "LDDQU", "LDS", "LEAVE", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
-	"MONITOR", "MUL", "MWAIT",
-	"NEG", "NOP", "NOT",
-	"OUT", "OUTS",
-	"POP", "POPAD", "POP DS", "POP ES", "POP FS", "POP GS", "POP SS", "POPF", "PREFETCHW", "PUSH", "PUSHAD", "PUSH CS", "PUSH DS", "PUSH ES", "PUSH FS", "PUSH GS", "PUSH SS", "PUSHF", "POPCNT", "PINSRW", "PEXTRW",
-	"RCL", "RCR", "RDMSR", "RDPMC", "RDTSC", "RET FAR", "RET NEAR", "ROL", "ROR", "RSM", "RCPPS", "RCPSS",
-	"SAHF", "SAR", "SBB", "SCAS", "SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNO", "SETNP", "SETNS", "SETNZ", "SETO", "SETP", "SETS", "SETZ", "STAC", "STC", "STD", "STI", "STOS", "SYSCALL", "SYSENTER", "SYSEXIT", "SYSRET",
-	"TEST", "TZCNT",
-	"UCOMISD", "UCOMISS", "UNPCKHPD", "UNPCKHPS", "UNPCKLPD", "UNPCKLPS",
-	"VMCALL", "VMFUNC", "VMLAUNCH", "VMRESUME", "VMXOFF", "VMREAD", "VMWRITE",
-	"WAIT", "WBINVD", "WRMSR",
-	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XSETBV", "XTEST"
-};
-
-unsigned char isOpcodeCall(enum Mnemonic opcode)
-{
-	if (opcode == CALL_FAR || opcode == CALL_NEAR || opcode == JMP_FAR || opcode == JMP_NEAR) 
+	// check the opcode map in use
+	if ((*bytesPtr)[0] == 0x0F)
 	{
-		return 1;
+		if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
+		{
+			opcodeByte = (*bytesPtr)[2];
+			//result.opcode = &threeByteMap2[opcodeByte];
+			(*bytesPtr) += 3;
+		}
+		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x38) // sequence: 0x0F 0x38 opcode
+		{
+			opcodeByte = (*bytesPtr)[2];
+			//result.opcode = &threeByteMap[opcodeByte];
+			(*bytesPtr) += 3;
+		}
+		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
+		{
+			opcodeByte = (*bytesPtr)[1];
+			unsigned char prefixIndex = legPrefixByte == 0x66 ? 1 : legPrefixByte == 0xF3 ? 2 : legPrefixByte == 0xF2 ? 3 : 0;
+			if (prefixIndex != 0)
+			{
+				legPrefixes->group1 = NO_PREFIX;
+			}
+
+			if (twoByteOpcodeMap[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
+			{
+				*result = twoByteOpcodeMap[opcodeByte][0];
+			}
+			else
+			{
+				*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
+			}
+
+			(*bytesPtr) += 2;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else if ((*bytesPtr) <= maxBytesAddr) // sequence: opcode
+	{
+		opcodeByte = (*bytesPtr)[0];
+		*result = oneByteOpcodeMap[opcodeByte];
+
+		if (disassemblerOptions->is64BitMode && opcodeByte == 0x63)
+		{
+			*result = alternateX63;
+		}
+
+		if (result->mnemonic == CWDE)
+		{
+			if (legPrefixes->group1 == OSO)
+			{
+				result->mnemonic = CBW;
+			}
+			else if (rexPrefix->w)
+			{
+				result->mnemonic = CDQE;
+			}
+		}
+
+		(*bytesPtr)++;
+	}
+	else
+	{
+		return 0;
 	}
 
-	return 0;
+	// handle extended opcodes or escape opcodes
+	if (result->mnemonic == EXTENDED_OPCODE)
+	{
+		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char mod = (((modRMByte >> 7) & 0x01) * 2) + ((modRMByte >> 6) & 0x01);
+		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
+		unsigned char rm = (((modRMByte >> 2) & 0x01) * 4) + (((modRMByte >> 1) & 0x01) * 2) + ((modRMByte >> 0) & 0x01);
+
+		const struct Opcode* extendedOpcode = 0;
+
+		if (result->extensionGroup < 7)
+		{
+			extendedOpcode = &extendedOpcodeMapThroughGroupSix[result->extensionGroup][reg];
+		}
+		else if (result->extensionGroup == 7)
+		{
+			if (mod == 0b11)
+			{
+				extendedOpcode = &extendedOpcodeMapGroup7With11B[reg][rm];
+			}
+		}
+		else if (result->extensionGroup == 8)
+		{
+			extendedOpcode = &extendedOpcodeMapGroup8[reg];
+		}
+		else if (result->extensionGroup == 9)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0xF3)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup9F311B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup911B[reg];
+				}
+			}
+		}
+		else if (result->extensionGroup == 11)
+		{
+			if (opcodeByte == 0xC6)
+			{
+				extendedOpcode = &extendedOpcodeMapGroup11C6[reg];
+			}
+			else if (opcodeByte == 0xC7)
+			{
+				extendedOpcode = &extendedOpcodeMapGroup11C7[reg];
+			}
+		}
+		else if (result->extensionGroup == 14)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0x66)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup146611B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1411B[reg];
+				}
+			}
+		}
+		else if (result->extensionGroup == 15)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0xF3)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup15F311B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1511B[reg];
+				}
+			}
+			else
+			{
+				extendedOpcode = &extendedOpcodeMapGroup15[reg];
+			}
+		}
+
+		if (extendedOpcode == 0)
+		{
+			return 0;
+		}
+
+		result->mnemonic = extendedOpcode->mnemonic;
+
+		for (int i = 0; i < 4; i++)
+		{
+			if (extendedOpcode->operands[i] != NO_OPERAND_CODE)
+			{
+				result->operands[i] = extendedOpcode->operands[i];
+			}
+		}
+
+		if (extendedOpcode->opcodeSuperscript != NO_SUPERSCRIPT)
+		{
+			result->opcodeSuperscript = extendedOpcode->opcodeSuperscript;
+		}
+
+		if (result->extensionGroup == 3 && opcodeByte == 0xF7 && result->mnemonic == TEST)
+		{
+			result->operands[1] = Iz;
+		}
+
+		(*hasGotModRMRef) = 1;
+		(*modRMByteRef) = modRMByte;
+		(*bytesPtr)++;
+	}
+	else if (opcodeByte > 0xD7 && opcodeByte < 0xE0) // escape to coprocessor instruction set
+	{
+		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
+
+		switch (opcodeByte)
+		{
+		case 0xD8:
+			*result = modRMByte < 0xC0 ? escapeD8OpcodeMapBits[reg] : escapeD8OpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xD9:
+			*result = modRMByte < 0xC0 ? escapeD9OpcodeMapBits[reg] : escapeD9OpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDA:
+			*result = modRMByte < 0xC0 ? escapeDAOpcodeMapBits[reg] : escapeDAOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDB:
+			*result = modRMByte < 0xC0 ? escapeDBOpcodeMapBits[reg] : escapeDBOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDC:
+			*result = modRMByte < 0xC0 ? escapeDCOpcodeMapBits[reg] : escapeDCOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDD:
+			*result = modRMByte < 0xC0 ? escapeDDOpcodeMapBits[reg] : escapeDDOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDE:
+			*result = modRMByte < 0xC0 ? escapeDEOpcodeMapBits[reg] : escapeDEOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		case 0xDF:
+			*result = modRMByte < 0xC0 ? escapeDFOpcodeMapBits[reg] : escapeDFOpcodeMapByte[modRMByte - 0xC0];
+			break;
+		}
+
+		(*hasGotModRMRef) = 1;
+		(*modRMByteRef) = modRMByte;
+		(*bytesPtr)++;
+	}
+
+	return 1;
 }

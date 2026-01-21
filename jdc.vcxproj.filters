@@ -81,6 +81,21 @@
     <ClCompile Include="src\decompiler\returnStatements.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\disassembler\prefixes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\mnemonics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\operands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\modRM.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\disassemblyUtils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -162,6 +177,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\returnStatements.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\prefixes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\mnemonics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\operands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\modRM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\disassemblyUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
