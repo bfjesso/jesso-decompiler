@@ -229,11 +229,6 @@ static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 		char* newBuffer = (char*)realloc(jdcStr->buffer, newSize);
 		if (newBuffer)
 		{
-			if (newBuffer != jdcStr->buffer) 
-			{
-				memset(jdcStr->buffer, 0, jdcStr->bufferSize);
-			}
-			
 			jdcStr->buffer = newBuffer;
 			jdcStr->bufferSize = newSize;
 
