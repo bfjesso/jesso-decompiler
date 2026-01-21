@@ -6,7 +6,7 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 
 	if (len >= jdcStr->bufferSize - 2) 
 	{
-		if (resizeJdcStr(jdcStr)) 
+		if (resizeJdcStr(jdcStr, len + 3))
 		{
 			return wrapJdcStrInParentheses(jdcStr);
 		}
@@ -29,9 +29,10 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
-		if (strlen(src) >= jdcStr->bufferSize)
+		int srcLen = strlen(src);
+		if (srcLen >= jdcStr->bufferSize)
 		{
-			if (resizeJdcStr(jdcStr))
+			if (resizeJdcStr(jdcStr, srcLen + 1))
 			{
 				return strcpyJdc(jdcStr, src);
 			}
@@ -58,9 +59,10 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
-		if ((strlen(src) + strlen(jdcStr->buffer)) >= jdcStr->bufferSize)
+		int newLen = strlen(src) + strlen(jdcStr->buffer);
+		if (newLen >= jdcStr->bufferSize)
 		{
-			if (resizeJdcStr(jdcStr))
+			if (resizeJdcStr(jdcStr, newLen + 1))
 			{
 				return strcatJdc(jdcStr, src);
 			}
@@ -107,7 +109,7 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 			}
 			else if (result >= jdcStr->bufferSize - ogLen)
 			{
-				if (resizeJdcStr(jdcStr))
+				if (resizeJdcStr(jdcStr, ogLen + result + 1))
 				{
 					memset(jdcStr->buffer + ogLen, 0, jdcStr->bufferSize - ogLen);
 					unsigned char result = sprintfJdcArgs(jdcStr, 1, format, copy);
@@ -134,7 +136,7 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 			}
 			else if (result >= jdcStr->bufferSize)
 			{
-				if (resizeJdcStr(jdcStr))
+				if (resizeJdcStr(jdcStr, result + 1))
 				{
 					memset(jdcStr->buffer, 0, jdcStr->bufferSize);
 					unsigned char result = sprintfJdcArgs(jdcStr, 0, format, copy);
@@ -220,11 +222,11 @@ unsigned char freeJdcStr(struct JdcStr* jdcStr)
 	return 0;
 }
 
-static unsigned char resizeJdcStr(struct JdcStr* jdcStr)
+static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
-		char* newBuffer = (char*)realloc(jdcStr->buffer, jdcStr->bufferSize + 10);
+		char* newBuffer = (char*)realloc(jdcStr->buffer, newSize);
 		if (newBuffer)
 		{
 			if (newBuffer != jdcStr->buffer) 
@@ -233,7 +235,7 @@ static unsigned char resizeJdcStr(struct JdcStr* jdcStr)
 			}
 			
 			jdcStr->buffer = newBuffer;
-			jdcStr->bufferSize += 10;
+			jdcStr->bufferSize = newSize;
 
 			int len = strlen(jdcStr->buffer);
 			memset(jdcStr->buffer + len, 0, jdcStr->bufferSize - len);
