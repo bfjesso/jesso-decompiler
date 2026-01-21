@@ -22,6 +22,8 @@ extern "C"
 	
 	struct JdcStr initializeJdcStr();
 
+	struct JdcStr initializeJdcStrWithVal(const char* initStr);
+
 	unsigned char freeJdcStr(struct JdcStr* jdcStr);
 
 #ifdef __cplusplus

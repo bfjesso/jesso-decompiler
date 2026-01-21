@@ -188,6 +188,24 @@ struct JdcStr initializeJdcStr()
 	return result;
 }
 
+struct JdcStr initializeJdcStrWithVal(const char* initStr)
+{
+	struct JdcStr result = { 0 };
+
+	if(initStr)
+	{
+		int len = strlen(initStr);
+		result.buffer = (char*)calloc(len + 1, sizeof(char));
+		if (result.buffer)
+		{
+			result.bufferSize = len + 1;
+			strcpy(result.buffer, initStr);
+		}
+	}
+
+	return result;
+}
+
 unsigned char freeJdcStr(struct JdcStr* jdcStr)
 {
 	if (jdcStr && jdcStr->buffer)

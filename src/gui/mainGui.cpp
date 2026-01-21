@@ -498,7 +498,7 @@ void MainGui::FindAllFunctions()
 			statusStaticText->SetLabelText("Status: analyzing " + wxString(addressStr));
 		}
 
-		functionsGrid->SetCellValue(functionNum, 2, wxString(functions[functionNum].name.buffer));
+		functionsGrid->SetCellValue(functionNum, 2, functions[functionNum].name.buffer);
 		functionsGrid->SetCellValue(functionNum, 3, std::to_string(functions[functionNum].numOfInstructions));
 		functionNum++;
 

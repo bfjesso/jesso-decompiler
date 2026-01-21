@@ -622,9 +622,7 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-			buffer[bufferIndex].name = initializeJdcStr();
-			strcpyJdc(&buffer[bufferIndex].name, stringBytes + symbol->st_name);
-
+			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
 			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
 			bufferIndex++;
