@@ -6,10 +6,11 @@
 
 unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Operand* result)
 {
+	int operandIndex = 0; // see Hps ?
 	for (int i = 0; i < 4; i++)
 	{
 		enum OperandCode currentOperandCode = opcode->operands[i];
-		struct Operand* currentOperand = &(result[i]);
+		struct Operand* currentOperand = &(result[operandIndex]);
 
 		currentOperand->type = NO_OPERAND;
 		currentOperand->reg = NO_REG;
@@ -428,14 +429,14 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 		case Hpd:
 		case Hx:
 		case Hq:
-			if (!vexPrefix->isValidVEX) { break; }
+			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = opcode->opcodeSuperscript == f256 ? (YMM0 + vexPrefix->vvvv) : (XMM0 + vexPrefix->vvvv);
 			break;
 		case Hss:
 		case Hsd:
 		case Hdq:
-			if (!vexPrefix->isValidVEX) { break; }
+			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
 			break;
@@ -443,6 +444,8 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			(*bytesPtr)++;
 			break;
 		}
+
+		operandIndex++;
 	}
 
 	return 1;
