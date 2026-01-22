@@ -93,9 +93,6 @@
     <ClCompile Include="src\disassembler\modRM.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\disassembler\disassemblyUtils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -189,9 +186,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\disassembler\modRM.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\disassemblyUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
