@@ -7,25 +7,29 @@ extern const char* mnemonicStrs[] =
 	"MOVUPS", "MOVUPD", "MOVSS", "MOVSD", "MOVSX", "MOVD", "MOVAPS", "MOVAPD", "MOVLPS", "MOVLPD", "MOVSLDUP", "MOVDDUP", "MOVHPS", "MOVHPD", "MOVSHDUP", "MOVNTPS", "MOVNTPD", "MOVMSKPS", "MOVMSKPD", "MOVS", "MOVSXD", "MOVZX", "MOVQ", "MOVDQA", "MOVDQU", "MOVNTI", "MOVQ2DQ", "MOVDQ2Q", "PMOVMSKB", "MOVNTQ", "MOVNTDQ", "MASKMOVQ", "MASKMOVDQU", "MOV",
 	"LEA",
 	"ADDPS", "ADDPD", "ADDSS", "ADDSD", "HADDPD", "HADDPS", "XADD", "PADDQ", "ADD",
-	"SUB", "AND", "OR", "XOR", "SHL", "SHR", "SHLD", "SHRD",
+	"SUBPS", "SUBPD", "SUBSS", "SUBSD", "HSUBPD", "HSUBPS", "SUB", 
+	"AND", "ANDPS", "ANDPD", "ANDNPS", "ANDNPD", "PAND", "PANDN",
+	"OR", "ORPS", "ORPD",
+	"XOR", "XORPD", "XORPS",  "PXOR",
+	"SHL", "SHLD",
+	"SHR", "SHRD",
+	"IMUL", "MULPS", "MULPD", "MULSS", "MULSD",
+	"IDIV", "DIVPS", "DIVPD", "DIVSS", "DIVSD",
+	"CVTPS2PD", "CVTSS2SD",  "CVTPI2PD", "CVTSI2SD", "CVTDQ2PD",
+	"CVTPD2PS", "CVTSD2SS",  "CVTPI2PS", "CVTSI2SS", "CVTDQ2PS",
 
-	"CVTPS2PD", "CVTPD2PS", "CVTSS2SD", "CVTSD2SS", "CVTPI2PS", "CVTPI2PD", "CVTSI2SS", "CVTSI2SD", "CVTTPS2PI", "CVTTPD2PI", "CVTTSS2SI", "CVTTSD2SI", "CVTPS2PI", "CVTPD2PI", "CVTSS2SI", "CVTSD2SI", "CVTDQ2PS", "CVTPS2DQ", "CVTTPS2DQ", "CVTTPD2DQ", "CVTDQ2PD", "CVTPD2DQ",
+	"CVTTPS2PI", "CVTTPD2PI", "CVTTSS2SI", "CVTTSD2SI", "CVTPS2PI", "CVTPD2PI", "CVTSS2SI", "CVTSD2SI", "CVTPS2DQ", "CVTTPS2DQ", "CVTTPD2DQ", "CVTPD2DQ",
 	"CMP", "COMISS", "COMISD",
 
-	"IMUL", "IDIV",
-
-	"MULPS", "MULPD", "MULSS", "MULSD",
 	"PMULLW",
+
+	"JA SHORT", "JB SHORT", "JBE SHORT", "JG SHORT", "JL SHORT", "JLE SHORT", "JNB SHORT", "JGE SHORT", "JNO SHORT", "JNP SHORT", "JNS SHORT", "JNZ SHORT", "JO SHORT", "JP SHORT", "JS SHORT", "JZ SHORT", "JMP SHORT", "JMP FAR", "JMP NEAR",
 
 	"CMOVO", "CMOVNO", "CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVP", "CMOVNP", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
 
 	"SQRTPS", "SQRTPD", "SQRTSS", "SQRTSD", "RSQRTPS", "RSQRTSS",
 
-	"ANDPS", "ANDPD", "ANDNPS", "ANDNPD", "PAND", "PANDN",
-	"ORPS", "ORPD", "XORPD", "XORPS",
-	"SUBPS", "SUBPD", "SUBSS", "SUBSD", "HSUBPD", "HSUBPS",
 	"MINPS", "MINPD", "MINSS", "MINSD",
-	"DIVPS", "DIVPD", "DIVSS", "DIVSD",
 	"MAXPS", "MAXPD", "MAXSS", "MAXSD",
 
 	"ADDSUBPD", "ADDSUBPS",
@@ -48,7 +52,7 @@ extern const char* mnemonicStrs[] =
 	"PADDUSB", "PADDUSW",
 	"PMAXUB",
 	"PAVGB", "PSRAW", "PSRAD", "PAVGW", "PMULHUW", "PMULHW",
-	"PSUBSB", "PSUBSW", "PMINSW", "POR", "PADDSB", "PADDSW", "PMAXSW", "PXOR",
+	"PSUBSB", "PSUBSW", "PMINSW", "POR", "PADDSB", "PADDSW", "PMAXSW",
 	"PSLLW", "PSLLD", "PSLLQ", "PMULUDQ", "PMADDWD", "PSADBW",
 	"PSUBB", "PSUBW", "PSUBD", "PSUBQ", "PADDB", "PADDW", "PADDD",
 
@@ -66,7 +70,7 @@ extern const char* mnemonicStrs[] =
 	"GETSEC",
 	"HLT",
 	"IN", "INC", "INS", "INT", "INT1", "INT3", "INTO", "INVD", "IRET",
-	"JA SHORT", "JB SHORT", "JBE SHORT", "JG SHORT", "JL SHORT", "JLE SHORT", "JNB SHORT", "JGE SHORT", "JNO SHORT", "JNP SHORT", "JNS SHORT", "JNZ SHORT", "JO SHORT", "JP SHORT", "JS SHORT", "JZ SHORT", "JMP SHORT", "JMP FAR", "JMP NEAR", "JRCXZ", "JMPE",
+	"JRCXZ", "JMPE",
 	"LAHF", "LAR", "LDDQU", "LDS", "LEAVE", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
 	"MONITOR", "MUL", "MWAIT",
 	"NEG", "NOP", "NOT",
@@ -81,9 +85,159 @@ extern const char* mnemonicStrs[] =
 	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XSETBV", "XTEST"
 };
 
+unsigned char isOpcodeMov(enum Mnemonic opcode)
+{
+	if (opcode >= MOV && opcode <= MASKMOVDQU)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeAdd(enum Mnemonic opcode)
+{
+	if (opcode >= ADD && opcode <= PADDQ)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeSub(enum Mnemonic opcode)
+{
+	if (opcode >= SUB && opcode <= HSUBPS)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeAnd(enum Mnemonic opcode)
+{
+	if (opcode >= AND && opcode <= PANDN)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeOr(enum Mnemonic opcode)
+{
+	if (opcode >= OR && opcode <= ORPD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeXor(enum Mnemonic opcode)
+{
+	if (opcode >= XOR && opcode <= PXOR)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeShl(enum Mnemonic opcode)
+{
+	if (opcode >= SHL && opcode <= SHLD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeShr(enum Mnemonic opcode)
+{
+	if (opcode >= SHR && opcode <= SHRD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeMul(enum Mnemonic opcode)
+{
+	if (opcode >= IMUL && opcode <= MULSD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeDiv(enum Mnemonic opcode)
+{
+	if (opcode >= IDIV && opcode <= DIVSD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)
+{
+	if (opcode >= CVTPS2PD && opcode <= CVTDQ2PD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode)
+{
+	if (opcode >= CVTPD2PS && opcode <= CVTDQ2PS)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char isOpcodeCall(enum Mnemonic opcode)
 {
 	if (opcode == CALL_FAR || opcode == CALL_NEAR || opcode == JMP_FAR || opcode == JMP_NEAR)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeReturn(enum Mnemonic opcode)
+{
+	if (opcode == RET_NEAR || opcode == RET_FAR)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeJcc(enum Mnemonic opcode)
+{
+	if (opcode >= JA_SHORT && opcode <= JZ_SHORT)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
+{
+	if (opcode >= CMOVO && opcode <= CMOVG)
 	{
 		return 1;
 	}

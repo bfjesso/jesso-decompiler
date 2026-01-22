@@ -13,7 +13,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
 
-		if (instruction->opcode >= JA_SHORT && instruction->opcode < JMP_SHORT)
+		if (isOpcodeJcc(instruction->opcode))
 		{
 			allJccs[jccCount].jccIndex = i;
 

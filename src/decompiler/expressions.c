@@ -251,11 +251,11 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
+		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
 		{
 			isInUnreachableState = 1;
 		}
-		else if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode < JMP_SHORT) 
+		else if (isOpcodeJcc(currentInstruction->opcode))
 		{
 			isInUnreachableState = 0;
 		}
@@ -501,13 +501,33 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	if (instruction->opcode == XOR && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	if (isOpcodeXor(instruction->opcode) && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
 	{
 		if (getAssignment) { strcpyJdc(result, " = 0"); }
 		else { strcpyJdc(result, "0"); }
 		return 1;
 	}
-	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+	else if (instruction->opcode == INC) 
+	{
+		if (getAssignment) { strcpyJdc(result, "++"); }
+		else { strcpyJdc(result, " + 1"); }
+		return 1;
+	}
+	else if (instruction->opcode == DEC) 
+	{
+		if (getAssignment) { strcpyJdc(result, "--"); }
+		else { strcpyJdc(result, " - 1"); }
+		return 1;
+	}
+	else if (instruction->opcode == STMXCSR) 
+	{
+		if (getAssignment) { strcpyJdc(result, " = stmxcsr()"); }
+		else { strcpyJdc(result, "stmxcsr()"); }
+		return 1;
+	}
+
+
+	if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		params.startInstructionIndex--;
 
@@ -533,7 +553,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 
 		return 1;
 	}
-	else if (instruction->opcode >= CMOVO && instruction->opcode <= CMOVG) 
+	else if (isOpcodeCMOVcc(instruction->opcode))
 	{
 		struct JdcStr comparisonStr = initializeJdcStr();
 		if (!decompileComparison(params, 0, &comparisonStr))
@@ -568,104 +588,89 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		return 1;
 	}
 
-	char operationStr[20] = { 0 };
-	switch (instruction->opcode)
-	{
-	case INC:
-		if (getAssignment) { strcpyJdc(result, "++"); }
-		else { strcpyJdc(result, " + 1"); }
-		return 1;
-	case DEC:
-		if (getAssignment) { strcpyJdc(result, "--"); }
-		else { strcpyJdc(result, " - 1"); }
-		return 1;
-	case STMXCSR:
-		if (getAssignment) { strcpyJdc(result, " = stmxcsr()"); }
-		else { strcpyJdc(result, "stmxcsr()"); }
-		return 1;
-	case MOV: // the rest of these opcodes should only be of the form where the first operand is the target operand, and the second is the value being used to modify it
-	case MOVUPS:
-	case MOVUPD:
-	case MOVSS:
-	case MOVSD:
-	case MOVSX:
-	case MOVZX:
-		if (getAssignment) { strcpy(operationStr, " = "); }
-		else { strcpy(operationStr, ""); }
-		break;
-	case LEA:
-		if (getAssignment) { strcpy(operationStr, " = &"); }
-		else { strcpy(operationStr, "&"); }
-		break;
-	case ADD:
-	case ADDPS:
-	case ADDPD:
-	case ADDSS:
-	case ADDSD:
-		if (getAssignment) { strcpy(operationStr, " += "); }
-		else { strcpy(operationStr, " + "); }
-		break;
-	case SUB:
-		if (getAssignment) { strcpy(operationStr, " -= "); }
-		else { strcpy(operationStr, " - "); }
-		break;
-	case AND:
-		if (getAssignment) { strcpy(operationStr, " &= "); }
-		else { strcpy(operationStr, " & "); }
-		break;
-	case OR:
-		if (getAssignment) { strcpy(operationStr, " |= "); }
-		else { strcpy(operationStr, " | "); }
-		break;
-	case XOR:
-		if (getAssignment) { strcpy(operationStr, " ^= "); }
-		else { strcpy(operationStr, " ^ "); }
-		break;
-	case SHL:
-		if (getAssignment) { strcpy(operationStr, " <<= "); }
-		else { strcpy(operationStr, " << "); }
-		break;
-	case SHR:
-		if (getAssignment) { strcpy(operationStr, " >>= "); }
-		else { strcpy(operationStr, " >> "); }
-		break;
-	case IMUL:
-		if (getAssignment) { strcpy(operationStr, " *= "); }
-		else { strcpy(operationStr, " * "); }
-		break;
-	case IDIV:
-		if (getAssignment) { strcpy(operationStr, " /= "); }
-		else { strcpy(operationStr, " / "); }
-		break;
-	case CVTPS2PD:
-	case CVTSS2SD:
-		if (getAssignment) { strcpy(operationStr, " = (double)"); }
-		else { strcpy(operationStr, "(double)"); }
-		break;
-	case CVTPD2PS:
-	case CVTSD2SS:
-		if (getAssignment) { strcpy(operationStr, " = (float)"); }
-		else { strcpy(operationStr, "(float)"); }
-		break;
-	default:
-		return 0;
-	}
-
 	struct Operand* secondOperand = &instruction->operands[1];
 	if (secondOperand->type == REGISTER)
 	{
 		params.startInstructionIndex--; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
 	}
-
-	struct JdcStr operandStr = initializeJdcStr();
-	if (!decompileOperand(params, secondOperand, type, &operandStr))
+	struct JdcStr secondOperandStr = initializeJdcStr();
+	if (!decompileOperand(params, secondOperand, type, &secondOperandStr))
 	{
-		freeJdcStr(&operandStr);
+		freeJdcStr(&secondOperandStr);
 		return 0;
 	}
 
-	sprintfJdc(result, 0, "%s%s", operationStr, operandStr.buffer);
-	freeJdcStr(&operandStr);
+	if (isOpcodeMov(instruction->opcode)) 
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " = %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, "%s", secondOperandStr.buffer); }
+	}
+	else if (instruction->opcode == LEA) 
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " = &%s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, "&%s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeAdd(instruction->opcode)) 
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " += %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " + %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeSub(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " -= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " - %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeAnd(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " &= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " & %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeOr(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " |= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " | %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeXor(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " ^= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " ^ %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeShl(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " <<= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " << %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeShr(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " >>= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " >> %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeMul(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " *= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " * %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeDiv(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " /= %s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, " / %s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeCvtToDbl(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " = (double)%s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, "(double)%s", secondOperandStr.buffer); }
+	}
+	else if (isOpcodeCvtToFlt(instruction->opcode))
+	{
+		if (getAssignment) { sprintfJdc(result, 0, " = (float)%s", secondOperandStr.buffer); }
+		else { sprintfJdc(result, 0, "(float)%s", secondOperandStr.buffer); }
+	}
+	else 
+	{
+		freeJdcStr(&secondOperandStr);
+		return 0;
+	}
 
+	freeJdcStr(&secondOperandStr);
 	return 1;
 }

@@ -43,7 +43,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	if (instruction->opcode == RET_NEAR || instruction->opcode == RET_FAR)
+	if (isOpcodeReturn(instruction->opcode))
 	{
 		return 1;
 	}

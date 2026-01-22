@@ -166,7 +166,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR || currentInstruction->opcode == JMP_SHORT)
+		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
 		{
 			if (originalIndex != -1) 
 			{
@@ -241,7 +241,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 			for (int j = i + 1; j < params.currentFunc->numOfInstructions; j++)
 			{
 				enum Mnemonic opcode = params.currentFunc->instructions[j].opcode;
-				if (opcode == RET_NEAR || opcode == RET_FAR || doesInstructionAccessRegister(&(params.currentFunc->instructions[j]), AX, 0))
+				if (isOpcodeReturn(opcode) || doesInstructionAccessRegister(&(params.currentFunc->instructions[j]), AX, 0))
 				{
 					isReturnVarUsed = 1;
 					break;

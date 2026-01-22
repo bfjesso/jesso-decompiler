@@ -125,13 +125,13 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				result->returnType = FLOAT_TYPE;
 				result->addressOfReturnFunction = 0;
 			}
-			else if ((currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR) && result->returnType == VOID_TYPE)
+			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType == VOID_TYPE)
 			{
 				canReturnNothing = 1;
 			}
 		}
 
-		if (currentInstruction->opcode >= JA_SHORT && currentInstruction->opcode <= JMP_SHORT && currentInstruction->operands[0].immediate > 0)
+		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
 		{
 			unsigned long long jumpAddr = addresses[i] + currentInstruction->operands[0].immediate;
 			if (jumpAddr > addressToJumpTo)
@@ -150,7 +150,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 		}
 
 		
-		if (currentInstruction->opcode == RET_NEAR || currentInstruction->opcode == RET_FAR)
+		if (isOpcodeReturn(currentInstruction->opcode))
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{

@@ -197,67 +197,48 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 	if (operandNum == 0)
 	{
-		switch (instruction->opcode)
+		if (isOpcodeXor(instruction->opcode) && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
 		{
-		case MOV:
-		case MOVUPS:
-		case MOVUPD:
-		case MOVSS:
-		case MOVSD:
-		case MOVSX:
-		case MOVZX:
-		case LEA:
-		case CVTPS2PD:
-		case CVTPD2PS:
-		case CVTSS2SD:
-		case CVTSD2SS:
-		case STMXCSR:
-		case CMOVO:
-		case CMOVNO:
-		case CMOVB:
-		case CMOVNB:
-		case CMOVZ:
-		case CMOVNZ:
-		case CMOVBE:
-		case CMOVA:
-		case CMOVS:
-		case CMOVNS:
-		case CMOVP:
-		case CMOVNP:
-		case CMOVL:
-		case CMOVGE:
-		case CMOVLE:
-		case CMOVG:
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
-		case ADD:
-		case ADDPS:
-		case ADDPD:
-		case ADDSS:
-		case ADDSD:
-		case SUB:
-		case AND:
-		case OR:
-		case SHL:
-		case SHR:
-		case INC:
-		case DEC:
+		}
+
+		if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+		{
+			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
-		case IMUL:
-			if (overwrites != 0 && instruction->operands[2].type != NO_OPERAND) { *overwrites = 1; }
+		}
+		
+		if (isOpcodeMov(instruction->opcode) || 
+			instruction->opcode == LEA || 
+			isOpcodeCvtToDbl(instruction->opcode) ||
+			isOpcodeCvtToFlt(instruction->opcode) ||
+			isOpcodeCMOVcc(instruction->opcode) || 
+			instruction->opcode == STMXCSR)
+		{
+			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
-		case XOR:
-			if (overwrites != 0 && areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) { *overwrites = 1; }
+		}
+
+		if (isOpcodeAdd(instruction->opcode) ||
+			isOpcodeSub(instruction->opcode) ||
+			isOpcodeAnd(instruction->opcode) ||
+			isOpcodeOr(instruction->opcode) ||
+			isOpcodeXor(instruction->opcode) ||
+			isOpcodeShl(instruction->opcode) ||
+			isOpcodeShr(instruction->opcode) ||
+			isOpcodeMul(instruction->opcode) ||
+			isOpcodeDiv(instruction->opcode))
+		{
 			return 1;
 		}
 	}
 	else if (operandNum == 1) 
 	{
-		switch (instruction->opcode)
+		if (isOpcodeXor(instruction->opcode))
 		{
-		case XOR:
-			if (areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
-			{ 
+			if (areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+			{
 				if (overwrites != 0) { *overwrites = 1; }
 				return 1;
 			}
