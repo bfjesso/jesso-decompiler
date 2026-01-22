@@ -1,5 +1,4 @@
 #include "modRM.h"
-#include "disassemblyUtils.h"
 #include "registers.h"
 
 unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, enum ModRMSelection selection, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result)

@@ -1,6 +1,6 @@
 #pragma once
+#include "disassemblyStructs.h"
 #include "prefixes.h"
-#include "operands.h"
 
 enum ModRMSelection
 {

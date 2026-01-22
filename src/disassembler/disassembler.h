@@ -1,6 +1,5 @@
 #pragma once
-#include "disassemblyUtils.h"
-#include "modRM.h"
+#include "disassemblyStructs.h"
 #include "registers.h"
 
 #ifdef __cplusplus

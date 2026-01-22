@@ -1,6 +1,7 @@
 #include "disassembler.h"
-#include "opcodes.h"
 #include "prefixes.h"
+#include "opcodes.h"
+#include "operands.h"
 
 #include <stdio.h>
 #include <string.h>
