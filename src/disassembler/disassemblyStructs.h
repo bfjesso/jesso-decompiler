@@ -48,5 +48,6 @@ struct DisassembledInstruction
 	struct Operand operands[4];
 	enum LegacyPrefix group1Prefix;
 
+	unsigned long long address;
 	unsigned char isInvalid;
 };

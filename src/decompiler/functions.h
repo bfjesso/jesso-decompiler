@@ -44,7 +44,6 @@ struct ReturnedVariable // variables that contain the reuturn value of another f
 
 struct Function
 {
-	unsigned long long* addresses;
 	struct DisassembledInstruction* instructions;
 	unsigned short numOfInstructions;
 
@@ -73,7 +72,7 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
+	unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
 
@@ -83,9 +82,9 @@ extern "C"
 
 int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 
-int findInstructionByAddress(unsigned long long* addresses, int low, int high, unsigned long long address);
+int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
-unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, int startInstructionIndex);
+unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, int numOfInstructions, int startInstructionIndex);
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 

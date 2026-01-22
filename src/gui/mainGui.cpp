@@ -233,9 +233,6 @@ void MainGui::ClearData()
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 
-	instructionAddresses.clear();
-	instructionAddresses.shrink_to_fit();
-
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
 
@@ -341,9 +338,8 @@ void MainGui::DisassembleCodeSections()
 		unsigned char numOfBytes = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
-			unsigned long long address = imageBase + codeSections[i].virtualAddress + currentIndex;
+			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
-			instructionAddresses.push_back(address);
 			disassembledInstructions.push_back(currentInstruction);
 
 			if (currentInstruction.opcode == NO_MNEMONIC)
@@ -380,7 +376,6 @@ void MainGui::DecompileFunction(int functionIndex)
 	params.skipLowerBound = -1;
 
 	params.allInstructions = disassembledInstructions.data();
-	params.allAddresses = instructionAddresses.data();
 	params.totalNumOfInstructions = disassembledInstructions.size();
 	
 	params.imageBase = imageBase;
@@ -422,16 +417,16 @@ void MainGui::FindAllFunctions()
 
 	functions.push_back({ 0 });
 
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], &instructionAddresses[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
 	{
-		if (instructionAddresses[instructionIndex] >= nextSectionStartAddress)
+		if (disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
 		{
 			codeSectionIndex++;
 			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
 		}
 
 		functions[functionNum].name = initializeJdcStr();
-		sprintfJdc(&(functions[functionNum].name), 0, "func%llX", (*functions[functionNum].addresses) - imageBase);
+		sprintfJdc(&(functions[functionNum].name), 0, "func%llX", functions[functionNum].instructions[0].address - imageBase);
 
 		functionNum++;
 
@@ -462,13 +457,13 @@ void MainGui::UpdateDisassemblyTextCtrl()
 
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		if (instructionAddresses[i] > codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size + imageBase)
+		if (disassembledInstructions[i].address > codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size + imageBase)
 		{
 			codeSectionIndex++;
 		}
 		
 		char addressStr[20] = { 0 };
-		sprintf(addressStr, "%llX", instructionAddresses[i]);
+		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
 		wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[codeSectionIndex].name) + "\t";
 
 		char buffer[255] = { 0 };
@@ -512,10 +507,10 @@ void MainGui::UpdateFunctionsGrid()
 	{
 		functionsGrid->AppendRows(1);
 
-		if (functions[i].addresses)
+		if (functions[i].instructions)
 		{
 			char addressStr[10];
-			sprintf(addressStr, "%llX", *functions[i].addresses);
+			sprintf(addressStr, "%llX", functions[i].instructions[0].address);
 			functionsGrid->SetCellValue(i, 0, wxString(addressStr));
 
 			functionsGrid->SetCellValue(i, 1, wxString(callingConventionStrs[functions[i].callingConvention]));
@@ -535,9 +530,9 @@ void MainGui::GetFunctionSymbols()
 	int numOfFunctions = functions.size();
 	for (int i = 0; i < numOfFunctions; i++)
 	{
-		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, *functions[i].addresses, &functions[i].name))
+		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, functions[i].instructions[0].address, &functions[i].name))
 		{
-			sprintfJdc(&(functions[i].name), 0, "func%llX", (*functions[i].addresses) - imageBase);
+			sprintfJdc(&(functions[i].name), 0, "func%llX", functions[i].instructions[0].address - imageBase);
 			functionsGrid->SetCellValue(i, 2, functions[i].name.buffer);
 		}
 	}

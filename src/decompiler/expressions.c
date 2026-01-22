@@ -49,7 +49,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->addresses[params.startInstructionIndex + 1] + operand->memoryAddress.constDisplacement);
+			sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
@@ -94,7 +94,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (compareRegisters(operand->reg, IP))
 		{
-			return sprintfJdc(result, 0, "0x%llX", params.currentFunc->addresses[params.startInstructionIndex + 1]);
+			return sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address);
 		}
 
 		if (!decompileRegister(params, operand->reg, type, result))
@@ -294,8 +294,8 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 		}
 		else if (compareRegisters(targetReg, AX) && isOpcodeCall(currentInstruction->opcode))
 		{
-			int currentInstructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, params.currentFunc->addresses[i]);
-			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
+			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
+			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			
 			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)

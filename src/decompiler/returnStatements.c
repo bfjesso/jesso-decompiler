@@ -6,7 +6,7 @@
 unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	unsigned long long address = params.currentFunc->addresses[params.startInstructionIndex];
+	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
 
 	if ((params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE) && instruction->opcode == FLD)
 	{
@@ -51,9 +51,9 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (instruction->opcode == JMP_SHORT)
 	{
-		unsigned long long jmpDst = params.currentFunc->addresses[params.startInstructionIndex] + instruction->operands[0].immediate;
+		unsigned long long jmpDst = params.currentFunc->instructions[params.startInstructionIndex].address + instruction->operands[0].immediate;
 
-		int jmpDstIndex = findInstructionByAddress(params.currentFunc->addresses, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+		int jmpDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 		for (int i = jmpDstIndex; i < params.currentFunc->numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
 		{
 			params.startInstructionIndex = i;

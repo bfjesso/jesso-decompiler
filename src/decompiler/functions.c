@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-unsigned char findNextFunction(struct DisassembledInstruction* instructions, unsigned long long* addresses, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
+unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
@@ -24,7 +24,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 				continue;
 			}
 
-			result->addresses = &addresses[i];
 			result->instructions = &instructions[i];
 
 			foundFirstInstruction = 1;
@@ -114,8 +113,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(instructions, addresses, numOfInstructions, i);
-				if (calleeAddress != result->addresses[0]) // check for recursive function
+				unsigned long long calleeAddress = resolveJmpChain(instructions, numOfInstructions, i);
+				if (calleeAddress != result->instructions[0].address) // check for recursive function
 				{
 					result->addressOfReturnFunction = calleeAddress;
 				}
@@ -133,14 +132,14 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 
 		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
 		{
-			unsigned long long jumpAddr = addresses[i] + currentInstruction->operands[0].immediate;
+			unsigned long long jumpAddr = instructions[i].address + currentInstruction->operands[0].immediate;
 			if (jumpAddr > addressToJumpTo)
 			{
 				addressToJumpTo = jumpAddr;
 			}
 		}
 
-		if (addressToJumpTo != 0 && addresses[i] < addressToJumpTo)
+		if (addressToJumpTo != 0 && instructions[i].address < addressToJumpTo)
 		{
 			continue;
 		}
@@ -164,7 +163,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, uns
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || addresses[i + 1] == nextSectionStartAddress)
+		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || instructions[i + 1].address == nextSectionStartAddress)
 		{
 			sortFunctionArguments(result);
 			return 1;
@@ -211,9 +210,9 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 	{
 		int mid = low + (high - low) / 2;
 
-		if (*functions[mid].addresses == address) { return mid; }
+		if (functions[mid].instructions[0].address == address) { return mid; }
 
-		if (*functions[mid].addresses < address) { low = mid + 1; }
+		if (functions[mid].instructions[0].address < address) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 
@@ -221,34 +220,34 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 }
 
 // returns address of final instruction jumped to that isnt a jmp
-unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, unsigned long long* addresses, int numOfInstructions, int startInstructionIndex)
+unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, int numOfInstructions, int startInstructionIndex)
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
 
-	unsigned long long jmpAddress = addresses[startInstructionIndex] + instruction->operands[0].immediate;
+	unsigned long long jmpAddress = instructions[startInstructionIndex].address + instruction->operands[0].immediate;
 	if (instruction->operands[0].type == MEM_ADDRESS)
 	{
 		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
 		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
 		{
-			jmpAddress += addresses[startInstructionIndex + 1];
+			jmpAddress += instructions[startInstructionIndex + 1].address;
 		}
 	}
 	else if (instruction->operands[0].type == REGISTER)
 	{
-		if (!operandToValue(instructions, addresses, startInstructionIndex, &instruction->operands[0], &jmpAddress))
+		if (!operandToValue(instructions, startInstructionIndex, &instruction->operands[0], &jmpAddress))
 		{
 			return 0;
 		}
 	}
 
-	int instructionIndex = findInstructionByAddress(addresses, 0, numOfInstructions - 1, jmpAddress);
+	int instructionIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(instructions[instructionIndex]);
 		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
 		{
-			return resolveJmpChain(instructions, addresses, numOfInstructions, instructionIndex);
+			return resolveJmpChain(instructions, numOfInstructions, instructionIndex);
 		}
 	}
 
@@ -256,15 +255,15 @@ unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions,
 }
 
 // returns index of instruction, -1 if not found
-int findInstructionByAddress(unsigned long long* addresses, int low, int high, unsigned long long address) 
+int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address)
 {
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
 
-		if (addresses[mid] == address) { return mid; }
+		if (instructions[mid].address == address) { return mid; }
 
-		if (addresses[mid] < address) { low = mid + 1; }
+		if (instructions[mid].address < address) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 

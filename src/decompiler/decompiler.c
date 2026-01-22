@@ -257,8 +257,8 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				continue;
 			}
 
-			int currentInstructionIndex = findInstructionByAddress(params.allAddresses, 0, params.totalNumOfInstructions - 1, params.currentFunc->addresses[i]);
-			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.allAddresses, params.totalNumOfInstructions, currentInstructionIndex);
+			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
+			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
 
 			int callNum = 0;
 			for (int j = 0; j < params.currentFunc->numOfReturnedVars; j++)

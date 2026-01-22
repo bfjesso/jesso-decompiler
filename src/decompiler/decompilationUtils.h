@@ -19,7 +19,6 @@ struct DecompilationParameters
 	int skipLowerBound;
 
 	struct DisassembledInstruction* allInstructions;
-	unsigned long long* allAddresses;
 	int totalNumOfInstructions;
 
 	unsigned long long imageBase;

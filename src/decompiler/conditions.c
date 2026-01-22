@@ -18,8 +18,8 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			allJccs[jccCount].jccIndex = i;
 
 			// getting index of instruction jumped to by jcc
-			unsigned long long jccDst = params.currentFunc->addresses[i] + instruction->operands[0].immediate;
-			int jccDstIndex = findInstructionByAddress(params.currentFunc->addresses, 0, params.currentFunc->numOfInstructions - 1, jccDst);
+			unsigned long long jccDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate;
+			int jccDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jccDst);
 			allJccs[jccCount].dstIndex = jccDstIndex;
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
@@ -39,8 +39,8 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 					}
 				}
 
-				unsigned long long jmpDst = params.currentFunc->addresses[firstJmpIndex] + params.currentFunc->instructions[firstJmpIndex].operands[0].immediate;
-				int jmpDstIndex = findInstructionByAddress(params.currentFunc->addresses, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+				unsigned long long jmpDst = params.currentFunc->instructions[firstJmpIndex].address + params.currentFunc->instructions[firstJmpIndex].operands[0].immediate;
+				int jmpDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 				allJccs[jccCount].exitIndex = jmpDstIndex;
 			}
 			else
