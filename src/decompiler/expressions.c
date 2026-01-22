@@ -20,6 +20,8 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
+		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+		
 		if (compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP))
 		{
 			if (operand->memoryAddress.constDisplacement < 0)
@@ -49,11 +51,22 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
+			if (instruction->opcode == LEA) 
+			{
+				sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
+			}
+			else 
+			{
+				sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
+			}
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
-			if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, result))
+			if (instruction->opcode == LEA)
+			{
+				sprintfJdc(result, 0, "0x%llX", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
+			}
+			else
 			{
 				sprintfJdc(result, 0, "*(%s*)(0x%llX)", primitiveTypeStrs[type], operand->memoryAddress.constDisplacement);
 			}
@@ -74,11 +87,25 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 
 			if (operand->memoryAddress.constDisplacement != 0)
 			{
-				sprintfJdc(result, 0, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
+				if (instruction->opcode == LEA)
+				{
+					sprintfJdc(result, 0, "%s + 0x%llX", baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
+				}
+				else
+				{
+					sprintfJdc(result, 0, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
+				}
 			}
 			else
 			{
-				sprintfJdc(result, 0, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr.buffer);
+				if (instruction->opcode == LEA)
+				{
+					sprintfJdc(result, 0, "%s", baseOperandStr.buffer);
+				}
+				else
+				{
+					sprintfJdc(result, 0, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr.buffer);
+				}
 			}
 
 			freeJdcStr(&baseOperandStr);
@@ -600,7 +627,8 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		return 0;
 	}
 
-	if (isOpcodeMov(instruction->opcode)) 
+	if (isOpcodeMov(instruction->opcode) || 
+		(instruction->opcode == LEA && secondOperand->type == MEM_ADDRESS && !compareRegisters(secondOperand->memoryAddress.reg, BP) && !compareRegisters(secondOperand->memoryAddress.reg, SP)))
 	{
 		if (getAssignment) { sprintfJdc(result, 0, " = %s", secondOperandStr.buffer); }
 		else { sprintfJdc(result, 0, "%s", secondOperandStr.buffer); }
