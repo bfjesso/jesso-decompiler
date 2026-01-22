@@ -23,7 +23,7 @@ extern const char* ptrSizeStrs[] =
 	"TBYTE PTR"
 };
 
-unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* isOpcodeInvalid)
+unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes)
 {
 	unsigned char* startPoint = bytes;
 
@@ -59,11 +59,14 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	*isOpcodeInvalid = (disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == o64);
-
 	result->opcode = opcode.mnemonic;
-	result->numOfBytes = (unsigned char)(bytes - startPoint);
 	result->group1Prefix = legacyPrefixes.group1;
+	result->isInvalid = (disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == o64);
+
+	if (numOfBytes) 
+	{
+		*numOfBytes = (unsigned char)(bytes - startPoint);
+	}
 
 	return 1;
 }

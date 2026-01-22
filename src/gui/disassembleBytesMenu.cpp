@@ -60,13 +60,12 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
 	struct DisassembledInstruction result;
-	unsigned char isOpcodeInvalid = 0;
-	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result, &isOpcodeInvalid))
+	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result, 0))
 	{
 		char buffer[255] = { 0 };
 		if (instructionToStr(&result, buffer, 255))
 		{
-			if (isOpcodeInvalid) 
+			if (result.isInvalid)
 			{
 				disassemblyStaticText->SetLabel(wxString(buffer) + wxString(" ; invalid opcode"));
 			}

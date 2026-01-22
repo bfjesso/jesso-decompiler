@@ -338,8 +338,8 @@ void MainGui::DisassembleCodeSections()
 
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
-		unsigned char isOpcodeInvalid = 0;
-		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &isOpcodeInvalid))
+		unsigned char numOfBytes = 0;
+		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
 			unsigned long long address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
@@ -352,7 +352,7 @@ void MainGui::DisassembleCodeSections()
 			}
 
 			instructionNum++;
-			currentIndex += currentInstruction.numOfBytes;
+			currentIndex += numOfBytes;
 		}
 
 		delete[] bytes;
@@ -478,10 +478,10 @@ void MainGui::UpdateDisassemblyTextCtrl()
 			asmStr = wxString(buffer);
 		}
 
-		/*if (isOpcodeInvalid)
+		if (disassembledInstructions[i].isInvalid)
 		{
 			asmStr += " ; invalid opcode";
-		}*/
+		}
 
 		int pos = disassemblyTextCtrl->GetLength() - 1;
 		disassemblyTextCtrl->AppendText(addressInfoStr);
