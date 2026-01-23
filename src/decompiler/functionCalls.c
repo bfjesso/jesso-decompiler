@@ -178,8 +178,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
 	unsigned char hasAccessedCX = 0; // should check other regs too
-
-	int stackArgsFound = 0;
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
@@ -214,7 +212,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			if (decompileOperand(params, &currentInstruction->operands[0], type, &argStr))
 			{
 				sprintfJdc(result, 1, "%s, ", argStr.buffer);
-				stackArgsFound++;
 			}
 
 			freeJdcStr(&argStr);
@@ -231,7 +228,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
 				{
 					sprintfJdc(result, 1, "%s, ", argStr.buffer);
-					stackArgsFound++;
 				}
 
 				freeJdcStr(&argStr);
@@ -249,7 +245,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
 			{
 				sprintfJdc(result, 1, "%s, ", argStr.buffer);
-				stackArgsFound++;
 			}
 
 			freeJdcStr(&argStr);
@@ -261,17 +256,17 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		}
 	}
 
-	if (stackArgsFound != 0)
+	if (result->buffer[strlen(result->buffer) - 1] != '(')
 	{
 		result->buffer[strlen(result->buffer) - 2] = ')';
 		result->buffer[strlen(result->buffer) - 1] = 0;
 	}
 	else
 	{
-		strcat(result->buffer, ")");
+		strcatJdc(result, ")");
 	}
 
-	strcat(result->buffer, ";");
+	strcatJdc(result, ";");
 
 	return 1;
 }
