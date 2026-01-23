@@ -48,6 +48,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 
 			if (currentOperand->type == REGISTER)
 			{
+				if (isRegisterPointer(currentOperand->reg)) { continue; }
+				
 				for(int k = RAX; k < ST0; k++)
 				{
 					if(k == RBP || k == RSP || k == RIP) { continue; }
@@ -74,26 +76,43 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 					}
 				}
 			}
-			else if (isOperandStackArgument(currentOperand))
+			else if (currentOperand->type == MEM_ADDRESS) 
 			{
-				unsigned char alreadyFound = 0;
-				for (int k = 0; k < result->numOfStackArgs; k++)
+				// maybe memoryAddress.regDisplacement should be checked too ?
+				if (currentOperand->memoryAddress.reg == NO_REG || compareRegisters(currentOperand->memoryAddress.reg, IP)) { continue; }
+
+				for (int k = RAX; k < ST0; k++)
 				{
-					if (result->stackArgs[k].stackOffset == currentOperand->memoryAddress.constDisplacement)
+					if (k == RIP) { continue; }
+					
+					if (compareRegisters(currentOperand->memoryAddress.reg, k))
 					{
-						alreadyFound = 1;
+						if ((k == RBP || k == RSP) && currentOperand->memoryAddress.constDisplacement > 0)
+						{
+							if (!getStackArgByOffset(result, currentOperand->memoryAddress.constDisplacement))
+							{
+								result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
+								result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+								result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
+								sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", result->stackArgs[result->numOfStackArgs].stackOffset);
+
+								result->numOfStackArgs++;
+							}
+						}
+						else if (!initializedRegs[k - RAX])
+						{
+							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
+							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->memoryAddress.reg]);
+
+							result->numOfRegArgs++;
+							result->callingConvention = __FASTCALL;
+							initializedRegs[k - RAX] = 1;
+						}
+
 						break;
 					}
-				}
-
-				if (!alreadyFound)
-				{
-					result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
-					result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
-					result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
-					sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", result->stackArgs[result->numOfStackArgs].stackOffset);
-
-					result->numOfStackArgs++;
 				}
 			}
 		}
@@ -321,12 +340,6 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	}
 	
 	return VOID_TYPE;
-}
-
-unsigned char isOperandStackArgument(struct Operand* operand)
-{
-	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement > 0 &&
-		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
 }
 
 unsigned char isOperandLocalVariable(struct Operand* operand)

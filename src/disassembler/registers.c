@@ -103,6 +103,11 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 	return reg1 == reg2;
 }
 
+unsigned char isRegisterPointer(enum Register reg) 
+{
+	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
+}
+
 unsigned char getSizeOfRegister(enum Register reg) // in bytes
 {
 	if (reg >= AL && reg <= R15B) 
