@@ -39,3 +39,5 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy);
 
 static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize);
+
+struct JdcStr initializeJdcStrWithSize(int size);

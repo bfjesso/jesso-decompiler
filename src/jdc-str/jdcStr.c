@@ -190,6 +190,19 @@ struct JdcStr initializeJdcStr()
 	return result;
 }
 
+struct JdcStr initializeJdcStrWithSize(int size)
+{
+	struct JdcStr result = { 0 };
+
+	result.buffer = (char*)calloc(size, sizeof(char));
+	if (result.buffer)
+	{
+		result.bufferSize = size;
+	}
+
+	return result;
+}
+
 struct JdcStr initializeJdcStrWithVal(const char* initStr)
 {
 	struct JdcStr result = { 0 };

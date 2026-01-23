@@ -349,13 +349,14 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					break;
 				}
 
-				buffer[bufferIndex].name = initializeJdcStr();
 				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
 				{
+					buffer[bufferIndex].name = initializeJdcStr();
 					strcpyJdc(&buffer[bufferIndex].name, "");
 				}
 				else // import by name
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
 					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
@@ -420,13 +421,14 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					break;
 				}
 
-				buffer[bufferIndex].name = initializeJdcStr();
 				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
 				{
+					buffer[bufferIndex].name = initializeJdcStr();
 					strcpyJdc(&buffer[bufferIndex].name, "");
 				}
 				else // import by name
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
 					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
