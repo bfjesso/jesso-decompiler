@@ -39,6 +39,10 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		{
 			continue;
 		}
+		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
+		{
+			result->stackFrameSize += currentInstruction->operands[1].immediate;
+		}
 
 		// checking all operands for arguments
 		unsigned char overwrites = 0;
@@ -87,7 +91,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 					
 					if (compareRegisters(currentOperand->memoryAddress.reg, k))
 					{
-						if ((k == RBP || k == RSP) && currentOperand->memoryAddress.constDisplacement > 0)
+						if ((k == RBP && currentOperand->memoryAddress.constDisplacement > 0) || (k == RSP && currentOperand->memoryAddress.constDisplacement > result->stackFrameSize))
 						{
 							if (!getStackArgByOffset(result, currentOperand->memoryAddress.constDisplacement))
 							{
@@ -99,7 +103,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 								result->numOfStackArgs++;
 							}
 						}
-						else if (!initializedRegs[k - RAX])
+						else if (!initializedRegs[k - RAX] && k != RBP && k != RSP)
 						{
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
@@ -340,12 +344,6 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	}
 	
 	return VOID_TYPE;
-}
-
-unsigned char isOperandLocalVariable(struct Operand* operand)
-{
-	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement < 0 &&
-		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
 }
 
 unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result)

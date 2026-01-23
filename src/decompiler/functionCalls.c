@@ -55,7 +55,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 			if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 			{
-				unsigned char reg = currentInstruction->operands[0].reg;
+				enum Register reg = currentInstruction->operands[0].reg;
 
 				if (compareRegisters(reg, callee->regArgs[i].reg))
 				{

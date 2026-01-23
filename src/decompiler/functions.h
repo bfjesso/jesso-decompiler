@@ -54,6 +54,8 @@ struct Function
 
 	enum CallingConvention callingConvention;
 
+	int stackFrameSize;
+
 	struct RegisterVariable regArgs[ST0 - RAX];
 	unsigned char numOfRegArgs;
 
@@ -95,8 +97,6 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr);
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
-
-unsigned char isOperandLocalVariable(struct Operand* operand);
 
 unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 

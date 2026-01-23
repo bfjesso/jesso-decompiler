@@ -201,7 +201,9 @@ static unsigned char getAllLocalVars(struct DecompilationParameters params)
 		for (int j = 0; j < 4; j++)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
-			if (isOperandLocalVariable(currentOperand))
+			if (currentOperand->type == MEM_ADDRESS && 
+				((currentOperand->memoryAddress.constDisplacement < 0 && compareRegisters(currentOperand->memoryAddress.reg, BP)) || 
+					(currentOperand->memoryAddress.constDisplacement < params.currentFunc->stackFrameSize && compareRegisters(currentOperand->memoryAddress.reg, SP))))
 			{
 				long long displacement = currentOperand->memoryAddress.constDisplacement;
 
@@ -220,7 +222,15 @@ static unsigned char getAllLocalVars(struct DecompilationParameters params)
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].stackOffset = (int)displacement;
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name = initializeJdcStr();
-					sprintfJdc(&(params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name), 0, "var%X", -(int)displacement);
+
+					if (displacement > 0) 
+					{
+						sprintfJdc(&(params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name), 0, "var%X", (int)displacement);
+					}
+					else 
+					{
+						sprintfJdc(&(params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name), 0, "var%X", -(int)displacement);
+					}
 
 					params.currentFunc->numOfLocalVars++;
 				}
