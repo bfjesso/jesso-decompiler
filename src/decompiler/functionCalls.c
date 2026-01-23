@@ -232,20 +232,22 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			}
 		}
 
-		// this should be sorted so it comes first in the parameters
+		// checking for CX arg, this should be sorted so it comes first in the parameters
 		int operandNum = 0;
 		if (!hasAccessedCX && doesInstructionModifyRegister(currentInstruction, CX, &operandNum, 0))
 		{
-			unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit);
+			enum PrimitiveType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], params.is64Bit);
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();
-			if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
+			if (decompileOperand(params, &currentInstruction->operands[operandNum], type, &argStr))
 			{
 				sprintfJdc(result, 1, "%s, ", argStr.buffer);
 			}
 
 			freeJdcStr(&argStr);
+
+			hasAccessedCX = 1;
 		}
 
 		if (doesInstructionAccessRegister(currentInstruction, CX, 0))

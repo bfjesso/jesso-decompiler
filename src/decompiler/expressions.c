@@ -126,13 +126,6 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 
 		if (!decompileRegister(params, operand->reg, type, result))
 		{
-			// register argument
-			struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, operand->reg);
-			if (regArg)
-			{
-				return strcpyJdc(result, regArg->name.buffer);
-			}
-
 			return 0;
 		}
 
@@ -371,11 +364,22 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 
 	if (!finished) 
 	{
-		for (int i = 0; i < expressionIndex; i++)
+		// check if register argument
+		struct RegisterVariable* regArg = getRegArgByReg(params.currentFunc, targetReg);
+		if (regArg)
 		{
-			freeJdcStr(&expressions[i]);
+			expressions[expressionIndex] = initializeJdcStr();
+			strcpyJdc(&expressions[expressionIndex], regArg->name.buffer);
+			expressionIndex++;
 		}
-		return 0; 
+		else 
+		{
+			for (int i = 0; i < expressionIndex; i++)
+			{
+				freeJdcStr(&expressions[i]);
+			}
+			return 0;
+		}
 	}
 
 	for (int i = expressionIndex - 1; i >= 0; i--)
