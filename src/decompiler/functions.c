@@ -105,10 +105,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 			unsigned char operandNum = 0;
 			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, &overwrites) && overwrites)
 			{
-				struct Operand* operand = &currentInstruction->operands[getLastOperand(currentInstruction)];
-				if (operand->type == IMMEDIATE) { operand = &currentInstruction->operands[operandNum]; }
-
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, operand, is64Bit);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], is64Bit);
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
@@ -324,6 +321,70 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	}
 	
 	return VOID_TYPE;
+}
+
+unsigned char isOperandStackArgument(struct Operand* operand)
+{
+	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement > 0 &&
+		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
+}
+
+unsigned char isOperandLocalVariable(struct Operand* operand)
+{
+	return operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement < 0 &&
+		(compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP));
+}
+
+unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			*result = instructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else if (operand->memoryAddress.reg == NO_REG)
+		{
+			*result = operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		else
+		{
+			struct Operand baseReg = { 0 };
+			baseReg.type = REGISTER;
+			baseReg.reg = operand->memoryAddress.reg;
+
+			unsigned long long regValue = 0;
+			if (!operandToValue(instructions, startInstructionIndex, &baseReg, &regValue))
+			{
+				return 0;
+			}
+
+			*result = regValue + operand->memoryAddress.constDisplacement;
+		}
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		for (int i = startInstructionIndex - 1; i >= 0; i--)
+		{
+			if (instructions[i].opcode == MOV && compareRegisters(instructions[i].operands[0].reg, operand->reg))
+			{
+				return operandToValue(instructions, i, &(instructions[i].operands[1]), result);
+			}
+		}
+
+		return 0;
+	}
+
+	return 0;
 }
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset)

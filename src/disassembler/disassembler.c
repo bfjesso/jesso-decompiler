@@ -296,3 +296,28 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 
 	return 0;
 }
+
+unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
+{
+	if (op1->type == op2->type)
+	{
+		struct MemoryAddress* m1 = &op1->memoryAddress;
+		struct MemoryAddress* m2 = &op2->memoryAddress;
+
+		switch (op1->type)
+		{
+		case NO_OPERAND:
+			return 1;
+		case SEGMENT:
+			return op1->segment == op2->segment;
+		case REGISTER:
+			return op1->reg == op2->reg;
+		case MEM_ADDRESS:
+			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->segment == m2->segment;
+		case IMMEDIATE:
+			return op1->immediate == op2->immediate;
+		}
+	}
+
+	return 0;
+}

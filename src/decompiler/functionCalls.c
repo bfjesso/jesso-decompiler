@@ -105,12 +105,10 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
-				int operandIndex = getLastOperand(currentInstruction);
-
 				params.startInstructionIndex = i;
 
 				struct JdcStr argStr = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], callee->stackArgs[stackArgsFound].type, &argStr))
+				if (!decompileOperand(params, &currentInstruction->operands[1], callee->stackArgs[stackArgsFound].type, &argStr))
 				{
 					freeJdcStr(&argStr);
 					return 0;

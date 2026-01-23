@@ -96,4 +96,10 @@ struct FuncReturnVariable* findReturnedVar(struct Function* function, char callN
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
 
+unsigned char isOperandStackArgument(struct Operand* operand);
+
+unsigned char isOperandLocalVariable(struct Operand* operand);
+
+unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
+
 static void sortFunctionArguments(struct Function* function);
