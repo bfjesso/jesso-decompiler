@@ -177,6 +177,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
+	unsigned char hasAccessedCX = 0; // should check other regs too
+
 	int stackArgsFound = 0;
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
@@ -209,39 +211,53 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], type, &argStr))
+			if (decompileOperand(params, &currentInstruction->operands[0], type, &argStr))
 			{
-				freeJdcStr(&argStr);
-				return 0;
+				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				stackArgsFound++;
 			}
 
-			sprintfJdc(result, 1, "%s, ", argStr.buffer);
 			freeJdcStr(&argStr);
-
-			stackArgsFound++;
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
-				int operandIndex = getLastOperand(currentInstruction);
-
-				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandIndex], params.is64Bit);
+				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit);
 
 				params.startInstructionIndex = i;
 				struct JdcStr argStr = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[operandIndex], type, &argStr))
+				if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
 				{
-					freeJdcStr(&argStr);
-					return 0;
+					sprintfJdc(result, 1, "%s, ", argStr.buffer);
+					stackArgsFound++;
 				}
 
-				sprintfJdc(result, 1, "%s, ", argStr.buffer);
 				freeJdcStr(&argStr);
+			}
+		}
 
+		// this should be sorted so it comes first in the parameters
+		int operandNum = 0;
+		if (!hasAccessedCX && doesInstructionModifyRegister(currentInstruction, CX, &operandNum, 0))
+		{
+			unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit);
+
+			params.startInstructionIndex = i;
+			struct JdcStr argStr = initializeJdcStr();
+			if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
+			{
+				sprintfJdc(result, 1, "%s, ", argStr.buffer);
 				stackArgsFound++;
 			}
+
+			freeJdcStr(&argStr);
+		}
+
+		if (doesInstructionAccessRegister(currentInstruction, CX, 0))
+		{
+			hasAccessedCX = 1;
 		}
 	}
 
