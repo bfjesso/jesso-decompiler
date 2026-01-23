@@ -373,6 +373,77 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 	return bufferIndex;
 }
 
+int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+
+	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	int bufferIndex = 0;
+
+	if (imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes > 1)
+	{
+		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
+		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
+
+		DWORD importDirectoryTableFileOffset = (DWORD)rvaToFileOffset(file, importDirectoryTableAddress);
+
+		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
+		{
+			IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
+			if (SetFilePointer(file, importDirectoryTableFileOffset + i, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+			if (!ReadFile(file, &importDescriptor, sizeof(importDescriptor), 0, 0)) { return 0; }
+
+			if (!importDescriptor.Characteristics)
+			{
+				break;
+			}
+
+			DWORD importLookupTableFileOffset = (DWORD)rvaToFileOffset(file, importDescriptor.Characteristics);
+
+			int j = 0;
+			while (bufferIndex < bufferLen)
+			{
+				DWORD lookupValue = 0;
+				if (SetFilePointer(file, importLookupTableFileOffset + j, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+				if (!ReadFile(file, &lookupValue, sizeof(lookupValue), 0, 0)) { return 0; }
+
+				if (!lookupValue)
+				{
+					break;
+				}
+
+				buffer[bufferIndex].name = initializeJdcStr();
+				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
+				{
+					strcpyJdc(&buffer[bufferIndex].name, "");
+				}
+				else // import by name
+				{
+					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
+					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
+				}
+
+				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+
+				bufferIndex++;
+
+				j += 8;
+			}
+		}
+	}
+
+	return bufferIndex;
+}
+
 unsigned long long rvaToFileOffset(HANDLE file, unsigned long long rva)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };

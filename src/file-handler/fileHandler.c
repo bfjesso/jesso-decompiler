@@ -195,8 +195,7 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 	
 	if (is64Bit) 
 	{
-		// not implemented ?
-		return 0;
+		return getAllPEImports64(file, buffer, bufferLen);
 	}
 	else 
 	{
