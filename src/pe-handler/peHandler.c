@@ -1,5 +1,8 @@
 #include "peHandler.h"
 
+#include "dbghelp.h"
+#pragma comment(lib, "dbghelp.lib")
+
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64) 
 {
 	DWORD binaryType = 0;
@@ -428,10 +431,51 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 				}
 				else // import by name
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+					char tmp[255] = { 0 };
 					DWORD nameFileOffset = (DWORD)rvaToFileOffset(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
+					if (!ReadFile(file, tmp, 255, 0, 0)) { return 0; }
+
+					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+					if (UnDecorateSymbolName(tmp, buffer[bufferIndex].name.buffer, 255, UNDNAME_NAME_ONLY))
+					{
+						// removing template parameters
+						int nameLen = strlen(buffer[bufferIndex].name.buffer);
+						int k = 0;
+						int openIndex = -1;
+						int openNum = 0;
+						int closeNum = 0;
+						while (buffer[bufferIndex].name.buffer[k] != 0) 
+						{
+							if (buffer[bufferIndex].name.buffer[k] == '<')
+							{
+								if (openIndex == -1) { openIndex = k; }
+								openNum++;
+							}
+							else if (buffer[bufferIndex].name.buffer[k] == '>')
+							{
+								closeNum++;
+
+								if (closeNum == openNum) 
+								{
+									int len = strlen(buffer[bufferIndex].name.buffer + k + 1);
+									memcpy(buffer[bufferIndex].name.buffer + openIndex, buffer[bufferIndex].name.buffer + k + 1, len);
+									memset(buffer[bufferIndex].name.buffer + openIndex + len, 0, nameLen - (openIndex + len));
+
+									openIndex = -1;
+									openNum = 0;
+									closeNum = 0;
+								}
+								
+							}
+
+							k++;
+						}
+					}
+					else 
+					{
+						strcpyJdc(&buffer[bufferIndex].name, tmp);
+					}
 				}
 
 				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
