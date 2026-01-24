@@ -1,15 +1,15 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/clrpicker.h>
-#include <wx/stc/stc.h>
 
 class ColorsMenu : public wxFrame, public Utils
 {
 public:
-	ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl);
+	ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl, wxStyledTextCtrl* dataCtrl);
 
 	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
 	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
+	wxStyledTextCtrl* dataTextCtrl = nullptr;
 
 	wxStaticText* disassemblyLabel;
 	wxStaticText* decompilationLabel;

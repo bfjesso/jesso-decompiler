@@ -9,7 +9,7 @@ public:
 
 	wxChoice* dataTypeChoice = nullptr;
 	wxCheckBox* hexCheckBox = nullptr;
-	wxListBox* dataListBox = nullptr;
+	wxStyledTextCtrl* dataTextCtrl = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
@@ -28,6 +28,16 @@ public:
 		"8-byte int",
 		"float",
 		"double"
+	};
+
+	const int typeSizes[6] =
+	{
+		1,
+		2,
+		4,
+		8,
+		4,
+		8
 	};
 
 	enum ids

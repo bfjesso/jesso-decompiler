@@ -1,6 +1,7 @@
 #pragma once
 #include <wx/wx.h>
 #include <wx/clipbrd.h>
+#include <wx/stc/stc.h>
 
 class Utils
 {
@@ -12,4 +13,8 @@ public:
 	const wxFont codeFont = wxFontInfo(10).FaceName("Cascadia Mono").Bold();
 
 	void CopyToClipboard(const char* txt);
+
+	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
+
+	void ClearStyledTextCtrl(wxStyledTextCtrl* ctrl);
 };

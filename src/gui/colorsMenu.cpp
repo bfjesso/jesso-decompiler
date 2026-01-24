@@ -4,12 +4,13 @@ wxBEGIN_EVENT_TABLE(ColorsMenu, wxFrame)
 EVT_CLOSE(ColorsMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-ColorsMenu::ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
+ColorsMenu::ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl, wxStyledTextCtrl* dataCtrl) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
 	disassemblyTextCtrl = disassemblyCtrl;
 	decompilationTextCtrl = decompilationCtrl;
+	dataTextCtrl = dataCtrl;
 
 	disassemblySizer = new wxBoxSizer(wxVERTICAL);
 	decompilationSizer = new wxBoxSizer(wxVERTICAL);
@@ -70,6 +71,7 @@ void ColorsMenu::ApplyColors()
 	for (int i = 0; i < numberOfDisassemblyColors; i++) 
 	{
 		disassemblyTextCtrl->StyleSetForeground(i, disassemblyColorPickerCtrls[i]->GetColour());
+		dataTextCtrl->StyleSetForeground(i, disassemblyColorPickerCtrls[i]->GetColour());
 	}
 
 	for (int i = 0; i < numberOfDecompColors; i++)

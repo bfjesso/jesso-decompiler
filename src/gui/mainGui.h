@@ -104,10 +104,6 @@ public:
 
 	void ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor);
 
-	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
-
-	void ClearStyledTextCtrl(wxStyledTextCtrl* ctrl);
-
 	wxDECLARE_EVENT_TABLE();
 };
 

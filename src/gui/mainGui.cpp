@@ -15,9 +15,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	
 	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
+	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
 	decompilationTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 300));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
+	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
 	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -47,7 +49,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar = new wxMenuBar();
 	bytesDisassemblerMenu = new BytesDisassembler();
 	dataViewerMenu = new DataViewer();
-	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl);
+	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
 
 	wxMenu* fileMenu = new wxMenu();
 
@@ -880,31 +882,6 @@ void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::Decompilatio
 			break;
 		}
 	}
-}
-
-void MainGui::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl) 
-{
-	ctrl->SetReadOnly(true);
-	ctrl->SetMarginWidth(1, 0);
-	ctrl->StyleSetFont(wxSTC_STYLE_DEFAULT, codeFont);
-	ctrl->StyleSetBackground(wxSTC_STYLE_DEFAULT, gridColor);
-	ctrl->StyleClearAll();
-	ctrl->SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
-	ctrl->SetSelForeground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-	ctrl->SetCaretForeground(textColor);
-	ctrl->SetCaretWidth(2);
-	ctrl->SetWrapMode(wxSTC_WRAP_NONE);
-	ctrl->SetScrollWidthTracking(true);
-	ctrl->SetScrollWidth(1);
-	ctrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
-	ctrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
-}
-
-void MainGui::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
-{
-	ctrl->SetReadOnly(false);
-	ctrl->SetText("");
-	ctrl->SetReadOnly(true);
 }
 
 // Function Properties Menu
