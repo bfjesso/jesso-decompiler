@@ -385,6 +385,15 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					break;
 				}
 			}
+			for (int j = 0; j < params.currentFunc->numOfRegArgs; j++)
+			{
+				if (alreadyFound) { break; }
+				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regArgs[j].reg))
+				{
+					alreadyFound = 1;
+					break;
+				}
+			}
 			if (alreadyFound) 
 			{
 				continue;
