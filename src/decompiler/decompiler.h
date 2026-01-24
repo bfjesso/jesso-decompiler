@@ -16,6 +16,8 @@ static unsigned char getAllLocalVars(struct DecompilationParameters params);
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters params);
 
+static unsigned char getAllRegVars(struct DecompilationParameters params, struct Condition* conditions, int numOfConditions);
+
 static void addIndents(struct JdcStr* result, int numOfIndents);
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result);

@@ -12,6 +12,9 @@ const char* indent = "    ";
 
 unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
+	struct Condition conditions[20] = { 0 };
+	int numOfConditions = getAllConditions(params, conditions);
+	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
 		if (!getAllLocalVars(params)) 
@@ -19,6 +22,10 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			return 0;
 		}
 		if (!getAllReturnedVars(params)) 
+		{
+			return 0;
+		}
+		if (!getAllRegVars(params, conditions, numOfConditions))
 		{
 			return 0;
 		}
@@ -41,14 +48,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
-	struct Condition conditions[20] = { 0 };
-	int numOfConditions = getAllConditions(params, conditions);
-
-	unsigned char isConditionEmpty = 0; // used to check if there is an empty condition that should be removed
 	unsigned char numOfIndents = 1;
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
 	int originalIndex = -1;
-
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
@@ -62,26 +64,10 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			{
 				numOfIndents--;
 
-				//if (isConditionEmpty)
-				//{
-				//	// remove the condition and the {
-				//	numOfLinesDecompiled--;
-				//	resultBuffer[numOfLinesDecompiled].line[0] = 0;
-				//	numOfLinesDecompiled--;
-				//	resultBuffer[numOfLinesDecompiled].line[0] = 0;
-				//}
-				//else
-				//{
-				//	strcpy(resultBuffer[numOfLinesDecompiled].line, "}");
-				//	resultBuffer[numOfLinesDecompiled].indents = numOfIndents;
-				//	numOfLinesDecompiled++;
-				//}
-
 				addIndents(result, numOfIndents);
 				strcatJdc(result, "}\n");
 
 				isInUnreachableState = 0;
-				isConditionEmpty = 0;
 			}
 		}
 
@@ -96,7 +82,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				addIndents(result, numOfIndents);
 				strcatJdc(result, "{\n");
 				
-				isConditionEmpty = 1;
 				isInUnreachableState = 0;
 			}
 			else
@@ -126,7 +111,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			if (decompileImportCall(params, importIndex, result))
 			{
 				strcatJdc(result, "\n");
-				isConditionEmpty = 0;
 			}
 			else
 			{
@@ -139,7 +123,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			if (decompileFunctionCall(params, callee, result))
 			{
 				strcatJdc(result, "\n");
-				isConditionEmpty = 0;
 			}
 			else
 			{
@@ -152,20 +135,18 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			if (decompileReturnStatement(params, result))
 			{
 				strcatJdc(result, "\n");
-				isConditionEmpty = 0;
 			}
 			else 
 			{
 				return 0;
 			}
 		}
-		else if (checkForAssignment(currentInstruction))
+		else if (checkForAssignment(params))
 		{
 			addIndents(result, numOfIndents);
 			if (decompileAssignment(params, result))
 			{
 				strcatJdc(result, ";\n");
-				isConditionEmpty = 0;
 			}
 			else
 			{
@@ -187,7 +168,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				strcatJdc(result, "}\n");
 
 				isInUnreachableState = 0;
-				isConditionEmpty = 0;
 			}
 			else 
 			{
@@ -371,6 +351,69 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	return 1;
 }
 
+// right now this only checks for registers that are modified in a condition
+static unsigned char getAllRegVars(struct DecompilationParameters params, struct Condition* conditions, int numOfConditions)
+{
+	int isInCondition = 0;
+	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	{
+		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+
+		for (int j = 0; j < numOfConditions; j++)
+		{
+			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
+			{
+				isInCondition = 0;
+				break;
+			}
+		}
+
+		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
+		if (conditionIndex != -1)
+		{
+			isInCondition = 1;
+		}
+
+		if (isInCondition && currentInstruction->operands[0].type == REGISTER)
+		{
+			int alreadyFound = 0;
+			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+			{
+				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regVars[j].reg))
+				{
+					alreadyFound = 1;
+					break;
+				}
+			}
+			if (alreadyFound) 
+			{
+				continue;
+			}
+			
+			if (doesInstructionModifyOperand(currentInstruction, 0, 0))
+			{
+				struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
+				if (newRegVars)
+				{
+					params.currentFunc->regVars = newRegVars;
+				}
+				else
+				{
+					return 0;
+				}
+
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
+				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[currentInstruction->operands[0].reg]);
+				params.currentFunc->numOfRegVars++;
+			}
+		}
+	}
+
+	return 1;
+}
+
 static void addIndents(struct JdcStr* result, int numOfIndents)
 {
 	for (int i = 0; i < numOfIndents; i++)
@@ -430,6 +473,14 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
 		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name.buffer))
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < function->numOfRegVars; i++)
+	{
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer))
 		{
 			return 0;
 		}

@@ -354,10 +354,9 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 			struct JdcStr assignmentExpression = initializeJdcStr();
 			for (int i = conditions[conditionIndex].exitIndex; i < conditions[conditionIndex].jccIndex; i++)
 			{
-				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
-				if (checkForAssignment(currentInstruction))
+				params.startInstructionIndex = i;
+				if (checkForAssignment(params))
 				{
-					params.startInstructionIndex = i;
 					if (decompileAssignment(params, &assignmentExpression))
 					{
 						break;

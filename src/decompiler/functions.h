@@ -58,11 +58,14 @@ struct Function
 	struct StackVariable* stackArgs;
 	unsigned char numOfStackArgs;
 
-	unsigned char hasGottenLocalVars; // returnedVars count for this too
+	unsigned char hasGottenLocalVars;
+
 	struct StackVariable* localVars;
 	unsigned char numOfLocalVars;
 	struct ReturnedVariable* returnedVars;
 	unsigned char numOfReturnedVars;
+	struct RegisterVariable* regVars;
+	unsigned char numOfRegVars;
 
 	struct DisassembledInstruction* instructions;
 	unsigned short numOfInstructions;

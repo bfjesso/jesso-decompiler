@@ -124,12 +124,15 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			return sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address);
 		}
 
-		if (!decompileRegister(params, operand->reg, type, result))
+		for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
 		{
-			return 0;
+			if (compareRegisters(operand->reg, params.currentFunc->regVars[i].reg)) 
+			{
+				return strcpyJdc(result, params.currentFunc->regVars[i].name.buffer);
+			}
 		}
 
-		return 1;
+		return decompileRegister(params, operand->reg, type, result);
 	}
 
 	return 0;

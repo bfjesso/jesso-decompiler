@@ -1,11 +1,21 @@
 #include "expressions.h"
 #include "assignment.h"
 
-unsigned char checkForAssignment(struct DisassembledInstruction* instruction)
+unsigned char checkForAssignment(struct DecompilationParameters params)
 {
-	if (instruction->operands[0].type == MEM_ADDRESS && !compareRegisters(instruction->operands[0].memoryAddress.reg, SP) && doesInstructionModifyOperand(instruction, 0, 0))
+	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+
+	if (currentInstruction->operands[0].type == MEM_ADDRESS && !compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP) && doesInstructionModifyOperand(currentInstruction, 0, 0))
 	{
 		return 1;
+	}
+
+	for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
+	{
+		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0))
+		{
+			return 1;
+		}
 	}
 
 	return 0;

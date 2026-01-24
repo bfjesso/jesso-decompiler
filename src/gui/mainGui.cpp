@@ -667,7 +667,13 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		ColorAllStrs(text, function->localVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
-	// return vars
+	// reg vars
+	for (int i = 0; i < function->numOfRegVars; i++)
+	{
+		ColorAllStrs(text, function->regVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+	}
+
+	// returned vars
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
 		ColorAllStrs(text, function->returnedVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);

@@ -63,7 +63,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 				return 1;
 			}
 
-			if (checkForAssignment(&(params.currentFunc->instructions[i])) || doesInstructionModifyReturnRegister(params))
+			if (checkForAssignment(params) || doesInstructionModifyReturnRegister(params))
 			{
 				return 0;
 			}
