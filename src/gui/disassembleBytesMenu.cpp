@@ -10,7 +10,7 @@ BytesDisassembler::BytesDisassembler() : wxFrame(nullptr, MainWindowID, "Bytes D
 {
 	SetOwnBackgroundColour(backgroundColor);
 	
-	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(200, 25));
+	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(300, 25));
 	bytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	bytesTextCtrl->SetOwnForegroundColour(textColor);
 	bytesTextCtrl->SetToolTip("Bytes to disassemble");
@@ -25,25 +25,23 @@ BytesDisassembler::BytesDisassembler() : wxFrame(nullptr, MainWindowID, "Bytes D
 	disassemblyStaticText = new wxStaticText(this, wxID_ANY, "Disassebled bytes");
 	disassemblyStaticText->SetOwnForegroundColour(textColor);
 
-	// ---------------------
-
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(bytesTextCtrl, 0, wxALL, 10);
+	row1Sizer->Add(bytesTextCtrl, 1, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
 
-	row2Sizer->Add(disassembleButton, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
-	row2Sizer->Add(is64BitModeCheckBox, 0, wxBOTTOM | wxRIGHT, 10);
+	row2Sizer->Add(disassembleButton, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(is64BitModeCheckBox, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
 
-	row3Sizer->Add(disassemblyStaticText, 0, wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	row3Sizer->Add(disassemblyStaticText, 1, wxLEFT | wxBOTTOM | wxRIGHT | wxCENTER, 10);
 
-	vSizer->Add(row1Sizer, 0, wxEXPAND);
-	vSizer->Add(row2Sizer, 0, wxEXPAND);
-	vSizer->Add(row3Sizer, 0, wxEXPAND);
+	vSizer->Add(row1Sizer, 1, wxCENTER);
+	vSizer->Add(row2Sizer, 1, wxCENTER);
+	vSizer->Add(row3Sizer, 1, wxCENTER);
 
-	SetSizer(vSizer);
+	SetSizerAndFit(vSizer);
 }
 
 void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
