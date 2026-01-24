@@ -66,12 +66,22 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 						}
 						else if (!initializedRegs[k - RAX])
 						{
+							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
+							if (newRegArgs) 
+							{
+								result->regArgs = newRegArgs;
+							}
+							else 
+							{
+								return 0;
+							}
+
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->reg]);
-
 							result->numOfRegArgs++;
+
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k - RAX] = 1;
 						}
@@ -95,22 +105,41 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 						{
 							if (!getStackArgByOffset(result, currentOperand->memoryAddress.constDisplacement))
 							{
+								struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
+								if (newStackArgs)
+								{
+									result->stackArgs = newStackArgs;
+								}
+								else
+								{
+									return 0;
+								}
+								
 								result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
 								result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 								result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
 								sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", result->stackArgs[result->numOfStackArgs].stackOffset);
-
 								result->numOfStackArgs++;
 							}
 						}
 						else if (!initializedRegs[k - RAX] && k != RBP && k != RSP)
 						{
+							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
+							if (newRegArgs)
+							{
+								result->regArgs = newRegArgs;
+							}
+							else
+							{
+								return 0;
+							}
+
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
 							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->memoryAddress.reg]);
-
 							result->numOfRegArgs++;
+
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k - RAX] = 1;
 						}
@@ -221,6 +250,33 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	}
 
 	return 1;
+}
+
+void freeFunction(struct Function* function) 
+{
+	freeJdcStr(&function->name);
+
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		freeJdcStr(&function->regArgs[i].name);
+	}
+	for (int i = 0; i < function->numOfStackArgs; i++)
+	{
+		freeJdcStr(&function->stackArgs[i].name);
+	}
+	for (int i = 0; i < function->numOfLocalVars; i++)
+	{
+		freeJdcStr(&function->localVars[i].name);
+	}
+	for (int i = 0; i < function->numOfReturnedVars; i++)
+	{
+		freeJdcStr(&function->returnedVars[i].name);
+	}
+
+	free(function->regArgs);
+	free(function->stackArgs);
+	free(function->localVars);
+	free(function->returnedVars);
 }
 
 // returns index of function, -1 if not found

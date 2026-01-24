@@ -44,29 +44,28 @@ struct ReturnedVariable // variables that contain the reuturn value of another f
 
 struct Function
 {
-	struct DisassembledInstruction* instructions;
-	unsigned short numOfInstructions;
-
-	struct JdcStr name;
-
 	enum PrimitiveType returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
 
 	enum CallingConvention callingConvention;
 
+	struct JdcStr name;
+
 	int stackFrameSize;
 
-	struct RegisterVariable regArgs[ST0 - RAX];
+	struct RegisterVariable* regArgs;
 	unsigned char numOfRegArgs;
-
-	struct StackVariable stackArgs[6];
+	struct StackVariable* stackArgs;
 	unsigned char numOfStackArgs;
 
 	unsigned char hasGottenLocalVars; // returnedVars count for this too
-	struct StackVariable localVars[100];
+	struct StackVariable* localVars;
 	unsigned char numOfLocalVars;
-	struct ReturnedVariable returnedVars[100];
+	struct ReturnedVariable* returnedVars;
 	unsigned char numOfReturnedVars;
+
+	struct DisassembledInstruction* instructions;
+	unsigned short numOfInstructions;
 };
 
 #ifdef __cplusplus
@@ -77,6 +76,8 @@ extern "C"
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
+
+	void freeFunction(struct Function* function);
 
 #ifdef __cplusplus
 }

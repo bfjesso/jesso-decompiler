@@ -245,23 +245,7 @@ void MainGui::ClearData()
 	
 	for (int i = 0; i < functions.size(); i++)
 	{
-		freeJdcStr(&functions[i].name);
-		for (int j = 0; j < functions[i].numOfRegArgs; j++)
-		{
-			freeJdcStr(&functions[i].regArgs[j].name);
-		}
-		for (int j = 0; j < functions[i].numOfStackArgs; j++)
-		{
-			freeJdcStr(&functions[i].stackArgs[j].name);
-		}
-		for (int j = 0; j < functions[i].numOfLocalVars; j++)
-		{
-			freeJdcStr(&functions[i].localVars[j].name);
-		}
-		for (int j = 0; j < functions[i].numOfReturnedVars; j++)
-		{
-			freeJdcStr(&functions[i].returnedVars[j].name);
-		}
+		freeFunction(&functions[i]);
 	}
 
 	functions.clear();

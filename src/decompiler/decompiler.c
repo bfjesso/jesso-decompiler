@@ -14,8 +14,15 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 {
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
-		getAllLocalVars(params);
-		getAllReturnedVars(params);
+		if (!getAllLocalVars(params)) 
+		{
+			return 0;
+		}
+		if (!getAllReturnedVars(params)) 
+		{
+			return 0;
+		}
+
 		params.currentFunc->hasGottenLocalVars = 1;
 	}
 	
@@ -219,6 +226,16 @@ static unsigned char getAllLocalVars(struct DecompilationParameters params)
 
 				if (!isAlreadyFound)
 				{
+					struct StackVariable* newLocalVars = (struct StackVariable*)realloc(params.currentFunc->localVars, sizeof(struct StackVariable) * (params.currentFunc->numOfLocalVars + 1));
+					if (newLocalVars)
+					{
+						params.currentFunc->localVars = newLocalVars;
+					}
+					else
+					{
+						return 0;
+					}
+					
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].stackOffset = (int)displacement;
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name = initializeJdcStr();
@@ -288,6 +305,16 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				}
 				else
 				{
+					struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
+					if (newReturnedVars)
+					{
+						params.currentFunc->returnedVars = newReturnedVars;
+					}
+					else
+					{
+						return 0;
+					}
+					
 					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = params.functions[calleIndex].returnType;
 					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
 					sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.functions[calleIndex].name.buffer, callNum);
@@ -315,6 +342,16 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 								returnType = getTypeOfOperand(params.currentFunc->instructions[k].opcode, &(params.currentFunc->instructions[k].operands[operandNum]), params.is64Bit);
 								break;
 							}
+						}
+
+						struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
+						if (newReturnedVars)
+						{
+							params.currentFunc->returnedVars = newReturnedVars;
+						}
+						else
+						{
+							return 0;
 						}
 
 						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
