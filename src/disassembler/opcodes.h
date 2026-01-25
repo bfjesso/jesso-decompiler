@@ -17,7 +17,8 @@ enum OperandCode
 	ST0_CODE, ST1_CODE, ST2_CODE, ST3_CODE, ST4_CODE, ST5_CODE, ST6_CODE, ST7_CODE,
 	Eb, Ev, Ew, Ep, Ey,
 	Gb, Gd, Gv, Gz, Gw, Gy,
-	M, Mw, Md, Mp, Ma, Mq, Mt, Mps, Mpd, My, Mx,
+	By,
+	M, Mw, Md, Mp, Ma, Mq, Mt, Mps, Mpd, Mdq, My, Mx,
 	Ib, Iv, Iz, Iw,
 	Yb, Yv, Yz,
 	Xb, Xv, Xz,
@@ -32,9 +33,9 @@ enum OperandCode
 	Pd, Ppi, Pq,
 	Qd, Qpi, Qq,
 	Ups, Upd, Udq, Uq, Ux,
-	Vps, Vpd, Vx, Vss, Vsd, Vdq, Vy, Vq,
-	Wps, Wpd, Wss, Wsd, Wdq, Wx, Wq,
-	Hps, Hpd, Hx, Hss, Hsd, Hdq, Hq,
+	Vps, Vpd, Vx, Vss, Vsd, Vdq, Vqq, Vy, Vq,
+	Wps, Wpd, Wss, Wsd, Wdq, Wqq, Wd, Wx, Wq,
+	Hps, Hpd, Hx, Hss, Hsd, Hdq, Hqq, Hq,
 
 	A_BYTE, // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
 	NO_OPERAND_CODE

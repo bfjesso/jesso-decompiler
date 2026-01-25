@@ -560,7 +560,7 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
-	{                                                                                                            // 0x98
+	{                                                                                                            // 0x99
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ FMADD132SS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic fmadd132sd
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -622,6 +622,12 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 	},
 	{                                                                                                            // 0xA8
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ FMADD213PS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic fmadd218pd
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+	},
+	{                                                                                                            // 0xA9
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ FMADD213SS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic fmadd218sd
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
@@ -681,6 +687,12 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xB8
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ FMADD231PS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic fmadd218pd
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+	},
+	{                                                                                                            // 0xB9
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ FMADD231SS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic fmadd218sd
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -781,31 +793,31 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0xDA; not defined
 	{                                                                                                            // 0xDB
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VAESIMC, -1, Vdq, Wdq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESIMC, -1, Vdq, Wdq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xDC
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VAESENC, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESENC, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xDD
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VAESENCLAST, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESENCLAST, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xDE
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VAESDEC, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESDEC, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xDF
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VAESDECLAST, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESDECLAST, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
@@ -855,7 +867,7 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ ADCX, -1, Gy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ ADOX, -1, Gy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MULX, -1, By, Gy, rDX_CODE, Ey, NO_SUPERSCRIPT },
+		{ MULX, -1, By, Gy, rDX, Ey, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0xF7
 		{ BEXTR, -1, Gy, Ey, By, NO_OPERAND_CODE, NO_SUPERSCRIPT },

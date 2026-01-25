@@ -226,6 +226,11 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, legPrefixes->group3 != OSO && is64BitMode ? 8 : 4, 0, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case By:
+			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ((legPrefixes->group3 != OSO && is64BitMode ? RAX : EAX) + vexPrefix->vvvv);
+			break;
 		case M:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, is64BitMode ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -258,6 +263,10 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 		case Mpd:
 		case Mx:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Mdq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case My:
@@ -411,6 +420,10 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Vqq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_REGISTER, 32, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Wps:
 		case Wpd:
 		case Wx:
@@ -418,10 +431,18 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, opcode->opcodeSuperscript == f256 ? 32 : 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Wd:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Wss:
 		case Wsd:
 		case Wdq:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 16, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
+		case Wqq:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 32, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
 		case Hps:
@@ -438,6 +459,11 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = (XMM0 + vexPrefix->vvvv);
+			break;
+		case Hqq:
+			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
+			currentOperand->type = REGISTER;
+			currentOperand->reg = (YMM0 + vexPrefix->vvvv);
 			break;
 		case A_BYTE:
 			(*bytesPtr)++;

@@ -5,6 +5,7 @@
 
 #include "oneByteOpcodeMap.h"
 #include "twoByteOpcodeMap.h"
+#include "threeByteOpcodeMaps.h"
 #include "extendedOpcodeMap.h"
 #include "escapeOpcodeMaps.h"
 
@@ -13,27 +14,43 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
 	unsigned char legPrefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
+	unsigned char prefixIndex = legPrefixByte == 0x66 ? 1 : legPrefixByte == 0xF3 ? 2 : legPrefixByte == 0xF2 ? 3 : 0;
 	unsigned char opcodeByte = 0;
+	unsigned char escapeToCoprocessor = 0;
 
 	// check the opcode map in use
 	if ((*bytesPtr)[0] == 0x0F)
 	{
-		if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
+		if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x38) // sequence: 0x0F 0x38 opcode
+		{
+			opcodeByte = (*bytesPtr)[2];
+			
+			if (prefixIndex != 0)
+			{
+				legPrefixes->group1 = NO_PREFIX;
+			}
+
+			if (threeByteOpcodeMap38[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
+			{
+				*result = threeByteOpcodeMap38[opcodeByte][0];
+			}
+			else
+			{
+				*result = threeByteOpcodeMap38[opcodeByte][prefixIndex];
+			}
+
+			(*bytesPtr) += 3;
+		}
+		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
 		{
 			opcodeByte = (*bytesPtr)[2];
 			//result.opcode = &threeByteMap2[opcodeByte];
 			(*bytesPtr) += 3;
 		}
-		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x38) // sequence: 0x0F 0x38 opcode
-		{
-			opcodeByte = (*bytesPtr)[2];
-			//result.opcode = &threeByteMap[opcodeByte];
-			(*bytesPtr) += 3;
-		}
 		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
 			opcodeByte = (*bytesPtr)[1];
-			unsigned char prefixIndex = legPrefixByte == 0x66 ? 1 : legPrefixByte == 0xF3 ? 2 : legPrefixByte == 0xF2 ? 3 : 0;
+
 			if (prefixIndex != 0)
 			{
 				legPrefixes->group1 = NO_PREFIX;
@@ -76,6 +93,8 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				result->mnemonic = CDQE;
 			}
 		}
+
+		escapeToCoprocessor = opcodeByte > 0xD7 && opcodeByte < 0xE0;
 
 		(*bytesPtr)++;
 	}
@@ -198,7 +217,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		(*modRMByteRef) = modRMByte;
 		(*bytesPtr)++;
 	}
-	else if (opcodeByte > 0xD7 && opcodeByte < 0xE0) // escape to coprocessor instruction set
+	else if (escapeToCoprocessor) // escape to coprocessor instruction set
 	{
 		if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
