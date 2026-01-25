@@ -44,7 +44,21 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
 		{
 			opcodeByte = (*bytesPtr)[2];
-			//result.opcode = &threeByteMap2[opcodeByte];
+
+			if (prefixIndex != 0)
+			{
+				legPrefixes->group1 = NO_PREFIX;
+			}
+
+			if (threeByteOpcodeMap3A[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
+			{
+				*result = threeByteOpcodeMap3A[opcodeByte][0];
+			}
+			else
+			{
+				*result = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
+			}
+
 			(*bytesPtr) += 3;
 		}
 		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode

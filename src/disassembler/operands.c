@@ -186,6 +186,10 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 1, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
 			break;
+		case Ed:
+			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
+			hasGotModRM = 1;
+			break;
 		case Ev:
 			if (!handleModRM(bytesPtr, maxBytesAddr, hasGotModRM, modRMByteRef, GET_MEM_ADDRESS, legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, legPrefixes->group4 == ASO, is64BitMode, rexPrefix, currentOperand)) { return 0; }
 			hasGotModRM = 1;
@@ -464,6 +468,11 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			if (!vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
 			currentOperand->reg = (YMM0 + vexPrefix->vvvv);
+			break;
+		case Lx:
+			currentOperand->type = REGISTER;
+			char immediate = (char)getUIntFromBytes(bytesPtr, 1) & 0b11110000; // upper 4 bits
+			currentOperand->reg = opcode->opcodeSuperscript == f256 ? (YMM0 + immediate) : (XMM0 + immediate);
 			break;
 		case A_BYTE:
 			(*bytesPtr)++;

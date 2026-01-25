@@ -15,7 +15,7 @@ enum OperandCode
 	rAX_r8, rCX_r9, rDX_r10, rBX_r11, rSP_r12, rBP_r13, rSI_r14, rDI_r15,
 	AL_R8B, CL_R9B, DL_R10B, BL_R11B, AH_R12B, CH_R13B, DH_R14B, BH_R15B,
 	ST0_CODE, ST1_CODE, ST2_CODE, ST3_CODE, ST4_CODE, ST5_CODE, ST6_CODE, ST7_CODE,
-	Eb, Ev, Ew, Ep, Ey,
+	Eb, Ed, Ev, Ew, Ep, Ey,
 	Gb, Gd, Gv, Gz, Gw, Gy,
 	By,
 	M, Mw, Md, Mp, Ma, Mq, Mt, Mps, Mpd, Mdq, My, Mx,
@@ -36,6 +36,7 @@ enum OperandCode
 	Vps, Vpd, Vx, Vss, Vsd, Vdq, Vqq, Vy, Vq,
 	Wps, Wpd, Wss, Wsd, Wdq, Wqq, Wd, Wx, Wq,
 	Hps, Hpd, Hx, Hss, Hsd, Hdq, Hqq, Hq,
+	Lx,
 
 	A_BYTE, // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
 	NO_OPERAND_CODE

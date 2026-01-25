@@ -132,6 +132,25 @@ extern const char* mnemonicStrs[] =
 	"MULX",
 	"BEXTR",
 	"SHLX", "SARX", "SHRX",
+
+	"PERMQ", "PERMPD",
+	"PBLENDD", "BLENDPS", "BLENDPD", "PBLENDW",
+	"PERM2F128", "PERM2I128",
+	"ROUNDPS", "ROUNDPD", "ROUNDSS", "ROUNDSD",
+	"PALIGNR",
+	"PEXTRB", "PEXTRD",
+	"INSERTPS", "EXTRACTPS",
+	"INSERTF128", "EXTRACTF128",
+	"INSERTI128", "EXTRACTI128",
+	"CVTPS2PH",
+	"PINSRB", "PINSRD",
+	"DPPS", "DPPD",
+	"MPSADBW",
+	"PCLMULQDQ",
+	"PCMPESTRM", "PCMPESTRI", "PCMPISTRM", "PCMPISTRI",
+	"SHA1RNDS4",
+	"AESKEYGEN",
+	"RORX",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)
