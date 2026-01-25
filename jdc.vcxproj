@@ -213,6 +213,7 @@
     <ClInclude Include="src\disassembler\operands.h" />
     <ClInclude Include="src\disassembler\prefixes.h" />
     <ClInclude Include="src\disassembler\registers.h" />
+    <ClInclude Include="src\disassembler\threeByteOpcodeMaps.h" />
     <ClInclude Include="src\disassembler\twoByteOpcodeMap.h" />
     <ClInclude Include="src\elf-handler\elfHandler.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
