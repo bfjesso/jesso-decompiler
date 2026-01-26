@@ -395,15 +395,14 @@ void MainGui::DecompileFunction(int functionIndex)
 
 void MainGui::FindAllFunctions() 
 {
-	int functionNum = 0;
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 	int codeSectionIndex = 1;
 	unsigned long long nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
 
-	functions.push_back({ 0 });
-
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &functions[functionNum], &instructionIndex, is64Bit))
+	struct Function currentFunction;
+	memset(&currentFunction, 0, sizeof(struct Function));
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &currentFunction, &instructionIndex, is64Bit))
 	{
 		if (disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
 		{
@@ -411,15 +410,12 @@ void MainGui::FindAllFunctions()
 			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
 		}
 
-		functions[functionNum].name = initializeJdcStr();
-		sprintfJdc(&(functions[functionNum].name), 0, "func%llX", functions[functionNum].instructions[0].address - imageBase);
+		currentFunction.name = initializeJdcStr();
+		sprintfJdc(&currentFunction.name, 0, "func%llX", currentFunction.instructions[0].address - imageBase);
 
-		functionNum++;
-
-		functions.push_back({ 0 });
+		functions.push_back(currentFunction);
+		memset(&currentFunction, 0, sizeof(struct Function));
 	}
-
-	functions.pop_back(); // remove last empty one
 
 	if (functions.size() > 0) 
 	{
