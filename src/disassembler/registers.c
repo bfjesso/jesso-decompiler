@@ -22,8 +22,8 @@ extern const char* registerStrs[] =
 	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
 	"ST(0)", "ST(1)", "ST(2)", "ST(3)", "ST(4)", "ST(5)", "ST(6)", "ST(7)",
 	"MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
-	"XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7",
-	"YMM0", "YMM1", "YMM2", "YMM3", "YMM4", "YMM5", "YMM6", "YMM7",
+	"XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7", "XMM8", "XMM9", "XMM10", "XMM11", "XMM12", "XMM13", "XMM14", "XMM15",
+	"YMM0", "YMM1", "YMM2", "YMM3", "YMM4", "YMM5", "YMM6", "YMM7", "YMM8", "YMM9", "YMM10", "YMM11", "YMM12", "YMM13", "YMM14", "YMM15",
 
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
@@ -147,6 +147,10 @@ enum Register extendRegister(enum Register reg)
 	if (reg >= AL && reg <= BH) 
 	{
 		return (enum Register)(reg + (R8B - AL));
+	}
+	else if((reg >= XMM0 && reg <= XMM7) || (reg >= YMM0 && reg <= YMM7))
+	{
+		return (enum Register)(reg + (XMM8 - XMM0));
 	}
 	else 
 	{
