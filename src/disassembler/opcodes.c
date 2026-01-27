@@ -137,7 +137,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				extendedOpcode = &extendedOpcodeMapGroup7With11B[reg][rm];
+				extendedOpcode = &extendedOpcodeMapGroup711B[reg][rm];
+			}
+			else 
+			{
+				extendedOpcode = &extendedOpcodeMapGroup7[reg];
 			}
 		}
 		else if (result->extensionGroup == 8)
@@ -157,6 +161,26 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 					extendedOpcode = &extendedOpcodeMapGroup911B[reg];
 				}
 			}
+			else 
+			{
+				if (legPrefixByte == 0x66) 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup966[reg];
+				}
+				else if (legPrefixByte == 0xF3)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup9F3[reg];
+				}
+				else 
+				{
+					extendedOpcode = &extendedOpcodeMapGroup9[reg];
+
+					if(extendedOpcode->mnemonic == CMPXCH8B && rexPrefix->w)
+					{
+						extendedOpcode = &alternateCMPXCH;
+					}
+				}
+			}
 		}
 		else if (result->extensionGroup == 11)
 		{
@@ -167,6 +191,34 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			else if (opcodeByte == 0xC7)
 			{
 				extendedOpcode = &extendedOpcodeMapGroup11C7[reg];
+			}
+		}
+		else if (result->extensionGroup == 12)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0x66)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup126611B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1211B[reg];
+				}
+			}
+		}
+		else if (result->extensionGroup == 13)
+		{
+			if (mod == 0b11)
+			{
+				if (legPrefixByte == 0x66)
+				{
+					extendedOpcode = &extendedOpcodeMapGroup136611B[reg];
+				}
+				else
+				{
+					extendedOpcode = &extendedOpcodeMapGroup1311B[reg];
+				}
 			}
 		}
 		else if (result->extensionGroup == 14)
@@ -207,6 +259,10 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			{
 				extendedOpcode = &extendedOpcodeMapGroup16[reg];
 			}
+		}
+		else if (result->extensionGroup == 17)
+		{
+			extendedOpcode = &extendedOpcodeMapGroup17[reg];
 		}
 
 		if (extendedOpcode == 0)

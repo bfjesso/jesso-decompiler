@@ -4,8 +4,6 @@
 // Intel 64 and IA-32 Architectures Software Developer’s Manuals:
 //	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
 
-// This file isn't complete yet
-
 // Appendix A: A.4.2 table A-6
 
 // any NO_OPERAND_CODE means that the operand code will be what is in the regular opcode map
@@ -73,20 +71,32 @@ const struct Opcode extendedOpcodeMapThroughGroupSix[7][8] = // [group index][Mo
 		{ PUSH, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC }
 	},
-	{	// group 6     ! This is not implemented yet
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
-		{ NO_MNEMONIC },
+	{	// group 6
+		{ SLDT, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Rv/Mw, leaving Ew
+		{ STR, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Rv/Mw, leaving Ew
+		{ LLDT, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ LTR, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VERR, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VERW, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC }
 	}
 };
 
-// Group 7 where Mod 7,6 is 11B
-const struct Opcode extendedOpcodeMapGroup7With11B[8][8] =  // [ModR/M bits 3-5][ModR/M bits 0-2]
+// group 7 where Mod 7,6 is not 11B
+const struct Opcode extendedOpcodeMapGroup7[8] = // [ModR/M bits 3-5]
+{
+	{ SGDT, -1, Mv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Ms, leaving Mv
+	{ SIDT, -1, Mv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Ms, leaving Mv
+	{ LGDT, -1, Mv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Ms, leaving Mv
+	{ LIDT, -1, Mv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Ms, leaving Mv
+	{ SMSW, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Mw/Rv, leaving Ew
+	{ NO_MNEMONIC },
+	{ LMSW, -1, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ INVLPG, -1, Mb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// group 7 where Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup711B[8][8] =  // [ModR/M bits 3-5][ModR/M bits 0-2]
 {
 	{
 		{ NO_MNEMONIC },
@@ -118,7 +128,56 @@ const struct Opcode extendedOpcodeMapGroup7With11B[8][8] =  // [ModR/M bits 3-5]
 		{ XTEST, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ ENCLU, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
-	// not completed
+	{
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
+	},
+	{
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
+	},
+	{
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
+	},
+	{
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC }
+	},
+	{
+		{ SWAPGS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, o64 },
+		{ RDTSCP , -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+		{ NO_MNEMONIC },
+	}
 };
 
 // group 8
@@ -132,6 +191,46 @@ const struct Opcode extendedOpcodeMapGroup8[8] = // [ModR/M bits 3-5]
 	{ BTS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ BTR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ BTC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// group 9 with no prefix and Mod 7,6 is not 11B
+const struct Opcode extendedOpcodeMapGroup9[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ CMPXCH8B, -1, Mq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // CMPXCHG16B and Mdq if REX.w
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ VMPTRLD, -1, Mq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VMPTRST, -1, Mq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+const struct Opcode alternateCMPXCH = { CMPXCHG16B, -1, Mdq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT };
+
+// group 9 with 0x66 prefix and Mod 7,6 is not 11B
+const struct Opcode extendedOpcodeMapGroup966[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ VMCLEAR, -1, Mq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC }
+};
+
+// group 9 with 0xF3 prefix and Mod 7,6 is not 11B
+const struct Opcode extendedOpcodeMapGroup9F3[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ VMXON, -1, Mq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC }
 };
 
 // group 9 with no prefix and Mod 7,6 is 11B
@@ -160,6 +259,8 @@ const struct Opcode extendedOpcodeMapGroup9F311B[8] = // [ModR/M bits 3-5]
 	{ RDPID, -1, Rd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // first operand is Rd/q
 };
 
+// group 10 is UD1
+
 // group 11 for opcode 0xC6
 const struct Opcode extendedOpcodeMapGroup11C6[8] = // [ModR/M bits 3-5]
 {
@@ -184,6 +285,58 @@ const struct Opcode extendedOpcodeMapGroup11C7[8] = // [ModR/M bits 3-5]
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
 	{ XBEGIN, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
+};
+
+// group 12 with no prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup1211B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLW, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSRAW, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSLLW, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+};
+
+// group 12 with 0x66 prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup126611B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSRAW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSLLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+};
+
+// group 13 with no prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup1311B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLD, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSRAD, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSLLD, -1, Nq, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+};
+
+// group 13 with 0x66 prefix and Mod 7,6 is 11B
+const struct Opcode extendedOpcodeMapGroup136611B[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ PSRLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSRAD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ PSLLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
 };
 
 // group 14 with no prefix and Mod 7,6 is 11B
@@ -262,4 +415,17 @@ const struct Opcode extendedOpcodeMapGroup16[8] = // [ModR/M bits 3-5]
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC }
+};
+
+// group 17
+const struct Opcode extendedOpcodeMapGroup17[8] = // [ModR/M bits 3-5]
+{
+	{ NO_MNEMONIC },
+	{ BLSR, -1, By, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ BLSMSK, -1, By, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ BLSI, -1, By, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
+	{ NO_MNEMONIC },
 };

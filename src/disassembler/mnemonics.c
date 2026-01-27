@@ -153,6 +153,14 @@ extern const char* mnemonicStrs[] =
 	"RORX",
 
 	"PREFETCHNTA", "PREFETCHT0", "PREFETCHT1", "PREFETCHT2",
+
+	"SLDT", "STR", "LLDT", "LTR", "VERR", "VERW",
+	"SGDT", "SIDT", "LGDT", "LIDT", "SMSW", "LMSW", "INVLPG",
+	"SWAPGS", "RDTSCP",
+	"CMPXCH8B", "CMPXCHG16B",
+	"VMPTRLD", "VMPTRST",
+	"VMCLEAR", "VMXON",
+	"BLSR", "BLSMSK", "BLSI",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)
