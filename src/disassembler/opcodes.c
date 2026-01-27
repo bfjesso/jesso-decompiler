@@ -9,21 +9,20 @@
 #include "extendedOpcodeMap.h"
 #include "escapeOpcodeMaps.h"
 
-unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct Opcode* result)
+unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
-	unsigned char legPrefixByte = rexPrefix->isValidREX ? ((*bytesPtr) - 2)[0] : ((*bytesPtr) - 1)[0];
-	unsigned char prefixIndex = legPrefixByte == 0x66 ? 1 : legPrefixByte == 0xF3 ? 2 : legPrefixByte == 0xF2 ? 3 : 0;
+	unsigned char prefixIndex = legPrefixes->group3 == OSO ? 1 : legPrefixes->group1 == REPZ ? 2 : legPrefixes->group1 == REPNZ ? 3 : 0;
 	unsigned char opcodeByte = 0;
 	unsigned char escapeToCoprocessor = 0;
 
 	// check the opcode map in use
-	if ((*bytesPtr)[0] == 0x0F)
+	if ((*bytesPtr)[0] == 0x0F || vexPrefix->mmmmm != 0)
 	{
-		if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x38) // sequence: 0x0F 0x38 opcode
+		if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x38 || vexPrefix->mmmmm == 0b00010)) // sequence: 0x0F 0x38 opcode
 		{
-			opcodeByte = (*bytesPtr)[2];
+			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 2];
 			
 			if (prefixIndex != 0)
 			{
@@ -39,11 +38,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap38[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += 3;
+			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 3;
 		}
-		else if (((*bytesPtr) + 2) <= maxBytesAddr && (*bytesPtr)[1] == 0x3A) // sequence: 0x0F 0x3A opcode
+		else if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x3A || vexPrefix->mmmmm == 0b00011)) // sequence: 0x0F 0x3A opcode
 		{
-			opcodeByte = (*bytesPtr)[2];
+			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 2];
 
 			if (prefixIndex != 0)
 			{
@@ -59,11 +58,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += 3;
+			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 3;
 		}
 		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
-			opcodeByte = (*bytesPtr)[1];
+			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 1];
 
 			if (prefixIndex != 0)
 			{
@@ -79,7 +78,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += 2;
+			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 2;
 		}
 		else
 		{
@@ -152,7 +151,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixByte == 0xF3)
+				if (legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F311B[reg];
 				}
@@ -163,11 +162,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			}
 			else 
 			{
-				if (legPrefixByte == 0x66) 
+				if (legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup966[reg];
 				}
-				else if (legPrefixByte == 0xF3)
+				else if (legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F3[reg];
 				}
@@ -197,7 +196,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixByte == 0x66)
+				if (legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup126611B[reg];
 				}
@@ -211,7 +210,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixByte == 0x66)
+				if (legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup136611B[reg];
 				}
@@ -225,7 +224,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixByte == 0x66)
+				if (legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup146611B[reg];
 				}
@@ -239,7 +238,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixByte == 0xF3)
+				if (legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup15F311B[reg];
 				}

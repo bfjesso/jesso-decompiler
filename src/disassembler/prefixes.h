@@ -2,25 +2,21 @@
 
 enum LegacyPrefix
 {
-	// group 2
-	// segment overrides
-	CSO_BNT, // branch not taken if Jcc (conditional jump) instruction
-	SSO,
-	DSO_BT, // branch taken if Jcc (conditional jump) instruction
-	ESO,
-	FSO,
-	GSO,
-
 	// group 1
-	LOCK,
-	REPNZ, // repeat not zero
-	REPZ, // repeat zero
-
+	LOCK,    // 0xF0
+	REPNZ,   // 0xF2
+	REPZ,    // 0xF3
+	// group 2
+	CSO_BNT, // 0x2E
+	SSO,     // 0x36
+	DSO_BT,  // 0x3E
+	ESO,     // 0x26
+	FSO,     // 0x64
+	GSO,     // 0x65
 	// group 3
-	OSO, // operand-size override
-
+	OSO,     // 0x66
 	// group 4
-	ASO, // address-size override
+	ASO,     // 0x67
 
 	NO_PREFIX
 };
@@ -65,4 +61,4 @@ unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxB
 
 unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct REXPrefix* result);
 
-unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct VEXPrefix* result);
+unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct VEXPrefix* result);

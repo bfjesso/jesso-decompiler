@@ -40,7 +40,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	}
 
 	struct VEXPrefix vexPrefix = { 0 };
-	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !handleVEXPrefix(&bytes, maxBytesAddr, &vexPrefix))
+	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !handleVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &vexPrefix))
 	{
 		return 0;
 	}
@@ -49,7 +49,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	unsigned char modRMByte = 0;
 	char hasGotModRM = 0;
 	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0, 0, 0 };
-	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &opcode))
+	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &vexPrefix, &opcode))
 	{
 		return 0;
 	}

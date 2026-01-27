@@ -77,7 +77,7 @@ unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 	return 1;
 }
 
-unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct VEXPrefix* result)
+unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct VEXPrefix* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
@@ -87,16 +87,19 @@ unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 
 	if (byte0 == 0xC5) // two-byte form
 	{
+		result->isValidVEX = 1;
 		result->r = (byte1 >> 7) & 0x01;
 		result->vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
 		result->l = (byte1 >> 2) & 0x01;
 		result->pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
+		result->mmmmm = 0b00001;
+
 		(*bytesPtr) += 2;
-		return 1;
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
+		result->isValidVEX = 1;
 		result->r = (byte1 >> 7) & 0x01;
 		result->x = (byte1 >> 6) & 0x01;
 		result->b = (byte1 >> 5) & 0x01;
@@ -108,7 +111,22 @@ unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 		result->pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
 
 		(*bytesPtr) += 3;
-		return 1;
+	}
+
+	if(result->isValidVEX)
+	{
+		switch(result->pp)
+		{
+		case 0b01:
+			legPrefixes->group3 = OSO; // 0x66
+			break;
+		case 0b10:
+			legPrefixes->group1 = REPZ; // 0xF3
+			break;
+		case 0b11:
+			legPrefixes->group1 = REPNZ; // 0xF2
+			break;
+		}
 	}
 
 	return 1;
