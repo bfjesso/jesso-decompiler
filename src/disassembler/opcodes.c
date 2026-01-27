@@ -201,6 +201,13 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				extendedOpcode = &extendedOpcodeMapGroup15[reg];
 			}
 		}
+		else if (result->extensionGroup == 16)
+		{
+			if (mod != 0b11)
+			{
+				extendedOpcode = &extendedOpcodeMapGroup16[reg];
+			}
+		}
 
 		if (extendedOpcode == 0)
 		{

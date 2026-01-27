@@ -48,7 +48,7 @@ extern const char* mnemonicStrs[] =
 	"UCOMISD", "UCOMISS", "UNPCKHPD", "UNPCKHPS", "UNPCKLPD", "UNPCKLPS",
 	"VMCALL", "VMFUNC", "VMLAUNCH", "VMRESUME", "VMXOFF", "VMREAD", "VMWRITE",
 	"WAIT", "WBINVD", "WRMSR",
-	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XSETBV", "XTEST"
+	"XABORT", "XBEGIN", "XCHG", "XEND", "XGETBV", "XLAT", "XSETBV", "XTEST",
 
 	"SQRTPS", "SQRTPD", "SQRTSS", "SQRTSD", "RSQRTPS", "RSQRTSS",
 
@@ -151,6 +151,8 @@ extern const char* mnemonicStrs[] =
 	"SHA1RNDS4",
 	"AESKEYGEN",
 	"RORX",
+
+	"PREFETCHNTA", "PREFETCHT0", "PREFETCHT1", "PREFETCHT2",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)

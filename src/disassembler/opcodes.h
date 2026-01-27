@@ -18,7 +18,7 @@ enum OperandCode
 	Eb, Ed, Ev, Ew, Ep, Ey,
 	Gb, Gd, Gv, Gz, Gw, Gy,
 	By,
-	M, Mw, Md, Mp, Ma, Mq, Mt, Mps, Mpd, Mdq, My, Mx,
+	M, Mb, Mw, Md, Mp, Ma, Mq, Mt, Mps, Mpd, Mdq, My, Mx,
 	Ib, Iv, Iz, Iw,
 	Yb, Yv, Yz,
 	Xb, Xv, Xz,
