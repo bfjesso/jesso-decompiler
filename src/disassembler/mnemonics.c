@@ -161,6 +161,8 @@ extern const char* mnemonicStrs[] =
 	"VMPTRLD", "VMPTRST",
 	"VMCLEAR", "VMXON",
 	"BLSR", "BLSMSK", "BLSI",
+
+	"VPTERNLOGD",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)

@@ -38,6 +38,8 @@ enum OperandCode
 	Hps, Hpd, Hx, Hss, Hsd, Hdq, Hqq, Hq,
 	Lx,
 
+	EVEXvvvv,
+
 	A_BYTE, // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
 	NO_OPERAND_CODE
 };

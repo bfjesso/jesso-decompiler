@@ -3,7 +3,7 @@
 #include "mnemonics.h"
 #include "modRM.h"
 
-unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Operand* result)
+unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAddr, unsigned char* startBytePtr, char hasGotModRM, unsigned char* modRMByteRef, unsigned char is64BitMode, struct Opcode* opcode, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct EVEXPrefix* evexPrefix, struct Operand* result)
 {
 	int operandIndex = 0; // see Hps ?
 	for (int i = 0; i < 4; i++)
@@ -481,6 +481,11 @@ unsigned char handleOperands(unsigned char** bytesPtr, unsigned char* maxBytesAd
 			currentOperand->type = REGISTER;
 			char immediate = (char)getUIntFromBytes(bytesPtr, 1) & 0b11110000; // upper 4 bits
 			currentOperand->reg = opcode->opcodeSuperscript == f256 ? (YMM0 + immediate) : (XMM0 + immediate);
+			break;
+		case EVEXvvvv:
+			if (!evexPrefix->isValidEVEX) { operandIndex--; break; }
+			currentOperand->type = REGISTER;
+			currentOperand->reg = evexPrefix->ll == 0b00 ? (XMM15 - evexPrefix->vvvv) : evexPrefix->ll == 0b01 ? (YMM15 - evexPrefix->vvvv) : (ZMM31 - evexPrefix->vvvv);
 			break;
 		case A_BYTE:
 			(*bytesPtr)++;
