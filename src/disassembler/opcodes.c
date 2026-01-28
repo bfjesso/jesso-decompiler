@@ -9,7 +9,7 @@
 #include "extendedOpcodeMap.h"
 #include "escapeOpcodeMaps.h"
 
-unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct Opcode* result)
+unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct EVEXPrefix* evexPrefix, struct Opcode* result)
 {
 	if ((*bytesPtr) > maxBytesAddr) { return 0; }
 
@@ -17,12 +17,12 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 	unsigned char opcodeByte = 0;
 	unsigned char escapeToCoprocessor = 0;
 
-	// check the opcode map in use
-	if ((*bytesPtr)[0] == 0x0F || vexPrefix->mmmmm != 0)
+	int mmm = vexPrefix->mmmmm != 0 ? vexPrefix->mmmmm : evexPrefix->mmm;
+	if ((*bytesPtr)[0] == 0x0F || mmm != 0)
 	{
-		if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x38 || vexPrefix->mmmmm == 0b00010)) // sequence: 0x0F 0x38 opcode
+		if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x38 || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
 		{
-			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 2];
+			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 2];
 			
 			if (prefixIndex != 0)
 			{
@@ -38,11 +38,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap38[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 3;
+			(*bytesPtr) += mmm != 0 ? 1 : 3;
 		}
-		else if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x3A || vexPrefix->mmmmm == 0b00011)) // sequence: 0x0F 0x3A opcode
+		else if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x3A || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
 		{
-			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 2];
+			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 2];
 
 			if (prefixIndex != 0)
 			{
@@ -58,11 +58,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 3;
+			(*bytesPtr) += mmm != 0 ? 1 : 3;
 		}
 		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
 		{
-			opcodeByte = (*bytesPtr)[vexPrefix->mmmmm != 0 ? 0 : 1];
+			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 1];
 
 			if (prefixIndex != 0)
 			{
@@ -78,7 +78,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += vexPrefix->mmmmm != 0 ? 1 : 2;
+			(*bytesPtr) += mmm != 0 ? 1 : 2;
 		}
 		else
 		{

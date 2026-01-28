@@ -57,8 +57,32 @@ struct VEXPrefix
 	unsigned char pp;
 };
 
+struct EVEXPrefix
+{
+	unsigned char isValidEVEX;
+
+	// P0
+	unsigned char rxb;
+	unsigned char r;
+	unsigned char mmm;
+
+	// P1
+	unsigned char w;
+	unsigned char vvvv;
+	unsigned char pp;
+
+	// P2
+	unsigned char z;
+	unsigned char ll;
+	unsigned char b;
+	unsigned char v;
+	unsigned char aaa;
+};
+
 unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result);
 
 unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct REXPrefix* result);
 
 unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct VEXPrefix* result);
+
+unsigned char handleEVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct EVEXPrefix* result);

@@ -45,11 +45,17 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
+	struct EVEXPrefix evexPrefix = { 0 };
+	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !vexPrefix.isValidVEX && !handleEVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &evexPrefix))
+	{
+		return 0;
+	}
+
 	// if the opcode is an extended one then modRM will be retrieved
 	unsigned char modRMByte = 0;
 	char hasGotModRM = 0;
 	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0, 0, 0 };
-	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &vexPrefix, &opcode))
+	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &vexPrefix, &evexPrefix, &opcode))
 	{
 		return 0;
 	}

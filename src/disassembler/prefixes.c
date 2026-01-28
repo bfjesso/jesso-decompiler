@@ -131,3 +131,49 @@ unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 
 	return 1;
 }
+
+unsigned char handleEVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct EVEXPrefix* result)
+{
+	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+
+	unsigned char firstByte = (*bytesPtr)[0];
+	unsigned char p0 = (*bytesPtr)[1];
+	unsigned char p1 = (*bytesPtr)[2];
+	unsigned char p2 = (*bytesPtr)[3];
+
+	if (firstByte == 0x62)
+	{
+		result->isValidEVEX = 1;
+
+		result->rxb = (((p0 >> 7) & 0x01) * 4) + (((p0 >> 6) & 0x01) * 2) + ((p0 >> 5) & 0x01);
+		result->r = ((p0 >> 4) & 0x01);
+		result->mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
+
+		result->r = ((p1 >> 7) & 0x01);
+		result->vvvv = (((p1 >> 6) & 0x01) * 8) + (((p1 >> 5) & 0x01) * 4) + (((p1 >> 4) & 0x01) * 2) + ((p1 >> 3) & 0x01);
+		result->pp = (((p1 >> 1) & 0x01) * 2) + ((p1 >> 0) & 0x01);
+
+		result->z = ((p2 >> 7) & 0x01);
+		result->ll = (((p2 >> 6) & 0x01) * 2) + ((p2 >> 5) & 0x01);
+		result->b = ((p2 >> 4) & 0x01);
+		result->v = ((p2 >> 3) & 0x01);
+		result->aaa = (((p2 >> 2) & 0x01) * 4) + (((p2 >> 1) & 0x01) * 2) + ((p2 >> 0) & 0x01);
+
+		switch (result->pp)
+		{
+		case 0b01:
+			legPrefixes->group3 = OSO; // 0x66
+			break;
+		case 0b10:
+			legPrefixes->group1 = REPZ; // 0xF3
+			break;
+		case 0b11:
+			legPrefixes->group1 = REPNZ; // 0xF2
+			break;
+		}
+
+		(*bytesPtr) += 4;
+	}
+
+	return 1;
+}
