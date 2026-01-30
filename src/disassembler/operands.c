@@ -27,10 +27,12 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 
 		if (params->opcode->mnemonic == NO_MNEMONIC) { break; }
 
-		char is64BitOperandSize = 0;
+		unsigned char is64BitOperandSize = 0;
 		if (params->is64BitMode && params->opcode->opcodeSuperscript == d64 && params->legPrefixes->group3 != OSO) { is64BitOperandSize = 1; }
 		else if (params->is64BitMode && params->opcode->opcodeSuperscript == f64) { is64BitOperandSize = 1; }
 		else if (params->rexPrefix->w) { is64BitOperandSize = 1; }
+
+		unsigned char is256BitOperandSize = params->opcode->opcodeSuperscript == f256 || params->vexPrefix->l || params->evexPrefix->ll;
 
 		unsigned char operandSize;
 		switch (currentOperandCode)
@@ -277,7 +279,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Mps:
 		case Mpd:
 		case Mx:
-			if (!handleModRM(params, GET_MEM_ADDRESS, params->opcode->opcodeSuperscript == f256 ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Mdq:
@@ -414,7 +416,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Upd:
 		case Uq:
 		case Ux:
-			if (!handleModRM(params, GET_MEM_ADDRESS, params->opcode->opcodeSuperscript == f256 ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Udq:
@@ -426,13 +428,13 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Vx:
 		case Vy:
 		case Vq:
-			if (!handleModRM(params, GET_REGISTER, params->opcode->opcodeSuperscript == f256 ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_REGISTER, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Vss:
 		case Vsd:
 		case Vdq:
-			if (!handleModRM(params, GET_REGISTER, 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_REGISTER, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Vqq:
@@ -443,7 +445,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Wpd:
 		case Wx:
 		case Wq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, params->opcode->opcodeSuperscript == f256 ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Wd:
@@ -466,7 +468,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Hq:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->opcode->opcodeSuperscript == f256 ? (YMM0 + params->vexPrefix->vvvv) : (XMM0 + params->vexPrefix->vvvv);
+			currentOperand->reg = is256BitOperandSize ? (YMM0 + params->vexPrefix->vvvv) : (XMM0 + params->vexPrefix->vvvv);
 			break;
 		case Hss:
 		case Hsd:
@@ -483,7 +485,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Lx:
 			currentOperand->type = REGISTER;
 			char immediate = (char)getUIntFromBytes(&params->bytes, 1) & 0b11110000; // upper 4 bits
-			currentOperand->reg = params->opcode->opcodeSuperscript == f256 ? (YMM0 + immediate) : (XMM0 + immediate);
+			currentOperand->reg = is256BitOperandSize ? (YMM0 + immediate) : (XMM0 + immediate);
 			break;
 		case EVEXvvvv:
 			if (!params->evexPrefix->isValidEVEX) { operandIndex--; break; }
