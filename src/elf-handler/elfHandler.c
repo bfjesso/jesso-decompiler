@@ -566,6 +566,57 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 	return 0;
 }
 
+unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, int index, Elf32_Shdr* result)
+{
+	Elf32_Ehdr elfHeader;
+	Elf32_Shdr sectionHeader;
+	FILE* file = fopen(filePath, "r");
+
+	if (file)
+	{
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+
+		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		{
+			int num = 0;
+
+			for (int i = 0; i < elfHeader.e_shnum; i++)
+			{
+				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+				if (sectionHeader.sh_type == type)
+				{
+					if(num == index)
+					{
+						*result = sectionHeader;
+						fclose(file);
+						return 1;
+					}
+
+					num++;
+				}
+			}
+		}
+		else
+		{
+			printf("Not a valid ELF binary.\n");
+			fclose(file);
+			return 0;
+		}
+
+		printf("Couldn't find section.\n");
+		fclose(file);
+	}
+	else
+	{
+		printf("Failed to open file.\n");
+		return 0;
+	}
+
+	return 0;
+}
+
 unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
@@ -621,6 +672,80 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+
+			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+
+			bufferIndex++;
+			i++;
+		}
+
+		free(relaBytes);
+
+		relaNum++;
+	}
+
+	free(stringBytes);
+	free(dynsymBytes);
+
+	return bufferIndex;
+}
+
+unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+{
+	Elf32_Shdr dynstrSection;
+	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
+	{
+		printf("Failed to find .dynstr section.\n");
+		return 0;
+	}
+
+	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
+	if(!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
+	{
+		printf("Failed to read .dynstr section bytes.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	Elf32_Shdr dynsymSection;
+	if(!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
+	{
+		printf("Failed to find .dynsym section.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
+	if(!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
+	{
+		printf("Failed to read .dynsym section bytes.\n");
+		free(stringBytes);
+		free(dynsymBytes);
+		return 0;
+	}
+
+	int relaNum = 0;
+	Elf32_Shdr relaSection;
+	int bufferIndex = 0;
+	while(getSectionHeaderByType32(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
+	{
+		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		if(!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		{
+			printf("Failed to read rela section bytes.\n");
+			free(stringBytes);
+			free(dynsymBytes);
+			free(relaBytes);
+			return 0;
+		}
+
+		int i = 0;
+		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
+		{
+			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
+			int val = ELF32_R_SYM(rela->r_info);
+			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 
 			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
 			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);

@@ -213,7 +213,7 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 	}
 	else
 	{
-		return 0;
+		return getAllELFImports32(filePathChar, buffer, bufferLen);
 	}
 #endif
 }
