@@ -297,6 +297,9 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = params.functions[calleIndex].returnType;
 					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
 					sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.functions[calleIndex].name.buffer, callNum);
+					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
+					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
+					params.currentFunc->numOfReturnedVars++;
 				}
 			}
 			else
@@ -336,14 +339,13 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
 						sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
 						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
+						params.currentFunc->numOfReturnedVars++;
 						break;
 					}
 				}
 			}
-
-			params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
-			params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
-			params.currentFunc->numOfReturnedVars++;
 		}
 	}
 
