@@ -9,24 +9,24 @@
 #include "extendedOpcodeMap.h"
 #include "escapeOpcodeMaps.h"
 
-unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct EVEXPrefix* evexPrefix, struct Opcode* result)
+unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* result)
 {
-	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return 0; }
 
-	unsigned char prefixIndex = legPrefixes->group3 == OSO ? 1 : legPrefixes->group1 == REPZ ? 2 : legPrefixes->group1 == REPNZ ? 3 : 0;
+	unsigned char prefixIndex = params->legPrefixes->group3 == OSO ? 1 : params->legPrefixes->group1 == REPZ ? 2 : params->legPrefixes->group1 == REPNZ ? 3 : 0;
 	unsigned char opcodeByte = 0;
 	unsigned char escapeToCoprocessor = 0;
 
-	int mmm = vexPrefix->mmmmm != 0 ? vexPrefix->mmmmm : evexPrefix->mmm;
-	if ((*bytesPtr)[0] == 0x0F || mmm != 0)
+	int mmm = params->vexPrefix->mmmmm != 0 ? params->vexPrefix->mmmmm : params->evexPrefix->mmm;
+	if (params->bytes[0] == 0x0F || mmm != 0)
 	{
-		if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x38 || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
+		if ((params->bytes + 2) <= params->maxBytesAddr && (params->bytes[1] == 0x38 || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
 		{
-			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 2];
+			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
 			
 			if (prefixIndex != 0)
 			{
-				legPrefixes->group1 = NO_PREFIX;
+				params->legPrefixes->group1 = NO_PREFIX;
 			}
 
 			if (threeByteOpcodeMap38[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
@@ -38,15 +38,15 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap38[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += mmm != 0 ? 1 : 3;
+			params->bytes += mmm != 0 ? 1 : 3;
 		}
-		else if (((*bytesPtr) + 2) <= maxBytesAddr && ((*bytesPtr)[1] == 0x3A || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
+		else if ((params->bytes + 2) <= params->maxBytesAddr && (params->bytes[1] == 0x3A || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
 		{
-			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 2];
+			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
 
 			if (prefixIndex != 0)
 			{
-				legPrefixes->group1 = NO_PREFIX;
+				params->legPrefixes->group1 = NO_PREFIX;
 			}
 
 			if (threeByteOpcodeMap3A[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
@@ -58,15 +58,15 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += mmm != 0 ? 1 : 3;
+			params->bytes += mmm != 0 ? 1 : 3;
 		}
-		else if (((*bytesPtr) + 1) <= maxBytesAddr) // sequence: 0x0F opcode
+		else if ((params->bytes + 1) <= params->maxBytesAddr) // sequence: 0x0F opcode
 		{
-			opcodeByte = (*bytesPtr)[mmm != 0 ? 0 : 1];
+			opcodeByte = params->bytes[mmm != 0 ? 0 : 1];
 
 			if (prefixIndex != 0)
 			{
-				legPrefixes->group1 = NO_PREFIX;
+				params->legPrefixes->group1 = NO_PREFIX;
 			}
 
 			if (twoByteOpcodeMap[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
@@ -78,30 +78,30 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				*result = twoByteOpcodeMap[opcodeByte][prefixIndex];
 			}
 
-			(*bytesPtr) += mmm != 0 ? 1 : 2;
+			params->bytes += mmm != 0 ? 1 : 2;
 		}
 		else
 		{
 			return 0;
 		}
 	}
-	else if ((*bytesPtr) <= maxBytesAddr) // sequence: opcode
+	else if (params->bytes <= params->maxBytesAddr) // sequence: opcode
 	{
-		opcodeByte = (*bytesPtr)[0];
+		opcodeByte = params->bytes[0];
 		*result = oneByteOpcodeMap[opcodeByte];
 
-		if (disassemblerOptions->is64BitMode && opcodeByte == 0x63)
+		if (params->is64BitMode && opcodeByte == 0x63)
 		{
 			*result = alternateX63;
 		}
 
 		if (result->mnemonic == CWDE)
 		{
-			if (legPrefixes->group1 == OSO)
+			if (params->legPrefixes->group1 == OSO)
 			{
 				result->mnemonic = CBW;
 			}
-			else if (rexPrefix->w)
+			else if (params->rexPrefix->w)
 			{
 				result->mnemonic = CDQE;
 			}
@@ -109,7 +109,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 
 		escapeToCoprocessor = opcodeByte > 0xD7 && opcodeByte < 0xE0;
 
-		(*bytesPtr)++;
+		params->bytes++;
 	}
 	else
 	{
@@ -119,9 +119,9 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 	// handle extended opcodes or escape opcodes
 	if (result->mnemonic == EXTENDED_OPCODE)
 	{
-		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return 0; }
 
-		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char modRMByte = params->bytes[0];
 		unsigned char mod = (((modRMByte >> 7) & 0x01) * 2) + ((modRMByte >> 6) & 0x01);
 		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
 		unsigned char rm = (((modRMByte >> 2) & 0x01) * 4) + (((modRMByte >> 1) & 0x01) * 2) + ((modRMByte >> 0) & 0x01);
@@ -151,7 +151,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixes->group1 == REPZ)
+				if (params->legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F311B[reg];
 				}
@@ -162,11 +162,11 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			}
 			else 
 			{
-				if (legPrefixes->group3 == OSO)
+				if (params->legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup966[reg];
 				}
-				else if (legPrefixes->group1 == REPZ)
+				else if (params->legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F3[reg];
 				}
@@ -174,7 +174,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9[reg];
 
-					if(extendedOpcode->mnemonic == CMPXCH8B && rexPrefix->w)
+					if(extendedOpcode->mnemonic == CMPXCH8B && params->rexPrefix->w)
 					{
 						extendedOpcode = &alternateCMPXCH;
 					}
@@ -196,7 +196,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixes->group3 == OSO)
+				if (params->legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup126611B[reg];
 				}
@@ -210,7 +210,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixes->group3 == OSO)
+				if (params->legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup136611B[reg];
 				}
@@ -224,7 +224,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixes->group3 == OSO)
+				if (params->legPrefixes->group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup146611B[reg];
 				}
@@ -238,7 +238,7 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 		{
 			if (mod == 0b11)
 			{
-				if (legPrefixes->group1 == REPZ)
+				if (params->legPrefixes->group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup15F311B[reg];
 				}
@@ -289,15 +289,15 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			result->operands[1] = Iz;
 		}
 
-		(*hasGotModRMRef) = 1;
-		(*modRMByteRef) = modRMByte;
-		(*bytesPtr)++;
+		params->hasGotModRM = 1;
+		params->modRMByte= modRMByte;
+		params->bytes++;
 	}
 	else if (escapeToCoprocessor) // escape to coprocessor instruction set
 	{
-		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return 0; }
 
-		unsigned char modRMByte = (*bytesPtr)[0];
+		unsigned char modRMByte = params->bytes[0];
 		unsigned char reg = (((modRMByte >> 5) & 0x01) * 4) + (((modRMByte >> 4) & 0x01) * 2) + ((modRMByte >> 3) & 0x01);
 
 		switch (opcodeByte)
@@ -328,9 +328,9 @@ unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr
 			break;
 		}
 
-		(*hasGotModRMRef) = 1;
-		(*modRMByteRef) = modRMByte;
-		(*bytesPtr)++;
+		params->hasGotModRM = 1;
+		params->modRMByte = modRMByte;
+		params->bytes++;
 	}
 
 	return 1;

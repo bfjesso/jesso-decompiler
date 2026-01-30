@@ -1,6 +1,6 @@
 #pragma once
 #include "disassemblyStructs.h"
-#include "prefixes.h"
+
 
 enum ModRMSelection
 {
@@ -13,6 +13,6 @@ enum ModRMSelection
 	GET_MEM_ADDRESS_MMX,
 };
 
-unsigned char handleModRM(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char hasGotModRM, unsigned char* modRMByteRef, enum ModRMSelection selection, unsigned char operandSize, char addressSizeOverride, unsigned char is64bitMode, struct REXPrefix* rexPrefix, struct Operand* result);
+unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result);
 
-static unsigned char handleSIB(unsigned char** bytesPtr, unsigned char mod, unsigned char is64Bit, struct REXPrefix* rexPrefix, unsigned char* gotDisp, struct Operand* result);
+static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned char mod, unsigned char* gotDisp, struct Operand* result);

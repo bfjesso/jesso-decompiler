@@ -25,42 +25,50 @@ extern const char* ptrSizeStrs[] =
 
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes)
 {
-	unsigned char* startPoint = bytes;
+	struct DisassemblyParameters params = { 0 };
+	params.startBytePtr = bytes;
 
 	struct LegacyPrefixes legacyPrefixes = { NO_PREFIX, NO_PREFIX, NO_PREFIX, NO_PREFIX };
 	if (!handleLegacyPrefixes(&bytes, maxBytesAddr, &legacyPrefixes))
 	{
 		return 0;
 	}
-
+	
 	struct REXPrefix rexPrefix = { 0 };
 	if (disassemblerOptions->is64BitMode && !handleREXPrefix(&bytes, maxBytesAddr, &rexPrefix))
 	{
 		return 0;
 	}
-
+	
 	struct VEXPrefix vexPrefix = { 0 };
 	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !handleVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &vexPrefix))
 	{
 		return 0;
 	}
-
+	
 	struct EVEXPrefix evexPrefix = { 0 };
 	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !vexPrefix.isValidVEX && !handleEVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &evexPrefix))
 	{
 		return 0;
 	}
 
+	params.bytes = bytes;
+	params.maxBytesAddr = maxBytesAddr;
+	params.is64BitMode = disassemblerOptions->is64BitMode;
+	params.legPrefixes = &legacyPrefixes;
+	params.rexPrefix = &rexPrefix;
+	params.vexPrefix = &vexPrefix;
+	params.evexPrefix = &evexPrefix;
+
 	// if the opcode is an extended one then modRM will be retrieved
-	unsigned char modRMByte = 0;
-	char hasGotModRM = 0;
 	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0, 0, 0 };
-	if (!handleOpcode(&bytes, maxBytesAddr, &hasGotModRM, &modRMByte, disassemblerOptions, &legacyPrefixes, &rexPrefix, &vexPrefix, &evexPrefix, &opcode))
+	if (!handleOpcode(&params, &opcode))
 	{
 		return 0;
 	}
+	params.opcode = &opcode;
 
-	if (!handleOperands(&bytes, maxBytesAddr, startPoint, hasGotModRM, &modRMByte, disassemblerOptions->is64BitMode, &opcode, &legacyPrefixes, &rexPrefix, &vexPrefix, &evexPrefix, (struct Operand*)(&result->operands)))
+	if (!handleOperands(&params, (struct Operand*)(&result->operands)))
 	{
 		return 0;
 	}
@@ -71,7 +79,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 
 	if (numOfBytes) 
 	{
-		*numOfBytes = (unsigned char)(bytes - startPoint);
+		*numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 	}
 
 	return 1;

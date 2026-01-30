@@ -1,7 +1,5 @@
 #pragma once
 #include "disassemblyStructs.h"
-#include "registers.h"
-#include "prefixes.h"
 #include "mnemonics.h"
 
 // Appendix A: A.2
@@ -63,4 +61,4 @@ struct Opcode
 	enum OpcodeSuperscript opcodeSuperscript;
 };
 
-unsigned char handleOpcode(unsigned char** bytesPtr, unsigned char* maxBytesAddr, char* hasGotModRMRef, unsigned char* modRMByteRef, struct DisassemblerOptions* disassemblerOptions, struct LegacyPrefixes* legPrefixes, struct REXPrefix* rexPrefix, struct VEXPrefix* vexPrefix, struct EVEXPrefix* evexPrefix, struct Opcode* result);
+unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* result);

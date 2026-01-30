@@ -42,6 +42,21 @@ struct Operand
 	enum OperandType type;
 };
 
+struct DisassemblyParameters 
+{
+	unsigned char* bytes;
+	unsigned char* maxBytesAddr;
+	unsigned char* startBytePtr;
+	char hasGotModRM;
+	unsigned char modRMByte;
+	unsigned char is64BitMode;
+	struct Opcode* opcode;
+	struct LegacyPrefixes* legPrefixes;
+	struct REXPrefix* rexPrefix;
+	struct VEXPrefix* vexPrefix;
+	struct EVEXPrefix* evexPrefix;
+};
+
 struct DisassembledInstruction
 {
 	enum Mnemonic opcode;

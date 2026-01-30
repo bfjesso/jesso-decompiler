@@ -324,6 +324,11 @@ void MainGui::DisassembleCodeSections()
 		unsigned char numOfBytes = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
+			if (numOfBytes == 0) 
+			{
+				break;
+			}
+			
 			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
 			disassembledInstructions.push_back(currentInstruction);
