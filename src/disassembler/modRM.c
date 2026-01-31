@@ -5,16 +5,17 @@
 
 unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result)
 {
-	if (!params->hasGotModRM)
+	if (!params->modRM.hasGotModRM)
 	{
 		if (params->bytes > params->maxBytesAddr) { return 0; }
-		params->modRMByte = params->bytes[0];
+
+		params->modRM.hasGotModRM = 1;
+		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
+		params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
+		params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
+
 		params->bytes++;
 	}
-
-	unsigned char mod = (((params->modRMByte >> 7) & 0x01) * 2) + ((params->modRMByte >> 6) & 0x01);
-	unsigned char reg = (((params->modRMByte >> 5) & 0x01) * 4) + (((params->modRMByte >> 4) & 0x01) * 2) + ((params->modRMByte >> 3) & 0x01);
-	unsigned char rm = (((params->modRMByte >> 2) & 0x01) * 4) + (((params->modRMByte >> 1) & 0x01) * 2) + ((params->modRMByte >> 0) & 0x01);
 
 	if (selection == GET_REGISTER)
 	{
@@ -23,25 +24,25 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		switch (operandSize)
 		{
 		case 1:
-			result->reg = (reg + AL);
+			result->reg = (params->modRM.reg + AL);
 			break;
 		case 2:
-			result->reg = (reg + AX);
+			result->reg = (params->modRM.reg + AX);
 			break;
 		case 4:
-			result->reg = (reg + EAX);
+			result->reg = (params->modRM.reg + EAX);
 			break;
 		case 8:
-			result->reg = (reg + RAX);
+			result->reg = (params->modRM.reg + RAX);
 			break;
 		case 16:
-			result->reg = (reg + XMM0);
+			result->reg = (params->modRM.reg + XMM0);
 			break;
 		case 32:
-			result->reg = (reg + YMM0);
+			result->reg = (params->modRM.reg + YMM0);
 			break;
 		case 64:
-			result->reg = (reg + ZMM0);
+			result->reg = (params->modRM.reg + ZMM0);
 			break;
 		}
 
@@ -55,24 +56,24 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	else if (selection == GET_SEGMENT)
 	{
 		result->type = SEGMENT;
-		result->segment = reg;
+		result->segment = params->modRM.reg;
 
 		return 1;
 	}
 	else if (selection == GET_MMX_REG)
 	{
-		result->reg = (reg + MM0);
+		result->reg = (params->modRM.reg + MM0);
 		return 1;
 	}
 	else if (selection == GET_CONTROL_REG)
 	{
 		if (params->rexPrefix->r)
 		{
-			result->reg = (reg + CR8);
+			result->reg = (params->modRM.reg + CR8);
 		}
 		else
 		{
-			result->reg = (reg + CR0);
+			result->reg = (params->modRM.reg + CR0);
 		}
 		return 1;
 	}
@@ -80,19 +81,19 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	{
 		if (params->rexPrefix->r)
 		{
-			result->reg = (reg + DR8);
+			result->reg = (params->modRM.reg + DR8);
 		}
 		else
 		{
-			result->reg = (reg + DR0);
+			result->reg = (params->modRM.reg + DR0);
 		}
 		return 1;
 	}
-	else if (mod == 3)
+	else if (params->modRM.mod == 3)
 	{
 		result->type = REGISTER;
 
-		switch (rm)
+		switch (params->modRM.rm)
 		{
 		case 0:
 			result->reg = operandSize == 64 ? ZMM0 : operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM0 : RAX) : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
@@ -135,11 +136,11 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 
 	if (params->legPrefixes->group4 == ASO && !params->is64BitMode)
 	{
-		switch (mod)
+		switch (params->modRM.mod)
 		{
 		case 0:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				result->memoryAddress.reg = BX;
@@ -176,7 +177,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 		case 1:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				if (params->bytes > params->maxBytesAddr) { return 0; }
@@ -228,7 +229,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 		case 2:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return 0; }
@@ -282,11 +283,11 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 	else
 	{
-		switch (mod)
+		switch (params->modRM.mod)
 		{
 		case 0:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				result->memoryAddress.reg = EAX;
@@ -302,7 +303,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 				break;
 			case 4:
 				if (params->bytes > params->maxBytesAddr) { return 0; }
-				handleSIB(params, mod, 0, result);
+				handleSIB(params, 0, result);
 				usedSIB = 1;
 				break;
 			case 5:
@@ -323,7 +324,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 		case 1:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				if (params->bytes > params->maxBytesAddr) { return 0; }
@@ -348,7 +349,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			case 4:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return 0; }
 				unsigned char gotDisp = 0;
-				handleSIB(params, mod, &gotDisp, result);
+				handleSIB(params, &gotDisp, result);
 				if (!gotDisp) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); } // disp8
 				usedSIB = 1;
 				break;
@@ -373,7 +374,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 		case 2:
 		{
-			switch (rm)
+			switch (params->modRM.rm)
 			{
 			case 0:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return 0; }
@@ -398,7 +399,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			case 4:
 				if ((params->bytes + 4) > params->maxBytesAddr) { return 0; }
 				unsigned char gotDisp = 0;
-				handleSIB(params, mod, &gotDisp, result);
+				handleSIB(params, &gotDisp, result);
 				if (!gotDisp) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); } // disp32
 				usedSIB = 1;
 				break;
@@ -437,7 +438,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	return 1;
 }
 
-static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned char mod, unsigned char* gotDisp, struct Operand* result)
+static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned char* gotDisp, struct Operand* result)
 {
 	unsigned char sibByte = params->bytes[0];
 	params->bytes++;
@@ -481,7 +482,7 @@ static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned ch
 
 	if (base == 5)
 	{
-		switch (mod)
+		switch (params->modRM.mod)
 		{
 		case 0:
 			if (index != 4) { result->memoryAddress.regDisplacement = NO_REG; }

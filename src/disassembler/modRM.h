@@ -1,7 +1,6 @@
 #pragma once
 #include "disassemblyStructs.h"
 
-
 enum ModRMSelection
 {
 	GET_MEM_ADDRESS,
@@ -15,4 +14,4 @@ enum ModRMSelection
 
 unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result);
 
-static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned char mod, unsigned char* gotDisp, struct Operand* result);
+static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned char* gotDisp, struct Operand* result);

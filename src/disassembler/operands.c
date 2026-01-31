@@ -191,51 +191,39 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		case Eb:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 1, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ed:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ev:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ew:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 2, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ep:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 4 : 6, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ey:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gb:
 			if (!handleModRM(params, GET_REGISTER, 1, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gd:
 			if (!handleModRM(params, GET_REGISTER, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gv:
 			if (!handleModRM(params, GET_REGISTER, params->legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gz:
 			if (!handleModRM(params, GET_REGISTER, params->legPrefixes->group3 == OSO ? 2 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gw:
 			if (!handleModRM(params, GET_REGISTER, 2, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Gy:
 			if (!handleModRM(params, GET_REGISTER, params->legPrefixes->group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case By:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
@@ -244,53 +232,41 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		case M:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->is64BitMode ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mb:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 1, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mw:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 2, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Md:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mv:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ma:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 4 : 8, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mp:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 4 : 6, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mq:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 8, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mt:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 10, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mps:
 		case Mpd:
 		case Mx:
 			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Mdq:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 16, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case My:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ib:
 			if (params->bytes > params->maxBytesAddr) { return 0; }
@@ -370,27 +346,21 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		case Rd:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ry:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Rv:
 			if (!handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes->group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Cd:
 			if (!handleModRM(params, GET_CONTROL_REG, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Dd:
 			if (!handleModRM(params, GET_DEBUG_REG, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Sw:
 			if (!handleModRM(params, GET_SEGMENT, 2, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ap:
 			if ((params->bytes + 5) > params->maxBytesAddr) { return 0; }
@@ -402,28 +372,23 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Ppi:
 		case Pq:
 			if (!handleModRM(params, GET_MMX_REG, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Qd:
 			if (!handleModRM(params, GET_MEM_ADDRESS_MMX, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Qpi:
 		case Qq:
 		case Nq:
 			if (!handleModRM(params, GET_MEM_ADDRESS_MMX, 8, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Ups:
 		case Upd:
 		case Uq:
 		case Ux:
 			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Udq:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 16, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Vps:
 		case Vpd:
@@ -431,32 +396,27 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Vy:
 		case Vq:
 			if (!handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Vss:
 		case Vsd:
 		case Vdq:
 		case Vqq:
 			if (!handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Wps:
 		case Wpd:
 		case Wx:
 		case Wq:
 			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Wd:
 			if (!handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Wss:
 		case Wsd:
 		case Wdq:
 		case Wqq:
 			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
 			break;
 		case Hps:
 		case Hpd:

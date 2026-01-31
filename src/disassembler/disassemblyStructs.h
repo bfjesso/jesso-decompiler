@@ -17,6 +17,15 @@ enum OperandType
 	IMMEDIATE
 };
 
+struct ModRM
+{
+	unsigned char hasGotModRM;
+
+	unsigned char mod;
+	unsigned char reg;
+	unsigned char rm;
+};
+
 struct MemoryAddress
 {
 	unsigned char ptrSize;
@@ -47,9 +56,9 @@ struct DisassemblyParameters
 	unsigned char* bytes;
 	unsigned char* maxBytesAddr;
 	unsigned char* startBytePtr;
-	char hasGotModRM;
-	unsigned char modRMByte;
+	
 	unsigned char is64BitMode;
+	struct ModRM modRM;
 	struct Opcode* opcode;
 	struct LegacyPrefixes* legPrefixes;
 	struct REXPrefix* rexPrefix;
