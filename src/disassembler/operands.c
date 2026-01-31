@@ -455,7 +455,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Wss:
 		case Wsd:
 		case Wdq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Wqq:
@@ -466,21 +466,17 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Hpd:
 		case Hx:
 		case Hq:
-			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is256BitOperandSize ? (YMM0 + params->vexPrefix->vvvv) : (XMM0 + params->vexPrefix->vvvv);
-			break;
 		case Hss:
 		case Hsd:
 		case Hdq:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = (XMM0 + params->vexPrefix->vvvv);
+			currentOperand->reg = is256BitOperandSize ? (YMM15 - params->vexPrefix->vvvv) : (XMM15 - params->vexPrefix->vvvv);
 			break;
 		case Hqq:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = (YMM0 + params->vexPrefix->vvvv);
+			currentOperand->reg = (YMM15 - params->vexPrefix->vvvv);
 			break;
 		case Lx:
 			currentOperand->type = REGISTER;

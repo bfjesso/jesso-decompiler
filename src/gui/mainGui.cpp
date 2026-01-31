@@ -331,7 +331,7 @@ void MainGui::DisassembleCodeSections()
 			
 			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
-			if (currentInstruction.address == 0x14000491E)
+			if (currentInstruction.address == 0x140004912)
 			{
 				int tt = 0;
 			}

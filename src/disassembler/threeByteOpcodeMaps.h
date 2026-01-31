@@ -1047,7 +1047,7 @@ const struct Opcode threeByteOpcodeMap3A[0x100][4] = // [byte][prefix] 0 - no pr
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x24; not defined
 	{                                                                                                            // 0x25; AVX-512
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VPTERNLOGD, -1, Vdq, EVEXvvvv, Ey, Ib, NO_SUPERSCRIPT}, // alternate mnemonic VPTERNLOGQ
+		{ VPTERNLOGD, -1, Vdq, EVEXvvvv, Mx, Ib, NO_SUPERSCRIPT}, // alternate mnemonic VPTERNLOGQ
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
