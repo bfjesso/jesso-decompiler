@@ -326,12 +326,39 @@ unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* 
 	return 1;
 }
 
-static void handleAlternateMnemonics(struct DisassemblyParameters* params, struct Opcode* opcode)
+static void handleAlternateMnemonics(struct DisassemblyParameters* params, struct Opcode* opcode) // this should only be for when the alternate mnemonic represents a different instruction
 {
 	switch (opcode->mnemonic) 
 	{
 	case CWDE:
 		opcode->mnemonic = params->rexPrefix->w ? CDQE : params->legPrefixes->group1 == OSO ? CBW : CWDE;
+		break;
+	case CDQ:
+		opcode->mnemonic = params->rexPrefix->w ? CQO : params->legPrefixes->group1 == OSO ? CWD : CDQ;
+		break;
+	case VMOVUPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVUPS : VMOVUPS;
+		break;
+	case VMOVUPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVUPD : VMOVUPD;
+		break;
+	case VMOVSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVSS : VMOVSS;
+		break;
+	case VMOVSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVSD : VMOVSD;
+		break;
+	case VMOVLPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVLPS : VMOVLPS;
+		break;
+	case VMOVLPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVLPD : VMOVLPD;
+		break;
+	case VMOVSLDUP:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVSLDUP : VMOVSLDUP;
+		break;
+	case VMOVDDUP:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVDDUP : VMOVDDUP;
 		break;
 	case VINSERTI32X8:
 		opcode->mnemonic = params->evexPrefix->w ? VINSERTI64X4 : VINSERTI32X8;

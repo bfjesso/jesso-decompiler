@@ -24,22 +24,22 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x0E; not defined
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x0F; not defined
 	{                                                                                                            // 0x10
-		{ MOVUPS, -1, Vps, Wps, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVUPD, -1, Vpd, Wpd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVSS, -1, Vx, Hx, Wss, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVSD, -1, Vx, Hx, Wsd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVUPS, -1, Vps, Wps, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVUPD, -1, Vpd, Wpd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVSS, -1, Vx, Hx, Wss, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVSD, -1, Vx, Hx, Wsd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x11
-		{ MOVUPS, -1, Wps, Vps, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVUPD, -1, Wpd, Vpd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVSS, -1, Wss, Hx, Vss, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVSD, -1, Wsd, Hx, Vsd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVUPS, -1, Wps, Vps, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVUPD, -1, Wpd, Vpd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVSS, -1, Wss, Hx, Vss, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVSD, -1, Wsd, Hx, Vsd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x12
-		{ MOVLPS, -1, Vq, Hq, Mq, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // vmovhlps Vq, Hq, Uq ?
-		{ MOVLPD, -1, Vq, Hq, Mq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVSLDUP, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVDDUP, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVLPS, -1, Vq, Hq, Mq, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // vmovhlps Vq, Hq, Uq ?
+		{ VMOVLPD, -1, Vq, Hq, Mq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVSLDUP, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVDDUP, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x13
 		{ MOVLPS, -1, Mq, Vq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },

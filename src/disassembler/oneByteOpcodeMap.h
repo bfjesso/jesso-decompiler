@@ -106,7 +106,7 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ PUSHAD, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                    // 0x60; PUSHA if operand size is 16-bit
 	{ POPAD, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                     // 0x61; POPA if operand size is 16-bit
 	{ BOUND, -1, Gv, Ma, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                               // 0x62
-	{ ARPL, -1, Ew, Gw, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                                // 0x63; { MOVSXD, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT } if 64-bit mode
+	{ ARPL, -1, Ew, Gw, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                                // 0x63; { MOVSXD, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, o64 } if 64-bit mode
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0x64; not an opcode: FS segment prefix
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0x65; not an opcode: GS segment prefix
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0x66; not an opcode: Operand size prefix
@@ -159,8 +159,8 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ XCHG, -1, rBP_r13, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                   // 0x95
 	{ XCHG, -1, rSI_r14, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                   // 0x96
 	{ XCHG, -1, rDI_r15, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                   // 0x97
-	{ CWDE, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0x98; CBW if operand size is 16-bit, CDQE if operand size is 64-bit			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	{ CDQ, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x99; CWD if operand size is 16-bit, CQO if operand size is 64-bit			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	{ CWDE, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0x98; CBW if operand size is 16-bit, CDQE if operand size is 64-bit
+	{ CDQ, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x99; CWD if operand size is 16-bit, CQO if operand size is 64-bit
 	{ CALL_FAR, -1, Ap, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                               // 0x9A
 	{ WAIT, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0x9B; alternate mnemonics: FWAIT
 	{ PUSHF, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                     // 0x9C
