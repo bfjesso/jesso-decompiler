@@ -336,5 +336,8 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 	case VINSERTI32X8:
 		opcode->mnemonic = params->evexPrefix->w ? VINSERTI64X4 : VINSERTI32X8;
 		break;
+	case VSHUFI32X4:
+		opcode->mnemonic = params->evexPrefix->w ? VSHUFI64X2 : VSHUFI32X4;
+		break;
 	}
 }

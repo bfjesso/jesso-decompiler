@@ -454,11 +454,8 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Wss:
 		case Wsd:
 		case Wdq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
-			break;
 		case Wqq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, 32, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Hps:
