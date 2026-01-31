@@ -163,6 +163,7 @@ extern const char* mnemonicStrs[] =
 	"BLSR", "BLSMSK", "BLSI",
 
 	"VPTERNLOGD",
+	"VINSERTI32X8", "VINSERTI64X4",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)

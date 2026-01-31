@@ -95,18 +95,6 @@ unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* 
 			*result = alternateX63;
 		}
 
-		if (result->mnemonic == CWDE)
-		{
-			if (params->legPrefixes->group1 == OSO)
-			{
-				result->mnemonic = CBW;
-			}
-			else if (params->rexPrefix->w)
-			{
-				result->mnemonic = CDQE;
-			}
-		}
-
 		escapeToCoprocessor = opcodeByte > 0xD7 && opcodeByte < 0xE0;
 
 		params->bytes++;
@@ -333,5 +321,20 @@ unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* 
 		params->bytes++;
 	}
 
+	handleAlternateMnemonics(params, result);
+
 	return 1;
+}
+
+static void handleAlternateMnemonics(struct DisassemblyParameters* params, struct Opcode* opcode)
+{
+	switch (opcode->mnemonic) 
+	{
+	case CWDE:
+		opcode->mnemonic = params->rexPrefix->w ? CDQE : params->legPrefixes->group1 == OSO ? CBW : CWDE;
+		break;
+	case VINSERTI32X8:
+		opcode->mnemonic = params->evexPrefix->w ? VINSERTI64X4 : VINSERTI32X8;
+		break;
+	}
 }

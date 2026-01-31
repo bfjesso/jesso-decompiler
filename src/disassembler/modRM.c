@@ -40,6 +40,9 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		case 32:
 			result->reg = (reg + YMM0);
 			break;
+		case 64:
+			result->reg = (reg + ZMM0);
+			break;
 		}
 
 		if (params->rexPrefix->r)

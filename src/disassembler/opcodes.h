@@ -62,3 +62,5 @@ struct Opcode
 };
 
 unsigned char handleOpcode(struct DisassemblyParameters* params, struct Opcode* result);
+
+static void handleAlternateMnemonics(struct DisassemblyParameters* params, struct Opcode* opcode);

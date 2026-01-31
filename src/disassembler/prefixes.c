@@ -149,7 +149,7 @@ unsigned char handleEVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytes
 		result->r = ((p0 >> 4) & 0x01);
 		result->mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
 
-		result->r = ((p1 >> 7) & 0x01);
+		result->w = ((p1 >> 7) & 0x01);
 		result->vvvv = (((p1 >> 6) & 0x01) * 8) + (((p1 >> 5) & 0x01) * 4) + (((p1 >> 4) & 0x01) * 2) + ((p1 >> 3) & 0x01);
 		result->pp = (((p1 >> 1) & 0x01) * 2) + ((p1 >> 0) & 0x01);
 

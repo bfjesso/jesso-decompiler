@@ -32,7 +32,9 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		else if (params->is64BitMode && params->opcode->opcodeSuperscript == f64) { is64BitOperandSize = 1; }
 		else if (params->rexPrefix->w) { is64BitOperandSize = 1; }
 
-		unsigned char is256BitOperandSize = params->opcode->opcodeSuperscript == f256 || params->vexPrefix->l || params->evexPrefix->ll;
+		unsigned char vectorLength = 16;
+		if (params->evexPrefix->ll == 0b10) { vectorLength = 64; }
+		else if (params->opcode->opcodeSuperscript == f256 || params->vexPrefix->l || params->evexPrefix->ll == 0b01) { vectorLength = 32; }
 
 		unsigned char operandSize;
 		switch (currentOperandCode)
@@ -279,7 +281,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Mps:
 		case Mpd:
 		case Mx:
-			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Mdq:
@@ -416,7 +418,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Upd:
 		case Uq:
 		case Ux:
-			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Udq:
@@ -428,24 +430,21 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Vx:
 		case Vy:
 		case Vq:
-			if (!handleModRM(params, GET_REGISTER, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Vss:
 		case Vsd:
 		case Vdq:
-			if (!handleModRM(params, GET_REGISTER, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
-			params->hasGotModRM = 1;
-			break;
 		case Vqq:
-			if (!handleModRM(params, GET_REGISTER, 32, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Wps:
 		case Wpd:
 		case Wx:
 		case Wq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Wd:
@@ -455,7 +454,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Wss:
 		case Wsd:
 		case Wdq:
-			if (!handleModRM(params, GET_MEM_ADDRESS, is256BitOperandSize ? 32 : 16, currentOperand)) { return 0; }
+			if (!handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return 0; }
 			params->hasGotModRM = 1;
 			break;
 		case Wqq:
@@ -471,7 +470,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Hdq:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is256BitOperandSize ? (YMM15 - params->vexPrefix->vvvv) : (XMM15 - params->vexPrefix->vvvv);
+			currentOperand->reg = vectorLength == 32 ? (YMM15 - params->vexPrefix->vvvv) : (XMM15 - params->vexPrefix->vvvv);
 			break;
 		case Hqq:
 			if (!params->vexPrefix->isValidVEX) { operandIndex--; break; }
@@ -481,12 +480,12 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Lx:
 			currentOperand->type = REGISTER;
 			char immediate = (char)getUIntFromBytes(&params->bytes, 1) & 0b11110000; // upper 4 bits
-			currentOperand->reg = is256BitOperandSize ? (YMM0 + immediate) : (XMM0 + immediate);
+			currentOperand->reg = vectorLength == 32 ? (YMM0 + immediate) : (XMM0 + immediate);
 			break;
 		case EVEXvvvv:
 			if (!params->evexPrefix->isValidEVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->evexPrefix->ll == 0b00 ? (XMM15 - params->evexPrefix->vvvv) : params->evexPrefix->ll == 0b01 ? (YMM15 - params->evexPrefix->vvvv) : (ZMM31 - params->evexPrefix->vvvv);
+			currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix->vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix->vvvv) : (ZMM15 - params->evexPrefix->vvvv);
 			break;
 		case A_BYTE:
 			params->bytes++;
