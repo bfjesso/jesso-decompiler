@@ -494,6 +494,99 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 	case VXORPD:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? XORPD : VXORPD;
 		break;
+	case VADDPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? ADDPS : VADDPS;
+		break;
+	case VADDPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? ADDPD : VADDPD;
+		break;
+	case VADDSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? ADDSS : VADDSS;
+		break;
+	case VADDSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? ADDSD : VADDSD;
+		break;
+	case VMULPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MULPS : VMULPS;
+		break;
+	case VMULPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MULPD : VMULPD;
+		break;
+	case VMULSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MULSS : VMULSS;
+		break;
+	case VMULSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MULSD : VMULSD;
+		break;
+	case VCVTPS2PD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTPS2PD : VCVTPS2PD;
+		break;
+	case VCVTPD2PS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTPD2PS : VCVTPD2PS;
+		break;
+	case VCVTSS2SD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTSS2SD : VCVTSS2SD;
+		break;
+	case VCVTSD2SS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTSD2SS : VCVTSD2SS;
+		break;
+	case VCVTDQ2PS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTDQ2PS : VCVTDQ2PS;
+		break;
+	case VCVTPS2DQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTPS2DQ : VCVTPS2DQ;
+		break;
+	case VCVTTPS2DQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTTPS2DQ : VCVTTPS2DQ;
+		break;
+	case VSUBPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? SUBPS : VSUBPS;
+		break;
+	case VSUBPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? SUBPD : VSUBPD;
+		break;
+	case VSUBSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? SUBSS : VSUBSS;
+		break;
+	case VSUBSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? SUBSD : VSUBSD;
+		break;
+	case VMINPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MINPS : VMINPS;
+		break;
+	case VMINPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MINPD : VMINPD;
+		break;
+	case VMINSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MINSS : VMINSS;
+		break;
+	case VMINSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MINSD : VMINSD;
+		break;
+	case VDIVPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? DIVPS : VDIVPS;
+		break;
+	case VDIVPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? DIVPD : VDIVPD;
+		break;
+	case VDIVSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? DIVSS : VDIVSS;
+		break;
+	case VDIVSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? DIVSD : VDIVSD;
+		break;
+	case VMAXPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MAXPS : VMAXPS;
+		break;
+	case VMAXPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MAXPD : VMAXPD;
+		break;
+	case VMAXSS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MAXSS : VMAXSS;
+		break;
+	case VMAXSD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MAXSD : VMAXSD;
+		break;
 
 	case VINSERTI32X8:
 		opcode->mnemonic = params->evexPrefix->w ? VINSERTI64X4 : VINSERTI32X8;
