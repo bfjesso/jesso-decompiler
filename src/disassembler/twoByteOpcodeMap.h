@@ -358,8 +358,8 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x6E
-		{ MOVD, -1, Pd, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VMOVD, -1, Vy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ MOVD, -1, Pd, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // MOVQ if REX.w or E/VEX.W1
+		{ VMOVD, -1, Vy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // VMOVQ if REX.w or E/VEX.W1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
@@ -396,33 +396,33 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
-	{ EMMS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x77; vzeroupper, vzeroall ?
+	{ EMMS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x77; vzeroupper if VEX.L = 0, vzeroall if VEX.L = 1
 	{ VMREAD, -1, Ey, Gy, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0x78
 	{ VMWRITE, -1, Gy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                   // 0x79
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x7A; not defined
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x7B; not defined
 	{                                                                                                            // 0x7C
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ HADDPD, -1, Vpd, Hpd, Wpd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VHADDPD, -1, Vpd, Hpd, Wpd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ HADDPS, -1, Vps, Hps, Wps, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VHADDPS, -1, Vps, Hps, Wps, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x7D
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ HSUBPD, -1, Vpd, Hpd, Wpd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VHSUBPD, -1, Vpd, Hpd, Wpd, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ HSUBPS, -1, Vps, Hps, Wps, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VHSUBPS, -1, Vps, Hps, Wps, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x7E
 		{ MOVD, -1, Ey, Pd, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVD, -1, Ey, Vy, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVQ, -1, Vq, Wq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVD, -1, Ey, Vy, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVQ, -1, Vq, Wq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0x7F
 		{ MOVQ, -1, Qq, Pq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVDQA, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ MOVDQU, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVDQA, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVDQU, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{ JO_SHORT, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                     // 0x80
@@ -507,27 +507,27 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{ XADD, -1, Eb, Gb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0xC0
 	{ XADD, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0xC1
 	{                                                                                                            // 0xC2
-		{ CMPPS, -1, Vps, Hps, Wps, Ib, NO_SUPERSCRIPT },
-		{ CMPPD, -1, Vpd, Hpd, Wpd, Ib, NO_SUPERSCRIPT },
-		{ CMPSS, -1, Vss, Hss, Wss, Ib, NO_SUPERSCRIPT },
-		{ CMPSD, -1, Vsd, Hsd, Wsd, Ib, NO_SUPERSCRIPT },
+		{ VCMPPS, -1, Vps, Hps, Wps, Ib, NO_SUPERSCRIPT },
+		{ VCMPPD, -1, Vpd, Hpd, Wpd, Ib, NO_SUPERSCRIPT },
+		{ VCMPSS, -1, Vss, Hss, Wss, Ib, NO_SUPERSCRIPT },
+		{ VCMPSD, -1, Vsd, Hsd, Wsd, Ib, NO_SUPERSCRIPT },
 	},
 	{ MOVNTI, -1, My, Gy, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0xC3
 	{                                                                                                            // 0xC4
 		{ PINSRW, -1, Pq, Ey, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // second operand is Ry/Mw, leaving Ey
-		{ PINSRW, -1, Vdq, Hdq, Ey, Ib, NO_SUPERSCRIPT }, // third operand is Ry/Mw, leaving Ey
+		{ VPINSRW, -1, Vdq, Hdq, Ey, Ib, NO_SUPERSCRIPT }, // third operand is Ry/Mw, leaving Ey
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0xC5
 		{ PEXTRW, -1, Gd, Nq, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ PEXTRW, -1, Gd, Udq, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VPEXTRW, -1, Gd, Udq, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{                                                                                                            // 0xC6
-		{ SHUFPS, -1, Vps, Hps, Wps, Ib, NO_SUPERSCRIPT },
-		{ SHUFPD, -1, Vpd, Hpd, Wpd, Ib, NO_SUPERSCRIPT },
+		{ VSHUFPS, -1, Vps, Hps, Wps, Ib, NO_SUPERSCRIPT },
+		{ VSHUFPD, -1, Vpd, Hpd, Wpd, Ib, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
