@@ -701,35 +701,110 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 	case VSHUFPD:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? SHUFPD : VSHUFPD;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VADDSUBPD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX ? ADDSUBPD : VADDSUBPD;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VADDSUBPS:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX ? ADDSUBPS : VADDSUBPS;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPSRLW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSRLW : VPSRLW;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPSRLD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSRLD : VPSRLD;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPSRLQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSRLQ : VPSRLQ;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPADDQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDQ : VPADDQ;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPMULLW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMULLW : VPMULLW;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPMOVMSKB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMOVMSKB : VPMOVMSKB;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPSUBUSB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSUBUSB : VPSUBUSB;
 		break;
-	case VPUNPCKHDQ:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
+	case VPSUBUSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSUBUSW : VPSUBUSW;
+		break;
+	case VPMINUB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMINUB : VPMINUB;
+		break;
+	case VPAND:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PAND : VPAND;
+		break;
+	case VPADDUSB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDUSB : VPADDUSB;
+		break;
+	case VPADDUSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDUSW : VPADDUSW;
+		break;
+	case VPANDN:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PANDN : VPANDN;
+		break;
+	case VPAVGB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PAVGB : VPAVGB;
+		break;
+	case VPSRAW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSRAW : VPSRAW;
+		break;
+	case VPSRAD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSRAD : VPSRAD;
+		break;
+	case VPAVGW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PAVGW : VPAVGW;
+		break;
+	case VPMULHUW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMULHUW : VPMULHUW;
+		break;
+	case VPMULHW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMULHW : VPMULHW;
+		break;
+	case VCVTTPD2DQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTTPD2DQ : VCVTTPD2DQ;
+		break;
+	case VCVTDQ2PD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTDQ2PD : VCVTDQ2PD;
+		break;
+	case VCVTPD2DQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? CVTPD2DQ : VCVTPD2DQ;
+		break;
+	case VMOVNTDQ:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVNTDQ : VMOVNTDQ;
+		break;
+	case VPSUBSB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSUBSB : VPSUBSB;
+		break;
+	case VPSUBSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSUBSW : VPSUBSW;
+		break;
+	case VPMINSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMINSW : VPMINSW;
+		break;
+	case VPOR:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? POR : VPOR;
+		break;
+	case VPADDSB:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDSB : VPADDSB;
+		break;
+	case VPADDSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDSW : VPADDSW;
+		break;
+	case VPMAXSW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PMAXSW : VPMAXSW;
+		break;
+	case VPXOR:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PXOR : VPXOR;
+		break;
+	case VLDDQU:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX ? LDDQU : VLDDQU;
+		break;
+	case VPSLLW:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSLLW : VPSLLW;
 		break;
 	case VPUNPCKHDQ:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PUNPCKHDQ : VPUNPCKHDQ;
