@@ -986,6 +986,33 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 	case VPMASKMOVD:
 		opcode->mnemonic = params->vexPrefix->w ? VPMASKMOVQ : VPMASKMOVD;
 		break;
+	case VGATHERDD:
+		opcode->mnemonic = params->evexPrefix->w ? VGATHERDQ : VGATHERDD;
+		break;
+	case VGATHERQD:
+		opcode->mnemonic = params->evexPrefix->w ? VGATHERQQ : VGATHERQD;
+		break;
+	case VGATHERDPS:
+		opcode->mnemonic = params->evexPrefix->w ? VGATHERDPD : VGATHERDPS;
+		break;
+	case VGATHERQPS:
+		opcode->mnemonic = params->evexPrefix->w ? VGATHERQPD : VGATHERQPS;
+		break;
+	case VPADDD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
+		break;
+	case VPADDD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
+		break;
+	case VPADDD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
+		break;
+	case VPADDD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
+		break;
+	case VPADDD:
+		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
+		break;
 	case VPADDD:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PADDD : VPADDD;
 		break;

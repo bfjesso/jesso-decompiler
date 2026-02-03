@@ -518,25 +518,25 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x8F; not defined
 	{                                                                                                            // 0x90
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ GATHERDD, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic gatherdq
+		{ VGATHERDD, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // undocumented? assuming alternate mnemonic is VGATHERDQ when EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0x91
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ GATHERQD, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic gatherqq
+		{ VGATHERQD, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // undocumented? assuming alternate mnemonic is VGATHERQQ when EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0x92
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ GATHERDPS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic gatherdpd
+		{ VGATHERDPS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // VGATHERDPD if EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0x93
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ GATHERQPS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // alternate mnemonic gatherqpd
+		{ VGATHERQPS, -1, Vx, Hx, Wx, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // VGATHERQPD if EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
