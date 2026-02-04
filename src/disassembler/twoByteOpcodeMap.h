@@ -366,8 +366,8 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{                                                                                                            // 0x6F
 		{ MOVQ, -1, Pq, Qq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ VMOVDQA, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VMOVDQU, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVDQU, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // VMOVDQU32 if EVEX.W = 0, VMOVDQU64 if EVEX.W = 1
+		{ VMOVDQU8, -1, Vx, Wx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },  // AVX-512, VMOVDQU16 if EVEX.W = 1
 	},
 	{                                                                                                            // 0x70
 		{ PSHUFW, -1, Pq, Qq, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
@@ -422,8 +422,8 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{                                                                                                            // 0x7F
 		{ MOVQ, -1, Qq, Pq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ VMOVDQA, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VMOVDQU, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ VMOVDQU, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // VMOVDQU32 if EVEX.W = 0, VMOVDQU64 if EVEX.W = 1
+		{ VMOVDQU8, -1, Wx, Vx, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }, // AVX-512, VMOVDQU16 if EVEX.W = 1
 	},
 	{ JO_SHORT, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                     // 0x80
 	{ JNO_SHORT, -1, Jz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                    // 0x81

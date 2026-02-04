@@ -642,7 +642,7 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVDQA : VMOVDQA;
 		break;
 	case VMOVDQU:
-		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? MOVDQU : VMOVDQU;
+		opcode->mnemonic = params->evexPrefix->w ? VMOVDQU64 : params->evexPrefix->isValidEVEX ? VMOVDQU32 : params->vexPrefix->isValidVEX ? VMOVDQU : MOVDQU;
 		break;
 	case VPSHUFD:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX && !params->evexPrefix->isValidEVEX ? PSHUFD : VPSHUFD;
@@ -1183,6 +1183,9 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 		break;
 	case VAESKEYGEN:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX ? AESKEYGEN : VAESKEYGEN;
+		break;
+	case VMOVDQU8:
+		opcode->mnemonic = params->evexPrefix->w ? VMOVDQU16 : VMOVDQU8;
 		break;
 	case VPTERNLOGD:
 		opcode->mnemonic = params->evexPrefix->w ? VPTERNLOGQ : VPTERNLOGD;
