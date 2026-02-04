@@ -305,11 +305,11 @@ const struct Opcode extendedOpcodeMapGroup126611B[8] = // [ModR/M bits 3-5]
 {
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
-	{ PSRLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
-	{ PSRAW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRAW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
-	{ PSLLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSLLW, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
 };
 
@@ -331,11 +331,11 @@ const struct Opcode extendedOpcodeMapGroup136611B[8] = // [ModR/M bits 3-5]
 {
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
-	{ PSRLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
-	{ PSRAD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRAD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
-	{ PSLLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSLLD, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
 };
 
@@ -357,12 +357,12 @@ const struct Opcode extendedOpcodeMapGroup146611B[8] = // [ModR/M bits 3-5]
 {
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
-	{ PSRLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-	{ PSRLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSRLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	{ NO_MNEMONIC },
 	{ NO_MNEMONIC },
-	{ PSLLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-	{ PSLLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSLLQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+	{ VPSLLDQ, -1, Hx, Ux, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 };
 
 // group 15 with no prefix and Mod 7,6 is not 11B
