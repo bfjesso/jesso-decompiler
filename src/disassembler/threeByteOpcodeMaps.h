@@ -1047,7 +1047,7 @@ const struct Opcode threeByteOpcodeMap3A[0x100][4] = // [byte][prefix] 0 - no pr
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x24; not defined
 	{                                                                                                            // 0x25; AVX-512
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VPTERNLOGD, -1, Vdq, EVEXvvvv, Mx, Ib, NO_SUPERSCRIPT}, // alternate mnemonic VPTERNLOGQ
+		{ VPTERNLOGD, -1, Vdq, EVEXvvvv, Mx, Ib, NO_SUPERSCRIPT}, // VPTERNLOGQ if EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
@@ -1083,7 +1083,7 @@ const struct Opcode threeByteOpcodeMap3A[0x100][4] = // [byte][prefix] 0 - no pr
 	},
 	{                                                                                                            // 0x3A; AVX-512
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VINSERTI32X8, -1, Vqq, EVEXvvvv, Wqq, Ib, NO_SUPERSCRIPT }, // alternate mnemonic VINSERTI64X4 
+		{ VINSERTI32X8, -1, Vqq, EVEXvvvv, Wqq, Ib, NO_SUPERSCRIPT }, // VINSERTI64X4 if EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
@@ -1112,7 +1112,7 @@ const struct Opcode threeByteOpcodeMap3A[0x100][4] = // [byte][prefix] 0 - no pr
 	},
 	{                                                                                                            // 0x43; AVX-512
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ VSHUFI32X4, -1, Vqq, EVEXvvvv, Wqq, Ib, NO_SUPERSCRIPT }, // alternate mnemonic VSHUFI64X2 
+		{ VSHUFI32X4, -1, Vqq, EVEXvvvv, Wqq, Ib, NO_SUPERSCRIPT }, // VSHUFI64X2 if EVEX.W = 1
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},

@@ -1184,7 +1184,9 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params, struc
 	case VAESKEYGEN:
 		opcode->mnemonic = !params->vexPrefix->isValidVEX ? AESKEYGEN : VAESKEYGEN;
 		break;
-
+	case VPTERNLOGD:
+		opcode->mnemonic = params->evexPrefix->w ? VPTERNLOGQ : VPTERNLOGD;
+		break;
 	case VINSERTI32X8:
 		opcode->mnemonic = params->evexPrefix->w ? VINSERTI64X4 : VINSERTI32X8;
 		break;
