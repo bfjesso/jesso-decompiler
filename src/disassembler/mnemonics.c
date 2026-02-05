@@ -271,7 +271,7 @@ unsigned char isOpcodeDiv(enum Mnemonic opcode)
 
 unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)
 {
-	if (opcode >= CVTPS2PD && opcode <= CVTDQ2PD)
+	if (opcode >= VCVTPS2PD && opcode <= CVTDQ2PD)
 	{
 		return 1;
 	}
@@ -281,7 +281,7 @@ unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)
 
 unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode)
 {
-	if (opcode >= CVTPD2PS && opcode <= CVTDQ2PS)
+	if (opcode >= VCVTPD2PS && opcode <= CVTDQ2PS)
 	{
 		return 1;
 	}
