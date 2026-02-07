@@ -806,9 +806,10 @@ void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstructio
 			}
 			
 			// ptr size
-			if (instruction->operands[i].memoryAddress.ptrSize != 0 && instruction->operands[i].memoryAddress.ptrSize <= 10)
+			int ptrSize = instruction->operands[i].memoryAddress.ptrSize;
+			if (ptrSize != 0)
 			{
-				wxString sizeStr = wxString(ptrSizeStrs[instruction->operands[i].memoryAddress.ptrSize / 2]);
+				wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
 				disassemblyTextCtrl->StartStyling(pos + str.find(sizeStr));
 				disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
 			}

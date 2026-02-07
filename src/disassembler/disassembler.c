@@ -13,14 +13,17 @@ static const char* group1PrefixStrs[] =
 	"REPZ"
 };
 
-extern const char* ptrSizeStrs[] =
+static const char* ptrSizeStrs[] =
 {
 	"BYTE PTR",
 	"WORD PTR",
 	"DWORD PTR",
 	"FWORD PTR",
 	"QWORD PTR",
-	"TBYTE PTR"
+	"TBYTE PTR",
+	"XMMWORD PTR",
+	"YMMWORD PTR",
+	"ZMMWORD PTR"
 };
 
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes)
@@ -134,9 +137,9 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 
 static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize)
 {
-	if (memAddr->ptrSize != 0 && memAddr->ptrSize <= 10)
+	if (memAddr->ptrSize != 0)
 	{
-		strcat(buffer, ptrSizeStrs[memAddr->ptrSize / 2]);
+		strcat(buffer, getPtrSizeStr(memAddr->ptrSize));
 		strcat(buffer, " ");
 	}
 	
@@ -200,6 +203,11 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	strcat(buffer, "]");
 
 	return strlen(buffer) < bufferSize;
+}
+
+const char* getPtrSizeStr(int ptrSize) 
+{
+	return ptrSizeStrs[ptrSize <= 10 ? ptrSize / 2 : ptrSize == 16 ? 6 : ptrSize == 32 ? 7 : ptrSize == 64 ? 8 : 0];
 }
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)

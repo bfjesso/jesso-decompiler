@@ -7,11 +7,11 @@ extern "C"
 {
 #endif
 
-	extern const char* ptrSizeStrs[];
-
 	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes);
 	
 	unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
+
+	const char* getPtrSizeStr(int ptrSize);
 
 #ifdef __cplusplus
 }
