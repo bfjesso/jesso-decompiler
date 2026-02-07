@@ -33,28 +33,27 @@ struct REXPrefix
 {
 	unsigned char isValidREX;
 
-	// fixed bits: 0100
-	unsigned char w; // bit position 3
-	unsigned char r; // bit position 2
-	unsigned char x; // bit position 1
-	unsigned char b; // bit position 0
-	// REX byte: 0100WRXB
+	unsigned char W; // 64 bit operand size if 1
+	unsigned char R; // extension of the ModR/M reg field
+	unsigned char X; // extension of the SIB index field
+	unsigned char B; // extension of the ModR/M r/m field, SIB base field, or opcode reg field
 };
 
 struct VEXPrefix
 {
 	unsigned char isValidVEX;
+	
+	unsigned char R; // inverted REX.R
 
-	unsigned char w;
-	unsigned char r;
-	unsigned char x;
-	unsigned char b;
+	// only in 3 byte VEX
+	unsigned char X; // inverted REX.X
+	unsigned char B; // inverted REX.B
+	unsigned char m_mmmm; // implied opcode map
+	unsigned char W; // same as REX.W
 
-	unsigned char mmmmm;
-
-	unsigned char vvvv;
-	unsigned char l;
-	unsigned char pp;
+	unsigned char vvvv; // register specifier encoded in 1's compliment (inverted)
+	unsigned char L; // vector length
+	unsigned char pp; // implied legacy prefix for opcode extension
 };
 
 struct EVEXPrefix
@@ -62,21 +61,23 @@ struct EVEXPrefix
 	unsigned char isValidEVEX;
 
 	// P0
-	unsigned char rxb;
-	unsigned char r;
-	unsigned char mmm;
+	unsigned char R; // combine with ModR/M.reg
+	unsigned char X; // combine with EVEX.B and ModR/M.rm, when SIB/VSIB absent
+	unsigned char B; // combine with ModR/M.rm
+	unsigned char R_prime; // high 16 register specifier modifier
+	unsigned char mmm; // implied opcode map
 
 	// P1
-	unsigned char w;
-	unsigned char vvvv;
-	unsigned char pp;
+	unsigned char W; // operand size promotion/opcode extension
+	unsigned char vvvv; // same as VEX.vvvv
+	unsigned char pp; // same as VEX.pp
 
 	// P2
-	unsigned char z;
-	unsigned char ll;
-	unsigned char b;
-	unsigned char v;
-	unsigned char aaa;
+	unsigned char z; // zeroing/merging
+	unsigned char LL; // vector length/RC
+	unsigned char b; // broadcast/RC/SAE context
+	unsigned char V_prime; // high 16 VVVV/VIDX register specifier
+	unsigned char aaa; // embedded opmask register specifier
 };
 
 unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result);

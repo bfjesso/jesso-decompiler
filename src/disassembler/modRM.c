@@ -46,7 +46,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			break;
 		}
 
-		if (params->rexPrefix->r)
+		if (params->rexPrefix->R)
 		{
 			result->reg = extendRegister(result->reg);
 		}
@@ -67,7 +67,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 	else if (selection == GET_CONTROL_REG)
 	{
-		if (params->rexPrefix->r)
+		if (params->rexPrefix->R)
 		{
 			result->reg = (params->modRM.reg + CR8);
 		}
@@ -79,7 +79,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 	else if (selection == GET_DEBUG_REG)
 	{
-		if (params->rexPrefix->r)
+		if (params->rexPrefix->R)
 		{
 			result->reg = (params->modRM.reg + DR8);
 		}
@@ -121,7 +121,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			break;
 		}
 
-		if (params->rexPrefix->b)
+		if (params->rexPrefix->B)
 		{
 			result->reg = extendRegister(result->reg);
 		}
@@ -429,7 +429,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
-		if (params->rexPrefix->b)
+		if (params->rexPrefix->B)
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
@@ -470,11 +470,11 @@ static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned ch
 			result->memoryAddress.regDisplacement = increaseRegisterSize(result->memoryAddress.regDisplacement);
 		}
 
-		if (params->rexPrefix->x)
+		if (params->rexPrefix->X)
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
-		if (params->rexPrefix->b && result->memoryAddress.regDisplacement != NO_REG)
+		if (params->rexPrefix->B && result->memoryAddress.regDisplacement != NO_REG)
 		{
 			result->memoryAddress.regDisplacement = extendRegister(result->memoryAddress.regDisplacement);
 		}

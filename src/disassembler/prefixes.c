@@ -67,10 +67,10 @@ unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 	if (rexByte < 0x40 || rexByte > 0x4F) { return 1; }
 
 	result->isValidREX = 1;
-	result->w = (rexByte >> 3) & 0x01;
-	result->r = (rexByte >> 2) & 0x01;
-	result->x = (rexByte >> 1) & 0x01;
-	result->b = (rexByte >> 0) & 0x01;
+	result->W = (rexByte >> 3) & 0x01;
+	result->R = (rexByte >> 2) & 0x01;
+	result->X = (rexByte >> 1) & 0x01;
+	result->B = (rexByte >> 0) & 0x01;
 
 	(*bytesPtr)++;
 
@@ -88,26 +88,26 @@ unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 	if (byte0 == 0xC5) // two-byte form
 	{
 		result->isValidVEX = 1;
-		result->r = (byte1 >> 7) & 0x01;
+		result->R = (byte1 >> 7) & 0x01;
 		result->vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
-		result->l = (byte1 >> 2) & 0x01;
+		result->L = (byte1 >> 2) & 0x01;
 		result->pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
-		result->mmmmm = 0b00001;
+		result->m_mmmm = 0b00001;
 
 		(*bytesPtr) += 2;
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
 		result->isValidVEX = 1;
-		result->r = (byte1 >> 7) & 0x01;
-		result->x = (byte1 >> 6) & 0x01;
-		result->b = (byte1 >> 5) & 0x01;
-		result->mmmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
+		result->R = (byte1 >> 7) & 0x01;
+		result->X = (byte1 >> 6) & 0x01;
+		result->B = (byte1 >> 5) & 0x01;
+		result->m_mmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
-		result->w = (byte2 >> 7) & 0x01;
+		result->W = (byte2 >> 7) & 0x01;
 		result->vvvv = (((byte2 >> 6) & 0x01) * 8) + (((byte2 >> 5) & 0x01) * 4) + (((byte2 >> 4) & 0x01) * 2) + ((byte2 >> 3) & 0x01);
-		result->l = (byte2 >> 2) & 0x01;
+		result->L = (byte2 >> 2) & 0x01;
 		result->pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
 
 		(*bytesPtr) += 3;
@@ -145,18 +145,20 @@ unsigned char handleEVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytes
 	{
 		result->isValidEVEX = 1;
 
-		result->rxb = (((p0 >> 7) & 0x01) * 4) + (((p0 >> 6) & 0x01) * 2) + ((p0 >> 5) & 0x01);
-		result->r = ((p0 >> 4) & 0x01);
+		result->R = ((p0 >> 7) & 0x01);
+		result->X = ((p0 >> 6) & 0x01);
+		result->B = ((p0 >> 5) & 0x01);
+		result->R_prime = ((p0 >> 4) & 0x01);
 		result->mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
 
-		result->w = ((p1 >> 7) & 0x01);
+		result->W = ((p1 >> 7) & 0x01);
 		result->vvvv = (((p1 >> 6) & 0x01) * 8) + (((p1 >> 5) & 0x01) * 4) + (((p1 >> 4) & 0x01) * 2) + ((p1 >> 3) & 0x01);
 		result->pp = (((p1 >> 1) & 0x01) * 2) + ((p1 >> 0) & 0x01);
 
 		result->z = ((p2 >> 7) & 0x01);
-		result->ll = (((p2 >> 6) & 0x01) * 2) + ((p2 >> 5) & 0x01);
+		result->LL = (((p2 >> 6) & 0x01) * 2) + ((p2 >> 5) & 0x01);
 		result->b = ((p2 >> 4) & 0x01);
-		result->v = ((p2 >> 3) & 0x01);
+		result->V_prime = ((p2 >> 3) & 0x01);
 		result->aaa = (((p2 >> 2) & 0x01) * 4) + (((p2 >> 1) & 0x01) * 2) + ((p2 >> 0) & 0x01);
 
 		switch (result->pp)
