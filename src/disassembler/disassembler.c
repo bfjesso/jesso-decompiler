@@ -29,56 +29,48 @@ static const char* ptrSizeStrs[] =
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes)
 {
 	struct DisassemblyParameters params = { 0 };
-	params.startBytePtr = bytes;
-
-	struct LegacyPrefixes legacyPrefixes = { NO_PREFIX, NO_PREFIX, NO_PREFIX, NO_PREFIX };
-	if (!handleLegacyPrefixes(&bytes, maxBytesAddr, &legacyPrefixes))
-	{
-		return 0;
-	}
-	
-	struct REXPrefix rexPrefix = { 0 };
-	if (disassemblerOptions->is64BitMode && !handleREXPrefix(&bytes, maxBytesAddr, &rexPrefix))
-	{
-		return 0;
-	}
-	
-	struct VEXPrefix vexPrefix = { 0 };
-	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !handleVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &vexPrefix))
-	{
-		return 0;
-	}
-	
-	struct EVEXPrefix evexPrefix = { 0 };
-	if (disassemblerOptions->is64BitMode && !rexPrefix.isValidREX && !vexPrefix.isValidVEX && !handleEVEXPrefix(&bytes, maxBytesAddr, &legacyPrefixes, &evexPrefix))
-	{
-		return 0;
-	}
-
 	params.bytes = bytes;
 	params.maxBytesAddr = maxBytesAddr;
+	params.startBytePtr = bytes;
 	params.is64BitMode = disassemblerOptions->is64BitMode;
-	params.legPrefixes = &legacyPrefixes;
-	params.rexPrefix = &rexPrefix;
-	params.vexPrefix = &vexPrefix;
-	params.evexPrefix = &evexPrefix;
-
-	// if the opcode is an extended one then modRM will be retrieved
-	struct Opcode opcode = { NO_MNEMONIC, -1, 0, 0, 0, 0, 0 };
-	if (!handleOpcode(&params, &opcode))
+	
+	if (!handleLegacyPrefixes(&params))
 	{
 		return 0;
 	}
-	params.opcode = &opcode;
+
+	if (params.is64BitMode) 
+	{
+		if (!handleREXPrefix(&params))
+		{
+			return 0;
+		}
+
+		if (!params.rexPrefix.isValidREX && !handleVEXPrefix(&params))
+		{
+			return 0;
+		}
+
+		if (!params.rexPrefix.isValidREX && !params.vexPrefix.isValidVEX && !handleEVEXPrefix(&params))
+		{
+			return 0;
+		}
+	}
+
+	// if the opcode is an extended one then modRM will be retrieved
+	if (!handleOpcode(&params))
+	{
+		return 0;
+	}
 
 	if (!handleOperands(&params, (struct Operand*)(&result->operands)))
 	{
 		return 0;
 	}
 
-	result->opcode = opcode.mnemonic;
-	result->group1Prefix = legacyPrefixes.group1;
-	result->isInvalid = (disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && opcode.opcodeSuperscript == o64);
+	result->opcode = params.opcode.mnemonic;
+	result->group1Prefix = params.legPrefixes.group1;
+	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
 
 	if (numOfBytes) 
 	{

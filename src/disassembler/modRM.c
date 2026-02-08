@@ -1,6 +1,5 @@
 #include "modRM.h"
 #include "registers.h"
-#include "prefixes.h"
 #include "operands.h"
 
 unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result)
@@ -46,7 +45,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			break;
 		}
 
-		if (params->rexPrefix->R)
+		if (params->rexPrefix.R)
 		{
 			result->reg = extendRegister(result->reg);
 		}
@@ -67,7 +66,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 	else if (selection == GET_CONTROL_REG)
 	{
-		if (params->rexPrefix->R)
+		if (params->rexPrefix.R)
 		{
 			result->reg = (params->modRM.reg + CR8);
 		}
@@ -79,7 +78,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 	else if (selection == GET_DEBUG_REG)
 	{
-		if (params->rexPrefix->R)
+		if (params->rexPrefix.R)
 		{
 			result->reg = (params->modRM.reg + DR8);
 		}
@@ -121,7 +120,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			break;
 		}
 
-		if (params->rexPrefix->B)
+		if (params->rexPrefix.B)
 		{
 			result->reg = extendRegister(result->reg);
 		}
@@ -134,7 +133,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 
 	unsigned char usedSIB = 0;
 
-	if (params->legPrefixes->group4 == ASO && !params->is64BitMode)
+	if (params->legPrefixes.group4 == ASO && !params->is64BitMode)
 	{
 		switch (params->modRM.mod)
 		{
@@ -425,11 +424,11 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 	}
 
-	if (!usedSIB && params->is64BitMode && params->legPrefixes->group4 != ASO && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
+	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
-		if (params->rexPrefix->B)
+		if (params->rexPrefix.B)
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
@@ -470,11 +469,11 @@ static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned ch
 			result->memoryAddress.regDisplacement = increaseRegisterSize(result->memoryAddress.regDisplacement);
 		}
 
-		if (params->rexPrefix->X)
+		if (params->rexPrefix.X)
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
-		if (params->rexPrefix->B && result->memoryAddress.regDisplacement != NO_REG)
+		if (params->rexPrefix.B && result->memoryAddress.regDisplacement != NO_REG)
 		{
 			result->memoryAddress.regDisplacement = extendRegister(result->memoryAddress.regDisplacement);
 		}

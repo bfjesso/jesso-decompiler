@@ -1,130 +1,128 @@
 #include "prefixes.h"
 
-unsigned char handleLegacyPrefixes(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* result)
+unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params)
 {
-	result->group1 = NO_PREFIX;
-	result->group2 = NO_PREFIX;
-	result->group3 = NO_PREFIX;
-	result->group4 = NO_PREFIX;
+	params->legPrefixes.group1 = NO_PREFIX;
+	params->legPrefixes.group2 = NO_PREFIX;
+	params->legPrefixes.group3 = NO_PREFIX;
+	params->legPrefixes.group4 = NO_PREFIX;
 
 	while (1)
 	{
-		if ((*bytesPtr) > maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return 0; }
 
-		unsigned char byte = (*bytesPtr)[0];
-		(*bytesPtr)++;
-
-		switch (byte)
+		switch (params->bytes[0])
 		{
 		case 0xF0:
-			result->group1 = LOCK;
+			params->legPrefixes.group1 = LOCK;
 			break;
 		case 0xF2:
-			result->group1 = REPNZ;
+			params->legPrefixes.group1 = REPNZ;
 			break;
 		case 0xF3:
-			result->group1 = REPZ;
+			params->legPrefixes.group1 = REPZ;
 			break;
 		case 0x2E:
-			result->group2 = CSO_BNT;
+			params->legPrefixes.group2 = CSO_BNT;
 			break;
 		case 0x36:
-			result->group2 = SSO;
+			params->legPrefixes.group2 = SSO;
 			break;
 		case 0x3E:
-			result->group2 = DSO_BT;
+			params->legPrefixes.group2 = DSO_BT;
 			break;
 		case 0x26:
-			result->group2 = ESO;
+			params->legPrefixes.group2 = ESO;
 			break;
 		case 0x64:
-			result->group2 = FSO;
+			params->legPrefixes.group2 = FSO;
 			break;
 		case 0x65:
-			result->group2 = GSO;
+			params->legPrefixes.group2 = GSO;
 			break;
 		case 0x66:
-			result->group3 = OSO;
+			params->legPrefixes.group3 = OSO;
 			break;
 		case 0x67:
-			result->group4 = ASO;
+			params->legPrefixes.group4 = ASO;
 			break;
 		default:
-			(*bytesPtr)--;
 			return 1;
 		}
+
+		params->bytes++;
 	}
 
 	return 1;
 }
 
-unsigned char handleREXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct REXPrefix* result)
+unsigned char handleREXPrefix(struct DisassemblyParameters* params)
 {
-	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return 0; }
 
-	unsigned char rexByte = (*bytesPtr)[0];
+	unsigned char rexByte = params->bytes[0];
 
 	if (rexByte < 0x40 || rexByte > 0x4F) { return 1; }
 
-	result->isValidREX = 1;
-	result->W = (rexByte >> 3) & 0x01;
-	result->R = (rexByte >> 2) & 0x01;
-	result->X = (rexByte >> 1) & 0x01;
-	result->B = (rexByte >> 0) & 0x01;
+	params->rexPrefix.isValidREX = 1;
+	params->rexPrefix.W = (rexByte >> 3) & 0x01;
+	params->rexPrefix.R = (rexByte >> 2) & 0x01;
+	params->rexPrefix.X = (rexByte >> 1) & 0x01;
+	params->rexPrefix.B = (rexByte >> 0) & 0x01;
 
-	(*bytesPtr)++;
+	params->bytes++;
 
 	return 1;
 }
 
-unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct VEXPrefix* result)
+unsigned char handleVEXPrefix(struct DisassemblyParameters* params)
 {
-	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return 0; }
 
-	unsigned char byte0 = (*bytesPtr)[0];
-	unsigned char byte1 = (*bytesPtr)[1];
-	unsigned char byte2 = (*bytesPtr)[2];
+	unsigned char byte0 = params->bytes[0];
+	unsigned char byte1 = params->bytes[1];
+	unsigned char byte2 = params->bytes[2];
 
 	if (byte0 == 0xC5) // two-byte form
 	{
-		result->isValidVEX = 1;
-		result->R = (byte1 >> 7) & 0x01;
-		result->vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
-		result->L = (byte1 >> 2) & 0x01;
-		result->pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
+		params->vexPrefix.isValidVEX = 1;
+		params->vexPrefix.R = (byte1 >> 7) & 0x01;
+		params->vexPrefix.vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
+		params->vexPrefix.L = (byte1 >> 2) & 0x01;
+		params->vexPrefix.pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
-		result->m_mmmm = 0b00001;
+		params->vexPrefix.m_mmmm = 0b00001;
 
-		(*bytesPtr) += 2;
+		params->bytes += 2;
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
-		result->isValidVEX = 1;
-		result->R = (byte1 >> 7) & 0x01;
-		result->X = (byte1 >> 6) & 0x01;
-		result->B = (byte1 >> 5) & 0x01;
-		result->m_mmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
+		params->vexPrefix.isValidVEX = 1;
+		params->vexPrefix.R = (byte1 >> 7) & 0x01;
+		params->vexPrefix.X = (byte1 >> 6) & 0x01;
+		params->vexPrefix.B = (byte1 >> 5) & 0x01;
+		params->vexPrefix.m_mmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
-		result->W = (byte2 >> 7) & 0x01;
-		result->vvvv = (((byte2 >> 6) & 0x01) * 8) + (((byte2 >> 5) & 0x01) * 4) + (((byte2 >> 4) & 0x01) * 2) + ((byte2 >> 3) & 0x01);
-		result->L = (byte2 >> 2) & 0x01;
-		result->pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
+		params->vexPrefix.W = (byte2 >> 7) & 0x01;
+		params->vexPrefix.vvvv = (((byte2 >> 6) & 0x01) * 8) + (((byte2 >> 5) & 0x01) * 4) + (((byte2 >> 4) & 0x01) * 2) + ((byte2 >> 3) & 0x01);
+		params->vexPrefix.L = (byte2 >> 2) & 0x01;
+		params->vexPrefix.pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
 
-		(*bytesPtr) += 3;
+		params->bytes += 3;
 	}
 
-	if(result->isValidVEX)
+	if(params->vexPrefix.isValidVEX)
 	{
-		switch(result->pp)
+		switch(params->vexPrefix.pp)
 		{
 		case 0b01:
-			legPrefixes->group3 = OSO; // 0x66
+			params->legPrefixes.group3 = OSO; // 0x66
 			break;
 		case 0b10:
-			legPrefixes->group1 = REPZ; // 0xF3
+			params->legPrefixes.group1 = REPZ; // 0xF3
 			break;
 		case 0b11:
-			legPrefixes->group1 = REPNZ; // 0xF2
+			params->legPrefixes.group1 = REPNZ; // 0xF2
 			break;
 		}
 	}
@@ -132,49 +130,49 @@ unsigned char handleVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesA
 	return 1;
 }
 
-unsigned char handleEVEXPrefix(unsigned char** bytesPtr, unsigned char* maxBytesAddr, struct LegacyPrefixes* legPrefixes, struct EVEXPrefix* result)
+unsigned char handleEVEXPrefix(struct DisassemblyParameters* params)
 {
-	if ((*bytesPtr) > maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return 0; }
 
-	unsigned char firstByte = (*bytesPtr)[0];
-	unsigned char p0 = (*bytesPtr)[1];
-	unsigned char p1 = (*bytesPtr)[2];
-	unsigned char p2 = (*bytesPtr)[3];
+	unsigned char firstByte = params->bytes[0];
+	unsigned char p0 = params->bytes[1];
+	unsigned char p1 = params->bytes[2];
+	unsigned char p2 = params->bytes[3];
 
 	if (firstByte == 0x62)
 	{
-		result->isValidEVEX = 1;
+		params->evexPrefix.isValidEVEX = 1;
 
-		result->R = ((p0 >> 7) & 0x01);
-		result->X = ((p0 >> 6) & 0x01);
-		result->B = ((p0 >> 5) & 0x01);
-		result->R_prime = ((p0 >> 4) & 0x01);
-		result->mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
+		params->evexPrefix.R = ((p0 >> 7) & 0x01);
+		params->evexPrefix.X = ((p0 >> 6) & 0x01);
+		params->evexPrefix.B = ((p0 >> 5) & 0x01);
+		params->evexPrefix.R_prime = ((p0 >> 4) & 0x01);
+		params->evexPrefix.mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
 
-		result->W = ((p1 >> 7) & 0x01);
-		result->vvvv = (((p1 >> 6) & 0x01) * 8) + (((p1 >> 5) & 0x01) * 4) + (((p1 >> 4) & 0x01) * 2) + ((p1 >> 3) & 0x01);
-		result->pp = (((p1 >> 1) & 0x01) * 2) + ((p1 >> 0) & 0x01);
+		params->evexPrefix.W = ((p1 >> 7) & 0x01);
+		params->evexPrefix.vvvv = (((p1 >> 6) & 0x01) * 8) + (((p1 >> 5) & 0x01) * 4) + (((p1 >> 4) & 0x01) * 2) + ((p1 >> 3) & 0x01);
+		params->evexPrefix.pp = (((p1 >> 1) & 0x01) * 2) + ((p1 >> 0) & 0x01);
 
-		result->z = ((p2 >> 7) & 0x01);
-		result->LL = (((p2 >> 6) & 0x01) * 2) + ((p2 >> 5) & 0x01);
-		result->b = ((p2 >> 4) & 0x01);
-		result->V_prime = ((p2 >> 3) & 0x01);
-		result->aaa = (((p2 >> 2) & 0x01) * 4) + (((p2 >> 1) & 0x01) * 2) + ((p2 >> 0) & 0x01);
+		params->evexPrefix.z = ((p2 >> 7) & 0x01);
+		params->evexPrefix.LL = (((p2 >> 6) & 0x01) * 2) + ((p2 >> 5) & 0x01);
+		params->evexPrefix.b = ((p2 >> 4) & 0x01);
+		params->evexPrefix.V_prime = ((p2 >> 3) & 0x01);
+		params->evexPrefix.aaa = (((p2 >> 2) & 0x01) * 4) + (((p2 >> 1) & 0x01) * 2) + ((p2 >> 0) & 0x01);
 
-		switch (result->pp)
+		switch (params->evexPrefix.pp)
 		{
 		case 0b01:
-			legPrefixes->group3 = OSO; // 0x66
+			params->legPrefixes.group3 = OSO; // 0x66
 			break;
 		case 0b10:
-			legPrefixes->group1 = REPZ; // 0xF3
+			params->legPrefixes.group1 = REPZ; // 0xF3
 			break;
 		case 0b11:
-			legPrefixes->group1 = REPNZ; // 0xF2
+			params->legPrefixes.group1 = REPNZ; // 0xF2
 			break;
 		}
 
-		(*bytesPtr) += 4;
+		params->bytes += 4;
 	}
 
 	return 1;
