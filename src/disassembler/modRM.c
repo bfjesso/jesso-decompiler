@@ -1,6 +1,7 @@
 #include "modRM.h"
 #include "registers.h"
 #include "operands.h"
+#include"prefixes.h"
 
 unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result)
 {
@@ -120,7 +121,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 			break;
 		}
 
-		if (params->rexPrefix.B)
+		if (checkFlagB(params))
 		{
 			result->reg = extendRegister(result->reg);
 		}
@@ -428,7 +429,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
-		if (params->rexPrefix.B)
+		if (checkFlagB(params))
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
