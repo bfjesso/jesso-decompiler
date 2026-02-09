@@ -372,7 +372,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
 		if (conditionIndex != -1)
 		{
-			isInCondition = 1;
+			isInCondition = conditions[conditionIndex].conditionType != LOOP_CT;
 		}
 
 		if (isInCondition && currentInstruction->operands[0].type == REGISTER)
