@@ -496,6 +496,7 @@ unsigned char readSectionBytes64(const char* filePath, Elf64_Shdr* section, unsi
 	{
 		fseek(file, section->sh_offset, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
+		fclose(file);
 		return 1;
 	}
 	
@@ -509,6 +510,7 @@ unsigned char readSectionBytes32(const char* filePath, Elf32_Shdr* section, unsi
 	{
 		fseek(file, section->sh_offset, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
+		fclose(file);
 		return 1;
 	}
 
