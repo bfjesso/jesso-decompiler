@@ -260,6 +260,7 @@ const struct Opcode extendedOpcodeMapGroup9F311B[8] = // [ModR/M bits 3-5]
 };
 
 // group 10 is UD1
+const struct Opcode extendedOpcodeGroup10 = { UD1, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT };
 
 // group 11 for opcode 0xC6
 const struct Opcode extendedOpcodeMapGroup11C6[8] = // [ModR/M bits 3-5]

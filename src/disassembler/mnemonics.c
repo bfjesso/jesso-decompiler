@@ -167,6 +167,7 @@ extern const char* mnemonicStrs[] =
 	"VSHUFI32X4", "VSHUFI64X2",
 	"VZEROUPPER", "VZEROALL",
 
+	"UD0", "UD1", "UD2",
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)

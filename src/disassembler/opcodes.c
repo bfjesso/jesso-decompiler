@@ -186,6 +186,10 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 				}
 			}
 		}
+		else if (params->opcode.extensionGroup == 10) 
+		{
+			extendedOpcode = &extendedOpcodeGroup10;
+		}
 		else if (params->opcode.extensionGroup == 11)
 		{
 			if (opcodeByte == 0xC6)
