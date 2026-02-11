@@ -18,7 +18,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 	int mmm = params->vexPrefix.m_mmmm != 0 ? params->vexPrefix.m_mmmm : params->evexPrefix.mmm;
 	if (params->bytes[0] == 0x0F || mmm != 0)
 	{
-		if ((params->bytes + 2) <= params->maxBytesAddr && (params->bytes[1] == 0x38 || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
+		if ((params->bytes + 2) <= params->maxBytesAddr && ((params->bytes[1] == 0x38 && mmm == 0) || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
 		{
 			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
 			params->bytes += mmm != 0 ? 1 : 3;
@@ -37,7 +37,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 				params->opcode = threeByteOpcodeMap38[opcodeByte][prefixIndex];
 			}
 		}
-		else if ((params->bytes + 2) <= params->maxBytesAddr && (params->bytes[1] == 0x3A || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
+		else if ((params->bytes + 2) <= params->maxBytesAddr && ((params->bytes[1] == 0x3A && mmm == 0) || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
 		{
 			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
 			params->bytes += mmm != 0 ? 1 : 3;

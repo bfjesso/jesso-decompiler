@@ -331,6 +331,11 @@ void MainGui::DisassembleCodeSections()
 			
 			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 
+			if (currentInstruction.address == 0x140007E8E) 
+			{
+				int tt = 0;
+			}
+
 			disassembledInstructions.push_back(currentInstruction);
 
 			if (currentInstruction.opcode == NO_MNEMONIC)
