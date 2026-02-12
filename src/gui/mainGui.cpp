@@ -524,7 +524,6 @@ void MainGui::GetFunctionSymbols()
 	{
 		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, functions[i].instructions[0].address, &functions[i].name))
 		{
-			sprintfJdc(&(functions[i].name), 0, "func%llX", functions[i].instructions[0].address - imageBase);
 			functionsGrid->SetCellValue(i, 2, functions[i].name.buffer);
 		}
 	}
