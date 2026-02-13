@@ -422,6 +422,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		else { strcpy(compOperator, "!="); }
 		break;
 	case JG_SHORT:
+	case JA_SHORT:
 	case CMOVG:
 		if (invertOperator) { strcpy(compOperator, "<="); }
 		else { strcpy(compOperator, ">"); }
