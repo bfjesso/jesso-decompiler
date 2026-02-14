@@ -24,7 +24,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		
 		if (compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP))
 		{
-			if (operand->memoryAddress.constDisplacement < 0 && compareRegisters(operand->memoryAddress.reg, BP) || (operand->memoryAddress.constDisplacement < params.currentFunc->stackFrameSize && compareRegisters(operand->memoryAddress.reg, SP)))
+			if (isOperandStackVar(operand, params.currentFunc->stackFrameSize))
 			{
 				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (localVar)
@@ -36,7 +36,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 					return 0;
 				}
 			}
-			else
+			else if (isOperandStackArg(operand, params.currentFunc->stackFrameSize))
 			{
 				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
 				if (stackArg)

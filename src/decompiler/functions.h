@@ -92,6 +92,10 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int l
 
 unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, int numOfInstructions, int startInstructionIndex);
 
+unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize);
+
+unsigned char isOperandStackArg(struct Operand* operand, int stackFrameSize);
+
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 
 struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);

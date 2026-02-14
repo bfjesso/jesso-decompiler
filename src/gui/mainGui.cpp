@@ -166,7 +166,7 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	UpdateDisassemblyTextCtrl();
+	// UpdateDisassemblyTextCtrl();
 
 	statusStaticText->SetLabelText("Status: idle");
 

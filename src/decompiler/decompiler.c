@@ -187,9 +187,7 @@ static unsigned char getAllLocalVars(struct DecompilationParameters params)
 		for (int j = 0; j < 4; j++)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
-			if (currentOperand->type == MEM_ADDRESS && 
-				((currentOperand->memoryAddress.constDisplacement < 0 && compareRegisters(currentOperand->memoryAddress.reg, BP)) || 
-					(currentOperand->memoryAddress.constDisplacement < params.currentFunc->stackFrameSize && compareRegisters(currentOperand->memoryAddress.reg, SP))))
+			if (isOperandStackVar(currentOperand, params.currentFunc->stackFrameSize))
 			{
 				long long displacement = currentOperand->memoryAddress.constDisplacement;
 

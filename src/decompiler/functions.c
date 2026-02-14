@@ -101,7 +101,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 					
 					if (compareRegisters(currentOperand->memoryAddress.reg, k))
 					{
-						if ((k == RBP && currentOperand->memoryAddress.constDisplacement > 0) || (k == RSP && currentOperand->memoryAddress.constDisplacement > result->stackFrameSize))
+						if (isOperandStackArg(currentOperand, result->stackFrameSize))
 						{
 							if (!getStackArgByOffset(result, currentOperand->memoryAddress.constDisplacement))
 							{
@@ -452,6 +452,16 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 	}
 
 	return 0;
+}
+
+unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize)
+{
+	return operand->type == MEM_ADDRESS && ((operand->memoryAddress.constDisplacement < 0 && compareRegisters(operand->memoryAddress.reg, BP)) || ((operand->memoryAddress.constDisplacement < stackFrameSize || stackFrameSize == 0) && compareRegisters(operand->memoryAddress.reg, SP)));
+}
+
+unsigned char isOperandStackArg(struct Operand* operand, int stackFrameSize)
+{
+	return operand->type == MEM_ADDRESS && ((compareRegisters(BP, operand->memoryAddress.reg) && operand->memoryAddress.constDisplacement > 0) || (compareRegisters(SP, operand->memoryAddress.reg) && stackFrameSize != 0 && operand->memoryAddress.constDisplacement > stackFrameSize));
 }
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset)
