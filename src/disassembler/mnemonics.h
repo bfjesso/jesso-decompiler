@@ -174,7 +174,8 @@ enum Mnemonic
 
 	UD0, UD1, UD2,
 
-	EXTENDED_OPCODE
+	DATA,
+	EXTENDED_OPCODE,
 };
 
 #ifdef __cplusplus

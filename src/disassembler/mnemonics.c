@@ -168,6 +168,8 @@ extern const char* mnemonicStrs[] =
 	"VZEROUPPER", "VZEROALL",
 
 	"UD0", "UD1", "UD2",
+
+	"DATA"
 };
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)

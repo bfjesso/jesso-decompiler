@@ -322,6 +322,7 @@ void MainGui::DisassembleCodeSections()
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
 		unsigned char numOfBytes = 0;
+		unsigned long long jmpTableAddress = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
 			if (numOfBytes == 0) 
@@ -330,11 +331,7 @@ void MainGui::DisassembleCodeSections()
 			}
 			
 			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
-
-			if (currentInstruction.address == 0x140007E8E) 
-			{
-				int tt = 0;
-			}
+			currentIndex += numOfBytes;
 
 			disassembledInstructions.push_back(currentInstruction);
 
@@ -342,9 +339,36 @@ void MainGui::DisassembleCodeSections()
 			{
 				break;
 			}
+			else if (imageBase + codeSections[i].virtualAddress + currentIndex == jmpTableAddress)
+			{
+				struct DisassembledInstruction dataInstruction;
+				dataInstruction.opcode = DATA;
+				dataInstruction.operands[0].type = IMMEDIATE;
+				dataInstruction.operands[1].type = NO_OPERAND;
+				dataInstruction.operands[2].type = NO_OPERAND;
+				dataInstruction.operands[3].type = NO_OPERAND;
+				dataInstruction.group1Prefix = NO_PREFIX;
+				dataInstruction.isInvalid = 0;
+
+				while (bytes[currentIndex] != 0xCC || bytes[currentIndex + 1] != 0xCC)
+				{
+					dataInstruction.operands[0].immediate = bytes[currentIndex];
+					dataInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
+					disassembledInstructions.push_back(dataInstruction);
+					currentIndex++;
+					instructionNum++;
+				}
+
+				jmpTableAddress = 0;
+			}
+			else if (jmpTableAddress == 0 && currentInstruction.opcode == JMP_NEAR && currentInstruction.operands[0].type == REGISTER && // looking for pattern of switch jump
+				disassembledInstructions[instructionNum - 1].opcode == ADD && 
+				disassembledInstructions[instructionNum - 2].opcode == MOV && disassembledInstructions[instructionNum - 2].operands[1].type == MEM_ADDRESS && disassembledInstructions[instructionNum - 2].operands[1].memoryAddress.scale != 0)
+			{
+				jmpTableAddress = imageBase + disassembledInstructions[instructionNum - 2].operands[1].memoryAddress.constDisplacement;
+			}
 
 			instructionNum++;
-			currentIndex += numOfBytes;
 		}
 
 		delete[] bytes;
