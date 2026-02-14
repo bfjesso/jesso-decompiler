@@ -585,6 +585,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	const int ID_COPY = 100;
 	const int ID_SELECT_ALL = 101;
 	const int ID_CONVERT_NUMBER = 102;
+	const int ID_FIND = 103;
 
 	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
@@ -665,6 +666,27 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 		ctrl->SetSelection(0, ctrl->GetLastPosition());
 		ctrl->SetFocus();
 		}, ID_SELECT_ALL);
+
+	menu.Append(ID_FIND, "Find");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Find text");
+		if (dlg.ShowModal() == wxID_OK) 
+		{
+			wxString txt = dlg.GetValue();
+			if (!txt.IsEmpty()) 
+			{
+				int pos = ctrl->FindText(0, ctrl->GetLength(), txt);
+				if (pos == -1) 
+				{
+					wxMessageBox("Text not found", "Failed to find text");
+				}
+				else 
+				{
+					ctrl->GotoPos(pos);
+				}
+			}
+		}
+		}, ID_FIND);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
