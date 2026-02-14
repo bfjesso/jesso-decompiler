@@ -202,6 +202,30 @@ const char* getPtrSizeStr(int ptrSize)
 	return ptrSizeStrs[ptrSize <= 10 ? ptrSize / 2 : ptrSize == 16 ? 6 : ptrSize == 32 ? 7 : ptrSize == 64 ? 8 : 0];
 }
 
+unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
+{
+	struct DisassembledInstruction* currentInstruction = &instructions[numOfInstructions - 1];
+
+	if (currentInstruction->opcode == JMP_NEAR && currentInstruction->operands[0].type == REGISTER)
+	{
+		enum Register targetReg = currentInstruction->operands[0].reg;
+		int i = numOfInstructions - 2;
+		struct DisassembledInstruction* instruction = &instructions[i];
+		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode))
+		{
+			if (instruction->opcode == MOV && instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) && instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+			{
+				return instruction->operands[1].memoryAddress.constDisplacement;
+			}
+
+			i--;
+			instruction = &instructions[i];
+		}
+	}
+
+	return 0;
+}
+
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
 {
 	if (instruction->operands[operandNum].type == REGISTER && compareRegisters(instruction->operands[operandNum].reg, AX)) // some opcodes may modify a register even if it isn't an operand

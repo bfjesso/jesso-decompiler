@@ -1,5 +1,7 @@
 #include "mainGui.h"
 #include "../decompiler/dataTypes.h"
+#include "../disassembler/registers.h"
+#include "../disassembler/mnemonics.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
@@ -325,11 +327,11 @@ void MainGui::DisassembleCodeSections()
 		unsigned long long jmpTableAddress = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
-			if (numOfBytes == 0) 
+			if (numOfBytes == 0)
 			{
 				break;
 			}
-			
+
 			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 			currentIndex += numOfBytes;
 
@@ -339,7 +341,7 @@ void MainGui::DisassembleCodeSections()
 			{
 				break;
 			}
-			else if (imageBase + codeSections[i].virtualAddress + currentIndex == jmpTableAddress)
+			else if (codeSections[i].virtualAddress + currentIndex == jmpTableAddress)
 			{
 				struct DisassembledInstruction dataInstruction;
 				dataInstruction.opcode = DATA;
@@ -361,11 +363,9 @@ void MainGui::DisassembleCodeSections()
 
 				jmpTableAddress = 0;
 			}
-			else if (jmpTableAddress == 0 && currentInstruction.opcode == JMP_NEAR && currentInstruction.operands[0].type == REGISTER && // looking for pattern of switch jump
-				disassembledInstructions[instructionNum - 1].opcode == ADD && 
-				disassembledInstructions[instructionNum - 2].opcode == MOV && disassembledInstructions[instructionNum - 2].operands[1].type == MEM_ADDRESS && disassembledInstructions[instructionNum - 2].operands[1].memoryAddress.scale != 0)
+			else if (jmpTableAddress == 0) 
 			{
-				jmpTableAddress = imageBase + disassembledInstructions[instructionNum - 2].operands[1].memoryAddress.constDisplacement;
+				jmpTableAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size()); // returns zero if there is none
 			}
 
 			instructionNum++;
