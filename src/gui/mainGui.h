@@ -100,7 +100,7 @@ public:
 
 	void ApplySyntaxHighlighting(Function* function);
 
-	void ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction);
+	void ApplyAsmHighlighting();
 
 	void ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor);
 

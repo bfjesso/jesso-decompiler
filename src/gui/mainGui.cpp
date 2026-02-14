@@ -166,7 +166,7 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	// UpdateDisassemblyTextCtrl();
+	UpdateDisassemblyTextCtrl();
 
 	statusStaticText->SetLabelText("Status: idle");
 
@@ -471,6 +471,9 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	int numOfInstructions = disassembledInstructions.size();
 	int codeSectionIndex = 0;
 
+	wxString disassemblyText = "";
+	disassemblyText.reserve(numOfInstructions * 50);
+
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
 		if (disassembledInstructions[i].address > codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size + imageBase)
@@ -494,21 +497,11 @@ void MainGui::UpdateDisassemblyTextCtrl()
 			asmStr += " ; invalid opcode";
 		}
 
-		int pos = disassemblyTextCtrl->GetLength() - 1;
-		disassemblyTextCtrl->AppendText(addressInfoStr);
-		disassemblyTextCtrl->StartStyling(pos);
-		disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
-
-		pos += addressInfoStr.length() + 1;
-
-		disassemblyTextCtrl->AppendText(asmStr);
-		disassemblyTextCtrl->StartStyling(pos);
-		disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
-
-		ApplyAsmHighlighting(pos, asmStr, (DisassembledInstruction*)(&disassembledInstructions[i]));
-
-		disassemblyTextCtrl->AppendText("\n");
+		disassemblyText += addressInfoStr + asmStr + "\n";
 	}
+
+	disassemblyTextCtrl->SetText(disassemblyText);
+	ApplyAsmHighlighting();
 
 	disassemblyTextCtrl->Thaw();
 	disassemblyTextCtrl->SetReadOnly(true);
@@ -800,98 +793,120 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 }
 
-void MainGui::ApplyAsmHighlighting(int pos, wxString str, DisassembledInstruction* instruction)
+void MainGui::ApplyAsmHighlighting()
 {
-	disassemblyTextCtrl->StartStyling(pos);
-	disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
+	int numOfInstructions = disassembledInstructions.size();
+	int pos = 0;
+	wxString disassemblyText = disassemblyTextCtrl->GetValue();
 
-	// regs
-	int start = 0;
-	for (int i = 0; i < 4; i++) 
+	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		wxString regStr = "";
-		wxString regStr2 = "";
-		if (instruction->operands[i].type == REGISTER) 
-		{
-			regStr = wxString(registerStrs[instruction->operands[i].reg]);
-		}
-		else if (instruction->operands[i].type == MEM_ADDRESS)
-		{
-			if (instruction->operands[i].memoryAddress.reg != NO_REG) 
-			{
-				regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
-			}
-
-			if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
-			{
-				regStr2 = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
-			}
-		}
+		struct DisassembledInstruction* instruction = &disassembledInstructions[i];
 		
+		int tabPos = disassemblyText.find('\t', pos);
+		wxString addressInfoStr = disassemblyText.substr(pos, tabPos - pos);
+		wxString asmStr = disassemblyText.substr(tabPos + 1, disassemblyText.find('\n', tabPos) - (tabPos + 1));
+		
+		disassemblyTextCtrl->StartStyling(pos);
+		disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
 
-		if (!regStr.IsEmpty()) 
-		{
-			int loc = str.find(regStr, start);
-			disassemblyTextCtrl->StartStyling(pos + loc);
-			disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-			start = loc + regStr.length();
-		}
+		pos += addressInfoStr.length() + 1;
 
-		if (!regStr2.IsEmpty())
-		{
-			int loc = str.find(regStr2, start);
-			disassemblyTextCtrl->StartStyling(pos + loc);
-			disassemblyTextCtrl->SetStyling(regStr2.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-			start = loc + regStr2.length();
-		}
+		disassemblyTextCtrl->StartStyling(pos);
+		disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
 
-		if (instruction->operands[i].type == MEM_ADDRESS)
+		disassemblyTextCtrl->StartStyling(pos);
+		disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
+
+		// regs
+		int start = 0;
+		for (int i = 0; i < 4; i++)
 		{
-			// segment
-			if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT) 
+			wxString regStr = "";
+			wxString regStr2 = "";
+			if (instruction->operands[i].type == REGISTER)
 			{
-				wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
-				disassemblyTextCtrl->StartStyling(pos + str.find(segStr));
-				disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+				regStr = wxString(registerStrs[instruction->operands[i].reg]);
 			}
-			
-			// ptr size
-			int ptrSize = instruction->operands[i].memoryAddress.ptrSize;
-			if (ptrSize != 0)
+			else if (instruction->operands[i].type == MEM_ADDRESS)
 			{
-				wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
-				disassemblyTextCtrl->StartStyling(pos + str.find(sizeStr));
-				disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
-			}
-		}
-	}
-
-	// numbers
-	start = 0;
-	while (start < str.length())
-	{
-		int num = str.find("0x", start);
-		if (num != wxNOT_FOUND)
-		{
-			int end = str.length();
-			for (int i = num + 2; i < end; i++) 
-			{
-				if ((str[i] < '0' || str[i] > '9') && (str[i] < 'A' || str[i] > 'F')) 
+				if (instruction->operands[i].memoryAddress.reg != NO_REG)
 				{
-					end = i;
-					break;
+					regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
+				}
+
+				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
+				{
+					regStr2 = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
 				}
 			}
 
-			disassemblyTextCtrl->StartStyling(pos + num);
-			disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+			if (!regStr.IsEmpty())
+			{
+				int loc = asmStr.find(regStr, start);
+				disassemblyTextCtrl->StartStyling(pos + loc);
+				disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+				start = loc + regStr.length();
+			}
 
-			start = end + 1;
+			if (!regStr2.IsEmpty())
+			{
+				int loc = asmStr.find(regStr2, start);
+				disassemblyTextCtrl->StartStyling(pos + loc);
+				disassemblyTextCtrl->SetStyling(regStr2.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+				start = loc + regStr2.length();
+			}
+
+			if (instruction->operands[i].type == MEM_ADDRESS)
+			{
+				// segment
+				if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT)
+				{
+					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
+					disassemblyTextCtrl->StartStyling(pos + asmStr.find(segStr));
+					disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+				}
+
+				// ptr size
+				int ptrSize = instruction->operands[i].memoryAddress.ptrSize;
+				if (ptrSize != 0)
+				{
+					wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
+					disassemblyTextCtrl->StartStyling(pos + asmStr.find(sizeStr));
+					disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
+				}
+			}
 		}
-		else
+
+		// numbers
+		start = 0;
+		while (start < asmStr.length())
 		{
-			break;
+			int num = asmStr.find("0x", start);
+			if (num != wxNOT_FOUND)
+			{
+				int end = asmStr.length();
+				for (int i = num + 2; i < end; i++)
+				{
+					if ((asmStr[i] < '0' || asmStr[i] > '9') && (asmStr[i] < 'A' || asmStr[i] > 'F'))
+					{
+						end = i;
+						break;
+					}
+				}
+
+				disassemblyTextCtrl->StartStyling(pos + num);
+				disassemblyTextCtrl->SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+
+				start = end + 1;
+			}
+			else
+			{
+				break;
+			}
 		}
+
+		pos += asmStr.size();
 	}
 }
 
