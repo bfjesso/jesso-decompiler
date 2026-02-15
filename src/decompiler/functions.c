@@ -345,15 +345,8 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 
 					numFixed++;
 				}
-				else 
-				{
-					currentFunc->addressOfFirstFuncCall = 0;
-				}
 
 				free(initializedRegs);
-			}
-			else 
-			{
 				currentFunc->addressOfFirstFuncCall = 0;
 			}
 		}
