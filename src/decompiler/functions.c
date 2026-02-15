@@ -1,7 +1,4 @@
 #include "functions.h"
-#include "../disassembler/opcodes.h"
-
-#include <stdio.h>
 
 unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
 {
@@ -16,6 +13,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &instructions[i];
+
+		if (currentInstruction->address == 0x1402e7400) 
+		{
+			int tt = 0;
+		}
 
 		if (!foundFirstInstruction)
 		{
@@ -34,6 +36,16 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		if (isOpcodeCall(currentInstruction->opcode))
 		{
 			initializedRegs[0] = 1; // AX
+
+			if (result->addressOfFirstFuncCall == 0)
+			{
+				unsigned long long calleeAddress = resolveJmpChain(instructions, numOfInstructions, i);
+				if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
+				{
+					result->addressOfFirstFuncCall = calleeAddress;
+					result->indexOfFirstFuncCall = result->numOfInstructions - 1;
+				}
+			}
 		}
 		else if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
 		{
@@ -247,6 +259,104 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 				functions[i].returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
 			}
 		}
+	}
+
+	return 1;
+}
+
+unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numOfFunctions) // checks for arguments that aren't used in the function but are just passed to another function call
+{
+	int numFixed = 0;
+
+	for (int i = 0; i < numOfFunctions; i++) 
+	{
+		struct Function* currentFunc = &functions[i];
+		if (currentFunc->addressOfFirstFuncCall != 0)
+		{
+			int functionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, currentFunc->addressOfFirstFuncCall);
+			if (functionIndex != -1 && functions[functionIndex].numOfRegArgs > 0)
+			{
+				struct Function* callee = &functions[functionIndex];
+
+				int numOfRegArgsInit = 0;
+				enum Register* initializedRegs = (enum Register*)malloc(sizeof(enum Register) * callee->numOfRegArgs);
+				if (!initializedRegs) 
+				{
+					return 0;
+				}
+
+				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= 0; j--)
+				{
+					struct DisassembledInstruction* instruction = &currentFunc->instructions[j];
+
+					if (isOpcodeJcc(instruction->opcode) || instruction->opcode == JMP_SHORT)
+					{
+						break;
+					}
+
+					for (int k = 0; k < callee->numOfRegArgs; k++)
+					{
+						int alreadyFound = 0;
+						for (int l = 0; l < numOfRegArgsInit; l++) 
+						{
+							if (initializedRegs[l] == callee->regArgs[k].reg) 
+							{
+								alreadyFound = 1;
+								break;
+							}
+						}
+						if (alreadyFound) { continue; }
+						
+						int overwrites = 0;
+						if (doesInstructionModifyRegister(instruction, callee->regArgs[k].reg, 0, &overwrites) && overwrites)
+						{
+							initializedRegs[numOfRegArgsInit] = callee->regArgs[k].reg;
+							numOfRegArgsInit++;
+							break;
+						}
+					}
+				}
+
+				if (numOfRegArgsInit != callee->numOfRegArgs) 
+				{
+					for (int k = 0; k < callee->numOfRegArgs; k++)
+					{
+						int isInitialized = 0;
+						for (int l = 0; l < numOfRegArgsInit; l++)
+						{
+							if (initializedRegs[l] == callee->regArgs[k].reg)
+							{
+								isInitialized = 1;
+								break;
+							}
+						}
+						if (isInitialized) { continue; }
+
+						currentFunc->regArgs[currentFunc->numOfRegArgs].reg = callee->regArgs[k].reg;
+						currentFunc->regArgs[currentFunc->numOfRegArgs].type = callee->regArgs[k].type;
+						currentFunc->regArgs[currentFunc->numOfRegArgs].name = copyJdcStr(&callee->regArgs[k].name);
+						currentFunc->numOfRegArgs++;
+					}
+
+					numFixed++;
+				}
+				else 
+				{
+					currentFunc->addressOfFirstFuncCall = 0;
+				}
+
+				free(initializedRegs);
+			}
+			else 
+			{
+				currentFunc->addressOfFirstFuncCall = 0;
+			}
+		}
+	}
+
+	if (numFixed != 0) 
+	{
+		return fixAllFunctionArgs(functions, numOfFunctions);
 	}
 
 	return 1;

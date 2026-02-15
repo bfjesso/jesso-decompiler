@@ -46,6 +46,8 @@ struct Function
 {
 	enum PrimitiveType returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
+	unsigned long long addressOfFirstFuncCall; // if the function has arguments that it only uses to pass to this function call
+	int indexOfFirstFuncCall;
 
 	enum CallingConvention callingConvention;
 
@@ -79,6 +81,8 @@ extern "C"
 	unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
+
+	unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numOfFunctions);
 
 	void freeFunction(struct Function* function);
 

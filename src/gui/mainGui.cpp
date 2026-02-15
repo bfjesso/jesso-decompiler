@@ -454,6 +454,7 @@ void MainGui::FindAllFunctions()
 	if (functions.size() > 0) 
 	{
 		fixAllFunctionReturnTypes(&functions[0], functions.size(), is64Bit);
+		fixAllFunctionArgs(&functions[0], functions.size());
 	}
 
 	numOfDataSections = 0;
