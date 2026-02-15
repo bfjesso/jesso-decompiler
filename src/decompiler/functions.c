@@ -223,6 +223,24 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 			}
 		}
 
+		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
+		{
+			unsigned long long jumpAddr = instructions[i].address + currentInstruction->operands[0].immediate;
+			if (jumpAddr > addressToJumpTo)
+			{
+				addressToJumpTo = jumpAddr;
+			}
+		}
+
+		if (addressToJumpTo != 0 && instructions[i].address < addressToJumpTo)
+		{
+			continue;
+		}
+		else
+		{
+			addressToJumpTo = 0;
+		}
+
 		// check for return value
 		overwrites = 0;
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
@@ -251,25 +269,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 				canReturnNothing = 1;
 			}
 		}
-
-		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
-		{
-			unsigned long long jumpAddr = instructions[i].address + currentInstruction->operands[0].immediate;
-			if (jumpAddr > addressToJumpTo)
-			{
-				addressToJumpTo = jumpAddr;
-			}
-		}
-
-		if (addressToJumpTo != 0 && instructions[i].address < addressToJumpTo)
-		{
-			continue;
-		}
-		else
-		{
-			addressToJumpTo = 0;
-		}
-
 		
 		if (isOpcodeReturn(currentInstruction->opcode))
 		{
