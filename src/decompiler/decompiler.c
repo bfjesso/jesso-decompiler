@@ -34,7 +34,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 	strcatJdc(result, "{\n");
 
-	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnedVars > 0)
+	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
 	{
 		if (!declareAllLocalVariables(params.currentFunc, result))
 		{
