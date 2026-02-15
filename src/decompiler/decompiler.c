@@ -4,7 +4,6 @@
 #include "returnStatements.h"
 #include "functionCalls.h"
 #include "dataTypes.h"
-#include "../disassembler/opcodes.h"
 #include "../disassembler/registers.h"
 
 const char* indent = "    ";
@@ -16,10 +15,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
-		if (!getAllLocalVars(params)) 
-		{
-			return 0;
-		}
 		if (!getAllReturnedVars(params)) 
 		{
 			return 0;
@@ -47,6 +42,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
+	params.stackFrameSize = 0;
+
 	unsigned char numOfIndents = 1;
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
 	int originalIndex = -1;
@@ -55,6 +52,11 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		params.startInstructionIndex = i;
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP))
+		{
+			params.stackFrameSize += currentInstruction->operands[1].immediate;
+		}
 
 		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
@@ -176,63 +178,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	}
 
 	return strcatJdc(result, "}\n");
-}
-
-static unsigned char getAllLocalVars(struct DecompilationParameters params)
-{
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
-	{
-		struct DisassembledInstruction* currentInstruction = &params.currentFunc->instructions[i];
-
-		for (int j = 0; j < 4; j++)
-		{
-			struct Operand* currentOperand = &currentInstruction->operands[j];
-			if (isOperandStackVar(currentOperand, params.currentFunc->stackFrameSize))
-			{
-				long long displacement = currentOperand->memoryAddress.constDisplacement;
-
-				unsigned char isAlreadyFound = 0;
-				for (int k = 0; k < params.currentFunc->numOfLocalVars; k++)
-				{
-					if (params.currentFunc->localVars[k].stackOffset == displacement)
-					{
-						isAlreadyFound = 1;
-						break;
-					}
-				}
-
-				if (!isAlreadyFound)
-				{
-					struct StackVariable* newLocalVars = (struct StackVariable*)realloc(params.currentFunc->localVars, sizeof(struct StackVariable) * (params.currentFunc->numOfLocalVars + 1));
-					if (newLocalVars)
-					{
-						params.currentFunc->localVars = newLocalVars;
-					}
-					else
-					{
-						return 0;
-					}
-					
-					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].stackOffset = (int)displacement;
-					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
-					params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name = initializeJdcStr();
-
-					if (displacement > 0) 
-					{
-						sprintfJdc(&(params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name), 0, "var%X", (int)displacement);
-					}
-					else 
-					{
-						sprintfJdc(&(params.currentFunc->localVars[params.currentFunc->numOfLocalVars].name), 0, "var%X", -(int)displacement);
-					}
-
-					params.currentFunc->numOfLocalVars++;
-				}
-			}
-		}
-	}
-
-	return 1;
 }
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters params)

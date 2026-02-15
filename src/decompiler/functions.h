@@ -53,8 +53,6 @@ struct Function
 
 	struct JdcStr name;
 
-	int stackFrameSize;
-
 	struct RegisterVariable* regArgs;
 	unsigned char numOfRegArgs;
 	struct StackVariable* stackArgs;

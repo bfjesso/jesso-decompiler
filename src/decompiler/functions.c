@@ -4,6 +4,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
+	int stackFrameSize = 0;
+
 	unsigned long long addressToJumpTo = 0;
 	unsigned char canReturnNothing = 0;
 
@@ -48,7 +50,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		}
 		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
 		{
-			result->stackFrameSize += currentInstruction->operands[1].immediate;
+			stackFrameSize += currentInstruction->operands[1].immediate;
 		}
 
 		// checking all operands for arguments
@@ -108,25 +110,89 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 					
 					if (compareRegisters(currentOperand->memoryAddress.reg, k))
 					{
-						if (isOperandStackArg(currentOperand, result->stackFrameSize))
+						if (isOperandStackArg(currentOperand, stackFrameSize))
 						{
-							if (!getStackArgByOffset(result, currentOperand->memoryAddress.constDisplacement))
+							int stackOffset = currentOperand->memoryAddress.constDisplacement;
+							if (k == RSP) 
+							{ 
+								stackOffset -= stackFrameSize; 
+							
+							}
+							if (!getStackArgByOffset(result, stackOffset) && !getLocalVarByOffset(result, stackOffset))
 							{
-								struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
-								if (newStackArgs)
+								doesInstructionModifyOperand(currentInstruction, j, &overwrites);
+								if (!overwrites) 
 								{
-									result->stackArgs = newStackArgs;
+									struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
+									if (newStackArgs)
+									{
+										result->stackArgs = newStackArgs;
+									}
+									else
+									{
+										return 0;
+									}
+
+									result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
+									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+									result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
+									sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
+									result->numOfStackArgs++;
+								}
+								else // treating stack args that are overwritten before being accessed as local vars
+								{
+									struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
+									if (newLocalVars)
+									{
+										result->localVars = newLocalVars;
+									}
+									else
+									{
+										return 0;
+									}
+
+									result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
+									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+									result->localVars[result->numOfLocalVars].name = initializeJdcStr();
+									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
+									result->numOfLocalVars++;
+								}
+							}
+						}
+						else if (isOperandStackVar(currentOperand, stackFrameSize))
+						{
+							int stackOffset = currentOperand->memoryAddress.constDisplacement;
+							if (k == RSP)
+							{
+								stackOffset -= stackFrameSize;
+
+							}
+							if (!getStackArgByOffset(result, stackOffset) && !getLocalVarByOffset(result, stackOffset))
+							{
+								struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
+								if (newLocalVars)
+								{
+									result->localVars = newLocalVars;
 								}
 								else
 								{
 									return 0;
 								}
-								
-								result->stackArgs[result->numOfStackArgs].stackOffset = (int)(currentOperand->memoryAddress.constDisplacement);
-								result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
-								result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
-								sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", result->stackArgs[result->numOfStackArgs].stackOffset);
-								result->numOfStackArgs++;
+
+								result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
+								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+								result->localVars[result->numOfLocalVars].name = initializeJdcStr();
+
+								if (stackOffset > 0)
+								{
+									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
+								}
+								else
+								{
+									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", -stackOffset);
+								}
+
+								result->numOfLocalVars++;
 							}
 						}
 						else if (!initializedRegs[k - RAX] && k != RBP && k != RSP)

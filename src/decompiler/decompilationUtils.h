@@ -18,6 +18,8 @@ struct DecompilationParameters
 	int skipUpperBound;
 	int skipLowerBound;
 
+	int stackFrameSize;
+
 	struct DisassembledInstruction* allInstructions;
 	int totalNumOfInstructions;
 

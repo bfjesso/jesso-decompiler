@@ -24,21 +24,20 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		
 		if (compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP))
 		{
-			if (isOperandStackVar(operand, params.currentFunc->stackFrameSize))
+			int stackOffset = (int)(operand->memoryAddress.constDisplacement);
+			if (compareRegisters(operand->memoryAddress.reg, SP)) 
 			{
-				struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
-				if (localVar)
-				{
-					strcpyJdc(result, localVar->name.buffer);
-				}
-				else
-				{
-					return 0;
-				}
+				stackOffset -= params.stackFrameSize;
 			}
-			else if (isOperandStackArg(operand, params.currentFunc->stackFrameSize))
+			
+			struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, stackOffset);
+			if (localVar)
 			{
-				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, (int)(operand->memoryAddress.constDisplacement));
+				strcpyJdc(result, localVar->name.buffer);
+			}
+			else
+			{
+				struct StackVariable* stackArg = getStackArgByOffset(params.currentFunc, stackOffset);
 				if (stackArg)
 				{
 					strcpyJdc(result, stackArg->name.buffer);

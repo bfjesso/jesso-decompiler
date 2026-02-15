@@ -228,6 +228,11 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
 {
+	if (overwrites != 0) 
+	{
+		*overwrites = 0;
+	}
+	
 	if (instruction->operands[operandNum].type == REGISTER && compareRegisters(instruction->operands[operandNum].reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
 		switch (instruction->opcode)
