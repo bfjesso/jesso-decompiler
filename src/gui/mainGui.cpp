@@ -558,6 +558,9 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 	const int ID_DECOMPILE = 100;
 	const int ID_EDIT_PROPERTIES = 101;
 	const int ID_COPY_ADDRESS = 102;
+	const int ID_COPY_NAME = 103;
+	const int ID_FIND_BY_ADDR = 104;
+	const int ID_FIND_BY_NAME = 105;
 
 	menu.Append(ID_DECOMPILE, "Decompile");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
@@ -567,6 +570,65 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 
 	menu.Append(ID_COPY_ADDRESS, "Copy address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
+
+	menu.Append(ID_COPY_NAME, "Copy name");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 2)); }, ID_COPY_NAME);
+
+	menu.Append(ID_FIND_BY_ADDR, "Find function by address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { 
+		wxTextEntryDialog dlg(this, "", "Address");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			unsigned long long address = 0;
+			if (txt.ToULongLong(&address, 16)) 
+			{
+				int index = findFunctionByAddress(&functions[0], 0, functions.size() - 1, address);
+				if (index == -1)
+				{
+					wxMessageBox("No function with that address", "Failed to find function");
+				}
+				else
+				{
+					functionsGrid->GoToCell(index, 0);
+					functionsGrid->SelectRow(index);
+				}
+			}
+			else 
+			{
+				wxMessageBox("Not valid hex number", "Failed to find function");
+			}
+		}
+	}, ID_FIND_BY_ADDR);
+
+	menu.Append(ID_FIND_BY_NAME, "Find function by name");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
+		wxTextEntryDialog dlg(this, "", "Name");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			unsigned char funcFound = 0;
+			wxString txt = dlg.GetValue();
+			if (!txt.IsEmpty())
+			{
+				int numOfFunctions = functions.size();
+				for (int i = 0; i < numOfFunctions; i++) 
+				{
+					if (strcmp(functions[i].name.buffer, txt.c_str()) == 0) 
+					{
+						functionsGrid->GoToCell(i, 0);
+						functionsGrid->SelectRow(i);
+						funcFound = 1;
+						break;
+					}
+				}
+			}
+
+			if (!funcFound) 
+			{
+				wxMessageBox("No function with that name", "Failed to find function");
+			}
+		}
+		}, ID_FIND_BY_NAME);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();

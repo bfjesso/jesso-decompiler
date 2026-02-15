@@ -84,11 +84,11 @@ extern "C"
 
 	void freeFunction(struct Function* function);
 
+	int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
+
 #ifdef __cplusplus
 }
 #endif
-
-int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
