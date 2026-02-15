@@ -739,6 +739,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 				else 
 				{
 					ctrl->GotoPos(pos);
+					ctrl->SetSelection(pos, pos + txt.size());
 				}
 			}
 		}
