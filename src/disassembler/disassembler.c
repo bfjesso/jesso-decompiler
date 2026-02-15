@@ -244,6 +244,11 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
+		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate == 0xFF)
+		{
+			if (overwrites != 0) { *overwrites = 1; }
+			return 1;
+		}
 
 		if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 		{
