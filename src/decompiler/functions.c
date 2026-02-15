@@ -14,11 +14,6 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 
 		struct DisassembledInstruction* currentInstruction = &instructions[i];
 
-		if (currentInstruction->address == 0x1402e7400) 
-		{
-			int tt = 0;
-		}
-
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
@@ -331,6 +326,16 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 							}
 						}
 						if (isInitialized) { continue; }
+
+						struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(currentFunc->regArgs, sizeof(struct RegisterVariable) * (currentFunc->numOfRegArgs + 1));
+						if (newRegArgs)
+						{
+							currentFunc->regArgs = newRegArgs;
+						}
+						else
+						{
+							return 0;
+						}
 
 						currentFunc->regArgs[currentFunc->numOfRegArgs].reg = callee->regArgs[k].reg;
 						currentFunc->regArgs[currentFunc->numOfRegArgs].type = callee->regArgs[k].type;
