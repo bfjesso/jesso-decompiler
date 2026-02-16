@@ -220,3 +220,5 @@ unsigned char isOpcodeReturn(enum Mnemonic opcode);
 unsigned char isOpcodeJcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
+
+unsigned char isOpcodeAES(enum Mnemonic opcode);
