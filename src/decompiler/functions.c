@@ -242,11 +242,10 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		}
 
 		// check for return value
-		overwrites = 0;
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
 			unsigned char operandNum = 0;
-			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, &overwrites) && overwrites)
+			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, 0))
 			{
 				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], is64Bit);
 				result->addressOfReturnFunction = 0;
