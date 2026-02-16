@@ -354,7 +354,7 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
 {
-	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
+	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
 }
 
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
