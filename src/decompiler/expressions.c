@@ -86,41 +86,82 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				return 0;
 			}
 
-			if (operand->memoryAddress.constDisplacement > 0)
+			struct JdcStr displacementOperandStr = initializeJdcStr();
+			if (operand->memoryAddress.regDisplacement != NO_REG) 
 			{
-				if (instruction->opcode == LEA)
+				struct Operand displacementReg = { 0 };
+				displacementReg.type = REGISTER;
+				displacementReg.reg = operand->memoryAddress.regDisplacement;
+				
+				if (!decompileOperand(params, &displacementReg, getTypeOfOperand(NO_MNEMONIC, &displacementReg, params.is64Bit), &displacementOperandStr))
 				{
-					sprintfJdc(result, 0, "%s + 0x%llX", baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
-				}
-				else
-				{
-					sprintfJdc(result, 0, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
+					freeJdcStr(&baseOperandStr);
+					freeJdcStr(&displacementOperandStr);
+					return 0;
 				}
 			}
-			else if (operand->memoryAddress.constDisplacement < 0)
+
+			long long constDisplacement = operand->memoryAddress.constDisplacement;
+			char constDisplacementOperator = '+';
+			if (constDisplacement < 0) 
 			{
-				if (instruction->opcode == LEA)
+				constDisplacement = -constDisplacement;
+				constDisplacementOperator = '-';
+			}
+			
+			if (constDisplacement != 0)
+			{
+				if (operand->memoryAddress.regDisplacement != NO_REG) 
 				{
-					sprintfJdc(result, 0, "%s - 0x%llX", baseOperandStr.buffer, -operand->memoryAddress.constDisplacement);
+					if (instruction->opcode == LEA)
+					{
+						sprintfJdc(result, 0, "%s + %s %c 0x%llX", baseOperandStr.buffer, displacementOperandStr.buffer, constDisplacementOperator, constDisplacement);
+					}
+					else
+					{
+						sprintfJdc(result, 0, "*(%s*)(%s + %s %c 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, displacementOperandStr.buffer, constDisplacementOperator, constDisplacement);
+					}
 				}
-				else
+				else 
 				{
-					sprintfJdc(result, 0, "*(%s*)(%s - 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, -operand->memoryAddress.constDisplacement);
+					if (instruction->opcode == LEA)
+					{
+						sprintfJdc(result, 0, "%s %c 0x%llX", baseOperandStr.buffer, constDisplacementOperator, constDisplacement);
+					}
+					else
+					{
+						sprintfJdc(result, 0, "*(%s*)(%s %c 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, constDisplacementOperator, constDisplacement);
+					}
 				}
 			}
 			else
 			{
-				if (instruction->opcode == LEA)
+				if (operand->memoryAddress.regDisplacement != NO_REG) 
 				{
-					sprintfJdc(result, 0, "%s", baseOperandStr.buffer);
+					if (instruction->opcode == LEA)
+					{
+						sprintfJdc(result, 0, "%s + %s", baseOperandStr.buffer, displacementOperandStr.buffer);
+					}
+					else
+					{
+						sprintfJdc(result, 0, "*(%s*)(%s + %s)", primitiveTypeStrs[type], baseOperandStr.buffer, displacementOperandStr.buffer);
+					}
 				}
-				else
+				else 
 				{
-					sprintfJdc(result, 0, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr.buffer);
+					if (instruction->opcode == LEA)
+					{
+						sprintfJdc(result, 0, "%s", baseOperandStr.buffer);
+					}
+					else
+					{
+						sprintfJdc(result, 0, "*(%s*)(%s)", primitiveTypeStrs[type], baseOperandStr.buffer);
+					}
 				}
 			}
 
 			freeJdcStr(&baseOperandStr);
+			freeJdcStr(&displacementOperandStr);
 		}
 
 		return 1;
