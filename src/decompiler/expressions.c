@@ -2,6 +2,8 @@
 #include "functionCalls.h"
 #include "dataTypes.h"
 
+#include <ctype.h>
+
 unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, enum PrimitiveType type, struct JdcStr* result)
 {
 	if (operand->type == IMMEDIATE)
@@ -591,9 +593,18 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 			freeJdcStr(&operandStr1);
 			return 0;
 		}
+
+		char* mnemonicStrsLowercase = (char*)malloc(strlen(mnemonicStrs[instruction->opcode]) + 1);
+		if (!mnemonicStrsLowercase) { return 0; }
+		strcpy(mnemonicStrsLowercase, mnemonicStrs[instruction->opcode]);
+		for (int i = 0; i < strlen(mnemonicStrsLowercase); i++) 
+		{
+			mnemonicStrsLowercase[i] = tolower(mnemonicStrsLowercase[i]);
+		}
 		
-		if (getAssignment) { sprintfJdc(result, 0, " = %s(%s, %s)", mnemonicStrs[instruction->opcode], operandStr0.buffer, operandStr1.buffer); }
-		else { sprintfJdc(result, 0, "%s(%s, %s)", mnemonicStrs[instruction->opcode], operandStr0.buffer, operandStr1.buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, " = %s(%s, %s)", mnemonicStrsLowercase, operandStr0.buffer, operandStr1.buffer); }
+		else { sprintfJdc(result, 0, "%s(%s, %s)", mnemonicStrsLowercase, operandStr0.buffer, operandStr1.buffer); }
+		free(mnemonicStrsLowercase);
 		return 1;
 	}
 

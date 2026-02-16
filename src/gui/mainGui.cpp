@@ -811,6 +811,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 	}
 
+	// opcodes
+	for (int i = 0; i < numOfImports; i++)
+	{
+		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
+	}
+
 	// calling conventions
 	for (int i = 0; i < 4; i++)
 	{
