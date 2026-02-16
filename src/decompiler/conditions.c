@@ -250,7 +250,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		return strcatJdc(result, "else");
 	}
 
-	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp;
+	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp || conditions[conditionIndex].conditionType == DO_WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
