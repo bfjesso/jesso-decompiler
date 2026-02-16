@@ -6,7 +6,8 @@ enum ConditionType
 	IF_CT,
 	ELSE_IF_CT,
 	ELSE_CT,
-	LOOP_CT
+	LOOP_CT, // for or while loop
+	DO_WHILE_CT
 };
 
 enum LogicalType

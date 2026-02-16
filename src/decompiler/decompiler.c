@@ -63,34 +63,53 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		{
 			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
 			{
-				numOfIndents--;
+				if (conditions[j].conditionType == DO_WHILE_CT) 
+				{
+					addIndents(result, numOfIndents);
+					strcatJdc(result, "do\n");
+					addIndents(result, numOfIndents);
+					strcatJdc(result, "{\n");
+					numOfIndents++;
+				}
+				else 
+				{
+					numOfIndents--;
 
-				addIndents(result, numOfIndents);
-				strcatJdc(result, "}\n");
+					addIndents(result, numOfIndents);
+					strcatJdc(result, "}\n");
 
-				isInUnreachableState = 0;
+					isInUnreachableState = 0;
+				}
 			}
 		}
 
 		int conditionIndex = checkForCondition(i, conditions, numOfConditions);
 		if (conditionIndex != -1)
 		{
+			if (conditions[conditionIndex].conditionType == DO_WHILE_CT)
+			{
+				numOfIndents--;
+			}
+			
 			addIndents(result, numOfIndents);
 			
 			if (decompileCondition(params, conditions, conditionIndex, result))
 			{
 				strcatJdc(result, "\n");
-				addIndents(result, numOfIndents);
-				strcatJdc(result, "{\n");
-				
-				isInUnreachableState = 0;
+
+				if (conditions[conditionIndex].conditionType != DO_WHILE_CT)
+				{
+					addIndents(result, numOfIndents);
+					strcatJdc(result, "{\n");
+
+					isInUnreachableState = 0;
+					numOfIndents++;
+				}
 			}
 			else
 			{
 				return 0;
 			}
-
-			numOfIndents++;
 
 			if (conditions[conditionIndex].requiresJumpInDecomp)
 			{

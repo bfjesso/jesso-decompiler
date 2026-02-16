@@ -2,8 +2,6 @@
 #include "expressions.h"
 #include "assignment.h"
 
-#include <string.h>
-
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
 {
 	// find all conditional jumps
@@ -172,6 +170,11 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 		{
 			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
 			conditionsBuffer[conditionsIndex].conditionType = LOOP_CT;
+		}
+		else if (conditions[i].dstIndex < conditions[i].jccIndex)
+		{
+			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
+			conditionsBuffer[conditionsIndex].conditionType = DO_WHILE_CT;
 		}
 		else if (i > 0 && conditions[i].exitIndex != -1 &&
 			conditions[i - 1].exitIndex == conditions[i].exitIndex && // check for else if
@@ -377,6 +380,10 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 		{
 			sprintfJdc(result, 1, "while (%s)", conditionExpression.buffer);
 		}
+	}
+	else if (conditions[conditionIndex].conditionType == DO_WHILE_CT) 
+	{
+		sprintfJdc(result, 1, "} while (%s);", conditionExpression.buffer);
 	}
 	else if (conditions[conditionIndex].conditionType == IF_CT)
 	{
