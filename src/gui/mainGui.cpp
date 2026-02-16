@@ -824,7 +824,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// primitive data types
-	for (int i = 0; i < 7; i++) 
+	for (int i = 0; i < numOfPrimitiveTypes; i++) 
 	{
 		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}

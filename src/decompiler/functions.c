@@ -567,9 +567,11 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	case 8:
 		return LONG_LONG_TYPE;
 	case 16:
-		return FLOAT_TYPE;
+		return INT_128_TPYE;
 	case 32:
-		return DOUBLE_TYPE;
+		return INT_256_TPYE;
+	case 64:
+		return INT_512_TPYE;
 	}
 	
 	return VOID_TYPE;

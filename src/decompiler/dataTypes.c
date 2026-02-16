@@ -8,5 +8,11 @@ extern const char* primitiveTypeStrs[] =
 	"long long",
 
 	"float",
-	"double"
+	"double",
+
+	"__int128",
+	"__int256",
+	"__int512"
 };
+
+numOfPrimitiveTypes = 10;
