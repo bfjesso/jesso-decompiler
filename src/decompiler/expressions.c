@@ -86,7 +86,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				return 0;
 			}
 
-			if (operand->memoryAddress.constDisplacement != 0)
+			if (operand->memoryAddress.constDisplacement > 0)
 			{
 				if (instruction->opcode == LEA)
 				{
@@ -95,6 +95,17 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				else
 				{
 					sprintfJdc(result, 0, "*(%s*)(%s + 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, operand->memoryAddress.constDisplacement);
+				}
+			}
+			else if (operand->memoryAddress.constDisplacement < 0)
+			{
+				if (instruction->opcode == LEA)
+				{
+					sprintfJdc(result, 0, "%s - 0x%llX", baseOperandStr.buffer, -operand->memoryAddress.constDisplacement);
+				}
+				else
+				{
+					sprintfJdc(result, 0, "*(%s*)(%s - 0x%llX)", primitiveTypeStrs[type], baseOperandStr.buffer, -operand->memoryAddress.constDisplacement);
 				}
 			}
 			else
