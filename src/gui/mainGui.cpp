@@ -824,8 +824,8 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// keywords
-	const char* keywordStrs[5] = { "if", "else", "for", "while", "return" };
-	for (int i = 0; i < 5; i++)
+	const char* keywordStrs[6] = { "if", "else", "for", "while", "do", "return" };
+	for (int i = 0; i < 6; i++)
 	{
 		ColorAllStrs(text, keywordStrs[i], ColorsMenu::DecompilationColor::KEYWORD_COLOR, 0);
 	}
