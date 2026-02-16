@@ -407,8 +407,10 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
+	enum Mnemonic jcc = currentInstruction->opcode;
+
 	char compOperator[3] = { 0 };
-	switch (currentInstruction->opcode)
+	switch (jcc)
 	{
 	case JZ_SHORT:
 	case CMOVZ:
@@ -451,13 +453,13 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		return 0;
 	}
 
-	// looking for comparison opcode
+	// looking for instruction that modifies the appropriate flags
 	for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 	{
 		currentInstruction = &(params.currentFunc->instructions[i]);
 
 		params.startInstructionIndex = i;
-		if (currentInstruction->opcode == TEST)
+		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
 			if (areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
 			{
@@ -503,7 +505,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 				return 1;
 			}
 		}
-		else if (currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) 
+		else if ((currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) || currentInstruction->opcode == SUB)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
@@ -523,6 +525,20 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
+
+			return 1;
+		}
+		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
+		{
+			struct JdcStr operand1Str = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+			{
+				freeJdcStr(&operand1Str);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+			freeJdcStr(&operand1Str);
 
 			return 1;
 		}

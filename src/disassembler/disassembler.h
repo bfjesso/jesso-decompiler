@@ -29,4 +29,6 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 
 unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum, unsigned char* overwrites);
 
+unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
+
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);

@@ -351,6 +351,11 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 	return 0;
 }
 
+unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
+{
+	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
+}
+
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 {
 	if (op1->type == op2->type)
