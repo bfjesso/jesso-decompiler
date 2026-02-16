@@ -84,7 +84,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 {
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
-		strcpy(buffer, group1PrefixStrs[instruction->group1Prefix - LOCK]);
+		strcpy(buffer, getGroup1PrefixStr(instruction->group1Prefix));
 		strcat(buffer, " ");
 	}
 
@@ -200,6 +200,11 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 const char* getPtrSizeStr(int ptrSize) 
 {
 	return ptrSizeStrs[ptrSize <= 10 ? ptrSize / 2 : ptrSize == 16 ? 6 : ptrSize == 32 ? 7 : ptrSize == 64 ? 8 : 0];
+}
+
+const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
+{
+	return group1PrefixStrs[prefix - LOCK];
 }
 
 unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)

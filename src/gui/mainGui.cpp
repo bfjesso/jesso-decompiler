@@ -880,7 +880,13 @@ void MainGui::ApplyAsmHighlighting()
 		disassemblyTextCtrl->SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
 
 		disassemblyTextCtrl->StartStyling(pos);
-		disassemblyTextCtrl->SetStyling(strlen(mnemonicStrs[instruction->opcode]) + 1, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
+
+		int opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
+		if (instruction->group1Prefix != NO_PREFIX) 
+		{
+			opcodeLen += strlen(getGroup1PrefixStr(instruction->group1Prefix)) + 1;
+		}
+		disassemblyTextCtrl->SetStyling(opcodeLen, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
 
 		// regs
 		int start = 0;

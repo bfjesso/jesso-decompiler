@@ -13,6 +13,8 @@ extern "C"
 
 	const char* getPtrSizeStr(int ptrSize);
 
+	const char* getGroup1PrefixStr(enum LegacyPrefix prefix);
+
 	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
 
 #ifdef __cplusplus
