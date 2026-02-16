@@ -10,7 +10,7 @@ static const char* group1PrefixStrs[] =
 {
 	"LOCK",
 	"REPNZ",
-	"REPZ"
+	"REP"
 };
 
 static const char* ptrSizeStrs[] =
