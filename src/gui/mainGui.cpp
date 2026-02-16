@@ -888,8 +888,10 @@ void MainGui::ApplyAsmHighlighting()
 		}
 		disassemblyTextCtrl->SetStyling(opcodeLen, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
 
-		// regs
-		int start = 0;
+		// operands
+		int regStart = 0;
+		int segStart = 0;
+		int ptrSizeStart = 0;
 		for (int i = 0; i < 4; i++)
 		{
 			wxString regStr = "";
@@ -913,18 +915,18 @@ void MainGui::ApplyAsmHighlighting()
 
 			if (!regStr.IsEmpty())
 			{
-				int loc = asmStr.find(regStr, start);
+				int loc = asmStr.find(regStr, regStart);
 				disassemblyTextCtrl->StartStyling(pos + loc);
 				disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-				start = loc + regStr.length();
+				regStart = loc + regStr.length();
 			}
 
 			if (!regStr2.IsEmpty())
 			{
-				int loc = asmStr.find(regStr2, start);
+				int loc = asmStr.find(regStr2, regStart);
 				disassemblyTextCtrl->StartStyling(pos + loc);
 				disassemblyTextCtrl->SetStyling(regStr2.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-				start = loc + regStr2.length();
+				regStart = loc + regStr2.length();
 			}
 
 			if (instruction->operands[i].type == MEM_ADDRESS)
@@ -933,8 +935,10 @@ void MainGui::ApplyAsmHighlighting()
 				if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT)
 				{
 					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
-					disassemblyTextCtrl->StartStyling(pos + asmStr.find(segStr));
+					int loc = asmStr.find(segStr, segStart);
+					disassemblyTextCtrl->StartStyling(pos + loc);
 					disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+					segStart = loc + segStr.length();
 				}
 
 				// ptr size
@@ -942,14 +946,16 @@ void MainGui::ApplyAsmHighlighting()
 				if (ptrSize != 0)
 				{
 					wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
-					disassemblyTextCtrl->StartStyling(pos + asmStr.find(sizeStr));
+					int loc = asmStr.find(sizeStr, ptrSizeStart);
+					disassemblyTextCtrl->StartStyling(pos + loc);
 					disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
+					ptrSizeStart = loc + sizeStr.length();
 				}
 			}
 		}
 
 		// numbers
-		start = 0;
+		int start = 0;
 		while (start < asmStr.length())
 		{
 			int num = asmStr.find("0x", start);
