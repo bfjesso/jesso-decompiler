@@ -289,33 +289,39 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		case Yb:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = DI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 == OSO ? DI : is64BitOperandSize ? RDI : EDI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yz:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 == OSO ? DI : EDI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xb:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = SI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 == OSO ? SI : is64BitOperandSize ? RSI : ESI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xz:
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 == OSO ? SI : ESI;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Jb:
 			if (params->bytes > params->maxBytesAddr) { return 0; }
