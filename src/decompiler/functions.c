@@ -55,7 +55,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 
 		// checking all operands for arguments
 		unsigned char overwrites = 0;
-		for (int j = 0; j < 4; j++)
+		for (int j = 3; j >= 0; j--)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 
