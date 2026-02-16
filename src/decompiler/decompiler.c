@@ -350,15 +350,6 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					break;
 				}
 			}
-			for (int j = 0; j < params.currentFunc->numOfRegArgs; j++)
-			{
-				if (alreadyFound) { break; }
-				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regArgs[j].reg))
-				{
-					alreadyFound = 1;
-					break;
-				}
-			}
 			if (alreadyFound) 
 			{
 				continue;
@@ -454,9 +445,29 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer))
+		int argIndex = -1;
+		for (int j = 0; j < function->numOfRegArgs; j++)
 		{
-			return 0;
+			if (compareRegisters(function->regVars[i].reg, function->regArgs[j].reg))
+			{
+				argIndex = j;
+				break;
+			}
+		}
+
+		if (argIndex != -1)
+		{
+			if (!sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer))
+			{
+				return 0;
+			}
+		}
+		else 
+		{
+			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer))
+			{
+				return 0;
+			}
 		}
 	}
 
