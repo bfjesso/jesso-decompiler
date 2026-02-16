@@ -314,32 +314,15 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	return 1;
 }
 
-// right now this only checks for registers that are modified in a condition
 static unsigned char getAllRegVars(struct DecompilationParameters params, struct Condition* conditions, int numOfConditions)
 {
+	// check for registers being modified in a condition
 	int isInCondition = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		for (int j = 0; j < numOfConditions; j++)
-		{
-			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && conditions[j].conditionType != LOOP_CT)
-			{
-				if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].dstIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].jccIndex))
-				{
-					isInCondition = 0;
-					break;
-				}
-				else if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].jccIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].dstIndex)) 
-				{
-					isInCondition = 1;
-					break;
-				}
-			}
-		}
-
-		if (isInCondition && currentInstruction->operands[0].type == REGISTER)
+		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 		{
 			int alreadyFound = 0;
 			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
@@ -350,12 +333,29 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					break;
 				}
 			}
-			if (alreadyFound) 
+			if (alreadyFound)
 			{
 				continue;
 			}
 			
-			if (doesInstructionModifyOperand(currentInstruction, 0, 0))
+			for (int j = 0; j < numOfConditions; j++)
+			{
+				if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && conditions[j].conditionType != LOOP_CT)
+				{
+					if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].dstIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].jccIndex))
+					{
+						isInCondition = 0;
+						break;
+					}
+					else if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].jccIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].dstIndex))
+					{
+						isInCondition = 1;
+						break;
+					}
+				}
+			}
+
+			if (isInCondition)
 			{
 				struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
 				if (newRegVars)
@@ -367,6 +367,62 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					return 0;
 				}
 
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
+				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[currentInstruction->operands[0].reg]);
+				params.currentFunc->numOfRegVars++;
+			}
+		}
+	}
+
+	// check for registers that depend on the value of a reg var
+	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	{
+		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+
+		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
+		{
+			int alreadyFound = 0;
+			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+			{
+				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regVars[j].reg))
+				{
+					alreadyFound = 1;
+					break;
+				}
+			}
+			if (alreadyFound)
+			{
+				continue;
+			}
+
+			unsigned char dependsOnRegVar = 0;
+			if (currentInstruction->operands[1].type == REGISTER)
+			{
+				for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+				{
+					if (params.currentFunc->regVars[j].reg == currentInstruction->operands[1].reg)
+					{
+						dependsOnRegVar = 1;
+						break;
+					}
+				}
+			}
+			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
+			{
+				for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+				{
+					if (params.currentFunc->regVars[j].reg == currentInstruction->operands[1].memoryAddress.reg || params.currentFunc->regVars[j].reg == currentInstruction->operands[1].memoryAddress.regDisplacement)
+					{
+						dependsOnRegVar = 1;
+						break;
+					}
+				}
+			}
+
+			if (dependsOnRegVar)
+			{
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
