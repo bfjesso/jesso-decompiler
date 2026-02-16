@@ -287,7 +287,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeShr(instruction->opcode) ||
 			isOpcodeMul(instruction->opcode) ||
 			isOpcodeDiv(instruction->opcode) || 
-			instruction->opcode == INC || instruction->opcode == DEC)
+			instruction->opcode == INC || instruction->opcode == DEC || instruction->opcode == NEG)
 		{
 			return 1;
 		}
