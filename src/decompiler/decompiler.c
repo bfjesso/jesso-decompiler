@@ -322,6 +322,23 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
+		for (int j = 0; j < numOfConditions; j++)
+		{
+			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && conditions[j].conditionType != LOOP_CT)
+			{
+				if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].dstIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].jccIndex))
+				{
+					isInCondition = 0;
+					break;
+				}
+				else if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].jccIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].dstIndex))
+				{
+					isInCondition = 1;
+					break;
+				}
+			}
+		}
+
 		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 		{
 			int alreadyFound = 0;
@@ -336,23 +353,6 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			if (alreadyFound)
 			{
 				continue;
-			}
-			
-			for (int j = 0; j < numOfConditions; j++)
-			{
-				if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && conditions[j].conditionType != LOOP_CT)
-				{
-					if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].dstIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].jccIndex))
-					{
-						isInCondition = 0;
-						break;
-					}
-					else if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].jccIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].dstIndex))
-					{
-						isInCondition = 1;
-						break;
-					}
-				}
 			}
 
 			if (isInCondition)
