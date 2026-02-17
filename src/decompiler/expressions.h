@@ -1,5 +1,5 @@
 #pragma once
-#include "decompilationUtils.h"
+#include "decompilationParams.h"
 
 unsigned char decompileOperand(struct DecompilationParameters params, struct Operand* operand, enum PrimitiveType type, struct JdcStr* result);
 

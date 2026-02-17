@@ -1,5 +1,5 @@
 #pragma once
-#include "decompilationUtils.h"
+#include "decompilationParams.h"
 
 unsigned char checkForAssignment(struct DecompilationParameters params);
 

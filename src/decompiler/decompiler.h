@@ -1,5 +1,5 @@
 #pragma once
-#include "decompilationUtils.h"
+#include "decompilationParams.h"
 #include "conditions.h"
 
 #ifdef __cplusplus
