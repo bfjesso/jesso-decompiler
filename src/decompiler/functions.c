@@ -226,7 +226,8 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
 		{
 			unsigned long long jumpAddr = instructions[i].address + currentInstruction->operands[0].immediate;
-			if (jumpAddr > addressToJumpTo)
+			int instructionIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jumpAddr);
+			if (jumpAddr > addressToJumpTo && instructions[instructionIndex - 1].opcode != JMP_SHORT)
 			{
 				addressToJumpTo = jumpAddr;
 			}
