@@ -588,12 +588,20 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			*result = params.allInstructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			unsigned long long address = params.allInstructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result)) 
+			{
+				*result = address;
+			}
 			return 1;
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
-			*result = operand->memoryAddress.constDisplacement;
+			unsigned long long address = operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result))
+			{
+				*result = address;
+			}
 			return 1;
 		}
 		else
@@ -628,6 +636,42 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 	}
 
 	return 0;
+}
+
+static unsigned char getNumFromData(struct DecompilationParameters params, unsigned long long address, unsigned long long* result)
+{
+	if (address < params.imageBase + params.dataSections[0].virtualAddress)
+	{
+		return 0;
+	}
+
+	int dataSectionIndex = -1;
+	int totalSize = 0;
+	for (int i = 0; i < params.numOfDataSections; i++)
+	{
+		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
+		{
+			dataSectionIndex = (int)((totalSize + address) - (params.dataSections[i].virtualAddress + params.imageBase));
+		}
+
+		totalSize += params.dataSections[i].size;
+	}
+
+	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
+	{
+		return 0;
+	}
+
+	if (params.is64Bit)
+	{
+		*result = *(unsigned long long*)(params.dataSectionByte + dataSectionIndex);
+	}
+	else
+	{
+		*result = *(unsigned int*)(params.dataSectionByte + dataSectionIndex);
+	}
+
+	return 1;
 }
 
 unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize)
