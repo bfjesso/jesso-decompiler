@@ -371,7 +371,7 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 		else if (compareRegisters(targetReg, AX) && isOpcodeCall(currentInstruction->opcode))
 		{
 			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
-			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
+			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			
 			if (calleeIndex != -1 && params.functions[calleeIndex].returnType != VOID_TYPE)

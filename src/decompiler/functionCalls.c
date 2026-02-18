@@ -10,7 +10,7 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 	if (isOpcodeCall(instruction->opcode))
 	{
 		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
-		unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
+		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 		int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
 		if (calleIndex == -1)
@@ -145,7 +145,7 @@ int checkForImportCall(struct DecompilationParameters params)
 	if (isOpcodeCall(instruction->opcode))
 	{
 		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
-		unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
+		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 
 		for (int i = 0; i < params.numOfImports; i++)
 		{
@@ -188,7 +188,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
 			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
-			unsigned long long calleeAddress = resolveJmpChain(params.allInstructions, params.totalNumOfInstructions, currentInstructionIndex);
+			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			if (calleIndex != -1 && (params.functions[calleIndex].numOfRegArgs > 0 || params.functions[calleIndex].numOfStackArgs > 0))
 			{

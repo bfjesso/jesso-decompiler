@@ -1,6 +1,6 @@
 #include "functions.h"
 
-unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit)
+unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
 {
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
 
@@ -10,11 +10,11 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
-	for (int i = startInstructionIndex; i < numOfInstructions; i++)
+	for (int i = params.startInstructionIndex; i < params.totalNumOfInstructions; i++)
 	{
 		(*instructionIndex)++;
 
-		struct DisassembledInstruction* currentInstruction = &instructions[i];
+		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
 		if (!foundFirstInstruction)
 		{
@@ -23,7 +23,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 				continue;
 			}
 
-			result->instructions = &instructions[i];
+			result->instructions = &params.allInstructions[i];
 
 			foundFirstInstruction = 1;
 		}
@@ -36,7 +36,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 
 			if (result->addressOfFirstFuncCall == 0)
 			{
-				unsigned long long calleeAddress = resolveJmpChain(instructions, numOfInstructions, i);
+				unsigned long long calleeAddress = resolveJmpChain(params, i);
 				if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
 				{
 					result->addressOfFirstFuncCall = calleeAddress;
@@ -86,7 +86,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 							}
 
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->reg]);
 							result->numOfRegArgs++;
@@ -134,7 +134,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 									}
 
 									result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
-									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 									result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
 									sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
 									result->numOfStackArgs++;
@@ -152,7 +152,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 									}
 
 									result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 									result->localVars[result->numOfLocalVars].name = initializeJdcStr();
 									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
 									result->numOfLocalVars++;
@@ -180,7 +180,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 								}
 
 								result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 								result->localVars[result->numOfLocalVars].name = initializeJdcStr();
 
 								if (stackOffset > 0)
@@ -208,7 +208,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 							}
 
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, is64Bit);
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->memoryAddress.reg]);
 							result->numOfRegArgs++;
@@ -225,15 +225,15 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 
 		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
 		{
-			unsigned long long jumpAddr = instructions[i].address + currentInstruction->operands[0].immediate;
-			int instructionIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jumpAddr);
-			if (jumpAddr > addressToJumpTo && instructions[instructionIndex - 1].opcode != JMP_SHORT)
+			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate;
+			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
+			if (jumpAddr > addressToJumpTo && params.allInstructions[instructionIndex - 1].opcode != JMP_SHORT)
 			{
 				addressToJumpTo = jumpAddr;
 			}
 		}
 
-		if (addressToJumpTo != 0 && instructions[i].address < addressToJumpTo)
+		if (addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo)
 		{
 			continue;
 		}
@@ -248,12 +248,12 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 			unsigned char operandNum = 0;
 			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, 0))
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], is64Bit);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], params.is64Bit);
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(instructions, numOfInstructions, i);
+				unsigned long long calleeAddress = resolveJmpChain(params, i);
 				if (calleeAddress != result->instructions[0].address) // check for recursive function
 				{
 					result->addressOfReturnFunction = calleeAddress;
@@ -284,7 +284,7 @@ unsigned char findNextFunction(struct DisassembledInstruction* instructions, int
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || instructions[i + 1].address == nextSectionStartAddress)
+		else if (currentInstruction->opcode == JMP_NEAR || currentInstruction->opcode == JMP_FAR || currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i + 1].address == nextSectionStartAddress)
 		{
 			sortFunctionArguments(result);
 			return 1;
@@ -469,34 +469,34 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 }
 
 // returns address of final instruction jumped to that isnt a jmp
-unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, int numOfInstructions, int startInstructionIndex)
+unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex)
 {
-	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params.allInstructions[startInstructionIndex];
 
-	unsigned long long jmpAddress = instructions[startInstructionIndex].address + instruction->operands[0].immediate;
+	unsigned long long jmpAddress = params.allInstructions[startInstructionIndex].address + instruction->operands[0].immediate;
 	if (instruction->operands[0].type == MEM_ADDRESS)
 	{
 		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
 		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
 		{
-			jmpAddress += instructions[startInstructionIndex + 1].address;
+			jmpAddress += params.allInstructions[startInstructionIndex + 1].address;
 		}
 	}
 	else if (instruction->operands[0].type == REGISTER)
 	{
-		if (!operandToValue(instructions, startInstructionIndex, &instruction->operands[0], &jmpAddress))
+		if (!operandToValue(params, &instruction->operands[0], &jmpAddress))
 		{
 			return 0;
 		}
 	}
 
-	int instructionIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpAddress);
+	int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
 	{
-		struct DisassembledInstruction* jmpInstruction = &(instructions[instructionIndex]);
+		struct DisassembledInstruction* jmpInstruction = &(params.allInstructions[instructionIndex]);
 		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
 		{
-			return resolveJmpChain(instructions, numOfInstructions, instructionIndex);
+			return resolveJmpChain(params, instructionIndex);
 		}
 	}
 
@@ -577,7 +577,7 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	return VOID_TYPE;
 }
 
-unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+static unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -588,7 +588,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			*result = instructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			*result = params.allInstructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			return 1;
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
@@ -603,7 +603,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 			baseReg.reg = operand->memoryAddress.reg;
 
 			unsigned long long regValue = 0;
-			if (!operandToValue(instructions, startInstructionIndex, &baseReg, &regValue))
+			if (!operandToValue(params, &baseReg, &regValue))
 			{
 				return 0;
 			}
@@ -615,11 +615,12 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 	}
 	else if (operand->type == REGISTER)
 	{
-		for (int i = startInstructionIndex - 1; i >= 0; i--)
+		for (int i = params.startInstructionIndex - 1; i >= 0; i--)
 		{
-			if (instructions[i].opcode == MOV && compareRegisters(instructions[i].operands[0].reg, operand->reg))
+			if (params.allInstructions[i].opcode == MOV && compareRegisters(params.allInstructions[i].operands[0].reg, operand->reg))
 			{
-				return operandToValue(instructions, i, &(instructions[i].operands[1]), result);
+				params.startInstructionIndex = i;
+				return operandToValue(params, &(params.allInstructions[i].operands[1]), result);
 			}
 		}
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "../disassembler/registers.h"
 #include "../disassembler/disassembler.h"
+#include "decompilationParams.h"
 #include "../fileStructs.h"
 #include "dataTypes.h"
 
@@ -76,7 +77,7 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DisassembledInstruction* instructions, int startInstructionIndex, int numOfInstructions, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex, unsigned char is64Bit);
+	unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex);
 	
 	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
 
@@ -92,7 +93,7 @@ extern "C"
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
-unsigned long long resolveJmpChain(struct DisassembledInstruction* instructions, int numOfInstructions, int startInstructionIndex);
+unsigned long long resolveJmpChain(struct DecompilationParameters param, int startInstructionIndex);
 
 unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize);
 
@@ -108,6 +109,6 @@ struct FuncReturnVariable* findReturnedVar(struct Function* function, char callN
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
 
-unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
+static unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result);
 
 static void sortFunctionArguments(struct Function* function);

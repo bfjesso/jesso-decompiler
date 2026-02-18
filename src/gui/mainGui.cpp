@@ -385,25 +385,10 @@ void MainGui::DecompileFunction(int functionIndex)
 
 	ClearStyledTextCtrl(decompilationTextCtrl);
 
-	DecompilationParameters params = { 0 };
-	params.functions = &functions[0];
-	params.numOfFunctions = functions.size();
-	params.imports = imports;
-	params.numOfImports = numOfImports;
-	params.currentFunc = &functions[functionIndex];
-	params.startInstructionIndex = 0;
-	params.skipUpperBound = -1;
-	params.skipLowerBound = -1;
-
-	params.allInstructions = disassembledInstructions.data();
-	params.totalNumOfInstructions = disassembledInstructions.size();
-	
-	params.imageBase = imageBase;
-	params.dataSections = dataSections;
-	params.numOfDataSections = numOfDataSections;
-	params.dataSectionByte = dataSectionBytes;
-
-	params.is64Bit = is64Bit;
+	decompParams.currentFunc = &functions[functionIndex];
+	decompParams.startInstructionIndex = 0;
+	decompParams.skipUpperBound = -1;
+	decompParams.skipLowerBound = -1;
 
 	struct JdcStr decompiledFunction = initializeJdcStr();
 	if (decompiledFunction.bufferSize == 0)
@@ -412,7 +397,7 @@ void MainGui::DecompileFunction(int functionIndex)
 		return;
 	}
 
-	if (!decompileFunction(params, &decompiledFunction))
+	if (!decompileFunction(decompParams, &decompiledFunction))
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
 		freeJdcStr(&decompiledFunction);
@@ -422,13 +407,27 @@ void MainGui::DecompileFunction(int functionIndex)
 	decompilationTextCtrl->SetReadOnly(false);
 	decompilationTextCtrl->SetValue(decompiledFunction.buffer);
 	freeJdcStr(&decompiledFunction);
-	ApplySyntaxHighlighting(params.currentFunc);
+	ApplySyntaxHighlighting(decompParams.currentFunc);
 	decompilationTextCtrl->SetReadOnly(true);
 	currentDecompiledFunc = functionIndex;
 }
 
 void MainGui::FindAllFunctions() 
 {
+	decompParams.imports = imports;
+	decompParams.numOfImports = numOfImports;
+	decompParams.startInstructionIndex = 0;
+
+	decompParams.allInstructions = disassembledInstructions.data();
+	decompParams.totalNumOfInstructions = disassembledInstructions.size();
+
+	decompParams.imageBase = imageBase;
+	decompParams.dataSections = dataSections;
+	decompParams.numOfDataSections = numOfDataSections;
+	decompParams.dataSectionByte = dataSectionBytes;
+
+	decompParams.is64Bit = is64Bit;
+	
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 	int codeSectionIndex = 1;
@@ -436,7 +435,7 @@ void MainGui::FindAllFunctions()
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(&disassembledInstructions[0], instructionIndex, numOfInstructions, nextSectionStartAddress, &currentFunction, &instructionIndex, is64Bit))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(decompParams, nextSectionStartAddress, &currentFunction, &instructionIndex))
 	{
 		if (disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
 		{
@@ -449,6 +448,8 @@ void MainGui::FindAllFunctions()
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
+
+		decompParams.startInstructionIndex = instructionIndex;
 	}
 
 	if (functions.size() > 0) 
@@ -462,6 +463,9 @@ void MainGui::FindAllFunctions()
 	{
 		delete[] dataSectionBytes;
 	}
+
+	decompParams.functions = &functions[0];
+	decompParams.numOfFunctions = functions.size();
 }
 
 void MainGui::UpdateDisassemblyTextCtrl()

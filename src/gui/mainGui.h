@@ -54,6 +54,8 @@ public:
 	int numOfCodeSections = 0;
 
 	int currentDecompiledFunc = -1;
+
+	DecompilationParameters decompParams = { 0 };
 	
 	enum ids 
 	{
