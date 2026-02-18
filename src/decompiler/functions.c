@@ -616,7 +616,11 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 				return 0;
 			}
 
-			*result = regValue + operand->memoryAddress.constDisplacement;
+			unsigned long long address = regValue + operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result))
+			{
+				*result = address;
+			}
 		}
 
 		return 1;
