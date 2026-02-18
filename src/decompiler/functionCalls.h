@@ -1,5 +1,5 @@
 #pragma once
-#include "decompilationParams.h"
+#include "decompilationStructs.h"
 
 unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef);
 

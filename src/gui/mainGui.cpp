@@ -2,6 +2,7 @@
 #include "../decompiler/dataTypes.h"
 #include "../disassembler/registers.h"
 #include "../disassembler/mnemonics.h"
+#include "../decompiler/functions.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
