@@ -284,16 +284,19 @@ void MainGui::LoadDataSectionBytes()
 	}
 
 	dataSectionBytes = new unsigned char[totalSize];
-	
+
+	int currentIndex = 0;
 	for (int i = 0; i < numOfDataSections; i++)
 	{
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSections[i], is64Bit, dataSectionBytes + (i != 0 ? dataSections[i - 1].size : 0), dataSections[i].size))
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSections[i], is64Bit, dataSectionBytes + currentIndex, dataSections[i].size))
 		{
 			wxMessageBox("Error reading bytes from file data section", "Can't load data");
 
 			delete[] dataSectionBytes;
 			return;
 		}
+
+		currentIndex += dataSections[i].size;
 	}
 }
 
