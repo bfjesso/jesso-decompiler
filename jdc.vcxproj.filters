@@ -188,7 +188,7 @@
     <ClInclude Include="src\disassembler\threeByteOpcodeMaps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decompiler\decompilationParams.h">
+    <ClInclude Include="src\decompiler\decompilationStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

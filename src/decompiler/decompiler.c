@@ -1,4 +1,5 @@
 #include "decompiler.h"
+#include "functions.h"
 #include "assignment.h"
 #include "returnStatements.h"
 #include "functionCalls.h"

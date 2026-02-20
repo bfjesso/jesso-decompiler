@@ -197,7 +197,7 @@
     <ClInclude Include="src\decompiler\assignment.h" />
     <ClInclude Include="src\decompiler\conditions.h" />
     <ClInclude Include="src\decompiler\dataTypes.h" />
-    <ClInclude Include="src\decompiler\decompilationParams.h" />
+    <ClInclude Include="src\decompiler\decompilationStructs.h" />
     <ClInclude Include="src\decompiler\expressions.h" />
     <ClInclude Include="src\decompiler\decompiler.h" />
     <ClInclude Include="src\decompiler\functionCalls.h" />

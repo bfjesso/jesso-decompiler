@@ -1,4 +1,5 @@
 #include "functionCalls.h"
+#include "functions.h"
 #include "expressions.h"
 #include "dataTypes.h"
 
