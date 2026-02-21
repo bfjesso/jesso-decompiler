@@ -66,9 +66,10 @@ public:
 		PRIMITIVE_COLOR,
 		KEYWORD_COLOR,
 		STRING_COLOR,
-		NUMBER_COLOR 
+		NUMBER_COLOR,
+		ERROR_COLOR,
 	};
-	const char* decompColorNames[9] = 
+	const char* decompColorNames[10] = 
 	{ 
 		"Operators",
 		"Local variables",
@@ -78,9 +79,10 @@ public:
 		"Primitive types",
 		"Keywords",
 		"Strings",
-		"Numbers"
+		"Numbers",
+		"Errors"
 	};
-	wxColour defaultDecompColors[9] = 
+	wxColour defaultDecompColors[10] = 
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
@@ -90,9 +92,10 @@ public:
 		wxColour(86, 156, 214),
 		wxColour(216, 160, 223),
 		wxColour(232, 201, 187),
-		wxColour(181, 206, 168)
+		wxColour(181, 206, 168),
+		wxColour(250, 50, 50)
 	};
-	const int numberOfDecompColors = 9;
+	const int numberOfDecompColors = 10;
 	
 	enum ids
 	{

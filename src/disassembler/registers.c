@@ -30,6 +30,8 @@ extern const char* registerStrs[] =
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
 };
 
+extern const int numOfRegisters = 179;
+
 unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 {
 	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)

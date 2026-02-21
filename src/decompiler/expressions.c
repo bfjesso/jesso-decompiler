@@ -427,7 +427,8 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			{
 				freeJdcStr(&expressions[i]);
 			}
-			return 0;
+
+			return strcpyJdc(result, registerStrs[targetReg]);
 		}
 	}
 

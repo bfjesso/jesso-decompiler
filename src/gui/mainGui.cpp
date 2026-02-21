@@ -863,6 +863,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		}
 	}
 
+	// regs that arent variables/arguments
+	for (int i = 0; i < numOfRegisters; i++)
+	{
+		ColorAllStrs(text, registerStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
+	}
+
 	// numbers
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)

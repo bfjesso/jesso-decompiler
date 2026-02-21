@@ -43,6 +43,8 @@ extern "C"
 
 	extern const char* registerStrs[];
 
+	extern const int numOfRegisters;
+
 #ifdef __cplusplus
 }
 #endif
