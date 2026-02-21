@@ -50,7 +50,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		}
 		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
 		{
-			stackFrameSize += currentInstruction->operands[1].immediate;
+			stackFrameSize += currentInstruction->operands[1].immediate.value;
 		}
 
 		// checking all operands for arguments
@@ -223,9 +223,9 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 
-		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate > 0)
+		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate.value > 0)
 		{
-			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate;
+			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
 			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
 			if (jumpAddr > addressToJumpTo && params.allInstructions[instructionIndex - 1].opcode != JMP_SHORT)
 			{
@@ -473,7 +473,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, int st
 {
 	struct DisassembledInstruction* instruction = &params.allInstructions[startInstructionIndex];
 
-	unsigned long long jmpAddress = params.allInstructions[startInstructionIndex].address + instruction->operands[0].immediate;
+	unsigned long long jmpAddress = params.allInstructions[startInstructionIndex].address + instruction->operands[0].immediate.value;
 	if (instruction->operands[0].type == MEM_ADDRESS)
 	{
 		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
@@ -581,7 +581,7 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 {
 	if (operand->type == IMMEDIATE)
 	{
-		*result = operand->immediate;
+		*result = operand->immediate.value;
 		return 1;
 	}
 	else if (operand->type == MEM_ADDRESS)

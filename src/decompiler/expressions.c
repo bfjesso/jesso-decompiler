@@ -9,9 +9,9 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 {
 	if (operand->type == IMMEDIATE)
 	{
-		if (!getValueFromDataSection(params, type, operand->immediate, result))
+		if (!getValueFromDataSection(params, type, operand->immediate.value, result))
 		{
-			if (operand->immediate > -10 && operand->immediate < 10) // this is just arbitrary
+			if (operand->immediate.value > -10 && operand->immediate.value < 10) // this is just arbitrary
 			{
 				return sprintfJdc(result, 0, "%lli", operand->immediate);
 			}

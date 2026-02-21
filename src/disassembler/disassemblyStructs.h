@@ -176,6 +176,12 @@ struct MemoryAddress
 	long long constDisplacement;
 };
 
+struct Immediate 
+{
+	long long value;
+	unsigned char size;
+};
+
 struct Operand
 {
 	union
@@ -183,7 +189,7 @@ struct Operand
 		enum Segment segment;
 		enum Register reg;
 		struct MemoryAddress memoryAddress;
-		long long immediate;
+		struct Immediate immediate;
 	};
 
 	enum OperandType type;

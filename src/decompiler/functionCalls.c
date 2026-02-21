@@ -280,7 +280,7 @@ int getFunctionCallNumber(struct DecompilationParameters params, unsigned long l
 	{
 		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
-			if (params.currentFunc->instructions[i].address + params.currentFunc->instructions[i].operands[0].immediate == callAddr ||
+			if (params.currentFunc->instructions[i].address + params.currentFunc->instructions[i].operands[0].immediate.value == callAddr ||
 				params.currentFunc->instructions[i].operands[0].memoryAddress.constDisplacement == callAddr) // check for imported func call
 			{
 				result++;

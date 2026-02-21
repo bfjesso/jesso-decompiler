@@ -254,7 +254,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate == 0xFF)
+		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0xFF)
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
@@ -375,7 +375,7 @@ unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 		case MEM_ADDRESS:
 			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->segment == m2->segment;
 		case IMMEDIATE:
-			return op1->immediate == op2->immediate;
+			return op1->immediate.value == op2->immediate.value;
 		}
 	}
 

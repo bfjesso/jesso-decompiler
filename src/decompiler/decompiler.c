@@ -55,7 +55,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP))
 		{
-			params.stackFrameSize += currentInstruction->operands[1].immediate;
+			params.stackFrameSize += currentInstruction->operands[1].immediate.value;
 		}
 
 		// checking for end of condition

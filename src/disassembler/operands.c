@@ -13,7 +13,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 
 		currentOperand->type = NO_OPERAND;
 		currentOperand->reg = NO_REG;
-		currentOperand->immediate = 0;
+		currentOperand->immediate.value = 0;
 		currentOperand->memoryAddress.ptrSize = 0;
 		currentOperand->memoryAddress.segment = NO_SEGMENT;
 		currentOperand->memoryAddress.reg = NO_REG;
@@ -40,7 +40,8 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		case ONE:
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = 1;
+			currentOperand->immediate.value = 1;
+			currentOperand->immediate.size = 1;
 			break;
 		case AL_CODE:
 			currentOperand->type = REGISTER;
@@ -268,24 +269,28 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Ib:
 			if (params->bytes > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(&params->bytes, 1);
+			currentOperand->immediate.value = getUIntFromBytes(&params->bytes, 1);
+			currentOperand->immediate.size = 1;
 			break;
 		case Iv:
 			operandSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->immediate.value = getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->immediate.size = operandSize;
 			break;
 		case Iz:
 			operandSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->immediate.value = getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->immediate.size = operandSize;
 			break;
 		case Iw:
 			if ((params->bytes + 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = getUIntFromBytes(&params->bytes, 2);
+			currentOperand->immediate.value = getUIntFromBytes(&params->bytes, 2);
+			currentOperand->immediate.size = 2;
 			break;
 		case Yb:
 			currentOperand->type = MEM_ADDRESS;
@@ -326,13 +331,15 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Jb:
 			if (params->bytes > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (char)(getUIntFromBytes(&params->bytes, 1) + (params->bytes - params->startBytePtr)); // add instruction size
+			currentOperand->immediate.value = (char)(getUIntFromBytes(&params->bytes, 1) + (params->bytes - params->startBytePtr)); // add instruction size
+			currentOperand->immediate.size = 1;
 			break;
 		case Jz:
 			operandSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate = (int)getUIntFromBytes(&params->bytes, operandSize) + (params->bytes - params->startBytePtr); // add instruction size
+			currentOperand->immediate.value = (int)getUIntFromBytes(&params->bytes, operandSize) + (params->bytes - params->startBytePtr); // add instruction size
+			currentOperand->immediate.size = operandSize;
 			break;
 		case Ob:
 			if (params->bytes > params->maxBytesAddr) { return 0; }

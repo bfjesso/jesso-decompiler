@@ -358,7 +358,7 @@ void MainGui::DisassembleCodeSections()
 
 				while (bytes[currentIndex] != 0xCC || bytes[currentIndex + 1] != 0xCC)
 				{
-					dataInstruction.operands[0].immediate = bytes[currentIndex];
+					dataInstruction.operands[0].immediate.value = bytes[currentIndex];
 					dataInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
 					disassembledInstructions.push_back(dataInstruction);
 					currentIndex++;
