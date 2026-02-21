@@ -40,8 +40,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
 
-	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
-
+	params.startInstructionIndex--;
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{
 		struct JdcStr argStr = initializeJdcStr();
@@ -55,6 +54,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		freeJdcStr(&argStr);
 	}
 
+	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 	int stackArgsFound = 0;
 	for (int i = ogStartInstructionIndex; i >= 0; i--)
 	{
