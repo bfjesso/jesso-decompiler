@@ -312,22 +312,19 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 {
 	for (int i = 0; i < 4; i++)
 	{
-		struct Operand* op = &(instruction->operands[i]);
-		if (!doesInstructionModifyOperand(instruction, i, 0)) 
+		if (operandNum != 0)
 		{
-			if (operandNum != 0)
-			{
-				*operandNum = i;
-			}
-			
-			if (op->type == REGISTER && compareRegisters(op->reg, reg))
-			{
-				return 1;
-			}
-			else if (op->type == MEM_ADDRESS && compareRegisters(op->memoryAddress.reg, reg))
-			{
-				return 1;
-			}
+			*operandNum = i;
+		}
+		
+		struct Operand* op = &(instruction->operands[i]);
+		if (op->type == MEM_ADDRESS && (compareRegisters(op->memoryAddress.reg, reg) || compareRegisters(op->memoryAddress.regDisplacement, reg)))
+		{
+			return 1;
+		}
+		else if (!doesInstructionModifyOperand(instruction, i, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		{
+			return 1;
 		}
 	}
 
