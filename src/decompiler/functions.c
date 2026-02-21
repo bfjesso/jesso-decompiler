@@ -367,7 +367,7 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 							}
 						}
 						if (alreadyFound) { continue; }
-						
+
 						int overwrites = 0;
 						if (doesInstructionModifyRegister(instruction, callee->regArgs[k].reg, 0, &overwrites) && overwrites)
 						{
@@ -392,6 +392,17 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 							}
 						}
 						if (isInitialized) { continue; }
+
+						int alreadyFound = 0;
+						for (int l = 0; l < currentFunc->numOfRegArgs; l++)
+						{
+							if (compareRegisters(currentFunc->regArgs[l].reg, callee->regArgs[k].reg))
+							{
+								alreadyFound = 1;
+								break;
+							}
+						}
+						if (alreadyFound) { continue; }
 
 						struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(currentFunc->regArgs, sizeof(struct RegisterVariable) * (currentFunc->numOfRegArgs + 1));
 						if (newRegArgs)
