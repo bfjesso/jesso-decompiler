@@ -272,8 +272,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeCvtToFlt(instruction->opcode) ||
 			isOpcodeCMOVcc(instruction->opcode) || 
 			instruction->opcode == STMXCSR ||
-			isOpcodeAES(instruction->opcode) ||
-			instruction->opcode == POP)
+			isOpcodeAES(instruction->opcode))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;

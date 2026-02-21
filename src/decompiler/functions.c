@@ -44,6 +44,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 			}
 		}
+		else if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
+		{
+			continue;
+		}
 		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
 		{
 			stackFrameSize += currentInstruction->operands[1].immediate.value;
@@ -229,20 +233,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 
-		if (isOpcodeReturn(currentInstruction->opcode) && result->returnType == VOID_TYPE)
-		{
-			canReturnNothing = 1;
-		}
-
-		if (addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo)
-		{
-			continue;
-		}
-		else
-		{
-			addressToJumpTo = 0;
-		}
-
 		// check for return value
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
@@ -265,6 +255,20 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				result->returnType = FLOAT_TYPE;
 				result->addressOfReturnFunction = 0;
 			}
+			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType == VOID_TYPE)
+			{
+				canReturnNothing = 1;
+			}
+
+		}
+
+		if (addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo)
+		{
+			continue;
+		}
+		else
+		{
+			addressToJumpTo = 0;
 		}
 		
 		if (isOpcodeReturn(currentInstruction->opcode))
