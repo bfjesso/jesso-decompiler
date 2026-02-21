@@ -13,10 +13,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		{
 			if (operand->immediate.value > -10 && operand->immediate.value < 10) // this is just arbitrary
 			{
-				return sprintfJdc(result, 0, "%lli", operand->immediate);
+				return sprintfJdc(result, 0, "%lli", operand->immediate.value);
 			}
 
-			return sprintfJdc(result, 0, "0x%llX", operand->immediate);
+			return sprintfJdc(result, 0, "0x%llX", operand->immediate.value);
 		}
 		
 		return 1;

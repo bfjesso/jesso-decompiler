@@ -118,7 +118,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 			if (!memAddressToStr(&currentOperand->memoryAddress, buffer, bufferSize)) { return 0; }
 			break;
 		case IMMEDIATE:
-			sprintf(immediateBuffer, "0x%llX", currentOperand->immediate);
+			sprintf(immediateBuffer, "0x%llX", currentOperand->immediate.value);
 			strcat(buffer, immediateBuffer);
 			break;
 		}
