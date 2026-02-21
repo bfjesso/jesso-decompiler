@@ -31,12 +31,6 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	if (firstInstruction->opcode == JMP_NEAR || firstInstruction->opcode == JMP_FAR)
-	{
-		sprintfJdc(result, 1, "%s();", callee->name.buffer);
-		return 1;
-	}
-
 	int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
 	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
 	if (returnedVar != 0)
@@ -50,31 +44,15 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{
-		for (int j = ogStartInstructionIndex; j >= 0; j--)
+		struct JdcStr argStr = initializeJdcStr();
+		if (!decompileRegister(params, callee->regArgs[i].reg, callee->regArgs[i].type, &argStr))
 		{
-			struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
-
-			if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
-			{
-				enum Register reg = currentInstruction->operands[0].reg;
-
-				if (compareRegisters(reg, callee->regArgs[i].reg))
-				{
-					params.startInstructionIndex = j;
-
-					struct JdcStr argStr = initializeJdcStr();
-					if (!decompileOperand(params, &(currentInstruction->operands[0]), callee->regArgs[i].type, &argStr))
-					{
-						freeJdcStr(&argStr);
-						return 0;
-					}
-
-					sprintfJdc(result, 1, "%s, ", argStr.buffer);
-					freeJdcStr(&argStr);
-					break;
-				}
-			}
+			freeJdcStr(&argStr);
+			return 0;
 		}
+
+		sprintfJdc(result, 1, "%s, ", argStr.buffer);
+		freeJdcStr(&argStr);
 	}
 
 	int stackArgsFound = 0;
@@ -204,7 +182,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				break;
 			}
 
-			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0], params.is64Bit);
+			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();
@@ -220,7 +198,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
-				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit);
+				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
 
 				params.startInstructionIndex = i;
 				struct JdcStr argStr = initializeJdcStr();
@@ -237,7 +215,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		int operandNum = 0;
 		if (!hasAccessedCX && doesInstructionModifyRegister(currentInstruction, CX, &operandNum, 0))
 		{
-			enum PrimitiveType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], params.is64Bit);
+			enum PrimitiveType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();

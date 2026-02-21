@@ -75,13 +75,9 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else
 		{
-			struct Operand baseReg = { 0 };
-			baseReg.type = REGISTER;
-			baseReg.reg = operand->memoryAddress.reg;
-
 			params.startInstructionIndex--;
 			struct JdcStr baseOperandStr = initializeJdcStr();
-			if (!decompileOperand(params, &baseReg, getTypeOfOperand(NO_MNEMONIC, &baseReg, params.is64Bit), &baseOperandStr))
+			if (!decompileRegister(params, operand->memoryAddress.reg, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.reg), &baseOperandStr))
 			{
 				freeJdcStr(&baseOperandStr);
 				return 0;
@@ -90,11 +86,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			struct JdcStr displacementOperandStr = initializeJdcStr();
 			if (operand->memoryAddress.regDisplacement != NO_REG) 
 			{
-				struct Operand displacementReg = { 0 };
-				displacementReg.type = REGISTER;
-				displacementReg.reg = operand->memoryAddress.regDisplacement;
-				
-				if (!decompileOperand(params, &displacementReg, getTypeOfOperand(NO_MNEMONIC, &displacementReg, params.is64Bit), &displacementOperandStr))
+				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.regDisplacement), &displacementOperandStr))
 				{
 					freeJdcStr(&baseOperandStr);
 					freeJdcStr(&displacementOperandStr);
@@ -169,23 +161,6 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	}
 	else if (operand->type == REGISTER)
 	{
-		if (compareRegisters(operand->reg, BP) || compareRegisters(operand->reg, SP))
-		{
-			return strcpyJdc(result, registerStrs[operand->reg]);
-		}
-		else if (compareRegisters(operand->reg, IP))
-		{
-			return sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address);
-		}
-
-		for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
-		{
-			if (compareRegisters(operand->reg, params.currentFunc->regVars[i].reg)) 
-			{
-				return strcpyJdc(result, params.currentFunc->regVars[i].name.buffer);
-			}
-		}
-
 		return decompileRegister(params, operand->reg, type, result);
 	}
 
@@ -305,8 +280,25 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	return 1;
 }
 
-static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result)
+unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result)
 {
+	if (compareRegisters(targetReg, BP) || compareRegisters(targetReg, SP))
+	{
+		return strcpyJdc(result, registerStrs[targetReg]);
+	}
+	else if (compareRegisters(targetReg, IP))
+	{
+		return sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address);
+	}
+
+	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+	{
+		if (compareRegisters(targetReg, params.currentFunc->regVars[i].reg))
+		{
+			return strcpyJdc(result, params.currentFunc->regVars[i].name.buffer);
+		}
+	}
+	
 	struct JdcStr expressions[5] = { 0 };
 	int expressionIndex = 0;
 
@@ -350,8 +342,8 @@ static unsigned char decompileRegister(struct DecompilationParameters params, en
 			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
 				if (finished && 
-					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0]), params.is64Bit) != type &&
-					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1]), params.is64Bit) != type)
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0])) != type &&
+					getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1])) != type)
 				{
 					struct JdcStr tmp = copyJdcStr(&expressions[expressionIndex]);
 					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", primitiveTypeStrs[type], tmp.buffer);
@@ -525,7 +517,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 				}
 
 				struct JdcStr operandStr = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operandStr))
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &operandStr))
 				{
 					freeJdcStr(&operandStr);
 					return 0;
@@ -539,14 +531,14 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 			else 
 			{
 				struct JdcStr operand1Str = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+				if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &operand1Str))
 				{
 					freeJdcStr(&operand1Str);
 					return 0;
 				}
 
 				struct JdcStr operand2Str = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
+				if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), &operand2Str))
 				{
 					freeJdcStr(&operand1Str);
 					freeJdcStr(&operand2Str);
@@ -563,14 +555,14 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		else if ((currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) || currentInstruction->opcode == SUB)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1], params.is64Bit), &operand2Str))
+			if (!decompileOperand(params, &currentInstruction->operands[1], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
@@ -586,7 +578,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit), &operand1Str))
+			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;

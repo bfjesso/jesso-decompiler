@@ -5,7 +5,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 
 static unsigned char getValueFromDataSection(struct DecompilationParameters params, enum PrimitiveType type, unsigned long long address, struct JdcStr* result);
 
-static unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result);
+unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, enum PrimitiveType type, struct JdcStr* result);
 
 unsigned char decompileComparison(struct DecompilationParameters params, unsigned char invertOperator, struct JdcStr* result);
 

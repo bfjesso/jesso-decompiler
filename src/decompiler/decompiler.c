@@ -283,7 +283,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 							unsigned char operandNum = 0;
 							if (doesInstructionAccessRegister(&(params.currentFunc->instructions[k]), AX, &operandNum))
 							{
-								returnType = getTypeOfOperand(params.currentFunc->instructions[k].opcode, &(params.currentFunc->instructions[k].operands[operandNum]), params.is64Bit);
+								returnType = getTypeOfOperand(params.currentFunc->instructions[k].opcode, &(params.currentFunc->instructions[k].operands[operandNum]));
 								break;
 							}
 						}
@@ -368,7 +368,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 				}
 
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
 				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[currentInstruction->operands[0].reg]);
 				params.currentFunc->numOfRegVars++;
@@ -424,7 +424,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			if (dependsOnRegVar)
 			{
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
 				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[currentInstruction->operands[0].reg]);
 				params.currentFunc->numOfRegVars++;

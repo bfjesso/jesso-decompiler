@@ -38,7 +38,11 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 
 struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr);
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit);
+unsigned char getSizeOfOperand(struct Operand* operand);
+
+enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
+
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
 static unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result);
 

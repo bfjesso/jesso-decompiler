@@ -16,11 +16,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
-		if (currentInstruction->address == 0x4011D6) 
-		{
-			int ttt = 0;
-		}
-
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
@@ -91,7 +86,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							}
 
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->reg]);
 							result->numOfRegArgs++;
@@ -139,7 +134,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 									}
 
 									result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
-									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
+									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 									result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
 									sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
 									result->numOfStackArgs++;
@@ -157,7 +152,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 									}
 
 									result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
+									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 									result->localVars[result->numOfLocalVars].name = initializeJdcStr();
 									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
 									result->numOfLocalVars++;
@@ -185,7 +180,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 								}
 
 								result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
+								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 								result->localVars[result->numOfLocalVars].name = initializeJdcStr();
 
 								if (stackOffset > 0)
@@ -213,7 +208,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							}
 
 							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand, params.is64Bit);
+							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
 							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
 							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->memoryAddress.reg]);
 							result->numOfRegArgs++;
@@ -258,7 +253,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			unsigned char operandNum = 0;
 			if (doesInstructionModifyRegister(currentInstruction, AX, &operandNum, 0))
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum], params.is64Bit);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
@@ -525,7 +520,34 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int l
 	return -1;
 }
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand, unsigned char is64Bit)
+unsigned char getSizeOfOperand(struct Operand* operand)
+{
+	if (operand->type == MEM_ADDRESS)
+	{
+		return operand->memoryAddress.ptrSize;
+	}
+	else if (operand->type == REGISTER)
+	{
+		return getSizeOfRegister(operand->reg);
+	}
+	else if (operand->type == IMMEDIATE)
+	{
+		return operand->immediate.size;
+	}
+
+	return 0;
+}
+
+enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
+{
+	struct Operand regOperand = { 0 };
+	regOperand.type = REGISTER;
+	regOperand.reg = reg;
+
+	return getTypeOfOperand(opcode, &regOperand);
+}
+
+enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 {
 	switch (opcode)
 	{
@@ -547,21 +569,8 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	{ 
 		return VOID_TYPE; 
 	}
-	else if (operand->type == IMMEDIATE) 
-	{
-		return is64Bit ? LONG_LONG_TYPE : INT_TYPE;
-	}
 
-	unsigned char size = 0;
-	if (operand->type == MEM_ADDRESS) 
-	{
-		size = operand->memoryAddress.ptrSize;
-	}
-	else if (operand->type == REGISTER) 
-	{
-		size = getSizeOfRegister(operand->reg);
-	}
-
+	unsigned char size = getSizeOfOperand(operand);
 	switch (size)
 	{
 	case 1:

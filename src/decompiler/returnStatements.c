@@ -116,12 +116,8 @@ unsigned char decompileReturnStatement(struct DecompilationParameters params, st
 	}
 	else
 	{
-		struct Operand eax = { 0 };
-		eax.type = REGISTER;
-		eax.reg = AX;
-
 		params.startInstructionIndex = newStartInstruction;
-		if (!decompileOperand(params, &eax, params.currentFunc->returnType, &returnExpression))
+		if (!decompileRegister(params, AX, params.currentFunc->returnType, &returnExpression))
 		{
 			freeJdcStr(&returnExpression);
 			return 0;

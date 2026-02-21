@@ -30,7 +30,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 	enum PrimitiveType type;
 	if (!localVar)
 	{
-		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0], params.is64Bit);
+		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 	}
 	else
 	{
