@@ -44,10 +44,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 			}
 		}
-		else if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
-		{
-			continue;
-		}
 		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
 		{
 			stackFrameSize += currentInstruction->operands[1].immediate.value;
