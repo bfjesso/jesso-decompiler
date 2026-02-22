@@ -184,7 +184,7 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 #endif
 }
 
-int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
+int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction** bufferRef, int bufferLen)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -195,11 +195,11 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 	
 	if (is64Bit) 
 	{
-		return getAllPEImports64(file, buffer, bufferLen);
+		return getAllPEImports64(file, bufferRef, bufferLen);
 	}
 	else 
 	{
-		return getAllPEImports32(file, buffer, bufferLen);
+		return getAllPEImports32(file, bufferRef, bufferLen);
 	}
 #endif
 
@@ -209,11 +209,11 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 
 	if (is64Bit)
 	{
-		return getAllELFImports64(filePathChar, buffer, bufferLen);
+		return getAllELFImports64(filePathChar, bufferRef, bufferLen);
 	}
 	else
 	{
-		return getAllELFImports32(filePathChar, buffer, bufferLen);
+		return getAllELFImports32(filePathChar, bufferRef, bufferLen);
 	}
 #endif
 }

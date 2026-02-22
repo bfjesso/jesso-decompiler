@@ -36,8 +36,7 @@ public:
 	unsigned char is64Bit = 0;
 	unsigned long long imageBase = 0;
 
-	static const int importsBufferMaxSize = 50;
-	ImportedFunction imports[importsBufferMaxSize] = { 0 };
+	ImportedFunction* imports = nullptr;
 	int numOfImports = 0;
 
 	std::vector<DisassembledInstruction> disassembledInstructions;

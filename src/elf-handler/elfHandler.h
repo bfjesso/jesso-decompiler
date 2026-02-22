@@ -27,6 +27,6 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 
 unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, int index, Elf32_Shdr* result);
 
-unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen);
 
-unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen);

@@ -305,7 +305,7 @@ unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* resu
 	return 0;
 }
 
-int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
+int getAllPEImports32(HANDLE file, struct ImportedFunction** bufferRef, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -341,7 +341,7 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 			DWORD importLookupTableFileOffset = rvaToFileOffset32(file, importDescriptor.Characteristics);
 
 			int j = 0;
-			while (bufferIndex < bufferLen)
+			while (1)
 			{
 				DWORD lookupValue = 0;
 				if (SetFilePointer(file, importLookupTableFileOffset + j, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -354,20 +354,34 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
 				{
-					buffer[bufferIndex].name = initializeJdcStr();
-					strcpyJdc(&buffer[bufferIndex].name, "");
+					(*bufferRef)[bufferIndex].name = initializeJdcStr();
+					strcpyJdc(&(*bufferRef)[bufferIndex].name, "");
 				}
 				else // import by name
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+					(*bufferRef)[bufferIndex].name = initializeJdcStrWithSize(255);
 					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
+					if (!ReadFile(file, (*bufferRef)[bufferIndex].name.buffer, (*bufferRef)[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
 				}
 
-				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+				(*bufferRef)[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
 
 				bufferIndex++;
+
+				if (bufferIndex >= bufferLen) 
+				{
+					bufferLen += 100;
+					struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
+					if (newBuffer) 
+					{
+						*bufferRef = newBuffer;
+					}
+					else 
+					{
+						return 0;
+					}
+				}
 
 				j += 4;
 			}
@@ -377,7 +391,7 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 	return bufferIndex;
 }
 
-int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
+int getAllPEImports64(HANDLE file, struct ImportedFunction** bufferRef, int bufferLen)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -413,7 +427,7 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 			DWORD importLookupTableFileOffset = rvaToFileOffset64(file, importDescriptor.Characteristics);
 
 			int j = 0;
-			while (bufferIndex < bufferLen)
+			while (1)
 			{
 				DWORD lookupValue = 0;
 				if (SetFilePointer(file, importLookupTableFileOffset + j, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -426,8 +440,8 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
 				{
-					buffer[bufferIndex].name = initializeJdcStr();
-					strcpyJdc(&buffer[bufferIndex].name, "");
+					(*bufferRef)[bufferIndex].name = initializeJdcStr();
+					strcpyJdc(&(*bufferRef)[bufferIndex].name, "");
 				}
 				else // import by name
 				{
@@ -436,31 +450,31 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, tmp, 255, 0, 0)) { return 0; }
 
-					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
-					if (UnDecorateSymbolName(tmp, buffer[bufferIndex].name.buffer, 255, UNDNAME_NAME_ONLY))
+					(*bufferRef)[bufferIndex].name = initializeJdcStrWithSize(255);
+					if (UnDecorateSymbolName(tmp, (*bufferRef)[bufferIndex].name.buffer, 255, UNDNAME_NAME_ONLY))
 					{
 						// removing template parameters
-						int nameLen = strlen(buffer[bufferIndex].name.buffer);
+						int nameLen = strlen((*bufferRef)[bufferIndex].name.buffer);
 						int k = 0;
 						int openIndex = -1;
 						int openNum = 0;
 						int closeNum = 0;
-						while (buffer[bufferIndex].name.buffer[k] != 0) 
+						while ((*bufferRef)[bufferIndex].name.buffer[k] != 0)
 						{
-							if (buffer[bufferIndex].name.buffer[k] == '<')
+							if ((*bufferRef)[bufferIndex].name.buffer[k] == '<')
 							{
 								if (openIndex == -1) { openIndex = k; }
 								openNum++;
 							}
-							else if (buffer[bufferIndex].name.buffer[k] == '>')
+							else if ((*bufferRef)[bufferIndex].name.buffer[k] == '>')
 							{
 								closeNum++;
 
 								if (closeNum == openNum) 
 								{
-									int len = strlen(buffer[bufferIndex].name.buffer + k + 1);
-									memcpy(buffer[bufferIndex].name.buffer + openIndex, buffer[bufferIndex].name.buffer + k + 1, len);
-									memset(buffer[bufferIndex].name.buffer + openIndex + len, 0, nameLen - (openIndex + len));
+									int len = strlen((*bufferRef)[bufferIndex].name.buffer + k + 1);
+									memcpy((*bufferRef)[bufferIndex].name.buffer + openIndex, (*bufferRef)[bufferIndex].name.buffer + k + 1, len);
+									memset((*bufferRef)[bufferIndex].name.buffer + openIndex + len, 0, nameLen - (openIndex + len));
 
 									openIndex = -1;
 									openNum = 0;
@@ -474,13 +488,27 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					}
 					else 
 					{
-						strcpyJdc(&buffer[bufferIndex].name, tmp);
+						strcpyJdc(&(*bufferRef)[bufferIndex].name, tmp);
 					}
 				}
 
-				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+				(*bufferRef)[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
 
 				bufferIndex++;
+
+				if (bufferIndex >= bufferLen)
+				{
+					bufferLen += 100;
+					struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
+					if (newBuffer)
+					{
+						*bufferRef = newBuffer;
+					}
+					else
+					{
+						return 0;
+					}
+				}
 
 				j += 8;
 			}

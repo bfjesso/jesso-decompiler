@@ -619,7 +619,7 @@ unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, 
 	return 0;
 }
 
-unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
 	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
@@ -669,16 +669,31 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 		}
 
 		int i = 0;
-		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
+		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size)
 		{
 			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			(*bufferRef)[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+			(*bufferRef)[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
 			bufferIndex++;
+
+			if (bufferIndex >= bufferLen)
+			{
+				bufferLen += 100;
+				struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
+				if (newBuffer)
+				{
+					*bufferRef = newBuffer;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
 			i++;
 		}
 
@@ -693,7 +708,7 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 	return bufferIndex;
 }
 
-unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen)
 {
 	Elf32_Shdr dynstrSection;
 	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
@@ -743,16 +758,31 @@ unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* 
 		}
 
 		int i = 0;
-		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
+		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size)
 		{
 			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
 			int val = ELF32_R_SYM(rela->r_info);
 			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 
-			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			(*bufferRef)[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+			(*bufferRef)[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
 			bufferIndex++;
+
+			if (bufferIndex >= bufferLen)
+			{
+				bufferLen += 100;
+				struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
+				if (newBuffer)
+				{
+					*bufferRef = newBuffer;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
 			i++;
 		}
 

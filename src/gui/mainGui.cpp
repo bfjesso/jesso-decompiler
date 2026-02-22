@@ -121,7 +121,9 @@ void MainGui::OpenFile()
 			}
 
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
-			numOfImports = getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, importsBufferMaxSize);
+
+			imports = (ImportedFunction*)calloc(100, sizeof(ImportedFunction));
+			numOfImports = getAllImports(filePath.c_str().AsWChar(), is64Bit, &imports, 100);
 			
 			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
@@ -234,6 +236,10 @@ void MainGui::ClearData()
 	if (dataSectionBytes)
 	{
 		delete[] dataSectionBytes;
+	}
+	if (imports) 
+	{
+		delete[] imports;
 	}
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);

@@ -19,7 +19,7 @@ extern "C"
 
 	unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, unsigned int value, struct JdcStr* result);
 
-	int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
+	int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction** bufferRef, int bufferLen);
 
 #ifdef __cplusplus
 }
