@@ -17,6 +17,9 @@ public:
 		MainWindowID
 	};
 
-
 	void OpenMenu(wxPoint position, ImportedFunction* imports, int numOfImports);
+
+	void CloseMenu(wxCloseEvent& e);
+
+	wxDECLARE_EVENT_TABLE();
 };

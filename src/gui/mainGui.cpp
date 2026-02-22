@@ -126,8 +126,14 @@ void MainGui::OpenFile()
 
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
 
-			imports = (ImportedFunction*)calloc(100, sizeof(ImportedFunction));
-			numOfImports = getAllImports(filePath.c_str().AsWChar(), is64Bit, &imports, 100);
+			numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
+			imports = new ImportedFunction[numOfImports];
+			if (getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, numOfImports) != numOfImports)
+			{
+				wxMessageBox("Error getting all imports", "Failed to open file");
+				currentFilePath = "";
+				return;
+			}
 			
 			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);

@@ -619,7 +619,141 @@ unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, 
 	return 0;
 }
 
-unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen)
+int getNumOfELFImports64(const char* filePath)
+{
+	Elf64_Shdr dynstrSection;
+	if (!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
+	{
+		printf("Failed to find .dynstr section.\n");
+		return 0;
+	}
+
+	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
+	if (!readSectionBytes64(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
+	{
+		printf("Failed to read .dynstr section bytes.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	Elf64_Shdr dynsymSection;
+	if (!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
+	{
+		printf("Failed to find .dynsym section.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
+	if (!readSectionBytes64(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
+	{
+		printf("Failed to read .dynsym section bytes.\n");
+		free(stringBytes);
+		free(dynsymBytes);
+		return 0;
+	}
+
+	int relaNum = 0;
+	Elf64_Shdr relaSection;
+	int result = 0;
+	while (getSectionHeaderByType64(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
+	{
+		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		if (!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		{
+			printf("Failed to read rela section bytes.\n");
+			free(stringBytes);
+			free(dynsymBytes);
+			free(relaBytes);
+			return 0;
+		}
+
+		int i = 0;
+		while ((i * sizeof(Elf64_Rela)) < relaSection.sh_size)
+		{
+			result++;
+			i++;
+		}
+
+		free(relaBytes);
+
+		relaNum++;
+	}
+
+	free(stringBytes);
+	free(dynsymBytes);
+
+	return result;
+}
+
+int getNumOfELFImports32(const char* filePath)
+{
+	Elf32_Shdr dynstrSection;
+	if (!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
+	{
+		printf("Failed to find .dynstr section.\n");
+		return 0;
+	}
+
+	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
+	if (!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
+	{
+		printf("Failed to read .dynstr section bytes.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	Elf32_Shdr dynsymSection;
+	if (!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
+	{
+		printf("Failed to find .dynsym section.\n");
+		free(stringBytes);
+		return 0;
+	}
+
+	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
+	if (!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
+	{
+		printf("Failed to read .dynsym section bytes.\n");
+		free(stringBytes);
+		free(dynsymBytes);
+		return 0;
+	}
+
+	int relaNum = 0;
+	Elf32_Shdr relaSection;
+	int result = 0;
+	while (getSectionHeaderByType32(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
+	{
+		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		if (!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		{
+			printf("Failed to read rela section bytes.\n");
+			free(stringBytes);
+			free(dynsymBytes);
+			free(relaBytes);
+			return 0;
+		}
+
+		int i = 0;
+		while ((i * sizeof(Elf32_Rela)) < relaSection.sh_size)
+		{
+			result++;
+			i++;
+		}
+
+		free(relaBytes);
+
+		relaNum++;
+	}
+
+	free(stringBytes);
+	free(dynsymBytes);
+
+	return result;
+}
+
+unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
 	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
@@ -669,31 +803,16 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction**
 		}
 
 		int i = 0;
-		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size)
+		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
 		{
 			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-			(*bufferRef)[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			(*bufferRef)[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
 			bufferIndex++;
-
-			if (bufferIndex >= bufferLen)
-			{
-				bufferLen += 100;
-				struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
-				if (newBuffer)
-				{
-					*bufferRef = newBuffer;
-				}
-				else
-				{
-					return 0;
-				}
-			}
-
 			i++;
 		}
 
@@ -708,7 +827,7 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction**
 	return bufferIndex;
 }
 
-unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction** bufferRef, int bufferLen)
+unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf32_Shdr dynstrSection;
 	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
@@ -758,31 +877,16 @@ unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction**
 		}
 
 		int i = 0;
-		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size)
+		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
 		{
 			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
 			int val = ELF32_R_SYM(rela->r_info);
 			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 
-			(*bufferRef)[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			(*bufferRef)[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 
 			bufferIndex++;
-
-			if (bufferIndex >= bufferLen)
-			{
-				bufferLen += 100;
-				struct ImportedFunction* newBuffer = (struct ImportedFunction*)realloc(*bufferRef, bufferLen);
-				if (newBuffer)
-				{
-					*bufferRef = newBuffer;
-				}
-				else
-				{
-					return 0;
-				}
-			}
-
 			i++;
 		}
 

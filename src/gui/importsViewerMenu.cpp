@@ -1,5 +1,9 @@
 #include "importsViewerMenu.h"
 
+wxBEGIN_EVENT_TABLE(ImportsViewer, wxFrame)
+EVT_CLOSE(ImportsViewer::CloseMenu)
+wxEND_EVENT_TABLE()
+
 ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
@@ -56,4 +60,9 @@ void ImportsViewer::OpenMenu(wxPoint position, ImportedFunction* imports, int nu
 
 		importsGrid->SetCellValue(i, 1, imports[i].name.buffer);
 	}
+}
+
+void ImportsViewer::CloseMenu(wxCloseEvent& e)
+{
+	Hide();
 }

@@ -23,9 +23,13 @@ unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* resu
 
 unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* result);
 
-int getAllPEImports32(HANDLE file, struct ImportedFunction** bufferRef, int bufferLen);
+int getNumOfPEImports32(HANDLE file);
 
-int getAllPEImports64(HANDLE file, struct ImportedFunction** bufferRef, int bufferLen);
+int getNumOfPEImports64(HANDLE file);
+
+int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
+
+int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
 
 DWORD rvaToFileOffset32(HANDLE file, DWORD rva);
 
