@@ -2,6 +2,7 @@
 
 wxBEGIN_EVENT_TABLE(ImportsViewer, wxFrame)
 EVT_CLOSE(ImportsViewer::CloseMenu)
+EVT_GRID_CELL_RIGHT_CLICK(ImportsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
 ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))
@@ -61,6 +62,56 @@ void ImportsViewer::OpenMenu(wxPoint position, ImportedFunction* imports, int nu
 		importsGrid->SetCellValue(i, 1, imports[i].name.buffer);
 	}
 }
+
+void ImportsViewer::GridRightClickOptions(wxGridEvent& e)
+{
+	wxMenu menu;
+
+	int row = e.GetRow(); // row right-clicked on
+
+	const int ID_COPY_ADDRESS = 100;
+	const int ID_COPY_NAME = 101;
+	const int ID_FIND = 102;
+
+	menu.Append(ID_COPY_ADDRESS, "Copy address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(importsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
+
+	menu.Append(ID_COPY_NAME, "Copy name");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(importsGrid->GetCellValue(row, 1)); }, ID_COPY_NAME);
+
+	menu.Append(ID_FIND, "Find");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
+		wxTextEntryDialog dlg(this, "", "Text");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			unsigned char found = 0;
+			wxString txt = dlg.GetValue();
+			if (!txt.IsEmpty())
+			{
+				int numOfImports = importsGrid->GetNumberRows();
+				for (int i = 0; i < numOfImports; i++)
+				{
+					if (importsGrid->GetCellValue(i, 0).Contains(txt) || importsGrid->GetCellValue(i, 1).Contains(txt))
+					{
+						importsGrid->GoToCell(i, 0);
+						importsGrid->SelectRow(i);
+						found = 1;
+						break;
+					}
+				}
+			}
+
+			if (!found)
+			{
+				wxMessageBox("Text not found", "Failed to find text");
+			}
+		}
+		}, ID_FIND);
+
+	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+	e.Skip();
+}
+
 
 void ImportsViewer::CloseMenu(wxCloseEvent& e)
 {

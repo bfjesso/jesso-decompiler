@@ -247,10 +247,6 @@ void MainGui::ClearData()
 	{
 		delete[] dataSectionBytes;
 	}
-	if (imports) 
-	{
-		delete[] imports;
-	}
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 
@@ -260,6 +256,10 @@ void MainGui::ClearData()
 	for (int i = 0; i < numOfImports; i++) 
 	{
 		freeJdcStr(&imports[i].name);
+	}
+	if (imports)
+	{
+		delete[] imports;
 	}
 	
 	for (int i = 0; i < functions.size(); i++)
@@ -777,6 +777,7 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	ClearData();
 	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
+	importsViewerMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
 }

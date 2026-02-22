@@ -19,6 +19,8 @@ public:
 
 	void OpenMenu(wxPoint position, ImportedFunction* imports, int numOfImports);
 
+	void GridRightClickOptions(wxGridEvent& e);
+
 	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
