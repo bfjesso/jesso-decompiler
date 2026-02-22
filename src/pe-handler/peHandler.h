@@ -27,4 +27,6 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
 
-unsigned long long rvaToFileOffset(HANDLE file, unsigned long long rva);
+DWORD rvaToFileOffset32(HANDLE file, DWORD rva);
+
+DWORD rvaToFileOffset64(HANDLE file, DWORD rva);
