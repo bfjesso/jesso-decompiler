@@ -3,6 +3,7 @@
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
+#include "importsViewerMenu.h"
 #include "colorsMenu.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
@@ -18,6 +19,7 @@ public:
 	wxMenuBar* menuBar = nullptr;
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
+	ImportsViewer* importsViewerMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
 
@@ -61,6 +63,7 @@ public:
 		MainWindowID,
 		OpenBytesDisassemblerID,
 		OpenDataViewerID,
+		OpenImportsViewerID,
 		OpenColorsMenuID,
 		OpenFileID,
 		DisassembleFileID,

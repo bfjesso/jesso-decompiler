@@ -93,6 +93,9 @@
     <ClCompile Include="src\disassembler\modRM.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\importsViewerMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -189,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\decompilationStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\importsViewerMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
