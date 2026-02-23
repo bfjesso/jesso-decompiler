@@ -132,6 +132,7 @@ void MainGui::OpenFile()
 			{
 				wxMessageBox("Error getting all imports", "Failed to open file");
 				currentFilePath = "";
+				delete[] imports;
 				return;
 			}
 			

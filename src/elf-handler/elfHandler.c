@@ -753,7 +753,7 @@ int getNumOfELFImports32(const char* filePath)
 	return result;
 }
 
-unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
 	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
@@ -827,7 +827,7 @@ unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* 
 	return bufferIndex;
 }
 
-unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf32_Shdr dynstrSection;
 	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))

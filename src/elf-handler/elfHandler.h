@@ -31,6 +31,6 @@ int getNumOfELFImports64(const char* filePath);
 
 int getNumOfELFImports32(const char* filePath);
 
-unsigned char getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
 
-unsigned char getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
