@@ -217,11 +217,13 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 		{
 			for (int j = i + 1; j < conditionsIndex; j++)
 			{
-				if (conditionsBuffer[i].dstIndex > conditionsBuffer[j].jccIndex && conditionsBuffer[i].dstIndex < conditionsBuffer[j].dstIndex)
+				if(conditionsBuffer[j].conditionType == IF_CT)
 				{
-					conditionsBuffer[i].requiresJumpInDecomp = 1;
-
-					break;
+					if (conditionsBuffer[i].dstIndex > conditionsBuffer[j].jccIndex && conditionsBuffer[i].dstIndex < conditionsBuffer[j].dstIndex)
+					{
+						conditionsBuffer[i].requiresJumpInDecomp = 1;
+						break;
+					}
 				}
 			}
 		}
