@@ -82,7 +82,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters params, st
 
 	struct JdcStr returnExpression = initializeJdcStr();
 
-	if(params.currentFunc->returnType == FLOAT_TYPE)
+	if(params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE)
 	{
 		for (int i = params.startInstructionIndex; i >= 0; i--)
 		{
