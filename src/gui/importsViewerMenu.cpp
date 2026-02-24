@@ -5,7 +5,7 @@ EVT_CLOSE(ImportsViewer::CloseMenu)
 EVT_GRID_CELL_RIGHT_CLICK(ImportsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))
+ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Imports", wxPoint(50, 50), wxSize(600, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
