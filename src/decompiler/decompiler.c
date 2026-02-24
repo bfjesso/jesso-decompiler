@@ -15,13 +15,27 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
-		if (!getAllReturnedVars(params)) 
-		{
-			return 0;
-		}
 		if (!getAllRegVars(params, conditions, numOfConditions))
 		{
 			return 0;
+		}
+
+		params.axRegVarIndex = -1;
+		for(int i = 0; i < params.currentFunc->numOfRegVars; i++)
+		{
+			if(compareRegisters(params.currentFunc->regVars[i].reg, AX))
+			{
+				params.axRegVarIndex = i;
+				break;
+			}
+		}
+
+		if(params.axRegVarIndex == -1)
+		{
+			if (!getAllReturnedVars(params))
+			{
+				return 0;
+			}
 		}
 
 		params.currentFunc->hasGottenLocalVars = 1;

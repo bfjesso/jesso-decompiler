@@ -31,11 +31,18 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
-	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
-	if (returnedVar != 0)
+	if(params.axRegVarIndex != -1)
 	{
-		sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+		sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[params.axRegVarIndex].name.buffer);
+	}
+	else
+	{
+		int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
+		struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
+		if (returnedVar != 0)
+		{
+			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+		}
 	}
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
@@ -142,12 +149,19 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 {
 	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	unsigned long long calleeAddress = params.imports[importIndex].address;
-	int callNum = getFunctionCallNumber(params, calleeAddress);
-	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
-	if (returnedVar != 0)
+	if(params.axRegVarIndex != -1)
 	{
-		sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+		sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[params.axRegVarIndex].name.buffer);
+	}
+	else
+	{
+		unsigned long long calleeAddress = params.imports[importIndex].address;
+		int callNum = getFunctionCallNumber(params, calleeAddress);
+		struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
+		if (returnedVar != 0)
+		{
+			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+		}
 	}
 
 	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name.buffer);

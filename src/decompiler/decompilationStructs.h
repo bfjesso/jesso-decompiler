@@ -87,6 +87,8 @@ struct DecompilationParameters
 
 	int stackFrameSize;
 
+	int axRegVarIndex;
+
 	struct DisassembledInstruction* allInstructions;
 	int totalNumOfInstructions;
 
