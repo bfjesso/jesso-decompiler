@@ -81,49 +81,37 @@ unsigned char decompileReturnStatement(struct DecompilationParameters params, st
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
-	int newStartInstruction = -1;
 
-	// find where a return register is first being modified
-	for (int i = params.startInstructionIndex; i >= 0; i--)
+	if(params.currentFunc->returnType == FLOAT_TYPE)
 	{
-		if (i == params.skipLowerBound)
+		for (int i = params.startInstructionIndex; i >= 0; i--)
 		{
-			i = params.skipUpperBound;
-			continue;
-		}
+			if (i == params.skipLowerBound)
+			{
+				i = params.skipUpperBound;
+				continue;
+			}
 
-		params.startInstructionIndex = i;
-		if (doesInstructionModifyReturnRegister(params))
-		{
-			newStartInstruction = i;
-			break;
-		}
-	}
-
-	if (newStartInstruction == -1)
-	{
-		return 0;
-	}
-
-	if (params.currentFunc->instructions[newStartInstruction].opcode == FLD)
-	{
-		params.startInstructionIndex = newStartInstruction - 1;
-		if (!decompileOperand(params, &(params.currentFunc->instructions[newStartInstruction].operands[0]), params.currentFunc->returnType, &returnExpression))
-		{
-			freeJdcStr(&returnExpression);
-			return 0;
+			if (params.currentFunc->instructions[i].opcode == FLD)
+			{
+				params.startInstructionIndex = i;
+				if (!decompileOperand(params, &(params.currentFunc->instructions[i].operands[0]), params.currentFunc->returnType, &returnExpression))
+				{
+					freeJdcStr(&returnExpression);
+					return 0;
+				}
+				break;
+			}
 		}
 	}
 	else
 	{
-		params.startInstructionIndex = newStartInstruction;
 		if (!decompileRegister(params, AX, params.currentFunc->returnType, &returnExpression))
 		{
 			freeJdcStr(&returnExpression);
 			return 0;
 		}
 	}
-
 
 	sprintfJdc(result, 1, "return %s;", returnExpression.buffer);
 	freeJdcStr(&returnExpression);
