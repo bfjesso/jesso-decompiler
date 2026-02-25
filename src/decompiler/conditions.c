@@ -210,9 +210,9 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 		conditionsIndex++;
 	}
 
-	// checking for an if statement ends before another if statment that it encolses
 	for (int i = 0; i < conditionsIndex; i++)
 	{
+		// checking for an if statement ends before another if statment that it encolses
 		if (conditionsBuffer[i].conditionType == IF_CT)
 		{
 			for (int j = i + 1; j < conditionsIndex; j++)
@@ -222,6 +222,27 @@ static int setConditionTypes(struct Condition* conditions, int numOfConditions, 
 					if (conditionsBuffer[i].dstIndex > conditionsBuffer[j].jccIndex && conditionsBuffer[i].dstIndex < conditionsBuffer[j].dstIndex)
 					{
 						conditionsBuffer[i].requiresJumpInDecomp = 1;
+						break;
+					}
+				}
+			}
+		}
+
+		// checking for ELSEs with same dstIndex
+		if (conditionsBuffer[i].conditionType == ELSE_CT)
+		{
+			for (int j = 0; j < conditionsIndex; j++)
+			{
+				if(j == i)
+				{
+					continue;
+				}
+
+				if(conditionsBuffer[j].conditionType == ELSE_CT)
+				{
+					if (conditionsBuffer[i].dstIndex == conditionsBuffer[j].dstIndex && conditionsBuffer[i].jccIndex < conditionsBuffer[j].jccIndex)
+					{
+						conditionsBuffer[i].dstIndex = conditionsBuffer[j].jccIndex;
 						break;
 					}
 				}

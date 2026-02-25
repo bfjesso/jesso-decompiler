@@ -104,7 +104,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			{
 				numOfIndents--;
 			}
-			
+
 			addIndents(result, numOfIndents);
 			
 			if (decompileCondition(params, conditions, conditionIndex, result))
