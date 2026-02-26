@@ -30,12 +30,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if(params.axRegVarIndex == -1)
+		if (!getAllReturnedVars(params)) // still need to get these even if AX is a reg var in order to check if the returned value is used or not
 		{
-			if (!getAllReturnedVars(params))
-			{
-				return 0;
-			}
+			return 0;
 		}
 
 		params.currentFunc->hasGottenLocalVars = 1;
@@ -219,22 +216,25 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	{
 		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
-			unsigned char isReturnVarUsed = 0;
+			enum PrimitiveType returnType = VOID_TYPE; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i + 1; j < params.currentFunc->numOfInstructions; j++)
 			{
-				enum Mnemonic opcode = params.currentFunc->instructions[j].opcode;
-				if (isOpcodeReturn(opcode) || doesInstructionAccessRegister(&(params.currentFunc->instructions[j]), AX, 0))
+				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+				enum Mnemonic opcode = currentInstruction->opcode;
+				unsigned char overwrites = 0;
+				if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, &overwrites) && overwrites))
 				{
-					isReturnVarUsed = 1;
 					break;
 				}
 
-				if (isOpcodeCall(opcode) || opcode == JMP_SHORT || doesInstructionModifyRegister(&(params.currentFunc->instructions[j]), AX, 0, 0))
+				unsigned char operandNum = 0;
+				if (isOpcodeReturn(opcode) || doesInstructionAccessRegister(currentInstruction, AX, &operandNum))
 				{
+					returnType = getTypeOfOperand(opcode, &(currentInstruction->operands[operandNum]));
 					break;
 				}
 			}
-			if (!isReturnVarUsed)
+			if (returnType == VOID_TYPE)
 			{
 				continue;
 			}
@@ -284,40 +284,26 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				{
 					if (params.imports[j].address == calleeAddress)
 					{
-						// checking if AX is ever accessed without being assigned after the call and until the next function call
-						unsigned char returnType = params.is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume it returns something by default
-						for (int k = i + 1; i < params.currentFunc->numOfInstructions; k++)
+						if(returnType != VOID_TYPE)
 						{
-							enum Mnemonic opcode = params.currentFunc->instructions[k].opcode;
-							if (isOpcodeCall(opcode) || opcode == JMP_SHORT)
+							struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
+							if (newReturnedVars)
 							{
-								break;
+								params.currentFunc->returnedVars = newReturnedVars;
+							}
+							else
+							{
+								return 0;
 							}
 
-							unsigned char operandNum = 0;
-							if (doesInstructionAccessRegister(&(params.currentFunc->instructions[k]), AX, &operandNum))
-							{
-								returnType = getTypeOfOperand(params.currentFunc->instructions[k].opcode, &(params.currentFunc->instructions[k].operands[operandNum]));
-								break;
-							}
+							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
+							sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
+							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
+							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
+							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
+							params.currentFunc->numOfReturnedVars++;
 						}
 
-						struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
-						if (newReturnedVars)
-						{
-							params.currentFunc->returnedVars = newReturnedVars;
-						}
-						else
-						{
-							return 0;
-						}
-
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
-						sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
-						params.currentFunc->numOfReturnedVars++;
 						break;
 					}
 				}
