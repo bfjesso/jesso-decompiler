@@ -163,6 +163,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		else if (checkForReturnStatement(params)) 
 		{
 			addIndents(result, numOfIndents);
+			params.startInstructionIndex--;
 			if (decompileReturnStatement(params, result))
 			{
 				strcatJdc(result, "\n");
@@ -227,8 +228,14 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					break;
 				}
 
+				if (isOpcodeReturn(opcode))
+				{
+					returnType = params.currentFunc->returnType;
+					break;
+				}
+
 				unsigned char operandNum = 0;
-				if (isOpcodeReturn(opcode) || doesInstructionAccessRegister(currentInstruction, AX, &operandNum))
+				if (doesInstructionAccessRegister(currentInstruction, AX, &operandNum))
 				{
 					returnType = getTypeOfOperand(opcode, &(currentInstruction->operands[operandNum]));
 					break;
@@ -278,7 +285,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					params.currentFunc->numOfReturnedVars++;
 				}
 			}
-			else
+			else if(returnType != VOID_TYPE)
 			{
 				for (int j = 0; j < params.numOfImports; j++)
 				{
