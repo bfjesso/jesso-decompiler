@@ -44,13 +44,17 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 			}
 		}
-		else if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
+
+		int stackFrameSizeChange = getStackFrameChange(currentInstruction);
+		if (stackFrameSizeChange != 0) 
 		{
+			stackFrameSize += stackFrameSizeChange;
 			continue;
 		}
-		else if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP)) 
+
+		if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
 		{
-			stackFrameSize += currentInstruction->operands[1].immediate.value;
+			continue;
 		}
 
 		// checking all operands for arguments and stack vars
@@ -462,6 +466,37 @@ void freeFunction(struct Function* function)
 	free(function->stackArgs);
 	free(function->localVars);
 	free(function->returnedVars);
+}
+
+int getStackFrameChange(struct DisassembledInstruction* instruction) 
+{
+	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)) 
+	{
+		return 0;
+	}
+
+	int result = 0;
+	if(instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP))
+	{
+		if (instruction->opcode == SUB)
+		{
+			result += instruction->operands[1].immediate.value;
+		}
+		else if (instruction->opcode == ADD)
+		{
+			result -= instruction->operands[1].immediate.value;
+		}
+	}
+	else if (instruction->opcode == PUSH) 
+	{
+		result += getSizeOfOperand(&instruction->operands[0]);
+	}
+	else if (instruction->opcode == POP)
+	{
+		result -= getSizeOfOperand(&instruction->operands[0]);
+	}
+
+	return result;
 }
 
 // returns index of function, -1 if not found

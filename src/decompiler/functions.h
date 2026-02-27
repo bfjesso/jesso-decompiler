@@ -22,6 +22,8 @@ extern "C"
 }
 #endif
 
+int getStackFrameChange(struct DisassembledInstruction* instruction);
+
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
 unsigned long long resolveJmpChain(struct DecompilationParameters param, int startInstructionIndex);

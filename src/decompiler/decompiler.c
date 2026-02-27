@@ -64,10 +64,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->opcode == SUB && currentInstruction->operands[0].type == REGISTER && compareRegisters(currentInstruction->operands[0].reg, SP))
-		{
-			params.stackFrameSize += currentInstruction->operands[1].immediate.value;
-		}
+		params.stackFrameSize += getStackFrameChange(currentInstruction);
 
 		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
