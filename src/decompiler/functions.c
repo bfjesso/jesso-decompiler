@@ -53,7 +53,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			stackFrameSize += currentInstruction->operands[1].immediate.value;
 		}
 
-		// checking all operands for arguments
+		// checking all operands for arguments and stack vars
 		unsigned char overwrites = 0;
 		for (int j = 3; j >= 0; j--)
 		{
@@ -69,7 +69,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 					if (compareRegisters(currentOperand->reg, k))
 					{
-						if (j == 0 && doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+						if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
 						{
 							initializedRegs[k - RAX] = 1;
 						}

@@ -285,31 +285,28 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					params.currentFunc->numOfReturnedVars++;
 				}
 			}
-			else if(returnType != VOID_TYPE)
+			else
 			{
 				for (int j = 0; j < params.numOfImports; j++)
 				{
 					if (params.imports[j].address == calleeAddress)
 					{
-						if(returnType != VOID_TYPE)
+						struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
+						if (newReturnedVars)
 						{
-							struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
-							if (newReturnedVars)
-							{
-								params.currentFunc->returnedVars = newReturnedVars;
-							}
-							else
-							{
-								return 0;
-							}
-
-							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
-							sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
-							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
-							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
-							params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
-							params.currentFunc->numOfReturnedVars++;
+							params.currentFunc->returnedVars = newReturnedVars;
 						}
+						else
+						{
+							return 0;
+						}
+
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
+						sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
+						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
+						params.currentFunc->numOfReturnedVars++;
 
 						break;
 					}
