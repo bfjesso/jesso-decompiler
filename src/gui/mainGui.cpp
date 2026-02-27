@@ -479,12 +479,6 @@ void MainGui::FindAllFunctions()
 		fixAllFunctionArgs(&functions[0], functions.size());
 	}
 
-	numOfDataSections = 0;
-	if (dataSectionBytes)
-	{
-		delete[] dataSectionBytes;
-	}
-
 	decompParams.functions = &functions[0];
 	decompParams.numOfFunctions = functions.size();
 }
