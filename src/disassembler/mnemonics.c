@@ -264,7 +264,7 @@ unsigned char isOpcodeMul(enum Mnemonic opcode)
 
 unsigned char isOpcodeDiv(enum Mnemonic opcode)
 {
-	if (opcode >= IDIV && opcode <= DIVSD)
+	if (opcode > IDIV && opcode <= DIVSD) // IDIV not included because it is handled as an edge case. it divides AX by the first operand
 	{
 		return 1;
 	}

@@ -237,15 +237,6 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	{
 		*overwrites = 0;
 	}
-	
-	if (instruction->operands[operandNum].type == REGISTER && compareRegisters(instruction->operands[operandNum].reg, AX)) // some opcodes may modify a register even if it isn't an operand
-	{
-		switch (instruction->opcode)
-		{
-		case IDIV:
-			return 1;
-		}
-	}
 
 	if (operandNum == 0)
 	{
@@ -333,6 +324,15 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 
 unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum, unsigned char* overwrites)
 {
+	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
+	{
+		switch (instruction->opcode)
+		{
+		case IDIV:
+			return 1;
+		}
+	}
+	
 	for (int i = 0; i < 4; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);

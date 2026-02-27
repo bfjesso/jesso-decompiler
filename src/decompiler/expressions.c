@@ -620,6 +620,19 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		else { strcpyJdc(result, " - 1"); }
 		return 1;
 	}
+	else if (instruction->opcode == IDIV) 
+	{
+		struct JdcStr operandStr0 = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[0], type, &operandStr0))
+		{
+			freeJdcStr(&operandStr0);
+			return 0;
+		}
+
+		if (getAssignment) { sprintfJdc(result, 0, " /= %s", operandStr0.buffer); }
+		else { sprintfJdc(result, 0, " / %s", operandStr0.buffer); }
+		return 1;
+	}
 	else if (instruction->opcode == NEG)
 	{
 		struct JdcStr operandStr0 = initializeJdcStr();
@@ -669,9 +682,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, enum Pri
 		free(mnemonicStrsLowercase);
 		return 1;
 	}
-
-
-	if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		params.startInstructionIndex--;
 
