@@ -531,7 +531,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, int st
 	}
 	else if (instruction->operands[0].type == REGISTER)
 	{
-		if (!operandToValue(params, &instruction->operands[0], &jmpAddress))
+		if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &jmpAddress))
 		{
 			return 0;
 		}
@@ -638,7 +638,7 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	return VOID_TYPE;
 }
 
-static unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result)
+static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -649,7 +649,7 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			unsigned long long address = params.allInstructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			unsigned long long address = params.allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			if (!getNumFromData(params, address, result)) 
 			{
 				*result = address;
@@ -672,7 +672,7 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 			baseReg.reg = operand->memoryAddress.reg;
 
 			unsigned long long regValue = 0;
-			if (!operandToValue(params, &baseReg, &regValue))
+			if (!operandToValue(params, startInstructionIndex, &baseReg, &regValue))
 			{
 				return 0;
 			}
@@ -688,12 +688,11 @@ static unsigned char operandToValue(struct DecompilationParameters params, struc
 	}
 	else if (operand->type == REGISTER)
 	{
-		for (int i = params.startInstructionIndex - 1; i >= 0; i--)
+		for (int i = startInstructionIndex - 1; i >= 0; i--)
 		{
 			if (params.allInstructions[i].opcode == MOV && compareRegisters(params.allInstructions[i].operands[0].reg, operand->reg))
 			{
-				params.startInstructionIndex = i;
-				return operandToValue(params, &(params.allInstructions[i].operands[1]), result);
+				return operandToValue(params, i, &(params.allInstructions[i].operands[1]), result);
 			}
 		}
 

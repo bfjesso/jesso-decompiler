@@ -46,7 +46,7 @@ enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
 
 enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
-static unsigned char operandToValue(struct DecompilationParameters params, struct Operand* operand, unsigned long long* result);
+static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 
 static unsigned char getNumFromData(struct DecompilationParameters params, unsigned long long address, unsigned long long* result);
 
