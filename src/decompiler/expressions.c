@@ -354,9 +354,9 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			}
 			else 
 			{
-				for (int i = 0; i < expressionIndex; i++)
+				for (int j = 0; j < expressionIndex; j++)
 				{
-					freeJdcStr(&expressions[i]);
+					freeJdcStr(&expressions[j]);
 				}
 				return 0;
 			}
@@ -404,9 +404,9 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 				}
 				else
 				{
-					for (int i = 0; i < expressionIndex; i++)
+					for (int j = 0; j < expressionIndex; j++)
 					{
-						freeJdcStr(&expressions[i]);
+						freeJdcStr(&expressions[j]);
 					}
 					return 0;
 				}
