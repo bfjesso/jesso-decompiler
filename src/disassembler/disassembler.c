@@ -378,3 +378,17 @@ unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2)
 
 	return 0;
 }
+
+unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)
+{
+	if (isOpcodeMov(instruction->opcode) && areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
+	{
+		return 1;
+	}
+	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0)
+	{
+		return 1;
+	}
+
+	return 0;
+}

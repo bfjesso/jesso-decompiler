@@ -6,6 +6,11 @@ unsigned char checkForAssignment(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
+	if (doesInstructionDoNothing(currentInstruction)) 
+	{
+		return 0;
+	}
+
 	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0))
 	{
 		return 1;

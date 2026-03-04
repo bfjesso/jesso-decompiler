@@ -32,3 +32,5 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
 
 unsigned char areOperandsEqual(struct Operand* op1, struct Operand* op2);
+
+unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
