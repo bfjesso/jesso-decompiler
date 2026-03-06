@@ -214,7 +214,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	{
 		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
-			enum PrimitiveType returnType = VOID_TYPE; // used if its an import call, also using this here to check if the return value is used
+			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i + 1; j < params.currentFunc->numOfInstructions; j++)
 			{
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
@@ -238,7 +238,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					break;
 				}
 			}
-			if (returnType == VOID_TYPE)
+			if (returnType.primitiveType == VOID_TYPE)
 			{
 				continue;
 			}
@@ -258,7 +258,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			if (calleeIndex != -1)
 			{
-				if (params.functions[calleeIndex].returnType == VOID_TYPE)
+				if (params.functions[calleeIndex].returnType.primitiveType == VOID_TYPE)
 				{
 					continue;
 				}
@@ -344,7 +344,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 		struct Function* callee;
 		params.startInstructionIndex = i;
-		if((checkForFunctionCall(params, &callee) && callee->returnType != VOID_TYPE) || checkForImportCall(params))
+		if((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE) || checkForImportCall(params))
 		{
 			isFunctionCallWithRetVal = 1;
 		}
@@ -356,7 +356,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			{
 				if(callee)
 				{
-					switch(callee->returnType)
+					switch(callee->returnType.primitiveType)
 					{
 					case CHAR_TYPE:
 						reg = AL;
@@ -482,24 +482,32 @@ static void addIndents(struct JdcStr* result, int numOfIndents)
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
 {
-	if (!sprintfJdc(result, 0, "%s %s %s(", primitiveTypeStrs[function->returnType], callingConventionStrs[function->callingConvention], function->name.buffer)) 
+	struct JdcStr typeStr = initializeJdcStr();
+
+	varTypeToStr(function->returnType, &typeStr);
+	if (!sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer))
 	{
+		freeJdcStr(&typeStr);
 		return 0;
 	}
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
+		varTypeToStr(function->regArgs[i].type, &typeStr);
+		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
+			if (!sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->regArgs[i].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
 		else 
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->regArgs[i].type], function->regArgs[i].name.buffer))
+			if (!sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
@@ -507,31 +515,40 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
+		varTypeToStr(function->stackArgs[i].type, &typeStr);
+		
 		if (i == function->numOfStackArgs - 1)
 		{
-			if (!sprintfJdc(result, 1, "%s %s", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
+			if (!sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->stackArgs[i].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
 		else
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", primitiveTypeStrs[function->stackArgs[i].type], function->stackArgs[i].name.buffer))
+			if (!sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
 	}
 
+	freeJdcStr(&typeStr);
 	return strcatJdc(result, ")\n");
 }
 
 static unsigned char declareAllLocalVariables(struct Function* function, struct JdcStr* result)
 {
+	struct JdcStr typeStr = initializeJdcStr();
+	
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->localVars[i].type], function->localVars[i].name.buffer))
+		varTypeToStr(function->localVars[i].type, &typeStr);
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->localVars[i].name.buffer))
 		{
+			freeJdcStr(&typeStr);
 			return 0;
 		}
 	}
@@ -548,17 +565,21 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 			}
 		}
 
+		varTypeToStr(function->regVars[i].type, &typeStr);
+
 		if (argIndex != -1)
 		{
-			if (!sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer))
+			if (!sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
 		else 
 		{
-			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->regVars[i].type], function->regVars[i].name.buffer))
+			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer))
 			{
+				freeJdcStr(&typeStr);
 				return 0;
 			}
 		}
@@ -566,11 +587,14 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, primitiveTypeStrs[function->returnedVars[i].type], function->returnedVars[i].name.buffer))
+		varTypeToStr(function->returnedVars[i].type, &typeStr);
+		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer))
 		{
+			freeJdcStr(&typeStr);
 			return 0;
 		}
 	}
 
+	freeJdcStr(&typeStr);
 	return strcatJdc(result, "\n");
 }

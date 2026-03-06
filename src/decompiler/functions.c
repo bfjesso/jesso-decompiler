@@ -256,10 +256,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 			else if (currentInstruction->opcode == FLD)
 			{
-				result->returnType = FLOAT_TYPE;
+				result->returnType.primitiveType = FLOAT_TYPE;
 				result->addressOfReturnFunction = 0;
 			}
-			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType == VOID_TYPE)
+			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE)
 			{
 				canReturnNothing = 1;
 			}
@@ -314,14 +314,14 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 
 			if (returnFunctionIndex != -1)
 			{
-				if (functions[returnFunctionIndex].returnType != VOID_TYPE) 
+				if (functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE) 
 				{
 					functions[i].returnType = functions[returnFunctionIndex].returnType;
 				}
 			}
 			else // probably an imported function
 			{
-				functions[i].returnType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
+				functions[i].returnType.primitiveType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
 			}
 		}
 	}
@@ -584,7 +584,7 @@ unsigned char getSizeOfOperand(struct Operand* operand)
 	return 0;
 }
 
-enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
+struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
 {
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER;
@@ -593,8 +593,10 @@ enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
 	return getTypeOfOperand(opcode, &regOperand);
 }
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
+struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 {
+	struct VarType result = { 0 };
+	
 	switch (opcode)
 	{
 	case MOVSS:
@@ -602,40 +604,57 @@ enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operan
 	case CVTPS2PD:
 	case CVTSS2SD:
 	case COMISS:
-		return FLOAT_TYPE;
+		result.primitiveType = FLOAT_TYPE;
+		return result;
 	case MOVSD:
 	case ADDSD:
 	case CVTPD2PS:
 	case CVTSD2SS:
 	case COMISD:
-		return DOUBLE_TYPE;
+		result.primitiveType = DOUBLE_TYPE;
+		return result;
 	}
 
 	if (!operand) 
 	{ 
-		return VOID_TYPE; 
+		return result;
 	}
 
 	unsigned char size = getSizeOfOperand(operand);
 	switch (size)
 	{
 	case 1:
-		return CHAR_TYPE;
+		result.primitiveType = CHAR_TYPE;
+		break;
 	case 2:
-		return SHORT_TYPE;
+		result.primitiveType = SHORT_TYPE;
+		break;
 	case 4:
-		return INT_TYPE;
+		result.primitiveType = INT_TYPE;
+		break;
 	case 8:
-		return LONG_LONG_TYPE;
+		result.primitiveType = LONG_LONG_TYPE;
+		break;
 	case 16:
-		return INT_128_TPYE;
+		result.primitiveType = INT_128_TPYE;
+		break;
 	case 32:
-		return INT_256_TPYE;
+		result.primitiveType = INT_256_TPYE;
+		break;
 	case 64:
-		return INT_512_TPYE;
+		result.primitiveType = INT_512_TPYE;
+		break;
+	}
+
+	switch (opcode) 
+	{
+	case IMUL:
+	case IDIV:
+		result.isSigned = 1;
+		break;
 	}
 	
-	return VOID_TYPE;
+	return result;
 }
 
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)

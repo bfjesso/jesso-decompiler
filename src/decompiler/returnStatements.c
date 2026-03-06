@@ -8,7 +8,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
 
-	if ((params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE) && instruction->opcode == FLD)
+	if ((params.currentFunc->returnType.primitiveType == FLOAT_TYPE || params.currentFunc->returnType.primitiveType == DOUBLE_TYPE) && instruction->opcode == FLD)
 	{
 		return 1;
 	}
@@ -27,7 +27,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 			{
 				return checkForImportCall(params) != -1;
 			}
-			else if (params.functions[calleIndex].returnType == VOID_TYPE)
+			else if (params.functions[calleIndex].returnType.primitiveType == VOID_TYPE)
 			{
 				return 0;
 			}
@@ -75,14 +75,14 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 
 unsigned char decompileReturnStatement(struct DecompilationParameters params, struct JdcStr* result)
 {
-	if (params.currentFunc->returnType == VOID_TYPE)
+	if (params.currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
 		return strcatJdc(result, "return;");
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
 
-	if(params.currentFunc->returnType == FLOAT_TYPE || params.currentFunc->returnType == DOUBLE_TYPE)
+	if(params.currentFunc->returnType.primitiveType == FLOAT_TYPE || params.currentFunc->returnType.primitiveType == DOUBLE_TYPE)
 	{
 		for (int i = params.startInstructionIndex; i >= 0; i--)
 		{

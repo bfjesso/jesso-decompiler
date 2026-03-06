@@ -848,6 +848,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	{
 		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
+	ColorAllStrs(text, "unsigned", ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	ColorAllStrs(text, "sizeof", ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 
 	// keywords

@@ -32,7 +32,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
 	struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
-	enum PrimitiveType type;
+	struct VarType type = { 0 };
 	if (!localVar)
 	{
 		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);

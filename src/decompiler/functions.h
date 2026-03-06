@@ -42,9 +42,9 @@ struct FuncReturnVariable* findReturnedVar(struct Function* function, char callN
 
 unsigned char getSizeOfOperand(struct Operand* operand);
 
-enum PrimitiveType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
+struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
 
-enum PrimitiveType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
+struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
 
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 

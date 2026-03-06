@@ -196,7 +196,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				break;
 			}
 
-			unsigned char type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
+			struct VarType type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();
@@ -212,7 +212,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
-				unsigned char type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
+				struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
 
 				params.startInstructionIndex = i;
 				struct JdcStr argStr = initializeJdcStr();
@@ -229,7 +229,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		int operandNum = 0;
 		if (!hasAccessedCX && doesInstructionModifyRegister(currentInstruction, CX, &operandNum, 0))
 		{
-			enum PrimitiveType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
+			struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
 
 			params.startInstructionIndex = i;
 			struct JdcStr argStr = initializeJdcStr();

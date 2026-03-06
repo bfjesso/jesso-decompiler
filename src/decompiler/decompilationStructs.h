@@ -5,21 +5,21 @@
 
 struct RegisterVariable
 {
-	enum PrimitiveType type;
+	struct VarType type;
 	enum Register reg;
 	struct JdcStr name;
 };
 
 struct StackVariable
 {
-	enum PrimitiveType type;
+	struct VarType type;
 	int stackOffset;
 	struct JdcStr name;
 };
 
 struct ReturnedVariable // variables that contain the reuturn value of another function call
 {
-	enum PrimitiveType type;
+	struct VarType type;
 	char callNum;
 	unsigned long long callAddr;
 	struct JdcStr name;
@@ -43,7 +43,7 @@ static const char* callingConventionStrs[] =
 
 struct Function
 {
-	enum PrimitiveType returnType;
+	struct VarType returnType;
 	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
 	unsigned long long addressOfFirstFuncCall; // if the function has arguments that it only uses to pass to this function call
 	int indexOfFirstFuncCall;

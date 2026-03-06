@@ -1,4 +1,5 @@
 #pragma once
+#include "../jdc-str/jdcStr.h"
 
 enum PrimitiveType
 {
@@ -17,6 +18,13 @@ enum PrimitiveType
 	INT_512_TPYE
 };
 
+struct VarType 
+{
+	unsigned char isSigned;
+	unsigned char pointerLevel;
+	enum PrimitiveType primitiveType;
+};
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -28,3 +36,7 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+void varTypeToStr(struct VarType type, struct JdcStr* result);
+
+unsigned char compareTypes(struct VarType t1, struct VarType t2);
