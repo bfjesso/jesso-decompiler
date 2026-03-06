@@ -106,7 +106,7 @@ public:
 
 	void ApplyAsmHighlighting();
 
-	void ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor);
+	void ColorAllStrs(wxString text, const char* string, ColorsMenu::DecompilationColor color, unsigned char forceColor);
 
 	wxDECLARE_EVENT_TABLE();
 };

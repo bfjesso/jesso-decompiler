@@ -1020,9 +1020,15 @@ void MainGui::ApplyAsmHighlighting()
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, wxString str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
+void MainGui::ColorAllStrs(wxString text, const char* string, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
-	if(str == "")
+	if(!string)
+	{
+		return;
+	}
+
+	wxString str = string;
+	if (str.IsEmpty()) 
 	{
 		return;
 	}
