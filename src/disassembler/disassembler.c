@@ -253,7 +253,10 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 		if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 		{
-			if (overwrites != 0) { *overwrites = 1; }
+			if (overwrites != 0) 
+			{ 
+				*overwrites = !areOperandsEqual(&instruction->operands[0], &instruction->operands[1]);
+			}
 			return 1;
 		}
 		

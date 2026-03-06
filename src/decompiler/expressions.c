@@ -727,10 +727,20 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = (%s * %s)", decompiledOperands[0].buffer, decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
-		else { sprintfJdc(result, 0, "(%s * %s)", decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		return 1;
+		if (areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
+		{
+			if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledOperands[0].buffer, decompiledOperands[2].buffer); }
+			else { sprintfJdc(result, 0, " * %s", decompiledOperands[2].buffer); }
+			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			return 1;
+		}
+		else 
+		{
+			if (getAssignment) { sprintfJdc(result, 0, "%s = (%s * %s)", decompiledOperands[0].buffer, decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
+			else { sprintfJdc(result, 0, "(%s * %s)", decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
+			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			return 1;
+		}
 	}
 	else if (isOpcodeCMOVcc(instruction->opcode))
 	{
