@@ -477,3 +477,56 @@ unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resu
 
 	return result;
 }
+
+unsigned char getSizeOfOperand(struct Operand* operand)
+{
+	if (operand->type == MEM_ADDRESS)
+	{
+		return operand->memoryAddress.ptrSize;
+	}
+	else if (operand->type == REGISTER)
+	{
+		return getSizeOfRegister(operand->reg);
+	}
+	else if (operand->type == IMMEDIATE)
+	{
+		return operand->immediate.size;
+	}
+
+	return 0;
+}
+
+unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
+{
+	if (op1->type == op2->type)
+	{
+		struct MemoryAddress* m1 = &op1->memoryAddress;
+		struct MemoryAddress* m2 = &op2->memoryAddress;
+
+		switch (op1->type)
+		{
+		case NO_OPERAND:
+			return 1;
+		case SEGMENT:
+			return op1->segment == op2->segment;
+		case REGISTER:
+			return op1->reg == op2->reg;
+		case MEM_ADDRESS:
+			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->segment == m2->segment;
+		case IMMEDIATE:
+			return op1->immediate.value == op2->immediate.value;
+		}
+	}
+
+	return 0;
+}
+
+unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize)
+{
+	return operand->type == MEM_ADDRESS && ((operand->memoryAddress.constDisplacement < 0 && compareRegisters(operand->memoryAddress.reg, BP)) || ((operand->memoryAddress.constDisplacement < stackFrameSize || stackFrameSize == 0) && compareRegisters(operand->memoryAddress.reg, SP)));
+}
+
+unsigned char isOperandStackArg(struct Operand* operand, int stackFrameSize)
+{
+	return operand->type == MEM_ADDRESS && ((compareRegisters(BP, operand->memoryAddress.reg) && operand->memoryAddress.constDisplacement > 0) || (compareRegisters(SP, operand->memoryAddress.reg) && stackFrameSize != 0 && operand->memoryAddress.constDisplacement > stackFrameSize));
+}

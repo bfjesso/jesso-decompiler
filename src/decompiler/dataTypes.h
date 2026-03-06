@@ -1,5 +1,5 @@
 #pragma once
-#include "../jdc-str/jdcStr.h"
+#include "../disassembler/disassemblyStructs.h"
 
 enum PrimitiveType
 {
@@ -40,3 +40,7 @@ extern "C"
 void varTypeToStr(struct VarType type, struct JdcStr* result);
 
 unsigned char compareTypes(struct VarType t1, struct VarType t2);
+
+struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
+
+struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);

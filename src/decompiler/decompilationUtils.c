@@ -1,0 +1,150 @@
+#include "decompilationUtils.h"
+
+unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex)
+{
+	struct DisassembledInstruction* instruction = &params.allInstructions[startInstructionIndex];
+
+	unsigned long long jmpAddress = params.allInstructions[startInstructionIndex].address + instruction->operands[0].immediate.value;
+	if (instruction->operands[0].type == MEM_ADDRESS)
+	{
+		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
+		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
+		{
+			jmpAddress += params.allInstructions[startInstructionIndex + 1].address;
+		}
+	}
+	else if (instruction->operands[0].type == REGISTER)
+	{
+		if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &jmpAddress))
+		{
+			return 0;
+		}
+	}
+
+	int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jmpAddress);
+	if (instructionIndex != -1)
+	{
+		struct DisassembledInstruction* jmpInstruction = &(params.allInstructions[instructionIndex]);
+		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
+		{
+			return resolveJmpChain(params, instructionIndex);
+		}
+	}
+
+	return jmpAddress;
+}
+
+int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address)
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (instructions[mid].address == address) { return mid; }
+
+		if (instructions[mid].address < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
+static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate.value;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP))
+		{
+			unsigned long long address = params.allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result))
+			{
+				*result = address;
+			}
+			return 1;
+		}
+		else if (operand->memoryAddress.reg == NO_REG)
+		{
+			unsigned long long address = operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result))
+			{
+				*result = address;
+			}
+			return 1;
+		}
+		else
+		{
+			struct Operand baseReg = { 0 };
+			baseReg.type = REGISTER;
+			baseReg.reg = operand->memoryAddress.reg;
+
+			unsigned long long regValue = 0;
+			if (!operandToValue(params, startInstructionIndex, &baseReg, &regValue))
+			{
+				return 0;
+			}
+
+			unsigned long long address = regValue + operand->memoryAddress.constDisplacement;
+			if (!getNumFromData(params, address, result))
+			{
+				*result = address;
+			}
+		}
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		for (int i = startInstructionIndex - 1; i >= 0; i--)
+		{
+			if (params.allInstructions[i].opcode == MOV && compareRegisters(params.allInstructions[i].operands[0].reg, operand->reg))
+			{
+				return operandToValue(params, i, &(params.allInstructions[i].operands[1]), result);
+			}
+		}
+
+		return 0;
+	}
+
+	return 0;
+}
+
+static unsigned char getNumFromData(struct DecompilationParameters params, unsigned long long address, unsigned long long* result)
+{
+	if (address < params.imageBase + params.dataSections[0].virtualAddress)
+	{
+		return 0;
+	}
+
+	int dataSectionIndex = -1;
+	int totalSize = 0;
+	for (int i = 0; i < params.numOfDataSections; i++)
+	{
+		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
+		{
+			dataSectionIndex = (int)((totalSize + address) - (params.dataSections[i].virtualAddress + params.imageBase));
+		}
+
+		totalSize += params.dataSections[i].size;
+	}
+
+	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
+	{
+		return 0;
+	}
+
+	if (params.is64Bit)
+	{
+		*result = *(unsigned long long*)(params.dataSectionByte + dataSectionIndex);
+	}
+	else
+	{
+		*result = *(unsigned int*)(params.dataSectionByte + dataSectionIndex);
+	}
+
+	return 1;
+}

@@ -1,4 +1,6 @@
 #include "expressions.h"
+#include "../disassembler/operands.h"
+#include "decompilationUtils.h"
 #include "functions.h"
 #include "functionCalls.h"
 #include "dataTypes.h"
@@ -551,7 +553,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		params.startInstructionIndex = i;
 		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
-			if (areOperandsEqual(&currentInstruction->operands[0], &currentInstruction->operands[1])) 
+			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]))
 			{
 				if (params.currentFunc->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
 				{
@@ -663,7 +665,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		numOfOperands++;
 	}
 
-	if (isOpcodeXor(instruction->opcode) && areOperandsEqual(&instruction->operands[0], &instruction->operands[1]))
+	if (isOpcodeXor(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s = 0", decompiledOperands[0].buffer); }
 		else { strcpyJdc(result, "0"); }
@@ -727,7 +729,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
-		if (areOperandsEqual(&instruction->operands[0], &instruction->operands[1])) 
+		if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledOperands[0].buffer, decompiledOperands[2].buffer); }
 			else { sprintfJdc(result, 0, " * %s", decompiledOperands[2].buffer); }
