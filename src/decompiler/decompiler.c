@@ -182,6 +182,10 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				return 0;
 			}
 		}
+		else 
+		{
+			decompileMiscInstruction(params, numOfIndents, result);
+		}
 
 		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
 		{
@@ -594,4 +598,17 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, "\n");
+}
+
+static void decompileMiscInstruction(struct DecompilationParameters params, unsigned char numOfIndents, struct JdcStr* result)
+{
+	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	
+	switch (currentInstruction->opcode) 
+	{
+	case INT3:
+		addIndents(result, numOfIndents);
+		strcatJdc(result, "__debugbreak();\n");
+		break;
+	}
 }
