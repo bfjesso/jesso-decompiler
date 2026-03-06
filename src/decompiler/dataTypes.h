@@ -1,4 +1,5 @@
 #pragma once
+#include "../jdc-str/jdcStr.h"
 #include "../disassembler/disassemblyStructs.h"
 
 enum PrimitiveType
