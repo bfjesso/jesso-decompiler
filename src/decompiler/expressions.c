@@ -378,19 +378,6 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			expressions[expressionIndex] = initializeJdcStr();
 			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
-				if (finished && 
-					!compareTypes(getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[0])), type) &&
-					!compareTypes(getTypeOfOperand(currentInstruction->opcode, &(currentInstruction->operands[1])), type))
-				{
-					struct JdcStr tmp = copyJdcStr(&expressions[expressionIndex]);
-					struct JdcStr typeStr = initializeJdcStr();
-					varTypeToStr(type, &typeStr);
-
-					sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", typeStr.buffer, tmp.buffer);
-					freeJdcStr(&tmp);
-					freeJdcStr(&typeStr);
-				}
-				
 				expressionIndex++;
 			}
 			else 
@@ -643,12 +630,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
+	int ogStartInstructionIndex = params.startInstructionIndex;
+
 	struct JdcStr decompiledOperands[4] = { 0 };
 	int numOfOperands = 0;
-	int ogStartInstructionIndex = params.startInstructionIndex;
-	while (instruction->operands[numOfOperands].type != NO_OPERAND)
+	struct Operand* currentOperand = &instruction->operands[numOfOperands];
+	while (currentOperand->type != NO_OPERAND)
 	{
-		if (instruction->operands[numOfOperands].type == REGISTER)
+		if (currentOperand->type == REGISTER)
 		{
 			params.startInstructionIndex = ogStartInstructionIndex - 1; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
 		}
@@ -658,11 +647,13 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		}
 		
 		decompiledOperands[numOfOperands] = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[numOfOperands], type, &decompiledOperands[numOfOperands]))
+		if (!decompileOperand(params, currentOperand, getTypeOfOperand(instruction->opcode, currentOperand), &decompiledOperands[numOfOperands]))
 		{
 			strcpyJdc(&decompiledOperands[numOfOperands], "ERROR"); // not all operands may be used in the decompilation, often when getAssignment is 0 and this is the first operand
 		}
+
 		numOfOperands++;
+		currentOperand = &instruction->operands[numOfOperands];
 	}
 
 	if (isOpcodeXor(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
