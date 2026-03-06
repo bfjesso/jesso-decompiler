@@ -21,7 +21,7 @@ extern const int numOfPrimitiveTypes = 10;
 
 void varTypeToStr(struct VarType type, struct JdcStr* result)
 {
-	if (type.isSigned) 
+	if (type.isSigned || type.primitiveType == FLOAT_TYPE || type.primitiveType == DOUBLE_TYPE || type.primitiveType == VOID_TYPE) 
 	{
 		sprintfJdc(result, 0, "%s", primitiveTypeStrs[type.primitiveType]);
 	}
