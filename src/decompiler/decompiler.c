@@ -351,7 +351,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 		if (isFunctionCallWithRetVal || (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0)))
 		{
-			enum Register reg = reg = currentInstruction->operands[0].reg;
+			enum Register reg = currentInstruction->operands[0].reg;
 			if(isFunctionCallWithRetVal)
 			{
 				if(callee)
@@ -383,6 +383,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			{
 				if (compareRegisters(reg, params.currentFunc->regVars[j].reg))
 				{
+					params.currentFunc->regVars[j].type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
 					break;
 				}
@@ -425,6 +426,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			{
 				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regVars[j].reg))
 				{
+					params.currentFunc->regVars[j].type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
 					break;
 				}

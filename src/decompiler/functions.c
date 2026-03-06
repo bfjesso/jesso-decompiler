@@ -73,7 +73,12 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 					if (compareRegisters(currentOperand->reg, k))
 					{
-						if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
+						struct RegisterVariable* regArg = getRegArgByReg(result, k);
+						if (regArg) 
+						{
+							regArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+						}
+						else if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
 						{
 							initializedRegs[k - RAX] = 1;
 						}
@@ -122,7 +127,18 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 								stackOffset -= stackFrameSize; 
 							
 							}
-							if (!getStackArgByOffset(result, stackOffset) && !getLocalVarByOffset(result, stackOffset))
+
+							struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
+							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+							if (stackArg) 
+							{
+								stackArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+							}
+							else if (localVar) 
+							{
+								localVar->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+							}
+							else
 							{
 								doesInstructionModifyOperand(currentInstruction, j, &overwrites);
 								if (!overwrites) 
@@ -171,7 +187,18 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 								stackOffset -= stackFrameSize;
 
 							}
-							if (!getStackArgByOffset(result, stackOffset) && !getLocalVarByOffset(result, stackOffset))
+
+							struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
+							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+							if (stackArg)
+							{
+								stackArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+							}
+							else if (localVar)
+							{
+								localVar->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+							}
+							else
 							{
 								struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
 								if (newLocalVars)
@@ -646,13 +673,7 @@ struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 		break;
 	}
 
-	switch (opcode) 
-	{
-	case IMUL:
-	case IDIV:
-		result.isSigned = 1;
-		break;
-	}
+	result.isSigned = doesOpcodeOnlyUseSignedInt(opcode);
 	
 	return result;
 }
