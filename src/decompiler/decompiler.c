@@ -340,44 +340,39 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			}
 		}
 
-		unsigned char isFunctionCallWithRetVal = 0;
+		enum Register reg = NO_REG;
 
 		struct Function* callee;
 		params.startInstructionIndex = i;
-		if((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE) || checkForImportCall(params))
+		if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
 		{
-			isFunctionCallWithRetVal = 1;
+			switch (callee->returnType.primitiveType)
+			{
+			case CHAR_TYPE:
+				reg = AL;
+				break;
+			case SHORT_TYPE:
+				reg = AX;
+				break;
+			case INT_TYPE:
+				reg = EAX;
+				break;
+			case LONG_LONG_TYPE:
+				reg = RAX;
+				break;
+			}
+		}
+		else if (checkForImportCall(params))
+		{
+			reg = params.is64Bit ? RAX : EAX;
+		}
+		else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0)) 
+		{
+			reg = currentInstruction->operands[0].reg;
 		}
 
-		if (isFunctionCallWithRetVal || (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0)))
+		if (reg != NO_REG)
 		{
-			enum Register reg = currentInstruction->operands[0].reg;
-			if(isFunctionCallWithRetVal)
-			{
-				if(callee)
-				{
-					switch(callee->returnType.primitiveType)
-					{
-					case CHAR_TYPE:
-						reg = AL;
-						break;
-					case SHORT_TYPE:
-						reg = AX;
-						break;
-					case INT_TYPE:
-						reg = EAX;
-						break;
-					case LONG_LONG_TYPE:
-						reg = RAX;
-						break;
-					}
-				}
-				else
-				{
-					reg = params.is64Bit ? RAX : EAX;
-				}
-			}
-
 			int alreadyFound = 0;
 			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
 			{
