@@ -658,11 +658,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		decompiledOperands[numOfOperands] = initializeJdcStr();
 		if (!decompileOperand(params, &instruction->operands[numOfOperands], type, &decompiledOperands[numOfOperands]))
 		{
-			for (int i = 0; i < numOfOperands + 1; i++) 
-			{
-				freeJdcStr(&decompiledOperands[i]);
-			}
-			return 0;
+			strcpyJdc(&decompiledOperands[numOfOperands], "ERROR"); // not all operands may be used in the decompilation, often when getAssignment is 0 and this is the first operand
 		}
 		numOfOperands++;
 	}
