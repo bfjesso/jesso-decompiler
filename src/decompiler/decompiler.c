@@ -382,7 +382,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			{
 				if (compareRegisters(reg, params.currentFunc->regVars[j].reg))
 				{
-					params.currentFunc->regVars[j].type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+					params.currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
 					break;
 				}
@@ -425,7 +425,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			{
 				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regVars[j].reg))
 				{
-					params.currentFunc->regVars[j].type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+					params.currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
 					break;
 				}

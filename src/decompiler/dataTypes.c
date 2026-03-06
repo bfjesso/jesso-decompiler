@@ -21,7 +21,7 @@ extern const int numOfPrimitiveTypes = 10;
 
 void varTypeToStr(struct VarType type, struct JdcStr* result)
 {
-	if (type.isSigned || type.primitiveType == FLOAT_TYPE || type.primitiveType == DOUBLE_TYPE || type.primitiveType == VOID_TYPE) 
+	if (!type.isUnsigned || type.primitiveType == FLOAT_TYPE || type.primitiveType == DOUBLE_TYPE || type.primitiveType == VOID_TYPE)
 	{
 		sprintfJdc(result, 0, "%s", primitiveTypeStrs[type.primitiveType]);
 	}
@@ -38,5 +38,5 @@ void varTypeToStr(struct VarType type, struct JdcStr* result)
 
 unsigned char compareTypes(struct VarType t1, struct VarType t2) 
 {
-	return t1.primitiveType == t2.primitiveType && t1.isSigned == t2.isSigned && t1.pointerLevel == t2.pointerLevel;
+	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel;
 }

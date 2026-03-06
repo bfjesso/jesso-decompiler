@@ -76,7 +76,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 						struct RegisterVariable* regArg = getRegArgByReg(result, k);
 						if (regArg) 
 						{
-							regArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+							regArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 						}
 						else if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
 						{
@@ -132,11 +132,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
 							if (stackArg) 
 							{
-								stackArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+								stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 							}
 							else if (localVar) 
 							{
-								localVar->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+								localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 							}
 							else
 							{
@@ -192,11 +192,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
 							if (stackArg)
 							{
-								stackArg->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+								stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 							}
 							else if (localVar)
 							{
-								localVar->type.isSigned = doesOpcodeOnlyUseSignedInt(currentInstruction->opcode);
+								localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 							}
 							else
 							{
@@ -673,7 +673,7 @@ struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 		break;
 	}
 
-	result.isSigned = doesOpcodeOnlyUseSignedInt(opcode);
+	result.isUnsigned = doesOpcodeUseUnsignedInt(opcode);
 	
 	return result;
 }

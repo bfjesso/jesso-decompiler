@@ -342,12 +342,12 @@ unsigned char isOpcodeAES(enum Mnemonic opcode)
 	return 0;
 }
 
-unsigned char doesOpcodeOnlyUseSignedInt(enum Mnemonic opcode)
+unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
 {
 	switch (opcode)
 	{
-	case IMUL:
-	case IDIV:
+	case MUL:
+	case DIV:
 		return 1;
 	}
 

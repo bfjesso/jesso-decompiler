@@ -270,25 +270,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	{
 		sprintfJdc(result, 0, "%lf", *(double*)(params.dataSectionByte + dataSectionIndex));
 	}
-	else if (type.isSigned) 
-	{
-		switch (type.primitiveType)
-		{
-		case CHAR_TYPE:
-			sprintfJdc(result, 0, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case SHORT_TYPE:
-			sprintfJdc(result, 0, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case INT_TYPE:
-			sprintfJdc(result, 0, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case LONG_LONG_TYPE:
-			sprintfJdc(result, 0, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		}
-	}
-	else 
+	else if (type.isUnsigned) 
 	{
 		switch (type.primitiveType)
 		{
@@ -303,6 +285,24 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 			break;
 		case LONG_LONG_TYPE:
 			sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params.dataSectionByte + dataSectionIndex));
+			break;
+		}
+	}
+	else 
+	{
+		switch (type.primitiveType)
+		{
+		case CHAR_TYPE:
+			sprintfJdc(result, 0, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
+			break;
+		case SHORT_TYPE:
+			sprintfJdc(result, 0, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
+			break;
+		case INT_TYPE:
+			sprintfJdc(result, 0, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
+			break;
+		case LONG_LONG_TYPE:
+			sprintfJdc(result, 0, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
 			break;
 		}
 	}

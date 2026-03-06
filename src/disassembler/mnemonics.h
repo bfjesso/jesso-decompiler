@@ -223,4 +223,4 @@ unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeAES(enum Mnemonic opcode);
 
-unsigned char doesOpcodeOnlyUseSignedInt(enum Mnemonic opcode);
+unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);

@@ -20,7 +20,7 @@ enum PrimitiveType
 
 struct VarType 
 {
-	unsigned char isSigned;
+	unsigned char isUnsigned;
 	unsigned char pointerLevel;
 	enum PrimitiveType primitiveType;
 };
