@@ -645,9 +645,15 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		{
 			params.startInstructionIndex = ogStartInstructionIndex;
 		}
+
+		struct VarType operandType = getTypeOfOperand(instruction->opcode, currentOperand);
+		if (operandType.primitiveType == VOID_TYPE) 
+		{
+			operandType = type;
+		}
 		
 		decompiledOperands[numOfOperands] = initializeJdcStr();
-		if (!decompileOperand(params, currentOperand, getTypeOfOperand(instruction->opcode, currentOperand), &decompiledOperands[numOfOperands]))
+		if (!decompileOperand(params, currentOperand, operandType, &decompiledOperands[numOfOperands]))
 		{
 			strcpyJdc(&decompiledOperands[numOfOperands], "ERROR"); // not all operands may be used in the decompilation, often when getAssignment is 0 and this is the first operand
 		}
