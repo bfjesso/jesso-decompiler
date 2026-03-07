@@ -21,7 +21,9 @@ extern "C"
 }
 #endif
 
-int getStackFrameChange(struct DisassembledInstruction* instruction);
+static int getStackFrameChange(struct DisassembledInstruction* instruction);
+
+int getStackFrameSizeAtInstruction(struct Function* function, int instructionIndex);
 
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
 

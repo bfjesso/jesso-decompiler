@@ -35,7 +35,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			int stackOffset = (int)(operand->memoryAddress.constDisplacement);
 			if (compareRegisters(operand->memoryAddress.reg, SP)) 
 			{
-				stackOffset -= params.stackFrameSize;
+				stackOffset -= getStackFrameSizeAtInstruction(params.currentFunc, params.startInstructionIndex);
 			}
 			
 			struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, stackOffset);

@@ -53,8 +53,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
-	params.stackFrameSize = 0;
-
 	unsigned char numOfIndents = 1;
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
 	int originalIndex = -1;
@@ -205,8 +203,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				isInUnreachableState = 1;
 			}
 		}
-
-		params.stackFrameSize += getStackFrameChange(currentInstruction);
 	}
 
 	return strcatJdc(result, "}\n");

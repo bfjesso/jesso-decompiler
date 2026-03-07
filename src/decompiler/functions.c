@@ -501,32 +501,42 @@ void freeFunction(struct Function* function)
 	free(function->returnedVars);
 }
 
-int getStackFrameChange(struct DisassembledInstruction* instruction) 
+static int getStackFrameChange(struct DisassembledInstruction* instruction) 
 {
 	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)) 
 	{
 		return 0;
 	}
 
-	int result = 0;
 	if(instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP))
 	{
 		if (instruction->opcode == SUB)
 		{
-			result += instruction->operands[1].immediate.value;
+			return instruction->operands[1].immediate.value;
 		}
 		else if (instruction->opcode == ADD)
 		{
-			result -= instruction->operands[1].immediate.value;
+			return -instruction->operands[1].immediate.value;
 		}
 	}
 	else if (instruction->opcode == PUSH) 
 	{
-		result += getSizeOfOperand(&instruction->operands[0]);
+		return getSizeOfOperand(&instruction->operands[0]);
 	}
 	else if (instruction->opcode == POP)
 	{
-		result -= getSizeOfOperand(&instruction->operands[0]);
+		return -getSizeOfOperand(&instruction->operands[0]);
+	}
+
+	return 0;
+}
+
+int getStackFrameSizeAtInstruction(struct Function* function, int instructionIndex)
+{
+	int result = 0;
+	for (int i = 0; i < instructionIndex; i++) 
+	{
+		result += getStackFrameChange(&function->instructions[i]);
 	}
 
 	return result;

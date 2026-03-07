@@ -85,8 +85,6 @@ struct DecompilationParameters
 	int skipUpperBound;
 	int skipLowerBound;
 
-	int stackFrameSize;
-
 	int axRegVarIndex;
 
 	struct DisassembledInstruction* allInstructions;
