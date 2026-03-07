@@ -1,4 +1,5 @@
 #include "decompiler.h"
+#include "decompilationUtils.h"
 #include "functions.h"
 #include "assignment.h"
 #include "returnStatements.h"
