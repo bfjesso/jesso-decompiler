@@ -182,9 +182,15 @@ void MainGui::DisassembleFile()
 
 	UpdateDisassemblyTextCtrl();
 
+	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
+	if (answer == wxYES)
+	{
+		LoadDataSectionBytes();
+	}
+
 	statusStaticText->SetLabelText("Status: idle");
 
-	int answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+	answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
 	if (answer == wxYES)
 	{
 		AnalyzeFile();
@@ -221,15 +227,7 @@ void MainGui::AnalyzeFile()
 
 	UpdateFunctionsGrid();
 
-	statusStaticText->SetLabelText("Status: idle");
-
-	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
-	if (answer == wxYES)
-	{
-		LoadDataSectionBytes();
-	}
-
-	answer = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
+	int answer = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	if (answer == wxYES)
 	{
 		statusStaticText->SetLabelText("Status: looking for function name symbols...");
