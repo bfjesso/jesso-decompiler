@@ -18,7 +18,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
-		if (currentInstruction->address == 0x40100C) 
+		if (currentInstruction->address == 0x140031BA0)
 		{
 			int TT = 0;
 		}
@@ -52,18 +52,13 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 
-		if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
-		{
-			continue;
-		}
-
 		// checking all operands for arguments and stack vars
 		unsigned char overwrites = 0;
 		for (int j = 3; j >= 0; j--)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 
-			if (currentOperand->type == REGISTER)
+			if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
 			{
 				if (isRegisterPointer(currentOperand->reg)) { continue; }
 				
