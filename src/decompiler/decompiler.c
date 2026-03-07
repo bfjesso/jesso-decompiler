@@ -317,94 +317,120 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 
 static unsigned char getAllRegVars(struct DecompilationParameters params, struct Condition* conditions, int numOfConditions)
 {
-	// check for registers being modified in a condition
-	int isInCondition = 0;
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	// checking for registers that are modified in a condition
+	for (int i = 0; i < numOfConditions; i++) 
 	{
-		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
-
-		for (int j = 0; j < numOfConditions; j++)
+		if (!conditions[i].requiresJumpInDecomp && !conditions[i].isCombinedByOther)
 		{
-			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && conditions[j].conditionType != LOOP_CT)
+			enum Register modifiedRegs[ST0 - RAX];
+			int numOfRegs = 0;
+			
+			for (int j = conditions[i].jccIndex; j < conditions[i].dstIndex; j++) 
 			{
-				if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].dstIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].jccIndex))
+				if (checkForCondition(j, conditions, numOfConditions)) 
 				{
-					isInCondition = 0;
 					break;
 				}
-				else if ((conditions[j].conditionType != DO_WHILE_CT && i == conditions[j].jccIndex) || (conditions[j].conditionType == DO_WHILE_CT && i == conditions[j].dstIndex))
+
+				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+
+				enum Register reg = NO_REG;
+
+				struct Function* callee;
+				params.startInstructionIndex = j;
+				if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
 				{
-					isInCondition = 1;
+					switch (callee->returnType.primitiveType)
+					{
+					case CHAR_TYPE:
+						reg = AL;
+						break;
+					case SHORT_TYPE:
+						reg = AX;
+						break;
+					case INT_TYPE:
+						reg = EAX;
+						break;
+					case LONG_LONG_TYPE:
+						reg = RAX;
+						break;
+					}
+				}
+				else if (checkForImportCall(params))
+				{
+					reg = params.is64Bit ? RAX : EAX;
+				}
+				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
+				{
+					reg = currentInstruction->operands[0].reg;
+				}
+
+				if (reg != NO_REG)
+				{
+					int alreadyFound = 0;
+					for (int k = 0; k < numOfRegs; k++)
+					{
+						if (compareRegisters(reg, modifiedRegs[k]))
+						{
+							alreadyFound = 1;
+							break;
+						}
+					}
+					if (alreadyFound)
+					{
+						continue;
+					}
+
+					modifiedRegs[numOfRegs] = reg;
+					numOfRegs++;
+				}
+			}
+
+			// checking if the modified regs are accessed before being overwritten after the condition
+			for (int j = conditions[i].dstIndex; j < params.currentFunc->numOfInstructions; j++) 
+			{
+				if (checkForCondition(j, conditions, numOfConditions))
+				{
 					break;
 				}
-			}
-		}
 
-		enum Register reg = NO_REG;
+				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
 
-		struct Function* callee;
-		params.startInstructionIndex = i;
-		if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
-		{
-			switch (callee->returnType.primitiveType)
-			{
-			case CHAR_TYPE:
-				reg = AL;
-				break;
-			case SHORT_TYPE:
-				reg = AX;
-				break;
-			case INT_TYPE:
-				reg = EAX;
-				break;
-			case LONG_LONG_TYPE:
-				reg = RAX;
-				break;
-			}
-		}
-		else if (checkForImportCall(params))
-		{
-			reg = params.is64Bit ? RAX : EAX;
-		}
-		else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0)) 
-		{
-			reg = currentInstruction->operands[0].reg;
-		}
-
-		if (reg != NO_REG)
-		{
-			int alreadyFound = 0;
-			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
-			{
-				if (compareRegisters(reg, params.currentFunc->regVars[j].reg))
+				for (int k = 0; k < numOfRegs; k++)
 				{
-					params.currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-					alreadyFound = 1;
-					break;
-				}
-			}
-			if (alreadyFound)
-			{
-				continue;
-			}
+					if (modifiedRegs[k] == NO_REG)
+					{
+						continue;
+					}
 
-			if (isInCondition)
-			{
-				struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
-				if (newRegVars)
-				{
-					params.currentFunc->regVars = newRegVars;
-				}
-				else
-				{
-					return 0;
-				}
+					unsigned char overwrites = 0;
+					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k], 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k], 0, &overwrites) && !overwrites))
+					{
+						struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
+						if (newRegVars)
+						{
+							params.currentFunc->regVars = newRegVars;
+						}
+						else
+						{
+							return 0;
+						}
 
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = reg;
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
-				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
-				params.currentFunc->numOfRegVars++;
+						params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = modifiedRegs[k];
+						params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+						params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
+						sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[modifiedRegs[k]]);
+						params.currentFunc->numOfRegVars++;
+
+						modifiedRegs[k] = NO_REG; // so it isnt checked again
+						break;
+					}
+					else if (overwrites) 
+					{
+						modifiedRegs[k] = NO_REG;
+						break;
+					}
+				}
 			}
 		}
 	}
