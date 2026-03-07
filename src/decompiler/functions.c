@@ -18,7 +18,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
-		if (currentInstruction->address == 0x4010F2) 
+		if (currentInstruction->address == 0x40100C) 
 		{
 			int TT = 0;
 		}
@@ -50,13 +50,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 					result->indexOfFirstFuncCall = result->numOfInstructions - 1;
 				}
 			}
-		}
-
-		int stackFrameSizeChange = getStackFrameChange(currentInstruction);
-		if (stackFrameSizeChange != 0) 
-		{
-			stackFrameSize += stackFrameSizeChange;
-			continue;
 		}
 
 		if ((currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) || currentInstruction->opcode == POP)
@@ -259,6 +252,12 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 					}
 				}
 			}
+		}
+
+		int stackFrameSizeChange = getStackFrameChange(currentInstruction);
+		if (stackFrameSizeChange != 0)
+		{
+			stackFrameSize += stackFrameSizeChange;
 		}
 
 		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate.value > 0)

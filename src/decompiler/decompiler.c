@@ -64,8 +64,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		params.stackFrameSize += getStackFrameChange(currentInstruction);
-
 		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
 		{
@@ -207,6 +205,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				isInUnreachableState = 1;
 			}
 		}
+
+		params.stackFrameSize += getStackFrameChange(currentInstruction);
 	}
 
 	return strcatJdc(result, "}\n");
