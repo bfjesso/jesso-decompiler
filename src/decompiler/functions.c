@@ -1,4 +1,5 @@
 #include "functions.h"
+#include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
@@ -16,6 +17,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
+
+		if (currentInstruction->address == 0x4010F2) 
+		{
+			int TT = 0;
+		}
 
 		if (!foundFirstInstruction)
 		{

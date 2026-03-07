@@ -523,10 +523,10 @@ unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
 
 unsigned char isOperandStackVar(struct Operand* operand, int stackFrameSize)
 {
-	return operand->type == MEM_ADDRESS && ((operand->memoryAddress.constDisplacement < 0 && compareRegisters(operand->memoryAddress.reg, BP)) || ((operand->memoryAddress.constDisplacement < stackFrameSize || stackFrameSize == 0) && compareRegisters(operand->memoryAddress.reg, SP)));
+	return operand->type == MEM_ADDRESS && ((compareRegisters(operand->memoryAddress.reg, BP) && operand->memoryAddress.constDisplacement < 0) || (compareRegisters(operand->memoryAddress.reg, SP) && operand->memoryAddress.constDisplacement < stackFrameSize));
 }
 
 unsigned char isOperandStackArg(struct Operand* operand, int stackFrameSize)
 {
-	return operand->type == MEM_ADDRESS && ((compareRegisters(BP, operand->memoryAddress.reg) && operand->memoryAddress.constDisplacement > 0) || (compareRegisters(SP, operand->memoryAddress.reg) && stackFrameSize != 0 && operand->memoryAddress.constDisplacement > stackFrameSize));
+	return operand->type == MEM_ADDRESS && ((compareRegisters(operand->memoryAddress.reg, BP) && operand->memoryAddress.constDisplacement > 0) || (compareRegisters(operand->memoryAddress.reg, SP) && operand->memoryAddress.constDisplacement > stackFrameSize));
 }
