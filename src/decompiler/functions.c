@@ -18,11 +18,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
-		if (currentInstruction->address == 0x140031BA0)
-		{
-			int TT = 0;
-		}
-
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
