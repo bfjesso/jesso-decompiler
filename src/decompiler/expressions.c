@@ -220,7 +220,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 			{
 				break;
 			}
-			else if(len > 100 || byte > 126) // checking if byte is ascii and len isn't too long
+			else if(len > 100 || (byte < 32 && (byte < 7 || byte > 13)) || byte > 126) // checking if len isn't too long, and the byte is either an escape char or a character
 			{
 				isString = 0;
 				break;
