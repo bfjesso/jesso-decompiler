@@ -9,6 +9,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 	int stackFrameSize = 0;
 
 	unsigned long long addressToJumpTo = 0;
+	unsigned char isAfterJmp = 0;
 	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
@@ -70,7 +71,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 						}
 						else if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
 						{
-							initializedRegs[k - RAX] = 1;
+							if (!isAfterJmp) 
+							{
+								initializedRegs[k - RAX] = 1;
+							}
 						}
 						else if (!initializedRegs[k - RAX])
 						{
@@ -289,7 +293,8 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		}
 
-		if (addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo)
+		isAfterJmp = addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo;
+		if (isAfterJmp)
 		{
 			continue;
 		}
