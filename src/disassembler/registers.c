@@ -10,6 +10,8 @@ extern const char* segmentStrs[] =
 	"GS"
 };
 
+extern const int numOfSegments = 6;
+
 extern const char* registerStrs[] =
 {
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",

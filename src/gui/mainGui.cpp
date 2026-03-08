@@ -875,10 +875,14 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		}
 	}
 
-	// regs that arent variables/arguments
+	// regs/segs that arent variables/arguments
 	for (int i = 0; i < numOfRegisters; i++)
 	{
 		ColorAllStrs(text, registerStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
+	}
+	for (int i = 0; i < numOfSegments; i++)
+	{
+		ColorAllStrs(text, segmentStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 	}
 
 	// numbers
@@ -926,44 +930,34 @@ void MainGui::ApplyAsmHighlighting()
 		int ptrSizeStart = 0;
 		for (int i = 0; i < 4; i++)
 		{
-			wxString regStr = "";
-			wxString regStr2 = "";
 			if (instruction->operands[i].type == REGISTER)
 			{
-				regStr = wxString(registerStrs[instruction->operands[i].reg]);
-			}
-			else if (instruction->operands[i].type == MEM_ADDRESS)
-			{
-				if (instruction->operands[i].memoryAddress.reg != NO_REG)
-				{
-					regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
-				}
-
-				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
-				{
-					regStr2 = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
-				}
-			}
-
-			if (!regStr.IsEmpty())
-			{
+				wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
 				int loc = asmStr.find(regStr, regStart);
 				disassemblyTextCtrl->StartStyling(pos + loc);
 				disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
 				regStart = loc + regStr.length();
 			}
-
-			if (!regStr2.IsEmpty())
+			else if (instruction->operands[i].type == MEM_ADDRESS)
 			{
-				int loc = asmStr.find(regStr2, regStart);
-				disassemblyTextCtrl->StartStyling(pos + loc);
-				disassemblyTextCtrl->SetStyling(regStr2.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
-				regStart = loc + regStr2.length();
-			}
+				if (instruction->operands[i].memoryAddress.reg != NO_REG)
+				{
+					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
+					int loc = asmStr.find(regStr, regStart);
+					disassemblyTextCtrl->StartStyling(pos + loc);
+					disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+					regStart = loc + regStr.length();
+				}
 
-			if (instruction->operands[i].type == MEM_ADDRESS)
-			{
-				// segment
+				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
+				{
+					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
+					int loc = asmStr.find(regStr, regStart);
+					disassemblyTextCtrl->StartStyling(pos + loc);
+					disassemblyTextCtrl->SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+					regStart = loc + regStr.length();
+				}
+
 				if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT)
 				{
 					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
@@ -973,7 +967,6 @@ void MainGui::ApplyAsmHighlighting()
 					segStart = loc + segStr.length();
 				}
 
-				// ptr size
 				int ptrSize = instruction->operands[i].memoryAddress.ptrSize;
 				if (ptrSize != 0)
 				{
@@ -983,6 +976,14 @@ void MainGui::ApplyAsmHighlighting()
 					disassemblyTextCtrl->SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
 					ptrSizeStart = loc + sizeStr.length();
 				}
+			}
+			else if (instruction->operands[i].type == SEGMENT)
+			{
+				wxString segStr = wxString(segmentStrs[instruction->operands[i].segment]);
+				int loc = asmStr.find(segStr, segStart);
+				disassemblyTextCtrl->StartStyling(pos + loc);
+				disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+				segStart = loc + segStr.length();
 			}
 		}
 

@@ -41,6 +41,8 @@ extern "C"
 
 	extern const char* segmentStrs[];
 
+	extern const int numOfSegments;
+
 	extern const char* registerStrs[];
 
 	extern const int numOfRegisters;

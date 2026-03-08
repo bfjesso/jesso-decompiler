@@ -172,6 +172,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	{
 		return decompileRegister(params, operand->reg, type, result);
 	}
+	else if (operand->type == SEGMENT) 
+	{
+		return strcpyJdc(result, segmentStrs[operand->segment]);
+	}
 
 	return 0;
 }
