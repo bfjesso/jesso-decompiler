@@ -329,7 +329,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			
 			for (int j = conditions[i].jccIndex; j < conditions[i].dstIndex; j++) 
 			{
-				if (checkForCondition(j, conditions, numOfConditions)) 
+				int conditionIndex = checkForCondition(j, conditions, numOfConditions);
+				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;
 				}
@@ -358,7 +359,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 						break;
 					}
 				}
-				else if (checkForImportCall(params))
+				else if (checkForImportCall(params) != -1)
 				{
 					reg = params.is64Bit ? RAX : EAX;
 				}
@@ -391,7 +392,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			// checking if the modified regs are accessed before being overwritten after the condition
 			for (int j = conditions[i].dstIndex; j < params.currentFunc->numOfInstructions; j++) 
 			{
-				if (checkForCondition(j, conditions, numOfConditions))
+				if (checkForCondition(j, conditions, numOfConditions) != -1)
 				{
 					break;
 				}
