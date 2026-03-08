@@ -11,7 +11,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 {
 	if (operand->type == IMMEDIATE)
 	{
-		if (!getValueFromDataSection(params, type, operand->immediate.value, result))
+		if (!getStringFromDataSection(params, operand->immediate.value, result))
 		{
 			if (operand->immediate.value > -10 && operand->immediate.value < 10) // this is just arbitrary
 			{
@@ -59,13 +59,17 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
+			unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			if (instruction->opcode == LEA) 
 			{
-				sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
+				sprintfJdc(result, 0, "0x%llX", address);
 			}
 			else 
 			{
-				sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement);
+				if (!getValueFromDataSection(params, type, address, result))
+				{
+					sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, address);
+				}
 			}
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
@@ -76,7 +80,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			}
 			else
 			{
-				sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, operand->memoryAddress.constDisplacement);
+				if (!getValueFromDataSection(params, type, operand->memoryAddress.constDisplacement, result))
+				{
+					sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, operand->memoryAddress.constDisplacement);
+				}
 			}
 		}
 		else
@@ -204,70 +211,6 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 		return 0;
 	}
 
-	// checking for pointer to see if it is a string
-	if (type.primitiveType == INT_TYPE || type.primitiveType == LONG_LONG_TYPE)
-	{
-		char isString = 1;
-
-		struct JdcStr tmp = initializeJdcStr();
-		int len = 0;
-		char byte = 0;
-		while (1)
-		{
-			byte = *(char*)(params.dataSectionByte + len + dataSectionIndex);
-			
-			if (byte == 0) 
-			{
-				break;
-			}
-			else if(len > 100 || (byte < 32 && (byte < 7 || byte > 13)) || byte > 126) // checking if len isn't too long, and the byte is either an escape char or a character
-			{
-				isString = 0;
-				break;
-			}
-
-			char c[2] = { byte, 0 }; // so the byte is null terminated
-			switch (byte) 
-			{
-			case '\a':
-				strcatJdc(&tmp, "\\n");
-				break;
-			case '\b':
-				strcatJdc(&tmp, "\\b");
-				break;
-			case '\f':
-				strcatJdc(&tmp, "\\f");
-				break;
-			case '\n':
-				strcatJdc(&tmp, "\\n");
-				break;
-			case '\r':
-				strcatJdc(&tmp, "\\r");
-				break;
-			case '\t':
-				strcatJdc(&tmp, "\\t");
-				break;
-			case '\v':
-				strcatJdc(&tmp, "\\");
-				break;
-			default:
-				strcatJdc(&tmp, c);
-				break;
-			}
-
-			len++;
-		}
-
-		if (isString && len > 0)
-		{
-			
-			sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
-			return freeJdcStr(&tmp);
-		}
-
-		freeJdcStr(&tmp);
-	}
-
 	if (type.primitiveType == FLOAT_TYPE) 
 	{
 		sprintfJdc(result, 0, "%f", *(float*)(params.dataSectionByte + dataSectionIndex));
@@ -276,44 +219,138 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters para
 	{
 		sprintfJdc(result, 0, "%lf", *(double*)(params.dataSectionByte + dataSectionIndex));
 	}
-	else if (type.isUnsigned) 
-	{
-		switch (type.primitiveType)
-		{
-		case CHAR_TYPE:
-			sprintfJdc(result, 0, "%u", *(unsigned char*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case SHORT_TYPE:
-			sprintfJdc(result, 0, "%u", *(unsigned short*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case INT_TYPE:
-			sprintfJdc(result, 0, "%u", *(unsigned int*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case LONG_LONG_TYPE:
-			sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		}
-	}
 	else 
 	{
-		switch (type.primitiveType)
+		if (getStringFromDataSection(params, address, result))
 		{
-		case CHAR_TYPE:
-			sprintfJdc(result, 0, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case SHORT_TYPE:
-			sprintfJdc(result, 0, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case INT_TYPE:
-			sprintfJdc(result, 0, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
-			break;
-		case LONG_LONG_TYPE:
-			sprintfJdc(result, 0, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
-			break;
+			return 1;
+		}
+
+		if (type.isUnsigned)
+		{
+			switch (type.primitiveType)
+			{
+			case CHAR_TYPE:
+				sprintfJdc(result, 0, "%u", *(unsigned char*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case SHORT_TYPE:
+				sprintfJdc(result, 0, "%u", *(unsigned short*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case INT_TYPE:
+				sprintfJdc(result, 0, "%u", *(unsigned int*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case LONG_LONG_TYPE:
+				sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			}
+		}
+		else
+		{
+			switch (type.primitiveType)
+			{
+			case CHAR_TYPE:
+				sprintfJdc(result, 0, "%d", *(char*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case SHORT_TYPE:
+				sprintfJdc(result, 0, "%d", *(short*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case INT_TYPE:
+				sprintfJdc(result, 0, "%d", *(int*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			case LONG_LONG_TYPE:
+				sprintfJdc(result, 0, "%lld", *(long long*)(params.dataSectionByte + dataSectionIndex));
+				break;
+			}
 		}
 	}
 
 	return 1;
+}
+
+static unsigned char getStringFromDataSection(struct DecompilationParameters params, unsigned long long address, struct JdcStr* result)
+{
+	if (address < params.imageBase + params.dataSections[0].virtualAddress)
+	{
+		return 0;
+	}
+
+	int dataSectionIndex = -1;
+	int totalSize = 0;
+	for (int i = 0; i < params.numOfDataSections; i++)
+	{
+		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
+		{
+			dataSectionIndex = (int)((totalSize + address) - (params.dataSections[i].virtualAddress + params.imageBase));
+		}
+
+		totalSize += params.dataSections[i].size;
+	}
+
+	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
+	{
+		return 0;
+	}
+
+	char isString = 1;
+
+	struct JdcStr tmp = initializeJdcStr();
+	int len = 0;
+	char byte = 0;
+	while (1)
+	{
+		byte = *(char*)(params.dataSectionByte + len + dataSectionIndex);
+
+		if (byte == 0)
+		{
+			break;
+		}
+		else if (len > 100 || (byte < 32 && (byte < 7 || byte > 13)) || byte > 126) // checking if len isn't too long, and the byte is either an escape char or a character
+		{
+			isString = 0;
+			break;
+		}
+
+		char c[2] = { byte, 0 }; // so the byte is null terminated
+		switch (byte)
+		{
+		case '\a':
+			strcatJdc(&tmp, "\\n");
+			break;
+		case '\b':
+			strcatJdc(&tmp, "\\b");
+			break;
+		case '\f':
+			strcatJdc(&tmp, "\\f");
+			break;
+		case '\n':
+			strcatJdc(&tmp, "\\n");
+			break;
+		case '\r':
+			strcatJdc(&tmp, "\\r");
+			break;
+		case '\t':
+			strcatJdc(&tmp, "\\t");
+			break;
+		case '\v':
+			strcatJdc(&tmp, "\\");
+			break;
+		default:
+			strcatJdc(&tmp, c);
+			break;
+		}
+
+		len++;
+	}
+
+	if (isString && len > 0)
+	{
+
+		sprintfJdc(result, 0, "\"%s\"", tmp.buffer);
+		return freeJdcStr(&tmp);
+	}
+
+	freeJdcStr(&tmp);
+	return 0;
 }
 
 unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, struct VarType type, struct JdcStr* result)
