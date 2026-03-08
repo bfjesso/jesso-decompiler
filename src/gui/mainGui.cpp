@@ -884,6 +884,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	{
 		ColorAllStrs(text, segmentStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 	}
+	ColorAllStrs(text, "ERROR", ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 
 	// numbers
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
