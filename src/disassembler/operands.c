@@ -342,15 +342,18 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			currentOperand->immediate.size = operandSize;
 			break;
 		case Ob:
-			if (params->bytes > params->maxBytesAddr) { return 0; }
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
-			currentOperand->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1);
-			break;
-		case Ov:
-			operandSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
+			operandSize = params->legPrefixes.group3 == ASO ? 2 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = 1;
+			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
+			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
+			break;
+		case Ov:
+			operandSize = params->legPrefixes.group3 == ASO ? 2 : 4;
+			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
+			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.ptrSize = OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
 			break;
