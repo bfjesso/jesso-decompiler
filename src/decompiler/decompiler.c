@@ -1,6 +1,7 @@
 #include "decompiler.h"
 #include "decompilationUtils.h"
 #include "functions.h"
+#include "expressions.h"
 #include "assignment.h"
 #include "returnStatements.h"
 #include "functionCalls.h"
@@ -627,11 +628,27 @@ static void decompileMiscInstruction(struct DecompilationParameters params, unsi
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	
-	switch (currentInstruction->opcode) 
+	// these are windows functions
+	if (currentInstruction->opcode == INT3) 
 	{
-	case INT3:
 		addIndents(result, numOfIndents);
 		strcatJdc(result, "__debugbreak();\n");
-		break;
+		return;
+	}
+	else if (currentInstruction->opcode == _INT && currentInstruction->operands[0].immediate.value == 0x29) 
+	{
+		struct JdcStr code = initializeJdcStr();
+		struct VarType type = { 0 };
+		type.isUnsigned = 1;
+		type.primitiveType = INT_TYPE;
+
+		if (decompileRegister(params, CX, type, &code)) 
+		{
+			addIndents(result, numOfIndents);
+			sprintfJdc(result, 1, "__fastfail(%s);\n", code.buffer);
+		}
+
+		freeJdcStr(&code);
+		return;
 	}
 }
