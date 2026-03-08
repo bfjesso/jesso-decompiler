@@ -819,6 +819,16 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 					break;
 				}
 			}
+			else if (params.currentFunc->instructions[i].opcode == PUSHF) 
+			{
+				stackOffset--;
+				if (stackOffset == 0) 
+				{
+					strcpyJdc(&value, "__readeflags()"); // Windows function
+					gotValue = 1;
+					break;
+				}
+			}
 			else if (params.currentFunc->instructions[i].opcode == POP) 
 			{
 				stackOffset++;
