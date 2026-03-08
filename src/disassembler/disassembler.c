@@ -262,6 +262,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		
 		if (isOpcodeMov(instruction->opcode) || 
 			instruction->opcode == LEA || 
+			instruction->opcode == POP || 
 			isOpcodeCvtToDbl(instruction->opcode) ||
 			isOpcodeCvtToFlt(instruction->opcode) ||
 			isOpcodeCMOVcc(instruction->opcode) || 

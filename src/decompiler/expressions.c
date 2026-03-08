@@ -790,6 +790,47 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 		return 1;
 	}
+	else if (instruction->opcode == POP) 
+	{
+		struct JdcStr value = initializeJdcStr();
+		
+		int stackOffset = 0;
+		unsigned char gotValue = 0;
+		for (int i = ogStartInstructionIndex; i >= 0; i--)
+		{
+			if (params.currentFunc->instructions[i].opcode == PUSH) 
+			{
+				stackOffset--;
+				if (stackOffset == 0) 
+				{
+					params.startInstructionIndex = i;
+					if (!decompileOperand(params, &params.currentFunc->instructions[i].operands[0], type, &value)) 
+					{
+						for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+						freeJdcStr(&value);
+						return 0;
+					}
+
+					gotValue = 1;
+					break;
+				}
+			}
+			else if (params.currentFunc->instructions[i].opcode == POP) 
+			{
+				stackOffset++;
+			}
+		}
+
+		if (gotValue) 
+		{
+			if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, value.buffer); }
+			else { sprintfJdc(result, 0, "%s", value.buffer); }
+		}
+
+		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&value);
+		return gotValue;
+	}
 
 	struct Operand* secondOperand = &instruction->operands[1];
 
