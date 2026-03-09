@@ -66,10 +66,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			}
 			else 
 			{
-				if (!getValueFromDataSection(params, type, address, result))
-				{
-					sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, address);
-				}
+				sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, address);
 			}
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
