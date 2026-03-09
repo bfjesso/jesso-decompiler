@@ -167,10 +167,10 @@ int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int b
 
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
 					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
 					buffer[bufferIndex].size = sectionHeader.sh_size;
-					strcpy(buffer[bufferIndex].name, sectionNames + sectionHeader.sh_name);
 					bufferIndex++;
 				}
 			}
@@ -226,10 +226,10 @@ int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int b
 
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
 					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
 					buffer[bufferIndex].size = sectionHeader.sh_size;
-					strcpy(buffer[bufferIndex].name, sectionNames + sectionHeader.sh_name);
 					bufferIndex++;
 				}
 			}
@@ -285,10 +285,10 @@ int getELFDataSections64(const char* filePath, struct FileSection* buffer, int b
 
 				if (sectionHeader.sh_flags & SHF_WRITE)
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
 					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
 					buffer[bufferIndex].size = sectionHeader.sh_size;
-					strcpy(buffer[bufferIndex].name, sectionNames + sectionHeader.sh_name);
 					bufferIndex++;
 				}
 			}
@@ -344,10 +344,10 @@ int getELFDataSections32(const char* filePath, struct FileSection* buffer, int b
 
 				if (sectionHeader.sh_flags & SHF_WRITE)
 				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
 					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
 					buffer[bufferIndex].size = sectionHeader.sh_size;
-					strcpy(buffer[bufferIndex].name, sectionNames + sectionHeader.sh_name);
 					bufferIndex++;
 				}
 			}

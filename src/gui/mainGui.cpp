@@ -501,7 +501,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		
 		char addressStr[20] = { 0 };
 		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
-		wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[codeSectionIndex].name) + "\t";
+		wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[codeSectionIndex].name.buffer) + "\t";
 
 		char buffer[255] = { 0 };
 		wxString asmStr = "";

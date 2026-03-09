@@ -76,10 +76,10 @@ int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 				break;
 			}
 			
+			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
 			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
 			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
 			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-			strcpy(buffer[bufferIndex].name, sectionHeader.Name);
 			
 			bufferIndex++;
 		}
@@ -117,10 +117,10 @@ int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 				break;
 			}
 
+			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
 			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
 			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
 			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-			strcpy(buffer[bufferIndex].name, sectionHeader.Name);
 
 			bufferIndex++;
 		}
@@ -158,10 +158,10 @@ int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 				break;
 			}
 
+			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
 			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
 			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
 			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-			strcpy(buffer[bufferIndex].name, sectionHeader.Name);
 
 			bufferIndex++;
 		}
@@ -199,10 +199,10 @@ int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 				break;
 			}
 
+			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
 			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
 			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
 			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-			strcpy(buffer[bufferIndex].name, sectionHeader.Name);
 
 			bufferIndex++;
 		}

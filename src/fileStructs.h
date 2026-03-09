@@ -9,8 +9,8 @@ struct ImportedFunction
 
 struct FileSection
 {
+	struct JdcStr name;
 	unsigned long long virtualAddress;
 	unsigned long long fileOffset;
 	int size;
-	char name[8];
 };

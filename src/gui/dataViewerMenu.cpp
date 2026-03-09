@@ -67,8 +67,8 @@ void DataViewer::LoadData()
 		{
 			uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
 			char addressStrBuffer[20];
-			sprintf(addressStrBuffer, "%llX%s", address, dataSections[j].name);
-			wxString addressStr = wxString(addressStrBuffer) + "\t";
+			sprintf(addressStrBuffer, "%llX", address);
+			wxString addressStr = wxString(addressStrBuffer) + wxString(dataSections[j].name.buffer) + "\t";
 
 			char dataStrBuffer[50];
 			switch (typeSelection)
