@@ -21,6 +21,6 @@ static void addIndents(struct JdcStr* result, int numOfIndents);
 
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result);
 
-static unsigned char declareAllLocalVariables(struct Function* function, struct JdcStr* result);
+static unsigned char declareAllLocalVariables(struct Function* function, unsigned char declareReturnedVars, struct JdcStr* result);
 
 static void decompileMiscInstruction(struct DecompilationParameters params, unsigned char numOfIndents, struct JdcStr* result);

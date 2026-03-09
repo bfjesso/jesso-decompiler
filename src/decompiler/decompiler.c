@@ -49,7 +49,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
 	{
-		if (!declareAllLocalVariables(params.currentFunc, result))
+		if (!declareAllLocalVariables(params.currentFunc, params.axRegVarIndex == -1, result))
 		{
 			return 0;
 		}
@@ -566,7 +566,7 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	return strcatJdc(result, ")\n");
 }
 
-static unsigned char declareAllLocalVariables(struct Function* function, struct JdcStr* result)
+static unsigned char declareAllLocalVariables(struct Function* function, unsigned char declareReturnedVars, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	
@@ -612,13 +612,16 @@ static unsigned char declareAllLocalVariables(struct Function* function, struct 
 		}
 	}
 
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	if(declareReturnedVars)
 	{
-		varTypeToStr(function->returnedVars[i].type, &typeStr);
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer))
+		for (int i = 0; i < function->numOfReturnedVars; i++)
 		{
-			freeJdcStr(&typeStr);
-			return 0;
+			varTypeToStr(function->returnedVars[i].type, &typeStr);
+			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer))
+			{
+				freeJdcStr(&typeStr);
+				return 0;
+			}
 		}
 	}
 
