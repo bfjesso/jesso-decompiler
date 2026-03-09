@@ -60,11 +60,7 @@ static unsigned char operandToValue(struct DecompilationParameters params, int s
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			unsigned long long address = params.allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
-			if (!getNumFromData(params, address, result))
-			{
-				*result = address;
-			}
+			*result = params.allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			return 1;
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
