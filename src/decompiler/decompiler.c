@@ -324,7 +324,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	{
 		if (!conditions[i].requiresJumpInDecomp && !conditions[i].isCombinedByOther)
 		{
-			enum Register modifiedRegs[ST0 - RAX];
+			struct RegisterVariable modifiedRegs[ST0 - RAX];
 			int numOfRegs = 0;
 			
 			for (int j = conditions[i].jccIndex; j < conditions[i].dstIndex; j++) 
@@ -373,7 +373,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					int alreadyFound = 0;
 					for (int k = 0; k < numOfRegs; k++)
 					{
-						if (compareRegisters(reg, modifiedRegs[k]))
+						if (compareRegisters(reg, modifiedRegs[k].reg))
 						{
 							alreadyFound = 1;
 							break;
@@ -384,7 +384,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 						continue;
 					}
 
-					modifiedRegs[numOfRegs] = reg;
+					modifiedRegs[numOfRegs].reg = reg;
+					modifiedRegs[numOfRegs].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 					numOfRegs++;
 				}
 			}
@@ -401,13 +402,13 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 				for (int k = 0; k < numOfRegs; k++)
 				{
-					if (modifiedRegs[k] == NO_REG)
+					if (modifiedRegs[k].reg == NO_REG)
 					{
 						continue;
 					}
 
 					unsigned char overwrites = 0;
-					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k], 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k], 0, &overwrites) && !overwrites) || isOpcodeReturn(currentInstruction->opcode))
+					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, &overwrites) && !overwrites) || isOpcodeReturn(currentInstruction->opcode))
 					{
 						struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
 						if (newRegVars)
@@ -419,18 +420,18 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 							return 0;
 						}
 
-						params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = modifiedRegs[k];
-						params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+						params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = modifiedRegs[k].reg;
+						params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = modifiedRegs[k].type;
 						params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
-						sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[modifiedRegs[k]]);
+						sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[modifiedRegs[k].reg]);
 						params.currentFunc->numOfRegVars++;
 
-						modifiedRegs[k] = NO_REG; // so it isnt checked again
+						modifiedRegs[k].reg = NO_REG; // so it isnt checked again
 						break;
 					}
 					else if (overwrites) 
 					{
-						modifiedRegs[k] = NO_REG;
+						modifiedRegs[k].reg = NO_REG;
 						break;
 					}
 				}
