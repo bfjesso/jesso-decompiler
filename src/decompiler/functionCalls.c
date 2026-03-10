@@ -169,7 +169,23 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 
-	unsigned char hasAccessedCX = 0; // should check other regs too
+	struct JdcStr decompiledStackArgs[10] = { 0 };
+	int numOfStackArgs = 0;
+
+	#ifdef _WIN32
+	unsigned char accessedRegArgs[4] = { 0 };
+	const enum Register regArgs[4] = { RCX, RDX, R8, R9 };
+	struct JdcStr decompiledRegArgs[4] = { 0 };
+	const int numOfRegArgs = 4;
+	#endif
+
+	#ifdef linux
+	unsigned char accessedRegArgs[6] = { 0 };
+	const enum Register regArgs[6] = { RDI, RSI, RDX, RCX, R8, R9 };
+	struct JdcStr decompiledRegArgs[6] = { 0 };
+	const int numOfRegArgs = 6;
+	#endif
+
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
@@ -192,21 +208,18 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			if (currentInstruction->operands[0].type == REGISTER && (compareRegisters(currentInstruction->operands[0].reg, BP) || compareRegisters(currentInstruction->operands[0].reg, SP)))
-			{
-				break;
-			}
-
 			struct VarType type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
 			params.startInstructionIndex = i;
-			struct JdcStr argStr = initializeJdcStr();
-			if (decompileOperand(params, &currentInstruction->operands[0], type, &argStr))
+			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[0], type, &decompiledStackArgs[numOfStackArgs]))
 			{
-				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
+				for(int j = 0; j < numOfRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+				return 0;
 			}
 
-			freeJdcStr(&argStr);
+			numOfStackArgs++;
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
@@ -216,38 +229,60 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
 
 				params.startInstructionIndex = i;
-				struct JdcStr argStr = initializeJdcStr();
-				if (decompileOperand(params, &currentInstruction->operands[1], type, &argStr))
+				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
+				if (!decompileOperand(params, &currentInstruction->operands[1], type, &decompiledStackArgs[numOfStackArgs]))
 				{
-					sprintfJdc(result, 1, "%s, ", argStr.buffer);
+					for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
+					for(int j = 0; j < numOfRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+					return 0;
 				}
 
-				freeJdcStr(&argStr);
+				numOfStackArgs++;
 			}
 		}
 
-		// checking for CX arg, this should be sorted so it comes first in the parameters
-		int operandNum = 0;
-		if (!hasAccessedCX && doesInstructionModifyRegister(currentInstruction, CX, &operandNum, 0))
+		for(int j = 0; j < numOfRegArgs; j++)
 		{
-			struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
-
-			params.startInstructionIndex = i;
-			struct JdcStr argStr = initializeJdcStr();
-			if (decompileOperand(params, &currentInstruction->operands[operandNum], type, &argStr))
+			if (!accessedRegArgs[j])
 			{
-				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				int operandNum = 0;
+				if(doesInstructionModifyRegister(currentInstruction, regArgs[j], &operandNum, 0))
+				{
+					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
+
+					params.startInstructionIndex = i;
+					decompiledRegArgs[j] = initializeJdcStr();
+					if (!decompileOperand(params, &currentInstruction->operands[operandNum], type, &decompiledRegArgs[j]))
+					{
+						for(int k = 0; k < numOfStackArgs; k++) { freeJdcStr(&decompiledStackArgs[k]); }
+						for(int k = 0; k < numOfRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }
+						return 0;
+					}
+
+					accessedRegArgs[j] = 1;
+				}
+
+				if (doesInstructionAccessRegister(currentInstruction, regArgs[j], 0))
+				{
+					accessedRegArgs[j] = 1;
+				}
 			}
-
-			freeJdcStr(&argStr);
-
-			hasAccessedCX = 1;
 		}
+	}
 
-		if (doesInstructionAccessRegister(currentInstruction, CX, 0))
+	for(int i = 0; i < numOfRegArgs; i++)
+	{
+		if(decompiledRegArgs[i].buffer)
 		{
-			hasAccessedCX = 1;
+			sprintfJdc(result, 1, "%s, ", decompiledRegArgs[i].buffer);
+			freeJdcStr(&decompiledRegArgs[i]);
 		}
+	}
+
+	for(int i = 0; i < numOfStackArgs; i++)
+	{
+		sprintfJdc(result, 1, "%s, ", decompiledStackArgs[i].buffer);
+		freeJdcStr(&decompiledStackArgs[i]);
 	}
 
 	if (result->buffer[strlen(result->buffer) - 1] != '(')

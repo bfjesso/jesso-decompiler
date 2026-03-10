@@ -874,10 +874,19 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, value.buffer); }
 			else { sprintfJdc(result, 0, "%s", value.buffer); }
 		}
+		else
+		{
+			if(instruction->operands[0].type == REGISTER)
+			{
+				if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, registerStrs[instruction->operands[0].reg]); }
+				else { sprintfJdc(result, 0, "%s", registerStrs[instruction->operands[0].reg]); }
+				gotValue = 1;
+			}
 
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		freeJdcStr(&value);
-		return gotValue;
+			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			freeJdcStr(&value);
+			return gotValue;
+		}
 	}
 
 	struct Operand* secondOperand = &instruction->operands[1];
