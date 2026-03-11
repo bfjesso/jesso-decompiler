@@ -630,7 +630,8 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 				int numOfFunctions = functions.size();
 				for (int i = 0; i < numOfFunctions; i++) 
 				{
-					if (strcmp(functions[i].name.buffer, txt.c_str()) == 0) 
+					wxString funcName = wxString(functions[i].name.buffer);
+					if (funcName.Contains(txt))
 					{
 						functionsGrid->GoToCell(i, 0);
 						functionsGrid->SelectRow(i);
