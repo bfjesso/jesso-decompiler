@@ -36,9 +36,6 @@ struct Condition
 
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer);
 
-// this function sets the otherJccIndexes by finding series of &&s and ||s
-static int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* newConditionsBuffer);
-
 // this will go through the conditions and combine them into single conditions if applicable
 static void combineConditions(struct Condition* conditions, int numOfConditions);
 

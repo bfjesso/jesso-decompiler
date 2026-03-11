@@ -5,27 +5,27 @@
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
 {
 	// find all conditional jumps
-	struct Condition allJccs[20] = { 0 };
-	int jccCount = 0;
+	struct Condition conditions[20] = { 0 };
+	int numOfConditions = 0;
+	int combinationCount = 0;
+	int lastDstIndex = -1;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
 
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			allJccs[jccCount].jccIndex = i;
-
 			// getting index of instruction jumped to by jcc
 			unsigned long long jccDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
-			int jccDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jccDst);
-			allJccs[jccCount].dstIndex = jccDstIndex;
+			int dstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jccDst);
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
-			if (params.currentFunc->instructions[jccDstIndex - 1].opcode == JMP_SHORT)
+			int exitIndex = -1;
+			if (params.currentFunc->instructions[dstIndex - 1].opcode == JMP_SHORT)
 			{
 				// sometimes compiler puts multiple jmps next to each other at the end?
-				int firstJmpIndex = jccDstIndex - 1;
-				for (int j = jccDstIndex - 2; j > i; j--)
+				int firstJmpIndex = dstIndex - 1;
+				for (int j = dstIndex - 2; j > i; j--)
 				{
 					if (params.currentFunc->instructions[j].opcode == JMP_SHORT)
 					{
@@ -38,94 +38,47 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 				}
 
 				unsigned long long jmpDst = params.currentFunc->instructions[firstJmpIndex].address + params.currentFunc->instructions[firstJmpIndex].operands[0].immediate.value;
-				int jmpDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
-				allJccs[jccCount].exitIndex = jmpDstIndex;
+				exitIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+			}
+
+			// a series of Jcc instructions that have the same destination are combined with a logical AND
+			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
+
+			if (numOfConditions > 0 && dstIndex == conditions[numOfConditions - 1].dstIndex)
+			{
+				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
+				conditions[numOfConditions - 1].otherJccsLogicType = AND_LT;
+				combinationCount++;
+
+				conditions[numOfConditions - 1].numOfOtherJccs = combinationCount;
+			}
+			else if (numOfConditions > 0 && lastDstIndex - 1 == i)
+			{
+				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
+				conditions[numOfConditions - 1].otherJccsLogicType = OR_LT;
+				conditions[numOfConditions - 1].dstIndex = dstIndex;
+				conditions[numOfConditions - 1].exitIndex = exitIndex;
+				combinationCount++;
+
+				conditions[numOfConditions - 1].numOfOtherJccs = combinationCount;
 			}
 			else
 			{
-				allJccs[jccCount].exitIndex = -1;
+				conditions[numOfConditions].jccIndex = i;
+				conditions[numOfConditions].dstIndex = dstIndex;
+				conditions[numOfConditions].exitIndex = exitIndex;
+
+				numOfConditions++;
+				combinationCount = 0;
 			}
 
-			jccCount++;
+			lastDstIndex = dstIndex;
 		}
 	}
-
-	struct Condition conditions[20] = { 0 };
-	int numOfConditions = getAndsAndOrs(allJccs, jccCount, conditions);
 
 	combineConditions(conditions, numOfConditions);
 
 	return setConditionTypes(conditions, numOfConditions, conditionsBuffer);
-}
-
-static int getAndsAndOrs(struct Condition* allJccs, int numOfConditions, struct Condition* conditionsBuffer)
-{
-	int newConditionsIndex = 0;
-
-	for (int i = 0; i < numOfConditions; i++)
-	{
-		memcpy(&conditionsBuffer[newConditionsIndex], &allJccs[i], sizeof(struct Condition));
-
-		// check for ||. a group of ORs is a series of Jccs that all go to the same destination (like ANDs), but the last one in the series has a Jcc as the instruction right before its destination
-		int orCount = 0;
-		unsigned char reachedEnd = 0;
-		for (int j = i + 1; j < numOfConditions; j++)
-		{
-			if (allJccs[i].dstIndex == allJccs[j].dstIndex)
-			{
-				conditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = allJccs[j].jccIndex; // this could be part of an AND, but orCount will be set to 0 if its not so this will be ignored or overwritten
-				orCount++;
-			}
-			else if (allJccs[j - 1].dstIndex - 1 == allJccs[j].jccIndex)
-			{
-				conditionsBuffer[newConditionsIndex].otherJccIndexes[orCount] = allJccs[j].jccIndex;
-				conditionsBuffer[newConditionsIndex].dstIndex = allJccs[j].dstIndex;
-				conditionsBuffer[newConditionsIndex].exitIndex = allJccs[j].exitIndex;
-				orCount++;
-
-				conditionsBuffer[newConditionsIndex].otherJccsLogicType = OR_LT;
-				conditionsBuffer[newConditionsIndex].numOfOtherJccs = orCount;
-				i += orCount;
-
-				break;
-			}
-			else
-			{
-				orCount = 0;
-				break;
-			}
-
-			if (j == numOfConditions - 1)
-			{
-				orCount = 0;
-			}
-		}
-
-		if (orCount == 0)
-		{
-			// check for &&. a group of ANDs is a series of Jccs that all go to the same destination
-			int andCount = 0;
-			for (int j = i + 1; j < numOfConditions; j++)
-			{
-				if (allJccs[i].dstIndex == allJccs[j].dstIndex)
-				{
-					conditionsBuffer[newConditionsIndex].otherJccsLogicType = AND_LT;
-					conditionsBuffer[newConditionsIndex].otherJccIndexes[andCount] = allJccs[j].jccIndex;
-					andCount++;
-				}
-				else
-				{
-					break;
-				}
-			}
-			conditionsBuffer[newConditionsIndex].numOfOtherJccs = andCount;
-			i += andCount;
-		}
-
-		newConditionsIndex++;
-	}
-
-	return newConditionsIndex;
 }
 
 static void combineConditions(struct Condition* conditions, int numOfConditions)
