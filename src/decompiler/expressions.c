@@ -622,7 +622,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 				return 1;
 			}
 		}
-		else if ((currentInstruction->opcode >= CMP && currentInstruction->opcode <= COMISD) || currentInstruction->opcode == SUB)
+		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[0], getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &operand1Str))

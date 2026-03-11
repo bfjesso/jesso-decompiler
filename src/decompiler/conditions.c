@@ -9,6 +9,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	int numOfConditions = 0;
 	int combinationCount = 0;
 	int lastDstIndex = -1;
+	unsigned char stopCombination = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
@@ -44,7 +45,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			// a series of Jcc instructions that have the same destination are combined with a logical AND
 			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
 
-			if (numOfConditions > 0 && dstIndex == conditions[numOfConditions - 1].dstIndex)
+			if (numOfConditions > 0 && dstIndex == conditions[numOfConditions - 1].dstIndex && !stopCombination)
 			{
 				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
 				conditions[numOfConditions - 1].otherJccsLogicType = AND_LT;
@@ -52,7 +53,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 
 				conditions[numOfConditions - 1].numOfOtherJccs = combinationCount;
 			}
-			else if (numOfConditions > 0 && lastDstIndex - 1 == i)
+			else if (numOfConditions > 0 && lastDstIndex - 1 == i && !stopCombination)
 			{
 				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
 				conditions[numOfConditions - 1].otherJccsLogicType = OR_LT;
@@ -70,9 +71,14 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 
 				numOfConditions++;
 				combinationCount = 0;
+				stopCombination = 0;
 			}
 
 			lastDstIndex = dstIndex;
+		}
+		else if(numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
+		{
+			stopCombination = 1;
 		}
 	}
 
