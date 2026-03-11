@@ -379,7 +379,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 							break;
 						}
 					}
-					if (alreadyFound)
+					if (alreadyFound || getRegArgByReg(params.currentFunc, reg) || getRegVarByReg(params.currentFunc, reg))
 					{
 						continue;
 					}

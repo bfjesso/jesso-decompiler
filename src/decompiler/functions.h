@@ -31,6 +31,8 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
+struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register reg);
+
 struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr);
 
 static void sortFunctionArguments(struct Function* function);

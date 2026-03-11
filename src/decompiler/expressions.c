@@ -361,12 +361,10 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 		return sprintfJdc(result, 0, "0x%llX", params.currentFunc->instructions[params.startInstructionIndex + 1].address);
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+	struct RegisterVariable* regVar = getRegVarByReg(params.currentFunc, targetReg);
+	if (regVar)
 	{
-		if (compareRegisters(targetReg, params.currentFunc->regVars[i].reg))
-		{
-			return strcpyJdc(result, params.currentFunc->regVars[i].name.buffer);
-		}
+		return strcpyJdc(result, regVar->name.buffer);
 	}
 	
 	struct JdcStr expressions[5] = { 0 };

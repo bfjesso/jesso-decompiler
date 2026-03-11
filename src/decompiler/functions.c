@@ -592,6 +592,19 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 	return 0;
 }
 
+struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register reg)
+{
+	for (int i = 0; i < function->numOfRegVars; i++)
+	{
+		if (compareRegisters(function->regVars[i].reg, reg))
+		{
+			return &function->regVars[i];
+		}
+	}
+
+	return 0;
+}
+
 struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr)
 {
 	for (int i = 0; i < function->numOfReturnedVars; i++)
