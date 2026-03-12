@@ -388,21 +388,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (doesInstructionDoNothing(currentInstruction))
-		{
-			continue;
-		}
-
-		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
-		{
-			isInUnreachableState = 1;
-		}
-		else if (isOpcodeJcc(currentInstruction->opcode))
-		{
-			isInUnreachableState = 0;
-		}
-
-		if (isInUnreachableState) 
+		if (isInUnreachableState || doesInstructionDoNothing(currentInstruction))
 		{
 			continue;
 		}
@@ -475,6 +461,15 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					return 0;
 				}
 			}
+		}
+
+		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
+		{
+			isInUnreachableState = 1;
+		}
+		else if (isOpcodeJcc(currentInstruction->opcode))
+		{
+			isInUnreachableState = 0;
 		}
 	}
 

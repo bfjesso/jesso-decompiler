@@ -143,7 +143,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				return 0;
 			}
 		}
-		else if (checkForFunctionCall(params, &callee))
+
+		if (checkForFunctionCall(params, &callee))
 		{
 			addIndents(result, numOfIndents);
 			if (decompileFunctionCall(params, callee, result))
@@ -155,20 +156,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				return 0;
 			}
 		}
-		else if (checkForReturnStatement(params)) 
-		{
-			addIndents(result, numOfIndents);
-			params.startInstructionIndex--;
-			if (decompileReturnStatement(params, result))
-			{
-				strcatJdc(result, "\n");
-			}
-			else 
-			{
-				return 0;
-			}
-		}
-		else if (checkForAssignment(params))
+
+		if (checkForAssignment(params))
 		{
 			addIndents(result, numOfIndents);
 			if (decompileAssignment(params, result))
@@ -180,10 +169,26 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				return 0;
 			}
 		}
-		else 
+
+		if (checkForReturnStatement(params))
 		{
-			decompileMiscInstruction(params, numOfIndents, result);
+			addIndents(result, numOfIndents);
+			if(currentInstruction->opcode != JMP_FAR && currentInstruction->opcode != JMP_NEAR)
+			{
+				params.startInstructionIndex--;
+			}
+
+			if (decompileReturnStatement(params, result))
+			{
+				strcatJdc(result, "\n");
+			}
+			else
+			{
+				return 0;
+			}
 		}
+
+		decompileMiscInstruction(params, numOfIndents, result);
 
 		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
 		{
@@ -217,14 +222,17 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
-			for (int j = i + 1; j < params.currentFunc->numOfInstructions; j++)
+			for (int j = i; j < params.currentFunc->numOfInstructions; j++)
 			{
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
-				if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, &overwrites) && overwrites))
+				if(j != i)
 				{
-					break;
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, &overwrites) && overwrites))
+					{
+						break;
+					}
 				}
 
 				if (isOpcodeReturn(opcode))
