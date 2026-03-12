@@ -13,7 +13,7 @@ const char* indent = "    ";
 unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
 	struct Condition conditions[20] = { 0 };
-	int numOfConditions = getAllConditions(params, conditions);
+	int numOfConditions = getAllConditions(params, conditions, 20);
 	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{

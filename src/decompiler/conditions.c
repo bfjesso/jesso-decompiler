@@ -2,10 +2,8 @@
 #include "expressions.h"
 #include "assignment.h"
 
-int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer)
+int getAllConditions(struct DecompilationParameters params, struct Condition* conditions, int conditionsLength)
 {
-	// find all conditional jumps
-	struct Condition conditions[20] = { 0 };
 	int numOfConditions = 0;
 	int combinationCount = 0;
 	int lastDstIndex = -1;
@@ -65,13 +63,47 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			}
 			else
 			{
+				if (numOfConditions >= conditionsLength)
+				{
+					return 0;
+				}
+				
+				// setting the type
+				if (exitIndex != -1 && exitIndex < i)
+				{
+					conditions[numOfConditions].conditionType = LOOP_CT;
+				}
+				else if (dstIndex < i)
+				{
+					conditions[numOfConditions].conditionType = DO_WHILE_CT;
+				}
+				else if (numOfConditions > 0 && exitIndex != -1 &&
+					conditions[numOfConditions - 1].exitIndex == exitIndex && // check for else if
+					dstIndex > conditions[numOfConditions - 1].dstIndex) // also have to check that its not nested
+				{
+					conditions[numOfConditions].conditionType = ELSE_IF_CT;
+				}
+				else
+				{
+					// checking if last condition has an else and add it if so
+					if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
+					{
+						conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
+						conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
+						conditions[numOfConditions].conditionType = ELSE_CT;
+						numOfConditions++;
+					}
+
+					conditions[numOfConditions].conditionType = IF_CT;
+				}
+
 				conditions[numOfConditions].jccIndex = i;
 				conditions[numOfConditions].dstIndex = dstIndex;
 				conditions[numOfConditions].exitIndex = exitIndex;
 
-				numOfConditions++;
 				combinationCount = 0;
 				stopCombination = 0;
+				numOfConditions++;
 			}
 
 			lastDstIndex = dstIndex;
@@ -81,10 +113,62 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			stopCombination = 1;
 		}
 	}
+	if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
+	{
+		conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
+		conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
+		conditions[numOfConditions].conditionType = ELSE_CT;
+		
+		numOfConditions++;
+		if (numOfConditions >= conditionsLength)
+		{
+			return 0;
+		}
+	}
 
 	combineConditions(conditions, numOfConditions);
 
-	return setConditionTypes(conditions, numOfConditions, conditionsBuffer);
+	for (int i = 0; i < numOfConditions; i++)
+	{
+		// checking for an if statement ends before another if statment that it encolses
+		if (conditions[i].conditionType == IF_CT)
+		{
+			for (int j = i + 1; j < numOfConditions; j++)
+			{
+				if (conditions[j].conditionType == IF_CT)
+				{
+					if (conditions[i].dstIndex > conditions[j].jccIndex && conditions[i].dstIndex < conditions[j].dstIndex)
+					{
+						conditions[i].requiresJumpInDecomp = 1;
+						break;
+					}
+				}
+			}
+		}
+
+		// checking for ELSEs with same dstIndex
+		if (conditions[i].conditionType == ELSE_CT)
+		{
+			for (int j = 0; j < numOfConditions; j++)
+			{
+				if (j == i)
+				{
+					continue;
+				}
+
+				if (conditions[j].conditionType == ELSE_CT)
+				{
+					if (conditions[i].dstIndex == conditions[j].dstIndex && conditions[i].jccIndex < conditions[j].jccIndex)
+					{
+						conditions[i].dstIndex = conditions[j].jccIndex;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return numOfConditions;
 }
 
 static void combineConditions(struct Condition* conditions, int numOfConditions)
@@ -110,106 +194,6 @@ static void combineConditions(struct Condition* conditions, int numOfConditions)
 			i++;
 		}
 	}
-}
-
-static int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer)
-{
-	int conditionsIndex = 0; // this has its own index and buffer because ELSEs might be added to the array of conditions
-	for (int i = 0; i < numOfConditions; i++)
-	{
-		if (conditions[i].isCombinedByOther)
-		{
-			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsIndex++;
-			continue;
-		}
-
-		// check for loops
-		if (conditions[i].exitIndex != -1 && conditions[i].exitIndex < conditions[i].jccIndex)
-		{
-			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = LOOP_CT;
-		}
-		else if (conditions[i].dstIndex < conditions[i].jccIndex)
-		{
-			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = DO_WHILE_CT;
-		}
-		else if (i > 0 && conditions[i].exitIndex != -1 &&
-			conditions[i - 1].exitIndex == conditions[i].exitIndex && // check for else if
-			conditions[i].dstIndex > conditions[i - 1].dstIndex) // also have to check that its not nested
-		{
-			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = ELSE_IF_CT;
-		}
-		else
-		{
-			// check if last if condition has an else and add it if so
-			if (i > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != LOOP_CT && conditions[i - 1].exitIndex != -1)
-			{
-				conditionsBuffer[conditionsIndex].jccIndex = conditions[i - 1].dstIndex;
-				conditionsBuffer[conditionsIndex].dstIndex = conditions[i - 1].exitIndex;
-				conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
-
-				conditionsIndex++;
-			}
-
-			memcpy(&conditionsBuffer[conditionsIndex], &conditions[i], sizeof(struct Condition));
-			conditionsBuffer[conditionsIndex].conditionType = IF_CT;
-		}
-
-		conditionsIndex++;
-	}
-	if (numOfConditions > 0 && conditionsBuffer[conditionsIndex - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
-	{
-		conditionsBuffer[conditionsIndex].jccIndex = conditions[numOfConditions - 1].dstIndex;
-		conditionsBuffer[conditionsIndex].dstIndex = conditions[numOfConditions - 1].exitIndex;
-		conditionsBuffer[conditionsIndex].conditionType = ELSE_CT;
-
-		conditionsIndex++;
-	}
-
-	for (int i = 0; i < conditionsIndex; i++)
-	{
-		// checking for an if statement ends before another if statment that it encolses
-		if (conditionsBuffer[i].conditionType == IF_CT)
-		{
-			for (int j = i + 1; j < conditionsIndex; j++)
-			{
-				if(conditionsBuffer[j].conditionType == IF_CT)
-				{
-					if (conditionsBuffer[i].dstIndex > conditionsBuffer[j].jccIndex && conditionsBuffer[i].dstIndex < conditionsBuffer[j].dstIndex)
-					{
-						conditionsBuffer[i].requiresJumpInDecomp = 1;
-						break;
-					}
-				}
-			}
-		}
-
-		// checking for ELSEs with same dstIndex
-		if (conditionsBuffer[i].conditionType == ELSE_CT)
-		{
-			for (int j = 0; j < conditionsIndex; j++)
-			{
-				if(j == i)
-				{
-					continue;
-				}
-
-				if(conditionsBuffer[j].conditionType == ELSE_CT)
-				{
-					if (conditionsBuffer[i].dstIndex == conditionsBuffer[j].dstIndex && conditionsBuffer[i].jccIndex < conditionsBuffer[j].jccIndex)
-					{
-						conditionsBuffer[i].dstIndex = conditionsBuffer[j].jccIndex;
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	return conditionsIndex;
 }
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions)

@@ -34,13 +34,10 @@ struct Condition
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
 };
 
-int getAllConditions(struct DecompilationParameters params, struct Condition* conditionsBuffer);
+int getAllConditions(struct DecompilationParameters params, struct Condition* conditions, int conditionsLength);
 
 // this will go through the conditions and combine them into single conditions if applicable
 static void combineConditions(struct Condition* conditions, int numOfConditions);
-
-// set types as if or else if. This function will also find and add elses to the conditions buffer
-static int setConditionTypes(struct Condition* conditions, int numOfConditions, struct Condition* conditionsBuffer);
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
