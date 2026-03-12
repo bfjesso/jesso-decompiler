@@ -1,4 +1,6 @@
 #include "returnStatements.h"
+#include "decompilationUtils.h"
+#include "functions.h"
 #include "expressions.h"
 #include "assignment.h"
 #include "functionCalls.h"

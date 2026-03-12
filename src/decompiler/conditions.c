@@ -1,4 +1,6 @@
 #include "conditions.h"
+#include "decompilationUtils.h"
+#include "returnStatements.h"
 #include "expressions.h"
 #include "assignment.h"
 
@@ -88,10 +90,14 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 					// checking if last condition has an else and add it if so
 					if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
 					{
-						conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
-						conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
-						conditions[numOfConditions].conditionType = ELSE_CT;
-						numOfConditions++;
+						params.startInstructionIndex = conditions[numOfConditions - 1].dstIndex - 1;
+						if (!checkForReturnStatement(params)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
+						{
+							conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
+							conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
+							conditions[numOfConditions].conditionType = ELSE_CT;
+							numOfConditions++;
+						}
 					}
 
 					conditions[numOfConditions].conditionType = IF_CT;
@@ -115,14 +121,18 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	}
 	if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
 	{
-		conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
-		conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
-		conditions[numOfConditions].conditionType = ELSE_CT;
-		
-		numOfConditions++;
-		if (numOfConditions >= conditionsLength)
+		params.startInstructionIndex = conditions[numOfConditions - 1].dstIndex - 1;
+		if (!checkForReturnStatement(params)) 
 		{
-			return 0;
+			conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
+			conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
+			conditions[numOfConditions].conditionType = ELSE_CT;
+
+			numOfConditions++;
+			if (numOfConditions >= conditionsLength)
+			{
+				return 0;
+			}
 		}
 	}
 
