@@ -136,7 +136,28 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 		}
 	}
 
-	combineConditions(conditions, numOfConditions);
+	// combining conditions
+	for (int i = 0; i < numOfConditions - 2; i++)
+	{
+		if (conditions[i].dstIndex == conditions[i + 1].dstIndex)
+		{
+			conditions[i].dstIndex = conditions[i + 1].dstIndex;
+			conditions[i].exitIndex = conditions[i + 1].exitIndex;
+			conditions[i].combinedConditionIndex = i + 1;
+			conditions[i].combinationLogicType = AND_LT;
+			conditions[i + 1].isCombinedByOther = 1;
+			i++;
+		}
+		else if (conditions[i].dstIndex - 1 == conditions[i + 1].jccIndex)
+		{
+			conditions[i].dstIndex = conditions[i + 1].dstIndex;
+			conditions[i].exitIndex = conditions[i + 1].exitIndex;
+			conditions[i].combinedConditionIndex = i + 1;
+			conditions[i].combinationLogicType = OR_LT;
+			conditions[i + 1].isCombinedByOther = 1;
+			i++;
+		}
+	}
 
 	for (int i = 0; i < numOfConditions; i++)
 	{
@@ -179,31 +200,6 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 	}
 
 	return numOfConditions;
-}
-
-static void combineConditions(struct Condition* conditions, int numOfConditions)
-{
-	for (int i = 0; i < numOfConditions - 2; i++)
-	{
-		if (conditions[i].dstIndex == conditions[i + 1].dstIndex)
-		{
-			conditions[i].dstIndex = conditions[i + 1].dstIndex;
-			conditions[i].exitIndex = conditions[i + 1].exitIndex;
-			conditions[i].combinedConditionIndex = i + 1;
-			conditions[i].combinationLogicType = AND_LT;
-			conditions[i + 1].isCombinedByOther = 1;
-			i++;
-		}
-		else if (conditions[i].dstIndex - 1 == conditions[i + 1].jccIndex)
-		{
-			conditions[i].dstIndex = conditions[i + 1].dstIndex;
-			conditions[i].exitIndex = conditions[i + 1].exitIndex;
-			conditions[i].combinedConditionIndex = i + 1;
-			conditions[i].combinationLogicType = OR_LT;
-			conditions[i + 1].isCombinedByOther = 1;
-			i++;
-		}
-	}
 }
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions)

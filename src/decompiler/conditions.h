@@ -36,9 +36,6 @@ struct Condition
 
 int getAllConditions(struct DecompilationParameters params, struct Condition* conditions, int conditionsLength);
 
-// this will go through the conditions and combine them into single conditions if applicable
-static void combineConditions(struct Condition* conditions, int numOfConditions);
-
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
 unsigned char decompileCondition(struct DecompilationParameters params, struct Condition* conditions, int conditionIndex, struct JdcStr* result);
