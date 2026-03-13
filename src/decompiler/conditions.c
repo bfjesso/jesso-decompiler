@@ -47,21 +47,21 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 
 			if (numOfConditions > 0 && dstIndex == conditions[numOfConditions - 1].dstIndex && !stopCombination)
 			{
-				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
-				conditions[numOfConditions - 1].otherJccsLogicType = AND_LT;
+				conditions[numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
+				conditions[numOfConditions - 1].combinedJccsLogicType = AND_LT;
 				combinationCount++;
 
-				conditions[numOfConditions - 1].numOfOtherJccs = combinationCount;
+				conditions[numOfConditions - 1].numOfCombinedJccs = combinationCount;
 			}
 			else if (numOfConditions > 0 && lastDstIndex - 1 == i && !stopCombination)
 			{
-				conditions[numOfConditions - 1].otherJccIndexes[combinationCount] = i;
-				conditions[numOfConditions - 1].otherJccsLogicType = OR_LT;
+				conditions[numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
+				conditions[numOfConditions - 1].combinedJccsLogicType = OR_LT;
 				conditions[numOfConditions - 1].dstIndex = dstIndex;
 				conditions[numOfConditions - 1].exitIndex = exitIndex;
 				combinationCount++;
 
-				conditions[numOfConditions - 1].numOfOtherJccs = combinationCount;
+				conditions[numOfConditions - 1].numOfCombinedJccs = combinationCount;
 			}
 			else
 			{
@@ -225,7 +225,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 	unsigned char invertCondition = conditions[conditionIndex].requiresJumpInDecomp || conditions[conditionIndex].conditionType == DO_WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
-	if (conditions[conditionIndex].otherJccsLogicType == OR_LT)
+	if (conditions[conditionIndex].combinedJccsLogicType == OR_LT)
 	{
 		if (!decompileComparison(params, invertCondition, &conditionExpression))
 		{
@@ -233,16 +233,16 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 			return 0;
 		}
 
-		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
+		for (int i = 0; i < conditions[conditionIndex].numOfCombinedJccs; i++)
 		{
-			unsigned char invertOperator = i == (conditions[conditionIndex].numOfOtherJccs - 1);
+			unsigned char invertOperator = i == (conditions[conditionIndex].numOfCombinedJccs - 1);
 			if (invertCondition)
 			{
 				invertOperator = !invertOperator;
 			}
 
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
+			params.startInstructionIndex = conditions[conditionIndex].combinedJccIndexes[i];
 			if (!decompileComparison(params, invertOperator, &currentConditionExpression))
 			{
 				freeJdcStr(&currentConditionExpression);
@@ -257,16 +257,16 @@ unsigned char decompileCondition(struct DecompilationParameters params, struct C
 	}
 	else
 	{
-		if (!decompileComparison(params, !invertCondition, &conditionExpression)) // this needs to run if otherJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfOtherJccs will be 0 
+		if (!decompileComparison(params, !invertCondition, &conditionExpression)) // this needs to run if combinedJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfCombinedJccs will be 0 
 		{
 			freeJdcStr(&conditionExpression);
 			return 0;
 		}
 
-		for (int i = 0; i < conditions[conditionIndex].numOfOtherJccs; i++)
+		for (int i = 0; i < conditions[conditionIndex].numOfCombinedJccs; i++)
 		{
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = conditions[conditionIndex].otherJccIndexes[i];
+			params.startInstructionIndex = conditions[conditionIndex].combinedJccIndexes[i];
 			if (!decompileComparison(params, !invertCondition, &currentConditionExpression))
 			{
 				freeJdcStr(&conditionExpression);
