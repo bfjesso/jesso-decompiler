@@ -167,7 +167,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
 
-	unsigned char accessedRegArgs[6] = { 0 };
 	struct JdcStr decompiledRegArgs[6] = { 0 };
 
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
@@ -227,7 +226,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 		for(int j = 0; j < numOfPlatformRegArgs; j++)
 		{
-			if (!accessedRegArgs[j])
+			if (!decompiledRegArgs[j].buffer)
 			{
 				int operandNum = 0;
 				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &operandNum, 0))
@@ -242,13 +241,6 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 						for(int k = 0; k < numOfPlatformRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }
 						return 0;
 					}
-
-					accessedRegArgs[j] = 1;
-				}
-
-				if (doesInstructionAccessRegister(currentInstruction, platformRegArgs[j], 0))
-				{
-					accessedRegArgs[j] = 1;
 				}
 			}
 		}
