@@ -62,7 +62,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 			unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			if (instruction->opcode == LEA) 
 			{
-				sprintfJdc(result, 0, "0x%llX", address);
+				if (!getStringFromDataSection(params, address, result))
+				{
+					sprintfJdc(result, 0, "0x%llX", address);
+				}
 			}
 			else 
 			{
@@ -73,7 +76,10 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		{
 			if (instruction->opcode == LEA)
 			{
-				sprintfJdc(result, 0, "0x%llX", operand->memoryAddress.constDisplacement);
+				if (!getStringFromDataSection(params, operand->memoryAddress.constDisplacement, result)) 
+				{
+					sprintfJdc(result, 0, "0x%llX", operand->memoryAddress.constDisplacement);
+				}
 			}
 			else
 			{
