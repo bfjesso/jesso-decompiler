@@ -866,6 +866,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		{
 			if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, value.buffer); }
 			else { sprintfJdc(result, 0, "%s", value.buffer); }
+			return 1;
 		}
 		else
 		{
