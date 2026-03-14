@@ -1,4 +1,5 @@
 #include "dataTypes.h"
+#include "../disassembler/operands.h"
 
 extern const char* primitiveTypeStrs[] =
 {
