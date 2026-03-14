@@ -693,6 +693,8 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		currentOperand = &instruction->operands[numOfOperands];
 	}
 
+	params.startInstructionIndex = ogStartInstructionIndex;
+
 	if (isOpcodeXor(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s = 0", decompiledOperands[0].buffer); }
