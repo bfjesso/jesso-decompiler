@@ -376,7 +376,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					reg = currentInstruction->operands[0].reg;
 				}
 
-				if (reg != NO_REG)
+				if (reg != NO_REG && !isRegisterPointer(reg))
 				{
 					int alreadyFound = 0;
 					for (int k = 0; k < numOfRegs; k++)
