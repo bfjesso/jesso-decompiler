@@ -309,12 +309,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if (currentInstruction->opcode == INT3 || params.allInstructions[i + 1].address == nextSectionStartAddress)
-		{
-			sortFunctionArguments(result);
-			return 1;
-		}
-		else if(currentInstruction->opcode == HLT)
+		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i + 1].address == nextSectionStartAddress)
 		{
 			result->returnType.primitiveType = VOID_TYPE;
 			result->addressOfReturnFunction = 0;
