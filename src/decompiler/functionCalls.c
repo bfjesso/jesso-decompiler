@@ -90,23 +90,17 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
-			unsigned char overwrites = 0;
-			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+			struct JdcStr argStr = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, &argStr)) // this should just get the stack var or arg
 			{
-				params.startInstructionIndex = i;
-
-				struct JdcStr argStr = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[1], callee->stackArgs[stackArgsFound].type, &argStr))
-				{
-					freeJdcStr(&argStr);
-					return 0;
-				}
-
-				sprintfJdc(result, 1, "%s, ", argStr.buffer);
 				freeJdcStr(&argStr);
-
-				stackArgsFound++;
+				return 0;
 			}
+
+			sprintfJdc(result, 1, "%s, ", argStr.buffer);
+			freeJdcStr(&argStr);
+
+			stackArgsFound++;
 		}
 	}
 
