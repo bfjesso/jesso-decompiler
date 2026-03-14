@@ -416,7 +416,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					}
 
 					unsigned char overwrites = 0;
-					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, &overwrites) && !overwrites) || isOpcodeReturn(currentInstruction->opcode))
+					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, &overwrites) && !overwrites) || (isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
 					{
 						struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
 						if (newRegVars)
