@@ -19,6 +19,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
 
+		if (currentInstruction->address == 0x1400012A0) 
+		{
+			int TT = 0;
+		}
+
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
@@ -278,7 +283,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				result->returnType.primitiveType = FLOAT_TYPE;
 				result->addressOfReturnFunction = 0;
 			}
-			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE)
+			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction != 0)
 			{
 				canReturnNothing = 1;
 			}
