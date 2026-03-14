@@ -52,7 +52,8 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{
 		struct JdcStr argStr = initializeJdcStr();
-		if (!decompileRegister(params, callee->regArgs[i].reg, callee->regArgs[i].type, &argStr))
+		enum Register reg = callee->regArgs[i].reg;
+		if (!decompileRegister(params, reg, callee->regArgs[i].type, &argStr))
 		{
 			freeJdcStr(&argStr);
 			return 0;
@@ -172,19 +173,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
 
-	#ifdef _WIN32
-	unsigned char accessedRegArgs[4] = { 0 };
-	const enum Register regArgs[4] = { RCX, RDX, R8, R9 };
-	struct JdcStr decompiledRegArgs[4] = { 0 };
-	const int numOfRegArgs = 4;
-	#endif
-
-	#ifdef linux
 	unsigned char accessedRegArgs[6] = { 0 };
-	const enum Register regArgs[6] = { RDI, RSI, RDX, RCX, R8, R9 };
 	struct JdcStr decompiledRegArgs[6] = { 0 };
-	const int numOfRegArgs = 6;
-	#endif
 
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
@@ -215,7 +205,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			if (!decompileOperand(params, &currentInstruction->operands[0], type, &decompiledStackArgs[numOfStackArgs]))
 			{
 				for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-				for(int j = 0; j < numOfRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+				for(int j = 0; j < numOfPlatformRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 				return 0;
 			}
 
@@ -233,7 +223,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				if (!decompileOperand(params, &currentInstruction->operands[1], type, &decompiledStackArgs[numOfStackArgs]))
 				{
 					for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-					for(int j = 0; j < numOfRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+					for(int j = 0; j < numOfPlatformRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 					return 0;
 				}
 
@@ -241,12 +231,12 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			}
 		}
 
-		for(int j = 0; j < numOfRegArgs; j++)
+		for(int j = 0; j < numOfPlatformRegArgs; j++)
 		{
 			if (!accessedRegArgs[j])
 			{
 				int operandNum = 0;
-				if(doesInstructionModifyRegister(currentInstruction, regArgs[j], &operandNum, 0))
+				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &operandNum, 0))
 				{
 					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
 
@@ -255,14 +245,14 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 					if (!decompileOperand(params, &currentInstruction->operands[operandNum], type, &decompiledRegArgs[j]))
 					{
 						for(int k = 0; k < numOfStackArgs; k++) { freeJdcStr(&decompiledStackArgs[k]); }
-						for(int k = 0; k < numOfRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }
+						for(int k = 0; k < numOfPlatformRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }
 						return 0;
 					}
 
 					accessedRegArgs[j] = 1;
 				}
 
-				if (doesInstructionAccessRegister(currentInstruction, regArgs[j], 0))
+				if (doesInstructionAccessRegister(currentInstruction, platformRegArgs[j], 0))
 				{
 					accessedRegArgs[j] = 1;
 				}
@@ -270,7 +260,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		}
 	}
 
-	for(int i = 0; i < numOfRegArgs; i++)
+	for(int i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		if(decompiledRegArgs[i].buffer)
 		{

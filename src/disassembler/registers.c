@@ -34,6 +34,16 @@ extern const char* registerStrs[] =
 
 extern const int numOfRegisters = 179;
 
+#ifdef _WIN32
+extern const enum Register platformRegArgs[4] = { RCX, RDX, R8, R9 };
+extern const int numOfPlatformRegArgs = 4;
+#endif
+
+#ifdef linux
+extern const enum Register platformRegArgs[6] = { RDI, RSI, RDX, RCX, R8, R9 };
+extern const int numOfPlatformRegArgs = 6;
+#endif
+
 unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 {
 	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)

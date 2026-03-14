@@ -4,7 +4,7 @@
 
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
 {
-	unsigned char initializedRegs[ST0 - RAX] = { 0 }; // index is (i - RAX)
+	unsigned char initializedRegs[6] = { 0 }; // this corresponds with platformRegArgs
 
 	int stackFrameSize = 0;
 
@@ -35,8 +35,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		if (isOpcodeCall(currentInstruction->opcode))
 		{
-			initializedRegs[0] = 1; // AX
-
 			if (result->addressOfFirstFuncCall == 0)
 			{
 				unsigned long long calleeAddress = resolveJmpChain(params, i);
@@ -54,29 +52,132 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 
-			if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
+			if (isOperandStackArg(currentOperand, stackFrameSize))
+			{
+				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
+				{
+					stackOffset -= stackFrameSize;
+				}
+
+				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
+				struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+				if (stackArg)
+				{
+					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+				}
+				else if (localVar)
+				{
+					localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+				}
+				else
+				{
+					doesInstructionModifyOperand(currentInstruction, j, &overwrites);
+					if (!overwrites)
+					{
+						struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
+						if (newStackArgs)
+						{
+							result->stackArgs = newStackArgs;
+						}
+						else
+						{
+							return 0;
+						}
+
+						result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
+						result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+						result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
+						sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
+						result->numOfStackArgs++;
+					}
+					else // treating stack args that are overwritten before being accessed as local vars
+					{
+						struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
+						if (newLocalVars)
+						{
+							result->localVars = newLocalVars;
+						}
+						else
+						{
+							return 0;
+						}
+
+						result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
+						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+						result->localVars[result->numOfLocalVars].name = initializeJdcStr();
+						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
+						result->numOfLocalVars++;
+					}
+				}
+			}
+			else if (isOperandStackVar(currentOperand, stackFrameSize))
+			{
+				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
+				{
+					stackOffset -= stackFrameSize;
+				}
+
+				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
+				struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+				if (stackArg)
+				{
+					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+				}
+				else if (localVar)
+				{
+					localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+				}
+				else
+				{
+					struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
+					if (newLocalVars)
+					{
+						result->localVars = newLocalVars;
+					}
+					else
+					{
+						return 0;
+					}
+
+					result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
+					result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
+					result->localVars[result->numOfLocalVars].name = initializeJdcStr();
+
+					if (stackOffset > 0)
+					{
+						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
+					}
+					else
+					{
+						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", -stackOffset);
+					}
+
+					result->numOfLocalVars++;
+				}
+			}
+			else if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
 			{
 				if (isRegisterPointer(currentOperand->reg)) { continue; }
 				
-				for(int k = RAX; k < ST0; k++)
+				for(int k = 0; k < numOfPlatformRegArgs; k++)
 				{
-					if(k == RBP || k == RSP || k == RIP) { continue; }
-
-					if (compareRegisters(currentOperand->reg, k))
+					if (compareRegisters(currentOperand->reg, platformRegArgs[k]))
 					{
-						struct RegisterVariable* regArg = getRegArgByReg(result, k);
+						struct RegisterVariable* regArg = getRegArgByReg(result, platformRegArgs[k]);
 						if (regArg) 
 						{
 							regArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 						}
-						else if (doesInstructionModifyRegister(currentInstruction, k, 0, &overwrites) && overwrites)
+						else if (doesInstructionModifyRegister(currentInstruction, platformRegArgs[k], 0, &overwrites) && overwrites)
 						{
 							if (!isAfterJmp) 
 							{
-								initializedRegs[k - RAX] = 1;
+								initializedRegs[k] = 1;
 							}
 						}
-						else if (!initializedRegs[k - RAX])
+						else if (!initializedRegs[k])
 						{
 							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
 							if (newRegArgs) 
@@ -95,7 +196,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							result->numOfRegArgs++;
 
 							result->callingConvention = __FASTCALL;
-							initializedRegs[k - RAX] = 1;
+							initializedRegs[k] = 1;
 						}
 
 						break;
@@ -107,120 +208,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				// maybe memoryAddress.regDisplacement should be checked too ?
 				if (currentOperand->memoryAddress.reg == NO_REG || compareRegisters(currentOperand->memoryAddress.reg, IP)) { continue; }
 
-				for (int k = RAX; k < ST0; k++)
+				for (int k = 0; k < numOfPlatformRegArgs; k++)
 				{
-					if (k == RIP) { continue; }
-					
-					if (compareRegisters(currentOperand->memoryAddress.reg, k))
+					if (compareRegisters(currentOperand->memoryAddress.reg, platformRegArgs[k]))
 					{
-						if (isOperandStackArg(currentOperand, stackFrameSize))
-						{
-							int stackOffset = currentOperand->memoryAddress.constDisplacement;
-							if (k == RSP) 
-							{ 
-								stackOffset -= stackFrameSize; 
-							
-							}
-
-							struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
-							if (stackArg) 
-							{
-								stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-							}
-							else if (localVar) 
-							{
-								localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-							}
-							else
-							{
-								doesInstructionModifyOperand(currentInstruction, j, &overwrites);
-								if (!overwrites) 
-								{
-									struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
-									if (newStackArgs)
-									{
-										result->stackArgs = newStackArgs;
-									}
-									else
-									{
-										return 0;
-									}
-
-									result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
-									result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-									result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
-									sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
-									result->numOfStackArgs++;
-								}
-								else // treating stack args that are overwritten before being accessed as local vars
-								{
-									struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
-									if (newLocalVars)
-									{
-										result->localVars = newLocalVars;
-									}
-									else
-									{
-										return 0;
-									}
-
-									result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-									result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-									result->localVars[result->numOfLocalVars].name = initializeJdcStr();
-									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
-									result->numOfLocalVars++;
-								}
-							}
-						}
-						else if (isOperandStackVar(currentOperand, stackFrameSize))
-						{
-							int stackOffset = currentOperand->memoryAddress.constDisplacement;
-							if (k == RSP)
-							{
-								stackOffset -= stackFrameSize;
-
-							}
-
-							struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-							struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
-							if (stackArg)
-							{
-								stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-							}
-							else if (localVar)
-							{
-								localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-							}
-							else
-							{
-								struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
-								if (newLocalVars)
-								{
-									result->localVars = newLocalVars;
-								}
-								else
-								{
-									return 0;
-								}
-
-								result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-								result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-								result->localVars[result->numOfLocalVars].name = initializeJdcStr();
-
-								if (stackOffset > 0)
-								{
-									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
-								}
-								else
-								{
-									sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", -stackOffset);
-								}
-
-								result->numOfLocalVars++;
-							}
-						}
-						else if (!initializedRegs[k - RAX] && k != RBP && k != RSP)
+						if (!initializedRegs[k])
 						{
 							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
 							if (newRegArgs)
@@ -239,7 +231,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							result->numOfRegArgs++;
 
 							result->callingConvention = __FASTCALL;
-							initializedRegs[k - RAX] = 1;
+							initializedRegs[k] = 1;
 						}
 
 						break;
