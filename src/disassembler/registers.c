@@ -14,6 +14,8 @@ extern const int numOfSegments = 6;
 
 extern const char* registerStrs[] =
 {
+	"NO REG",
+	
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
 	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
 	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", "IP",

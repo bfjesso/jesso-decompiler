@@ -332,7 +332,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	{
 		if (!conditions[i].requiresJumpInDecomp && !conditions[i].isCombinedByOther)
 		{
-			struct RegisterVariable modifiedRegs[ST0 - RAX];
+			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
 			
 			for (int j = conditions[i].jccIndex; j < conditions[i].dstIndex; j++) 
@@ -454,10 +454,12 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 		{
-			int alreadyFound = 0;
+			enum Register reg = currentInstruction->operands[0].reg;
+			
+			unsigned char alreadyFound = 0;
 			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
 			{
-				if (compareRegisters(currentInstruction->operands[0].reg, params.currentFunc->regVars[j].reg))
+				if (compareRegisters(reg, params.currentFunc->regVars[j].reg))
 				{
 					params.currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
@@ -470,22 +472,19 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			}
 
 			unsigned char dependsOnRegVar = 0;
-			if (currentInstruction->operands[1].type == REGISTER)
+			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
 			{
-				for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+				if (currentInstruction->operands[1].type == REGISTER)
 				{
-					if (params.currentFunc->regVars[j].reg == currentInstruction->operands[1].reg)
+					if (compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].reg))
 					{
 						dependsOnRegVar = 1;
 						break;
 					}
 				}
-			}
-			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
-			{
-				for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+				else if (currentInstruction->operands[1].type == MEM_ADDRESS)
 				{
-					if (params.currentFunc->regVars[j].reg == currentInstruction->operands[1].memoryAddress.reg || params.currentFunc->regVars[j].reg == currentInstruction->operands[1].memoryAddress.regDisplacement)
+					if (compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.reg) || compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.regDisplacement))
 					{
 						dependsOnRegVar = 1;
 						break;
@@ -495,10 +494,20 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 			if (dependsOnRegVar)
 			{
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = currentInstruction->operands[0].reg;
+				struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
+				if (newRegVars)
+				{
+					params.currentFunc->regVars = newRegVars;
+				}
+				else
+				{
+					return 0;
+				}
+				
+				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = reg;
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
 				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
-				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[currentInstruction->operands[0].reg]);
+				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
 				params.currentFunc->numOfRegVars++;
 			}
 		}
@@ -520,11 +529,7 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	struct JdcStr typeStr = initializeJdcStr();
 
 	varTypeToStr(function->returnType, &typeStr);
-	if (!sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer))
-	{
-		freeJdcStr(&typeStr);
-		return 0;
-	}
+	sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
@@ -532,19 +537,11 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
-			if (!sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->regArgs[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->regArgs[i].name.buffer);
 		}
 		else 
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer);
 		}
 	}
 
@@ -554,19 +551,11 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 		
 		if (i == function->numOfStackArgs - 1)
 		{
-			if (!sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->stackArgs[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->stackArgs[i].name.buffer);
 		}
 		else
 		{
-			if (!sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer);
 		}
 	}
 
@@ -581,11 +570,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, unsigne
 	for (int i = 0; i < function->numOfLocalVars; i++)
 	{
 		varTypeToStr(function->localVars[i].type, &typeStr);
-		if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->localVars[i].name.buffer))
-		{
-			freeJdcStr(&typeStr);
-			return 0;
-		}
+		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->localVars[i].name.buffer);
 	}
 
 	for (int i = 0; i < function->numOfRegVars; i++)
@@ -604,19 +589,11 @@ static unsigned char declareAllLocalVariables(struct Function* function, unsigne
 
 		if (argIndex != -1)
 		{
-			if (!sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer);
 		}
 		else 
 		{
-			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer);
 		}
 	}
 
@@ -625,11 +602,7 @@ static unsigned char declareAllLocalVariables(struct Function* function, unsigne
 		for (int i = 0; i < function->numOfReturnedVars; i++)
 		{
 			varTypeToStr(function->returnedVars[i].type, &typeStr);
-			if (!sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer))
-			{
-				freeJdcStr(&typeStr);
-				return 0;
-			}
+			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer);
 		}
 	}
 

@@ -671,9 +671,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 
 	struct JdcStr decompiledOperands[4] = { 0 };
 	int numOfOperands = 0;
-	struct Operand* currentOperand = &instruction->operands[numOfOperands];
-	while (currentOperand->type != NO_OPERAND)
+	while(numOfOperands < 4)
 	{
+		struct Operand* currentOperand = &instruction->operands[numOfOperands];
+		if (currentOperand->type == NO_OPERAND) 
+		{
+			break;
+		}
+
 		if (currentOperand->type == REGISTER)
 		{
 			params.startInstructionIndex = ogStartInstructionIndex - 1; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
@@ -696,7 +701,6 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		}
 
 		numOfOperands++;
-		currentOperand = &instruction->operands[numOfOperands];
 	}
 
 	params.startInstructionIndex = ogStartInstructionIndex;

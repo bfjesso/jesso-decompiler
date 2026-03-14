@@ -2,27 +2,31 @@
 
 unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 {
-	int len = (int)strlen(jdcStr->buffer);
-
-	if (len >= jdcStr->bufferSize - 2) 
+	if (jdcStr && jdcStr->buffer && jdcStr->bufferSize >= 3)
 	{
-		if (resizeJdcStr(jdcStr, len + 3))
+		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
+		int len = (int)strlen(jdcStr->buffer);
+
+		if (len >= jdcStr->bufferSize - 2)
 		{
-			return wrapJdcStrInParentheses(jdcStr);
+			if (!resizeJdcStr(jdcStr, len + 3))
+			{
+				return 0;
+			}
 		}
 
-		return 0;
-	}
+		for (int i = len; i > 0; i--)
+		{
+			jdcStr->buffer[i] = jdcStr->buffer[i - 1];
+		}
 
-	for (int i = len; i > 0; i--)
-	{
-		jdcStr->buffer[i] = jdcStr->buffer[i - 1];
+		jdcStr->buffer[0] = '(';
+		jdcStr->buffer[len + 1] = ')';
+		jdcStr->buffer[len + 2] = 0;
+		return 1;
 	}
-
-	jdcStr->buffer[0] = '(';
-	jdcStr->buffer[len + 1] = ')';
-	jdcStr->buffer[len + 2] = 0;
-	return 1;
+	
+	return 0;
 }
 
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
@@ -44,12 +48,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 
 		memset(jdcStr->buffer, 0, jdcStr->bufferSize);
 
-		if (!strcpy(jdcStr->buffer, src))
-		{
-			return 0;
-		}
-
-		return 1;
+		return strcpy(jdcStr->buffer, src) == jdcStr->buffer;
 	}
 
 	return 0;
@@ -59,6 +58,7 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
+		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
 		int newLen = strlen(src) + strlen(jdcStr->buffer);
 		if (newLen >= jdcStr->bufferSize)
 		{
@@ -72,12 +72,7 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 			}
 		}
 
-		if (!strcat(jdcStr->buffer, src))
-		{
-			return 0;
-		}
-
-		return 1;
+		return strcat(jdcStr->buffer, src) == jdcStr->buffer;
 	}
 
 	return 0;
@@ -100,6 +95,7 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 		va_copy(copy, args);
 		if (cat)
 		{
+			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
 			int ogLen = strlen(jdcStr->buffer);
 			int result = vsnprintf(jdcStr->buffer + ogLen, jdcStr->bufferSize - ogLen, format, args);
 			if (result < 0)
@@ -120,9 +116,6 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 				va_end(copy);
 				return 0;
 			}
-
-			va_end(copy);
-			return 1;
 		}
 		else
 		{
@@ -147,9 +140,6 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 				va_end(copy);
 				return 0;
 			}
-
-			va_end(copy);
-			return 1;
 		}
 
 		va_end(copy);
@@ -169,9 +159,8 @@ struct JdcStr copyJdcStr(struct JdcStr* strToCpy)
 		if (result.buffer)
 		{
 			result.bufferSize = strToCpy->bufferSize;
+			strcpyJdc(&result, strToCpy->buffer);
 		}
-
-		strcpyJdc(&result, strToCpy->buffer);
 	}
 
 	return result;
@@ -179,27 +168,22 @@ struct JdcStr copyJdcStr(struct JdcStr* strToCpy)
 
 struct JdcStr initializeJdcStr()
 {
-	struct JdcStr result = { 0 };
-
-	result.buffer = (char*)calloc(10, sizeof(char));
-	if (result.buffer)
-	{
-		result.bufferSize = 10;
-	}
-
-	return result;
+	return initializeJdcStrWithSize(25);
 }
 
 struct JdcStr initializeJdcStrWithSize(int size)
 {
 	struct JdcStr result = { 0 };
 
-	result.buffer = (char*)calloc(size, sizeof(char));
-	if (result.buffer)
+	if (size > 0) 
 	{
-		result.bufferSize = size;
+		result.buffer = (char*)calloc(size, sizeof(char));
+		if (result.buffer)
+		{
+			result.bufferSize = size;
+		}
 	}
-
+	
 	return result;
 }
 
@@ -237,7 +221,7 @@ unsigned char freeJdcStr(struct JdcStr* jdcStr)
 
 static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 {
-	if (jdcStr && jdcStr->buffer)
+	if (jdcStr && jdcStr->buffer && newSize > 0)
 	{
 		char* newBuffer = (char*)realloc(jdcStr->buffer, newSize);
 		if (newBuffer)
@@ -245,12 +229,11 @@ static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 			jdcStr->buffer = newBuffer;
 			jdcStr->bufferSize = newSize;
 
+			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
 			int len = strlen(jdcStr->buffer);
 			memset(jdcStr->buffer + len, 0, jdcStr->bufferSize - len);
 			return 1;
 		}
-
-		return 0;
 	}
 
 	return 0;

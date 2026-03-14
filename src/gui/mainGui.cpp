@@ -543,7 +543,7 @@ void MainGui::UpdateFunctionsGrid()
 			functionsGrid->SetCellValue(i, 1, wxString(callingConventionStrs[functions[i].callingConvention]));
 		}
 
-		functionsGrid->SetCellValue(i, 2, functions[i].name.buffer);
+		functionsGrid->SetCellValue(i, 2, wxString(functions[i].name.buffer));
 		functionsGrid->SetCellValue(i, 3, std::to_string(functions[i].numOfInstructions));
 	}
 
@@ -1021,15 +1021,9 @@ void MainGui::ApplyAsmHighlighting()
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, const char* string, ColorsMenu::DecompilationColor color, unsigned char forceColor)
+void MainGui::ColorAllStrs(wxString text, const char* str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
-	if(!string)
-	{
-		return;
-	}
-
-	wxString str = string;
-	if (str.IsEmpty()) 
+	if(!str)
 	{
 		return;
 	}
@@ -1041,12 +1035,12 @@ void MainGui::ColorAllStrs(wxString text, const char* string, ColorsMenu::Decomp
 		pos = text.find(str, start);
 		if (pos != wxNOT_FOUND)
 		{
-			int end = pos + str.length();
+			int end = pos + strlen(str);
 
 			if (forceColor || decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				decompilationTextCtrl->StartStyling(pos);
-				decompilationTextCtrl->SetStyling(str.length(), color);
+				decompilationTextCtrl->SetStyling(strlen(str), color);
 			}
 
 			start = end;
