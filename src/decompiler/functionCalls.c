@@ -191,6 +191,11 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 		if (currentInstruction->opcode == PUSH)
 		{
+			if (currentInstruction->operands[0].type == REGISTER && isRegisterPointer(currentInstruction->operands[0].reg)) 
+			{
+				continue;
+			}
+			
 			struct VarType type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
 			params.startInstructionIndex = i;
