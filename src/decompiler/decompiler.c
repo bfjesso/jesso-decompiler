@@ -47,7 +47,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 	strcatJdc(result, "{\n");
 
-	if (params.currentFunc->numOfLocalVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
+	if (params.currentFunc->numOfStackVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
 	{
 		if (!declareAllLocalVariables(params.currentFunc, params.axRegVarIndex == -1, result))
 		{
@@ -518,10 +518,10 @@ static unsigned char declareAllLocalVariables(struct Function* function, unsigne
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	
-	for (int i = 0; i < function->numOfLocalVars; i++)
+	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		varTypeToStr(function->localVars[i].type, &typeStr);
-		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->localVars[i].name.buffer);
+		varTypeToStr(function->stackVars[i].type, &typeStr);
+		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->stackVars[i].name.buffer);
 	}
 
 	for (int i = 0; i < function->numOfRegVars; i++)

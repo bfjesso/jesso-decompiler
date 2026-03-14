@@ -38,7 +38,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				stackOffset -= getStackFrameSizeAtInstruction(params.currentFunc, params.startInstructionIndex);
 			}
 			
-			struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, stackOffset);
+			struct StackVariable* localVar = getStackVarByOffset(params.currentFunc, stackOffset);
 			if (localVar)
 			{
 				strcpyJdc(result, localVar->name.buffer);

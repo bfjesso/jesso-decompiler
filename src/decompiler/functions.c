@@ -66,7 +66,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-				struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+				struct StackVariable* localVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
 					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
@@ -85,7 +85,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							return 0;
 						}
 					}
-					else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as local vars
+					else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
 					{
 						return 0;
 					}
@@ -100,7 +100,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-				struct StackVariable* localVar = getLocalVarByOffset(result, stackOffset);
+				struct StackVariable* localVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
 					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
@@ -401,9 +401,9 @@ void freeFunction(struct Function* function)
 	{
 		freeJdcStr(&function->stackArgs[i].name);
 	}
-	for (int i = 0; i < function->numOfLocalVars; i++)
+	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		freeJdcStr(&function->localVars[i].name);
+		freeJdcStr(&function->stackVars[i].name);
 	}
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
@@ -412,7 +412,7 @@ void freeFunction(struct Function* function)
 
 	free(function->regArgs);
 	free(function->stackArgs);
-	free(function->localVars);
+	free(function->stackVars);
 	free(function->returnedVars);
 }
 
@@ -486,13 +486,13 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 	return 0;
 }
 
-struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset)
+struct StackVariable* getStackVarByOffset(struct Function* function, int stackOffset)
 {
-	for (int i = 0; i < function->numOfLocalVars; i++)
+	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		if (function->localVars[i].stackOffset == stackOffset)
+		if (function->stackVars[i].stackOffset == stackOffset)
 		{
-			return &function->localVars[i];
+			return &function->stackVars[i];
 		}
 	}
 
@@ -561,30 +561,30 @@ unsigned char addStackArg(struct Function* function, struct VarType type, int st
 
 unsigned char addStackVar(struct Function* function, struct VarType type, int stackOffset)
 {
-	struct StackVariable* newLocalVars = (struct StackVariable*)realloc(function->localVars, sizeof(struct StackVariable) * (function->numOfLocalVars + 1));
+	struct StackVariable* newLocalVars = (struct StackVariable*)realloc(function->stackVars, sizeof(struct StackVariable) * (function->numOfStackVars + 1));
 	if (newLocalVars)
 	{
-		function->localVars = newLocalVars;
+		function->stackVars = newLocalVars;
 	}
 	else
 	{
 		return 0;
 	}
 
-	function->localVars[function->numOfLocalVars].stackOffset = stackOffset;
-	function->localVars[function->numOfLocalVars].type = type;
-	function->localVars[function->numOfLocalVars].name = initializeJdcStr();
+	function->stackVars[function->numOfStackVars].stackOffset = stackOffset;
+	function->stackVars[function->numOfStackVars].type = type;
+	function->stackVars[function->numOfStackVars].name = initializeJdcStr();
 
 	if (stackOffset > 0)
 	{
-		sprintfJdc(&(function->localVars[function->numOfLocalVars].name), 0, "var%X", stackOffset);
+		sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "var%X", stackOffset);
 	}
 	else
 	{
-		sprintfJdc(&(function->localVars[function->numOfLocalVars].name), 0, "var%X", -stackOffset);
+		sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "var%X", -stackOffset);
 	}
 
-	function->numOfLocalVars++;
+	function->numOfStackVars++;
 
 	return 1;
 }

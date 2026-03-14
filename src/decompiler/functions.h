@@ -27,7 +27,7 @@ int getStackFrameSizeAtInstruction(struct Function* function, int instructionInd
 
 struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
 
-struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset);
+struct StackVariable* getStackVarByOffset(struct Function* function, int stackOffset);
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 

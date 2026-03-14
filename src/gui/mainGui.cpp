@@ -788,10 +788,10 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	decompilationTextCtrl->StartStyling(0);
 	decompilationTextCtrl->SetStyling(text.length(), ColorsMenu::DecompilationColor::OPERATOR_COLOR);
 
-	// local vars
-	for (int i = 0; i < function->numOfLocalVars; i++) 
+	// stack vars
+	for (int i = 0; i < function->numOfStackVars; i++) 
 	{
-		ColorAllStrs(text, function->localVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->stackVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// reg vars
@@ -1110,14 +1110,14 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		}
 	}
 
-	if (function->numOfLocalVars > 0)
+	if (function->numOfStackVars > 0)
 	{
 		wxStaticText* localVarLabel = new wxStaticText(this, wxID_ANY, "Local Var Names");
 		localVarLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(localVarLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfLocalVars; i++)
+		for (int i = 0; i < function->numOfStackVars; i++)
 		{
-			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->localVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
+			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
 			localVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
 			localVarTextCtrl->SetOwnForegroundColour(textColor);
 
@@ -1172,9 +1172,9 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 		strcpyJdc(&currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
-	for (int i = 0; i < currentFunction->numOfLocalVars; i++)
+	for (int i = 0; i < currentFunction->numOfStackVars; i++)
 	{
-		strcpyJdc(&currentFunction->localVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfReturnedVars; i++)

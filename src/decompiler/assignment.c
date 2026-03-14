@@ -31,7 +31,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	struct StackVariable* localVar = getLocalVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
+	struct StackVariable* localVar = getStackVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
 	struct VarType type = { 0 };
 	if (!localVar)
 	{

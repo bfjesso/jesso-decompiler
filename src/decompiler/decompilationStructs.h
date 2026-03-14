@@ -59,8 +59,8 @@ struct Function
 
 	unsigned char hasGottenLocalVars;
 
-	struct StackVariable* localVars;
-	unsigned char numOfLocalVars;
+	struct StackVariable* stackVars;
+	unsigned char numOfStackVars;
 	struct ReturnedVariable* returnedVars;
 	unsigned char numOfReturnedVars;
 	struct RegisterVariable* regVars;
