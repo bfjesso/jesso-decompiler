@@ -272,24 +272,9 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				{
 					continue;
 				}
-				else
+				else if(!addReturnedVar(params.currentFunc, params.functions[calleeIndex].returnType, callNum, calleeAddress, params.functions[calleeIndex].name.buffer))
 				{
-					struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
-					if (newReturnedVars)
-					{
-						params.currentFunc->returnedVars = newReturnedVars;
-					}
-					else
-					{
-						return 0;
-					}
-					
-					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = params.functions[calleeIndex].returnType;
-					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
-					sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.functions[calleeIndex].name.buffer, callNum);
-					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
-					params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
-					params.currentFunc->numOfReturnedVars++;
+					return 0;
 				}
 			}
 			else
@@ -298,23 +283,11 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				{
 					if (params.imports[j].address == calleeAddress)
 					{
-						struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(params.currentFunc->returnedVars, sizeof(struct ReturnedVariable) * (params.currentFunc->numOfReturnedVars + 1));
-						if (newReturnedVars)
-						{
-							params.currentFunc->returnedVars = newReturnedVars;
-						}
-						else
+						if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, params.imports[j].name.buffer)) 
 						{
 							return 0;
 						}
-
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name = initializeJdcStr();
-						sprintfJdc(&(params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].name), 0, "%sRetVal%d", params.imports[j].name.buffer, callNum);
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].type = returnType;
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callAddr = calleeAddress;
-						params.currentFunc->returnedVars[params.currentFunc->numOfReturnedVars].callNum = callNum;
-						params.currentFunc->numOfReturnedVars++;
-
+				
 						break;
 					}
 				}
@@ -418,21 +391,10 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					unsigned char overwrites = 0;
 					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, &overwrites) && !overwrites) || (isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
 					{
-						struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
-						if (newRegVars)
-						{
-							params.currentFunc->regVars = newRegVars;
-						}
-						else
+						if (!addRegVar(params.currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
 						{
 							return 0;
 						}
-
-						params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = modifiedRegs[k].reg;
-						params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = modifiedRegs[k].type;
-						params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
-						sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[modifiedRegs[k].reg]);
-						params.currentFunc->numOfRegVars++;
 
 						modifiedRegs[k].reg = NO_REG; // so it isnt checked again
 						break;
@@ -494,21 +456,10 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 
 			if (dependsOnRegVar)
 			{
-				struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params.currentFunc->regVars, sizeof(struct RegisterVariable) * (params.currentFunc->numOfRegVars + 1));
-				if (newRegVars)
-				{
-					params.currentFunc->regVars = newRegVars;
-				}
-				else
+				if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 				{
 					return 0;
 				}
-				
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].reg = reg;
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-				params.currentFunc->regVars[params.currentFunc->numOfRegVars].name = initializeJdcStr();
-				sprintfJdc(&(params.currentFunc->regVars[params.currentFunc->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
-				params.currentFunc->numOfRegVars++;
 			}
 		}
 	}

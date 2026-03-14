@@ -80,39 +80,14 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 					doesInstructionModifyOperand(currentInstruction, j, &overwrites);
 					if (!overwrites)
 					{
-						struct StackVariable* newStackArgs = (struct StackVariable*)realloc(result->stackArgs, sizeof(struct StackVariable) * (result->numOfStackArgs + 1));
-						if (newStackArgs)
-						{
-							result->stackArgs = newStackArgs;
-						}
-						else
+						if (!addStackArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) 
 						{
 							return 0;
 						}
-
-						result->stackArgs[result->numOfStackArgs].stackOffset = stackOffset;
-						result->stackArgs[result->numOfStackArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						result->stackArgs[result->numOfStackArgs].name = initializeJdcStr();
-						sprintfJdc(&(result->stackArgs[result->numOfStackArgs].name), 0, "arg%X", stackOffset);
-						result->numOfStackArgs++;
 					}
-					else // treating stack args that are overwritten before being accessed as local vars
+					else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as local vars
 					{
-						struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
-						if (newLocalVars)
-						{
-							result->localVars = newLocalVars;
-						}
-						else
-						{
-							return 0;
-						}
-
-						result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-						result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-						result->localVars[result->numOfLocalVars].name = initializeJdcStr();
-						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
-						result->numOfLocalVars++;
+						return 0;
 					}
 				}
 			}
@@ -134,32 +109,9 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				{
 					localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
-				else
+				else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset))
 				{
-					struct StackVariable* newLocalVars = (struct StackVariable*)realloc(result->localVars, sizeof(struct StackVariable) * (result->numOfLocalVars + 1));
-					if (newLocalVars)
-					{
-						result->localVars = newLocalVars;
-					}
-					else
-					{
-						return 0;
-					}
-
-					result->localVars[result->numOfLocalVars].stackOffset = stackOffset;
-					result->localVars[result->numOfLocalVars].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-					result->localVars[result->numOfLocalVars].name = initializeJdcStr();
-
-					if (stackOffset > 0)
-					{
-						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", stackOffset);
-					}
-					else
-					{
-						sprintfJdc(&(result->localVars[result->numOfLocalVars].name), 0, "var%X", -stackOffset);
-					}
-
-					result->numOfLocalVars++;
+					return 0;
 				}
 			}
 			else if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
@@ -184,21 +136,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 						}
 						else if (!initializedRegs[k])
 						{
-							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
-							if (newRegArgs) 
-							{
-								result->regArgs = newRegArgs;
-							}
-							else 
+							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->reg)) 
 							{
 								return 0;
 							}
-
-							result->regArgs[result->numOfRegArgs].reg = currentOperand->reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
-							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->reg]);
-							result->numOfRegArgs++;
 
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k] = 1;
@@ -219,21 +160,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 					{
 						if (!initializedRegs[k])
 						{
-							struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(result->regArgs, sizeof(struct RegisterVariable) * (result->numOfRegArgs + 1));
-							if (newRegArgs)
-							{
-								result->regArgs = newRegArgs;
-							}
-							else
+							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->memoryAddress.reg))
 							{
 								return 0;
 							}
-
-							result->regArgs[result->numOfRegArgs].reg = currentOperand->memoryAddress.reg;
-							result->regArgs[result->numOfRegArgs].type = getTypeOfOperand(currentInstruction->opcode, currentOperand);
-							result->regArgs[result->numOfRegArgs].name = initializeJdcStr();
-							sprintfJdc(&(result->regArgs[result->numOfRegArgs].name), 0, "arg%s", registerStrs[currentOperand->memoryAddress.reg]);
-							result->numOfRegArgs++;
 
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k] = 1;
@@ -436,20 +366,10 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 						}
 						if (alreadyFound) { continue; }
 
-						struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(currentFunc->regArgs, sizeof(struct RegisterVariable) * (currentFunc->numOfRegArgs + 1));
-						if (newRegArgs)
-						{
-							currentFunc->regArgs = newRegArgs;
-						}
-						else
+						if (!addRegArg(currentFunc, callee->regArgs[k].type, callee->regArgs[k].reg)) 
 						{
 							return 0;
 						}
-
-						currentFunc->regArgs[currentFunc->numOfRegArgs].reg = callee->regArgs[k].reg;
-						currentFunc->regArgs[currentFunc->numOfRegArgs].type = callee->regArgs[k].type;
-						currentFunc->regArgs[currentFunc->numOfRegArgs].name = copyJdcStr(&callee->regArgs[k].name);
-						currentFunc->numOfRegArgs++;
 					}
 
 					numFixed++;
@@ -553,6 +473,19 @@ int findFunctionByAddress(struct Function* functions, int low, int high, unsigne
 	return -1;
 }
 
+struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset)
+{
+	for (int i = 0; i < function->numOfStackArgs; i++)
+	{
+		if (function->stackArgs[i].stackOffset == stackOffset)
+		{
+			return &function->stackArgs[i];
+		}
+	}
+
+	return 0;
+}
+
 struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOffset)
 {
 	for (int i = 0; i < function->numOfLocalVars; i++)
@@ -560,19 +493,6 @@ struct StackVariable* getLocalVarByOffset(struct Function* function, int stackOf
 		if (function->localVars[i].stackOffset == stackOffset)
 		{
 			return &function->localVars[i];
-		}
-	}
-
-	return 0;
-}
-
-struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset)
-{
-	for (int i = 0; i < function->numOfStackArgs; i++) 
-	{
-		if (function->stackArgs[i].stackOffset == stackOffset) 
-		{
-			return &function->stackArgs[i];
 		}
 	}
 
@@ -616,6 +536,121 @@ struct FuncReturnVariable* findReturnedVar(struct Function* function, char callN
 	}
 
 	return 0;
+}
+
+unsigned char addStackArg(struct Function* function, struct VarType type, int stackOffset) 
+{
+	struct StackVariable* newStackArgs = (struct StackVariable*)realloc(function->stackArgs, sizeof(struct StackVariable) * (function->numOfStackArgs + 1));
+	if (newStackArgs)
+	{
+		function->stackArgs = newStackArgs;
+	}
+	else
+	{
+		return 0;
+	}
+
+	function->stackArgs[function->numOfStackArgs].stackOffset = stackOffset;
+	function->stackArgs[function->numOfStackArgs].type = type;
+	function->stackArgs[function->numOfStackArgs].name = initializeJdcStr();
+	sprintfJdc(&(function->stackArgs[function->numOfStackArgs].name), 0, "arg%X", stackOffset);
+	function->numOfStackArgs++;
+
+	return 1;
+}
+
+unsigned char addStackVar(struct Function* function, struct VarType type, int stackOffset)
+{
+	struct StackVariable* newLocalVars = (struct StackVariable*)realloc(function->localVars, sizeof(struct StackVariable) * (function->numOfLocalVars + 1));
+	if (newLocalVars)
+	{
+		function->localVars = newLocalVars;
+	}
+	else
+	{
+		return 0;
+	}
+
+	function->localVars[function->numOfLocalVars].stackOffset = stackOffset;
+	function->localVars[function->numOfLocalVars].type = type;
+	function->localVars[function->numOfLocalVars].name = initializeJdcStr();
+
+	if (stackOffset > 0)
+	{
+		sprintfJdc(&(function->localVars[function->numOfLocalVars].name), 0, "var%X", stackOffset);
+	}
+	else
+	{
+		sprintfJdc(&(function->localVars[function->numOfLocalVars].name), 0, "var%X", -stackOffset);
+	}
+
+	function->numOfLocalVars++;
+
+	return 1;
+}
+
+unsigned char addRegArg(struct Function* function, struct VarType type, enum Register reg) 
+{
+	struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(function->regArgs, sizeof(struct RegisterVariable) * (function->numOfRegArgs + 1));
+	if (newRegArgs)
+	{
+		function->regArgs = newRegArgs;
+	}
+	else
+	{
+		return 0;
+	}
+
+	function->regArgs[function->numOfRegArgs].reg = reg;
+	function->regArgs[function->numOfRegArgs].type = type;
+	function->regArgs[function->numOfRegArgs].name = initializeJdcStr();
+	sprintfJdc(&(function->regArgs[function->numOfRegArgs].name), 0, "arg%s", registerStrs[reg]);
+	function->numOfRegArgs++;
+
+	return 1;
+}
+
+unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg) 
+{
+	struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(function->regVars, sizeof(struct RegisterVariable) * (function->numOfRegVars + 1));
+	if (newRegVars)
+	{
+		function->regVars = newRegVars;
+	}
+	else
+	{
+		return 0;
+	}
+
+	function->regVars[function->numOfRegVars].reg = reg;
+	function->regVars[function->numOfRegVars].type = type;
+	function->regVars[function->numOfRegVars].name = initializeJdcStr();
+	sprintfJdc(&(function->regVars[function->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
+	function->numOfRegVars++;
+
+	return 1;
+}
+
+unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, const char* calleeName) 
+{
+	struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(function->returnedVars, sizeof(struct ReturnedVariable) * (function->numOfReturnedVars + 1));
+	if (newReturnedVars)
+	{
+		function->returnedVars = newReturnedVars;
+	}
+	else
+	{
+		return 0;
+	}
+
+	function->returnedVars[function->numOfReturnedVars].type = type;
+	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
+	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
+	function->returnedVars[function->numOfReturnedVars].callAddr = callAddr;
+	function->returnedVars[function->numOfReturnedVars].callNum = callNum;
+	function->numOfReturnedVars++;
+
+	return 1;
 }
 
 static void sortFunctionArguments(struct Function* function) 
