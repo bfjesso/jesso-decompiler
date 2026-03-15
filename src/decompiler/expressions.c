@@ -394,7 +394,9 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 		return strcpyJdc(result, regVar->name.buffer);
 	}
 	
-	struct JdcStr expressions[5] = { 0 };
+	struct JdcStr* expressions = (struct JdcStr*)calloc(5, sizeof(struct JdcStr));
+	int expressionsBufferSize = 5;
+
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
@@ -455,6 +457,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 				{
 					freeJdcStr(&expressions[j]);
 				}
+				free(expressions);
 				return 0;
 			}
 		}
@@ -477,7 +480,6 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					}
 					expressionIndex++;
 					finished = 1;
-					break;
 				}
 			}
 			else
@@ -497,7 +499,6 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					}
 					expressionIndex++;
 					finished = 1;
-					break;
 				}
 				else
 				{
@@ -505,8 +506,29 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					{
 						freeJdcStr(&expressions[j]);
 					}
+					free(expressions);
 					return 0;
 				}
+			}
+		}
+
+		if (expressionIndex >= expressionsBufferSize)
+		{
+			expressionsBufferSize += 5;
+
+			struct JdcStr* newExpressions = (struct JdcStr*)realloc(expressions, expressionsBufferSize * sizeof(struct JdcStr));
+			if (newExpressions)
+			{
+				expressions = newExpressions;
+			}
+			else
+			{
+				for (int j = 0; j < expressionIndex; j++)
+				{
+					freeJdcStr(&expressions[j]);
+				}
+				free(expressions);
+				return 0;
 			}
 		}
 
@@ -541,6 +563,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			{
 				freeJdcStr(&expressions[i]);
 			}
+			free(expressions);
 
 			return strcpyJdc(result, registerStrs[targetReg]);
 		}
@@ -556,6 +579,8 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 		strcatJdc(result, expressions[i].buffer);
 		freeJdcStr(&expressions[i]);
 	}
+
+	free(expressions);
 
 	if (expressionIndex > 1)
 	{
