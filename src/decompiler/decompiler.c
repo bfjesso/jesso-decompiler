@@ -412,6 +412,38 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					}
 				}
 			}
+
+			// if there are registers used in the comparisson of a do while loop, they need to be a reg var
+			if (conditions[i].conditionType == DO_WHILE_CT)
+			{
+				for (int j = end; j >= start; j--) 
+				{
+					struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+					
+					if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == TEST) 
+					{
+						for (int k = 0; k < 2; k++) 
+						{
+							if (currentInstruction->operands[k].type == REGISTER && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].reg))
+							{
+								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
+								{
+									return 0;
+								}
+							}
+							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].memoryAddress.reg))
+							{
+								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
+								{
+									return 0;
+								}
+							}
+						}
+
+						break;
+					}
+				}
+			}
 		}
 	}
 
