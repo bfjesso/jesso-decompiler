@@ -212,7 +212,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
-			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
+			if (doesInstructionModifyOperand(currentInstruction, 0, 0, &overwrites) && overwrites)
 			{
 				struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
 
@@ -233,14 +233,14 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		{
 			if (!decompiledRegArgs[j].buffer)
 			{
-				int operandNum = 0;
-				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &operandNum, 0))
+				unsigned char regOperandNum = 0;
+				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &regOperandNum, 0, 0))
 				{
-					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[operandNum]);
+					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 
 					params.startInstructionIndex = i;
 					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileOperand(params, &currentInstruction->operands[operandNum], type, &decompiledRegArgs[j]))
+					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], type, &decompiledRegArgs[j]))
 					{
 						for(int k = 0; k < numOfStackArgs; k++) { freeJdcStr(&decompiledStackArgs[k]); }
 						for(int k = 0; k < numOfPlatformRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }

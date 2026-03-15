@@ -11,14 +11,14 @@ unsigned char checkForAssignment(struct DecompilationParameters params)
 		return 0;
 	}
 
-	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0))
+	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 	{
 		return 1;
 	}
 
 	for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
 	{
-		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0))
+		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0, 0))
 		{
 			return 1;
 		}

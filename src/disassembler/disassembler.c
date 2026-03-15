@@ -231,11 +231,23 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 	return 0;
 }
 
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
 {
 	if (overwrites != 0) 
 	{
 		*overwrites = 0;
+	}
+
+	if (srcOperandNum != 0) 
+	{
+		for (int i = 3; i >= 0; i--) 
+		{
+			if (instruction->operands[i].type != NO_OPERAND) 
+			{
+				*srcOperandNum = i;
+				break;
+			}
+		}
 	}
 
 	if (operandNum == 0)
@@ -303,13 +315,13 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum)
+unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum) // this returns 1 if it only reads the register, not writes
 {
 	for (int i = 0; i < 4; i++)
 	{
-		if (operandNum != 0)
+		if (regOperandNum != 0)
 		{
-			*operandNum = i;
+			*regOperandNum = i;
 		}
 		
 		struct Operand* op = &(instruction->operands[i]);
@@ -317,7 +329,7 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 		{
 			return 1;
 		}
-		else if (!doesInstructionModifyOperand(instruction, i, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		else if (!doesInstructionModifyOperand(instruction, i, 0, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
 			return 1;
 		}
@@ -326,7 +338,7 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 	return 0;
 }
 
-unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* operandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
 {
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
@@ -342,9 +354,9 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
-			if (doesInstructionModifyOperand(instruction, i, overwrites))
+			if (doesInstructionModifyOperand(instruction, i, srcOperandNum, overwrites))
 			{
-				if(operandNum != 0) { *operandNum = i; }
+				if(regOperandNum != 0) { *regOperandNum = i; }
 				return 1;
 			}
 		}
@@ -355,7 +367,7 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
 {
-	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
+	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0, 0); // this isn't a full check
 }
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)

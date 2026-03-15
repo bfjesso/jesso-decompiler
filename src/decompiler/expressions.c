@@ -422,11 +422,31 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 
 		params.startInstructionIndex = i;
 
-		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &finished))
+		unsigned char regOperandNum = 0;
+		unsigned char srcOperandNum = 0;
+		if (doesInstructionModifyRegister(currentInstruction, targetReg, &regOperandNum, &srcOperandNum, &finished))
 		{
 			expressions[expressionIndex] = initializeJdcStr();
 			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
 			{
+				if (finished) 
+				{
+					struct VarType startRegType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
+					struct VarType startSrcType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+
+					if (!compareTypes(type, startRegType) && !compareTypes(type, startSrcType))
+					{
+						struct JdcStr typeStr = initializeJdcStr();
+						varTypeToStr(type, &typeStr);
+
+						struct JdcStr tmp = copyJdcStr(&expressions[expressionIndex]);
+						sprintfJdc(&expressions[expressionIndex], 0, "(%s)(%s)", typeStr.buffer, tmp.buffer);
+
+						freeJdcStr(&tmp);
+						freeJdcStr(&typeStr);
+					}
+				}
+				
 				expressionIndex++;
 			}
 			else 

@@ -77,7 +77,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				}
 				else
 				{
-					doesInstructionModifyOperand(currentInstruction, j, &overwrites);
+					doesInstructionModifyOperand(currentInstruction, j, 0, &overwrites);
 					if (!overwrites)
 					{
 						if (!addStackArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) 
@@ -127,7 +127,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 						{
 							regArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 						}
-						else if (doesInstructionModifyRegister(currentInstruction, platformRegArgs[k], 0, &overwrites) && overwrites)
+						else if (doesInstructionModifyRegister(currentInstruction, platformRegArgs[k], 0, 0, &overwrites) && overwrites)
 						{
 							if (!isAfterJmp) 
 							{
@@ -197,9 +197,10 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
 			unsigned char overwrites = 0;
-			if (doesInstructionModifyRegister(currentInstruction, AX, 0, &overwrites) && overwrites)
+			unsigned char srcOperandNum = 0;
+			if (doesInstructionModifyRegister(currentInstruction, AX, 0, &srcOperandNum, &overwrites) && overwrites)
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
@@ -333,7 +334,7 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 						if (alreadyFound) { continue; }
 
 						int overwrites = 0;
-						if (doesInstructionModifyRegister(instruction, callee->regArgs[k].reg, 0, &overwrites) && overwrites)
+						if (doesInstructionModifyRegister(instruction, callee->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
 						{
 							initializedRegs[numOfRegArgsInit] = callee->regArgs[k].reg;
 							numOfRegArgsInit++;

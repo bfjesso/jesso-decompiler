@@ -229,7 +229,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				unsigned char overwrites = 0;
 				if(j != i)
 				{
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, &overwrites) && overwrites))
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, 0, &overwrites) && overwrites))
 					{
 						break;
 					}
@@ -344,7 +344,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 				{
 					reg = params.is64Bit ? RAX : EAX;
 				}
-				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
+				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 				{
 					reg = currentInstruction->operands[0].reg;
 				}
@@ -389,7 +389,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					}
 
 					unsigned char overwrites = 0;
-					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, &overwrites) && !overwrites) || (isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
+					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, 0, &overwrites) && !overwrites) || (isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
 					{
 						if (!addRegVar(params.currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
 						{
@@ -414,7 +414,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
+		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
 			
