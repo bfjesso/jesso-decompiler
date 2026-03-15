@@ -165,6 +165,8 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 								return 0;
 							}
 
+							result->regArgs[result->numOfRegArgs - 1].type.pointerLevel = 1;
+
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k] = 1;
 						}

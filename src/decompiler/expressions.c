@@ -91,19 +91,35 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 		}
 		else
 		{
+			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
+			
 			params.startInstructionIndex--;
 			struct JdcStr baseOperandStr = initializeJdcStr();
-			if (!decompileRegister(params, operand->memoryAddress.reg, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.reg), &baseOperandStr))
+			if (!decompileRegister(params, operand->memoryAddress.reg, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.reg), &baseOperandStr, &regArgVar))
 			{
 				freeJdcStr(&typeStr);
 				freeJdcStr(&baseOperandStr);
 				return 0;
 			}
 
+			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == type.primitiveType && regArgVar->type.isUnsigned == type.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG)
+			{
+				if (instruction->opcode == LEA)
+				{
+					sprintfJdc(result, 0, "%s", regArgVar->name.buffer);
+				}
+				else
+				{
+					sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
+				}
+
+				return 1;
+			}
+
 			struct JdcStr displacementOperandStr = initializeJdcStr();
 			if (operand->memoryAddress.regDisplacement != NO_REG) 
 			{
-				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.regDisplacement), &displacementOperandStr))
+				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, getTypeOfRegister(NO_MNEMONIC, operand->memoryAddress.regDisplacement), &displacementOperandStr, 0))
 				{
 					freeJdcStr(&typeStr);
 					freeJdcStr(&baseOperandStr);
@@ -180,7 +196,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 	}
 	else if (operand->type == REGISTER)
 	{
-		return decompileRegister(params, operand->reg, type, result);
+		return decompileRegister(params, operand->reg, type, result, 0);
 	}
 	else if (operand->type == SEGMENT) 
 	{
@@ -356,7 +372,7 @@ static unsigned char getStringFromDataSection(struct DecompilationParameters par
 	return 0;
 }
 
-unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, struct VarType type, struct JdcStr* result)
+unsigned char decompileRegister(struct DecompilationParameters params, enum Register targetReg, struct VarType type, struct JdcStr* result, struct RegisterVariable** regArgVarRef)
 {
 	if (compareRegisters(targetReg, BP) || compareRegisters(targetReg, SP))
 	{
@@ -370,6 +386,11 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 	struct RegisterVariable* regVar = getRegVarByReg(params.currentFunc, targetReg);
 	if (regVar)
 	{
+		if (regArgVarRef)
+		{
+			*regArgVarRef = regVar;
+		}
+		
 		return strcpyJdc(result, regVar->name.buffer);
 	}
 	
@@ -488,6 +509,11 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			expressions[expressionIndex] = initializeJdcStr();
 			strcpyJdc(&expressions[expressionIndex], regArg->name.buffer);
 			expressionIndex++;
+
+			if (regArgVarRef && expressionIndex == 1)
+			{
+				*regArgVarRef = regArg;
+			}
 		}
 		else 
 		{
@@ -805,7 +831,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		struct JdcStr count = initializeJdcStr();
 		struct VarType uIntType = { 0 };
 		uIntType.primitiveType = INT_TYPE;
-		if (!decompileRegister(params, CX, uIntType, &count))
+		if (!decompileRegister(params, CX, uIntType, &count, 0))
 		{
 			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 			freeJdcStr(&count);

@@ -53,7 +53,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	{
 		struct JdcStr argStr = initializeJdcStr();
 		enum Register reg = callee->regArgs[i].reg;
-		if (!decompileRegister(params, reg, callee->regArgs[i].type, &argStr))
+		if (!decompileRegister(params, reg, callee->regArgs[i].type, &argStr, 0))
 		{
 			freeJdcStr(&argStr);
 			return 0;

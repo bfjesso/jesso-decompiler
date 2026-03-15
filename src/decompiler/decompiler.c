@@ -579,7 +579,7 @@ static void decompileMiscInstruction(struct DecompilationParameters params, unsi
 		type.isUnsigned = 1;
 		type.primitiveType = INT_TYPE;
 
-		if (decompileRegister(params, CX, type, &code)) 
+		if (decompileRegister(params, CX, type, &code, 0)) 
 		{
 			addIndents(result, numOfIndents);
 			sprintfJdc(result, 1, "__fastfail(%s);\n", code.buffer);
