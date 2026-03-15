@@ -307,8 +307,11 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 		{
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
+
+			int start = conditions[i].conditionType == DO_WHILE_CT ? conditions[i].dstIndex : conditions[i].jccIndex;
+			int end = conditions[i].conditionType == DO_WHILE_CT ? conditions[i].jccIndex : conditions[i].dstIndex;
 			
-			for (int j = conditions[i].jccIndex; j < conditions[i].dstIndex; j++) 
+			for (int j = start; j < end; j++)
 			{
 				int conditionIndex = checkForCondition(j, conditions, numOfConditions);
 				if (conditionIndex != -1 && conditionIndex != i)
@@ -372,9 +375,10 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int j = conditions[i].dstIndex; j < params.currentFunc->numOfInstructions; j++) 
+			for (int j = end; j < params.currentFunc->numOfInstructions; j++) 
 			{
-				if (checkForCondition(j, conditions, numOfConditions) != -1)
+				int conditionIndex = checkForCondition(j, conditions, numOfConditions);
+				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;
 				}
