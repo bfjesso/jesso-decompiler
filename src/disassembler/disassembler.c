@@ -278,6 +278,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeCvtToDbl(instruction->opcode) ||
 			isOpcodeCvtToFlt(instruction->opcode) ||
 			isOpcodeCMOVcc(instruction->opcode) || 
+			isOpcodeSETcc(instruction->opcode) ||
 			instruction->opcode == STMXCSR ||
 			isOpcodeAES(instruction->opcode))
 		{

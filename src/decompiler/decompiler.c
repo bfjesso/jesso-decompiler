@@ -393,7 +393,9 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					}
 
 					unsigned char overwrites = 0;
-					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || (doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, 0, &overwrites) && !overwrites) || (isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
+					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || 
+						(doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, 0, &overwrites) && !overwrites) ||
+						(isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
 					{
 						if (!addRegVar(params.currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
 						{
@@ -403,7 +405,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 						modifiedRegs[k].reg = NO_REG; // so it isnt checked again
 						break;
 					}
-					else if (overwrites) 
+					else if (overwrites && !isOpcodeCMOVcc(currentInstruction->opcode) && !isOpcodeSETcc(currentInstruction->opcode))
 					{
 						modifiedRegs[k].reg = NO_REG;
 						break;

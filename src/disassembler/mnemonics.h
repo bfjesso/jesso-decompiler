@@ -223,6 +223,8 @@ unsigned char isOpcodeJcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
 
+unsigned char isOpcodeSETcc(enum Mnemonic opcode);
+
 unsigned char isOpcodeAES(enum Mnemonic opcode);
 
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);

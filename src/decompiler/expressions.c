@@ -576,17 +576,20 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	{
 	case JZ_SHORT:
 	case CMOVZ:
+	case SETZ:
 		if (invertOperator) { strcpy(compOperator, "!="); }
 		else { strcpy(compOperator, "=="); }
 		break;
 	case JNZ_SHORT:
 	case CMOVNZ:
+	case SETNZ:
 		if (invertOperator) { strcpy(compOperator, "=="); }
 		else { strcpy(compOperator, "!="); }
 		break;
 	case JG_SHORT:
 	case JA_SHORT:
 	case CMOVG:
+	case SETG:
 		if (invertOperator) { strcpy(compOperator, "<="); }
 		else { strcpy(compOperator, ">"); }
 		break;
@@ -594,6 +597,8 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JB_SHORT:
 	case CMOVL:
 	case CMOVB:
+	case SETL:
+	case SETB:
 		if (invertOperator) { strcpy(compOperator, ">="); }
 		else { strcpy(compOperator, "<"); }
 		break;
@@ -601,6 +606,8 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JBE_SHORT:
 	case CMOVLE:
 	case CMOVBE:
+	case SETLE:
+	case SETBE:
 		if (invertOperator) { strcpy(compOperator, ">"); }
 		else { strcpy(compOperator, "<="); }
 		break;
@@ -608,6 +615,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JNB_SHORT:
 	case CMOVGE:
 	case CMOVNB:
+	case SETNB:
 		if (invertOperator) { strcpy(compOperator, "<"); }
 		else { strcpy(compOperator, ">="); }
 		break;
@@ -843,6 +851,21 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		// conditional moves cant assign to a memory address, getAssignment must be 0
 		sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer);
 		freeJdcStr(&comparisonStr);
+		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		return 1;
+	}
+	else if (isOpcodeSETcc(instruction->opcode))
+	{
+		struct JdcStr comparisonStr = initializeJdcStr();
+		if (!decompileComparison(params, 0, &comparisonStr))
+		{
+			freeJdcStr(&comparisonStr);
+			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			return 0;
+		}
+
+		if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, comparisonStr.buffer); }
+		else { sprintfJdc(result, 0, "%s", comparisonStr.buffer); }
 		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 		return 1;
 	}

@@ -342,6 +342,16 @@ unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
 	return 0;
 }
 
+unsigned char isOpcodeSETcc(enum Mnemonic opcode)
+{
+	if (opcode >= SETA && opcode <= SETZ)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char isOpcodeAES(enum Mnemonic opcode)
 {
 	if (opcode >= VAESIMC && opcode <= AESDECLAST)
