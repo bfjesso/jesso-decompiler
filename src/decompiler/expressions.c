@@ -102,7 +102,7 @@ unsigned char decompileOperand(struct DecompilationParameters params, struct Ope
 				return 0;
 			}
 
-			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == type.primitiveType && regArgVar->type.isUnsigned == type.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG)
+			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == type.primitiveType && regArgVar->type.isUnsigned == type.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG && operand->memoryAddress.constDisplacement == 0)
 			{
 				if (instruction->opcode == LEA)
 				{
