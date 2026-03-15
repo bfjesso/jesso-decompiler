@@ -848,8 +848,8 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			return 0;
 		}
 
-		// conditional moves cant assign to a memory address, getAssignment must be 0
-		sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer);
+		if (getAssignment) { sprintfJdc(result, 0, "%s = (%s ? %s : %s)", decompiledOperands[0].buffer, comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer); }
+		else { sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer); }
 		freeJdcStr(&comparisonStr);
 		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 		return 1;
