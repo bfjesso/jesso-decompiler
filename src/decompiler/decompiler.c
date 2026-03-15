@@ -55,9 +55,12 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
+	// used with jump in decomp
+	int originalIndex = -1; 
+	int originalNumOfIndents = -1; // so it returns to same level of indents
+
 	unsigned char numOfIndents = 1;
 	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
-	int originalIndex = -1;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
@@ -120,6 +123,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			if (conditions[conditionIndex].requiresJumpInDecomp)
 			{
 				originalIndex = i;
+				originalNumOfIndents = numOfIndents;
 				i = conditions[conditionIndex].dstIndex - 1;
 				params.skipUpperBound = originalIndex;
 				params.skipLowerBound = i;
@@ -199,9 +203,15 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				params.skipUpperBound = -1;
 				params.skipLowerBound = -1;
 
-				numOfIndents--;
-				addIndents(result, numOfIndents);
-				strcatJdc(result, "}\n");
+				int numOfCloses = 1 + numOfIndents - originalNumOfIndents;
+				for (int j = 0; j < numOfCloses; j++)
+				{
+					numOfIndents--;
+					addIndents(result, numOfIndents);
+					strcatJdc(result, "}\n");
+				}
+
+				originalNumOfIndents = -1;
 
 				isInUnreachableState = 0;
 			}
