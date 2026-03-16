@@ -5,6 +5,7 @@
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
 {
 	unsigned char initializedRegs[6] = { 0 }; // this corresponds with platformRegArgs
+	unsigned char initializedRegsAfterJmp[6] = { 0 };
 
 	int stackFrameSize = 0;
 
@@ -18,11 +19,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
-
-		if (currentInstruction->address == 0x1400012A0) 
-		{
-			int TT = 0;
-		}
 
 		if (!foundFirstInstruction)
 		{
@@ -129,10 +125,8 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 						}
 						else if (doesInstructionModifyRegister(currentInstruction, platformRegArgs[k], 0, 0, &overwrites) && overwrites)
 						{
-							if (!isAfterJmp) 
-							{
-								initializedRegs[k] = 1;
-							}
+							initializedRegs[k] = 1;
+							initializedRegsAfterJmp[k] = isAfterJmp;
 						}
 						else if (!initializedRegs[k])
 						{
@@ -187,7 +181,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		{
 			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
 			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
-			if (jumpAddr > addressToJumpTo && params.allInstructions[instructionIndex - 1].opcode != JMP_SHORT)
+			if (jumpAddr > addressToJumpTo)
 			{
 				addressToJumpTo = jumpAddr;
 			}
@@ -231,6 +225,15 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		else
 		{
 			addressToJumpTo = 0;
+
+			for (int j = 0; j < numOfPlatformRegArgs; j++) 
+			{
+				if (initializedRegsAfterJmp[j]) 
+				{
+					initializedRegs[j] = 0;
+					initializedRegsAfterJmp[j] = 0;
+				}
+			}
 		}
 		
 		if (isOpcodeReturn(currentInstruction->opcode))
