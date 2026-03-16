@@ -385,7 +385,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int j = end; j < params.currentFunc->numOfInstructions; j++) 
+			int checkingStart = conditions[i].conditionType == LOOP_CT || conditions[i].conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
+			for (int j = checkingStart; j < params.currentFunc->numOfInstructions; j++)
 			{
 				int conditionIndex = checkForCondition(j, conditions, numOfConditions);
 				if (conditionIndex != -1 && conditionIndex != i)
