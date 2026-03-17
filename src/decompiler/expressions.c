@@ -819,33 +819,6 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 		return 1;
 	}
-	else if (instruction->opcode == STMXCSR) 
-	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = stmxcsr()", decompiledOperands[0].buffer); }
-		else { strcpyJdc(result, "stmxcsr()"); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		return 1;
-	}
-	else if (isOpcodeAES(instruction->opcode))
-	{
-		char* mnemonicStrsLowercase = (char*)malloc(strlen(mnemonicStrs[instruction->opcode]) + 1);
-		if (!mnemonicStrsLowercase) 
-		{ 
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-			return 0; 
-		}
-		strcpy(mnemonicStrsLowercase, mnemonicStrs[instruction->opcode]);
-		for (int i = 0; i < strlen(mnemonicStrsLowercase); i++) 
-		{
-			mnemonicStrsLowercase[i] = tolower(mnemonicStrsLowercase[i]);
-		}
-		
-		if (getAssignment) { sprintfJdc(result, 0, "%s = %s(%s, %s)", decompiledOperands[0].buffer, mnemonicStrsLowercase, decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, "%s(%s, %s)", mnemonicStrsLowercase, decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		free(mnemonicStrsLowercase);
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		return 1;
-	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
@@ -988,6 +961,10 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			return gotValue;
 		}
 	}
+	else if (isOpcodeAES(instruction->opcode) || instruction->opcode == STMXCSR)
+	{
+		return decompileOpcodeAsFunction(instruction->opcode, numOfOperands, getAssignment, decompiledOperands, result);
+	}
 
 	struct Operand* secondOperand = &instruction->operands[1];
 
@@ -1064,5 +1041,45 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 	}
 
 	for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+	return 1;
+}
+
+static unsigned char decompileOpcodeAsFunction(enum Mnemonic opcode, int numOfOperands, unsigned char getAssignment, struct JdcStr* decompiledOperands, struct JdcStr* result)
+{
+	char* mnemonicStrsLowercase = (char*)malloc(strlen(mnemonicStrs[opcode]) + 1);
+	if (!mnemonicStrsLowercase)
+	{
+		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		return 0;
+	}
+	strcpy(mnemonicStrsLowercase, mnemonicStrs[opcode]);
+	for (int i = 0; i < strlen(mnemonicStrsLowercase); i++)
+	{
+		mnemonicStrsLowercase[i] = tolower(mnemonicStrsLowercase[i]);
+	}
+
+	if (getAssignment) 
+	{ 
+		sprintfJdc(result, 0, "%s = %s(", decompiledOperands[0].buffer, mnemonicStrsLowercase); 
+	}
+	else 
+	{
+		sprintfJdc(result, 0, "%s(", mnemonicStrsLowercase);
+	}
+
+	for (int i = 0; i < numOfOperands; i++)
+	{
+		sprintfJdc(result, 1, "%s", decompiledOperands[i].buffer);
+		freeJdcStr(&decompiledOperands[i]);
+
+		if (i != numOfOperands - 1)
+		{
+			strcatJdc(result, ", ");
+		}
+	}
+
+	strcatJdc(result, ")");
+
+	free(mnemonicStrsLowercase);
 	return 1;
 }
