@@ -167,7 +167,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
 
-	struct JdcStr decompiledRegArgs[6] = { 0 };
+	struct JdcStr decompiledRegArgs[ST0 - RAX] = { 0 };
 
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{

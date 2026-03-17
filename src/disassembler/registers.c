@@ -37,8 +37,8 @@ extern const char* registerStrs[] =
 extern const int numOfRegisters = 179;
 
 #ifdef _WIN32
-extern const enum Register platformRegArgs[4] = { RCX, RDX, R8, R9 };
-extern const int numOfPlatformRegArgs = 4;
+extern const enum Register platformRegArgs[8] = { RCX, RDX, R8, R9, XMM0, XMM1, XMM2, XMM3 }; // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9
+extern const int numOfPlatformRegArgs = 8;
 #endif
 
 #ifdef linux

@@ -52,12 +52,12 @@ extern "C"
 #endif
 
 #ifdef _WIN32
-extern const enum Register platformRegArgs[4];
+extern const enum Register platformRegArgs[];
 extern const int numOfPlatformRegArgs;
 #endif
 
 #ifdef linux
-extern const enum Register platformRegArgs[6];
+extern const enum Register platformRegArgs[];
 extern const int numOfPlatformRegArgs;
 #endif
 

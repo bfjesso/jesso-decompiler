@@ -4,8 +4,9 @@
 
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
 {
-	unsigned char initializedRegs[6] = { 0 }; // this corresponds with platformRegArgs
-	unsigned char initializedRegsAfterJmp[6] = { 0 };
+	// these correspond with platformRegArgs
+	unsigned char initializedRegs[ST0 - RAX] = { 0 }; 
+	unsigned char initializedRegsAfterJmp[ST0 - RAX] = { 0 };
 
 	int stackFrameSize = 0;
 
