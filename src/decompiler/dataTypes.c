@@ -58,6 +58,7 @@ struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 	switch (opcode)
 	{
 	case MOVSS:
+	case MOVUPS:
 	case ADDSS:
 	case CVTPS2PD:
 	case CVTSS2SD:
@@ -65,6 +66,7 @@ struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 		result.primitiveType = FLOAT_TYPE;
 		return result;
 	case MOVSD:
+	case MOVUPD:
 	case ADDSD:
 	case CVTPD2PS:
 	case CVTSD2SS:
