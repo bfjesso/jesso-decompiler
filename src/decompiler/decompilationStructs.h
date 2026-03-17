@@ -22,6 +22,7 @@ struct ReturnedVariable // variables that contain the reuturn value of another f
 	struct VarType type;
 	char callNum;
 	unsigned long long callAddr;
+	enum Register returnReg;
 	struct JdcStr name;
 };
 
@@ -44,6 +45,7 @@ static const char* callingConventionStrs[] =
 struct Function
 {
 	struct VarType returnType;
+	enum Register returnReg;
 	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
 	unsigned long long addressOfFirstFuncCall; // if the function has arguments that it only uses to pass to this function call
 	int indexOfFirstFuncCall;
@@ -84,8 +86,6 @@ struct DecompilationParameters
 	// these are used when a condition has requiresJumpInDecomp
 	int skipUpperBound;
 	int skipLowerBound;
-
-	int axRegVarIndex;
 
 	struct DisassembledInstruction* allInstructions;
 	int totalNumOfInstructions;

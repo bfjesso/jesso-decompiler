@@ -22,17 +22,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			return 0;
 		}
 
-		params.axRegVarIndex = -1;
-		for(int i = 0; i < params.currentFunc->numOfRegVars; i++)
-		{
-			if(compareRegisters(params.currentFunc->regVars[i].reg, AX))
-			{
-				params.axRegVarIndex = i;
-				break;
-			}
-		}
-
-		if (!getAllReturnedVars(params)) // still need to get these even if AX is a reg var in order to check if the returned value is used or not
+		if (!getAllReturnedVars(params))
 		{
 			return 0;
 		}
@@ -49,7 +39,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 	if (params.currentFunc->numOfStackVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
 	{
-		if (!declareAllLocalVariables(params.currentFunc, params.axRegVarIndex == -1, result))
+		if (!declareAllLocalVariables(params, result))
 		{
 			return 0;
 		}
@@ -231,6 +221,11 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	{
 		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
 		{
+			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
+			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
+			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+			enum Register returnReg = calleeIndex != -1 ? params.functions[calleeIndex].returnReg : AX;
+			
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i; j < params.currentFunc->numOfInstructions; j++)
 			{
@@ -239,7 +234,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				unsigned char overwrites = 0;
 				if(j != i)
 				{
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, AX, 0, 0, &overwrites) && overwrites))
+					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, returnReg, 0, 0, &overwrites) && overwrites))
 					{
 						break;
 					}
@@ -252,7 +247,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				}
 
 				unsigned char operandNum = 0;
-				if (doesInstructionAccessRegister(currentInstruction, AX, &operandNum))
+				if (doesInstructionAccessRegister(currentInstruction, returnReg, &operandNum))
 				{
 					returnType = getTypeOfOperand(opcode, &(currentInstruction->operands[operandNum]));
 					break;
@@ -263,9 +258,6 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				continue;
 			}
 
-			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
-			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-
 			int callNum = 0;
 			for (int j = 0; j < params.currentFunc->numOfReturnedVars; j++)
 			{
@@ -275,14 +267,13 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				}
 			}
 
-			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 			if (calleeIndex != -1)
 			{
 				if (params.functions[calleeIndex].returnType.primitiveType == VOID_TYPE)
 				{
 					continue;
 				}
-				else if(!addReturnedVar(params.currentFunc, params.functions[calleeIndex].returnType, callNum, calleeAddress, params.functions[calleeIndex].name.buffer))
+				else if(!addReturnedVar(params.currentFunc, params.functions[calleeIndex].returnType, callNum, calleeAddress, returnReg, params.functions[calleeIndex].name.buffer))
 				{
 					return 0;
 				}
@@ -293,7 +284,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				{
 					if (params.imports[j].address == calleeAddress)
 					{
-						if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, params.imports[j].name.buffer)) 
+						if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, returnReg, params.imports[j].name.buffer))
 						{
 							return 0;
 						}
@@ -337,21 +328,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 				params.startInstructionIndex = j;
 				if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
 				{
-					switch (callee->returnType.primitiveType)
-					{
-					case CHAR_TYPE:
-						reg = AL;
-						break;
-					case SHORT_TYPE:
-						reg = AX;
-						break;
-					case INT_TYPE:
-						reg = EAX;
-						break;
-					case LONG_LONG_TYPE:
-						reg = RAX;
-						break;
-					}
+					reg = callee->returnReg;
 				}
 				else if (checkForImportCall(params) != -1)
 				{
@@ -563,46 +540,56 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	return strcatJdc(result, ")\n");
 }
 
-static unsigned char declareAllLocalVariables(struct Function* function, unsigned char declareReturnedVars, struct JdcStr* result)
+static unsigned char declareAllLocalVariables(struct DecompilationParameters params, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int i = 0; i < params.currentFunc->numOfStackVars; i++)
 	{
-		varTypeToStr(function->stackVars[i].type, &typeStr);
-		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->stackVars[i].name.buffer);
+		varTypeToStr(params.currentFunc->stackVars[i].type, &typeStr);
+		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->stackVars[i].name.buffer);
 	}
 
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
 	{
 		int argIndex = -1;
-		for (int j = 0; j < function->numOfRegArgs; j++)
+		for (int j = 0; j < params.currentFunc->numOfRegArgs; j++)
 		{
-			if (compareRegisters(function->regVars[i].reg, function->regArgs[j].reg))
+			if (compareRegisters(params.currentFunc->regVars[i].reg, params.currentFunc->regArgs[j].reg))
 			{
 				argIndex = j;
 				break;
 			}
 		}
 
-		varTypeToStr(function->regVars[i].type, &typeStr);
+		varTypeToStr(params.currentFunc->regVars[i].type, &typeStr);
 
 		if (argIndex != -1)
 		{
-			sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer, function->regArgs[argIndex].name.buffer);
+			sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, params.currentFunc->regVars[i].name.buffer, params.currentFunc->regArgs[argIndex].name.buffer);
 		}
 		else 
 		{
-			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->regVars[i].name.buffer);
+			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->regVars[i].name.buffer);
 		}
 	}
 
-	if(declareReturnedVars)
+	for (int i = 0; i < params.currentFunc->numOfReturnedVars; i++)
 	{
-		for (int i = 0; i < function->numOfReturnedVars; i++)
+		unsigned char isReturnRegVar = 0;
+		for (int j = 0; j < params.currentFunc->numOfRegVars; j++) 
 		{
-			varTypeToStr(function->returnedVars[i].type, &typeStr);
-			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, function->returnedVars[i].name.buffer);
+			if (compareRegisters(params.currentFunc->regVars[j].reg, params.currentFunc->returnedVars[i].returnReg)) 
+			{
+				isReturnRegVar = 1;
+				break;
+			}
+		}
+
+		if (!isReturnRegVar) 
+		{
+			varTypeToStr(params.currentFunc->returnedVars[i].type, &typeStr);
+			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->returnedVars[i].name.buffer);
 		}
 	}
 

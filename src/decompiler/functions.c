@@ -191,11 +191,17 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		// check for return value
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
-			unsigned char overwrites = 0;
 			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(currentInstruction, AX, 0, &srcOperandNum, &overwrites) && overwrites)
+			if (doesInstructionModifyRegister(currentInstruction, AX, 0, &srcOperandNum, 0))
 			{
 				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				result->returnReg = AX;
+				result->addressOfReturnFunction = 0;
+			}
+			else if (doesInstructionModifyRegister(currentInstruction, XMM0, 0, &srcOperandNum, 0))
+			{
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				result->returnReg = XMM0;
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
@@ -209,6 +215,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			else if (currentInstruction->opcode == FLD)
 			{
 				result->returnType.primitiveType = FLOAT_TYPE;
+				result->returnReg = ST0;
 				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction != 0)
@@ -254,6 +261,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i + 1].address == nextSectionStartAddress)
 		{
 			result->returnType.primitiveType = VOID_TYPE;
+			result->returnReg = NO_REG;
 			result->addressOfReturnFunction = 0;
 
 			sortFunctionArguments(result);
@@ -638,7 +646,7 @@ unsigned char addRegVar(struct Function* function, struct VarType type, enum Reg
 	return 1;
 }
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, const char* calleeName) 
+unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, enum Register returnReg, const char* calleeName)
 {
 	struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(function->returnedVars, sizeof(struct ReturnedVariable) * (function->numOfReturnedVars + 1));
 	if (newReturnedVars)
@@ -655,6 +663,7 @@ unsigned char addReturnedVar(struct Function* function, struct VarType type, cha
 	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
 	function->returnedVars[function->numOfReturnedVars].callAddr = callAddr;
 	function->returnedVars[function->numOfReturnedVars].callNum = callNum;
+	function->returnedVars[function->numOfReturnedVars].returnReg = returnReg;
 	function->numOfReturnedVars++;
 
 	return 1;

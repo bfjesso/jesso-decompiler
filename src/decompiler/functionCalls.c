@@ -13,14 +13,14 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 	{
 		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
 		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-		int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+		int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
-		if (calleIndex == -1)
+		if (calleeIndex == -1)
 		{
 			return 0;
 		}
 
-		*calleeRef = &(params.functions[calleIndex]);
+		*calleeRef = &(params.functions[calleeIndex]);
 
 		return 1;
 	}
@@ -36,11 +36,18 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
 	if (returnedVar != 0)
 	{
-		if(params.axRegVarIndex != -1)
+		unsigned char isReturnRegVar = 0;
+		for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
 		{
-			sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[params.axRegVarIndex].name.buffer);
+			if (compareRegisters(params.currentFunc->regVars[i].reg, callee->returnReg)) 
+			{
+				sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[i].name.buffer);
+				isReturnRegVar = 1;
+				break;
+			}
 		}
-		else
+		
+		if(!isReturnRegVar)
 		{
 			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 		}
@@ -150,11 +157,18 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
 	if (returnedVar != 0)
 	{
-		if(params.axRegVarIndex != -1)
+		unsigned char isReturnRegVar = 0;
+		for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
 		{
-			sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[params.axRegVarIndex].name.buffer);
+			if (compareRegisters(params.currentFunc->regVars[i].reg, AX))
+			{
+				sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[i].name.buffer);
+				isReturnRegVar = 1;
+				break;
+			}
 		}
-		else
+
+		if (!isReturnRegVar)
 		{
 			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 		}
@@ -182,8 +196,8 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		{
 			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
 			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-			if (calleIndex != -1 && (params.functions[calleIndex].numOfRegArgs > 0 || params.functions[calleIndex].numOfStackArgs > 0))
+			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+			if (calleeIndex != -1 && (params.functions[calleeIndex].numOfRegArgs > 0 || params.functions[calleeIndex].numOfStackArgs > 0))
 			{
 				break;
 			}

@@ -461,7 +461,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 				return 0;
 			}
 		}
-		else if (compareRegisters(targetReg, AX) && isOpcodeCall(currentInstruction->opcode))
+		else if (isOpcodeCall(currentInstruction->opcode))
 		{
 			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
 			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
@@ -469,7 +469,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			
 			if (calleeIndex != -1)
 			{
-				if (params.functions[calleeIndex].returnType.primitiveType != VOID_TYPE) 
+				if (compareRegisters(params.functions[calleeIndex].returnReg, targetReg)) 
 				{
 					int callNum = getFunctionCallNumber(params, calleeAddress);
 					struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
@@ -482,7 +482,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					finished = 1;
 				}
 			}
-			else
+			else if(compareRegisters(targetReg, AX))
 			{
 				// checking for imported function call
 				int importIndex = checkForImportCall(params);

@@ -10,32 +10,21 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
 
-	if ((params.currentFunc->returnType.primitiveType == FLOAT_TYPE || params.currentFunc->returnType.primitiveType == DOUBLE_TYPE) && instruction->opcode == FLD)
+	if (doesInstructionModifyRegister(instruction, params.currentFunc->returnReg, 0, 0, 0))
 	{
 		return 1;
 	}
-	else
+	else if (isOpcodeCall(instruction->opcode))
 	{
-		if (doesInstructionModifyRegister(instruction, AX, 0, 0, 0))
-		{
-			return 1;
-		}
-		else if (isOpcodeCall(instruction->opcode))
-		{
-			unsigned long long calleeAddress = address + instruction->operands[0].immediate.value;
-			int calleIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+		unsigned long long calleeAddress = address + instruction->operands[0].immediate.value;
+		int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
 
-			if (calleIndex == -1)
-			{
-				return checkForImportCall(params) != -1;
-			}
-			else if (params.functions[calleIndex].returnType.primitiveType == VOID_TYPE)
-			{
-				return 0;
-			}
-
-			return 1;
+		if (calleeIndex == -1)
+		{
+			return checkForImportCall(params) != -1;
 		}
+
+		return params.functions[calleeIndex].returnReg == params.currentFunc->returnReg;
 	}
 
 	return 0;
@@ -84,35 +73,10 @@ unsigned char decompileReturnStatement(struct DecompilationParameters params, st
 
 	struct JdcStr returnExpression = initializeJdcStr();
 
-	if(params.currentFunc->returnType.primitiveType == FLOAT_TYPE || params.currentFunc->returnType.primitiveType == DOUBLE_TYPE)
+	if (!decompileRegister(params, params.currentFunc->returnReg, params.currentFunc->returnType, &returnExpression, 0))
 	{
-		for (int i = params.startInstructionIndex; i >= 0; i--)
-		{
-			if (i == params.skipLowerBound)
-			{
-				i = params.skipUpperBound;
-				continue;
-			}
-
-			if (params.currentFunc->instructions[i].opcode == FLD)
-			{
-				params.startInstructionIndex = i;
-				if (!decompileOperand(params, &(params.currentFunc->instructions[i].operands[0]), params.currentFunc->returnType, &returnExpression))
-				{
-					freeJdcStr(&returnExpression);
-					return 0;
-				}
-				break;
-			}
-		}
-	}
-	else
-	{
-		if (!decompileRegister(params, AX, params.currentFunc->returnType, &returnExpression, 0))
-		{
-			freeJdcStr(&returnExpression);
-			return 0;
-		}
+		freeJdcStr(&returnExpression);
+		return 0;
 	}
 
 	sprintfJdc(result, 1, "return %s;", returnExpression.buffer);

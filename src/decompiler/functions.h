@@ -43,6 +43,6 @@ unsigned char addRegArg(struct Function* function, struct VarType type, enum Reg
 
 unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg);
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, const char* calleeName);
+unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, enum Register returnReg, const char* calleeName);
 
 static void sortFunctionArguments(struct Function* function);
