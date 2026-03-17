@@ -661,79 +661,19 @@ unsigned char addReturnedVar(struct Function* function, struct VarType type, cha
 
 static void sortFunctionArguments(struct Function* function) 
 {
-	#ifdef _WIN32
-	// order for Microsoft x64 calling convention should be RCX, RDX, R8, R9
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		if (compareRegisters(function->regArgs[i].reg, RCX))
+		for (int j = 0; j < numOfPlatformRegArgs; j++) 
 		{
-			struct RegisterVariable temp = function->regArgs[0];
-			function->regArgs[0] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, RDX) && function->numOfRegArgs > 1)
-		{
-			struct RegisterVariable temp = function->regArgs[1];
-			function->regArgs[1] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, R8) && function->numOfRegArgs > 2)
-		{
-			struct RegisterVariable temp = function->regArgs[2];
-			function->regArgs[2] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, R9) && function->numOfRegArgs > 3)
-		{
-			struct RegisterVariable temp = function->regArgs[3];
-			function->regArgs[3] = function->regArgs[i];
-			function->regArgs[i] = temp;
+			if (compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) && function->numOfRegArgs > j)
+			{
+				struct RegisterVariable temp = function->regArgs[j];
+				function->regArgs[j] = function->regArgs[i];
+				function->regArgs[i] = temp;
+				break;
+			}
 		}
 	}
-	#endif
-
-	#ifdef linux
-	// order for Linux x64 calling convention should be RDI, RSI, RDX, RCX, R8, R9
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		if (compareRegisters(function->regArgs[i].reg, RDI))
-		{
-			struct RegisterVariable temp = function->regArgs[0];
-			function->regArgs[0] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, RSI) && function->numOfRegArgs > 1)
-		{
-			struct RegisterVariable temp = function->regArgs[1];
-			function->regArgs[1] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, RDX) && function->numOfRegArgs > 2)
-		{
-			struct RegisterVariable temp = function->regArgs[2];
-			function->regArgs[2] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, RCX) && function->numOfRegArgs > 3)
-		{
-			struct RegisterVariable temp = function->regArgs[3];
-			function->regArgs[3] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, R8) && function->numOfRegArgs > 4)
-		{
-			struct RegisterVariable temp = function->regArgs[4];
-			function->regArgs[4] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-		else if (compareRegisters(function->regArgs[i].reg, R9) && function->numOfRegArgs > 5)
-		{
-			struct RegisterVariable temp = function->regArgs[5];
-			function->regArgs[5] = function->regArgs[i];
-			function->regArgs[i] = temp;
-		}
-	}
-	#endif
 
 	// order should be from least to greatest stack offset
 	for (int i = 0; i < function->numOfStackArgs - 1; i++)
