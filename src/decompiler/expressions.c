@@ -620,6 +620,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		break;
 	case JL_SHORT:
 	case JB_SHORT:
+	case JS_SHORT:
 	case CMOVL:
 	case CMOVB:
 	case SETL:
@@ -638,6 +639,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 		break;
 	case JGE_SHORT:
 	case JNB_SHORT:
+	case JNS_SHORT:
 	case CMOVGE:
 	case CMOVNB:
 	case SETNB:
