@@ -961,10 +961,6 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			return gotValue;
 		}
 	}
-	else if (isOpcodeAES(instruction->opcode) || instruction->opcode == STMXCSR)
-	{
-		return decompileOpcodeAsFunction(instruction->opcode, numOfOperands, getAssignment, decompiledOperands, result);
-	}
 
 	struct Operand* secondOperand = &instruction->operands[1];
 
@@ -1034,10 +1030,9 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		if (getAssignment) { sprintfJdc(result, 0, "%s = (float)%s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
 		else { sprintfJdc(result, 0, "(float)%s", decompiledOperands[1].buffer); }
 	}
-	else 
+	else
 	{
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		return 0;
+		return decompileOpcodeAsFunction(instruction->opcode, numOfOperands, getAssignment, decompiledOperands, result);
 	}
 
 	for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }

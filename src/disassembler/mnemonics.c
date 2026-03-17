@@ -362,6 +362,16 @@ unsigned char isOpcodeAES(enum Mnemonic opcode)
 	return 0;
 }
 
+unsigned char isOpcodeShuf(enum Mnemonic opcode)
+{
+	if (opcode >= VSHUFPS && opcode <= SHUFPD)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
 {
 	switch (opcode)

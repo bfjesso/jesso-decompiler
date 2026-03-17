@@ -280,7 +280,8 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeCMOVcc(instruction->opcode) || 
 			isOpcodeSETcc(instruction->opcode) ||
 			instruction->opcode == STMXCSR ||
-			isOpcodeAES(instruction->opcode))
+			isOpcodeAES(instruction->opcode) ||
+			isOpcodeShuf(instruction->opcode))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;

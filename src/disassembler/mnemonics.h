@@ -227,4 +227,6 @@ unsigned char isOpcodeSETcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeAES(enum Mnemonic opcode);
 
+unsigned char isOpcodeShuf(enum Mnemonic opcode);
+
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);
