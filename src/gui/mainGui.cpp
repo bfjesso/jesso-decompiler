@@ -514,6 +514,13 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		{
 			asmStr += " ; invalid opcode";
 		}
+		else if(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR)
+		{
+			char jmpAddressStr[20] = { 0 };
+			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value);
+
+			asmStr += " ; jump to " + wxString(jmpAddressStr);
+		}
 
 		disassemblyText += addressInfoStr + asmStr + "\n";
 	}

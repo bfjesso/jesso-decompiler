@@ -185,6 +185,8 @@ extern "C"
 
 	extern const char* mnemonicStrs[];
 
+	unsigned char isOpcodeJcc(enum Mnemonic opcode);
+
 #ifdef __cplusplus
 }
 #endif
@@ -218,8 +220,6 @@ unsigned char isOpcodeCall(enum Mnemonic opcode);
 unsigned char isOpcodeReturn(enum Mnemonic opcode);
 
 unsigned char isOpcodeCmp(enum Mnemonic opcode);
-
-unsigned char isOpcodeJcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
 
