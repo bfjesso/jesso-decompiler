@@ -1023,7 +1023,7 @@ void MainGui::ApplyAsmHighlighting()
 
 void MainGui::ColorAllStrs(wxString text, const char* str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
-	if(!str)
+	if(!str || !strcmp(str, ""))
 	{
 		return;
 	}
