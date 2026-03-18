@@ -131,7 +131,7 @@ int checkForImportCall(struct DecompilationParameters params)
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
 
-	if (isOpcodeCall(instruction->opcode))
+	if (isOpcodeCall(instruction->opcode) || instruction->opcode == JMP_NEAR)
 	{
 		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
 		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);

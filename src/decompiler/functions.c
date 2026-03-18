@@ -178,11 +178,13 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			stackFrameSize += stackFrameSizeChange;
 		}
 
-		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT) && currentInstruction->operands[0].immediate.value > 0)
+		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT || currentInstruction->opcode == JMP_NEAR) && 
+			currentInstruction->operands[0].type == IMMEDIATE && 
+			currentInstruction->operands[0].immediate.value > 0)
 		{
 			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
 			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
-			if (jumpAddr > addressToJumpTo)
+			if (jumpAddr > addressToJumpTo && (nextSectionStartAddress == 0 || jumpAddr < nextSectionStartAddress))
 			{
 				addressToJumpTo = jumpAddr;
 			}
@@ -244,7 +246,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 		
-		if (isOpcodeReturn(currentInstruction->opcode))
+		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{
@@ -258,7 +260,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i + 1].address == nextSectionStartAddress)
+		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || (nextSectionStartAddress != 0 && params.allInstructions[i + 1].address == nextSectionStartAddress))
 		{
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;

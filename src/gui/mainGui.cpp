@@ -449,17 +449,31 @@ void MainGui::FindAllFunctions()
 	
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
-	int codeSectionIndex = 1;
-	unsigned long long nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+
+	int codeSectionIndex = 0;
+	unsigned long long nextSectionStartAddress = 0;
+	if (numOfCodeSections > 1) 
+	{
+		codeSectionIndex = 1;
+		nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+	}
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
 	while (instructionIndex < disassembledInstructions.size() && findNextFunction(decompParams, nextSectionStartAddress, &currentFunction, &instructionIndex))
 	{
-		if (disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
+		if (nextSectionStartAddress != 0 && disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
 		{
 			codeSectionIndex++;
-			nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+
+			if (codeSectionIndex < numOfCodeSections) 
+			{
+				nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
+			}
+			else 
+			{
+				nextSectionStartAddress = 0;
+			}
 		}
 
 		currentFunction.name = initializeJdcStr();
