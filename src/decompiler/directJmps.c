@@ -8,10 +8,15 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
 
-		if (instruction->opcode == JMP_SHORT) 
+		if (instruction->opcode == JMP_SHORT || instruction->opcode == JMP_NEAR)
 		{
 			unsigned long long jmpDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
 			int dstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+
+			if (dstIndex >= params.currentFunc->numOfInstructions) 
+			{
+				continue;
+			}
 			
 			enum DirectJmpType directJmpType = GO_TO_DJT;
 			for (int j = 0; j < numOfCondtions; j++) 
