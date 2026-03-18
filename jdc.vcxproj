@@ -166,6 +166,7 @@
     <ClCompile Include="src\decompiler\conditions.c" />
     <ClCompile Include="src\decompiler\dataTypes.c" />
     <ClCompile Include="src\decompiler\decompilationUtils.c" />
+    <ClCompile Include="src\decompiler\directJmps.c" />
     <ClCompile Include="src\decompiler\expressions.c" />
     <ClCompile Include="src\decompiler\decompiler.c" />
     <ClCompile Include="src\decompiler\functionCalls.c" />
@@ -201,6 +202,7 @@
     <ClInclude Include="src\decompiler\dataTypes.h" />
     <ClInclude Include="src\decompiler\decompilationStructs.h" />
     <ClInclude Include="src\decompiler\decompilationUtils.h" />
+    <ClInclude Include="src\decompiler\directJmps.h" />
     <ClInclude Include="src\decompiler\expressions.h" />
     <ClInclude Include="src\decompiler\decompiler.h" />
     <ClInclude Include="src\decompiler\functionCalls.h" />

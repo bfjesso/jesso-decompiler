@@ -5,6 +5,7 @@
 #include "assignment.h"
 #include "returnStatements.h"
 #include "functionCalls.h"
+#include "directJmps.h"
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
 
@@ -14,6 +15,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 {
 	struct Condition conditions[20] = { 0 };
 	int numOfConditions = getAllConditions(params, conditions, 20);
+
+	struct DirectJmp directJmps[20] = { 0 };
+	int numOfDirectJmps = getAllDirectJmps(params, conditions, numOfConditions, directJmps, 20);
 	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
@@ -79,6 +83,34 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 					isInUnreachableState = 0;
 				}
+			}
+		}
+
+		for (int j = 0; j < numOfDirectJmps; j++) 
+		{
+			if (i == directJmps[j].dstIndex && directJmps[j].type == GO_TO_DJT) 
+			{
+				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[directJmps[j].dstIndex].address - params.imageBase);
+				break;
+			}
+			else if (i == directJmps[j].jmpIndex) 
+			{
+				addIndents(result, numOfIndents);
+
+				switch (directJmps[j].type) 
+				{
+				case GO_TO_DJT:
+					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[directJmps[j].dstIndex].address - params.imageBase);
+					break;
+				case CONTINUE_DJT:
+					sprintfJdc(result, 1, "continue;\n");
+					break;
+				case BREAK_DJT:
+					sprintfJdc(result, 1, "break;\n");
+					break;
+				}
+				
+				break;
 			}
 		}
 

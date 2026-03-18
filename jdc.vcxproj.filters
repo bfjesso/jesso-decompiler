@@ -99,6 +99,9 @@
     <ClCompile Include="src\decompiler\decompilationUtils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decompiler\directJmps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -201,6 +204,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\decompilationUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\directJmps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
