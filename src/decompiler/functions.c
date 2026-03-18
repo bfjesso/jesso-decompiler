@@ -200,7 +200,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				result->returnReg = AX;
 				result->addressOfReturnFunction = 0;
 			}
-			else if (doesInstructionModifyRegister(currentInstruction, XMM0, 0, &srcOperandNum, 0))
+			else if (doesInstructionModifyRegister(currentInstruction, XMM0, 0, &srcOperandNum, 0) && result->returnReg != AX) // assuming AX is more likely to be the return register
 			{
 				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
 				result->returnReg = XMM0;
