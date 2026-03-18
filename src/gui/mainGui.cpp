@@ -514,7 +514,8 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		{
 			asmStr += " ; invalid opcode";
 		}
-		else if(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR)
+		else if(disassembledInstructions[i].operands[0].type == IMMEDIATE && 
+			(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
 		{
 			char jmpAddressStr[20] = { 0 };
 			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value);
