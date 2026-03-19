@@ -243,7 +243,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		decompileMiscInstruction(params, numOfIndents, result);
 
-		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
+		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT || currentInstruction->opcode == JMP_NEAR)
 		{
 			if (originalIndex != -1) 
 			{
