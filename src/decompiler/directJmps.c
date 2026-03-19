@@ -13,7 +13,7 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 			unsigned long long jmpDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
 			int dstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 
-			if (dstIndex >= params.currentFunc->numOfInstructions) 
+			if (dstIndex == -1 || dstIndex >= params.currentFunc->numOfInstructions)
 			{
 				continue;
 			}
