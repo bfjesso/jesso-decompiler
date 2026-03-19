@@ -17,4 +17,4 @@ struct DirectJmp
 	enum DirectJmpType type;
 };
 
-int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp* directJmps, int bufferSize);
+int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp** directJmpsRef, int directJmpsBufferSize);

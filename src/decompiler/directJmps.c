@@ -1,8 +1,10 @@
 #include "directJmps.h"
 #include "decompilationUtils.h"
 
-int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp* directJmps, int bufferSize) 
+int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp** directJmpsRef, int directJmpsBufferSize)
 {
+	struct DirectJmp* directJmps = *directJmpsRef;
+	
 	int numOfDirectJmps = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++) 
 	{
@@ -43,6 +45,21 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 
 			if (directJmpType != NONE_DJT)
 			{
+				if (numOfDirectJmps >= directJmpsBufferSize) 
+				{
+					directJmpsBufferSize += 5;
+					struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(directJmps, directJmpsBufferSize * sizeof(struct DirectJmp));
+					if (newDirectJmps)
+					{
+						*directJmpsRef = newDirectJmps;
+						directJmps = newDirectJmps;
+					}
+					else
+					{
+						return -1;
+					}
+				}
+				
 				directJmps[numOfDirectJmps].dstIndex = dstIndex;
 				directJmps[numOfDirectJmps].jmpIndex = i;
 				directJmps[numOfDirectJmps].type = directJmpType;

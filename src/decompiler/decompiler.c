@@ -13,21 +13,36 @@ const char* indent = "    ";
 
 unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
-	struct Condition conditions[20] = { 0 };
-	int numOfConditions = getAllConditions(params, conditions, 20);
+	struct Condition* conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
+	int numOfConditions = getAllConditions(params, &conditions, 20);
+	if (numOfConditions == -1) 
+	{
+		free(conditions);
+		return 0;
+	}
 
-	struct DirectJmp directJmps[20] = { 0 };
-	int numOfDirectJmps = getAllDirectJmps(params, conditions, numOfConditions, directJmps, 20);
+	struct DirectJmp* directJmps = (struct DirectJmp*)calloc(20, sizeof(struct DirectJmp));
+	int numOfDirectJmps = getAllDirectJmps(params, conditions, numOfConditions, &directJmps, 20);
+	if (numOfDirectJmps == -1)
+	{
+		free(conditions);
+		free(directJmps);
+		return 0;
+	}
 	
 	if (!params.currentFunc->hasGottenLocalVars)
 	{
 		if (!getAllRegVars(params, conditions, numOfConditions))
 		{
+			free(conditions);
+			free(directJmps);
 			return 0;
 		}
 
 		if (!getAllReturnedVars(params))
 		{
+			free(conditions);
+			free(directJmps);
 			return 0;
 		}
 
@@ -36,6 +51,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	
 	if (!generateFunctionHeader(params.currentFunc, result))
 	{
+		free(conditions);
+		free(directJmps);
 		return 0;
 	}
 
@@ -45,6 +62,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	{
 		if (!declareAllLocalVariables(params, result))
 		{
+			free(conditions);
+			free(directJmps);
 			return 0;
 		}
 	}
@@ -139,6 +158,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 			else
 			{
+				free(conditions);
+				free(directJmps);
 				return 0;
 			}
 
@@ -166,6 +187,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 			else
 			{
+				free(conditions);
+				free(directJmps);
 				return 0;
 			}
 		}
@@ -179,6 +202,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 			else
 			{
+				free(conditions);
+				free(directJmps);
 				return 0;
 			}
 		}
@@ -192,6 +217,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 			else
 			{
+				free(conditions);
+				free(directJmps);
 				return 0;
 			}
 		}
@@ -243,6 +270,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 	}
+
+	free(conditions);
+	free(directJmps);
 
 	return strcatJdc(result, "}\n");
 }

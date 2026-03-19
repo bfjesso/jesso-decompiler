@@ -4,8 +4,10 @@
 #include "expressions.h"
 #include "assignment.h"
 
-int getAllConditions(struct DecompilationParameters params, struct Condition* conditions, int conditionsLength)
+int getAllConditions(struct DecompilationParameters params, struct Condition** conditionsRef, int conditionsBufferSize)
 {
+	struct Condition* conditions = *conditionsRef;
+	
 	int numOfConditions = 0;
 	int combinationCount = 0;
 	int lastDstIndex = -1;
@@ -65,9 +67,19 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			}
 			else
 			{
-				if (numOfConditions >= conditionsLength)
+				if (numOfConditions >= conditionsBufferSize)
 				{
-					return 0;
+					conditionsBufferSize += 5;
+					struct Condition* newConditions = (struct Condition*)realloc(conditions, conditionsBufferSize * sizeof(struct Condition));
+					if (newConditions) 
+					{
+						*conditionsRef = newConditions;
+						conditions = newConditions;
+					}
+					else 
+					{
+						return -1;
+					}
 				}
 				
 				// setting the type
@@ -129,9 +141,19 @@ int getAllConditions(struct DecompilationParameters params, struct Condition* co
 			conditions[numOfConditions].conditionType = ELSE_CT;
 
 			numOfConditions++;
-			if (numOfConditions >= conditionsLength)
+			if (numOfConditions >= conditionsBufferSize)
 			{
-				return 0;
+				conditionsBufferSize += 5;
+				struct Condition* newConditions = (struct Condition*)realloc(conditions, conditionsBufferSize * sizeof(struct Condition));
+				if (newConditions)
+				{
+					*conditionsRef = newConditions;
+					conditions = newConditions;
+				}
+				else
+				{
+					return -1;
+				}
 			}
 		}
 	}

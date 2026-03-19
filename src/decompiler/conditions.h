@@ -34,7 +34,7 @@ struct Condition
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
 };
 
-int getAllConditions(struct DecompilationParameters params, struct Condition* conditions, int conditionsLength);
+int getAllConditions(struct DecompilationParameters params, struct Condition** conditionsRef, int conditionsBufferSize);
 
 int checkForCondition(int instructionIndex, struct Condition* conditions, int numOfConditions);
 
