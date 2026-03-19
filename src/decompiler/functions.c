@@ -2,7 +2,7 @@
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 
-unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long nextSectionStartAddress, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, struct Function* result, int* instructionIndex)
 {
 	// these correspond with platformRegArgs
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; 
@@ -184,7 +184,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		{
 			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
 			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
-			if (jumpAddr > addressToJumpTo && (nextSectionStartAddress == 0 || jumpAddr < nextSectionStartAddress))
+			if (jumpAddr > addressToJumpTo && jumpAddr <= currentSectionEndAddress)
 			{
 				addressToJumpTo = jumpAddr;
 			}
@@ -260,7 +260,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || (nextSectionStartAddress != 0 && params.allInstructions[i + 1].address == nextSectionStartAddress))
+		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i].address == currentSectionEndAddress)
 		{
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;

@@ -451,28 +451,19 @@ void MainGui::FindAllFunctions()
 	int instructionIndex = 0;
 
 	int codeSectionIndex = 0;
-	unsigned long long nextSectionStartAddress = 0;
-	if (numOfCodeSections > 1) 
-	{
-		codeSectionIndex = 1;
-		nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
-	}
+	unsigned long long currentSectionEndAddress = imageBase + codeSections[0].virtualAddress + codeSections[0].size - 1;
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(decompParams, nextSectionStartAddress, &currentFunction, &instructionIndex))
+	while (instructionIndex < disassembledInstructions.size() && findNextFunction(decompParams, currentSectionEndAddress, &currentFunction, &instructionIndex))
 	{
-		if (nextSectionStartAddress != 0 && disassembledInstructions[instructionIndex].address >= nextSectionStartAddress)
+		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{
 			codeSectionIndex++;
 
 			if (codeSectionIndex < numOfCodeSections) 
 			{
-				nextSectionStartAddress = imageBase + codeSections[codeSectionIndex].virtualAddress;
-			}
-			else 
-			{
-				nextSectionStartAddress = 0;
+				currentSectionEndAddress = imageBase + codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size - 1;
 			}
 		}
 
