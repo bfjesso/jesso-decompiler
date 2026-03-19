@@ -239,13 +239,9 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			{
 				return 0;
 			}
-		}
 
-		decompileMiscInstruction(params, numOfIndents, result);
-
-		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT || currentInstruction->opcode == JMP_NEAR)
-		{
-			if (originalIndex != -1) 
+			// checking for end of jmp in decomp
+			if (originalIndex != -1)
 			{
 				i = originalIndex;
 				originalIndex = -1;
@@ -264,11 +260,13 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 				isInUnreachableState = 0;
 			}
-			else 
+			else
 			{
 				isInUnreachableState = 1;
 			}
 		}
+
+		decompileMiscInstruction(params, numOfIndents, result);
 	}
 
 	free(conditions);
