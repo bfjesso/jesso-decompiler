@@ -1,5 +1,6 @@
 #include "directJmps.h"
 #include "decompilationUtils.h"
+#include "returnStatements.h"
 
 int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp** directJmpsRef, int directJmpsBufferSize)
 {
@@ -12,6 +13,12 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 
 		if (instruction->opcode == JMP_SHORT || instruction->opcode == JMP_NEAR)
 		{
+			params.startInstructionIndex = i;
+			if (checkForReturnStatement(params))
+			{
+				continue;
+			}
+			
 			unsigned long long jmpDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
 			int dstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 
