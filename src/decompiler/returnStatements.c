@@ -45,7 +45,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 		unsigned long long jmpDst = params.currentFunc->instructions[params.startInstructionIndex].address + instruction->operands[0].immediate.value;
 		int jmpDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
 
-		if (jmpDstIndex >= params.currentFunc->numOfInstructions)
+		if (jmpDstIndex == -1 || jmpDstIndex >= params.currentFunc->numOfInstructions)
 		{
 			return 1;
 		}
