@@ -270,7 +270,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			{
 				if (isOpcodeJmp(currentInstruction->opcode) && currentInstruction->operands[0].type == IMMEDIATE && currentInstruction->operands[0].immediate.value > 0)
 				{
-					unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
+					unsigned long long jumpAddr = currentInstruction->address + currentInstruction->operands[0].immediate.value;
 					int instructionIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jumpAddr);
 					if (instructionIndex > indexToJumpTo)
 					{
