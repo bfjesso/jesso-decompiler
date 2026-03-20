@@ -311,6 +311,16 @@ unsigned char isOpcodeReturn(enum Mnemonic opcode)
 	return 0;
 }
 
+unsigned char isOpcodeJmp(enum Mnemonic opcode)
+{
+	if (opcode == JMP_SHORT || opcode == JMP_NEAR)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char isOpcodeCmp(enum Mnemonic opcode)
 {
 	if (opcode >= CMP && opcode <= COMISD)

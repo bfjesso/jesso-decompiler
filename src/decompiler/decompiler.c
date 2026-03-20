@@ -73,7 +73,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	int originalNumOfIndents = -1; // so it returns to same level of indents
 
 	unsigned char numOfIndents = 1;
-	unsigned char isInUnreachableState = 0; // if looking at instructions after a ret or jmp
+	int indexToJumpTo = -1; // if looking at instructions after a ret or jmp
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
@@ -100,7 +100,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "}\n");
 
-					isInUnreachableState = 0;
+					indexToJumpTo = -1;
 				}
 			}
 		}
@@ -152,7 +152,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "{\n");
 
-					isInUnreachableState = 0;
+					indexToJumpTo = -1;
 					numOfIndents++;
 				}
 			}
@@ -174,7 +174,14 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if (isInUnreachableState) { continue; }
+		if (i < indexToJumpTo)
+		{
+			continue;
+		}
+		else
+		{
+			indexToJumpTo = -1;
+		}
 
 		struct Function* callee;
 		int importIndex = checkForImportCall(params);
@@ -240,8 +247,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				return 0;
 			}
 
-			// checking for end of jmp in decomp
-			if (originalIndex != -1)
+			if (originalIndex != -1) // handling end of jmp in decomp
 			{
 				i = originalIndex;
 				originalIndex = -1;
@@ -258,11 +264,23 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 				originalNumOfIndents = -1;
 
-				isInUnreachableState = 0;
+				indexToJumpTo = -1;
 			}
 			else
 			{
-				isInUnreachableState = 1;
+				if (isOpcodeJmp(currentInstruction->opcode) && currentInstruction->operands[0].type == IMMEDIATE && currentInstruction->operands[0].immediate.value > 0)
+				{
+					unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
+					int instructionIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jumpAddr);
+					if (instructionIndex > indexToJumpTo)
+					{
+						indexToJumpTo = instructionIndex;
+					}
+				}
+				else
+				{
+					indexToJumpTo = params.currentFunc->numOfInstructions + 1; // this is so the current state will be treated as unreachable. indexToJumpTo gets reset back to -1 when there is a condtion.
+				}
 			}
 		}
 

@@ -40,7 +40,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 	}
 
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
-	if (instruction->opcode == JMP_SHORT || instruction->opcode == JMP_NEAR)
+	if (isOpcodeJmp(instruction->opcode))
 	{
 		unsigned long long jmpDst = params.currentFunc->instructions[params.startInstructionIndex].address + instruction->operands[0].immediate.value;
 		int jmpDstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
@@ -59,7 +59,8 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 				return 1;
 			}
 
-			if (checkForAssignment(params) || doesInstructionModifyReturnRegister(params))
+			enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
+			if (checkForAssignment(params) || isOpcodeCall(opcode) || isOpcodeJcc(opcode) || doesInstructionModifyReturnRegister(params))
 			{
 				return 0;
 			}

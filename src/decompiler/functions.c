@@ -178,7 +178,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			stackFrameSize += stackFrameSizeChange;
 		}
 
-		if ((isOpcodeJcc(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT || currentInstruction->opcode == JMP_NEAR) && 
+		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
 			currentInstruction->operands[0].type == IMMEDIATE && 
 			currentInstruction->operands[0].immediate.value > 0)
 		{
