@@ -62,7 +62,7 @@ unsigned char decompileReturningIntrinsicFunc(struct IntrinsicFunc* intrinsicFun
 			sprintfJdc(result, 1, "%s", decompiledOperands[i].buffer);
 			freeJdcStr(&decompiledOperands[i]);
 
-			if (i < lastDecompiledOperand - 1)
+			if (i < lastDecompiledOperand)
 			{
 				strcatJdc(result, ", ");
 			}
@@ -142,7 +142,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters params, 
 			sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
 			freeJdcStr(&decompiledOperand);
 
-			if (i < lastDecompiledOperand - 1)
+			if (i < lastDecompiledOperand)
 			{
 				strcatJdc(result, ", ");
 			}
