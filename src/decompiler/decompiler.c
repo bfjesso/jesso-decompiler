@@ -297,20 +297,21 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 {
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
-		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
+		params.startInstructionIndex = i;
+		struct Function* callee;
+		int importIndex = checkForImportCall(params);
+		if (checkForFunctionCall(params, &callee) || importIndex != -1)
 		{
-			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
-			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-			enum Register returnReg = calleeIndex != -1 ? params.functions[calleeIndex].returnReg : AX;
-			
+			enum Register returnReg = callee ? callee->returnReg : AX;
+			unsigned long long calleeAddress = callee ? callee->instructions[0].address : params.imports[importIndex].address;
+
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i; j < params.currentFunc->numOfInstructions; j++)
 			{
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
-				if(j != i)
+				if (j != i)
 				{
 					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, returnReg, 0, 0, &overwrites) && overwrites))
 					{
@@ -318,7 +319,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					}
 				}
 
-				if (isOpcodeReturn(opcode))
+				if (checkForReturnStatement(params))
 				{
 					returnType = params.currentFunc->returnType;
 					break;
@@ -345,30 +346,22 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				}
 			}
 
-			if (calleeIndex != -1)
+			if (callee)
 			{
-				if (params.functions[calleeIndex].returnType.primitiveType == VOID_TYPE)
+				if (callee->returnType.primitiveType == VOID_TYPE)
 				{
 					continue;
 				}
-				else if(!addReturnedVar(params.currentFunc, params.functions[calleeIndex].returnType, callNum, calleeAddress, returnReg, params.functions[calleeIndex].name.buffer))
+				else if (!addReturnedVar(params.currentFunc, callee->returnType, callNum, calleeAddress, returnReg, callee->name.buffer))
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				for (int j = 0; j < params.numOfImports; j++)
+				if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, returnReg, params.imports[importIndex].name.buffer))
 				{
-					if (params.imports[j].address == calleeAddress)
-					{
-						if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, returnReg, params.imports[j].name.buffer))
-						{
-							return 0;
-						}
-				
-						break;
-					}
+					return 0;
 				}
 			}
 		}

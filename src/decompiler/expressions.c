@@ -461,35 +461,27 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 				return 0;
 			}
 		}
-		else if (isOpcodeCall(currentInstruction->opcode))
+		else 
 		{
-			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
-			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-			
-			if (calleeIndex != -1)
+			struct Function* callee;
+			if (checkForFunctionCall(params, &callee) && compareRegisters(callee->returnReg, targetReg))
 			{
-				if (compareRegisters(params.functions[calleeIndex].returnReg, targetReg)) 
+				int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
+				struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
+				if (returnedVar != 0)
 				{
-					int callNum = getFunctionCallNumber(params, calleeAddress);
-					struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
-					if (returnedVar != 0)
-					{
-						expressions[expressionIndex] = initializeJdcStr();
-						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
-					}
-					expressionIndex++;
-					finished = 1;
+					expressions[expressionIndex] = initializeJdcStr();
+					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
 				}
+				expressionIndex++;
+				finished = 1;
 			}
-			else if(compareRegisters(targetReg, AX))
+			else 
 			{
-				// checking for imported function call
 				int importIndex = checkForImportCall(params);
-
-				if (importIndex != -1)
+				if (importIndex != -1 && compareRegisters(targetReg, AX))
 				{
-					calleeAddress = params.imports[importIndex].address;
+					unsigned long long calleeAddress = params.imports[importIndex].address;
 					int callNum = getFunctionCallNumber(params, calleeAddress);
 					struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
 					if (returnedVar != 0)
@@ -499,15 +491,6 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 					}
 					expressionIndex++;
 					finished = 1;
-				}
-				else
-				{
-					for (int j = 0; j < expressionIndex; j++)
-					{
-						freeJdcStr(&expressions[j]);
-					}
-					free(expressions);
-					return 0;
 				}
 			}
 		}

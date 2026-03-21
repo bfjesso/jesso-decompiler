@@ -34,7 +34,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	if (isOpcodeReturn(instruction->opcode))
+	if (isOpcodeReturn(instruction->opcode) || params.startInstructionIndex == params.currentFunc->numOfInstructions - 1)
 	{
 		return 1;
 	}
@@ -78,7 +78,6 @@ unsigned char decompileReturnStatement(struct DecompilationParameters params, st
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
-
 	if (!decompileRegister(params, params.currentFunc->returnReg, params.currentFunc->returnType, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);

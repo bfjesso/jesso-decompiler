@@ -8,24 +8,27 @@ unsigned char checkForFunctionCall(struct DecompilationParameters params, struct
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
+	int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
 
+	unsigned long long calleeAddress = 0;
 	if (isOpcodeCall(instruction->opcode))
 	{
-		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
-		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-		int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-
-		if (calleeIndex == -1)
-		{
-			return 0;
-		}
-
-		*calleeRef = &(params.functions[calleeIndex]);
-
-		return 1;
+		calleeAddress = resolveJmpChain(params, currentInstructionIndex);
+	}
+	else if (params.startInstructionIndex == params.currentFunc->numOfInstructions - 1 && !isOpcodeReturn(instruction->opcode))
+	{
+		calleeAddress = params.allInstructions[currentInstructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
 	}
 
-	return 0;
+	int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+	if (calleeIndex == -1)
+	{
+		return 0;
+	}
+
+	*calleeRef = &(params.functions[calleeIndex]);
+
+	return 1;
 }
 
 unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct JdcStr* result)
