@@ -389,18 +389,36 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	// checking for registers that are modified in a condition
 	for (int i = 0; i < numOfConditions; i++) 
 	{
-		if (!conditions[i].requiresJumpInDecomp && !conditions[i].isCombinedByOther)
+		if (!conditions[i].isCombinedByOther)
 		{
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
 
-			int start = conditions[i].conditionType == DO_WHILE_CT ? conditions[i].dstIndex : conditions[i].jccIndex;
-			int end = conditions[i].conditionType == DO_WHILE_CT ? conditions[i].jccIndex : conditions[i].dstIndex;
+			int start = conditions[i].jccIndex;
+			int end = conditions[i].dstIndex;
+
+			if (conditions[i].conditionType == DO_WHILE_CT) 
+			{
+				start = conditions[i].dstIndex;
+				end = conditions[i].jccIndex;
+			}
+			else if (conditions[i].requiresJumpInDecomp) 
+			{
+				start = conditions[i].dstIndex;
+				end = params.currentFunc->numOfInstructions - 1; // end is when there is a return
+			}
 			
 			for (int j = start; j < end; j++)
 			{
+				params.startInstructionIndex = j;
+				
 				int conditionIndex = checkForCondition(j, conditions, numOfConditions);
 				if (conditionIndex != -1 && conditionIndex != i)
+				{
+					break;
+				}
+
+				if (checkForReturnStatement(params)) 
 				{
 					break;
 				}
@@ -440,9 +458,21 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 						continue;
 					}
 
-					modifiedRegs[numOfRegs].reg = reg;
-					modifiedRegs[numOfRegs].type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-					numOfRegs++;
+					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+
+					if (conditions[i].requiresJumpInDecomp) 
+					{
+						if (!addRegVar(params.currentFunc, type, reg))
+						{
+							return 0;
+						}
+					}
+					else 
+					{
+						modifiedRegs[numOfRegs].reg = reg;
+						modifiedRegs[numOfRegs].type = type;
+						numOfRegs++;
+					}
 				}
 			}
 
