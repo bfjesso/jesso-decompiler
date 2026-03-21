@@ -53,14 +53,13 @@ unsigned char checkForReturnStatement(struct DecompilationParameters params)
 		for (int i = jmpDstIndex; i < params.currentFunc->numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
 		{
 			params.startInstructionIndex = i;
-
 			if (checkForReturnStatement(params))
 			{
 				return 1;
 			}
 
-			enum Mnemonic opcode = params.currentFunc->instructions[i].opcode;
-			if (checkForAssignment(params) || isOpcodeCall(opcode) || isOpcodeJcc(opcode) || doesInstructionModifyReturnRegister(params))
+			struct DisassembledInstruction* instruction = &params.currentFunc->instructions[i];
+			if ((instruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(instruction, 0, 0, 0)) || isOpcodeCall(instruction->opcode) || isOpcodeJcc(instruction->opcode) || doesInstructionModifyReturnRegister(params))
 			{
 				return 0;
 			}
