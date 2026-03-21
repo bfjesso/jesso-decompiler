@@ -299,11 +299,13 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 				if (functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE) 
 				{
 					functions[i].returnType = functions[returnFunctionIndex].returnType;
+					functions[i].returnReg = functions[returnFunctionIndex].returnReg;
 				}
 			}
 			else // probably an imported function
 			{
 				functions[i].returnType.primitiveType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
+				functions[i].returnReg = AX;
 			}
 		}
 	}
