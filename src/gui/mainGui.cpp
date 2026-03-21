@@ -4,6 +4,7 @@
 #include "../disassembler/registers.h"
 #include "../disassembler/mnemonics.h"
 #include "../decompiler/functions.h"
+#include "../decompiler/intrinsics.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
@@ -857,10 +858,14 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
 	}
 
-	// opcodes
-	for (int i = 0; i < numOfImports; i++)
+	// intrinsic functions
+	for (int i = 0; i < numOfReturningIntrinsicFuncs; i++)
 	{
-		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
+		ColorAllStrs(text, returningIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
+	}
+	for (int i = 0; i < numOfVoidIntrinsicFuncs; i++)
+	{
+		ColorAllStrs(text, voidIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
 	}
 
 	// calling conventions

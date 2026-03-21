@@ -8,13 +8,22 @@ struct IntrinsicFunc
 	const char* name;
 };
 
-// these modify the dst operand
-extern struct IntrinsicFunc returningIntrinsicFuncs[];
-extern const int numOfReturningIntrinsicFuncs;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-// these do not modify any operand
-extern struct IntrinsicFunc voidIntrinsicFuncs[];
-extern const int numOfVoidIntrinsicFuncs;
+	// these modify the dst operand
+	extern struct IntrinsicFunc returningIntrinsicFuncs[];
+	extern const int numOfReturningIntrinsicFuncs;
+
+	// these do not modify any operand
+	extern struct IntrinsicFunc voidIntrinsicFuncs[];
+	extern const int numOfVoidIntrinsicFuncs;
+
+#ifdef __cplusplus
+}
+#endif
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 

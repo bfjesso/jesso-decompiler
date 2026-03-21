@@ -63,39 +63,42 @@ public:
 		ARGUMENT_COLOR,
 		FUNCTION_COLOR,
 		IMPORT_COLOR,
+		INTRINSIC_COLOR,
 		PRIMITIVE_COLOR,
 		KEYWORD_COLOR,
 		STRING_COLOR,
 		NUMBER_COLOR,
 		ERROR_COLOR,
 	};
-	const char* decompColorNames[10] = 
+	const char* decompColorNames[11] = 
 	{ 
 		"Operators",
 		"Local variables",
 		"Arguments",
 		"Functions",
 		"Imports",
+		"Intrinsic Functions",
 		"Primitive types",
 		"Keywords",
 		"Strings",
 		"Numbers",
 		"Errors"
 	};
-	wxColour defaultDecompColors[10] = 
+	wxColour defaultDecompColors[11] = 
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
 		wxColour(154, 154, 154),
 		wxColour(220, 220, 170),
 		wxColour(190, 183, 255),
+		wxColour(220, 220, 170),
 		wxColour(86, 156, 214),
 		wxColour(216, 160, 223),
 		wxColour(232, 201, 187),
 		wxColour(181, 206, 168),
 		wxColour(250, 50, 50)
 	};
-	const int numberOfDecompColors = 10;
+	const int numberOfDecompColors = 11;
 	
 	enum ids
 	{

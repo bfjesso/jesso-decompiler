@@ -16,7 +16,7 @@ const int numOfReturningIntrinsicFuncs = 7;
 struct IntrinsicFunc voidIntrinsicFuncs[] =
 {
 	{ INT3, { 0, 0, 0, 0 }, "__debugbreak" },
-	{ _INT, { 0, 0, 0, 0 }, "" }, // intrinsic is determined by immediate operand
+	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
 };
 const int numOfVoidIntrinsicFuncs = 2;
 
@@ -102,7 +102,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters params, 
 
 			if (decompileRegister(params, CX, type, &code, 0))
 			{
-				sprintfJdc(result, 1, "__fastfail(%s);\n", code.buffer);
+				sprintfJdc(result, 1, "%s(%s);\n", intrinsicFunc->name, code.buffer);
 			}
 
 			freeJdcStr(&code);
