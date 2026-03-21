@@ -1,10 +1,10 @@
 #include "decompiler.h"
 #include "decompilationUtils.h"
 #include "functions.h"
-#include "expressions.h"
 #include "assignment.h"
 #include "returnStatements.h"
 #include "functionCalls.h"
+#include "intrinsics.h"
 #include "directJmps.h"
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
@@ -183,7 +183,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			indexToJumpTo = -1;
 		}
 
-		struct Function* callee;
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
@@ -200,10 +199,27 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
+		struct Function* callee;
 		if (checkForFunctionCall(params, &callee))
 		{
 			addIndents(result, numOfIndents);
 			if (decompileFunctionCall(params, callee, result))
+			{
+				strcatJdc(result, "\n");
+			}
+			else
+			{
+				free(conditions);
+				free(directJmps);
+				return 0;
+			}
+		}
+
+		struct IntrinsicFunc* intrinsicFunc;
+		if (checkForVoidIntrinsicFunc(currentInstruction->opcode, &intrinsicFunc))
+		{
+			addIndents(result, numOfIndents);
+			if (decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
 				strcatJdc(result, "\n");
 			}
@@ -283,8 +299,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				}
 			}
 		}
-
-		decompileMiscInstruction(params, numOfIndents, result);
 	}
 
 	free(conditions);
@@ -666,33 +680,4 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters par
 
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, "\n");
-}
-
-static void decompileMiscInstruction(struct DecompilationParameters params, unsigned char numOfIndents, struct JdcStr* result)
-{
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	
-	// these are windows functions
-	if (currentInstruction->opcode == INT3) 
-	{
-		addIndents(result, numOfIndents);
-		strcatJdc(result, "__debugbreak();\n");
-		return;
-	}
-	else if (currentInstruction->opcode == _INT && currentInstruction->operands[0].immediate.value == 0x29) 
-	{
-		struct JdcStr code = initializeJdcStr();
-		struct VarType type = { 0 };
-		type.isUnsigned = 1;
-		type.primitiveType = INT_TYPE;
-
-		if (decompileRegister(params, CX, type, &code, 0)) 
-		{
-			addIndents(result, numOfIndents);
-			sprintfJdc(result, 1, "__fastfail(%s);\n", code.buffer);
-		}
-
-		freeJdcStr(&code);
-		return;
-	}
 }

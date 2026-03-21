@@ -3,6 +3,7 @@
 #include "decompilationUtils.h"
 #include "functions.h"
 #include "functionCalls.h"
+#include "intrinsics.h"
 #include "dataTypes.h"
 
 #include <ctype.h>
@@ -1017,49 +1018,18 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 	}
 	else
 	{
-		return decompileOpcodeAsFunction(instruction->opcode, numOfOperands, getAssignment, decompiledOperands, result);
-	}
-
-	for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-	return 1;
-}
-
-static unsigned char decompileOpcodeAsFunction(enum Mnemonic opcode, int numOfOperands, unsigned char getAssignment, struct JdcStr* decompiledOperands, struct JdcStr* result)
-{
-	char* mnemonicStrsLowercase = (char*)malloc(strlen(mnemonicStrs[opcode]) + 1);
-	if (!mnemonicStrsLowercase)
-	{
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-		return 0;
-	}
-	strcpy(mnemonicStrsLowercase, mnemonicStrs[opcode]);
-	for (int i = 0; i < strlen(mnemonicStrsLowercase); i++)
-	{
-		mnemonicStrsLowercase[i] = tolower(mnemonicStrsLowercase[i]);
-	}
-
-	if (getAssignment) 
-	{ 
-		sprintfJdc(result, 0, "%s = %s(", decompiledOperands[0].buffer, mnemonicStrsLowercase); 
-	}
-	else 
-	{
-		sprintfJdc(result, 0, "%s(", mnemonicStrsLowercase);
-	}
-
-	for (int i = 0; i < numOfOperands; i++)
-	{
-		sprintfJdc(result, 1, "%s", decompiledOperands[i].buffer);
-		freeJdcStr(&decompiledOperands[i]);
-
-		if (i != numOfOperands - 1)
+		struct IntriniscFunc* intrinsicFunc;
+		if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
 		{
-			strcatJdc(result, ", ");
+			return decompileReturningIntrinsicFunc(intrinsicFunc, numOfOperands, getAssignment, decompiledOperands, result);
+		}
+		else 
+		{
+			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			return 0;
 		}
 	}
 
-	strcatJdc(result, ")");
-
-	free(mnemonicStrsLowercase);
+	for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
 	return 1;
 }

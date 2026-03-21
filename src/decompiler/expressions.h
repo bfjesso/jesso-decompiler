@@ -12,5 +12,3 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 unsigned char decompileComparison(struct DecompilationParameters params, unsigned char invertOperator, struct JdcStr* result);
 
 unsigned char decompileOperation(struct DecompilationParameters params, struct VarType type, unsigned char getAssignment, struct JdcStr* result);
-
-static unsigned char decompileOpcodeAsFunction(enum Mnemonic opcode, int numOfOperands, unsigned char getAssignment, struct JdcStr* decompiledOperands, struct JdcStr* result);
