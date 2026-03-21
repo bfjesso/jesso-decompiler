@@ -233,7 +233,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		if (checkForReturnStatement(params))
 		{
 			addIndents(result, numOfIndents);
-			if(currentInstruction->opcode != JMP_FAR && currentInstruction->opcode != JMP_NEAR)
+			if(isOpcodeReturn(currentInstruction->opcode))
 			{
 				params.startInstructionIndex--;
 			}
