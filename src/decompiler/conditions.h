@@ -32,6 +32,8 @@ struct Condition
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
 	enum LogicalType combinationLogicType; // OR or AND
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
+
+	unsigned char hasEnteredCondition; // this is checked when looking for ends of conditions. it is possible that a condition will never be entered if there is a direct jmp that skips it
 };
 
 int getAllConditions(struct DecompilationParameters params, struct Condition** conditionsRef, int conditionsBufferSize);

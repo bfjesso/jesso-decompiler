@@ -83,7 +83,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		// checking for end of condition
 		for (int j = 0; j < numOfConditions; j++) 
 		{
-			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && i == conditions[j].dstIndex)
+			if (!conditions[j].requiresJumpInDecomp && !conditions[j].isCombinedByOther && i == conditions[j].dstIndex && conditions[j].hasEnteredCondition)
 			{
 				if (conditions[j].conditionType == DO_WHILE_CT) 
 				{
@@ -164,6 +164,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 					numOfIndents++;
 				}
+
+				conditions[conditionIndex].hasEnteredCondition = 1;
 			}
 			else
 			{
