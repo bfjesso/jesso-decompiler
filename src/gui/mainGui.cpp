@@ -1069,7 +1069,9 @@ void MainGui::ColorAllStrs(wxString text, const char* str, ColorsMenu::Decompila
 		{
 			int end = pos + strlen(str);
 
-			if (forceColor || decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
+			if (forceColor || 
+				decompilationTextCtrl->GetStyleAt(pos) == color || // incase there are two strs that are equal except for one having more text at the end
+				decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				decompilationTextCtrl->StartStyling(pos);
 				decompilationTextCtrl->SetStyling(strlen(str), color);
