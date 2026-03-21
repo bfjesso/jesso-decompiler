@@ -251,11 +251,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		if (checkForReturnStatement(params))
 		{
 			addIndents(result, numOfIndents);
-			if(isOpcodeReturn(currentInstruction->opcode))
-			{
-				params.startInstructionIndex--;
-			}
-
 			if (decompileReturnStatement(params, result))
 			{
 				strcatJdc(result, "\n");

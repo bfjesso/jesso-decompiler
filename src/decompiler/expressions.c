@@ -403,6 +403,8 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 	unsigned char finished = 0;
 	unsigned char isInUnreachableState = 0;
 
+	int ogStartInstructionIndex = params.startInstructionIndex;
+
 	for (int i = params.startInstructionIndex; i >= 0; i--)
 	{
 		if (finished)
@@ -516,13 +518,16 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			}
 		}
 
-		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
+		if (i != ogStartInstructionIndex) 
 		{
-			isInUnreachableState = 1;
-		}
-		else if (isOpcodeJcc(currentInstruction->opcode))
-		{
-			isInUnreachableState = 0;
+			if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
+			{
+				isInUnreachableState = 1;
+			}
+			else if (isOpcodeJcc(currentInstruction->opcode))
+			{
+				isInUnreachableState = 0;
+			}
 		}
 	}
 
