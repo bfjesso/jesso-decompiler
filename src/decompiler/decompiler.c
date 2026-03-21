@@ -105,6 +105,15 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
+		if (i < indexToJumpTo)
+		{
+			continue;
+		}
+		else
+		{
+			indexToJumpTo = -1;
+		}
+
 		for (int j = 0; j < numOfDirectJmps; j++) 
 		{
 			if (i == directJmps[j].dstIndex && directJmps[j].type == GO_TO_DJT) 
@@ -120,6 +129,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				{
 				case GO_TO_DJT:
 					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[directJmps[j].dstIndex].address - params.imageBase);
+					indexToJumpTo = directJmps[j].dstIndex;
 					break;
 				case CONTINUE_DJT:
 					sprintfJdc(result, 1, "continue;\n");
@@ -128,7 +138,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					sprintfJdc(result, 1, "break;\n");
 					break;
 				}
-				
+
 				break;
 			}
 		}
@@ -152,7 +162,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "{\n");
 
-					indexToJumpTo = -1;
 					numOfIndents++;
 				}
 			}
@@ -172,15 +181,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				params.skipLowerBound = i;
 				continue;
 			}
-		}
-
-		if (i < indexToJumpTo)
-		{
-			continue;
-		}
-		else
-		{
-			indexToJumpTo = -1;
 		}
 
 		int importIndex = checkForImportCall(params);
@@ -279,8 +279,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				}
 
 				originalNumOfIndents = -1;
-
-				indexToJumpTo = -1;
 			}
 			else
 			{
