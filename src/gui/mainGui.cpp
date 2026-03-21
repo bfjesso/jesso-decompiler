@@ -1,4 +1,5 @@
 #include "mainGui.h"
+#include "../decompiler/decompilationUtils.h"
 #include "../decompiler/dataTypes.h"
 #include "../disassembler/registers.h"
 #include "../disassembler/mnemonics.h"
@@ -453,9 +454,22 @@ void MainGui::FindAllFunctions()
 	int codeSectionIndex = 0;
 	unsigned long long currentSectionEndAddress = imageBase + codeSections[0].virtualAddress + codeSections[0].size - 1;
 
+	std::vector<unsigned long long> calledAddresses;
+	for (int i = 0; i < numOfInstructions; i++) 
+	{
+		if (disassembledInstructions[i].opcode == CALL_NEAR && disassembledInstructions[i].operands[0].type == IMMEDIATE) 
+		{
+			unsigned long long addr = disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value;
+			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, addr) == -1) 
+			{
+				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), addr), addr); // sorting it
+			}
+		}
+	}
+
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
-	while (instructionIndex < disassembledInstructions.size() && findNextFunction(decompParams, currentSectionEndAddress, &currentFunction, &instructionIndex))
+	while (instructionIndex < numOfInstructions && findNextFunction(decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{

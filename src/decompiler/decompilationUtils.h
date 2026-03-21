@@ -1,6 +1,18 @@
 #pragma once
 #include "decompilationStructs.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address);
+
+#ifdef __cplusplus
+}
+#endif
+
+
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
 unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex);

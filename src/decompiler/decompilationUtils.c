@@ -49,6 +49,21 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int l
 	return -1;
 }
 
+int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address)
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (addresses[mid] == address) { return mid; }
+
+		if (addresses[mid] < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)

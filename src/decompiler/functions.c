@@ -2,7 +2,7 @@
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 
-unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
 	// these correspond with platformRegArgs
 	unsigned char initializedRegs[ST0 - RAX] = { 0 }; 
@@ -265,6 +265,13 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;
 			result->addressOfReturnFunction = 0;
+
+			sortFunctionArguments(result);
+			return 1;
+		}
+		else if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params.allInstructions[i + 1].address) != -1)
+		{
+			result->addressOfReturnFunction = params.allInstructions[i + 1].address;
 
 			sortFunctionArguments(result);
 			return 1;
