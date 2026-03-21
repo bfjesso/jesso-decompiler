@@ -527,14 +527,14 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					{
 						for (int k = 0; k < 2; k++) 
 						{
-							if (currentInstruction->operands[k].type == REGISTER && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].reg))
+							if (currentInstruction->operands[k].type == REGISTER && !isRegisterPointer(currentInstruction->operands[k].reg) && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].reg))
 							{
 								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
 								{
 									return 0;
 								}
 							}
-							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].memoryAddress.reg))
+							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !isRegisterPointer(currentInstruction->operands[k].memoryAddress.reg) && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].memoryAddress.reg))
 							{
 								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
 								{
@@ -555,7 +555,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 	{
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
+		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
 			
