@@ -458,12 +458,12 @@ void MainGui::FindAllFunctions()
 	std::vector<unsigned long long> calledAddresses;
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		if (disassembledInstructions[i].opcode == CALL_NEAR && disassembledInstructions[i].operands[0].type == IMMEDIATE) 
+		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
-			unsigned long long addr = disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value;
-			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, addr) == -1) 
+			unsigned long long address = resolveJmpChain(decompParams, i);
+			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, address) == -1)
 			{
-				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), addr), addr); // sorting it
+				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
 			}
 		}
 	}

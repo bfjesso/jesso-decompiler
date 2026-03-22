@@ -8,14 +8,14 @@ extern "C"
 
 	int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address);
 
+	unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex);
+
 #ifdef __cplusplus
 }
 #endif
 
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
-
-unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex);
 
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 
