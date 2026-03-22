@@ -227,6 +227,14 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		}
 
+		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params.allInstructions[i + 1].address) != -1)
+		{
+			result->addressOfReturnFunction = params.allInstructions[i + 1].address;
+
+			sortFunctionArguments(result);
+			return 1;
+		}
+
 		isAfterJmp = addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo;
 		if (isAfterJmp)
 		{
@@ -265,13 +273,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;
 			result->addressOfReturnFunction = 0;
-
-			sortFunctionArguments(result);
-			return 1;
-		}
-		else if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params.allInstructions[i + 1].address) != -1)
-		{
-			result->addressOfReturnFunction = params.allInstructions[i + 1].address;
 
 			sortFunctionArguments(result);
 			return 1;
