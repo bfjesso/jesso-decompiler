@@ -285,15 +285,14 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	if (result->buffer[strlen(result->buffer) - 1] != '(')
 	{
-		result->buffer[strlen(result->buffer) - 2] = ')';
+		result->buffer[strlen(result->buffer) - 2] = ')'; // removing the last comma
 		result->buffer[strlen(result->buffer) - 1] = 0;
+		strcatJdc(result, "; // arguments are guessed");
 	}
 	else
 	{
-		strcatJdc(result, ")");
+		strcatJdc(result, ");");
 	}
-
-	strcatJdc(result, ";");
 
 	return 1;
 }
