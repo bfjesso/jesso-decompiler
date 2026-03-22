@@ -307,7 +307,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		params.startInstructionIndex = i;
-		struct Function* callee;
+		struct Function* callee = 0;
 		int importIndex = checkForImportCall(params);
 		if (checkForFunctionCall(params, &callee) || importIndex != -1)
 		{
