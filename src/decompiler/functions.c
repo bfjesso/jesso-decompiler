@@ -290,9 +290,11 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 		{
 			int returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[i].addressOfReturnFunction);
 
-			while (returnFunctionIndex != -1 && functions[returnFunctionIndex].addressOfReturnFunction != 0)
+			int count = 0; // to avoid an infinite loop
+			while (returnFunctionIndex != -1 && functions[returnFunctionIndex].addressOfReturnFunction != 0 && count < 10)
 			{
 				returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[returnFunctionIndex].addressOfReturnFunction);
+				count++;
 			}
 
 			if (returnFunctionIndex != -1)
