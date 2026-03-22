@@ -317,6 +317,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i; j < params.currentFunc->numOfInstructions; j++)
 			{
+				params.startInstructionIndex = j;
 				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
