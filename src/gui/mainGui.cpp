@@ -908,6 +908,25 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		}
 	}
 
+	// comments
+	start = 0;
+	while (start < text.length())
+	{
+		int pos = text.find("//", start);
+		int end = text.find("\n", pos + 1);
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+		{
+			decompilationTextCtrl->StartStyling(pos);
+			decompilationTextCtrl->SetStyling(end - pos + 1, ColorsMenu::DecompilationColor::COMMENT_DECOMP_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
 	// regs/segs that arent variables/arguments
 	for (int i = 0; i < numOfRegisters; i++)
 	{
@@ -1047,6 +1066,14 @@ void MainGui::ApplyAsmHighlighting()
 			{
 				break;
 			}
+		}
+
+		// comments
+		int commentStart = asmStr.find(";", 0);
+		if (commentStart != wxNOT_FOUND)
+		{
+			disassemblyTextCtrl->StartStyling(pos + commentStart);
+			disassemblyTextCtrl->SetStyling(asmStr.length() - commentStart, ColorsMenu::DisassemblyColor::COMMENT_DIS_COLOR);
 		}
 
 		pos += asmStr.size();

@@ -32,9 +32,10 @@ public:
 		REGISTER_COLOR,
 		SEGMENT_COLOR,
 		PTR_SIZE_COLOR,
+		COMMENT_DIS_COLOR,
 		CONSTANT_COLOR
 	};
-	const char* disassemblyColorNames[7] =
+	const char* disassemblyColorNames[8] =
 	{
 		"Punctuation",
 		"Addresses",
@@ -42,9 +43,10 @@ public:
 		"Registers",
 		"Segments",
 		"Pointer sizes",
+		"Comments",
 		"Constants"
 	};
-	wxColour defaultDisassemblyColors[7] =
+	wxColour defaultDisassemblyColors[8] =
 	{
 		wxColour(180, 180, 180),
 		wxColour(154, 154, 154),
@@ -52,9 +54,10 @@ public:
 		wxColour(156, 220, 254),
 		wxColour(190, 183, 255),
 		wxColour(86, 156, 214),
+		wxColour(87, 166, 74),
 		wxColour(181, 206, 168)
 	};
-	const int numberOfDisassemblyColors = 7;
+	const int numberOfDisassemblyColors = 8;
 
 	enum DecompilationColor
 	{
@@ -68,9 +71,10 @@ public:
 		KEYWORD_COLOR,
 		STRING_COLOR,
 		NUMBER_COLOR,
+		COMMENT_DECOMP_COLOR,
 		ERROR_COLOR,
 	};
-	const char* decompColorNames[11] = 
+	const char* decompColorNames[12] = 
 	{ 
 		"Operators",
 		"Local variables",
@@ -82,9 +86,10 @@ public:
 		"Keywords",
 		"Strings",
 		"Numbers",
+		"Comments",
 		"Errors"
 	};
-	wxColour defaultDecompColors[11] = 
+	wxColour defaultDecompColors[12] = 
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
@@ -96,9 +101,10 @@ public:
 		wxColour(216, 160, 223),
 		wxColour(232, 201, 187),
 		wxColour(181, 206, 168),
+		wxColour(87, 166, 74),
 		wxColour(250, 50, 50)
 	};
-	const int numberOfDecompColors = 11;
+	const int numberOfDecompColors = 12;
 	
 	enum ids
 	{
