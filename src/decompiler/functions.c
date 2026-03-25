@@ -186,17 +186,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
 			if (jumpAddr > addressToJumpTo && jumpAddr <= currentSectionEndAddress)
 			{
-				unsigned char isThereFuncBeforeJmpAddr = 0;
-				for(int j = 0; j < numOfCalledAddresses; j++)
-				{
-					if(calledAddresses[j] > currentInstruction->address && calledAddresses[j] < jumpAddr)
-					{
-						isThereFuncBeforeJmpAddr = 1;
-						break;
-					}
-				}
-
-				if(!isThereFuncBeforeJmpAddr)
+				if(!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
 				{
 					addressToJumpTo = jumpAddr;
 				}

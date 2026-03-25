@@ -14,6 +14,7 @@ extern "C"
 }
 #endif
 
+unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress);
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 

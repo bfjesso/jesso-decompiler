@@ -64,6 +64,21 @@ int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned 
 	return -1;
 }
 
+unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress)
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (addresses[mid] >= minAddress && addresses[mid] <= maxAddress) { return 1; }
+
+		if (addresses[mid] < minAddress) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return 0;
+}
+
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
