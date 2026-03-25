@@ -75,6 +75,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition** c
 					{
 						*conditionsRef = newConditions;
 						conditions = newConditions;
+						memset(conditions + conditionsBufferSize - 5, 0, sizeof(struct Condition) * 5);
 					}
 					else 
 					{
@@ -149,6 +150,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition** c
 				{
 					*conditionsRef = newConditions;
 					conditions = newConditions;
+					memset(conditions + conditionsBufferSize - 5, 0, sizeof(struct Condition) * 5);
 				}
 				else
 				{
