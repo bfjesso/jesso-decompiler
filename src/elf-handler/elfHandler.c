@@ -671,7 +671,15 @@ int getNumOfELFImports64(const char* filePath)
 		int i = 0;
 		while ((i * sizeof(Elf64_Rela)) < relaSection.sh_size)
 		{
-			result++;
+			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
+			int val = ELF64_R_SYM(rela->r_info);
+			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+
+			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			{
+				result++;
+			}
+
 			i++;
 		}
 
@@ -738,7 +746,15 @@ int getNumOfELFImports32(const char* filePath)
 		int i = 0;
 		while ((i * sizeof(Elf32_Rela)) < relaSection.sh_size)
 		{
-			result++;
+			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
+			int val = ELF32_R_SYM(rela->r_info);
+			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
+
+			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			{
+				result++;
+			}
+
 			i++;
 		}
 
@@ -809,10 +825,13 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 			int val = ELF64_R_SYM(rela->r_info);
 			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 
-			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			{
+				buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+				bufferIndex++;
+			}
 
-			bufferIndex++;
 			i++;
 		}
 
@@ -883,10 +902,13 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 			int val = ELF32_R_SYM(rela->r_info);
 			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 
-			buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-			buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			{
+				buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+				bufferIndex++;
+			}
 
-			bufferIndex++;
 			i++;
 		}
 
