@@ -1226,7 +1226,7 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		}
 	}
 
-	SetSizer(vSizer);
+	SetSizerAndFit(vSizer);
 
 	mainGui = main;
 	functionIndex = funcIndex;
