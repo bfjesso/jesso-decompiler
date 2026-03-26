@@ -1190,18 +1190,18 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 
 	if (function->numOfStackVars > 0)
 	{
-		wxStaticText* localVarLabel = new wxStaticText(this, wxID_ANY, "Local Var Names");
-		localVarLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(localVarLabel, 0, wxEXPAND);
+		wxStaticText* stackVarLabel = new wxStaticText(this, wxID_ANY, "Stack Var Names");
+		stackVarLabel->SetOwnForegroundColour(textColor);
+		vSizer->Add(stackVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfStackVars; i++)
 		{
-			wxTextCtrl* localVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			localVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			localVarTextCtrl->SetOwnForegroundColour(textColor);
+			wxTextCtrl* stackVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
+			stackVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
+			stackVarTextCtrl->SetOwnForegroundColour(textColor);
 
-			vSizer->Add(localVarTextCtrl, 0, wxEXPAND);
+			vSizer->Add(stackVarTextCtrl, 0, wxEXPAND);
 
-			localVarNameTextCtrls.push_back(localVarTextCtrl);
+			stackVarNameTextCtrls.push_back(stackVarTextCtrl);
 		}
 	}
 
@@ -1257,7 +1257,7 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 
 	for (int i = 0; i < currentFunction->numOfStackVars; i++)
 	{
-		strcpyJdc(&currentFunction->stackVars[i].name, localVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackVars[i].name, stackVarNameTextCtrls[i]->GetValue().c_str());
 	}
 
 	for (int i = 0; i < currentFunction->numOfReturnedVars; i++)
