@@ -123,7 +123,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 		for (int i = 0; i < function->numOfReturnedVars; i++)
 		{
 			varTypeToStr(function->returnedVars[i].type, &typeStr);
-			sprintf(hexNumStr, "0x%X", function->returnedVars[i].callAddr);
+			sprintf(hexNumStr, "0x%llX", function->returnedVars[i].callAddr);
 			wxStaticText* retVarStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->returnedVars[i].name.buffer) + "; (Return reg: " + wxString(registerStrs[function->returnedVars[i].returnReg]) + ", called address: " + wxString(hexNumStr) + ", call number: " + wxString(std::to_string(function->returnedVars[i].callNum)) + ")");
 			retVarStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(retVarStaticTxt, 0, wxEXPAND);
