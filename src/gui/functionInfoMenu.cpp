@@ -7,23 +7,21 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 {
     SetOwnBackgroundColour(backgroundColor);
 
-    struct JdcStr returnTypeStr = initializeJdcStr();
-    varTypeToStr(function->returnType, &returnTypeStr);
-    returnTypeStaticTxt = new wxStaticText(this, wxID_ANY, "Return Type: " + wxString(returnTypeStr.buffer));
+    struct JdcStr typeStr = initializeJdcStr();
+    varTypeToStr(function->returnType, &typeStr);
+    returnTypeStaticTxt = new wxStaticText(this, wxID_ANY, "Return Type: " + wxString(typeStr.buffer));
 	returnTypeStaticTxt->SetOwnForegroundColour(textColor);
-    freeJdcStr(&returnTypeStr);
 
     returnRegStaticTxt = new wxStaticText(this, wxID_ANY, "Return Reg: " + wxString(registerStrs[function->returnReg]));
 	returnRegStaticTxt->SetOwnForegroundColour(textColor);
 
-    char addressOfReturnFunctionStr[10] = { 0 };
-    sprintf(addressOfReturnFunctionStr, "%llX", function->addressOfReturnFunction);
-    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Return Function: 0x" + wxString(addressOfReturnFunctionStr));
+    char hexNumStr[10] = { 0 };
+    sprintf(hexNumStr, "%llX", function->addressOfReturnFunction);
+    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Return Function: 0x" + wxString(hexNumStr));
 	returnFunctionAddrStaticTxt->SetOwnForegroundColour(textColor);
 
-    char addressOfFirstFuncCallStr[10] = { 0 };
-    sprintf(addressOfFirstFuncCallStr, "%llX", function->addressOfFirstFuncCall);
-    firstFuncCallAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of First Function Call: 0x" + wxString(addressOfFirstFuncCallStr));
+    sprintf(hexNumStr, "%llX", function->addressOfFirstFuncCall);
+    firstFuncCallAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of First Function Call: 0x" + wxString(hexNumStr));
 	firstFuncCallAddrStaticTxt->SetOwnForegroundColour(textColor);
 
     indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call: " + wxString(std::to_string(function->indexOfFirstFuncCall)));
@@ -47,12 +45,13 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
     if (function->numOfRegArgs > 0)
 	{
-		wxStaticText* regArgLabel = new wxStaticText(this, wxID_ANY, "Reg Arg Names:");
+		wxStaticText* regArgLabel = new wxStaticText(this, wxID_ANY, "Reg Args:");
 		regArgLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(regArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfRegArgs; i++)
 		{
-			wxStaticText* regArgStaticTxt = new wxStaticText(this, wxID_ANY, function->regArgs[i].name.buffer);
+			varTypeToStr(function->regArgs[i].type, &typeStr);
+			wxStaticText* regArgStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->regArgs[i].name.buffer) + "; (Register: " + wxString(registerStrs[function->regArgs[i].reg]) + ")");
 			regArgStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(regArgStaticTxt, 0, wxEXPAND);
 		}
@@ -60,12 +59,13 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfRegVars > 0)
 	{
-		wxStaticText* regVarLabel = new wxStaticText(this, wxID_ANY, "Reg Var Names:");
+		wxStaticText* regVarLabel = new wxStaticText(this, wxID_ANY, "Reg Vars:");
 		regVarLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(regVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfRegVars; i++)
 		{
-			wxStaticText* regVarStaticTxt = new wxStaticText(this, wxID_ANY, function->regVars[i].name.buffer);
+			varTypeToStr(function->regVars[i].type, &typeStr);
+			wxStaticText* regVarStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->regVars[i].name.buffer) + "; (Register: " + wxString(registerStrs[function->regVars[i].reg]) + ")");
 			regVarStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(regVarStaticTxt, 0, wxEXPAND);
 		}
@@ -73,12 +73,21 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfStackArgs > 0)
 	{
-		wxStaticText* stackArgLabel = new wxStaticText(this, wxID_ANY, "Stack Arg Names:");
+		wxStaticText* stackArgLabel = new wxStaticText(this, wxID_ANY, "Stack Args:");
 		stackArgLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(stackArgLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfStackArgs; i++)
 		{
-			wxStaticText* stackArgStaticTxt = new wxStaticText(this, wxID_ANY, function->stackArgs[i].name.buffer);
+			varTypeToStr(function->stackArgs[i].type, &typeStr);
+			if (function->stackArgs[i].stackOffset > 0)
+			{
+				sprintf(hexNumStr, "0x%X", function->stackArgs[i].stackOffset);
+			}
+			else
+			{
+				sprintf(hexNumStr, "-0x%X", -function->stackArgs[i].stackOffset);
+			}
+			wxStaticText* stackArgStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->stackArgs[i].name.buffer) + "; (Offset from BP: " + wxString(hexNumStr) + ")");
 			stackArgStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(stackArgStaticTxt, 0, wxEXPAND);
 		}
@@ -86,12 +95,21 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfStackVars > 0)
 	{
-		wxStaticText* stackVarLabel = new wxStaticText(this, wxID_ANY, "Stack Var Names:");
+		wxStaticText* stackVarLabel = new wxStaticText(this, wxID_ANY, "Stack Vars:");
 		stackVarLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(stackVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfStackVars; i++)
 		{
-			wxStaticText* stackVarStaticTxt = new wxStaticText(this, wxID_ANY, function->stackVars[i].name.buffer);
+			varTypeToStr(function->stackVars[i].type, &typeStr);
+			if (function->stackVars[i].stackOffset > 0) 
+			{
+				sprintf(hexNumStr, "0x%X", function->stackVars[i].stackOffset);
+			}
+			else 
+			{
+				sprintf(hexNumStr, "-0x%X", -function->stackVars[i].stackOffset);
+			}
+			wxStaticText* stackVarStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->stackVars[i].name.buffer) + "; (Offset from BP: " + wxString(hexNumStr) + ")");
 			stackVarStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(stackVarStaticTxt, 0, wxEXPAND);
 		}
@@ -99,16 +117,20 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfReturnedVars > 0)
 	{
-		wxStaticText* retVarLabel = new wxStaticText(this, wxID_ANY, "Returned Var Names:");
+		wxStaticText* retVarLabel = new wxStaticText(this, wxID_ANY, "Returned Vars:");
 		retVarLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(retVarLabel, 0, wxEXPAND);
 		for (int i = 0; i < function->numOfReturnedVars; i++)
 		{
-			wxStaticText* retVarStaticTxt = new wxStaticText(this, wxID_ANY, function->returnedVars[i].name.buffer);
+			varTypeToStr(function->returnedVars[i].type, &typeStr);
+			sprintf(hexNumStr, "0x%X", function->returnedVars[i].callAddr);
+			wxStaticText* retVarStaticTxt = new wxStaticText(this, wxID_ANY, wxString(typeStr.buffer) + " " + wxString(function->returnedVars[i].name.buffer) + "; (Return reg: " + wxString(registerStrs[function->returnedVars[i].returnReg]) + ", called address: " + wxString(hexNumStr) + ", call number: " + wxString(std::to_string(function->returnedVars[i].callNum)) + ")");
 			retVarStaticTxt->SetOwnForegroundColour(textColor);
 			vSizer->Add(retVarStaticTxt, 0, wxEXPAND);
 		}
 	}
+
+	freeJdcStr(&typeStr);
 
 	numOfInstructionsStaticTxt = new wxStaticText(this, wxID_ANY, "Number of Instructions: " + wxString(std::to_string(function->numOfInstructions)));
 	numOfInstructionsStaticTxt->SetOwnForegroundColour(textColor);
