@@ -1154,6 +1154,23 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, 
 		}
 	}
 
+	if (function->numOfRegVars > 0)
+	{
+		wxStaticText* regVarLabel = new wxStaticText(this, wxID_ANY, "Reg Var Names");
+		regVarLabel->SetOwnForegroundColour(textColor);
+		vSizer->Add(regVarLabel, 0, wxEXPAND);
+		for (int i = 0; i < function->numOfRegVars; i++)
+		{
+			wxTextCtrl* regVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
+			regVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
+			regVarTextCtrl->SetOwnForegroundColour(textColor);
+
+			vSizer->Add(regVarTextCtrl, 0, wxEXPAND);
+
+			regVarNameTextCtrls.push_back(regVarTextCtrl);
+		}
+	}
+
 	if (function->numOfStackArgs > 0)
 	{
 		wxStaticText* stackArgLabel = new wxStaticText(this, wxID_ANY, "Stack Arg Names");
@@ -1228,6 +1245,11 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 		strcpyJdc(&currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
 	}
 
+	for (int i = 0; i < currentFunction->numOfRegVars; i++)
+	{
+		strcpyJdc(&currentFunction->regVars[i].name, regVarNameTextCtrls[i]->GetValue().c_str());
+	}
+
 	for (int i = 0; i < currentFunction->numOfStackArgs; i++)
 	{
 		strcpyJdc(&currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
@@ -1246,7 +1268,7 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 	// update name in function grid
 	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
 
-	// redecompile if it is currently in the decompilation box
+	// redecompile if it is currently in the decompilation box. this is to refresh it
 	if (mainGui->currentDecompiledFunc == functionIndex)
 	{
 		mainGui->DecompileFunction(functionIndex);
