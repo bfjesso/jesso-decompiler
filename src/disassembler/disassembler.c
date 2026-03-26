@@ -350,6 +350,15 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 			return 1;
 		}
 	}
+	else if (compareRegisters(reg, ST0))
+	{
+		switch (instruction->opcode)
+		{
+		case FLD:
+			if (overwrites) { *overwrites = 1; }
+			return 1;
+		}
+	}
 	
 	for (int i = 0; i < 4; i++)
 	{

@@ -210,6 +210,12 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				result->returnReg = XMM0;
 				result->addressOfReturnFunction = 0;
 			}
+			else if (doesInstructionModifyRegister(currentInstruction, ST0, 0, 0, 0))
+			{
+				result->returnType.primitiveType = FLOAT_TYPE;
+				result->returnReg = ST0;
+				result->addressOfReturnFunction = 0;
+			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
 				unsigned long long calleeAddress = resolveJmpChain(params, i);
@@ -217,12 +223,6 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				{
 					result->addressOfReturnFunction = calleeAddress;
 				}
-			}
-			else if (currentInstruction->opcode == FLD)
-			{
-				result->returnType.primitiveType = FLOAT_TYPE;
-				result->returnReg = ST0;
-				result->addressOfReturnFunction = 0;
 			}
 			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction != 0)
 			{
