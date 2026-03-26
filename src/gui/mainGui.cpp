@@ -805,6 +805,14 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	dataViewerMenu->Destroy();
 	importsViewerMenu->Destroy();
 	colorsMenu->Destroy();
+	if (functionPropertiesMenu) 
+	{
+		functionPropertiesMenu->Destroy();
+	}
+	if (functionInfoMenu)
+	{
+		functionInfoMenu->Destroy();
+	}
 	Destroy();
 }
 
