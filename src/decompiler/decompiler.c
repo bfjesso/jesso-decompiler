@@ -96,6 +96,12 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				else if(conditions[j].hasEnteredCondition)
 				{
 					numOfIndents--;
+					if(numOfIndents < 1)
+					{
+						free(conditions);
+						free(directJmps);
+						return 0;
+					}
 
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "}\n");
