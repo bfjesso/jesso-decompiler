@@ -34,11 +34,11 @@ extern "C"
 	extern const char* primitiveTypeStrs[];
 	extern const int numOfPrimitiveTypes;
 
+	void varTypeToStr(struct VarType type, struct JdcStr* result);
+
 #ifdef __cplusplus
 }
 #endif
-
-void varTypeToStr(struct VarType type, struct JdcStr* result);
 
 unsigned char compareTypes(struct VarType t1, struct VarType t2);
 

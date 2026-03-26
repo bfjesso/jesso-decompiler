@@ -601,14 +601,18 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 	int row = e.GetRow(); // row right-clicked on
 
 	const int ID_DECOMPILE = 100;
-	const int ID_EDIT_PROPERTIES = 101;
-	const int ID_COPY_ADDRESS = 102;
-	const int ID_COPY_NAME = 103;
-	const int ID_FIND_BY_ADDR = 104;
-	const int ID_FIND_BY_NAME = 105;
+	const int ID_VIEW_INFO = 101;
+	const int ID_EDIT_PROPERTIES = 102;
+	const int ID_COPY_ADDRESS = 103;
+	const int ID_COPY_NAME = 104;
+	const int ID_FIND_BY_ADDR = 105;
+	const int ID_FIND_BY_NAME = 106;
 
 	menu.Append(ID_DECOMPILE, "Decompile");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
+
+	menu.Append(ID_VIEW_INFO, "View info");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionInfoMenu = new FunctionInfoMenu(GetPosition(), &functions[row]); }, ID_VIEW_INFO);
 
 	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, ID_EDIT_PROPERTIES);

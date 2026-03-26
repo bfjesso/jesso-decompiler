@@ -5,6 +5,7 @@
 #include "dataViewerMenu.h"
 #include "importsViewerMenu.h"
 #include "colorsMenu.h"
+#include "functionInfoMenu.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompiler.h"
@@ -22,6 +23,7 @@ public:
 	ImportsViewer* importsViewerMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
+	FunctionInfoMenu* functionInfoMenu = nullptr;
 
 	wxStaticText* statusStaticText = nullptr;
 
