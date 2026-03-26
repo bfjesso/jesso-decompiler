@@ -1,6 +1,7 @@
 #include "functions.h"
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
+#include "returnStatements.h"
 
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
@@ -257,7 +258,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 		
-		if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(i, params.allInstructions, params.totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{

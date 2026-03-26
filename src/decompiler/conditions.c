@@ -103,8 +103,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition** c
 					// checking if last condition has an else and add it if so
 					if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
 					{
-						params.startInstructionIndex = conditions[numOfConditions - 1].dstIndex - 1;
-						if (!checkForReturnStatement(params)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
+						if (!checkForReturnStatement(conditions[numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
 						{
 							conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
 							conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;
@@ -134,8 +133,7 @@ int getAllConditions(struct DecompilationParameters params, struct Condition** c
 	}
 	if (numOfConditions > 0 && conditions[numOfConditions - 1].conditionType != LOOP_CT && conditions[numOfConditions - 1].exitIndex != -1)
 	{
-		params.startInstructionIndex = conditions[numOfConditions - 1].dstIndex - 1;
-		if (!checkForReturnStatement(params)) 
+		if (!checkForReturnStatement(conditions[numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 		{
 			conditions[numOfConditions].jccIndex = conditions[numOfConditions - 1].dstIndex;
 			conditions[numOfConditions].dstIndex = conditions[numOfConditions - 1].exitIndex;

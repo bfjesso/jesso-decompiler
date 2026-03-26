@@ -248,7 +248,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if (checkForReturnStatement(params))
+		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 		{
 			addIndents(result, numOfIndents);
 			if (decompileReturnStatement(params, result))
@@ -329,7 +329,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					}
 				}
 
-				if (checkForReturnStatement(params))
+				if (checkForReturnStatement(j, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 				{
 					returnType = params.currentFunc->returnType;
 					break;
@@ -414,7 +414,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params, struct
 					break;
 				}
 
-				if (checkForReturnStatement(params)) 
+				if (checkForReturnStatement(j, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 				{
 					break;
 				}

@@ -13,8 +13,7 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 
 		if (isOpcodeJmp(instruction->opcode))
 		{
-			params.startInstructionIndex = i;
-			if (checkForReturnStatement(params))
+			if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 			{
 				continue;
 			}
