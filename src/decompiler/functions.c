@@ -447,6 +447,8 @@ void freeFunction(struct Function* function)
 	free(function->stackArgs);
 	free(function->stackVars);
 	free(function->returnedVars);
+	free(function->conditions);
+	free(function->directJmps);
 }
 
 static int getStackFrameChange(struct DisassembledInstruction* instruction) 

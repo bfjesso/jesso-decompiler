@@ -15,7 +15,7 @@ extern "C"
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters params);
 
-static unsigned char getAllRegVars(struct DecompilationParameters params, struct Condition* conditions, int numOfConditions);
+static unsigned char getAllRegVars(struct DecompilationParameters params);
 
 static void addIndents(struct JdcStr* result, int numOfIndents);
 
