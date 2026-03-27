@@ -52,7 +52,7 @@ unsigned char checkForReturnStatement(int startInstructionIndex, struct Disassem
 
 		for (int i = jmpDstIndex; i < numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
 		{
-			if (checkForReturnStatement(i, instructions, numOfInstructions))
+			if (isOpcodeReturn(instruction->opcode) || i == numOfInstructions - 1)
 			{
 				return 1;
 			}
