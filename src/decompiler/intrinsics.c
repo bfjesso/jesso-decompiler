@@ -150,6 +150,6 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters params, 
 		}
 	}
 
-	strcatJdc(result, ")");
+	strcatJdc(result, ");");
 	return 1;
 }
