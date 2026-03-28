@@ -16,7 +16,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	if(!params.currentFunc->conditions)
 	{
 		params.currentFunc->conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
-		params.currentFunc->numOfConditions = getAllConditions(params, &params.currentFunc->conditions, 20);
+		params.currentFunc->numOfConditions = getAllConditions(params, 20);
 		if (params.currentFunc->numOfConditions == -1)
 		{
 			return 0;
@@ -26,7 +26,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	if(!params.currentFunc->directJmps)
 	{
 		params.currentFunc->directJmps = (struct DirectJmp*)calloc(20, sizeof(struct DirectJmp));
-		params.currentFunc->numOfDirectJmps = getAllDirectJmps(params, params.currentFunc->conditions, params.currentFunc->numOfConditions, &params.currentFunc->directJmps, 20);
+		params.currentFunc->numOfDirectJmps = getAllDirectJmps(params, 20);
 		if (params.currentFunc->numOfDirectJmps == -1)
 		{
 			return 0;
@@ -71,11 +71,16 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	int indexToJumpTo = -1; // if looking at instructions after a ret or jmp
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
+		if (numOfIndents < 1)
+		{
+			return 0;
+		}
+		
 		params.startInstructionIndex = i;
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		// checking for end of condition
+		// handling condition dsts
 		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
 		{
 			if (!params.currentFunc->conditions[j].requiresJumpInDecomp && !params.currentFunc->conditions[j].isCombinedByOther && i == params.currentFunc->conditions[j].dstIndex)
@@ -91,14 +96,8 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				else if(params.currentFunc->conditions[j].hasEnteredCondition)
 				{
 					numOfIndents--;
-					if(numOfIndents < 1)
-					{
-						return 0;
-					}
-
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "}\n");
-
 					indexToJumpTo = -1;
 				}
 			}
@@ -111,6 +110,56 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		else
 		{
 			indexToJumpTo = -1;
+		}
+
+		// handling condition Jccs
+		unsigned char jmpInDecomp = 0;
+		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+		{
+			if (!params.currentFunc->conditions[j].isCombinedByOther && params.currentFunc->conditions[j].jccIndex == i)
+			{
+				if (params.currentFunc->conditions[j].conditionType == DO_WHILE_CT)
+				{
+					numOfIndents--;
+				}
+
+				addIndents(result, numOfIndents);
+
+				if (decompileCondition(params, j, result))
+				{
+					strcatJdc(result, "\n");
+
+					if (params.currentFunc->conditions[j].conditionType != DO_WHILE_CT)
+					{
+						addIndents(result, numOfIndents);
+						strcatJdc(result, "{\n");
+
+						numOfIndents++;
+					}
+
+					params.currentFunc->conditions[j].hasEnteredCondition = 1;
+				}
+				else
+				{
+					return 0;
+				}
+
+				if (params.currentFunc->conditions[j].requiresJumpInDecomp)
+				{
+					originalIndex = i;
+					originalNumOfIndents = numOfIndents;
+					i = params.currentFunc->conditions[j].dstIndex - 1;
+					params.skipUpperBound = originalIndex;
+					params.skipLowerBound = i;
+					jmpInDecomp = 1;
+				}
+
+				break;
+			}
+		}
+		if (jmpInDecomp) 
+		{
+			continue;
 		}
 
 		for (int j = 0; j < params.currentFunc->numOfDirectJmps; j++)
@@ -139,46 +188,6 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				}
 
 				break;
-			}
-		}
-
-		int conditionIndex = checkForCondition(i, params.currentFunc->conditions, params.currentFunc->numOfConditions);
-		if (conditionIndex != -1)
-		{
-			if (params.currentFunc->conditions[conditionIndex].conditionType == DO_WHILE_CT)
-			{
-				numOfIndents--;
-			}
-
-			addIndents(result, numOfIndents);
-			
-			if (decompileCondition(params, params.currentFunc->conditions, conditionIndex, result))
-			{
-				strcatJdc(result, "\n");
-
-				if (params.currentFunc->conditions[conditionIndex].conditionType != DO_WHILE_CT)
-				{
-					addIndents(result, numOfIndents);
-					strcatJdc(result, "{\n");
-
-					numOfIndents++;
-				}
-
-				params.currentFunc->conditions[conditionIndex].hasEnteredCondition = 1;
-			}
-			else
-			{
-				return 0;
-			}
-
-			if (params.currentFunc->conditions[conditionIndex].requiresJumpInDecomp)
-			{
-				originalIndex = i;
-				originalNumOfIndents = numOfIndents;
-				i = params.currentFunc->conditions[conditionIndex].dstIndex - 1;
-				params.skipUpperBound = originalIndex;
-				params.skipLowerBound = i;
-				continue;
 			}
 		}
 
@@ -393,8 +402,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 			for (int j = start; j < end; j++)
 			{
 				params.startInstructionIndex = j;
-				
-				int conditionIndex = checkForCondition(j, params.currentFunc->conditions, params.currentFunc->numOfConditions);
+				int conditionIndex = checkForConditionStart(params);
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;
@@ -462,7 +470,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 			int checkingStart = params.currentFunc->conditions[i].conditionType == LOOP_CT || params.currentFunc->conditions[i].conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
 			for (int j = checkingStart; j < params.currentFunc->numOfInstructions; j++)
 			{
-				int conditionIndex = checkForCondition(j, params.currentFunc->conditions, params.currentFunc->numOfConditions);
+				params.startInstructionIndex = j;
+				int conditionIndex = checkForConditionStart(params);
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;

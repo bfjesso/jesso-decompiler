@@ -2,10 +2,8 @@
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
-int getAllDirectJmps(struct DecompilationParameters params, struct Condition* conditions, int numOfCondtions, struct DirectJmp** directJmpsRef, int directJmpsBufferSize)
+int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBufferSize)
 {
-	struct DirectJmp* directJmps = *directJmpsRef;
-	
 	int numOfDirectJmps = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++) 
 	{
@@ -27,21 +25,25 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 			}
 			
 			enum DirectJmpType directJmpType = GO_TO_DJT;
-			for (int j = 0; j < numOfCondtions; j++) 
+			for (int j = 0; j < params.currentFunc->numOfConditions; j++)
 			{
-				if (i == conditions[j].dstIndex - 1 || i == conditions[j].dstIndex - 2 || i == conditions[j].exitIndex - 1 || i == conditions[j].jccIndex) // checking if the jmp is part of a condtion
+				// checking if the jmp is part of a condtion
+				if (i == params.currentFunc->conditions[j].dstIndex - 1 || 
+					i == params.currentFunc->conditions[j].dstIndex - 2 || 
+					i == params.currentFunc->conditions[j].exitIndex - 1 || 
+					i == params.currentFunc->conditions[j].jccIndex) 
 				{
 					directJmpType = NONE_DJT;
 					break;
 				}
-				else if (conditions[j].conditionType == LOOP_CT) 
+				else if (params.currentFunc->conditions[j].conditionType == LOOP_CT)
 				{
-					if (dstIndex == conditions[j].jccIndex + 1) 
+					if (dstIndex == params.currentFunc->conditions[j].jccIndex + 1)
 					{
 						directJmpType = CONTINUE_DJT;
 						break;
 					}
-					else if(dstIndex == conditions[j].dstIndex)
+					else if(dstIndex == params.currentFunc->conditions[j].dstIndex)
 					{
 						directJmpType = BREAK_DJT;
 						break;
@@ -54,11 +56,10 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 				if (numOfDirectJmps >= directJmpsBufferSize) 
 				{
 					directJmpsBufferSize += 5;
-					struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(directJmps, directJmpsBufferSize * sizeof(struct DirectJmp));
+					struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(params.currentFunc->directJmps, directJmpsBufferSize * sizeof(struct DirectJmp));
 					if (newDirectJmps)
 					{
-						*directJmpsRef = newDirectJmps;
-						directJmps = newDirectJmps;
+						params.currentFunc->directJmps = newDirectJmps;
 					}
 					else
 					{
@@ -66,9 +67,9 @@ int getAllDirectJmps(struct DecompilationParameters params, struct Condition* co
 					}
 				}
 				
-				directJmps[numOfDirectJmps].dstIndex = dstIndex;
-				directJmps[numOfDirectJmps].jmpIndex = i;
-				directJmps[numOfDirectJmps].type = directJmpType;
+				params.currentFunc->directJmps[numOfDirectJmps].dstIndex = dstIndex;
+				params.currentFunc->directJmps[numOfDirectJmps].jmpIndex = i;
+				params.currentFunc->directJmps[numOfDirectJmps].type = directJmpType;
 				numOfDirectJmps++;
 			}
 		}
