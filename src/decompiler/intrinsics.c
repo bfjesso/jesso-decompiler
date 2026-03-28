@@ -10,8 +10,10 @@ struct IntrinsicFunc returningIntrinsicFuncs[] =
 	{ AESIMC, { 0, 1, 0, 0 }, "_mm_aesimc" },
 	{ AESKEYGENASSIST, { 0, 1, 1, 0 }, "_mm_aesimc" },
 	{ STMXCSR, { 0, 0, 0, 0 }, "_mm_getcsr" },
+	{ SHUFPD, { 1, 1, 1, 0 }, "_mm_shuffle_pd" },
+	{ SHUFPS, { 1, 1, 1, 0 }, "_mm_shuffle_ps" },
 };
-const int numOfReturningIntrinsicFuncs = 7;
+const int numOfReturningIntrinsicFuncs = 9;
 
 struct IntrinsicFunc voidIntrinsicFuncs[] =
 {
