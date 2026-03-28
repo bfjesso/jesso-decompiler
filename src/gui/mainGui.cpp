@@ -408,8 +408,6 @@ void MainGui::DecompileFunction(int functionIndex)
 
 	decompParams.currentFunc = &functions[functionIndex];
 	decompParams.startInstructionIndex = 0;
-	decompParams.skipUpperBound = -1;
-	decompParams.skipLowerBound = -1;
 
 	struct JdcStr decompiledFunction = initializeJdcStr();
 	if (decompiledFunction.bufferSize == 0)

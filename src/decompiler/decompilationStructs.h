@@ -64,7 +64,8 @@ struct Condition
 	int dstIndex; // the index of the instruction jumped to by the jcc
 	int exitIndex; // if the instruction before dstIndex is a jmp, this is the index of the instruction jumped to by that jmp
 	enum ConditionType conditionType;
-	unsigned char requiresJumpInDecomp; // when the if statement cuts into another if statement
+	unsigned char decompileAsReturn;
+	unsigned char decompileAsGoTo;
 
 	int combinedJccIndexes[3]; // these will be either all connected by && or ||
 	unsigned char numOfCombinedJccs;
@@ -137,10 +138,6 @@ struct DecompilationParameters
 
 	struct Function* currentFunc; // function being decompiled
 	int startInstructionIndex; // index of instruction to start decompiling from relative to function
-	
-	// these are used when a condition has requiresJumpInDecomp
-	int skipUpperBound;
-	int skipLowerBound;
 
 	struct DisassembledInstruction* allInstructions;
 	int totalNumOfInstructions;

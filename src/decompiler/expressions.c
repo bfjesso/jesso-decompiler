@@ -412,12 +412,6 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 			break;
 		}
 
-		if (i == params.skipLowerBound) 
-		{
-			i = params.skipUpperBound;
-			continue;
-		}
-
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
 		if (isInUnreachableState || doesInstructionDoNothing(currentInstruction))

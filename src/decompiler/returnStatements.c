@@ -2,7 +2,6 @@
 #include "decompilationUtils.h"
 #include "functions.h"
 #include "expressions.h"
-#include "assignment.h"
 #include "functionCalls.h"
 
 unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
@@ -42,25 +41,34 @@ unsigned char checkForReturnStatement(int startInstructionIndex, struct Disassem
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		unsigned long long jmpDst = instruction->address + instruction->operands[0].immediate.value;
-		int jmpDstIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpDst);
+		return checkForJumpToReturnStatement(startInstructionIndex, instructions, numOfInstructions);
+	}
 
-		if (jmpDstIndex == -1 || jmpDstIndex >= numOfInstructions)
+	return 0;
+}
+
+unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+{
+	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
+
+	unsigned long long jmpDst = instruction->address + instruction->operands[0].immediate.value;
+	int jmpDstIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpDst);
+
+	if (jmpDstIndex == -1 || jmpDstIndex >= numOfInstructions)
+	{
+		return 1;
+	}
+
+	for (int i = jmpDstIndex; i < numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
+	{
+		if (isOpcodeReturn(instruction->opcode) || i == numOfInstructions - 1)
 		{
 			return 1;
 		}
 
-		for (int i = jmpDstIndex; i < numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
+		if ((instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&instructions[i], 0, 0, 0)) || isOpcodeCall(instructions[i].opcode) || isOpcodeJcc(instructions[i].opcode))
 		{
-			if (isOpcodeReturn(instruction->opcode) || i == numOfInstructions - 1)
-			{
-				return 1;
-			}
-
-			if ((instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&instructions[i], 0, 0, 0)) || isOpcodeCall(instructions[i].opcode) || isOpcodeJcc(instructions[i].opcode))
-			{
-				return 0;
-			}
+			return 0;
 		}
 	}
 

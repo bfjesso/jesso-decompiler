@@ -179,19 +179,42 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 
 	for (int i = 0; i < numOfConditions; i++)
 	{
-		// checking for an if statement ends before another if statment that it encolses
-		if (params.currentFunc->conditions[i].conditionType == IF_CT)
+		// checking for conditions that ends before another that it encolses
+		for (int j = 0; j < numOfConditions; j++)
 		{
-			for (int j = i + 1; j < numOfConditions; j++)
+			if (i == j || params.currentFunc->conditions[j].decompileAsReturn || params.currentFunc->conditions[j].decompileAsGoTo) 
 			{
-				if (params.currentFunc->conditions[j].conditionType == IF_CT)
+				continue;
+			}
+			
+			unsigned char isOverlapping = 0;
+			if (params.currentFunc->conditions[j].dstIndex > params.currentFunc->conditions[j].jccIndex)
+			{
+				if (params.currentFunc->conditions[i].dstIndex > params.currentFunc->conditions[j].jccIndex && params.currentFunc->conditions[i].dstIndex < params.currentFunc->conditions[j].dstIndex)
 				{
-					if (params.currentFunc->conditions[i].dstIndex > params.currentFunc->conditions[j].jccIndex && params.currentFunc->conditions[i].dstIndex < params.currentFunc->conditions[j].dstIndex)
-					{
-						params.currentFunc->conditions[i].requiresJumpInDecomp = 1;
-						break;
-					}
+					isOverlapping = 1;
 				}
+			}
+			else if (params.currentFunc->conditions[j].dstIndex < params.currentFunc->conditions[j].jccIndex)
+			{
+				if (params.currentFunc->conditions[i].dstIndex > params.currentFunc->conditions[j].dstIndex && params.currentFunc->conditions[i].dstIndex < params.currentFunc->conditions[j].jccIndex)
+				{
+					isOverlapping = 1;
+				}
+			}
+
+			if (isOverlapping) 
+			{
+				if (checkForJumpToReturnStatement(params.currentFunc->conditions[i].jccIndex, params.currentFunc->instructions, params.currentFunc->numOfInstructions)) 
+				{
+					params.currentFunc->conditions[i].decompileAsReturn = 1;
+				}
+				else 
+				{
+					params.currentFunc->conditions[i].decompileAsGoTo = 1;
+				}
+				params.currentFunc->conditions[i].conditionType == IF_CT;
+				break;
 			}
 		}
 
@@ -222,15 +245,17 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 
 unsigned char decompileCondition(struct DecompilationParameters params, int conditionIndex, struct JdcStr* result)
 {
-	if (params.currentFunc->conditions[conditionIndex].conditionType == ELSE_CT)
+	struct Condition* condition = &params.currentFunc->conditions[conditionIndex];
+	
+	if (condition->conditionType == ELSE_CT)
 	{
 		return strcatJdc(result, "else");
 	}
 
-	unsigned char invertCondition = params.currentFunc->conditions[conditionIndex].requiresJumpInDecomp || params.currentFunc->conditions[conditionIndex].conditionType == DO_WHILE_CT;
+	unsigned char invertCondition = condition->decompileAsReturn || condition->decompileAsGoTo || condition->conditionType == DO_WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
-	if (params.currentFunc->conditions[conditionIndex].combinedJccsLogicType == OR_LT)
+	if (condition->combinedJccsLogicType == OR_LT)
 	{
 		if (!decompileComparison(params, invertCondition, &conditionExpression))
 		{
@@ -238,16 +263,16 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 			return 0;
 		}
 
-		for (int i = 0; i < params.currentFunc->conditions[conditionIndex].numOfCombinedJccs; i++)
+		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
-			unsigned char invertOperator = i == (params.currentFunc->conditions[conditionIndex].numOfCombinedJccs - 1);
+			unsigned char invertOperator = i == (condition->numOfCombinedJccs - 1);
 			if (invertCondition)
 			{
 				invertOperator = !invertOperator;
 			}
 
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = params.currentFunc->conditions[conditionIndex].combinedJccIndexes[i];
+			params.startInstructionIndex = condition->combinedJccIndexes[i];
 			if (!decompileComparison(params, invertOperator, &currentConditionExpression))
 			{
 				freeJdcStr(&currentConditionExpression);
@@ -268,10 +293,10 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 			return 0;
 		}
 
-		for (int i = 0; i < params.currentFunc->conditions[conditionIndex].numOfCombinedJccs; i++)
+		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = params.currentFunc->conditions[conditionIndex].combinedJccIndexes[i];
+			params.startInstructionIndex = condition->combinedJccIndexes[i];
 			if (!decompileComparison(params, !invertCondition, &currentConditionExpression))
 			{
 				freeJdcStr(&conditionExpression);
@@ -286,10 +311,10 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 	}
 
 	struct JdcStr combinedConditionExpression = initializeJdcStr();
-	if (params.currentFunc->conditions[conditionIndex].combinedConditionIndex)
+	if (condition->combinedConditionIndex)
 	{
-		params.startInstructionIndex = params.currentFunc->conditions[params.currentFunc->conditions[conditionIndex].combinedConditionIndex].jccIndex;
-		if (decompileCondition(params, params.currentFunc->conditions[conditionIndex].combinedConditionIndex, &combinedConditionExpression))
+		params.startInstructionIndex = params.currentFunc->conditions[condition->combinedConditionIndex].jccIndex;
+		if (decompileCondition(params, condition->combinedConditionIndex, &combinedConditionExpression))
 		{
 			if (!wrapJdcStrInParentheses(&conditionExpression)) 
 			{
@@ -298,7 +323,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 				return 0;
 			}
 
-			if (params.currentFunc->conditions[conditionIndex].combinationLogicType == AND_LT)
+			if (condition->combinationLogicType == AND_LT)
 			{
 				strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
 			}
@@ -319,20 +344,20 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 
 	freeJdcStr(&combinedConditionExpression);
 
-	if (params.currentFunc->conditions[conditionIndex].isCombinedByOther)
+	if (condition->isCombinedByOther)
 	{
 		strcatJdc(result, conditionExpression.buffer);
 		freeJdcStr(&conditionExpression);
 		return 1;
 	}
 
-	if (params.currentFunc->conditions[conditionIndex].conditionType == LOOP_CT)
+	if (condition->conditionType == LOOP_CT)
 	{
 		// check for for loop
-		if (params.currentFunc->instructions[params.currentFunc->conditions[conditionIndex].exitIndex - 1].opcode == JMP_SHORT)
+		if (params.currentFunc->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
 		{
 			struct JdcStr assignmentExpression = initializeJdcStr();
-			for (int i = params.currentFunc->conditions[conditionIndex].exitIndex; i < params.currentFunc->conditions[conditionIndex].jccIndex; i++)
+			for (int i = condition->exitIndex; i < condition->jccIndex; i++)
 			{
 				params.startInstructionIndex = i;
 				if (checkForAssignment(params))
@@ -358,11 +383,11 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 			sprintfJdc(result, 1, "while (%s)", conditionExpression.buffer);
 		}
 	}
-	else if (params.currentFunc->conditions[conditionIndex].conditionType == DO_WHILE_CT)
+	else if (condition->conditionType == DO_WHILE_CT)
 	{
 		sprintfJdc(result, 1, "} while (%s);", conditionExpression.buffer);
 	}
-	else if (params.currentFunc->conditions[conditionIndex].conditionType == IF_CT)
+	else if (condition->conditionType == IF_CT)
 	{
 		sprintfJdc(result, 1, "if (%s)", conditionExpression.buffer);
 	}

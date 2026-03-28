@@ -5,4 +5,6 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 
 unsigned char checkForReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
 
+unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
+
 unsigned char decompileReturnStatement(struct DecompilationParameters params, struct JdcStr* result);
