@@ -603,7 +603,9 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JG_SHORT:
 	case JA_SHORT:
 	case CMOVG:
+	case CMOVA:
 	case SETG:
+	case SETA:
 		if (invertOperator) { strcpy(compOperator, "<="); }
 		else { strcpy(compOperator, ">"); }
 		break;
@@ -612,8 +614,10 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JS_SHORT:
 	case CMOVL:
 	case CMOVB:
+	case CMOVS:
 	case SETL:
 	case SETB:
+	case SETS:
 		if (invertOperator) { strcpy(compOperator, ">="); }
 		else { strcpy(compOperator, "<"); }
 		break;
@@ -631,7 +635,9 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	case JNS_SHORT:
 	case CMOVGE:
 	case CMOVNB:
+	case CMOVNS:
 	case SETNB:
+	case SETNS:
 		if (invertOperator) { strcpy(compOperator, "<"); }
 		else { strcpy(compOperator, ">="); }
 		break;
