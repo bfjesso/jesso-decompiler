@@ -184,6 +184,11 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 
 	for (int i = 0; i < numOfConditions; i++)
 	{
+		if (params.currentFunc->conditions[i].decompileAsReturn) 
+		{
+			continue;
+		}
+		
 		// checking for conditions that ends before another that it encolses
 		for (int j = 0; j < numOfConditions; j++)
 		{
