@@ -42,7 +42,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
 			{
 				result->addressOfFirstFuncCall = calleeAddress;
-				result->indexOfFirstFuncCall = i;
+				result->indexOfFirstFuncCall = result->numOfInstructions - 1;
 			}
 		}
 
