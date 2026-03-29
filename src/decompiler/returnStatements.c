@@ -61,7 +61,7 @@ unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct Di
 
 	for (int i = jmpDstIndex; i < numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
 	{
-		if (isOpcodeReturn(instruction->opcode) || i == numOfInstructions - 1)
+		if (isOpcodeReturn(instructions[i].opcode) || i == numOfInstructions - 1)
 		{
 			return 1;
 		}
