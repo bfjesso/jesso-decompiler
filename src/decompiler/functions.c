@@ -36,16 +36,13 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		result->numOfInstructions++;
 
-		if (isOpcodeCall(currentInstruction->opcode))
+		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
 		{
-			if (result->addressOfFirstFuncCall == 0)
+			unsigned long long calleeAddress = resolveJmpChain(params, i);
+			if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params, i);
-				if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
-				{
-					result->addressOfFirstFuncCall = calleeAddress;
-					result->indexOfFirstFuncCall = result->numOfInstructions - 1;
-				}
+				result->addressOfFirstFuncCall = calleeAddress;
+				result->indexOfFirstFuncCall = i;
 			}
 		}
 
