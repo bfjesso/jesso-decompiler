@@ -138,14 +138,17 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				if (params.currentFunc->conditions[j].decompileAsReturn)
 				{
 					addIndents(result, numOfIndents);
-					if (!decompileReturnStatement(params, result)) 
+					if (decompileReturnStatement(params, result)) 
+					{
+						strcatJdc(result, "\n");
+						numOfIndents--;
+						addIndents(result, numOfIndents);
+						strcatJdc(result, "}\n");
+					}
+					else 
 					{
 						return 0;
 					}
-
-					numOfIndents--;
-					addIndents(result, numOfIndents);
-					strcatJdc(result, "}\n");
 				}
 				else if (params.currentFunc->conditions[j].decompileAsGoTo)
 				{
