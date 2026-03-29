@@ -79,9 +79,14 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 						return -1;
 					}
 				}
-				
+
 				// setting the type
-				if (exitIndex != -1 && exitIndex < i)
+				if (checkForJumpToReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+				{
+					params.currentFunc->conditions[numOfConditions].decompileAsReturn = 1;
+					params.currentFunc->conditions[numOfConditions].conditionType = IF_CT;
+				}
+				else if (exitIndex != -1 && exitIndex < i)
 				{
 					params.currentFunc->conditions[numOfConditions].conditionType = LOOP_CT;
 				}
@@ -205,14 +210,7 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 
 			if (isOverlapping) 
 			{
-				if (checkForJumpToReturnStatement(params.currentFunc->conditions[i].jccIndex, params.currentFunc->instructions, params.currentFunc->numOfInstructions)) 
-				{
-					params.currentFunc->conditions[i].decompileAsReturn = 1;
-				}
-				else 
-				{
-					params.currentFunc->conditions[i].decompileAsGoTo = 1;
-				}
+				params.currentFunc->conditions[i].decompileAsGoTo = 1;
 				params.currentFunc->conditions[i].conditionType == IF_CT;
 				break;
 			}
