@@ -690,6 +690,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	const int ID_SELECT_ALL = 101;
 	const int ID_CONVERT_NUMBER = 102;
 	const int ID_FIND = 103;
+	const int ID_GO_TO_ADDR = 104;
 
 	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
@@ -792,6 +793,37 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 			}
 		}
 		}, ID_FIND);
+
+	if(ctrl == disassemblyTextCtrl)
+	{
+		menu.Append(ID_GO_TO_ADDR, "Go to address");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			wxTextEntryDialog dlg(this, "", "Address");
+			if (dlg.ShowModal() == wxID_OK)
+			{
+				wxString txt = dlg.GetValue();
+				unsigned long long address = 0;
+				if (txt.ToULongLong(&address, 16))
+				{
+					int index = findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, address);
+					if (index == -1)
+					{
+						wxMessageBox("Address not found", "Failed to find address");
+					}
+					else
+					{
+						disassemblyTextCtrl->GotoLine(index);
+						int pos = disassemblyTextCtrl->PositionFromLine(index);
+						disassemblyTextCtrl->SetSelection(pos, pos + txt.size());
+					}
+				}
+				else
+				{
+					wxMessageBox("Not valid hex number", "Failed to find function");
+				}
+			}
+			}, ID_GO_TO_ADDR);
+	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
