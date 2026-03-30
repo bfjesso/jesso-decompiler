@@ -27,8 +27,7 @@ extern "C"
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 
-// this is used in decompileOperation, which is why it takes struct JdcStr* decompiledOperands
-unsigned char decompileReturningIntrinsicFunc(struct IntrinsicFunc* intrinsicFunc, int numOfOperands, unsigned char getAssignment, struct JdcStr* decompiledOperands, struct JdcStr* result);
+unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result);
 
 unsigned char checkForVoidIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 

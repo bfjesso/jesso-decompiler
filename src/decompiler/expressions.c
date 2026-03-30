@@ -737,100 +737,99 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	int ogStartInstructionIndex = params.startInstructionIndex;
-
-	struct JdcStr decompiledOperands[4] = { 0 };
-	int numOfOperands = 0;
-	while(numOfOperands < 4)
+	struct IntriniscFunc* intrinsicFunc;
+	if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
 	{
-		struct Operand* currentOperand = &instruction->operands[numOfOperands];
-		if (currentOperand->type == NO_OPERAND) 
-		{
-			break;
-		}
-
-		if (currentOperand->type == REGISTER)
-		{
-			params.startInstructionIndex = ogStartInstructionIndex - 1; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
-		}
-		else 
-		{
-			params.startInstructionIndex = ogStartInstructionIndex;
-		}
-
-		struct VarType operandType = getTypeOfOperand(instruction->opcode, currentOperand);
-		if (operandType.primitiveType == VOID_TYPE) 
-		{
-			operandType = type;
-		}
-		
-		decompiledOperands[numOfOperands] = initializeJdcStr();
-		if (!decompileOperand(params, currentOperand, operandType, &decompiledOperands[numOfOperands]))
-		{
-			strcpyJdc(&decompiledOperands[numOfOperands], "ERROR"); // not all operands may be used in the decompilation, often when getAssignment is 0 and this is the first operand
-		}
-
-		numOfOperands++;
+		return decompileReturningIntrinsicFunc(params, intrinsicFunc, getAssignment, type, result);
 	}
 
-	params.startInstructionIndex = ogStartInstructionIndex;
+	struct Operand* firstOperand = &instruction->operands[0];
+	struct JdcStr decompiledFirstOperand = initializeJdcStr();
+	if(getAssignment && firstOperand->type != NO_OPERAND)
+	{
+		if (!decompileOperand(params, firstOperand, type, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+	}
 
 	if (isOpcodeXor(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = 0", decompiledOperands[0].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = 0", decompiledFirstOperand.buffer); }
 		else { strcpyJdc(result, "0"); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == INC) 
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s++", decompiledOperands[0].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s++", decompiledFirstOperand.buffer); }
 		else { strcpyJdc(result, " + 1"); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == DEC) 
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s--", decompiledOperands[0].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s--", decompiledFirstOperand.buffer); }
 		else { strcpyJdc(result, " - 1"); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == FLD)
 	{
-		if (getAssignment) { sprintfJdc(result, 0, " = %s", decompiledOperands[0].buffer); }
-		else { sprintfJdc(result, 0, "%s", decompiledOperands[0].buffer); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		if (getAssignment) { sprintfJdc(result, 0, " = %s", decompiledFirstOperand.buffer); }
+		else { sprintfJdc(result, 0, "%s", decompiledFirstOperand.buffer); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == IDIV) 
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledOperands[0].buffer, decompiledOperands[0].buffer); }
-		else { sprintfJdc(result, 0, " / %s", decompiledOperands[0].buffer); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
+		else { sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == NEG)
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = -%s", decompiledOperands[0].buffer, decompiledOperands[0].buffer); }
-		else { sprintfJdc(result, 0, "-%s", decompiledOperands[0].buffer); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
+		else { sprintfJdc(result, 0, "-%s", decompiledFirstOperand.buffer); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
+		struct JdcStr decompiledThirdOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[2], type, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledThirdOperand);
+			return 0;
+		}
+		
 		if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
-			if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledOperands[0].buffer, decompiledOperands[2].buffer); }
-			else { sprintfJdc(result, 0, " * %s", decompiledOperands[2].buffer); }
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledFirstOperand.buffer, decompiledThirdOperand.buffer); }
+			else { sprintfJdc(result, 0, " * %s", decompiledThirdOperand.buffer); }
+			freeJdcStr(&decompiledThirdOperand);
+			freeJdcStr(&decompiledFirstOperand);
 			return 1;
 		}
 		else 
 		{
-			if (getAssignment) { sprintfJdc(result, 0, "%s = (%s * %s)", decompiledOperands[0].buffer, decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
-			else { sprintfJdc(result, 0, "(%s * %s)", decompiledOperands[1].buffer, decompiledOperands[2].buffer); }
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			struct JdcStr decompiledSecondOperand = initializeJdcStr();
+			if (!decompileOperand(params, &instruction->operands[1], type, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				freeJdcStr(&decompiledSecondOperand);
+				freeJdcStr(&decompiledThirdOperand);
+				return 0;
+			}
+			
+			if (getAssignment) { sprintfJdc(result, 0, "%s = (%s * %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledThirdOperand.buffer); }
+			else { sprintfJdc(result, 0, "(%s * %s)", decompiledSecondOperand.buffer, decompiledThirdOperand.buffer); }
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
+			freeJdcStr(&decompiledThirdOperand);
 			return 1;
 		}
 	}
@@ -840,14 +839,22 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		if (!decompileComparison(params, 0, &comparisonStr))
 		{
 			freeJdcStr(&comparisonStr);
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			freeJdcStr(&decompiledFirstOperand);
 			return 0;
 		}
 
-		if (getAssignment) { sprintfJdc(result, 0, "%s = (%s ? %s : %s)", decompiledOperands[0].buffer, comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer); }
-		else { sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledOperands[1].buffer, decompiledOperands[0].buffer); }
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[1], type, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
+			return 0;
+		}
+
+		if (getAssignment) { sprintfJdc(result, 0, "%s = (%s ? %s : %s)", decompiledFirstOperand.buffer, comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer); }
+		else { sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer); }
 		freeJdcStr(&comparisonStr);
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (isOpcodeSETcc(instruction->opcode))
@@ -856,13 +863,14 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		if (!decompileComparison(params, 0, &comparisonStr))
 		{
 			freeJdcStr(&comparisonStr);
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			freeJdcStr(&decompiledFirstOperand);
 			return 0;
 		}
 
-		if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, comparisonStr.buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, comparisonStr.buffer); }
 		else { sprintfJdc(result, 0, "%s", comparisonStr.buffer); }
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&comparisonStr);
+		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->group1Prefix == REPZ && instruction->opcode == MOVS) 
@@ -872,8 +880,16 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		uIntType.primitiveType = INT_TYPE;
 		if (!decompileRegister(params, CX, uIntType, &count, 0))
 		{
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&count);
+			return 0;
+		}
+
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[1], type, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
 			return 0;
 		}
 
@@ -893,9 +909,10 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			break;
 		}
 
-		sprintfJdc(result, 0, "memcpy(%s, %s, %s)", decompiledOperands[0].buffer, decompiledOperands[1].buffer, count.buffer);
+		sprintfJdc(result, 0, "memcpy(%s, %s, %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, count.buffer);
 		freeJdcStr(&count);
-		for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledSecondOperand);
 		return 1;
 	}
 	else if (instruction->opcode == POP) 
@@ -904,6 +921,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		
 		int stackOffset = 0;
 		unsigned char gotValue = 0;
+		int ogStartInstructionIndex = params.startInstructionIndex;
 		for (int i = ogStartInstructionIndex; i >= 0; i--)
 		{
 			if (params.currentFunc->instructions[i].opcode == PUSH) 
@@ -914,7 +932,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 					params.startInstructionIndex = i;
 					if (!decompileOperand(params, &params.currentFunc->instructions[i].operands[0], type, &value)) 
 					{
-						for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+						freeJdcStr(&decompiledFirstOperand);
 						freeJdcStr(&value);
 						return 0;
 					}
@@ -941,7 +959,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 
 		if (gotValue) 
 		{
-			if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, value.buffer); }
+			if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, value.buffer); }
 			else { sprintfJdc(result, 0, "%s", value.buffer); }
 			return 1;
 		}
@@ -949,99 +967,110 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 		{
 			if(instruction->operands[0].type == REGISTER)
 			{
-				if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, registerStrs[instruction->operands[0].reg]); }
+				if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, registerStrs[instruction->operands[0].reg]); }
 				else { sprintfJdc(result, 0, "%s", registerStrs[instruction->operands[0].reg]); }
 				gotValue = 1;
 			}
 
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&value);
 			return gotValue;
 		}
 	}
 
 	struct Operand* secondOperand = &instruction->operands[1];
+	struct VarType operandType = getTypeOfOperand(instruction->opcode, secondOperand);
+	if (operandType.primitiveType == VOID_TYPE)
+	{
+		operandType = type;
+	}
+
+	if (secondOperand->type == REGISTER)
+	{
+		params.startInstructionIndex--; // avoiding infinite recursive loop with decompileRegister. startInstructionIndex could just be decremented for most instructions, but if secondOperand is dependent on the instruction pointer it needs startInstructionIndex to be the current instruction index
+	}
+
+	struct JdcStr decompiledSecondOperand = initializeJdcStr();
+	if (!decompileOperand(params, secondOperand, operandType, &decompiledSecondOperand))
+	{
+		freeJdcStr(&decompiledSecondOperand);
+		return 0;
+	}
 
 	if (isOpcodeMov(instruction->opcode) || 
 		(instruction->opcode == LEA && secondOperand->type == MEM_ADDRESS && !compareRegisters(secondOperand->memoryAddress.reg, BP) && !compareRegisters(secondOperand->memoryAddress.reg, SP)))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, "%s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, "%s", decompiledSecondOperand.buffer); }
 	}
 	else if (instruction->opcode == LEA) 
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = &%s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, "&%s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = &%s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, "&%s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeAdd(instruction->opcode)) 
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s += %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " + %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s += %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " + %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeSub(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s -= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " - %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s -= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " - %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeAnd(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s &= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " & %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s &= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " & %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeOr(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s |= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " | %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s |= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " | %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeXor(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s ^= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " ^ %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s ^= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " ^ %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeShl(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s <<= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " << %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s <<= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " << %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeShr(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s >>= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " >> %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s >>= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " >> %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeMul(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " * %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " * %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeDiv(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, " / %s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, " / %s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeCvtToDbl(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = (double)%s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, "(double)%s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = (double)%s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, "(double)%s", decompiledSecondOperand.buffer); }
 	}
 	else if (isOpcodeCvtToFlt(instruction->opcode))
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s = (float)%s", decompiledOperands[0].buffer, decompiledOperands[1].buffer); }
-		else { sprintfJdc(result, 0, "(float)%s", decompiledOperands[1].buffer); }
+		if (getAssignment) { sprintfJdc(result, 0, "%s = (float)%s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
+		else { sprintfJdc(result, 0, "(float)%s", decompiledSecondOperand.buffer); }
 	}
 	else
 	{
-		struct IntriniscFunc* intrinsicFunc;
-		if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
-		{
-			return decompileReturningIntrinsicFunc(intrinsicFunc, numOfOperands, getAssignment, decompiledOperands, result);
-		}
-		else 
-		{
-			for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
-			return 0;
-		}
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledSecondOperand);
+		return 0;
 	}
 
-	for (int i = 0; i < numOfOperands; i++) { freeJdcStr(&decompiledOperands[i]); }
+	freeJdcStr(&decompiledFirstOperand);
+	freeJdcStr(&decompiledSecondOperand);
 	return 1;
 }

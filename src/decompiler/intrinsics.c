@@ -37,11 +37,21 @@ unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct Intrin
 	return 0;
 }
 
-unsigned char decompileReturningIntrinsicFunc(struct IntrinsicFunc* intrinsicFunc, int numOfOperands, unsigned char getAssignment, struct JdcStr* decompiledOperands, struct JdcStr* result)
+unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result)
 {
+	struct DisassembledInstruction* instruction = &params.currentFunc->instructions[params.startInstructionIndex];
+
 	if (getAssignment)
 	{
-		sprintfJdc(result, 0, "%s = %s(", decompiledOperands[0].buffer, intrinsicFunc->name);
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (!decompileOperand(params, &instruction->operands[0], type, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+
+		sprintfJdc(result, 0, "%s = %s(", decompiledFirstOperand.buffer, intrinsicFunc->name);
+		freeJdcStr(&decompiledFirstOperand);
 	}
 	else
 	{
@@ -58,12 +68,23 @@ unsigned char decompileReturningIntrinsicFunc(struct IntrinsicFunc* intrinsicFun
 		}
 	}
 
-	for (int i = 0; i < numOfOperands; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
-			sprintfJdc(result, 1, "%s", decompiledOperands[i].buffer);
-			freeJdcStr(&decompiledOperands[i]);
+			struct Operand* currentOperand = &instruction->operands[i];
+
+			struct VarType operandType = getTypeOfOperand(instruction->opcode, currentOperand);
+
+			struct JdcStr decompiledOperand = initializeJdcStr();
+			if (!decompileOperand(params, currentOperand, operandType, &decompiledOperand))
+			{
+				freeJdcStr(&decompiledOperand);
+				return 0;
+			}
+			
+			sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+			freeJdcStr(&decompiledOperand);
 
 			if (i < lastDecompiledOperand)
 			{
