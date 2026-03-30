@@ -32,7 +32,7 @@ int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBuffer
 				end = i;
 			}
 			unsigned char doesJmpSkipNothing = 1;
-			for (int j = start; j < end; j++) 
+			for (int j = start + 1; j < end; j++) 
 			{
 				if (!doesInstructionDoNothing(&params.currentFunc->instructions[j]))
 				{
