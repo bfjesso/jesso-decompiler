@@ -188,32 +188,32 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 		{
 			continue;
 		}
+
+		int start1 = params.currentFunc->conditions[i].jccIndex;
+		int end1 = params.currentFunc->conditions[i].dstIndex;
+		if (end1 < start1)
+		{
+			start1 = params.currentFunc->conditions[i].dstIndex;
+			end1 = params.currentFunc->conditions[i].jccIndex;
+		}
 		
-		// checking for conditions that ends before another that it encolses
+		// checking for overlapping conditions which need to be handled as go to
 		for (int j = 0; j < numOfConditions; j++)
 		{
 			if (i == j || params.currentFunc->conditions[j].decompileAsReturn || params.currentFunc->conditions[j].decompileAsGoTo) 
 			{
 				continue;
 			}
-			
-			unsigned char isOverlapping = 0;
-			if (params.currentFunc->conditions[j].dstIndex > params.currentFunc->conditions[j].jccIndex)
-			{
-				if (params.currentFunc->conditions[i].dstIndex > params.currentFunc->conditions[j].jccIndex && params.currentFunc->conditions[i].dstIndex < params.currentFunc->conditions[j].dstIndex)
-				{
-					isOverlapping = 1;
-				}
-			}
-			else if (params.currentFunc->conditions[j].dstIndex < params.currentFunc->conditions[j].jccIndex)
-			{
-				if (params.currentFunc->conditions[i].dstIndex > params.currentFunc->conditions[j].dstIndex && params.currentFunc->conditions[i].dstIndex < params.currentFunc->conditions[j].jccIndex)
-				{
-					isOverlapping = 1;
-				}
-			}
 
-			if (isOverlapping) 
+			int start2 = params.currentFunc->conditions[j].jccIndex;
+			int end2 = params.currentFunc->conditions[j].dstIndex;
+			if (end2 < start2)
+			{
+				start2 = params.currentFunc->conditions[j].dstIndex;
+				end2 = params.currentFunc->conditions[j].jccIndex;
+			}
+			
+			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2))
 			{
 				params.currentFunc->conditions[i].decompileAsGoTo = 1;
 				params.currentFunc->conditions[i].conditionType == IF_CT;
