@@ -974,16 +974,12 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	while (start < text.length())
 	{
 		int pos = text.find("label_", start);
-		int end = text.find(";", pos + 1);
-		if (text[pos - 1] == '\n') 
-		{
-			end = text.find(":", pos + 1);
-		}
+		int end = text.find("\n", pos + 1);
 		
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			decompilationTextCtrl->StartStyling(pos);
-			decompilationTextCtrl->SetStyling(end - pos, ColorsMenu::DecompilationColor::LABEL_COLOR);
+			decompilationTextCtrl->SetStyling(end - pos - 1, ColorsMenu::DecompilationColor::LABEL_COLOR);
 
 			start = end + 1;
 		}

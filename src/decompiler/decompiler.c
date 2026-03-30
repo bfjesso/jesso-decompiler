@@ -168,6 +168,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		{
 			if (params.currentFunc->conditions[j].decompileAsGoTo && i == params.currentFunc->conditions[j].dstIndex)
 			{
+				addIndents(result, numOfIndents - 1);
 				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->conditions[j].dstIndex].address - params.imageBase);
 				break;
 			}
@@ -177,6 +178,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		{
 			if (i == params.currentFunc->directJmps[j].dstIndex && params.currentFunc->directJmps[j].type == GO_TO_DJT)
 			{
+				addIndents(result, numOfIndents - 1);
 				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->directJmps[j].dstIndex].address - params.imageBase);
 				break;
 			}
