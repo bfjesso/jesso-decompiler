@@ -48,7 +48,8 @@ enum ConditionType
 	ELSE_IF_CT,
 	ELSE_CT,
 	LOOP_CT, // for or while loop
-	DO_WHILE_CT
+	DO_WHILE_CT,
+	SWITCH_CASE_CT
 };
 
 enum LogicalType
@@ -74,6 +75,9 @@ struct Condition
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
 	enum LogicalType combinationLogicType;
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
+
+	struct DisassembledInstruction* cmpInstruction;
+	unsigned char isFirstSwitchCase;
 
 	unsigned char hasEnteredCondition; // this is checked when looking for ends of conditions. it is possible that a condition will never be entered if there is a direct jmp that skips it
 };

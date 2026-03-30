@@ -1,5 +1,6 @@
 #include "decompiler.h"
 #include "decompilationUtils.h"
+#include "expressions.h"
 #include "functions.h"
 #include "assignment.h"
 #include "returnStatements.h"
@@ -64,6 +65,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	}
 
 	unsigned char numOfIndents = 1;
+	unsigned char isInSwitch = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		if (numOfIndents < 1)
@@ -78,41 +80,83 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		// handling condition dsts
 		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
 		{
-			if (!params.currentFunc->conditions[j].decompileAsReturn && !params.currentFunc->conditions[j].decompileAsGoTo && !params.currentFunc->conditions[j].isCombinedByOther && i == params.currentFunc->conditions[j].dstIndex)
+			struct Condition* condition = &params.currentFunc->conditions[j];
+			if (!condition->decompileAsReturn && !condition->decompileAsGoTo && !condition->isCombinedByOther && i == condition->dstIndex)
 			{
-				if (params.currentFunc->conditions[j].conditionType == DO_WHILE_CT)
+				if (condition->conditionType == DO_WHILE_CT)
 				{
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "do\n");
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "{\n");
 					numOfIndents++;
-					params.currentFunc->conditions[j].hasEnteredCondition = 1;
+					condition->hasEnteredCondition = 1;
 				}
-				else if (params.currentFunc->conditions[j].hasEnteredCondition)
+				else if (condition->conditionType == SWITCH_CASE_CT) 
+				{
+					if (!condition->isFirstSwitchCase) 
+					{
+						addIndents(result, numOfIndents);
+						strcatJdc(result, "break;\n");
+					}
+					
+					struct JdcStr switchCase = initializeJdcStr();
+					if (!decompileOperand(params, &condition->cmpInstruction->operands[1], getTypeOfOperand(condition->cmpInstruction->opcode, &condition->cmpInstruction->operands[1]), &switchCase))
+					{
+						freeJdcStr(&switchCase);
+						return 0;
+					}
+					
+					addIndents(result, numOfIndents - 1);
+					sprintfJdc(result, 1, "case %s:\n", switchCase.buffer);
+					freeJdcStr(&switchCase);
+				}
+				else if (condition->hasEnteredCondition)
 				{
 					numOfIndents--;
 					addIndents(result, numOfIndents);
 					strcatJdc(result, "}\n");
 				}
 			}
+			else if (condition->isFirstSwitchCase && i == condition->exitIndex) 
+			{
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "break;\n");
+
+				isInSwitch = 0;
+
+				numOfIndents--;
+				addIndents(result, numOfIndents);
+				strcatJdc(result, "}\n");
+			}
 		}
 
 		// handling condition Jccs
 		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
 		{
-			if (!params.currentFunc->conditions[j].isCombinedByOther && params.currentFunc->conditions[j].jccIndex == i)
+			struct Condition* condition = &params.currentFunc->conditions[j];
+			if(condition->isCombinedByOther)
 			{
-				if (params.currentFunc->conditions[j].conditionType == DO_WHILE_CT)
+				continue;
+			}
+
+			if (condition->jccIndex == i && (condition->conditionType != SWITCH_CASE_CT || condition->isFirstSwitchCase))
+			{
+				if (condition->conditionType == DO_WHILE_CT)
 				{
-					if (params.currentFunc->conditions[j].hasEnteredCondition) 
+					if (condition->hasEnteredCondition)
 					{
 						numOfIndents--;
 					}
-					else 
+					else
 					{
 						continue;
 					}
+				}
+
+				if (condition->isFirstSwitchCase) 
+				{
+					isInSwitch = condition->isFirstSwitchCase;
 				}
 
 				addIndents(result, numOfIndents);
@@ -121,13 +165,13 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				{
 					strcatJdc(result, "\n");
 
-					if (params.currentFunc->conditions[j].conditionType != DO_WHILE_CT)
+					if (condition->conditionType != DO_WHILE_CT)
 					{
 						addIndents(result, numOfIndents);
 						strcatJdc(result, "{\n");
 
 						numOfIndents++;
-						params.currentFunc->conditions[j].hasEnteredCondition = 1;
+						condition->hasEnteredCondition = 1;
 					}
 				}
 				else
@@ -135,25 +179,25 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					return 0;
 				}
 
-				if (params.currentFunc->conditions[j].decompileAsReturn)
+				if (condition->decompileAsReturn)
 				{
 					addIndents(result, numOfIndents);
-					if (decompileReturnStatement(params, result)) 
+					if (decompileReturnStatement(params, result))
 					{
 						strcatJdc(result, "\n");
 						numOfIndents--;
 						addIndents(result, numOfIndents);
 						strcatJdc(result, "}\n");
 					}
-					else 
+					else
 					{
 						return 0;
 					}
 				}
-				else if (params.currentFunc->conditions[j].decompileAsGoTo)
+				else if (condition->decompileAsGoTo)
 				{
 					addIndents(result, numOfIndents);
-					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[params.currentFunc->conditions[j].dstIndex].address - params.imageBase);
+					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
 
 					numOfIndents--;
 					addIndents(result, numOfIndents);
@@ -166,10 +210,11 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
 		{
-			if (params.currentFunc->conditions[j].decompileAsGoTo && i == params.currentFunc->conditions[j].dstIndex)
+			struct Condition* condition = &params.currentFunc->conditions[j];
+			if (condition->decompileAsGoTo && i == condition->dstIndex)
 			{
 				addIndents(result, numOfIndents - 1);
-				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->conditions[j].dstIndex].address - params.imageBase);
+				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
 				break;
 			}
 		}
@@ -258,7 +303,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions) && !isInSwitch)
 		{
 			addIndents(result, numOfIndents);
 			if (decompileReturnStatement(params, result))

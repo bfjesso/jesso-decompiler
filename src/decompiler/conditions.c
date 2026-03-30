@@ -3,6 +3,7 @@
 #include "returnStatements.h"
 #include "expressions.h"
 #include "assignment.h"
+#include "../disassembler/operands.h"
 
 int getAllConditions(struct DecompilationParameters params, int conditionsBufferSize)
 {
@@ -10,6 +11,8 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 	int combinationCount = 0;
 	int lastDstIndex = -1;
 	unsigned char stopCombination = 0;
+	struct DisassembledInstruction* lastCmpInstruction = 0;
+	struct DisassembledInstruction* currentCmpInstruction = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
@@ -81,7 +84,21 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 				}
 
 				// setting the type
-				if (checkForJumpToReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+				if (numOfConditions > 0 && exitIndex == params.currentFunc->conditions[numOfConditions - 1].exitIndex &&
+					instruction->opcode == JZ_SHORT && params.currentFunc->instructions[params.currentFunc->conditions[numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
+					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]))
+				{
+					if (params.currentFunc->conditions[numOfConditions - 1].conditionType != SWITCH_CASE_CT) 
+					{
+						params.currentFunc->conditions[numOfConditions - 1].cmpInstruction = lastCmpInstruction;
+						params.currentFunc->conditions[numOfConditions - 1].isFirstSwitchCase = 1;
+						params.currentFunc->conditions[numOfConditions - 1].conditionType = SWITCH_CASE_CT;
+					}
+					
+					params.currentFunc->conditions[numOfConditions].cmpInstruction = currentCmpInstruction;
+					params.currentFunc->conditions[numOfConditions].conditionType = SWITCH_CASE_CT;
+				}
+				else if (checkForJumpToReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 				{
 					params.currentFunc->conditions[numOfConditions].decompileAsReturn = 1;
 					params.currentFunc->conditions[numOfConditions].conditionType = IF_CT;
@@ -103,7 +120,9 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 				else
 				{
 					// checking if last condition has an else and add it if so
-					if (numOfConditions > 0 && params.currentFunc->conditions[numOfConditions - 1].conditionType != LOOP_CT && params.currentFunc->conditions[numOfConditions - 1].exitIndex != -1)
+					if (numOfConditions > 0 && 
+						(params.currentFunc->conditions[numOfConditions - 1].conditionType == IF_CT || params.currentFunc->conditions[numOfConditions - 1].conditionType == ELSE_IF_CT) &&
+						params.currentFunc->conditions[numOfConditions - 1].exitIndex != -1)
 					{
 						if (!checkForReturnStatement(params.currentFunc->conditions[numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
 						{
@@ -132,8 +151,15 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 		{
 			stopCombination = 1;
 		}
+		else if (isOpcodeCmp(instruction->opcode)) 
+		{
+			lastCmpInstruction = currentCmpInstruction;
+			currentCmpInstruction = instruction;
+		}
 	}
-	if (numOfConditions > 0 && params.currentFunc->conditions[numOfConditions - 1].conditionType != LOOP_CT && params.currentFunc->conditions[numOfConditions - 1].exitIndex != -1)
+	if (numOfConditions > 0 && 
+		(params.currentFunc->conditions[numOfConditions - 1].conditionType == IF_CT || params.currentFunc->conditions[numOfConditions - 1].conditionType == ELSE_IF_CT) && 
+		params.currentFunc->conditions[numOfConditions - 1].exitIndex != -1)
 	{
 		if (!checkForReturnStatement(params.currentFunc->conditions[numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 		{
@@ -184,7 +210,7 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 
 	for (int i = 0; i < numOfConditions; i++)
 	{
-		if (params.currentFunc->conditions[i].decompileAsReturn) 
+		if (params.currentFunc->conditions[i].decompileAsReturn || params.currentFunc->conditions[i].conditionType == SWITCH_CASE_CT)
 		{
 			continue;
 		}
@@ -200,7 +226,8 @@ int getAllConditions(struct DecompilationParameters params, int conditionsBuffer
 		// checking for overlapping conditions which need to be handled as go to
 		for (int j = 0; j < numOfConditions; j++)
 		{
-			if (i == j || params.currentFunc->conditions[j].decompileAsReturn || params.currentFunc->conditions[j].decompileAsGoTo) 
+			
+			if (i == j || params.currentFunc->conditions[j].decompileAsReturn || params.currentFunc->conditions[j].decompileAsGoTo || params.currentFunc->conditions[j].conditionType == SWITCH_CASE_CT)
 			{
 				continue;
 			}
@@ -253,6 +280,19 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 	if (condition->conditionType == ELSE_CT)
 	{
 		return strcatJdc(result, "else");
+	}
+	else if (condition->isFirstSwitchCase) 
+	{
+		struct JdcStr switchVar = initializeJdcStr();
+		if (!decompileOperand(params, &condition->cmpInstruction->operands[0], getTypeOfOperand(condition->cmpInstruction->opcode, &condition->cmpInstruction->operands[0]), &switchVar))
+		{
+			freeJdcStr(&switchVar);
+			return 0;
+		}
+
+		sprintfJdc(result, 1, "switch(%s)", switchVar.buffer);
+		freeJdcStr(&switchVar);
+		return 1;
 	}
 
 	unsigned char invertCondition = condition->decompileAsReturn || condition->decompileAsGoTo || condition->conditionType == DO_WHILE_CT;
