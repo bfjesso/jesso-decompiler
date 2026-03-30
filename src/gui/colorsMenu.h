@@ -72,9 +72,10 @@ public:
 		STRING_COLOR,
 		NUMBER_COLOR,
 		COMMENT_DECOMP_COLOR,
+		LABEL_COLOR,
 		ERROR_COLOR,
 	};
-	const char* decompColorNames[12] = 
+	const char* decompColorNames[13] = 
 	{ 
 		"Operators",
 		"Local variables",
@@ -87,9 +88,10 @@ public:
 		"Strings",
 		"Numbers",
 		"Comments",
+		"Labels",
 		"Errors"
 	};
-	wxColour defaultDecompColors[12] = 
+	wxColour defaultDecompColors[13] = 
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
@@ -102,9 +104,10 @@ public:
 		wxColour(232, 201, 187),
 		wxColour(181, 206, 168),
 		wxColour(87, 166, 74),
+		wxColour(200, 200, 200),
 		wxColour(250, 50, 50)
 	};
-	const int numberOfDecompColors = 12;
+	const int numberOfDecompColors = 13;
 	
 	enum ids
 	{

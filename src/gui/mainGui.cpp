@@ -969,6 +969,30 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 		}
 	}
 
+	// labels
+	start = 0;
+	while (start < text.length())
+	{
+		int pos = text.find("label_", start);
+		int end = text.find(";", pos + 1);
+		if (text[pos - 1] == '\n') 
+		{
+			end = text.find(":", pos + 1);
+		}
+		
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+		{
+			decompilationTextCtrl->StartStyling(pos);
+			decompilationTextCtrl->SetStyling(end - pos, ColorsMenu::DecompilationColor::LABEL_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
 	// regs/segs that arent variables/arguments
 	for (int i = 0; i < numOfRegisters; i++)
 	{
