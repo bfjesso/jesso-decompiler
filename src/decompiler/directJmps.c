@@ -23,6 +23,27 @@ int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBuffer
 			{
 				continue;
 			}
+
+			int start = i;
+			int end = dstIndex;
+			if (start > end) 
+			{
+				start = dstIndex;
+				end = i;
+			}
+			unsigned char doesJmpSkipNothing = 1;
+			for (int j = start; j < end; j++) 
+			{
+				if (!doesInstructionDoNothing(&params.currentFunc->instructions[j]))
+				{
+					doesJmpSkipNothing = 0;
+					break;
+				}
+			}
+			if (doesJmpSkipNothing) 
+			{
+				continue;
+			}
 			
 			enum DirectJmpType directJmpType = GO_TO_DJT;
 			for (int j = 0; j < params.currentFunc->numOfConditions; j++)

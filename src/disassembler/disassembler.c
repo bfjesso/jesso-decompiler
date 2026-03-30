@@ -391,6 +391,10 @@ unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instructi
 	{
 		return 1;
 	}
+	else if (instruction->opcode == NOP) 
+	{
+		return 1;
+	}
 
 	return 0;
 }
