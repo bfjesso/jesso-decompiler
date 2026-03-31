@@ -68,8 +68,8 @@ struct Condition
 	unsigned char decompileAsReturn;
 	unsigned char decompileAsGoTo;
 
-	int combinedJccIndexes[3]; // these will be either all connected by && or ||
-	unsigned char numOfCombinedJccs;
+	int* combinedJccIndexes; // these will be either all connected by && or ||
+	int numOfCombinedJccs;
 	enum LogicalType combinedJccsLogicType;
 
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer

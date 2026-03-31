@@ -16,9 +16,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 {
 	if(!params.currentFunc->conditions)
 	{
-		params.currentFunc->conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
-		params.currentFunc->numOfConditions = getAllConditions(params, 20);
-		if (params.currentFunc->numOfConditions == -1)
+		if (!getAllConditions(params))
 		{
 			return 0;
 		}

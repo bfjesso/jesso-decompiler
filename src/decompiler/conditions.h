@@ -1,7 +1,11 @@
 #pragma once
 #include "decompilationStructs.h"
 
-int getAllConditions(struct DecompilationParameters params, int conditionsBufferSize);
+unsigned char getAllConditions(struct DecompilationParameters params);
+
+static unsigned char handleConditionsResize(struct DecompilationParameters params);
+
+static unsigned char handleCombinedJccResize(struct Condition* condition);
 
 unsigned char decompileCondition(struct DecompilationParameters params, int conditionIndex, struct JdcStr* result);
 
