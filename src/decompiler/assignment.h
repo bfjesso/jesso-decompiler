@@ -1,6 +1,6 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char checkForAssignment(struct DecompilationParameters params);
+unsigned char checkForAssignment(struct DecompilationParameters* params);
 
-unsigned char decompileAssignments(struct DecompilationParameters params, struct JdcStr* result, int numOfIndents);
+unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result, int numOfIndents);

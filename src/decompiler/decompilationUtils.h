@@ -10,7 +10,7 @@ extern "C"
 
 	int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
-	unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex);
+	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
 
 #ifdef __cplusplus
 }
@@ -20,6 +20,6 @@ void addIndents(struct JdcStr* result, int numOfIndents);
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress);
 
-static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
+static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 
-static unsigned char getNumFromData(struct DecompilationParameters params, unsigned long long address, unsigned long long* result);
+static unsigned char getNumFromData(struct DecompilationParameters* params, unsigned long long address, unsigned long long* result);

@@ -5,34 +5,34 @@
 #include "assignment.h"
 #include "../disassembler/operands.h"
 
-unsigned char getAllConditions(struct DecompilationParameters params)
+unsigned char getAllConditions(struct DecompilationParameters* params)
 {
-	params.currentFunc->conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
+	params->currentFunc->conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
 	
 	int combinationCount = 0;
 	int lastDstIndex = -1;
 	unsigned char stopCombination = 0;
 	struct DisassembledInstruction* lastCmpInstruction = 0;
 	struct DisassembledInstruction* currentCmpInstruction = 0;
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
-		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
+		struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[i]);
 
 		if (isOpcodeJcc(instruction->opcode))
 		{
 			// getting index of instruction jumped to by jcc
-			unsigned long long jccDst = params.currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
-			int dstIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jccDst);
+			unsigned long long jccDst = params->currentFunc->instructions[i].address + instruction->operands[0].immediate.value;
+			int dstIndex = findInstructionByAddress(params->currentFunc->instructions, 0, params->currentFunc->numOfInstructions - 1, jccDst);
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;
-			if (params.currentFunc->instructions[dstIndex - 1].opcode == JMP_SHORT)
+			if (params->currentFunc->instructions[dstIndex - 1].opcode == JMP_SHORT)
 			{
 				// sometimes compiler puts multiple jmps next to each other at the end?
 				int firstJmpIndex = dstIndex - 1;
 				for (int j = dstIndex - 2; j > i; j--)
 				{
-					if (params.currentFunc->instructions[j].opcode == JMP_SHORT)
+					if (params->currentFunc->instructions[j].opcode == JMP_SHORT)
 					{
 						firstJmpIndex = j;
 					}
@@ -42,40 +42,40 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 					}
 				}
 
-				unsigned long long jmpDst = params.currentFunc->instructions[firstJmpIndex].address + params.currentFunc->instructions[firstJmpIndex].operands[0].immediate.value;
-				exitIndex = findInstructionByAddress(params.currentFunc->instructions, 0, params.currentFunc->numOfInstructions - 1, jmpDst);
+				unsigned long long jmpDst = params->currentFunc->instructions[firstJmpIndex].address + params->currentFunc->instructions[firstJmpIndex].operands[0].immediate.value;
+				exitIndex = findInstructionByAddress(params->currentFunc->instructions, 0, params->currentFunc->numOfInstructions - 1, jmpDst);
 			}
 
 			// a series of Jcc instructions that have the same destination are combined with a logical AND
 			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
 
-			if (params.currentFunc->numOfConditions > 0 && dstIndex == params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex && !stopCombination)
+			if (params->currentFunc->numOfConditions > 0 && dstIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex && !stopCombination)
 			{
-				if (!handleCombinedJccResize(&params.currentFunc->conditions[params.currentFunc->numOfConditions - 1]))
+				if (!handleCombinedJccResize(&params->currentFunc->conditions[params->currentFunc->numOfConditions - 1]))
 				{
 					return 0;
 				}
 				
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].combinedJccsLogicType = AND_LT;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].combinedJccsLogicType = AND_LT;
 				combinationCount++;
 
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].numOfCombinedJccs = combinationCount;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].numOfCombinedJccs = combinationCount;
 			}
-			else if (params.currentFunc->numOfConditions > 0 && lastDstIndex - 1 == i && !stopCombination)
+			else if (params->currentFunc->numOfConditions > 0 && lastDstIndex - 1 == i && !stopCombination)
 			{
-				if (!handleCombinedJccResize(&params.currentFunc->conditions[params.currentFunc->numOfConditions - 1])) 
+				if (!handleCombinedJccResize(&params->currentFunc->conditions[params->currentFunc->numOfConditions - 1])) 
 				{
 					return 0;
 				}
 				
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].combinedJccsLogicType = OR_LT;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex = dstIndex;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex = exitIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].combinedJccIndexes[combinationCount] = i;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].combinedJccsLogicType = OR_LT;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex = dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex = exitIndex;
 				combinationCount++;
 
-				params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].numOfCombinedJccs = combinationCount;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].numOfCombinedJccs = combinationCount;
 			}
 			else
 			{
@@ -85,52 +85,52 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 				}
 
 				// setting the type
-				if (params.currentFunc->numOfConditions > 0 && exitIndex == params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex &&
-					instruction->opcode == JZ_SHORT && params.currentFunc->instructions[params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
+				if (params->currentFunc->numOfConditions > 0 && exitIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex &&
+					instruction->opcode == JZ_SHORT && params->currentFunc->instructions[params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
 					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]))
 				{
-					if (params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType != SWITCH_CASE_CT) 
+					if (params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType != SWITCH_CASE_CT) 
 					{
-						params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].cmpInstruction = lastCmpInstruction;
-						params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].isFirstSwitchCase = 1;
-						params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType = SWITCH_CASE_CT;
+						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].cmpInstruction = lastCmpInstruction;
+						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].isFirstSwitchCase = 1;
+						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType = SWITCH_CASE_CT;
 					}
 					
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].cmpInstruction = currentCmpInstruction;
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = SWITCH_CASE_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].cmpInstruction = currentCmpInstruction;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = SWITCH_CASE_CT;
 				}
-				else if (checkForJumpToReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+				else if (checkForJumpToReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].decompileAsReturn = 1;
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = IF_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].decompileAsReturn = 1;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
 				}
 				else if (exitIndex != -1 && exitIndex < i)
 				{
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = LOOP_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = LOOP_CT;
 				}
 				else if (dstIndex < i)
 				{
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = DO_WHILE_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = DO_WHILE_CT;
 				}
-				else if (params.currentFunc->numOfConditions > 0 && exitIndex != -1 &&
-					params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex == exitIndex && // check for else if
-					dstIndex > params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex) // also have to check that its not nested
+				else if (params->currentFunc->numOfConditions > 0 && exitIndex != -1 &&
+					params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex == exitIndex && // check for else if
+					dstIndex > params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex) // also have to check that its not nested
 				{
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = ELSE_IF_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_IF_CT;
 				}
 				else
 				{
 					// checking if last condition has an else and add it if so
-					if (params.currentFunc->numOfConditions > 0 && 
-						(params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType == IF_CT || params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) &&
-						params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex != -1)
+					if (params->currentFunc->numOfConditions > 0 && 
+						(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) &&
+						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
 					{
-						if (!checkForReturnStatement(params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
+						if (!checkForReturnStatement(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
 						{
-							params.currentFunc->conditions[params.currentFunc->numOfConditions].jccIndex = params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex;
-							params.currentFunc->conditions[params.currentFunc->numOfConditions].dstIndex = params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex;
-							params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = ELSE_CT;
-							params.currentFunc->numOfConditions++;
+							params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex;
+							params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex;
+							params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
+							params->currentFunc->numOfConditions++;
 						}
 					}
 
@@ -139,21 +139,21 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 						return 0;
 					}
 
-					params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = IF_CT;
+					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
 				}
 
-				params.currentFunc->conditions[params.currentFunc->numOfConditions].jccIndex = i;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions].dstIndex = dstIndex;
-				params.currentFunc->conditions[params.currentFunc->numOfConditions].exitIndex = exitIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = i;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].exitIndex = exitIndex;
 
 				combinationCount = 0;
 				stopCombination = 0;
-				params.currentFunc->numOfConditions++;
+				params->currentFunc->numOfConditions++;
 			}
 
 			lastDstIndex = dstIndex;
 		}
-		else if(params.currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
+		else if(params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
 			stopCombination = 1;
 		}
@@ -163,26 +163,26 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 			currentCmpInstruction = instruction;
 		}
 	}
-	if (params.currentFunc->numOfConditions > 0 && 
-		(params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType == IF_CT || params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) && 
-		params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex != -1)
+	if (params->currentFunc->numOfConditions > 0 && 
+		(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) && 
+		params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
 	{
-		if (!checkForReturnStatement(params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex - 1, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+		if (!checkForReturnStatement(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 		{
 			if (!handleConditionsResize(params))
 			{
 				return 0;
 			}
 			
-			params.currentFunc->conditions[params.currentFunc->numOfConditions].jccIndex = params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].dstIndex;
-			params.currentFunc->conditions[params.currentFunc->numOfConditions].dstIndex = params.currentFunc->conditions[params.currentFunc->numOfConditions - 1].exitIndex;
-			params.currentFunc->conditions[params.currentFunc->numOfConditions].conditionType = ELSE_CT;
-			params.currentFunc->numOfConditions++;
+			params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex;
+			params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex;
+			params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
+			params->currentFunc->numOfConditions++;
 		}
 	}
 
 	//// combining conditions
-	//for (int i = 0; i < params.currentFunc->numOfConditions - 2; i++)
+	//for (int i = 0; i < params->currentFunc->numOfConditions - 2; i++)
 	//{
 	//	if (conditions[i].dstIndex == conditions[i + 1].dstIndex)
 	//	{
@@ -204,61 +204,61 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 	//	}
 	//}
 
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params.currentFunc->conditions[i].decompileAsReturn || params.currentFunc->conditions[i].conditionType == SWITCH_CASE_CT)
+		if (params->currentFunc->conditions[i].decompileAsReturn || params->currentFunc->conditions[i].conditionType == SWITCH_CASE_CT)
 		{
 			continue;
 		}
 
-		int start1 = params.currentFunc->conditions[i].jccIndex;
-		int end1 = params.currentFunc->conditions[i].dstIndex;
+		int start1 = params->currentFunc->conditions[i].jccIndex;
+		int end1 = params->currentFunc->conditions[i].dstIndex;
 		if (end1 < start1)
 		{
-			start1 = params.currentFunc->conditions[i].dstIndex;
-			end1 = params.currentFunc->conditions[i].jccIndex;
+			start1 = params->currentFunc->conditions[i].dstIndex;
+			end1 = params->currentFunc->conditions[i].jccIndex;
 		}
 		
 		// checking for overlapping conditions which need to be handled as go to
-		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+		for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 		{
 			
-			if (i == j || params.currentFunc->conditions[j].decompileAsReturn || params.currentFunc->conditions[j].decompileAsGoTo || params.currentFunc->conditions[j].conditionType == SWITCH_CASE_CT)
+			if (i == j || params->currentFunc->conditions[j].decompileAsReturn || params->currentFunc->conditions[j].decompileAsGoTo || params->currentFunc->conditions[j].conditionType == SWITCH_CASE_CT)
 			{
 				continue;
 			}
 
-			int start2 = params.currentFunc->conditions[j].jccIndex;
-			int end2 = params.currentFunc->conditions[j].dstIndex;
+			int start2 = params->currentFunc->conditions[j].jccIndex;
+			int end2 = params->currentFunc->conditions[j].dstIndex;
 			if (end2 < start2)
 			{
-				start2 = params.currentFunc->conditions[j].dstIndex;
-				end2 = params.currentFunc->conditions[j].jccIndex;
+				start2 = params->currentFunc->conditions[j].dstIndex;
+				end2 = params->currentFunc->conditions[j].jccIndex;
 			}
 			
 			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2))
 			{
-				params.currentFunc->conditions[i].decompileAsGoTo = 1;
-				params.currentFunc->conditions[i].conditionType == IF_CT;
+				params->currentFunc->conditions[i].decompileAsGoTo = 1;
+				params->currentFunc->conditions[i].conditionType == IF_CT;
 				break;
 			}
 		}
 
 		// checking for ELSEs with same dstIndex
-		if (params.currentFunc->conditions[i].conditionType == ELSE_CT)
+		if (params->currentFunc->conditions[i].conditionType == ELSE_CT)
 		{
-			for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
 				if (j == i)
 				{
 					continue;
 				}
 
-				if (params.currentFunc->conditions[j].conditionType == ELSE_CT)
+				if (params->currentFunc->conditions[j].conditionType == ELSE_CT)
 				{
-					if (params.currentFunc->conditions[i].dstIndex == params.currentFunc->conditions[j].dstIndex && params.currentFunc->conditions[i].jccIndex < params.currentFunc->conditions[j].jccIndex)
+					if (params->currentFunc->conditions[i].dstIndex == params->currentFunc->conditions[j].dstIndex && params->currentFunc->conditions[i].jccIndex < params->currentFunc->conditions[j].jccIndex)
 					{
-						params.currentFunc->conditions[i].dstIndex = params.currentFunc->conditions[j].jccIndex;
+						params->currentFunc->conditions[i].dstIndex = params->currentFunc->conditions[j].jccIndex;
 						break;
 					}
 				}
@@ -269,15 +269,15 @@ unsigned char getAllConditions(struct DecompilationParameters params)
 	return 1;
 }
 
-static unsigned char handleConditionsResize(struct DecompilationParameters params)
+static unsigned char handleConditionsResize(struct DecompilationParameters* params)
 {
-	if (params.currentFunc->numOfConditions % 5 == 0)
+	if (params->currentFunc->numOfConditions % 5 == 0)
 	{
-		struct Condition* newConditions = (struct Condition*)realloc(params.currentFunc->conditions, (params.currentFunc->numOfConditions + 5) * sizeof(struct Condition));
+		struct Condition* newConditions = (struct Condition*)realloc(params->currentFunc->conditions, (params->currentFunc->numOfConditions + 5) * sizeof(struct Condition));
 		if (newConditions)
 		{
-			params.currentFunc->conditions = newConditions;
-			memset(params.currentFunc->conditions + params.currentFunc->numOfConditions, 0, sizeof(struct Condition) * 5);
+			params->currentFunc->conditions = newConditions;
+			memset(params->currentFunc->conditions + params->currentFunc->numOfConditions, 0, sizeof(struct Condition) * 5);
 		}
 		else
 		{
@@ -306,27 +306,27 @@ static unsigned char handleCombinedJccResize(struct Condition* condition)
 	return 1;
 }
 
-unsigned char decompileConditionDsts(struct DecompilationParameters params, unsigned char* numOfIndentsRef, struct JdcStr* result) 
+unsigned char decompileConditionDsts(struct DecompilationParameters* params, struct JdcStr* result) 
 {
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		struct Condition* condition = &params.currentFunc->conditions[i];
-		if (!condition->decompileAsReturn && !condition->decompileAsGoTo && !condition->isCombinedByOther && params.startInstructionIndex == condition->dstIndex)
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (!condition->decompileAsReturn && !condition->decompileAsGoTo && !condition->isCombinedByOther && params->startInstructionIndex == condition->dstIndex)
 		{
 			if (condition->conditionType == DO_WHILE_CT)
 			{
-				addIndents(result, *numOfIndentsRef);
+				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "do\n");
-				addIndents(result, *numOfIndentsRef);
+				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "{\n");
-				(*numOfIndentsRef)++;
+				params->numOfIndents++;
 				condition->hasEnteredCondition = 1;
 			}
 			else if (condition->conditionType == SWITCH_CASE_CT)
 			{
 				if (!condition->isFirstSwitchCase)
 				{
-					addIndents(result, *numOfIndentsRef);
+					addIndents(result, params->numOfIndents);
 					strcatJdc(result, "break;\n");
 				}
 
@@ -337,35 +337,35 @@ unsigned char decompileConditionDsts(struct DecompilationParameters params, unsi
 					return 0;
 				}
 
-				addIndents(result, *numOfIndentsRef - 1);
+				addIndents(result, params->numOfIndents - 1);
 				sprintfJdc(result, 1, "case %s:\n", switchCase.buffer);
 				freeJdcStr(&switchCase);
 			}
 			else if (condition->hasEnteredCondition)
 			{
-				(*numOfIndentsRef)--;
-				addIndents(result, *numOfIndentsRef);
+				params->numOfIndents--;
+				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "}\n");
 			}
 		}
-		else if (condition->isFirstSwitchCase && params.startInstructionIndex == condition->exitIndex)
+		else if (condition->isFirstSwitchCase && params->startInstructionIndex == condition->exitIndex)
 		{
-			addIndents(result, *numOfIndentsRef);
+			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "break;\n");
 
-			(*numOfIndentsRef)--;
-			addIndents(result, *numOfIndentsRef);
+			params->numOfIndents--;
+			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "}\n");
 		}
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		struct Condition* condition = &params.currentFunc->conditions[i];
-		if (condition->decompileAsGoTo && params.startInstructionIndex == condition->dstIndex)
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (condition->decompileAsGoTo && params->startInstructionIndex == condition->dstIndex)
 		{
-			addIndents(result, *numOfIndentsRef - 1);
-			sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
+			addIndents(result, params->numOfIndents - 1);
+			sprintfJdc(result, 1, "label_%llX:\n", params->currentFunc->instructions[condition->dstIndex].address - params->imageBase);
 			break;
 		}
 	}
@@ -373,23 +373,23 @@ unsigned char decompileConditionDsts(struct DecompilationParameters params, unsi
 	return 1;
 }
 
-unsigned char decompileConditionJccs(struct DecompilationParameters params, unsigned char* numOfIndentsRef, struct JdcStr* result)
+unsigned char decompileConditionJccs(struct DecompilationParameters* params, struct JdcStr* result)
 {
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		struct Condition* condition = &params.currentFunc->conditions[i];
+		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->isCombinedByOther)
 		{
 			continue;
 		}
 
-		if (condition->jccIndex == params.startInstructionIndex && (condition->conditionType != SWITCH_CASE_CT || condition->isFirstSwitchCase))
+		if (condition->jccIndex == params->startInstructionIndex && (condition->conditionType != SWITCH_CASE_CT || condition->isFirstSwitchCase))
 		{
 			if (condition->conditionType == DO_WHILE_CT)
 			{
 				if (condition->hasEnteredCondition)
 				{
-					(*numOfIndentsRef)--;
+					params->numOfIndents--;
 				}
 				else
 				{
@@ -397,7 +397,7 @@ unsigned char decompileConditionJccs(struct DecompilationParameters params, unsi
 				}
 			}
 
-			addIndents(result, *numOfIndentsRef);
+			addIndents(result, params->numOfIndents);
 
 			if (decompileCondition(params, i, result))
 			{
@@ -405,10 +405,10 @@ unsigned char decompileConditionJccs(struct DecompilationParameters params, unsi
 
 				if (condition->conditionType != DO_WHILE_CT)
 				{
-					addIndents(result, *numOfIndentsRef);
+					addIndents(result, params->numOfIndents);
 					strcatJdc(result, "{\n");
 
-					(*numOfIndentsRef)++;
+					params->numOfIndents++;
 					condition->hasEnteredCondition = 1;
 				}
 			}
@@ -419,12 +419,12 @@ unsigned char decompileConditionJccs(struct DecompilationParameters params, unsi
 
 			if (condition->decompileAsReturn)
 			{
-				addIndents(result, *numOfIndentsRef);
+				addIndents(result, params->numOfIndents);
 				if (decompileReturnStatement(params, result))
 				{
 					strcatJdc(result, "\n");
-					(*numOfIndentsRef)--;
-					addIndents(result, *numOfIndentsRef);
+					params->numOfIndents--;
+					addIndents(result, params->numOfIndents);
 					strcatJdc(result, "}\n");
 				}
 				else
@@ -434,11 +434,11 @@ unsigned char decompileConditionJccs(struct DecompilationParameters params, unsi
 			}
 			else if (condition->decompileAsGoTo)
 			{
-				addIndents(result, *numOfIndentsRef);
-				sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
+				addIndents(result, params->numOfIndents);
+				sprintfJdc(result, 1, "goto label_%llX;\n", params->currentFunc->instructions[condition->dstIndex].address - params->imageBase);
 
-				(*numOfIndentsRef)--;
-				addIndents(result, *numOfIndentsRef);
+				params->numOfIndents--;
+				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "}\n");
 			}
 
@@ -449,9 +449,9 @@ unsigned char decompileConditionJccs(struct DecompilationParameters params, unsi
 	return 1;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters params, int conditionIndex, struct JdcStr* result)
+static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, struct JdcStr* result)
 {
-	struct Condition* condition = &params.currentFunc->conditions[conditionIndex];
+	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
 	if (condition->conditionType == ELSE_CT)
 	{
@@ -470,6 +470,8 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		freeJdcStr(&switchVar);
 		return 1;
 	}
+
+	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	unsigned char invertCondition = condition->decompileAsReturn || condition->decompileAsGoTo || condition->conditionType == DO_WHILE_CT;
 
@@ -491,7 +493,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 			}
 
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = condition->combinedJccIndexes[i];
+			params->startInstructionIndex = condition->combinedJccIndexes[i];
 			if (!decompileComparison(params, invertOperator, &currentConditionExpression))
 			{
 				freeJdcStr(&currentConditionExpression);
@@ -515,7 +517,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			params.startInstructionIndex = condition->combinedJccIndexes[i];
+			params->startInstructionIndex = condition->combinedJccIndexes[i];
 			if (!decompileComparison(params, !invertCondition, &currentConditionExpression))
 			{
 				freeJdcStr(&conditionExpression);
@@ -532,7 +534,7 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 	struct JdcStr combinedConditionExpression = initializeJdcStr();
 	if (condition->combinedConditionIndex)
 	{
-		params.startInstructionIndex = params.currentFunc->conditions[condition->combinedConditionIndex].jccIndex;
+		params->startInstructionIndex = params->currentFunc->conditions[condition->combinedConditionIndex].jccIndex;
 		if (decompileCondition(params, condition->combinedConditionIndex, &combinedConditionExpression))
 		{
 			if (!wrapJdcStrInParentheses(&conditionExpression))
@@ -573,12 +575,12 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 	if (condition->conditionType == LOOP_CT)
 	{
 		// check for for loop
-		if (params.currentFunc->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
+		if (params->currentFunc->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
 		{
 			struct JdcStr assignmentExpression = initializeJdcStr();
 			for (int i = condition->exitIndex; i < condition->jccIndex; i++)
 			{
-				params.startInstructionIndex = i;
+				params->startInstructionIndex = i;
 				if (checkForAssignment(params))
 				{
 					if (decompileAssignments(params, &assignmentExpression, 0))
@@ -615,18 +617,20 @@ static unsigned char decompileCondition(struct DecompilationParameters params, i
 		sprintfJdc(result, 1, "else if (%s)", conditionExpression.buffer);
 	}
 
+	params->startInstructionIndex = ogStartInstructionIndex;
+
 	return freeJdcStr(&conditionExpression);
 }
 
-int checkForConditionStart(struct DecompilationParameters params)
+int checkForConditionStart(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params.currentFunc->conditions[i].conditionType == DO_WHILE_CT && params.currentFunc->conditions[i].dstIndex == params.startInstructionIndex)
+		if (params->currentFunc->conditions[i].conditionType == DO_WHILE_CT && params->currentFunc->conditions[i].dstIndex == params->startInstructionIndex)
 		{
 			return i;
 		}
-		else if (!params.currentFunc->conditions[i].isCombinedByOther && params.currentFunc->conditions[i].jccIndex == params.startInstructionIndex)
+		else if (!params->currentFunc->conditions[i].isCombinedByOther && params->currentFunc->conditions[i].jccIndex == params->startInstructionIndex)
 		{
 			return i;
 		}

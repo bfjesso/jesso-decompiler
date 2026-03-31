@@ -4,47 +4,47 @@
 #include "expressions.h"
 #include "dataTypes.h"
 
-unsigned char checkForFunctionCall(struct DecompilationParameters params, struct Function** calleeRef)
+unsigned char checkForFunctionCall(struct DecompilationParameters* params, struct Function** calleeRef)
 {
-	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
-	int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
+	struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	unsigned long long address = params->currentFunc->instructions[params->startInstructionIndex].address;
+	int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, address);
 
 	unsigned long long calleeAddress = 0;
 	if (isOpcodeCall(instruction->opcode))
 	{
 		calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 	}
-	else if (params.startInstructionIndex == params.currentFunc->numOfInstructions - 1 && !isOpcodeReturn(instruction->opcode))
+	else if (params->startInstructionIndex == params->currentFunc->numOfInstructions - 1 && !isOpcodeReturn(instruction->opcode))
 	{
-		calleeAddress = params.allInstructions[currentInstructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
+		calleeAddress = params->allInstructions[currentInstructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
 	}
 
-	int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+	int calleeIndex = findFunctionByAddress(params->functions, 0, params->numOfFunctions - 1, calleeAddress);
 	if (calleeIndex == -1)
 	{
 		return 0;
 	}
 
-	*calleeRef = &(params.functions[calleeIndex]);
+	*calleeRef = &(params->functions[calleeIndex]);
 
 	return 1;
 }
 
-unsigned char decompileFunctionCall(struct DecompilationParameters params, struct Function* callee, struct JdcStr* result)
+unsigned char decompileFunctionCall(struct DecompilationParameters* params, struct Function* callee, struct JdcStr* result)
 {
-	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	struct DisassembledInstruction* firstInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
 	int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
-	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, callee->instructions[0].address);
+	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, callee->instructions[0].address);
 	if (returnedVar != 0)
 	{
 		unsigned char isReturnRegVar = 0;
-		for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
+		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 		{
-			if (compareRegisters(params.currentFunc->regVars[i].reg, callee->returnReg)) 
+			if (compareRegisters(params->currentFunc->regVars[i].reg, callee->returnReg)) 
 			{
-				sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[i].name.buffer);
+				sprintfJdc(result, 1, "%s = ", params->currentFunc->regVars[i].name.buffer);
 				isReturnRegVar = 1;
 				break;
 			}
@@ -58,7 +58,9 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
 
-	params.startInstructionIndex--;
+	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
+
+	params->startInstructionIndex--;
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{
 		struct JdcStr argStr = initializeJdcStr();
@@ -73,18 +75,17 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 		freeJdcStr(&argStr);
 	}
 
-	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
 	int stackArgsFound = 0;
-	for (int i = ogStartInstructionIndex; i >= 0; i--)
+	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
 		if (stackArgsFound == callee->numOfStackArgs) { break; }
 
-		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
-		unsigned long long addr = params.currentFunc->instructions[i].address;
+		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		unsigned long long addr = params->currentFunc->instructions[i].address;
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			params.startInstructionIndex = i;
+			params->startInstructionIndex = i;
 
 			struct JdcStr argStr = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[0], callee->stackArgs[stackArgsFound].type, &argStr))
@@ -126,22 +127,23 @@ unsigned char decompileFunctionCall(struct DecompilationParameters params, struc
 
 	strcatJdc(result, ";");
 
+	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
 }
 
-int checkForImportCall(struct DecompilationParameters params)
+int checkForImportCall(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
+	struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	unsigned long long address = params->currentFunc->instructions[params->startInstructionIndex].address;
 
 	if (isOpcodeCall(instruction->opcode) || instruction->opcode == JMP_NEAR)
 	{
-		int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, address);
+		int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, address);
 		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 
-		for (int i = 0; i < params.numOfImports; i++)
+		for (int i = 0; i < params->numOfImports; i++)
 		{
-			if (params.imports[i].address == calleeAddress)
+			if (params->imports[i].address == calleeAddress)
 			{
 				return i;
 			}
@@ -151,21 +153,21 @@ int checkForImportCall(struct DecompilationParameters params)
 	return -1;
 }
 
-unsigned char decompileImportCall(struct DecompilationParameters params, int importIndex, struct JdcStr* result)
+unsigned char decompileImportCall(struct DecompilationParameters* params, int importIndex, struct JdcStr* result)
 {
-	struct DisassembledInstruction* firstInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	struct DisassembledInstruction* firstInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
-	unsigned long long calleeAddress = params.imports[importIndex].address;
+	unsigned long long calleeAddress = params->imports[importIndex].address;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
-	struct ReturnedVariable* returnedVar = findReturnedVar(params.currentFunc, callNum, calleeAddress);
+	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
 	if (returnedVar != 0)
 	{
 		unsigned char isReturnRegVar = 0;
-		for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
-			if (compareRegisters(params.currentFunc->regVars[i].reg, AX))
+			if (compareRegisters(params->currentFunc->regVars[i].reg, AX))
 			{
-				sprintfJdc(result, 1, "%s = ", params.currentFunc->regVars[i].name.buffer);
+				sprintfJdc(result, 1, "%s = ", params->currentFunc->regVars[i].name.buffer);
 				isReturnRegVar = 1;
 				break;
 			}
@@ -177,9 +179,9 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		}
 	}
 
-	sprintfJdc(result, 1, "%s(", params.imports[importIndex].name.buffer);
+	sprintfJdc(result, 1, "%s(", params->imports[importIndex].name.buffer);
 
-	unsigned short ogStartInstructionIndex = params.startInstructionIndex;
+	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
 
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
@@ -188,19 +190,19 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
 
-		params.startInstructionIndex = i;
+		params->startInstructionIndex = i;
 		if (currentInstruction->opcode == JMP_SHORT || checkForImportCall(params) != -1) // stop looking for parameters if instruction is jmp or another import call with unknown parameters
 		{
 			break;
 		}
 		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
-			int currentInstructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, params.currentFunc->instructions[i].address);
+			int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, params->currentFunc->instructions[i].address);
 			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
-			int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
-			if (calleeIndex != -1 && (params.functions[calleeIndex].numOfRegArgs > 0 || params.functions[calleeIndex].numOfStackArgs > 0))
+			int calleeIndex = findFunctionByAddress(params->functions, 0, params->numOfFunctions - 1, calleeAddress);
+			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || params->functions[calleeIndex].numOfStackArgs > 0))
 			{
 				break;
 			}
@@ -215,7 +217,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			
 			struct VarType type = getTypeOfOperand(PUSH, &currentInstruction->operands[0]);
 
-			params.startInstructionIndex = i;
+			params->startInstructionIndex = i;
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
 			if (!decompileOperand(params, &currentInstruction->operands[0], type, &decompiledStackArgs[numOfStackArgs]))
 			{
@@ -233,7 +235,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			{
 				struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]);
 
-				params.startInstructionIndex = i;
+				params->startInstructionIndex = i;
 				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
 				if (!decompileOperand(params, &currentInstruction->operands[1], type, &decompiledStackArgs[numOfStackArgs]))
 				{
@@ -255,7 +257,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				{
 					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 
-					params.startInstructionIndex = i;
+					params->startInstructionIndex = i;
 					decompiledRegArgs[j] = initializeJdcStr();
 					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], type, &decompiledRegArgs[j]))
 					{
@@ -294,19 +296,20 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		strcatJdc(result, ");");
 	}
 
+	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
 }
 
-int getFunctionCallNumber(struct DecompilationParameters params, unsigned long long callAddr)
+int getFunctionCallNumber(struct DecompilationParameters* params, unsigned long long callAddr)
 {
 	int result = 0;
 
-	for (int i = 0; i < params.startInstructionIndex; i++)
+	for (int i = 0; i < params->startInstructionIndex; i++)
 	{
-		if (isOpcodeCall(params.currentFunc->instructions[i].opcode))
+		if (isOpcodeCall(params->currentFunc->instructions[i].opcode))
 		{
-			if (params.currentFunc->instructions[i].address + params.currentFunc->instructions[i].operands[0].immediate.value == callAddr ||
-				params.currentFunc->instructions[i].operands[0].memoryAddress.constDisplacement == callAddr) // check for imported func call
+			if (params->currentFunc->instructions[i].address + params->currentFunc->instructions[i].operands[0].immediate.value == callAddr ||
+				params->currentFunc->instructions[i].operands[0].memoryAddress.constDisplacement == callAddr) // check for imported func call
 			{
 				result++;
 			}

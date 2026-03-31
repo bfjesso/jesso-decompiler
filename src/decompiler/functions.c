@@ -3,7 +3,7 @@
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
-unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
 	unsigned char initializedRegs[NUM_PLATFORM_REG_ARGS * 2] = { 0 }; // * 2 is to account for the alternate reg args
 	unsigned char initializedRegsAfterJmp[NUM_PLATFORM_REG_ARGS * 2] = { 0 };
@@ -16,11 +16,11 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
-	for (int i = params.startInstructionIndex; i < params.totalNumOfInstructions; i++)
+	for (int i = params->startInstructionIndex; i < params->totalNumOfInstructions; i++)
 	{
 		(*instructionIndex)++;
 
-		struct DisassembledInstruction* currentInstruction = &params.allInstructions[i];
+		struct DisassembledInstruction* currentInstruction = &params->allInstructions[i];
 
 		if (!foundFirstInstruction)
 		{
@@ -29,7 +29,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 				continue;
 			}
 
-			result->instructions = &params.allInstructions[i];
+			result->instructions = &params->allInstructions[i];
 
 			foundFirstInstruction = 1;
 		}
@@ -201,8 +201,8 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			currentInstruction->operands[0].type == IMMEDIATE && 
 			currentInstruction->operands[0].immediate.value > 0)
 		{
-			unsigned long long jumpAddr = params.allInstructions[i].address + currentInstruction->operands[0].immediate.value;
-			int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jumpAddr);
+			unsigned long long jumpAddr = params->allInstructions[i].address + currentInstruction->operands[0].immediate.value;
+			int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jumpAddr);
 			if (jumpAddr > addressToJumpTo && jumpAddr <= currentSectionEndAddress)
 			{
 				if(!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
@@ -249,15 +249,15 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 
 		}
 
-		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params.allInstructions[i + 1].address) != -1)
+		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->allInstructions[i + 1].address) != -1)
 		{
-			result->addressOfReturnFunction = params.allInstructions[i + 1].address;
+			result->addressOfReturnFunction = params->allInstructions[i + 1].address;
 
 			sortFunctionArguments(result);
 			return 1;
 		}
 
-		isAfterJmp = addressToJumpTo != 0 && params.allInstructions[i].address < addressToJumpTo;
+		isAfterJmp = addressToJumpTo != 0 && params->allInstructions[i].address < addressToJumpTo;
 		if (isAfterJmp)
 		{
 			continue;
@@ -276,7 +276,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			}
 		}
 		
-		if (checkForReturnStatement(i, params.allInstructions, params.totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(i, params->allInstructions, params->totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{
@@ -290,7 +290,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params.allInstructions[i].address == currentSectionEndAddress)
+		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->allInstructions[i].address == currentSectionEndAddress)
 		{
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;

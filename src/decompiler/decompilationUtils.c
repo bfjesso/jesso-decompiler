@@ -8,17 +8,17 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 	}
 }
 
-unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex)
+unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
 {
-	struct DisassembledInstruction* instruction = &params.allInstructions[startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->allInstructions[startInstructionIndex];
 
-	unsigned long long jmpAddress = params.allInstructions[startInstructionIndex].address + instruction->operands[0].immediate.value;
+	unsigned long long jmpAddress = params->allInstructions[startInstructionIndex].address + instruction->operands[0].immediate.value;
 	if (instruction->operands[0].type == MEM_ADDRESS)
 	{
 		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
 		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
 		{
-			jmpAddress += params.allInstructions[startInstructionIndex + 1].address;
+			jmpAddress += params->allInstructions[startInstructionIndex + 1].address;
 		}
 	}
 	else if (instruction->operands[0].type == REGISTER)
@@ -29,10 +29,10 @@ unsigned long long resolveJmpChain(struct DecompilationParameters params, int st
 		}
 	}
 
-	int instructionIndex = findInstructionByAddress(params.allInstructions, 0, params.totalNumOfInstructions - 1, jmpAddress);
+	int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
 	{
-		struct DisassembledInstruction* jmpInstruction = &(params.allInstructions[instructionIndex]);
+		struct DisassembledInstruction* jmpInstruction = &(params->allInstructions[instructionIndex]);
 		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
 		{
 			return resolveJmpChain(params, instructionIndex);
@@ -87,7 +87,7 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low
 	return 0;
 }
 
-static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -98,7 +98,7 @@ static unsigned char operandToValue(struct DecompilationParameters params, int s
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			*result = params.allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			*result = params->allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			return 1;
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
@@ -135,9 +135,9 @@ static unsigned char operandToValue(struct DecompilationParameters params, int s
 	{
 		for (int i = startInstructionIndex - 1; i >= 0; i--)
 		{
-			if (params.allInstructions[i].opcode == MOV && compareRegisters(params.allInstructions[i].operands[0].reg, operand->reg))
+			if (params->allInstructions[i].opcode == MOV && compareRegisters(params->allInstructions[i].operands[0].reg, operand->reg))
 			{
-				return operandToValue(params, i, &(params.allInstructions[i].operands[1]), result);
+				return operandToValue(params, i, &(params->allInstructions[i].operands[1]), result);
 			}
 		}
 
@@ -147,23 +147,23 @@ static unsigned char operandToValue(struct DecompilationParameters params, int s
 	return 0;
 }
 
-static unsigned char getNumFromData(struct DecompilationParameters params, unsigned long long address, unsigned long long* result)
+static unsigned char getNumFromData(struct DecompilationParameters* params, unsigned long long address, unsigned long long* result)
 {
-	if (address < params.imageBase + params.dataSections[0].virtualAddress)
+	if (address < params->imageBase + params->dataSections[0].virtualAddress)
 	{
 		return 0;
 	}
 
 	int dataSectionIndex = -1;
 	int totalSize = 0;
-	for (int i = 0; i < params.numOfDataSections; i++)
+	for (int i = 0; i < params->numOfDataSections; i++)
 	{
-		if (address > params.imageBase + params.dataSections[i].virtualAddress && address < params.imageBase + params.dataSections[i].virtualAddress + params.dataSections[i].size)
+		if (address > params->imageBase + params->dataSections[i].virtualAddress && address < params->imageBase + params->dataSections[i].virtualAddress + params->dataSections[i].size)
 		{
-			dataSectionIndex = (int)((totalSize + address) - (params.dataSections[i].virtualAddress + params.imageBase));
+			dataSectionIndex = (int)((totalSize + address) - (params->dataSections[i].virtualAddress + params->imageBase));
 		}
 
-		totalSize += params.dataSections[i].size;
+		totalSize += params->dataSections[i].size;
 	}
 
 	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
@@ -171,13 +171,13 @@ static unsigned char getNumFromData(struct DecompilationParameters params, unsig
 		return 0;
 	}
 
-	if (params.is64Bit)
+	if (params->is64Bit)
 	{
-		*result = *(unsigned long long*)(params.dataSectionByte + dataSectionIndex);
+		*result = *(unsigned long long*)(params->dataSectionByte + dataSectionIndex);
 	}
 	else
 	{
-		*result = *(unsigned int*)(params.dataSectionByte + dataSectionIndex);
+		*result = *(unsigned int*)(params->dataSectionByte + dataSectionIndex);
 	}
 
 	return 1;

@@ -4,26 +4,26 @@
 #include "expressions.h"
 #include "functionCalls.h"
 
-unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters params)
+unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
-	unsigned long long address = params.currentFunc->instructions[params.startInstructionIndex].address;
+	struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	unsigned long long address = params->currentFunc->instructions[params->startInstructionIndex].address;
 
-	if (doesInstructionModifyRegister(instruction, params.currentFunc->returnReg, 0, 0, 0))
+	if (doesInstructionModifyRegister(instruction, params->currentFunc->returnReg, 0, 0, 0))
 	{
 		return 1;
 	}
 	else if (isOpcodeCall(instruction->opcode))
 	{
 		unsigned long long calleeAddress = address + instruction->operands[0].immediate.value;
-		int calleeIndex = findFunctionByAddress(params.functions, 0, params.numOfFunctions - 1, calleeAddress);
+		int calleeIndex = findFunctionByAddress(params->functions, 0, params->numOfFunctions - 1, calleeAddress);
 
 		if (calleeIndex == -1)
 		{
 			return checkForImportCall(params) != -1;
 		}
 
-		return params.functions[calleeIndex].returnReg == params.currentFunc->returnReg;
+		return params->functions[calleeIndex].returnReg == params->currentFunc->returnReg;
 	}
 
 	return 0;
@@ -75,15 +75,15 @@ unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct Di
 	return 0;
 }
 
-unsigned char decompileReturnStatement(struct DecompilationParameters params, struct JdcStr* result)
+unsigned char decompileReturnStatement(struct DecompilationParameters* params, struct JdcStr* result)
 {
-	if (params.currentFunc->returnType.primitiveType == VOID_TYPE)
+	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
 		return strcatJdc(result, "return;");
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, params.currentFunc->returnReg, params.currentFunc->returnType, &returnExpression, 0))
+	if (!decompileRegister(params, params->currentFunc->returnReg, params->currentFunc->returnType, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
 		return 0;

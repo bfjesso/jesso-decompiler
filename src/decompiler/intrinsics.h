@@ -27,8 +27,8 @@ extern "C"
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 
-unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result);
+unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result);
 
 unsigned char checkForVoidIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 
-unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result);
+unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result);

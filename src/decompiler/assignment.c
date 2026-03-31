@@ -3,9 +3,9 @@
 #include "functions.h"
 #include "expressions.h"
 
-unsigned char checkForAssignment(struct DecompilationParameters params)
+unsigned char checkForAssignment(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
 	if (doesInstructionDoNothing(currentInstruction)) 
 	{
@@ -17,9 +17,9 @@ unsigned char checkForAssignment(struct DecompilationParameters params)
 		return 1;
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfRegVars; i++) 
+	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
-		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0, 0))
+		if (doesInstructionModifyRegister(currentInstruction, params->currentFunc->regVars[i].reg, 0, 0, 0))
 		{
 			return 1;
 		}
@@ -28,13 +28,13 @@ unsigned char checkForAssignment(struct DecompilationParameters params)
 	return 0;
 }
 
-unsigned char decompileAssignments(struct DecompilationParameters params, struct JdcStr* result, int numOfIndents)
+unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result, int numOfIndents)
 {
-	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
 	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 	{
-		struct StackVariable* localVar = getStackVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
+		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
 		struct VarType type = { 0 };
 		if (!localVar)
 		{
@@ -62,12 +62,12 @@ unsigned char decompileAssignments(struct DecompilationParameters params, struct
 		}
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0, 0))
+		if (doesInstructionModifyRegister(currentInstruction, params->currentFunc->regVars[i].reg, 0, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, params.currentFunc->regVars[i].type, params.currentFunc->regVars[i].reg, 1, &operation))
+			if (!decompileOperation(params, params->currentFunc->regVars[i].type, params->currentFunc->regVars[i].reg, 1, &operation))
 			{
 				freeJdcStr(&operation);
 				return 0;

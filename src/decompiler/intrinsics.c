@@ -37,9 +37,9 @@ unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct Intrin
 	return 0;
 }
 
-unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result)
+unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result)
 {
-	struct DisassembledInstruction* instruction = &params.currentFunc->instructions[params.startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
 
 	if (getAssignment)
 	{
@@ -111,9 +111,9 @@ unsigned char checkForVoidIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFu
 	return 0;
 }
 
-unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result)
+unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result)
 {
-	struct DisassembledInstruction* instruction = &params.currentFunc->instructions[params.startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
 
 	if (intrinsicFunc->opcode == _INT) 
 	{

@@ -416,7 +416,7 @@ void MainGui::DecompileFunction(int functionIndex)
 		return;
 	}
 
-	if (!decompileFunction(decompParams, &decompiledFunction))
+	if (!decompileFunction(&decompParams, &decompiledFunction))
 	{
 		wxMessageBox("Error decompiling function", "Can't decompile");
 		freeJdcStr(&decompiledFunction);
@@ -458,7 +458,7 @@ void MainGui::FindAllFunctions()
 	{
 		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
-			unsigned long long address = resolveJmpChain(decompParams, i);
+			unsigned long long address = resolveJmpChain(&decompParams, i);
 			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, address) == -1)
 			{
 				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
@@ -468,7 +468,7 @@ void MainGui::FindAllFunctions()
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
-	while (instructionIndex < numOfInstructions && findNextFunction(decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
+	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{

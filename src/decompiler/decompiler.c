@@ -10,19 +10,19 @@
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
 
-unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
+unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result)
 {
-	if(!params.currentFunc->conditions && !getAllConditions(params))
+	if(!params->currentFunc->conditions && !getAllConditions(params))
 	{
 		return 0;
 	}
 
-	if(!params.currentFunc->directJmps && !getAllDirectJmps(params))
+	if(!params->currentFunc->directJmps && !getAllDirectJmps(params))
 	{
 		return 0;
 	}
 	
-	if (!params.currentFunc->hasGottenLocalVars)
+	if (!params->currentFunc->hasGottenLocalVars)
 	{
 		if (!getAllRegVars(params))
 		{
@@ -34,17 +34,17 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			return 0;
 		}
 
-		params.currentFunc->hasGottenLocalVars = 1;
+		params->currentFunc->hasGottenLocalVars = 1;
 	}
 	
-	if (!generateFunctionHeader(params.currentFunc, result))
+	if (!generateFunctionHeader(params->currentFunc, result))
 	{
 		return 0;
 	}
 
 	strcatJdc(result, "{\n");
 
-	if (params.currentFunc->numOfStackVars > 0 || params.currentFunc->numOfReturnedVars > 0 || params.currentFunc->numOfRegVars > 0)
+	if (params->currentFunc->numOfStackVars > 0 || params->currentFunc->numOfReturnedVars > 0 || params->currentFunc->numOfRegVars > 0)
 	{
 		if (!declareAllLocalVariables(params, result))
 		{
@@ -52,24 +52,24 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
-	params.numOfIndents = 1;
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	params->numOfIndents = 1;
+	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
-		if (params.numOfIndents < 1)
+		if (params->numOfIndents < 1)
 		{
 			return 0;
 		}
 		
-		params.startInstructionIndex = i;
+		params->startInstructionIndex = i;
 
-		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
 
-		if (!decompileConditionDsts(params, &params.numOfIndents, result)) 
+		if (!decompileConditionDsts(params, result)) 
 		{
 			return 0;
 		}
 
-		if (!decompileConditionJccs(params, &params.numOfIndents, result))
+		if (!decompileConditionJccs(params, result))
 		{
 			return 0;
 		}
@@ -82,7 +82,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
-			addIndents(result, params.numOfIndents);
+			addIndents(result, params->numOfIndents);
 			if (decompileImportCall(params, importIndex, result))
 			{
 				strcatJdc(result, "\n");
@@ -96,7 +96,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		struct Function* callee;
 		if (checkForFunctionCall(params, &callee))
 		{
-			addIndents(result, params.numOfIndents);
+			addIndents(result, params->numOfIndents);
 			if (decompileFunctionCall(params, callee, result))
 			{
 				strcatJdc(result, "\n");
@@ -110,7 +110,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		struct IntrinsicFunc* intrinsicFunc;
 		if (checkForVoidIntrinsicFunc(currentInstruction->opcode, &intrinsicFunc))
 		{
-			addIndents(result, params.numOfIndents);
+			addIndents(result, params->numOfIndents);
 			if (decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
 				strcatJdc(result, "\n");
@@ -123,15 +123,15 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		if (checkForAssignment(params))
 		{
-			if (!decompileAssignments(params, result, params.numOfIndents))
+			if (!decompileAssignments(params, result, params->numOfIndents))
 			{
 				return 0;
 			}
 		}
 
-		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+		if (checkForReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 		{
-			addIndents(result, params.numOfIndents);
+			addIndents(result, params->numOfIndents);
 			if (decompileReturnStatement(params, result))
 			{
 				strcatJdc(result, "\n");
@@ -146,23 +146,23 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 	return strcatJdc(result, "}\n");
 }
 
-static unsigned char getAllReturnedVars(struct DecompilationParameters params)
+static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
-		params.startInstructionIndex = i;
+		params->startInstructionIndex = i;
 		struct Function* callee = 0;
 		int importIndex = checkForImportCall(params);
 		if (checkForFunctionCall(params, &callee) || importIndex != -1)
 		{
 			enum Register returnReg = callee ? callee->returnReg : AX;
-			unsigned long long calleeAddress = callee ? callee->instructions[0].address : params.imports[importIndex].address;
+			unsigned long long calleeAddress = callee ? callee->instructions[0].address : params->imports[importIndex].address;
 
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
-			for (int j = i; j < params.currentFunc->numOfInstructions; j++)
+			for (int j = i; j < params->currentFunc->numOfInstructions; j++)
 			{
-				params.startInstructionIndex = j;
-				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+				params->startInstructionIndex = j;
+				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
 				if (j != i)
@@ -173,9 +173,9 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 					}
 				}
 
-				if (checkForReturnStatement(j, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+				if (checkForReturnStatement(j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
-					returnType = params.currentFunc->returnType;
+					returnType = params->currentFunc->returnType;
 					break;
 				}
 
@@ -192,9 +192,9 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 			}
 
 			int callNum = 0;
-			for (int j = 0; j < params.currentFunc->numOfReturnedVars; j++)
+			for (int j = 0; j < params->currentFunc->numOfReturnedVars; j++)
 			{
-				if (params.currentFunc->returnedVars[j].callAddr == calleeAddress)
+				if (params->currentFunc->returnedVars[j].callAddr == calleeAddress)
 				{
 					callNum++;
 				}
@@ -206,14 +206,14 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 				{
 					continue;
 				}
-				else if (!addReturnedVar(params.currentFunc, callee->returnType, callNum, calleeAddress, returnReg, callee->name.buffer))
+				else if (!addReturnedVar(params->currentFunc, callee->returnType, callNum, calleeAddress, returnReg, callee->name.buffer))
 				{
 					return 0;
 				}
 			}
 			else
 			{
-				if (!addReturnedVar(params.currentFunc, returnType, callNum, calleeAddress, returnReg, params.imports[importIndex].name.buffer))
+				if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, params->imports[importIndex].name.buffer))
 				{
 					return 0;
 				}
@@ -224,52 +224,52 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters params)
 	return 1;
 }
 
-static unsigned char getAllRegVars(struct DecompilationParameters params)
+static unsigned char getAllRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
-	for (int i = 0; i < params.currentFunc->numOfConditions; i++)
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (!params.currentFunc->conditions[i].isCombinedByOther && !params.currentFunc->conditions[i].decompileAsReturn && !params.currentFunc->conditions[i].decompileAsGoTo)
+		if (!params->currentFunc->conditions[i].isCombinedByOther && !params->currentFunc->conditions[i].decompileAsReturn && !params->currentFunc->conditions[i].decompileAsGoTo)
 		{
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
 
-			int start = params.currentFunc->conditions[i].jccIndex;
-			int end = params.currentFunc->conditions[i].dstIndex;
+			int start = params->currentFunc->conditions[i].jccIndex;
+			int end = params->currentFunc->conditions[i].dstIndex;
 
-			if (params.currentFunc->conditions[i].conditionType == DO_WHILE_CT)
+			if (params->currentFunc->conditions[i].conditionType == DO_WHILE_CT)
 			{
-				start = params.currentFunc->conditions[i].dstIndex;
-				end = params.currentFunc->conditions[i].jccIndex;
+				start = params->currentFunc->conditions[i].dstIndex;
+				end = params->currentFunc->conditions[i].jccIndex;
 			}
 			
 			for (int j = start; j < end; j++)
 			{
-				params.startInstructionIndex = j;
+				params->startInstructionIndex = j;
 				int conditionIndex = checkForConditionStart(params);
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;
 				}
 
-				if (checkForReturnStatement(j, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
+				if (checkForReturnStatement(j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
 					break;
 				}
 
-				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
 
 				enum Register reg = NO_REG;
 
 				struct Function* callee;
-				params.startInstructionIndex = j;
+				params->startInstructionIndex = j;
 				if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
 				{
 					reg = callee->returnReg;
 				}
 				else if (checkForImportCall(params) != -1)
 				{
-					reg = params.is64Bit ? RAX : EAX;
+					reg = params->is64Bit ? RAX : EAX;
 				}
 				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 				{
@@ -287,7 +287,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 							break;
 						}
 					}
-					if (alreadyFound || getRegVarByReg(params.currentFunc, reg))
+					if (alreadyFound || getRegVarByReg(params->currentFunc, reg))
 					{
 						continue;
 					}
@@ -300,17 +300,17 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			int checkingStart = params.currentFunc->conditions[i].conditionType == LOOP_CT || params.currentFunc->conditions[i].conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
-			for (int j = checkingStart; j < params.currentFunc->numOfInstructions; j++)
+			int checkingStart = params->currentFunc->conditions[i].conditionType == LOOP_CT || params->currentFunc->conditions[i].conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
+			for (int j = checkingStart; j < params->currentFunc->numOfInstructions; j++)
 			{
-				params.startInstructionIndex = j;
+				params->startInstructionIndex = j;
 				int conditionIndex = checkForConditionStart(params);
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					break;
 				}
 
-				struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
 
 				for (int k = 0; k < numOfRegs; k++)
 				{
@@ -324,7 +324,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 						(doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, 0, &overwrites) && !overwrites) ||
 						(isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
 					{
-						if (!addRegVar(params.currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
+						if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
 						{
 							return 0;
 						}
@@ -341,26 +341,26 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 			}
 
 			// if there are registers used in the comparisson of a do while loop, they need to be a reg var
-			if (params.currentFunc->conditions[i].conditionType == DO_WHILE_CT)
+			if (params->currentFunc->conditions[i].conditionType == DO_WHILE_CT)
 			{
 				for (int j = end; j >= start; j--) 
 				{
-					struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[j]);
+					struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
 					
 					if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == TEST) 
 					{
 						for (int k = 0; k < 2; k++) 
 						{
-							if (currentInstruction->operands[k].type == REGISTER && !isRegisterPointer(currentInstruction->operands[k].reg) && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].reg))
+							if (currentInstruction->operands[k].type == REGISTER && !isRegisterPointer(currentInstruction->operands[k].reg) && !getRegVarByReg(params->currentFunc, currentInstruction->operands[k].reg))
 							{
-								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
+								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
 								{
 									return 0;
 								}
 							}
-							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !isRegisterPointer(currentInstruction->operands[k].memoryAddress.reg) && !getRegVarByReg(params.currentFunc, currentInstruction->operands[k].memoryAddress.reg))
+							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !isRegisterPointer(currentInstruction->operands[k].memoryAddress.reg) && !getRegVarByReg(params->currentFunc, currentInstruction->operands[k].memoryAddress.reg))
 							{
-								if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
+								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
 								{
 									return 0;
 								}
@@ -375,20 +375,20 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 	}
 
 	// check for registers that depend on the value of a reg var
-	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
+	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
 
 		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
 			
 			unsigned char alreadyFound = 0;
-			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+			for (int j = 0; j < params->currentFunc->numOfRegVars; j++)
 			{
-				if (compareRegisters(reg, params.currentFunc->regVars[j].reg))
+				if (compareRegisters(reg, params->currentFunc->regVars[j].reg))
 				{
-					params.currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					params->currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 					alreadyFound = 1;
 					break;
 				}
@@ -399,11 +399,11 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 			}
 
 			unsigned char dependsOnRegVar = 0;
-			for (int j = 0; j < params.currentFunc->numOfRegVars; j++)
+			for (int j = 0; j < params->currentFunc->numOfRegVars; j++)
 			{
 				if (currentInstruction->operands[1].type == REGISTER)
 				{
-					if (compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].reg))
+					if (compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].reg))
 					{
 						dependsOnRegVar = 1;
 						break;
@@ -411,7 +411,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 				}
 				else if (currentInstruction->operands[1].type == MEM_ADDRESS)
 				{
-					if (compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.reg) || compareRegisters(params.currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.regDisplacement))
+					if (compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.reg) || compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.regDisplacement))
 					{
 						dependsOnRegVar = 1;
 						break;
@@ -421,7 +421,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 
 			if (dependsOnRegVar)
 			{
-				if (!addRegVar(params.currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+				if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 				{
 					return 0;
 				}
@@ -471,48 +471,48 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	return strcatJdc(result, ")\n");
 }
 
-static unsigned char declareAllLocalVariables(struct DecompilationParameters params, struct JdcStr* result)
+static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	
-	for (int i = 0; i < params.currentFunc->numOfStackVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
-		varTypeToStr(params.currentFunc->stackVars[i].type, &typeStr);
+		varTypeToStr(params->currentFunc->stackVars[i].type, &typeStr);
 		addIndents(result, 1);
-		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->stackVars[i].name.buffer);
+		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
 		int argIndex = -1;
-		for (int j = 0; j < params.currentFunc->numOfRegArgs; j++)
+		for (int j = 0; j < params->currentFunc->numOfRegArgs; j++)
 		{
-			if (compareRegisters(params.currentFunc->regVars[i].reg, params.currentFunc->regArgs[j].reg))
+			if (compareRegisters(params->currentFunc->regVars[i].reg, params->currentFunc->regArgs[j].reg))
 			{
 				argIndex = j;
 				break;
 			}
 		}
 
-		varTypeToStr(params.currentFunc->regVars[i].type, &typeStr);
+		varTypeToStr(params->currentFunc->regVars[i].type, &typeStr);
 
 		addIndents(result, 1);
 		if (argIndex != -1)
 		{
-			sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, params.currentFunc->regVars[i].name.buffer, params.currentFunc->regArgs[argIndex].name.buffer);
+			sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, params->currentFunc->regVars[i].name.buffer, params->currentFunc->regArgs[argIndex].name.buffer);
 		}
 		else 
 		{
-			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->regVars[i].name.buffer);
+			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->regVars[i].name.buffer);
 		}
 	}
 
-	for (int i = 0; i < params.currentFunc->numOfReturnedVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 	{
 		unsigned char isReturnRegVar = 0;
-		for (int j = 0; j < params.currentFunc->numOfRegVars; j++) 
+		for (int j = 0; j < params->currentFunc->numOfRegVars; j++) 
 		{
-			if (compareRegisters(params.currentFunc->regVars[j].reg, params.currentFunc->returnedVars[i].returnReg)) 
+			if (compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg)) 
 			{
 				isReturnRegVar = 1;
 				break;
@@ -521,9 +521,9 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters par
 
 		if (!isReturnRegVar) 
 		{
-			varTypeToStr(params.currentFunc->returnedVars[i].type, &typeStr);
+			varTypeToStr(params->currentFunc->returnedVars[i].type, &typeStr);
 			addIndents(result, 1);
-			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->returnedVars[i].name.buffer);
+			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
 		}
 	}
 
