@@ -107,6 +107,14 @@ enum DirectJmpType
 	CONTINUE_DJT
 };
 
+static const char* directJmpTypeStrs[] =
+{
+	"NONE_DJT",
+	"GO_TO_DJT",
+	"BREAK_DJT",
+	"CONTINUE_DJT"
+};
+
 struct DirectJmp
 {
 	int jmpIndex;

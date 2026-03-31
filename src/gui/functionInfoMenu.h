@@ -16,11 +16,15 @@ public:
 	wxStaticText* functionNameStaticTxt = nullptr;
     wxStaticText* numOfInstructionsStaticTxt = nullptr;
 
+	wxGrid* regVarsGrid = nullptr;
+	wxGrid* stackVarsGrid = nullptr;
+	wxGrid* returnedVarsGrid = nullptr;
 	wxGrid* conditionsGrid = nullptr;
+	wxGrid* directJmpsGrid = nullptr;
 
-	wxBoxSizer* vSizer1 = nullptr;
-	wxBoxSizer* vSizer2 = nullptr;
-	wxBoxSizer* hSizer = nullptr;
+	wxBoxSizer* row1Sizer = nullptr;
+	wxBoxSizer* row2Sizer = nullptr;
+	wxBoxSizer* vSizer = nullptr;
 
 	enum ids
 	{
