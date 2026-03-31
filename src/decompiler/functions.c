@@ -444,6 +444,11 @@ void freeFunction(struct Function* function)
 	free(function->stackArgs);
 	free(function->stackVars);
 	free(function->returnedVars);
+
+	for (int i = 0; i < function->numOfConditions; i++) 
+	{
+		free(function->conditions[i].combinedJccIndexes);
+	}
 	free(function->conditions);
 	free(function->directJmps);
 }
