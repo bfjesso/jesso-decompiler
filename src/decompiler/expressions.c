@@ -426,7 +426,7 @@ unsigned char decompileRegister(struct DecompilationParameters params, enum Regi
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, &regOperandNum, &srcOperandNum, &finished))
 		{
 			expressions[expressionIndex] = initializeJdcStr();
-			if (decompileOperation(params, type, 0, &expressions[expressionIndex]))
+			if (decompileOperation(params, type, targetReg, 0, &expressions[expressionIndex]))
 			{
 				if (finished) 
 				{
@@ -733,7 +733,7 @@ unsigned char decompileComparison(struct DecompilationParameters params, unsigne
 	return 0;
 }
 
-unsigned char decompileOperation(struct DecompilationParameters params, struct VarType type, unsigned char getAssignment, struct JdcStr* result)
+unsigned char decompileOperation(struct DecompilationParameters params, struct VarType type, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
@@ -832,6 +832,64 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			freeJdcStr(&decompiledThirdOperand);
 			return 1;
 		}
+	}
+	else if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND) 
+	{
+		struct JdcStr decompiledAX = initializeJdcStr();
+		if (!decompileRegister(params, AX, getTypeOfOperand(IMUL, firstOperand), &decompiledAX, 0))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledAX);
+			return 0;
+		}
+		
+		if (compareRegisters(targetReg, AX))
+		{
+			if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledAX.buffer, decompiledFirstOperand.buffer); }
+			else
+			{
+				if (!decompileOperand(params, firstOperand, type, &decompiledFirstOperand))
+				{
+					freeJdcStr(&decompiledFirstOperand);
+					freeJdcStr(&decompiledAX);
+					return 0;
+				}
+
+				sprintfJdc(result, 0, " * %s", decompiledFirstOperand.buffer);
+			}
+		}
+		else if (compareRegisters(targetReg, DX))
+		{
+			if (getAssignment) 
+			{ 
+				struct JdcStr decompiledDX = initializeJdcStr();
+				if (!decompileRegister(params, DX, getTypeOfOperand(IMUL, firstOperand), &decompiledAX, 0))
+				{
+					freeJdcStr(&decompiledFirstOperand);
+					freeJdcStr(&decompiledAX);
+					freeJdcStr(&decompiledDX);
+					return 0;
+				}
+				
+				sprintfJdc(result, 0, "%s = (%s * %s) >> %d", decompiledDX.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, getSizeOfOperand(firstOperand));
+				freeJdcStr(&decompiledDX);
+			}
+			else
+			{
+				if (!decompileOperand(params, firstOperand, type, &decompiledFirstOperand))
+				{
+					freeJdcStr(&decompiledFirstOperand);
+					freeJdcStr(&decompiledAX);
+					return 0;
+				}
+
+				sprintfJdc(result, 0, "(%s * %s) >> %d", decompiledAX.buffer, decompiledFirstOperand.buffer, getSizeOfOperand(firstOperand));
+			}
+		}
+
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledAX);
+		return 1;
 	}
 	else if (isOpcodeCMOVcc(instruction->opcode))
 	{

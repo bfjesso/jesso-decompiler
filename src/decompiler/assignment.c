@@ -43,7 +43,7 @@ unsigned char decompileAssignment(struct DecompilationParameters params, struct 
 	}
 
 	struct JdcStr operation = initializeJdcStr();
-	if (!decompileOperation(params, type, 1, &operation))
+	if (!decompileOperation(params, type, NO_REG, 1, &operation))
 	{
 		freeJdcStr(&operation);
 		return 0;

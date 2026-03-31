@@ -349,6 +349,19 @@ unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* inst
 		case IDIV:
 			return 1;
 		}
+
+		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
+		{
+			return 1;
+		}
+	}
+	else if (compareRegisters(reg, DX))
+	{
+		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
+		{
+			if (overwrites) { *overwrites = 1; }
+			return 1;
+		}
 	}
 	else if (compareRegisters(reg, ST0))
 	{
