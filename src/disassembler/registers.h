@@ -51,14 +51,14 @@ extern "C"
 }
 #endif
 
-#ifdef _WIN32
 extern const enum Register platformRegArgs[];
-extern const int numOfPlatformRegArgs;
-#endif
+extern const enum Register altPlatformRegArgs[];
 
+#ifdef _WIN32
+#define NUM_PLATFORM_REG_ARGS 4
+#endif
 #ifdef linux
-extern const enum Register platformRegArgs[];
-extern const int numOfPlatformRegArgs;
+#define NUM_PLATFORM_REG_ARGS 6
 #endif
 
 unsigned char compareRegisters(enum Register reg1, enum Register reg2);

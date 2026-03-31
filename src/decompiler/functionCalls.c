@@ -184,7 +184,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
 
-	struct JdcStr decompiledRegArgs[ST0 - RAX] = { 0 };
+	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
 	for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 	{
@@ -220,7 +220,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			if (!decompileOperand(params, &currentInstruction->operands[0], type, &decompiledStackArgs[numOfStackArgs]))
 			{
 				for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-				for(int j = 0; j < numOfPlatformRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+				for(int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 				return 0;
 			}
 
@@ -238,7 +238,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 				if (!decompileOperand(params, &currentInstruction->operands[1], type, &decompiledStackArgs[numOfStackArgs]))
 				{
 					for(int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-					for(int j = 0; j < numOfPlatformRegArgs; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+					for(int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 					return 0;
 				}
 
@@ -246,7 +246,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 			}
 		}
 
-		for(int j = 0; j < numOfPlatformRegArgs; j++)
+		for(int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
 		{
 			if (!decompiledRegArgs[j].buffer)
 			{
@@ -260,7 +260,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], type, &decompiledRegArgs[j]))
 					{
 						for(int k = 0; k < numOfStackArgs; k++) { freeJdcStr(&decompiledStackArgs[k]); }
-						for(int k = 0; k < numOfPlatformRegArgs; k++) { freeJdcStr(&decompiledRegArgs[j]); }
+						for(int k = 0; k < NUM_PLATFORM_REG_ARGS; k++) { freeJdcStr(&decompiledRegArgs[j]); }
 						return 0;
 					}
 				}
@@ -268,7 +268,7 @@ unsigned char decompileImportCall(struct DecompilationParameters params, int imp
 		}
 	}
 
-	for(int i = 0; i < numOfPlatformRegArgs; i++)
+	for(int i = 0; i < NUM_PLATFORM_REG_ARGS; i++)
 	{
 		if(decompiledRegArgs[i].buffer)
 		{

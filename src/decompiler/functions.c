@@ -5,9 +5,9 @@
 
 unsigned char findNextFunction(struct DecompilationParameters params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
-	// these correspond with platformRegArgs
-	unsigned char initializedRegs[ST0 - RAX] = { 0 }; 
-	unsigned char initializedRegsAfterJmp[ST0 - RAX] = { 0 };
+	unsigned char initializedRegs[NUM_PLATFORM_REG_ARGS * 2] = { 0 }; // * 2 is to account for the alternate reg args
+	unsigned char initializedRegsAfterJmp[NUM_PLATFORM_REG_ARGS * 2] = { 0 };
+	unsigned char gottenRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
 	int stackFrameSize = 0;
 
@@ -113,21 +113,28 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 			{
 				if (isRegisterPointer(currentOperand->reg)) { continue; }
 				
-				for(int k = 0; k < numOfPlatformRegArgs; k++)
+				for(int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
 				{
-					if (compareRegisters(currentOperand->reg, platformRegArgs[k]))
+					enum Register reg = NO_REG;
+					int altRegOffset = 0;
+					if (compareRegisters(currentOperand->reg, platformRegArgs[k])) 
 					{
-						struct RegisterVariable* regArg = getRegArgByReg(result, platformRegArgs[k]);
-						if (regArg) 
+						reg = platformRegArgs[k];
+					}
+					else if (compareRegisters(currentOperand->reg, altPlatformRegArgs[k])) 
+					{
+						reg = altPlatformRegArgs[k];
+						altRegOffset = NUM_PLATFORM_REG_ARGS;
+					}
+					
+					if (reg != NO_REG)
+					{
+						if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
 						{
-							regArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+							initializedRegs[k + altRegOffset] = 1;
+							initializedRegsAfterJmp[k + altRegOffset] = isAfterJmp;
 						}
-						else if (doesInstructionModifyRegister(currentInstruction, platformRegArgs[k], 0, 0, &overwrites) && overwrites)
-						{
-							initializedRegs[k] = 1;
-							initializedRegsAfterJmp[k] = isAfterJmp;
-						}
-						else if (!initializedRegs[k])
+						else if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
 						{
 							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->reg)) 
 							{
@@ -135,23 +142,36 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							}
 
 							result->callingConvention = __FASTCALL;
-							initializedRegs[k] = 1;
+							initializedRegs[k + altRegOffset] = 1;
+							gottenRegArgs[k] = 1;
 						}
 
 						break;
 					}
 				}
 			}
-			else if (currentOperand->type == MEM_ADDRESS) 
+			else if (currentOperand->type == MEM_ADDRESS)
 			{
 				// maybe memoryAddress.regDisplacement should be checked too ?
 				if (currentOperand->memoryAddress.reg == NO_REG || compareRegisters(currentOperand->memoryAddress.reg, IP)) { continue; }
 
-				for (int k = 0; k < numOfPlatformRegArgs; k++)
+				for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
 				{
+					enum Register reg = NO_REG;
+					int altRegOffset = 0;
 					if (compareRegisters(currentOperand->memoryAddress.reg, platformRegArgs[k]))
 					{
-						if (!initializedRegs[k])
+						reg = platformRegArgs[k];
+					}
+					else if (compareRegisters(currentOperand->memoryAddress.reg, altPlatformRegArgs[k]))
+					{
+						reg = altPlatformRegArgs[k];
+						altRegOffset = NUM_PLATFORM_REG_ARGS;
+					}
+					
+					if (reg != NO_REG)
+					{
+						if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
 						{
 							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->memoryAddress.reg))
 							{
@@ -161,7 +181,8 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 							result->regArgs[result->numOfRegArgs - 1].type.pointerLevel = 1;
 
 							result->callingConvention = __FASTCALL;
-							initializedRegs[k] = 1;
+							initializedRegs[k + altRegOffset] = 1;
+							gottenRegArgs[k] = 1;
 						}
 
 						break;
@@ -245,7 +266,7 @@ unsigned char findNextFunction(struct DecompilationParameters params, unsigned l
 		{
 			addressToJumpTo = 0;
 
-			for (int j = 0; j < numOfPlatformRegArgs; j++) 
+			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
 			{
 				if (initializedRegsAfterJmp[j]) 
 				{
@@ -695,9 +716,9 @@ static void sortFunctionArguments(struct Function* function)
 {
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		for (int j = 0; j < numOfPlatformRegArgs; j++) 
+		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
 		{
-			if (compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) && function->numOfRegArgs > j)
+			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
 			{
 				struct RegisterVariable temp = function->regArgs[j];
 				function->regArgs[j] = function->regArgs[i];
