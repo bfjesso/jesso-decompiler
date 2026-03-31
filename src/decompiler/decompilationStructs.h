@@ -52,11 +52,28 @@ enum ConditionType
 	SWITCH_CASE_CT
 };
 
+static const char* conditionTypeStrs[] =
+{
+	"IF_CT",
+	"ELSE_IF_CT",
+	"ELSE_CT",
+	"LOOP_CT",
+	"DO_WHILE_CT",
+	"SWITCH_CASE_CT"
+};
+
 enum LogicalType
 {
 	NONE_LT,
 	AND_LT,
 	OR_LT
+};
+
+static const char* logicalTypeStrs[] =
+{
+	"NONE_LT",
+	"AND_LT",
+	"OR_LT"
 };
 
 struct Condition

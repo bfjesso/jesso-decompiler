@@ -1,4 +1,5 @@
 #include "guiUtils.h"
+#include <wx/grid.h>
 #include "../decompiler/decompilationStructs.h"
 
 class FunctionInfoMenu : public wxFrame, public Utils
@@ -15,10 +16,18 @@ public:
 	wxStaticText* functionNameStaticTxt = nullptr;
     wxStaticText* numOfInstructionsStaticTxt = nullptr;
 
-	wxBoxSizer* vSizer = nullptr;
+	wxGrid* conditionsGrid = nullptr;
+
+	wxBoxSizer* vSizer1 = nullptr;
+	wxBoxSizer* vSizer2 = nullptr;
+	wxBoxSizer* hSizer = nullptr;
 
 	enum ids
 	{
 		MainWindowID
 	};
+
+	void GridRightClickOptions(wxGridEvent& e);
+
+	wxDECLARE_EVENT_TABLE();
 };
