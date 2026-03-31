@@ -52,7 +52,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
-	unsigned char isInSwitch = 0;
+	params.numOfIndents = 1;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
 		if (params.numOfIndents < 1)
@@ -64,175 +64,19 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[i]);
 
-		// handling condition dsts
-		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+		if (!decompileConditionDsts(params, &params.numOfIndents, result)) 
 		{
-			struct Condition* condition = &params.currentFunc->conditions[j];
-			if (!condition->decompileAsReturn && !condition->decompileAsGoTo && !condition->isCombinedByOther && i == condition->dstIndex)
-			{
-				if (condition->conditionType == DO_WHILE_CT)
-				{
-					addIndents(result, params.numOfIndents);
-					strcatJdc(result, "do\n");
-					addIndents(result, params.numOfIndents);
-					strcatJdc(result, "{\n");
-					params.numOfIndents++;
-					condition->hasEnteredCondition = 1;
-				}
-				else if (condition->conditionType == SWITCH_CASE_CT) 
-				{
-					if (!condition->isFirstSwitchCase) 
-					{
-						addIndents(result, params.numOfIndents);
-						strcatJdc(result, "break;\n");
-					}
-					
-					struct JdcStr switchCase = initializeJdcStr();
-					if (!decompileOperand(params, &condition->cmpInstruction->operands[1], getTypeOfOperand(condition->cmpInstruction->opcode, &condition->cmpInstruction->operands[1]), &switchCase))
-					{
-						freeJdcStr(&switchCase);
-						return 0;
-					}
-					
-					addIndents(result, params.numOfIndents - 1);
-					sprintfJdc(result, 1, "case %s:\n", switchCase.buffer);
-					freeJdcStr(&switchCase);
-				}
-				else if (condition->hasEnteredCondition)
-				{
-					params.numOfIndents--;
-					addIndents(result, params.numOfIndents);
-					strcatJdc(result, "}\n");
-				}
-			}
-			else if (condition->isFirstSwitchCase && i == condition->exitIndex) 
-			{
-				addIndents(result, params.numOfIndents);
-				strcatJdc(result, "break;\n");
-
-				isInSwitch = 0;
-
-				params.numOfIndents--;
-				addIndents(result, params.numOfIndents);
-				strcatJdc(result, "}\n");
-			}
+			return 0;
 		}
 
-		// handling condition Jccs
-		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+		if (!decompileConditionJccs(params, &params.numOfIndents, result))
 		{
-			struct Condition* condition = &params.currentFunc->conditions[j];
-			if(condition->isCombinedByOther)
-			{
-				continue;
-			}
-
-			if (condition->jccIndex == i && (condition->conditionType != SWITCH_CASE_CT || condition->isFirstSwitchCase))
-			{
-				if (condition->conditionType == DO_WHILE_CT)
-				{
-					if (condition->hasEnteredCondition)
-					{
-						params.numOfIndents--;
-					}
-					else
-					{
-						continue;
-					}
-				}
-
-				if (condition->isFirstSwitchCase) 
-				{
-					isInSwitch = condition->isFirstSwitchCase;
-				}
-
-				addIndents(result, params.numOfIndents);
-
-				if (decompileCondition(params, j, result))
-				{
-					strcatJdc(result, "\n");
-
-					if (condition->conditionType != DO_WHILE_CT)
-					{
-						addIndents(result, params.numOfIndents);
-						strcatJdc(result, "{\n");
-
-						params.numOfIndents++;
-						condition->hasEnteredCondition = 1;
-					}
-				}
-				else
-				{
-					return 0;
-				}
-
-				if (condition->decompileAsReturn)
-				{
-					addIndents(result, params.numOfIndents);
-					if (decompileReturnStatement(params, result))
-					{
-						strcatJdc(result, "\n");
-						params.numOfIndents--;
-						addIndents(result, params.numOfIndents);
-						strcatJdc(result, "}\n");
-					}
-					else
-					{
-						return 0;
-					}
-				}
-				else if (condition->decompileAsGoTo)
-				{
-					addIndents(result, params.numOfIndents);
-					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
-
-					params.numOfIndents--;
-					addIndents(result, params.numOfIndents);
-					strcatJdc(result, "}\n");
-				}
-
-				break;
-			}
+			return 0;
 		}
 
-		for (int j = 0; j < params.currentFunc->numOfConditions; j++)
+		if (!decompileDirectJmps(params, result)) 
 		{
-			struct Condition* condition = &params.currentFunc->conditions[j];
-			if (condition->decompileAsGoTo && i == condition->dstIndex)
-			{
-				addIndents(result, params.numOfIndents - 1);
-				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
-				break;
-			}
-		}
-
-		for (int j = 0; j < params.currentFunc->numOfDirectJmps; j++)
-		{
-			if (i == params.currentFunc->directJmps[j].dstIndex && params.currentFunc->directJmps[j].type == GO_TO_DJT)
-			{
-				addIndents(result, params.numOfIndents - 1);
-				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->directJmps[j].dstIndex].address - params.imageBase);
-				break;
-			}
-			else if (i == params.currentFunc->directJmps[j].jmpIndex)
-			{
-				addIndents(result, params.numOfIndents);
-
-				switch (params.currentFunc->directJmps[j].type)
-				{
-				case GO_TO_DJT:
-					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[params.currentFunc->directJmps[j].dstIndex].address - params.imageBase);
-					break;
-				case CONTINUE_DJT:
-					sprintfJdc(result, 1, "continue;\n");
-					break;
-				case BREAK_DJT:
-					sprintfJdc(result, 1, "break;\n");
-					break;
-				}
-
-				break;
-			}
+			return 0;
 		}
 
 		int importIndex = checkForImportCall(params);
@@ -285,7 +129,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			}
 		}
 
-		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions) && !isInSwitch)
+		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions))
 		{
 			addIndents(result, params.numOfIndents);
 			if (decompileReturnStatement(params, result))

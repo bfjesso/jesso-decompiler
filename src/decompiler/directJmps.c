@@ -106,3 +106,37 @@ static unsigned char handleDirectJmpsResize(struct DecompilationParameters param
 		}
 	}
 }
+
+unsigned char decompileDirectJmps(struct DecompilationParameters params, struct JdcStr* result)
+{
+	for (int i = 0; i < params.currentFunc->numOfDirectJmps; i++)
+	{
+		if (params.startInstructionIndex == params.currentFunc->directJmps[i].dstIndex && params.currentFunc->directJmps[i].type == GO_TO_DJT)
+		{
+			addIndents(result, params.numOfIndents - 1);
+			sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->directJmps[i].dstIndex].address - params.imageBase);
+			break;
+		}
+		else if (params.startInstructionIndex == params.currentFunc->directJmps[i].jmpIndex)
+		{
+			addIndents(result, params.numOfIndents);
+
+			switch (params.currentFunc->directJmps[i].type)
+			{
+			case GO_TO_DJT:
+				sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[params.currentFunc->directJmps[i].dstIndex].address - params.imageBase);
+				break;
+			case CONTINUE_DJT:
+				sprintfJdc(result, 1, "continue;\n");
+				break;
+			case BREAK_DJT:
+				sprintfJdc(result, 1, "break;\n");
+				break;
+			}
+
+			break;
+		}
+	}
+
+	return 1;
+}
