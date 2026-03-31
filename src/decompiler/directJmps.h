@@ -1,4 +1,6 @@
 #pragma once
 #include "decompilationStructs.h"
 
-int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBufferSize);
+unsigned char getAllDirectJmps(struct DecompilationParameters params);
+
+static unsigned char handleDirectJmpsResize(struct DecompilationParameters params);

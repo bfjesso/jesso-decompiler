@@ -2,9 +2,10 @@
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
-int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBufferSize)
+unsigned char getAllDirectJmps(struct DecompilationParameters params)
 {
-	int numOfDirectJmps = 0;
+	params.currentFunc->directJmps = (struct DirectJmp*)calloc(20, sizeof(struct DirectJmp));
+	
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++) 
 	{
 		struct DisassembledInstruction* instruction = &(params.currentFunc->instructions[i]);
@@ -74,27 +75,34 @@ int getAllDirectJmps(struct DecompilationParameters params, int directJmpsBuffer
 
 			if (directJmpType != NONE_DJT)
 			{
-				if (numOfDirectJmps >= directJmpsBufferSize) 
+				if (!handleDirectJmpsResize(params)) 
 				{
-					directJmpsBufferSize += 5;
-					struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(params.currentFunc->directJmps, directJmpsBufferSize * sizeof(struct DirectJmp));
-					if (newDirectJmps)
-					{
-						params.currentFunc->directJmps = newDirectJmps;
-					}
-					else
-					{
-						return -1;
-					}
+					return 0;
 				}
 				
-				params.currentFunc->directJmps[numOfDirectJmps].dstIndex = dstIndex;
-				params.currentFunc->directJmps[numOfDirectJmps].jmpIndex = i;
-				params.currentFunc->directJmps[numOfDirectJmps].type = directJmpType;
-				numOfDirectJmps++;
+				params.currentFunc->directJmps[params.currentFunc->numOfDirectJmps].dstIndex = dstIndex;
+				params.currentFunc->directJmps[params.currentFunc->numOfDirectJmps].jmpIndex = i;
+				params.currentFunc->directJmps[params.currentFunc->numOfDirectJmps].type = directJmpType;
+				params.currentFunc->numOfDirectJmps++;
 			}
 		}
 	}
 
-	return numOfDirectJmps;
+	return 1;
+}
+
+static unsigned char handleDirectJmpsResize(struct DecompilationParameters params)
+{
+	if (params.currentFunc->numOfDirectJmps % 5 == 0)
+	{
+		struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(params.currentFunc->directJmps, (params.currentFunc->numOfDirectJmps + 5) * sizeof(struct DirectJmp));
+		if (newDirectJmps)
+		{
+			params.currentFunc->directJmps = newDirectJmps;
+		}
+		else
+		{
+			return -1;
+		}
+	}
 }

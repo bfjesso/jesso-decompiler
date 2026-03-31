@@ -14,22 +14,14 @@ const char* indent = "    ";
 
 unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
-	if(!params.currentFunc->conditions)
+	if(!params.currentFunc->conditions && !getAllConditions(params))
 	{
-		if (!getAllConditions(params))
-		{
-			return 0;
-		}
+		return 0;
 	}
 
-	if(!params.currentFunc->directJmps)
+	if(!params.currentFunc->directJmps && !getAllDirectJmps(params))
 	{
-		params.currentFunc->directJmps = (struct DirectJmp*)calloc(20, sizeof(struct DirectJmp));
-		params.currentFunc->numOfDirectJmps = getAllDirectJmps(params, 20);
-		if (params.currentFunc->numOfDirectJmps == -1)
-		{
-			return 0;
-		}
+		return 0;
 	}
 	
 	if (!params.currentFunc->hasGottenLocalVars)
