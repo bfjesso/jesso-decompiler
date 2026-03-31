@@ -167,6 +167,7 @@ struct DecompilationParameters
 
 	struct Function* currentFunc; // function being decompiled
 	int startInstructionIndex; // index of instruction to start decompiling from relative to function
+	unsigned char numOfIndents;
 
 	struct DisassembledInstruction* allInstructions;
 	int totalNumOfInstructions;

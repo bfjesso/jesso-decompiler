@@ -52,11 +52,10 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		}
 	}
 
-	unsigned char numOfIndents = 1;
 	unsigned char isInSwitch = 0;
 	for (int i = 0; i < params.currentFunc->numOfInstructions; i++)
 	{
-		if (numOfIndents < 1)
+		if (params.numOfIndents < 1)
 		{
 			return 0;
 		}
@@ -73,18 +72,18 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			{
 				if (condition->conditionType == DO_WHILE_CT)
 				{
-					addIndents(result, numOfIndents);
+					addIndents(result, params.numOfIndents);
 					strcatJdc(result, "do\n");
-					addIndents(result, numOfIndents);
+					addIndents(result, params.numOfIndents);
 					strcatJdc(result, "{\n");
-					numOfIndents++;
+					params.numOfIndents++;
 					condition->hasEnteredCondition = 1;
 				}
 				else if (condition->conditionType == SWITCH_CASE_CT) 
 				{
 					if (!condition->isFirstSwitchCase) 
 					{
-						addIndents(result, numOfIndents);
+						addIndents(result, params.numOfIndents);
 						strcatJdc(result, "break;\n");
 					}
 					
@@ -95,26 +94,26 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 						return 0;
 					}
 					
-					addIndents(result, numOfIndents - 1);
+					addIndents(result, params.numOfIndents - 1);
 					sprintfJdc(result, 1, "case %s:\n", switchCase.buffer);
 					freeJdcStr(&switchCase);
 				}
 				else if (condition->hasEnteredCondition)
 				{
-					numOfIndents--;
-					addIndents(result, numOfIndents);
+					params.numOfIndents--;
+					addIndents(result, params.numOfIndents);
 					strcatJdc(result, "}\n");
 				}
 			}
 			else if (condition->isFirstSwitchCase && i == condition->exitIndex) 
 			{
-				addIndents(result, numOfIndents);
+				addIndents(result, params.numOfIndents);
 				strcatJdc(result, "break;\n");
 
 				isInSwitch = 0;
 
-				numOfIndents--;
-				addIndents(result, numOfIndents);
+				params.numOfIndents--;
+				addIndents(result, params.numOfIndents);
 				strcatJdc(result, "}\n");
 			}
 		}
@@ -134,7 +133,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				{
 					if (condition->hasEnteredCondition)
 					{
-						numOfIndents--;
+						params.numOfIndents--;
 					}
 					else
 					{
@@ -147,7 +146,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 					isInSwitch = condition->isFirstSwitchCase;
 				}
 
-				addIndents(result, numOfIndents);
+				addIndents(result, params.numOfIndents);
 
 				if (decompileCondition(params, j, result))
 				{
@@ -155,10 +154,10 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 					if (condition->conditionType != DO_WHILE_CT)
 					{
-						addIndents(result, numOfIndents);
+						addIndents(result, params.numOfIndents);
 						strcatJdc(result, "{\n");
 
-						numOfIndents++;
+						params.numOfIndents++;
 						condition->hasEnteredCondition = 1;
 					}
 				}
@@ -169,12 +168,12 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 				if (condition->decompileAsReturn)
 				{
-					addIndents(result, numOfIndents);
+					addIndents(result, params.numOfIndents);
 					if (decompileReturnStatement(params, result))
 					{
 						strcatJdc(result, "\n");
-						numOfIndents--;
-						addIndents(result, numOfIndents);
+						params.numOfIndents--;
+						addIndents(result, params.numOfIndents);
 						strcatJdc(result, "}\n");
 					}
 					else
@@ -184,11 +183,11 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 				}
 				else if (condition->decompileAsGoTo)
 				{
-					addIndents(result, numOfIndents);
+					addIndents(result, params.numOfIndents);
 					sprintfJdc(result, 1, "goto label_%llX;\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
 
-					numOfIndents--;
-					addIndents(result, numOfIndents);
+					params.numOfIndents--;
+					addIndents(result, params.numOfIndents);
 					strcatJdc(result, "}\n");
 				}
 
@@ -201,7 +200,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 			struct Condition* condition = &params.currentFunc->conditions[j];
 			if (condition->decompileAsGoTo && i == condition->dstIndex)
 			{
-				addIndents(result, numOfIndents - 1);
+				addIndents(result, params.numOfIndents - 1);
 				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[condition->dstIndex].address - params.imageBase);
 				break;
 			}
@@ -211,13 +210,13 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		{
 			if (i == params.currentFunc->directJmps[j].dstIndex && params.currentFunc->directJmps[j].type == GO_TO_DJT)
 			{
-				addIndents(result, numOfIndents - 1);
+				addIndents(result, params.numOfIndents - 1);
 				sprintfJdc(result, 1, "label_%llX:\n", params.currentFunc->instructions[params.currentFunc->directJmps[j].dstIndex].address - params.imageBase);
 				break;
 			}
 			else if (i == params.currentFunc->directJmps[j].jmpIndex)
 			{
-				addIndents(result, numOfIndents);
+				addIndents(result, params.numOfIndents);
 
 				switch (params.currentFunc->directJmps[j].type)
 				{
@@ -239,7 +238,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
-			addIndents(result, numOfIndents);
+			addIndents(result, params.numOfIndents);
 			if (decompileImportCall(params, importIndex, result))
 			{
 				strcatJdc(result, "\n");
@@ -253,7 +252,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		struct Function* callee;
 		if (checkForFunctionCall(params, &callee))
 		{
-			addIndents(result, numOfIndents);
+			addIndents(result, params.numOfIndents);
 			if (decompileFunctionCall(params, callee, result))
 			{
 				strcatJdc(result, "\n");
@@ -267,7 +266,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 		struct IntrinsicFunc* intrinsicFunc;
 		if (checkForVoidIntrinsicFunc(currentInstruction->opcode, &intrinsicFunc))
 		{
-			addIndents(result, numOfIndents);
+			addIndents(result, params.numOfIndents);
 			if (decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
 				strcatJdc(result, "\n");
@@ -280,7 +279,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		if (checkForAssignment(params))
 		{
-			if (!decompileAssignments(params, result, numOfIndents))
+			if (!decompileAssignments(params, result, params.numOfIndents))
 			{
 				return 0;
 			}
@@ -288,7 +287,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		if (checkForReturnStatement(i, params.currentFunc->instructions, params.currentFunc->numOfInstructions) && !isInSwitch)
 		{
-			addIndents(result, numOfIndents);
+			addIndents(result, params.numOfIndents);
 			if (decompileReturnStatement(params, result))
 			{
 				strcatJdc(result, "\n");
