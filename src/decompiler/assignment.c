@@ -1,4 +1,5 @@
 #include "assignment.h"
+#include "decompilationUtils.h"
 #include "functions.h"
 #include "expressions.h"
 
@@ -27,29 +28,61 @@ unsigned char checkForAssignment(struct DecompilationParameters params)
 	return 0;
 }
 
-unsigned char decompileAssignment(struct DecompilationParameters params, struct JdcStr* result)
+unsigned char decompileAssignments(struct DecompilationParameters params, struct JdcStr* result, int numOfIndents)
 {
 	struct DisassembledInstruction* currentInstruction = &(params.currentFunc->instructions[params.startInstructionIndex]);
 
-	struct StackVariable* localVar = getStackVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
-	struct VarType type = { 0 };
-	if (!localVar)
+	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 	{
-		type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-	}
-	else
-	{
-		type = localVar->type;
-	}
+		struct StackVariable* localVar = getStackVarByOffset(params.currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
+		struct VarType type = { 0 };
+		if (!localVar)
+		{
+			type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
+		}
+		else
+		{
+			type = localVar->type;
+		}
+		
+		struct JdcStr operation = initializeJdcStr();
+		if (!decompileOperation(params, type, NO_REG, 1, &operation))
+		{
+			freeJdcStr(&operation);
+			return 0;
+		}
 
-	struct JdcStr operation = initializeJdcStr();
-	if (!decompileOperation(params, type, NO_REG, 1, &operation))
-	{
+		addIndents(result, numOfIndents);
+		strcatJdc(result, operation.buffer);
 		freeJdcStr(&operation);
-		return 0;
+
+		if (numOfIndents != 0) 
+		{
+			strcatJdc(result, ";\n");
+		}
 	}
 
-	unsigned char succeeded = strcatJdc(result, operation.buffer);
-	freeJdcStr(&operation);
-	return succeeded;
+	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
+	{
+		if (doesInstructionModifyRegister(currentInstruction, params.currentFunc->regVars[i].reg, 0, 0, 0))
+		{
+			struct JdcStr operation = initializeJdcStr();
+			if (!decompileOperation(params, params.currentFunc->regVars[i].type, params.currentFunc->regVars[i].reg, 1, &operation))
+			{
+				freeJdcStr(&operation);
+				return 0;
+			}
+
+			addIndents(result, numOfIndents);
+			strcatJdc(result, operation.buffer);
+			freeJdcStr(&operation);
+
+			if (numOfIndents != 0)
+			{
+				strcatJdc(result, ";\n");
+			}
+		}
+	}
+
+	return 1;
 }

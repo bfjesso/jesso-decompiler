@@ -3,4 +3,4 @@
 
 unsigned char checkForAssignment(struct DecompilationParameters params);
 
-unsigned char decompileAssignment(struct DecompilationParameters params, struct JdcStr* result);
+unsigned char decompileAssignments(struct DecompilationParameters params, struct JdcStr* result, int numOfIndents);

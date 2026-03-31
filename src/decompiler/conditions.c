@@ -438,7 +438,7 @@ unsigned char decompileCondition(struct DecompilationParameters params, int cond
 				params.startInstructionIndex = i;
 				if (checkForAssignment(params))
 				{
-					if (decompileAssignment(params, &assignmentExpression))
+					if (decompileAssignments(params, &assignmentExpression, 0))
 					{
 						break;
 					}

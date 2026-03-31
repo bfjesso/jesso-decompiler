@@ -1,5 +1,13 @@
 #include "decompilationUtils.h"
 
+void addIndents(struct JdcStr* result, int numOfIndents)
+{
+	for (int i = 0; i < numOfIndents; i++)
+	{
+		strcatJdc(result, "    ");
+	}
+}
+
 unsigned long long resolveJmpChain(struct DecompilationParameters params, int startInstructionIndex)
 {
 	struct DisassembledInstruction* instruction = &params.allInstructions[startInstructionIndex];

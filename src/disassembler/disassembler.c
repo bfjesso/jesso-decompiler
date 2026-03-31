@@ -263,13 +263,20 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			return 1;
 		}
 
-		if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
+		if (instruction->opcode == IMUL)
 		{
-			if (overwrites != 0) 
-			{ 
-				*overwrites = !compareOperands(&instruction->operands[0], &instruction->operands[1]);
+			if (instruction->operands[2].type != NO_OPERAND) 
+			{
+				if (overwrites != 0)
+				{
+					*overwrites = !compareOperands(&instruction->operands[0], &instruction->operands[1]);
+				}
+				return 1;
 			}
-			return 1;
+			else if (instruction->operands[1].type == NO_OPERAND) 
+			{
+				return 0;
+			}
 		}
 		
 		if (isOpcodeMov(instruction->opcode) || 

@@ -16,6 +16,8 @@ extern "C"
 }
 #endif
 
+void addIndents(struct JdcStr* result, int numOfIndents);
+
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress);
 
 static unsigned char operandToValue(struct DecompilationParameters params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);

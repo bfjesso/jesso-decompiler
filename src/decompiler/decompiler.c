@@ -10,8 +10,6 @@
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
 
-const char* indent = "    ";
-
 unsigned char decompileFunction(struct DecompilationParameters params, struct JdcStr* result)
 {
 	if(!params.currentFunc->conditions && !getAllConditions(params))
@@ -282,12 +280,7 @@ unsigned char decompileFunction(struct DecompilationParameters params, struct Jd
 
 		if (checkForAssignment(params))
 		{
-			addIndents(result, numOfIndents);
-			if (decompileAssignment(params, result))
-			{
-				strcatJdc(result, ";\n");
-			}
-			else
+			if (!decompileAssignments(params, result, numOfIndents))
 			{
 				return 0;
 			}
@@ -596,14 +589,6 @@ static unsigned char getAllRegVars(struct DecompilationParameters params)
 	return 1;
 }
 
-static void addIndents(struct JdcStr* result, int numOfIndents)
-{
-	for (int i = 0; i < numOfIndents; i++)
-	{
-		strcatJdc(result, indent);
-	}
-}
-
 static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
@@ -650,7 +635,8 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters par
 	for (int i = 0; i < params.currentFunc->numOfStackVars; i++)
 	{
 		varTypeToStr(params.currentFunc->stackVars[i].type, &typeStr);
-		sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->stackVars[i].name.buffer);
+		addIndents(result, 1);
+		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->stackVars[i].name.buffer);
 	}
 
 	for (int i = 0; i < params.currentFunc->numOfRegVars; i++)
@@ -667,13 +653,14 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters par
 
 		varTypeToStr(params.currentFunc->regVars[i].type, &typeStr);
 
+		addIndents(result, 1);
 		if (argIndex != -1)
 		{
-			sprintfJdc(result, 1, "%s%s %s = %s;\n", indent, typeStr.buffer, params.currentFunc->regVars[i].name.buffer, params.currentFunc->regArgs[argIndex].name.buffer);
+			sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, params.currentFunc->regVars[i].name.buffer, params.currentFunc->regArgs[argIndex].name.buffer);
 		}
 		else 
 		{
-			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->regVars[i].name.buffer);
+			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->regVars[i].name.buffer);
 		}
 	}
 
@@ -692,7 +679,8 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters par
 		if (!isReturnRegVar) 
 		{
 			varTypeToStr(params.currentFunc->returnedVars[i].type, &typeStr);
-			sprintfJdc(result, 1, "%s%s %s;\n", indent, typeStr.buffer, params.currentFunc->returnedVars[i].name.buffer);
+			addIndents(result, 1);
+			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params.currentFunc->returnedVars[i].name.buffer);
 		}
 	}
 

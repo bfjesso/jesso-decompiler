@@ -863,7 +863,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 			if (getAssignment) 
 			{ 
 				struct JdcStr decompiledDX = initializeJdcStr();
-				if (!decompileRegister(params, DX, getTypeOfOperand(IMUL, firstOperand), &decompiledAX, 0))
+				if (!decompileRegister(params, DX, getTypeOfOperand(IMUL, firstOperand), &decompiledDX, 0))
 				{
 					freeJdcStr(&decompiledFirstOperand);
 					freeJdcStr(&decompiledAX);
@@ -871,7 +871,7 @@ unsigned char decompileOperation(struct DecompilationParameters params, struct V
 					return 0;
 				}
 				
-				sprintfJdc(result, 0, "%s = (%s * %s) >> %d", decompiledDX.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, getSizeOfOperand(firstOperand));
+				sprintfJdc(result, 0, "%s = %s >> %d", decompiledDX.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, 8 * getSizeOfOperand(firstOperand));
 				freeJdcStr(&decompiledDX);
 			}
 			else
