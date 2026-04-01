@@ -320,7 +320,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->decompileAsReturn || condition->decompileAsGoTo || condition->isCombinedByOther || !condition->hasEnteredCondition)
+		if (condition->decompileAsReturn || condition->decompileAsGoTo || condition->isCombinedByOther || condition->indentLevel != params->numOfIndents)
 		{
 			continue;
 		}
@@ -331,6 +331,8 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 			{
 				return 0;
 			}
+
+			i = 0; // the loop needs to restart in order to recheck condition->indentLevel
 		}
 	}
 
@@ -362,7 +364,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 				return 0;
 			}
 
-			condition->hasEnteredCondition = 1;
+			condition->indentLevel = params->numOfIndents;
 
 			if (condition->decompileAsReturn)
 			{

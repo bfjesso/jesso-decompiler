@@ -96,7 +96,7 @@ struct Condition
 	struct DisassembledInstruction* cmpInstruction;
 	unsigned char isFirstSwitchCase;
 
-	unsigned char hasEnteredCondition; // this is checked when looking for ends of conditions. it is possible that a condition will never be entered if there is a direct jmp that skips it
+	int indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
 };
 
 enum DirectJmpType
