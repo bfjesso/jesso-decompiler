@@ -47,21 +47,48 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	else if (instruction->opcode == FLD)
 	{
 		if (getAssignment) { sprintfJdc(result, 0, " = %s", decompiledFirstOperand.buffer); }
-		else { sprintfJdc(result, 0, "%s", decompiledFirstOperand.buffer); }
+		else 
+		{ 
+			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				return 0;
+			}
+			
+			sprintfJdc(result, 0, "%s", decompiledFirstOperand.buffer); 
+		}
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == IDIV)
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
-		else { sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer); }
+		else 
+		{ 
+			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				return 0;
+			}
+			
+			sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer); 
+		}
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 	else if (instruction->opcode == NEG)
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
-		else { sprintfJdc(result, 0, "-%s", decompiledFirstOperand.buffer); }
+		else 
+		{ 
+			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "-%s", decompiledFirstOperand.buffer); 
+		}
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
@@ -171,7 +198,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		}
 
 		struct JdcStr decompiledSecondOperand = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[1], &decompiledFirstOperand))
+		if (!decompileOperand(params, &instruction->operands[1], &decompiledSecondOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledSecondOperand);
@@ -179,7 +206,16 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		}
 
 		if (getAssignment) { sprintfJdc(result, 0, "%s = (%s ? %s : %s)", decompiledFirstOperand.buffer, comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer); }
-		else { sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer); }
+		else 
+		{ 
+			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "(%s ? %s : %s)", comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer); 
+		}
 		freeJdcStr(&comparisonStr);
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
