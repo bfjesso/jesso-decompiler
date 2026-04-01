@@ -92,16 +92,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	else if (instruction->opcode == NEG)
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
-		else 
-		{ 
-			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
-			{
-				freeJdcStr(&decompiledFirstOperand);
-				return 0;
-			}
-
-			sprintfJdc(result, 0, "-%s", decompiledFirstOperand.buffer); 
-		}
+		else { strcatJdc(result, " * -1"); }
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
