@@ -108,7 +108,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	else if (instruction->opcode == IMUL && instruction->operands[2].type != NO_OPERAND)
 	{
 		struct JdcStr decompiledThirdOperand = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[2], &decompiledFirstOperand))
+		if (!decompileOperand(params, &instruction->operands[2], &decompiledThirdOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledThirdOperand);
@@ -126,7 +126,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		else
 		{
 			struct JdcStr decompiledSecondOperand = initializeJdcStr();
-			if (!decompileOperand(params, &instruction->operands[1], &decompiledFirstOperand))
+			if (!decompileOperand(params, &instruction->operands[1], &decompiledSecondOperand))
 			{
 				freeJdcStr(&decompiledFirstOperand);
 				freeJdcStr(&decompiledSecondOperand);
@@ -260,7 +260,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		}
 
 		struct JdcStr decompiledSecondOperand = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[1], &decompiledFirstOperand))
+		if (!decompileOperand(params, &instruction->operands[1], &decompiledSecondOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledSecondOperand);
