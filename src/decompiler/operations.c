@@ -352,6 +352,8 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		}
 	}
 
+	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
+
 	struct Operand* secondOperand = &instruction->operands[1];
 	if (secondOperand->type == REGISTER)
 	{
@@ -437,6 +439,8 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		freeJdcStr(&decompiledSecondOperand);
 		return 0;
 	}
+
+	params->startInstructionIndex = ogStartInstructionIndex;
 
 	freeJdcStr(&decompiledFirstOperand);
 	freeJdcStr(&decompiledSecondOperand);

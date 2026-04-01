@@ -101,6 +101,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 				freeJdcStr(&baseOperandStr);
 				return 0;
 			}
+			params->startInstructionIndex++;
 
 			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == memAddrType.primitiveType && regArgVar->type.isUnsigned == memAddrType.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG && operand->memoryAddress.constDisplacement == 0)
 			{
@@ -504,6 +505,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 	}
 
+	params->startInstructionIndex = ogStartInstructionIndex;
+
 	if (!finished) 
 	{
 		// check if register argument
@@ -549,7 +552,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		wrapJdcStrInParentheses(result);
 	}
 
-	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
 }
 
