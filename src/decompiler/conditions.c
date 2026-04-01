@@ -107,7 +107,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						params->currentFunc->conditions[params->currentFunc->numOfConditions].isFirstSwitchCase = 1;
 					}
 				}
-				else if (checkForJumpToReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				else if (checkForJumpToReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].decompileAsReturn = 1;
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
@@ -133,7 +133,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) &&
 						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
 					{
-						if (!checkForReturnStatement(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
+						if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
 						{
 							params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex;
 							params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex;
@@ -175,7 +175,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) && 
 		params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
 	{
-		if (!checkForReturnStatement(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+		if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 		{
 			if (!handleConditionsResize(params))
 			{

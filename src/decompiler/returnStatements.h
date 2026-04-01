@@ -3,8 +3,8 @@
 
 unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters* params);
 
-unsigned char checkForReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
+unsigned char checkForReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
 
-unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
+unsigned char checkForJumpToReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions);
 
 unsigned char decompileReturnStatement(struct DecompilationParameters* params, struct JdcStr* result);

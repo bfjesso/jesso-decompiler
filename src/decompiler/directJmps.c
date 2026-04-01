@@ -12,7 +12,7 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 
 		if (isOpcodeJmp(instruction->opcode))
 		{
-			if (checkForReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+			if (checkForReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 			{
 				continue;
 			}

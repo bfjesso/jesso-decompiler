@@ -29,7 +29,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	return 0;
 }
 
-unsigned char checkForReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
 
@@ -41,13 +41,13 @@ unsigned char checkForReturnStatement(int startInstructionIndex, struct Disassem
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		return checkForJumpToReturnStatement(startInstructionIndex, instructions, numOfInstructions);
+		return checkForJumpToReturnStatement(function, startInstructionIndex, instructions, numOfInstructions);
 	}
 
 	return 0;
 }
 
-unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForJumpToReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
 
@@ -66,7 +66,7 @@ unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct Di
 			return 1;
 		}
 
-		if ((instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&instructions[i], 0, 0, 0)) || isOpcodeCall(instructions[i].opcode) || isOpcodeJcc(instructions[i].opcode))
+		if ((instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&instructions[i], 0, 0, 0)) || isOpcodeCall(instructions[i].opcode) || isOpcodeJcc(instructions[i].opcode) || doesInstructionModifyRegister(&instructions[i], function->returnReg, 0, 0, 0))
 		{
 			return 0;
 		}

@@ -108,7 +108,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			}
 		}
 
-		if (checkForReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+		if (checkForReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 		{
 			if (!decompileReturnStatement(params, result))
 			{
@@ -147,7 +147,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 					}
 				}
 
-				if (checkForReturnStatement(j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				if (checkForReturnStatement(params->currentFunc, j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
 					returnType = params->currentFunc->returnType;
 					break;
@@ -226,7 +226,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					break;
 				}
 
-				if (checkForReturnStatement(j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				if (checkForReturnStatement(params->currentFunc, j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
 					break;
 				}
