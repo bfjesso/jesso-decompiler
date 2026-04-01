@@ -332,7 +332,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 				return 0;
 			}
 
-			i = 0; // the loop needs to restart in order to recheck condition->indentLevel
+			i = -1; // the loop needs to restart in order to recheck condition->indentLevel
 		}
 	}
 
