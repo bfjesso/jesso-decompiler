@@ -62,7 +62,19 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	}
 	else if (instruction->opcode == IDIV)
 	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer); }
+		if (getAssignment) 
+		{ 
+			struct JdcStr decompiledAX = initializeJdcStr();
+			if (!decompileRegister(params, AX, &decompiledAX, 0))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				freeJdcStr(&decompiledAX);
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "%s /= %s", decompiledAX.buffer, decompiledFirstOperand.buffer);
+			freeJdcStr(&decompiledAX);
+		}
 		else 
 		{ 
 			if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
@@ -73,6 +85,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 			
 			sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer); 
 		}
+
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
