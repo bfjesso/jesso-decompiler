@@ -398,16 +398,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
-	if (condition->conditionType == ELSE_CT)
-	{
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "else\n");
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "{\n");
-		params->numOfIndents++;
-		return 1;
-	}
-	else if (params->startInstructionIndex == condition->dstIndex) 
+	if (params->startInstructionIndex == condition->dstIndex) 
 	{
 		if (condition->conditionType == DO_WHILE_CT) 
 		{
@@ -470,6 +461,15 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
+		return 1;
+	}
+	else if (condition->conditionType == ELSE_CT)
+	{
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "else\n");
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "{\n");
+		params->numOfIndents++;
 		return 1;
 	}
 
