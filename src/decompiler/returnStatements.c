@@ -51,6 +51,11 @@ unsigned char checkForJumpToReturnStatement(struct Function* function, int start
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
 
+	if (instruction->operands[0].type != IMMEDIATE) 
+	{
+		return 0;
+	}
+
 	unsigned long long jmpDst = instruction->address + instruction->operands[0].immediate.value;
 	int jmpDstIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpDst);
 
