@@ -1,6 +1,5 @@
 #include "decompiler.h"
 #include "decompilationUtils.h"
-#include "expressions.h"
 #include "functions.h"
 #include "assignment.h"
 #include "returnStatements.h"
@@ -64,12 +63,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
 
-		if (!decompileConditionDsts(params, result)) 
-		{
-			return 0;
-		}
-
-		if (!decompileConditionJccs(params, result))
+		if (!decompileConditions(params, result))
 		{
 			return 0;
 		}

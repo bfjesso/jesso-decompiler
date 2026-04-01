@@ -77,6 +77,15 @@ unsigned char checkForJumpToReturnStatement(int startInstructionIndex, struct Di
 
 unsigned char decompileReturnStatement(struct DecompilationParameters* params, struct JdcStr* result)
 {
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
+	{
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (condition->conditionType == SWITCH_CASE_CT && params->startInstructionIndex == condition->dstIndex - 1) 
+		{
+			return 1;
+		}
+	}
+	
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
 		return strcatJdc(result, "return;");
