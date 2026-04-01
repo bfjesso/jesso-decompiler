@@ -172,6 +172,7 @@
     <ClCompile Include="src\decompiler\functionCalls.c" />
     <ClCompile Include="src\decompiler\functions.c" />
     <ClCompile Include="src\decompiler\intrinsics.c" />
+    <ClCompile Include="src\decompiler\operations.c" />
     <ClCompile Include="src\decompiler\returnStatements.c" />
     <ClCompile Include="src\disassembler\disassembler.c" />
     <ClCompile Include="src\disassembler\mnemonics.c" />
@@ -210,6 +211,7 @@
     <ClInclude Include="src\decompiler\functionCalls.h" />
     <ClInclude Include="src\decompiler\functions.h" />
     <ClInclude Include="src\decompiler\intrinsics.h" />
+    <ClInclude Include="src\decompiler\operations.h" />
     <ClInclude Include="src\decompiler\returnStatements.h" />
     <ClInclude Include="src\disassembler\disassembler.h" />
     <ClInclude Include="src\disassembler\escapeOpcodeMaps.h" />

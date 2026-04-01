@@ -11,4 +11,3 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 
 unsigned char decompileComparison(struct DecompilationParameters* params, unsigned char invertOperator, struct JdcStr* result);
 
-unsigned char decompileOperation(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result);

@@ -1,6 +1,6 @@
 #include "assignment.h"
 #include "decompilationUtils.h"
-#include "expressions.h"
+#include "operations.h"
 
 unsigned char checkForAssignment(struct DecompilationParameters* params)
 {
