@@ -5,7 +5,7 @@
 #include <windows.h>
 
 
-unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
+unsigned char isPEX64(HANDLE file, unsigned char* isX64);
 
 unsigned long long getPEImageBase32(HANDLE file);
 

@@ -11,7 +11,13 @@
 unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
 {
 #ifdef _WIN32
-	return isPEX64(filePath, isX64);
+	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (!file || file == INVALID_HANDLE_VALUE)
+	{
+		return 0;
+	}
+
+	return isPEX64(file, isX64);
 #endif
 
 #ifdef linux
