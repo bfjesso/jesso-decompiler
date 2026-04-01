@@ -34,19 +34,8 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 
 	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 	{
-		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, (int)(currentInstruction->operands[0].memoryAddress.constDisplacement));
-		struct VarType type = { 0 };
-		if (!localVar)
-		{
-			type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-		}
-		else
-		{
-			type = localVar->type;
-		}
-		
 		struct JdcStr operation = initializeJdcStr();
-		if (!decompileOperation(params, type, NO_REG, 1, &operation))
+		if (!decompileOperation(params, NO_REG, 1, &operation))
 		{
 			freeJdcStr(&operation);
 			return 0;
@@ -67,7 +56,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 		if (doesInstructionModifyRegister(currentInstruction, params->currentFunc->regVars[i].reg, 0, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, params->currentFunc->regVars[i].type, params->currentFunc->regVars[i].reg, 1, &operation))
+			if (!decompileOperation(params, params->currentFunc->regVars[i].reg, 1, &operation))
 			{
 				freeJdcStr(&operation);
 				return 0;

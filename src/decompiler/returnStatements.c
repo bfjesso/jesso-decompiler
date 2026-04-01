@@ -83,7 +83,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, s
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, params->currentFunc->returnReg, params->currentFunc->returnType, &returnExpression, 0))
+	if (!decompileRegister(params, params->currentFunc->returnReg, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
 		return 0;

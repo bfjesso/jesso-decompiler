@@ -37,14 +37,14 @@ unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct Intrin
 	return 0;
 }
 
-unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct VarType type, struct JdcStr* result)
+unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
 
 	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[0], type, &decompiledFirstOperand))
+		if (!decompileOperand(params, &instruction->operands[0], &decompiledFirstOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			return 0;
@@ -72,12 +72,8 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	{
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
-			struct Operand* currentOperand = &instruction->operands[i];
-
-			struct VarType operandType = getTypeOfOperand(instruction->opcode, currentOperand);
-
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, currentOperand, operandType, &decompiledOperand))
+			if (!decompileOperand(params, &instruction->operands[i], &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
@@ -120,11 +116,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		if (instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0x29) 
 		{
 			struct JdcStr code = initializeJdcStr();
-			struct VarType type = { 0 };
-			type.isUnsigned = 1;
-			type.primitiveType = INT_TYPE;
-
-			if (decompileRegister(params, CX, type, &code, 0))
+			if (decompileRegister(params, CX, &code, 0))
 			{
 				sprintfJdc(result, 1, "%s(%s);\n", intrinsicFunc->name, code.buffer);
 			}
@@ -152,12 +144,8 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	{
 		if (intrinsicFunc->operandsToDecompile[i])
 		{
-			struct Operand* currentOperand = &instruction->operands[i];
-			
-			struct VarType operandType = getTypeOfOperand(instruction->opcode, currentOperand);
-
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, currentOperand, operandType, &decompiledOperand))
+			if (!decompileOperand(params, &instruction->operands[i], &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
