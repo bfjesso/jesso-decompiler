@@ -717,7 +717,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 {
 	struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
-	struct IntriniscFunc* intrinsicFunc;
+	struct IntrinsicFunc* intrinsicFunc;
 	if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
 	{
 		return decompileReturningIntrinsicFunc(params, intrinsicFunc, getAssignment, result);

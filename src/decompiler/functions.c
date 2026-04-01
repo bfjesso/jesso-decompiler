@@ -583,7 +583,7 @@ struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register
 	return 0;
 }
 
-struct FuncReturnVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr)
+struct ReturnedVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr)
 {
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
