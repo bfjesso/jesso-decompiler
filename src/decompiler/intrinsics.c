@@ -1,4 +1,5 @@
 #include "intrinsics.h"
+#include "decompilationUtils.h"
 #include "expressions.h"
 
 struct IntrinsicFunc returningIntrinsicFuncs[] =
@@ -111,6 +112,8 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 {
 	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
 
+	addIndents(result, params->numOfIndents);
+
 	if (intrinsicFunc->opcode == _INT) 
 	{
 		if (instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0x29) 
@@ -161,6 +164,6 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		}
 	}
 
-	strcatJdc(result, ");");
+	strcatJdc(result, ");\n");
 	return 1;
 }

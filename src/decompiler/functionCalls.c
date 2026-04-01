@@ -35,6 +35,8 @@ unsigned char decompileFunctionCall(struct DecompilationParameters* params, stru
 {
 	struct DisassembledInstruction* firstInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
+	addIndents(result, params->numOfIndents);
+
 	int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, callee->instructions[0].address);
 	if (returnedVar != 0)
@@ -125,7 +127,7 @@ unsigned char decompileFunctionCall(struct DecompilationParameters* params, stru
 		strcatJdc(result, ")");
 	}
 
-	strcatJdc(result, ";");
+	strcatJdc(result, ";\n");
 
 	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
@@ -156,6 +158,8 @@ int checkForImportCall(struct DecompilationParameters* params)
 unsigned char decompileImportCall(struct DecompilationParameters* params, int importIndex, struct JdcStr* result)
 {
 	struct DisassembledInstruction* firstInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+
+	addIndents(result, params->numOfIndents);
 
 	unsigned long long calleeAddress = params->imports[importIndex].address;
 	int callNum = getFunctionCallNumber(params, calleeAddress);
@@ -283,11 +287,11 @@ unsigned char decompileImportCall(struct DecompilationParameters* params, int im
 	{
 		result->buffer[strlen(result->buffer) - 2] = ')'; // removing the last comma
 		result->buffer[strlen(result->buffer) - 1] = 0;
-		strcatJdc(result, "; // arguments are guessed");
+		strcatJdc(result, "; // arguments are guessed\n");
 	}
 	else
 	{
-		strcatJdc(result, ");");
+		strcatJdc(result, ");\n");
 	}
 
 	params->startInstructionIndex = ogStartInstructionIndex;

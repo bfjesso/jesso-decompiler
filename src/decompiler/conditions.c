@@ -366,13 +366,11 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 			if (condition->decompileAsReturn)
 			{
-				addIndents(result, params->numOfIndents);
 				if (!decompileReturnStatement(params, result))
 				{
 					return 0;
 				}
 
-				strcatJdc(result, "\n");
 				params->numOfIndents--;
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "}\n");
@@ -585,7 +583,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 				params->startInstructionIndex = i;
 				if (checkForAssignment(params))
 				{
-					if (decompileAssignments(params, &assignmentExpression, 0))
+					if (decompileAssignments(params, &assignmentExpression))
 					{
 						break;
 					}

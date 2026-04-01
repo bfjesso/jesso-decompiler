@@ -85,10 +85,12 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, s
 			return 1;
 		}
 	}
+
+	addIndents(result, params->numOfIndents);
 	
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
-		return strcatJdc(result, "return;");
+		return strcatJdc(result, "return;\n");
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
@@ -98,7 +100,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, s
 		return 0;
 	}
 
-	sprintfJdc(result, 1, "return %s;", returnExpression.buffer);
+	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
 	freeJdcStr(&returnExpression);
 
 	return 1;

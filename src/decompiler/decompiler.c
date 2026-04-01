@@ -76,12 +76,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		int importIndex = checkForImportCall(params);
 		if (importIndex != -1)
 		{
-			addIndents(result, params->numOfIndents);
-			if (decompileImportCall(params, importIndex, result))
-			{
-				strcatJdc(result, "\n");
-			}
-			else
+			if (!decompileImportCall(params, importIndex, result))
 			{
 				return 0;
 			}
@@ -90,12 +85,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		struct Function* callee;
 		if (checkForFunctionCall(params, &callee))
 		{
-			addIndents(result, params->numOfIndents);
-			if (decompileFunctionCall(params, callee, result))
-			{
-				strcatJdc(result, "\n");
-			}
-			else
+			if (!decompileFunctionCall(params, callee, result))
 			{
 				return 0;
 			}
@@ -104,12 +94,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		struct IntrinsicFunc* intrinsicFunc;
 		if (checkForVoidIntrinsicFunc(currentInstruction->opcode, &intrinsicFunc))
 		{
-			addIndents(result, params->numOfIndents);
-			if (decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
-			{
-				strcatJdc(result, "\n");
-			}
-			else
+			if (!decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
 				return 0;
 			}
@@ -117,7 +102,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (checkForAssignment(params))
 		{
-			if (!decompileAssignments(params, result, params->numOfIndents))
+			if (!decompileAssignments(params, result))
 			{
 				return 0;
 			}
@@ -125,12 +110,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (checkForReturnStatement(i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 		{
-			addIndents(result, params->numOfIndents);
-			if (decompileReturnStatement(params, result))
-			{
-				strcatJdc(result, "\n");
-			}
-			else
+			if (!decompileReturnStatement(params, result))
 			{
 				return 0;
 			}

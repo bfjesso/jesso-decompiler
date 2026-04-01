@@ -1,6 +1,5 @@
 #include "assignment.h"
 #include "decompilationUtils.h"
-#include "functions.h"
 #include "expressions.h"
 
 unsigned char checkForAssignment(struct DecompilationParameters* params)
@@ -28,7 +27,7 @@ unsigned char checkForAssignment(struct DecompilationParameters* params)
 	return 0;
 }
 
-unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result, int numOfIndents)
+unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
 
@@ -41,14 +40,10 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 			return 0;
 		}
 
-		addIndents(result, numOfIndents);
+		addIndents(result, params->numOfIndents);
 		strcatJdc(result, operation.buffer);
 		freeJdcStr(&operation);
-
-		if (numOfIndents != 0) 
-		{
-			strcatJdc(result, ";\n");
-		}
+		strcatJdc(result, ";\n");
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
@@ -62,14 +57,10 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 				return 0;
 			}
 
-			addIndents(result, numOfIndents);
+			addIndents(result, params->numOfIndents);
 			strcatJdc(result, operation.buffer);
 			freeJdcStr(&operation);
-
-			if (numOfIndents != 0)
-			{
-				strcatJdc(result, ";\n");
-			}
+			strcatJdc(result, ";\n");
 		}
 	}
 
