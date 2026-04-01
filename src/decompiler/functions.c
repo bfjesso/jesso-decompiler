@@ -282,7 +282,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			{
 				result->callingConvention = __STDCALL;
 			}
-			else if (result->numOfStackArgs != 0 && result->numOfRegArgs == 1)
+			else if (result->numOfRegArgs == 1 && compareRegisters(result->regArgs[0].reg, CX))
 			{
 				result->callingConvention = __THISCALL;
 			}
