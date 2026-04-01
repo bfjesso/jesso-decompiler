@@ -46,7 +46,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
     if (function->numOfRegArgs > 0 || function->numOfRegVars > 0)
 	{
-		regVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 200));
+		regVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
 		regVarsGrid->SetLabelBackgroundColour(foregroundColor);
 		regVarsGrid->SetLabelTextColour(textColor);
 		regVarsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -93,7 +93,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfStackArgs > 0 || function->numOfStackVars > 0)
 	{
-		stackVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 200));
+		stackVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
 		stackVarsGrid->SetLabelBackgroundColour(foregroundColor);
 		stackVarsGrid->SetLabelTextColour(textColor);
 		stackVarsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -197,12 +197,12 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 
 	if (function->numOfConditions > 0) 
 	{
-		conditionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 200));
+		conditionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 		conditionsGrid->SetLabelBackgroundColour(foregroundColor);
 		conditionsGrid->SetLabelTextColour(textColor);
 		conditionsGrid->SetDefaultCellBackgroundColour(gridColor);
 		conditionsGrid->SetDefaultCellTextColour(textColor);
-		conditionsGrid->CreateGrid(0, 6);
+		conditionsGrid->CreateGrid(0, 7);
 		conditionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
 		conditionsGrid->SetScrollRate(0, 10);
 		conditionsGrid->DisableDragRowSize();
@@ -211,18 +211,20 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 		conditionsGrid->SetColLabelValue(1, "Jcc index");
 		conditionsGrid->SetColLabelValue(2, "Dst index");
 		conditionsGrid->SetColLabelValue(3, "Exit index");
-		conditionsGrid->SetColLabelValue(4, "Combined jcc indexes");
-		conditionsGrid->SetColLabelValue(5, "Jcc combination type");
+		conditionsGrid->SetColLabelValue(4, "Decompilation type");
+		conditionsGrid->SetColLabelValue(5, "Combined jcc indexes");
+		conditionsGrid->SetColLabelValue(6, "Jcc combination type");
 		conditionsGrid->HideRowLabels();
 		conditionsGrid->SetColSize(0, 100);
 		conditionsGrid->SetColSize(1, 100);
 		conditionsGrid->SetColSize(2, 100);
 		conditionsGrid->SetColSize(3, 100);
-		conditionsGrid->SetColSize(4, 100);
-		conditionsGrid->SetColSize(5, 9999);
+		conditionsGrid->SetColSize(4, 150);
+		conditionsGrid->SetColSize(5, 150);
+		conditionsGrid->SetColSize(6, 9999);
 		conditionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-		row1Sizer->Add(conditionsGrid, 1, wxEXPAND | wxRIGHT, 10);
+		row1Sizer->Add(conditionsGrid, 2, wxEXPAND | wxRIGHT, 10);
 
 		for (int i = 0; i < function->numOfConditions; i++)
 		{
@@ -244,6 +246,19 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 			}
 			conditionsGrid->SetCellValue(i, 3, wxString(std::to_string(condition->exitIndex)) + " (" + wxString(hexNumStr) + ")");
 
+			if (condition->decompileAsGoTo) 
+			{
+				conditionsGrid->SetCellValue(i, 4, "Conditional goto");
+			}
+			else if (condition->decompileAsReturn)
+			{
+				conditionsGrid->SetCellValue(i, 4, "Conditional return");
+			}
+			else
+			{
+				conditionsGrid->SetCellValue(i, 4, "Condition");
+			}
+
 			wxString combinedJccsStr = "";
 			for (int j = 0; j < condition->numOfCombinedJccs; j++)
 			{
@@ -254,14 +269,14 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 					combinedJccsStr += ", ";
 				}
 			}
-			conditionsGrid->SetCellValue(i, 4, combinedJccsStr);
-			conditionsGrid->SetCellValue(i, 5, wxString(logicalTypeStrs[condition->combinedJccsLogicType]));
+			conditionsGrid->SetCellValue(i, 5, combinedJccsStr);
+			conditionsGrid->SetCellValue(i, 6, wxString(logicalTypeStrs[condition->combinedJccsLogicType]));
 		}
 	}
 
 	if (function->numOfDirectJmps > 0)
 	{
-		directJmpsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 200));
+		directJmpsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 		directJmpsGrid->SetLabelBackgroundColour(foregroundColor);
 		directJmpsGrid->SetLabelTextColour(textColor);
 		directJmpsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -280,7 +295,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFra
 		directJmpsGrid->SetColSize(2, 9999);
 		directJmpsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-		row2Sizer->Add(directJmpsGrid, 1, wxEXPAND | wxRIGHT, 10);
+		row2Sizer->Add(directJmpsGrid, 2, wxEXPAND | wxRIGHT, 10);
 
 		for (int i = 0; i < function->numOfDirectJmps; i++)
 		{
