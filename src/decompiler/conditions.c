@@ -384,6 +384,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, struct JdcStr* result)
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
+	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	if (params->startInstructionIndex == condition->dstIndex) 
 	{
@@ -395,6 +396,10 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			strcatJdc(result, "{\n");
 			params->numOfIndents++;
 			return 1;
+		}
+		else if (condition->conditionType == LOOP_CT)
+		{
+			params->startInstructionIndex = condition->jccIndex;
 		}
 		else if (condition->conditionType == SWITCH_CASE_CT)
 		{
@@ -441,6 +446,13 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			return 1;
 		}
 	}
+	else if (condition->conditionType == LOOP_CT && params->startInstructionIndex == condition->jccIndex)
+	{
+		params->numOfIndents--;
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "}\n");
+		return 1;
+	}
 	else if (params->startInstructionIndex == condition->exitIndex && condition->isFirstSwitchCase)
 	{
 		addIndents(result, params->numOfIndents);
@@ -459,8 +471,6 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		params->numOfIndents++;
 		return 1;
 	}
-
-	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	unsigned char invertCondition = condition->decompileAsReturn || condition->decompileAsGoTo || condition->conditionType == DO_WHILE_CT;
 
