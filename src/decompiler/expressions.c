@@ -12,9 +12,17 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 	{
 		if (!getStringFromDataSection(params, operand->immediate.value, result))
 		{
-			if (operand->immediate.value > -10 && operand->immediate.value < 10) // this is just arbitrary
+			if (operand->immediate.value > -10 && operand->immediate.value < 0)
+			{
+				return sprintfJdc(result, 0, "-%lli", -operand->immediate.value);
+			}
+			else if (operand->immediate.value > 0 && operand->immediate.value < 10)
 			{
 				return sprintfJdc(result, 0, "%lli", operand->immediate.value);
+			}
+			else if (operand->immediate.value < 0)
+			{
+				return sprintfJdc(result, 0, "-0x%llX", -operand->immediate.value);
 			}
 
 			return sprintfJdc(result, 0, "0x%llX", operand->immediate.value);
