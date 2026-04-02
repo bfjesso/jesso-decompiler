@@ -102,9 +102,11 @@ static unsigned char handleDirectJmpsResize(struct DecompilationParameters* para
 		}
 		else
 		{
-			return -1;
+			return 0;
 		}
 	}
+
+	return 1;
 }
 
 unsigned char decompileDirectJmps(struct DecompilationParameters* params, struct JdcStr* result)
