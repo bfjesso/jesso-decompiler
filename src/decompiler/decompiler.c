@@ -116,6 +116,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		}
 	}
 
+	if (params->numOfIndents != 1)
+	{
+		return 0;
+	}
+
 	return strcatJdc(result, "}\n");
 }
 
