@@ -150,12 +150,12 @@ int checkForUnknownFunctionCall(struct DecompilationParameters* params)
 	{
 		return 1;
 	}
-	if (instruction->opcode == JMP_NEAR)
+	else if (instruction->opcode == JMP_NEAR)
 	{
 		int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, address);
 		unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 
-		return getImportIndexByAddress(params, calleeAddress);
+		return getImportIndexByAddress(params, calleeAddress) != -1;
 	}
 
 	return 0;
