@@ -88,7 +88,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				// setting the type
 				if (params->currentFunc->numOfConditions > 0 && exitIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex &&
 					instruction->opcode == JZ_SHORT && params->currentFunc->instructions[params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
-					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]))
+					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
+					combinationCount == 0 && params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].numOfCombinedJccs == 0)
 				{
 					if (params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType != SWITCH_CASE_CT) 
 					{
