@@ -18,6 +18,11 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 		return 0;
 	}
 
+	if (instruction->operands[0].type == IMMEDIATE) 
+	{
+		jmpAddress += instruction->address;
+	}
+
 	int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
 	{
