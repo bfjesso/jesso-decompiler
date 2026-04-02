@@ -217,19 +217,14 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 	// checking for registers that are modified in a condition
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (!params->currentFunc->conditions[i].isCombinedByOther && !params->currentFunc->conditions[i].decompileAsReturn && !params->currentFunc->conditions[i].decompileAsGoTo)
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (!condition->isCombinedByOther && !condition->decompileAsReturn && !condition->decompileAsGoTo)
 		{
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
 
-			int start = params->currentFunc->conditions[i].jccIndex;
-			int end = params->currentFunc->conditions[i].dstIndex;
-
-			if (params->currentFunc->conditions[i].conditionType == DO_WHILE_CT)
-			{
-				start = params->currentFunc->conditions[i].dstIndex;
-				end = params->currentFunc->conditions[i].jccIndex;
-			}
+			int start = getConditionStart(condition);
+			int end = getConditionEnd(condition);
 			
 			for (int j = start; j < end; j++)
 			{
@@ -288,7 +283,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			int checkingStart = params->currentFunc->conditions[i].conditionType == LOOP_CT || params->currentFunc->conditions[i].conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
+			int checkingStart = condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
 			for (int j = checkingStart; j < params->currentFunc->numOfInstructions; j++)
 			{
 				params->startInstructionIndex = j;
@@ -328,8 +323,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				}
 			}
 
-			// if there are registers used in the comparisson of a do while loop, they need to be a reg var
-			if (params->currentFunc->conditions[i].conditionType == DO_WHILE_CT)
+			// if there are registers used in the comparisson of loop, they need to be a reg var
+			if (condition->conditionType == DO_WHILE_CT || condition->conditionType == LOOP_CT)
 			{
 				for (int j = end; j >= start; j--) 
 				{

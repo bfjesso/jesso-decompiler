@@ -11,4 +11,8 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, struct JdcStr* result);
 
+int getConditionStart(struct Condition* condition);
+
+int getConditionEnd(struct Condition* condition);
+
 int checkForConditionStart(struct DecompilationParameters* params);
