@@ -128,25 +128,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 				else
 				{
-					// checking if last condition has an else and add it if so
-					if (params->currentFunc->numOfConditions > 0 && 
-						(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) &&
-						params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
-					{
-						if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions)) // if the jmp functions as a return, it doesnt need to be handled as an ELSE
-						{
-							params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex;
-							params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex;
-							params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
-							params->currentFunc->numOfConditions++;
-						}
-					}
-
-					if (!handleConditionsResize(params))
-					{
-						return 0;
-					}
-
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
 				}
 
@@ -171,21 +152,27 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			currentCmpInstruction = instruction;
 		}
 	}
-	if (params->currentFunc->numOfConditions > 0 && 
-		(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) && 
-		params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex != -1)
+	
+	// addings ELSEs
+	int ogNumOfConditions = params->currentFunc->numOfConditions;
+	for (int i = 0; i < ogNumOfConditions; i++) 
 	{
-		if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+		if ((params->currentFunc->conditions[i].conditionType == IF_CT || params->currentFunc->conditions[i].conditionType == ELSE_IF_CT) && 
+			params->currentFunc->conditions[i].exitIndex != -1 && 
+			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
-			if (!handleConditionsResize(params))
+			if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[i].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 			{
-				return 0;
+				if (!handleConditionsResize(params))
+				{
+					return 0;
+				}
+
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[i].dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[i].exitIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
+				params->currentFunc->numOfConditions++;
 			}
-			
-			params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex;
-			params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex;
-			params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
-			params->currentFunc->numOfConditions++;
 		}
 	}
 
