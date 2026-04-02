@@ -350,7 +350,15 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			return 0;
 		}
 
-		sprintfJdc(result, 1, "(%s)", functionPointer.buffer);
+		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE) 
+		{
+			sprintfJdc(result, 1, "(0x%llX + %s)", params->currentFunc->instructions[ogStartInstructionIndex + 1].address, functionPointer.buffer);
+		}
+		else 
+		{
+			sprintfJdc(result, 1, "(%s)", functionPointer.buffer);
+		}
+		
 		freeJdcStr(&functionPointer);
 
 		strcatJdc(result, ")(");
