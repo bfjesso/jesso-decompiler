@@ -12,21 +12,10 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 {
 	struct DisassembledInstruction* instruction = &params->allInstructions[startInstructionIndex];
 
-	unsigned long long jmpAddress = params->allInstructions[startInstructionIndex].address + instruction->operands[0].immediate.value;
-	if (instruction->operands[0].type == MEM_ADDRESS)
+	unsigned long long jmpAddress = 0;
+	if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &jmpAddress))
 	{
-		jmpAddress = instruction->operands[0].memoryAddress.constDisplacement;
-		if (compareRegisters(instruction->operands[0].memoryAddress.reg, IP))
-		{
-			jmpAddress += params->allInstructions[startInstructionIndex + 1].address;
-		}
-	}
-	else if (instruction->operands[0].type == REGISTER)
-	{
-		if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &jmpAddress))
-		{
-			return 0;
-		}
+		return 0;
 	}
 
 	int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jmpAddress);
