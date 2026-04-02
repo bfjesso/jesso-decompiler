@@ -91,9 +91,10 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 		}
 		else
 		{
-			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
-			
+			int ogStartInstructionIndex = params->startInstructionIndex;
 			params->startInstructionIndex--;
+
+			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 			struct JdcStr baseOperandStr = initializeJdcStr();
 			if (!decompileRegister(params, operand->memoryAddress.reg, &baseOperandStr, &regArgVar))
 			{
@@ -101,7 +102,6 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 				freeJdcStr(&baseOperandStr);
 				return 0;
 			}
-			params->startInstructionIndex++;
 
 			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == memAddrType.primitiveType && regArgVar->type.isUnsigned == memAddrType.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG && operand->memoryAddress.constDisplacement == 0)
 			{
@@ -114,6 +114,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 					sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
 				}
 
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
@@ -190,6 +191,8 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 
 			freeJdcStr(&baseOperandStr);
 			freeJdcStr(&displacementOperandStr);
+
+			params->startInstructionIndex = ogStartInstructionIndex;
 		}
 
 		freeJdcStr(&typeStr);
