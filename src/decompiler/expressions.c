@@ -441,7 +441,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		else 
 		{
 			struct Function* callee;
-			if (checkForFunctionCall(params, &callee) && compareRegisters(callee->returnReg, targetReg))
+			if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg))
 			{
 				int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
 				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, callee->instructions[0].address);
@@ -453,22 +453,19 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				expressionIndex++;
 				finished = 1;
 			}
-			else 
+			else if (checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX))
 			{
-				int importIndex = checkForImportCall(params);
-				if (importIndex != -1 && compareRegisters(targetReg, AX))
+				int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, currentInstruction->address);
+				unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
+				int callNum = getFunctionCallNumber(params, calleeAddress);
+				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
+				if (returnedVar != 0)
 				{
-					unsigned long long calleeAddress = params->imports[importIndex].address;
-					int callNum = getFunctionCallNumber(params, calleeAddress);
-					struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
-					if (returnedVar != 0)
-					{
-						expressions[expressionIndex] = initializeJdcStr();
-						sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
-					}
-					expressionIndex++;
-					finished = 1;
+					expressions[expressionIndex] = initializeJdcStr();
+					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
 				}
+				expressionIndex++;
+				finished = 1;
 			}
 		}
 

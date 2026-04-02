@@ -73,19 +73,18 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		int importIndex = checkForImportCall(params);
-		if (importIndex != -1)
+		struct Function* callee;
+		if (checkForKnownFunctionCall(params, &callee))
 		{
-			if (!decompileImportCall(params, importIndex, result))
+			if (!decompileKnownFunctionCall(params, callee, result))
 			{
 				return 0;
 			}
 		}
 
-		struct Function* callee;
-		if (checkForFunctionCall(params, &callee))
+		if (checkForUnknownFunctionCall(params))
 		{
-			if (!decompileFunctionCall(params, callee, result))
+			if (!decompileUnknownFunctionCall(params, result))
 			{
 				return 0;
 			}
@@ -124,19 +123,22 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
+		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		int callInstructionIndex = i;
 		params->startInstructionIndex = i;
 		struct Function* callee = 0;
-		int importIndex = checkForImportCall(params);
-		if (checkForFunctionCall(params, &callee) || importIndex != -1)
+		if (checkForKnownFunctionCall(params, &callee) || checkForUnknownFunctionCall(params))
 		{
 			enum Register returnReg = callee ? callee->returnReg : AX;
-			unsigned long long calleeAddress = callee ? callee->instructions[0].address : params->imports[importIndex].address;
+
+			int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, currentInstruction->address);
+			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
 
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
 			for (int j = i; j < params->currentFunc->numOfInstructions; j++)
 			{
 				params->startInstructionIndex = j;
-				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
+				currentInstruction = &(params->currentFunc->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
 				if (j != i)
@@ -187,9 +189,21 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 			}
 			else
 			{
-				if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, params->imports[importIndex].name.buffer))
+				params->startInstructionIndex = callInstructionIndex;
+				int importIndex = getImportIndexByAddress(params, calleeAddress);
+				if (importIndex != -1) 
 				{
-					return 0;
+					if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, params->imports[importIndex].name.buffer))
+					{
+						return 0;
+					}
+				}
+				else 
+				{
+					if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, "funcPtr"))
+					{
+						return 0;
+					}
 				}
 			}
 		}
@@ -237,11 +251,11 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 
 				struct Function* callee;
 				params->startInstructionIndex = j;
-				if ((checkForFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
+				if ((checkForKnownFunctionCall(params, &callee) && callee->returnType.primitiveType != VOID_TYPE))
 				{
 					reg = callee->returnReg;
 				}
-				else if (checkForImportCall(params) != -1)
+				else if (checkForUnknownFunctionCall(params))
 				{
 					reg = params->is64Bit ? RAX : EAX;
 				}

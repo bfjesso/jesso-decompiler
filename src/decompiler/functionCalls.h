@@ -1,12 +1,14 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char checkForFunctionCall(struct DecompilationParameters* params, struct Function** calleeRef);
+unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, struct Function** calleeRef);
 
-unsigned char decompileFunctionCall(struct DecompilationParameters* params, struct Function* callee, struct JdcStr* result);
+unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params, struct Function* callee, struct JdcStr* result);
 
-int checkForImportCall(struct DecompilationParameters* params);
+int checkForUnknownFunctionCall(struct DecompilationParameters* params);
 
-unsigned char decompileImportCall(struct DecompilationParameters* params, int importIndex, struct JdcStr* result);
+unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* params, struct JdcStr* result);
 
-int getFunctionCallNumber(struct DecompilationParameters* params, unsigned long long callAddr);
+int getImportIndexByAddress(struct DecompilationParameters* params, unsigned long long calleeAddress);
+
+int getFunctionCallNumber(struct DecompilationParameters* params, unsigned long long calleeAddress);
