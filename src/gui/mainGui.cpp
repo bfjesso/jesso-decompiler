@@ -409,23 +409,23 @@ void MainGui::DecompileFunction(int functionIndex)
 	decompParams.currentFunc = &functions[functionIndex];
 	decompParams.startInstructionIndex = 0;
 
-	struct JdcStr decompiledFunction = initializeJdcStr();
-	if (decompiledFunction.bufferSize == 0)
+	struct JdcStr decompilationResult = initializeJdcStr();
+	if (decompilationResult.bufferSize == 0)
 	{
 		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
 		return;
 	}
 
-	if (!decompileFunction(&decompParams, &decompiledFunction))
+	if (!decompileFunction(&decompParams, &decompilationResult))
 	{
-		wxMessageBox("Error decompiling function", "Can't decompile");
-		freeJdcStr(&decompiledFunction);
+		wxMessageBox(decompilationResult.buffer, "Can't decompile");
+		freeJdcStr(&decompilationResult);
 		return;
 	}
 
 	decompilationTextCtrl->SetReadOnly(false);
-	decompilationTextCtrl->SetValue(decompiledFunction.buffer);
-	freeJdcStr(&decompiledFunction);
+	decompilationTextCtrl->SetValue(decompilationResult.buffer);
+	freeJdcStr(&decompilationResult);
 	ApplySyntaxHighlighting(decompParams.currentFunc);
 	decompilationTextCtrl->SetReadOnly(true);
 	currentDecompiledFunc = functionIndex;
