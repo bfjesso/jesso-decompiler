@@ -86,7 +86,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 
 				// setting the type
-				if (params->currentFunc->numOfConditions > 0 && exitIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex &&
+				if (params->currentFunc->numOfConditions > 0 && exitIndex != -1 && exitIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex &&
+					i == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex + 2 && // the Jccs need to be right next to eachother with only comparisson instructions between them
 					instruction->opcode == JZ_SHORT && params->currentFunc->instructions[params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
 					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
 					combinationCount == 0 && params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].numOfCombinedJccs == 0)
