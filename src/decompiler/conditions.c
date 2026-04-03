@@ -242,27 +242,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				break;
 			}
 		}
-
-		// checking for ELSEs with same dstIndex
-		if (params->currentFunc->conditions[i].conditionType == ELSE_CT)
-		{
-			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
-			{
-				if (j == i)
-				{
-					continue;
-				}
-
-				if (params->currentFunc->conditions[j].conditionType == ELSE_CT)
-				{
-					if (params->currentFunc->conditions[i].dstIndex == params->currentFunc->conditions[j].dstIndex && params->currentFunc->conditions[i].jccIndex < params->currentFunc->conditions[j].jccIndex)
-					{
-						params->currentFunc->conditions[i].dstIndex = params->currentFunc->conditions[j].jccIndex;
-						break;
-					}
-				}
-			}
-		}
 	}
 
 	return 1;
