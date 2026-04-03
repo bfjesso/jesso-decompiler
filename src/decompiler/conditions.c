@@ -159,7 +159,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	for (int i = 0; i < ogNumOfConditions; i++) 
 	{
 		if ((params->currentFunc->conditions[i].conditionType == IF_CT || params->currentFunc->conditions[i].conditionType == ELSE_IF_CT) && 
-			params->currentFunc->conditions[i].exitIndex != -1 && 
+			params->currentFunc->conditions[i].exitIndex > params->currentFunc->conditions[i].dstIndex &&
 			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
 			if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[i].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
