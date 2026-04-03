@@ -113,7 +113,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].decompileAsReturn = 1;
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
 				}
-				else if (exitIndex != -1 && exitIndex < i)
+				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = LOOP_CT;
 				}
