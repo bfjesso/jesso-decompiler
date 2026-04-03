@@ -18,15 +18,18 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
 	
-	disassemblyTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 300));
+	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
+	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
+
+	disassemblyTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
 	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
-	decompilationTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 300));
+	decompilationTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
-	functionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
+	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 100));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
 	functionsGrid->SetLabelTextColour(textColor);
 	functionsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -89,18 +92,15 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
-	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
+	topSplitter->SplitVertically(disassemblyTextCtrl, decompilationTextCtrl, 0);
+	topSplitter->SetMinimumPaneSize(100);
+
+	mainSplitter->SplitHorizontally(topSplitter, functionsGrid, 300);
+	mainSplitter->SetMinimumPaneSize(100);
+
 	vSizer = new wxBoxSizer(wxVERTICAL);
-
-	row1Sizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT | wxLEFT, 10);
-	row1Sizer->Add(decompilationTextCtrl, 1, wxEXPAND | wxBOTTOM | wxRIGHT, 10);
-
-	row2Sizer->Add(functionsGrid, 1, wxBOTTOM | wxRIGHT | wxLEFT, 10);
-
 	vSizer->Add(statusStaticText, 0, wxTOP | wxLEFT, 10);
-	vSizer->Add(row1Sizer, 1, wxEXPAND);
-	vSizer->Add(row2Sizer, 0, wxEXPAND);
+	vSizer->Add(mainSplitter, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	SetSizerAndFit(vSizer);
 }

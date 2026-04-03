@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/grid.h>
+#include <wx/splitter.h>
 #include "disassembleBytesMenu.h"
 #include "dataViewerMenu.h"
 #include "importsViewerMenu.h"
@@ -32,8 +33,8 @@ public:
 
 	wxGrid* functionsGrid = nullptr;
 
-	wxBoxSizer* row1Sizer = nullptr;
-	wxBoxSizer* row2Sizer = nullptr;
+	wxSplitterWindow* mainSplitter = nullptr;
+	wxSplitterWindow* topSplitter = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxString currentFilePath = "";
