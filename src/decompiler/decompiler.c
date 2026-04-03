@@ -52,6 +52,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	params->numOfIndents = 1;
+	unsigned char isInUnreachableState = 0;
 	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
 	{
 		if (params->numOfIndents < 1)
@@ -68,12 +69,27 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		if (!decompileConditions(params, result))
+		if (checkForDirectJmpEnd(params) || checkForConditionEnd(params)) 
+		{
+			isInUnreachableState = 0;
+		}
+
+		if (isInUnreachableState) 
+		{
+			continue;
+		}
+
+		if (!decompileDirectJmps(params, result)) 
 		{
 			return 0;
 		}
 
-		if (!decompileDirectJmps(params, result)) 
+		if (checkForDirectJmpStart(params))
+		{
+			isInUnreachableState = 1;
+		}
+
+		if (!decompileConditions(params, result))
 		{
 			return 0;
 		}
@@ -118,6 +134,8 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			{
 				return 0;
 			}
+
+			isInUnreachableState = 1;
 		}
 	}
 

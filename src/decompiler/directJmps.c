@@ -140,3 +140,29 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, struct
 
 	return 1;
 }
+
+unsigned char checkForDirectJmpStart(struct DecompilationParameters* params)
+{
+	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
+	{
+		if (params->startInstructionIndex == params->currentFunc->directJmps[i].jmpIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+unsigned char checkForDirectJmpEnd(struct DecompilationParameters* params)
+{
+	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
+	{
+		if (params->startInstructionIndex == params->currentFunc->directJmps[i].dstIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}

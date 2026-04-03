@@ -641,3 +641,16 @@ int checkForConditionStart(struct DecompilationParameters* params)
 
 	return -1;
 }
+
+unsigned char checkForConditionEnd(struct DecompilationParameters* params)
+{
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		if (params->startInstructionIndex == getConditionEnd(&params->currentFunc->conditions[i]))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
