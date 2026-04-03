@@ -203,22 +203,17 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	//	}
 	//}
 
+	// checking for overlapping conditions which need to be handled as go to
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->currentFunc->conditions[i].decompileAsReturn || params->currentFunc->conditions[i].conditionType == SWITCH_CASE_CT)
+		if (params->currentFunc->conditions[i].decompileAsReturn || params->currentFunc->conditions[i].conditionType == SWITCH_CASE_CT || params->currentFunc->conditions[i].conditionType == ELSE_CT)
 		{
 			continue;
 		}
 
-		int start1 = params->currentFunc->conditions[i].jccIndex;
-		int end1 = params->currentFunc->conditions[i].dstIndex;
-		if (end1 < start1)
-		{
-			start1 = params->currentFunc->conditions[i].dstIndex;
-			end1 = params->currentFunc->conditions[i].jccIndex;
-		}
+		int start1 = getConditionStart(&params->currentFunc->conditions[i]);
+		int end1 = getConditionEnd(&params->currentFunc->conditions[i]);
 		
-		// checking for overlapping conditions which need to be handled as go to
 		for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 		{
 			
@@ -227,13 +222,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				continue;
 			}
 
-			int start2 = params->currentFunc->conditions[j].jccIndex;
-			int end2 = params->currentFunc->conditions[j].dstIndex;
-			if (end2 < start2)
-			{
-				start2 = params->currentFunc->conditions[j].dstIndex;
-				end2 = params->currentFunc->conditions[j].jccIndex;
-			}
+			int start2 = getConditionStart(&params->currentFunc->conditions[j]);
+			int end2 = getConditionEnd(&params->currentFunc->conditions[j]);
 			
 			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2))
 			{
