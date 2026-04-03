@@ -122,8 +122,10 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = DO_WHILE_CT;
 				}
-				else if (params->currentFunc->numOfConditions > 0 && exitIndex != -1 &&
-					params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex == exitIndex && // check for else if
+				else if (params->currentFunc->numOfConditions > 0 && 
+					(params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == IF_CT || params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].conditionType == ELSE_IF_CT) &&
+					i == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex + 1 && // assuming again that the previous Jcc jumps directly to this one's comparisson instruction
+					exitIndex != -1 && params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex == exitIndex && // check for else if
 					dstIndex > params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].dstIndex) // also have to check that its not nested
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_IF_CT;
