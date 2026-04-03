@@ -51,7 +51,7 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
 				// checking if the jmp is part of a condtion
-				if (i == params->currentFunc->conditions[j].jccIndex || (i == params->currentFunc->conditions[j].dstIndex - 1 && params->currentFunc->conditions[j].conditionType == LOOP_CT))
+				if (i == params->currentFunc->conditions[j].jccIndex - 1 || (i == params->currentFunc->conditions[j].dstIndex - 1 && params->currentFunc->conditions[j].conditionType == LOOP_CT))
 				{
 					directJmpType = NONE_DJT;
 					break;
