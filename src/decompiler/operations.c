@@ -404,16 +404,6 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 		if (getAssignment) { sprintfJdc(result, 0, "%s >>= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
 		else { sprintfJdc(result, 0, " >> %s", decompiledSecondOperand.buffer); }
 	}
-	else if (isOpcodeMul(instruction->opcode))
-	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s *= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
-		else { sprintfJdc(result, 0, " * %s", decompiledSecondOperand.buffer); }
-	}
-	else if (isOpcodeDiv(instruction->opcode))
-	{
-		if (getAssignment) { sprintfJdc(result, 0, "%s /= %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }
-		else { sprintfJdc(result, 0, " / %s", decompiledSecondOperand.buffer); }
-	}
 	else if (isOpcodeCvtToDbl(instruction->opcode))
 	{
 		if (getAssignment) { sprintfJdc(result, 0, "%s = (double)%s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer); }

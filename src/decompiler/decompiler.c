@@ -63,6 +63,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
 
+		if (currentInstruction->opcode > lastImplementedOpcode) // temporary check for opcodes not implemented yet in the decompiler
+		{
+			return 0;
+		}
+
 		if (!decompileConditions(params, result))
 		{
 			return 0;
