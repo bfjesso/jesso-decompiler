@@ -9,7 +9,7 @@ static unsigned char handleCombinedJccResize(struct Condition* condition);
 
 unsigned char decompileConditions(struct DecompilationParameters* params, struct JdcStr* result);
 
-static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, struct JdcStr* result);
+static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
 
 int getConditionStart(struct Condition* condition);
 

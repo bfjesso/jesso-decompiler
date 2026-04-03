@@ -315,7 +315,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 		if (params->startInstructionIndex == getConditionEnd(condition))
 		{
-			if (!decompileCondition(params, i, result))
+			if (!decompileCondition(params, i, 0, result))
 			{
 				return 0;
 			}
@@ -347,7 +347,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 		if (params->startInstructionIndex == getConditionStart(condition))
 		{
-			if (!decompileCondition(params, i, result))
+			if (!decompileCondition(params, i, 1, result))
 			{
 				return 0;
 			}
@@ -382,14 +382,14 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 	return 1;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, struct JdcStr* result)
+static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result)
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 	int ogStartInstructionIndex = params->startInstructionIndex;
 
-	if (params->startInstructionIndex == condition->dstIndex) 
+	if (decompileStart) 
 	{
-		if (condition->conditionType == DO_WHILE_CT) 
+		if (condition->conditionType == DO_WHILE_CT)
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "do\n");
@@ -404,7 +404,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		}
 		else if (condition->conditionType == SWITCH_CASE_CT)
 		{
-			if (condition->isFirstSwitchCase) 
+			if (condition->isFirstSwitchCase)
 			{
 				struct JdcStr switchVar = initializeJdcStr();
 				if (!decompileOperand(params, &condition->cmpInstruction->operands[0], &switchVar))
@@ -421,12 +421,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 				freeJdcStr(&switchVar);
 			}
-			else 
+			else
 			{
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "break;\n");
 			}
-			
+
 			struct JdcStr value = initializeJdcStr();
 			if (!decompileOperand(params, &condition->cmpInstruction->operands[1], &value))
 			{
@@ -439,37 +439,27 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			freeJdcStr(&value);
 			return 1;
 		}
-		else 
+		else if (condition->conditionType == ELSE_CT)
 		{
-			params->numOfIndents--;
 			addIndents(result, params->numOfIndents);
-			strcatJdc(result, "}\n");
+			strcatJdc(result, "else\n");
+			addIndents(result, params->numOfIndents);
+			strcatJdc(result, "{\n");
+			params->numOfIndents++;
 			return 1;
 		}
 	}
-	else if (condition->conditionType == LOOP_CT && params->startInstructionIndex == condition->jccIndex)
+	else 
 	{
+		if (condition->isFirstSwitchCase)
+		{
+			addIndents(result, params->numOfIndents);
+			strcatJdc(result, "break;\n");
+		}
+
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
-		return 1;
-	}
-	else if (params->startInstructionIndex == condition->exitIndex && condition->isFirstSwitchCase)
-	{
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "break;\n");
-		params->numOfIndents--;
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "}\n");
-		return 1;
-	}
-	else if (condition->conditionType == ELSE_CT)
-	{
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "else\n");
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, "{\n");
-		params->numOfIndents++;
 		return 1;
 	}
 
@@ -535,7 +525,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	if (condition->combinedConditionIndex)
 	{
 		params->startInstructionIndex = params->currentFunc->conditions[condition->combinedConditionIndex].jccIndex;
-		if (decompileCondition(params, condition->combinedConditionIndex, &combinedConditionExpression))
+		if (decompileCondition(params, condition->combinedConditionIndex, 1, &combinedConditionExpression))
 		{
 			if (!wrapJdcStrInParentheses(&conditionExpression))
 			{
