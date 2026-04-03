@@ -16,7 +16,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 			{
 				return sprintfJdc(result, 0, "-%lli", -operand->immediate.value);
 			}
-			else if (operand->immediate.value > 0 && operand->immediate.value < 10)
+			else if (operand->immediate.value >= 0 && operand->immediate.value < 10)
 			{
 				return sprintfJdc(result, 0, "%lli", operand->immediate.value);
 			}
