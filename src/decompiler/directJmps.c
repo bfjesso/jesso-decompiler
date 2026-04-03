@@ -1,6 +1,7 @@
 #include "directJmps.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
+#include "conditions.h"
 
 unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 {
@@ -50,22 +51,19 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
 				// checking if the jmp is part of a condtion
-				if (i == params->currentFunc->conditions[j].dstIndex - 1 || 
-					i == params->currentFunc->conditions[j].dstIndex - 2 || 
-					i == params->currentFunc->conditions[j].exitIndex - 1 || 
-					i == params->currentFunc->conditions[j].jccIndex) 
+				if (i == params->currentFunc->conditions[j].jccIndex || (i == params->currentFunc->conditions[j].dstIndex - 1 && params->currentFunc->conditions[j].conditionType == LOOP_CT))
 				{
 					directJmpType = NONE_DJT;
 					break;
 				}
-				else if (params->currentFunc->conditions[j].conditionType == LOOP_CT)
+				else if (params->currentFunc->conditions[j].conditionType == LOOP_CT || params->currentFunc->conditions[j].conditionType == DO_WHILE_CT)
 				{
-					if (dstIndex == params->currentFunc->conditions[j].jccIndex + 1)
+					if (dstIndex == getConditionStart(&params->currentFunc->conditions[j]))
 					{
 						directJmpType = CONTINUE_DJT;
 						break;
 					}
-					else if(dstIndex == params->currentFunc->conditions[j].dstIndex)
+					else if(dstIndex == getConditionEnd(&params->currentFunc->conditions[j]))
 					{
 						directJmpType = BREAK_DJT;
 						break;
