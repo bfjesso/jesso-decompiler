@@ -339,6 +339,10 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		strcatJdc(result, ")");
 
 		params->startInstructionIndex = ogStartInstructionIndex;
+		if(callInstruction->operands[0].type == REGISTER)
+		{
+			params->startInstructionIndex--;
+		}
 
 		struct JdcStr functionPointer = initializeJdcStr();
 		if (!decompileOperand(params, &callInstruction->operands[0], &functionPointer))
