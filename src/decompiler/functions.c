@@ -215,10 +215,11 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		// check for return value
 		if (!canReturnNothing) // if the function can return nothing, its return type must be void
 		{
+			unsigned char regOperandNum = 0;
 			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(currentInstruction, AX, 0, &srcOperandNum, 0))
+			if (doesInstructionModifyRegister(currentInstruction, AX, &regOperandNum, 0, 0))
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 				result->returnReg = AX;
 				result->addressOfReturnFunction = 0;
 			}
