@@ -103,8 +103,19 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			sprintfJdc(result, 0, "Error decompiling condition at 0x%llX.", currentInstruction->address);
 			return 0;
 		}
+		else if (checkForReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+		{
+			if (!decompileReturnStatement(params, result))
+			{
+				sprintfJdc(result, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
+				return 0;
+			}
+
+			isInUnreachableState = 1;
+		}
 
 		struct Function* callee;
+		struct IntrinsicFunc* intrinsicFunc;
 		if (checkForKnownFunctionCall(params, &callee))
 		{
 			if (!decompileKnownFunctionCall(params, callee, result))
@@ -113,8 +124,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				return 0;
 			}
 		}
-
-		if (checkForUnknownFunctionCall(params))
+		else if (checkForUnknownFunctionCall(params))
 		{
 			if (!decompileUnknownFunctionCall(params, result))
 			{
@@ -122,9 +132,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				return 0;
 			}
 		}
-
-		struct IntrinsicFunc* intrinsicFunc;
-		if (checkForVoidIntrinsicFunc(params, &intrinsicFunc))
+		else if (checkForVoidIntrinsicFunc(params, &intrinsicFunc))
 		{
 			if (!decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
@@ -139,17 +147,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				sprintfJdc(result, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
 				return 0;
 			}
-		}
-
-		if (checkForReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
-		{
-			if (!decompileReturnStatement(params, result))
-			{
-				sprintfJdc(result, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
-				return 0;
-			}
-
-			isInUnreachableState = 1;
 		}
 	}
 
