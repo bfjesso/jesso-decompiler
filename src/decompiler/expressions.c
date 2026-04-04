@@ -435,11 +435,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		unsigned char srcOperandNum = 0;
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &srcOperandNum, &finished))
 		{
-			if (currentInstruction->operands[srcOperandNum].type == REGISTER && compareRegisters(targetReg, currentInstruction->operands[srcOperandNum].reg)) 
-			{
-				params->startInstructionIndex--;
-			}
-			
 			expressions[expressionIndex] = initializeJdcStr();
 			if (!decompileOperation(params, targetReg, 0, &expressions[expressionIndex]))
 			{
