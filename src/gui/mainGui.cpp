@@ -29,7 +29,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	SetUpStyledTextCtrl(decompilationTextCtrl);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
-	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 100));
+	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
 	functionsGrid->SetLabelTextColour(textColor);
 	functionsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -93,9 +93,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	this->SetMenuBar(menuBar);
 
 	topSplitter->SplitVertically(disassemblyTextCtrl, decompilationTextCtrl, 0);
+	topSplitter->SetSashGravity(0.5);
 	topSplitter->SetMinimumPaneSize(100);
 
-	mainSplitter->SplitHorizontally(topSplitter, functionsGrid, 300);
+	mainSplitter->SplitHorizontally(topSplitter, functionsGrid, 150);
+	mainSplitter->SetSashGravity(0.5);
 	mainSplitter->SetMinimumPaneSize(100);
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
