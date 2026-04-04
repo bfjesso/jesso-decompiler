@@ -612,10 +612,10 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
 
 	menu.Append(ID_VIEW_INFO, "View info");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionInfoMenu = new FunctionInfoMenu(GetPosition(), &functions[row]); }, ID_VIEW_INFO);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionInfoMenu(this, GetPosition(), &functions[row]); }, ID_VIEW_INFO);
 
 	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { functionPropertiesMenu = new FunctionPropertiesMenu(GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionPropertiesMenu(this, GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
 
 	menu.Append(ID_COPY_ADDRESS, "Copy address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
@@ -837,14 +837,6 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	dataViewerMenu->Destroy();
 	importsViewerMenu->Destroy();
 	colorsMenu->Destroy();
-	if (functionPropertiesMenu) 
-	{
-		functionPropertiesMenu->Destroy();
-	}
-	if (functionInfoMenu)
-	{
-		functionInfoMenu->Destroy();
-	}
 	Destroy();
 }
 
@@ -1183,7 +1175,7 @@ wxBEGIN_EVENT_TABLE(FunctionPropertiesMenu, wxFrame)
 EVT_CLOSE(FunctionPropertiesMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-FunctionPropertiesMenu::FunctionPropertiesMenu(wxPoint position, MainGui* main, int funcIndex) : wxFrame(nullptr, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
+FunctionPropertiesMenu::FunctionPropertiesMenu(wxWindow* parent, wxPoint position, MainGui* main, int funcIndex) : wxFrame(parent, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
 {
 	Function* function = &(main->functions[funcIndex]);
 	

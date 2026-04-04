@@ -5,7 +5,7 @@
 class FunctionInfoMenu : public wxFrame, public Utils
 {
 public:
-	FunctionInfoMenu(wxPoint position, Function* function);
+	FunctionInfoMenu(wxWindow* parent, wxPoint position, Function* function);
 
     wxStaticText* returnTypeStaticTxt = nullptr;
     wxStaticText* returnRegStaticTxt = nullptr;

@@ -7,7 +7,7 @@ wxBEGIN_EVENT_TABLE(FunctionInfoMenu, wxFrame)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoMenu::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoMenu::FunctionInfoMenu(wxPoint position, Function* function) : wxFrame(nullptr, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(800, 600))
+FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(800, 600))
 {
     SetOwnBackgroundColour(backgroundColor);
 

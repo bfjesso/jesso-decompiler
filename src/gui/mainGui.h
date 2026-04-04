@@ -22,9 +22,7 @@ public:
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
 	ImportsViewer* importsViewerMenu = nullptr;
-	ColorsMenu* colorsMenu = nullptr;
-	FunctionPropertiesMenu* functionPropertiesMenu = nullptr;
-	FunctionInfoMenu* functionInfoMenu = nullptr;
+	ColorsMenu* colorsMenu = nullptr;;
 
 	wxStaticText* statusStaticText = nullptr;
 
@@ -117,7 +115,7 @@ public:
 class FunctionPropertiesMenu : public wxFrame, public Utils
 {
 public:
-	FunctionPropertiesMenu(wxPoint position, MainGui* main, int funcIndex);
+	FunctionPropertiesMenu(wxWindow* parent, wxPoint position, MainGui* main, int funcIndex);
 
 	wxStaticText* functionNameLabel = nullptr;
 	wxTextCtrl* functionNameTextCtrl;
