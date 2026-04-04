@@ -21,8 +21,9 @@ struct IntrinsicFunc voidIntrinsicFuncs[] =
 	{ INT3, { 0, 0, 0, 0 }, "__debugbreak" },
 	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
 	{ UD2, { 0, 0, 0, 0 }, "__ud2" },
+	{ HLT, { 0, 0, 0, 0 }, "__halt" },
 };
-const int numOfVoidIntrinsicFuncs = 3;
+const int numOfVoidIntrinsicFuncs = 4;
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
 {
