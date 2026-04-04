@@ -48,6 +48,8 @@ extern const char* mnemonicStrs[] =
 
 	"STMXCSR",
 
+	"ENTER", "LEAVE",
+
 	"UD2",
 
 
@@ -68,13 +70,13 @@ extern const char* mnemonicStrs[] =
 	"BOUND", "BSF", "BSR", "BSWAP", "BT", "BTC", "BTR", "BTS", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
 	"CDQ", "CWD", "CQO", "CLAC", "CLC", "CLD", "CLI", "CLTS", "CMC", "CMPS", "CMPXCHG", "CPUID", "CBW", "CWDE", "CDQE",
 	"DAA", "DAS", "DIV",
-	"EMMS", "ENCLS", "ENCLU", "ENDBR", "ENTER",
+	"EMMS", "ENCLS", "ENCLU", "ENDBR",
 	"F2XM1", "FABS", "FADD", "FADDP", "FBLD", "FBSTP", "FCHS", "FCLEX", "FCMOVB", "FCMOVBE", "FCMOVE", "FCMOVNB", "FCMOVNBE", "FCMOVNE", "FCMOVNU", "FCMOVU", "FCOM", "FCOMI", "FCOMIP", "FCOMP", "FCOMPP", "FCOS", "FDECSTP", "FDIV", "FDIVP", "FDIVR", "FDIVRP", "FFREE", "FIADD", "FICOM", "FICOMP", "FIDIV", "FIDIVR", "FILD", "FIMUL", "FINCSTP", "FINIT", "FIST", "FISTP", "FISTTP", "FISUB", "FISUBR", "FLD1", "FLDCW", "FLDENV", "FLDL2E", "FLDL2T", "FLDLG2", "FLDLN2", "FLDPI", "FLDZ", "FMUL", "FMULP", "FNOP", "FPATAN", "FPREM", "FPREM1", "FPTAN", "FRNDINT", "FRSTOR", "FSAVE", "FSCALE", "FSIN", "FSINCOS", "FSQRT", "FST", "FSTCW", "FSTENV", "FSTP", "FSTSW", "FSUB", "FSUBP", "FSUBR", "FSUBRP", "FTST", "FUCOM", "FUCOMI", "FUCOMIP", "FUCOMP", "FUCOMPP", "FXAM", "FXCH", "FXTRACT", "FYL2X", "FYL2XP1",
 	"GETSEC",
 	"HLT",
 	"IN", "INS", "INT1", "INTO", "INVD", "IRET",
 	"JRCXZ", "JMPE",
-	"LAHF", "LAR", "VLDDQU", "LDDQU", "LDS", "LEAVE", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
+	"LAHF", "LAR", "VLDDQU", "LDDQU", "LDS", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
 	"MONITOR", "MUL", "MWAIT",
 	"NOT",
 	"OUT", "OUTS",
