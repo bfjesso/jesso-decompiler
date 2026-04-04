@@ -124,7 +124,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		}
 
 		struct IntrinsicFunc* intrinsicFunc;
-		if (checkForVoidIntrinsicFunc(currentInstruction->opcode, &intrinsicFunc))
+		if (checkForVoidIntrinsicFunc(params, &intrinsicFunc))
 		{
 			if (!decompileVoidIntrinsicFunc(params, intrinsicFunc, result))
 			{
@@ -132,8 +132,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				return 0;
 			}
 		}
-
-		if (checkForAssignment(params))
+		else if (checkForAssignment(params))
 		{
 			if (!decompileAssignments(params, result))
 			{

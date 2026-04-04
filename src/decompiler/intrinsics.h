@@ -29,6 +29,6 @@ unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct Intrin
 
 unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result);
 
-unsigned char checkForVoidIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
+unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc** intrinsicFuncRef);
 
 unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result);

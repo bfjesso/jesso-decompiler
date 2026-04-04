@@ -22,8 +22,9 @@ struct IntrinsicFunc voidIntrinsicFuncs[] =
 	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
 	{ UD2, { 0, 0, 0, 0 }, "__ud2" },
 	{ HLT, { 0, 0, 0, 0 }, "__halt" },
+	{ MOVS, { 1, 1, 0, 0 }, "__movs" }, // REPZ prefix must be used
 };
-const int numOfVoidIntrinsicFuncs = 4;
+const int numOfVoidIntrinsicFuncs = 5;
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
 {
@@ -95,12 +96,23 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	return 1;
 }
 
-unsigned char checkForVoidIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
+unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc** intrinsicFuncRef)
 {
+	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
+	
 	for (int i = 0; i < numOfVoidIntrinsicFuncs; i++)
 	{
-		if (opcode == voidIntrinsicFuncs[i].opcode)
+		if (instruction->opcode == voidIntrinsicFuncs[i].opcode)
 		{
+			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29)) 
+			{
+				continue;
+			}
+			else if (instruction->opcode == MOVS && instruction->group1Prefix != REPZ)
+			{
+				continue;
+			}
+
 			*intrinsicFuncRef = &voidIntrinsicFuncs[i];
 			return 1;
 		}
@@ -114,23 +126,6 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
 
 	addIndents(result, params->numOfIndents);
-
-	if (intrinsicFunc->opcode == _INT) 
-	{
-		if (instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0x29) 
-		{
-			struct JdcStr code = initializeJdcStr();
-			if (decompileRegister(params, CX, &code, 0))
-			{
-				sprintfJdc(result, 1, "%s(%s);\n", intrinsicFunc->name, code.buffer);
-			}
-
-			freeJdcStr(&code);
-			return 1;
-		}
-
-		return 0;
-	}
 	
 	sprintfJdc(result, 1, "%s(", intrinsicFunc->name);
 
@@ -163,6 +158,47 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 				strcatJdc(result, ", ");
 			}
 		}
+	}
+
+	if (intrinsicFunc->opcode == _INT)
+	{
+		struct JdcStr code = initializeJdcStr();
+		if (!decompileRegister(params, CX, &code, 0))
+		{
+			freeJdcStr(&code);
+			return 0;
+		}
+
+		sprintfJdc(result, 1, "%s)", intrinsicFunc->name, code.buffer);
+		freeJdcStr(&code);
+	}
+	else if (intrinsicFunc->opcode == MOVS)
+	{
+		struct JdcStr count = initializeJdcStr();
+		if (!decompileRegister(params, CX, &count, 0))
+		{
+			freeJdcStr(&count);
+			return 0;
+		}
+
+		switch (instruction->operands[0].memoryAddress.ptrSize)
+		{
+		case 1:
+			strcatJdc(&count, " * sizeof(char)");
+			break;
+		case 2:
+			strcatJdc(&count, " * sizeof(short)");
+			break;
+		case 4:
+			strcatJdc(&count, " * sizeof(int)");
+			break;
+		case 8:
+			strcatJdc(&count, " * sizeof(long long)");
+			break;
+		}
+
+		sprintfJdc(result, 1, ", %s)", count.buffer);
+		freeJdcStr(&count);
 	}
 
 	strcatJdc(result, ");\n");
