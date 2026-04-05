@@ -60,15 +60,21 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 				}
 				else if (params->currentFunc->conditions[j].conditionType == LOOP_CT || params->currentFunc->conditions[j].conditionType == DO_WHILE_CT)
 				{
-					if (dstIndex == getConditionStart(&params->currentFunc->conditions[j]))
+					int loopStart = getConditionStart(&params->currentFunc->conditions[j]);
+					int loopEnd = getConditionEnd(&params->currentFunc->conditions[j]);
+					
+					if (i > loopStart && i < loopEnd) 
 					{
-						directJmpType = CONTINUE_DJT;
-						break;
-					}
-					else if(dstIndex == getConditionEnd(&params->currentFunc->conditions[j]))
-					{
-						directJmpType = BREAK_DJT;
-						break;
+						if (dstIndex == loopStart)
+						{
+							directJmpType = CONTINUE_DJT;
+							break;
+						}
+						else if (dstIndex == loopEnd)
+						{
+							directJmpType = BREAK_DJT;
+							break;
+						}
 					}
 				}
 			}
