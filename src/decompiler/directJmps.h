@@ -5,8 +5,6 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params);
 
 static unsigned char handleDirectJmpsResize(struct DecompilationParameters* params);
 
-unsigned char decompileDirectJmps(struct DecompilationParameters* params, struct JdcStr* result);
+unsigned char decompileDirectJmps(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
 
-unsigned char checkForDirectJmpStart(struct DecompilationParameters* params);
-
-unsigned char checkForDirectJmpEnd(struct DecompilationParameters* params);
+unsigned char checkForDirectJmpDst(struct DecompilationParameters* params);

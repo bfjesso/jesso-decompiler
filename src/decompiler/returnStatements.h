@@ -7,4 +7,4 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params);
 
 unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params);
 
-unsigned char decompileReturnStatement(struct DecompilationParameters* params, struct JdcStr* result);
+unsigned char decompileReturnStatement(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result);

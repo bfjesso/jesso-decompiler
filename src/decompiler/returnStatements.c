@@ -83,7 +83,7 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 	return 0;
 }
 
-unsigned char decompileReturnStatement(struct DecompilationParameters* params, struct JdcStr* result)
+unsigned char decompileReturnStatement(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
@@ -93,6 +93,8 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, s
 			return 1;
 		}
 	}
+
+	if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 
 	addIndents(result, params->numOfIndents);
 	

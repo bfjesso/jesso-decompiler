@@ -333,7 +333,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 			if (condition->decompileAsReturn)
 			{
-				if (!decompileReturnStatement(params, result))
+				if (!decompileReturnStatement(params, 0, result))
 				{
 					return 0;
 				}
@@ -652,6 +652,19 @@ unsigned char checkForConditionEnd(struct DecompilationParameters* params)
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (params->startInstructionIndex == getConditionEnd(&params->currentFunc->conditions[i]))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+unsigned char checkForConditionDst(struct DecompilationParameters* params)
+{
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].dstIndex)
 		{
 			return 1;
 		}

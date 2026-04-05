@@ -62,6 +62,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
+
+		if (currentInstruction->address == 0x1401070A4) 
+		{
+			int tt = 0;
+		}
 		
 		if (params->numOfIndents < 1)
 		{
@@ -77,7 +82,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		if (checkForDirectJmpEnd(params) || checkForConditionEnd(params)) 
+		if (checkForDirectJmpDst(params) || checkForConditionDst(params))
 		{
 			isInUnreachableState = 0;
 		}
@@ -87,15 +92,10 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			continue;
 		}
 
-		if (!decompileDirectJmps(params, result)) 
+		if (!decompileDirectJmps(params, &isInUnreachableState, result))
 		{
 			sprintfJdc(result, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
 			return 0;
-		}
-
-		if (checkForDirectJmpStart(params))
-		{
-			isInUnreachableState = 1;
 		}
 
 		if (!decompileConditions(params, result))
@@ -103,15 +103,14 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			sprintfJdc(result, 0, "Error decompiling condition at 0x%llX.", currentInstruction->address);
 			return 0;
 		}
-		else if (checkForReturnStatement(params))
+
+		if (checkForReturnStatement(params))
 		{
-			if (!decompileReturnStatement(params, result))
+			if (!decompileReturnStatement(params, &isInUnreachableState, result))
 			{
 				sprintfJdc(result, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
 				return 0;
 			}
-
-			isInUnreachableState = 1;
 		}
 
 		struct Function* callee;
