@@ -110,7 +110,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						params->currentFunc->conditions[params->currentFunc->numOfConditions].isFirstSwitchCase = 1;
 					}
 				}
-				else if (checkForJumpToReturnStatement(params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				else if (checkForJumpToReturnStatement(params, params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].decompileAsReturn = 1;
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
@@ -166,7 +166,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			params->currentFunc->conditions[i].exitIndex > params->currentFunc->conditions[i].dstIndex &&
 			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
-			if (!checkForReturnStatement(params->currentFunc, params->currentFunc->conditions[i].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+			if (!checkForReturnStatement(params, params->currentFunc, params->currentFunc->conditions[i].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
 			{
 				if (!handleConditionsResize(params))
 				{

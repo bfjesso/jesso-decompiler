@@ -277,7 +277,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 		}
 		
-		if (checkForReturnStatement(result, i, params->allInstructions, params->totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(params, result, i, params->allInstructions, params->totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{

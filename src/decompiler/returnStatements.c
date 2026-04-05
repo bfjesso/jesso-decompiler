@@ -29,7 +29,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	return 0;
 }
 
-unsigned char checkForReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForReturnStatement(struct DecompilationParameters* params, struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
 
@@ -41,13 +41,13 @@ unsigned char checkForReturnStatement(struct Function* function, int startInstru
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		return checkForJumpToReturnStatement(function, startInstructionIndex, instructions, numOfInstructions);
+		return checkForJumpToReturnStatement(params, function, startInstructionIndex, instructions, numOfInstructions);
 	}
 
 	return 0;
 }
 
-unsigned char checkForJumpToReturnStatement(struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params, struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
 {
 	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
 
@@ -56,8 +56,8 @@ unsigned char checkForJumpToReturnStatement(struct Function* function, int start
 		return 0;
 	}
 
-	unsigned long long jmpDst = instruction->address + instruction->operands[0].immediate.value;
-	int jmpDstIndex = findInstructionByAddress(instructions, 0, numOfInstructions - 1, jmpDst);
+	int currentInstructionIndex = findInstructionByAddress(instruction, 0, numOfInstructions, instruction->address);
+	unsigned long long jmpDstIndex = resolveJmpChain(params, currentInstructionIndex);
 
 	if (jmpDstIndex == -1 || jmpDstIndex >= numOfInstructions)
 	{
