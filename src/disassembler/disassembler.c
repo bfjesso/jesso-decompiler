@@ -288,7 +288,8 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeSETcc(instruction->opcode) ||
 			instruction->opcode == STMXCSR ||
 			isOpcodeAES(instruction->opcode) ||
-			isOpcodeShuf(instruction->opcode))
+			isOpcodeShuf(instruction->opcode) ||
+			instruction->opcode == XCHG)
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
@@ -309,7 +310,12 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	}
 	else if (operandNum == 1) 
 	{
-		if (isOpcodeXor(instruction->opcode))
+		if (instruction->opcode == XCHG) 
+		{
+			if (overwrites != 0) { *overwrites = 1; }
+			return 1;
+		}
+		else if (isOpcodeXor(instruction->opcode))
 		{
 			if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 			{

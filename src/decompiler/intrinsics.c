@@ -1,6 +1,7 @@
 #include "intrinsics.h"
 #include "decompilationUtils.h"
 #include "expressions.h"
+#include "functions.h"
 
 struct IntrinsicFunc returningIntrinsicFuncs[] =
 {
@@ -23,8 +24,9 @@ struct IntrinsicFunc voidIntrinsicFuncs[] =
 	{ UD2, { 0, 0, 0, 0 }, "__ud2" },
 	{ HLT, { 0, 0, 0, 0 }, "__halt" },
 	{ MOVS, { 1, 1, 0, 0 }, "__movs" }, // REPZ prefix must be used
+	{ XCHG, { 1, 1, 0, 0 }, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
-const int numOfVoidIntrinsicFuncs = 5;
+const int numOfVoidIntrinsicFuncs = 6;
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
 {
@@ -111,6 +113,21 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 			else if (instruction->opcode == MOVS && instruction->group1Prefix != REPZ)
 			{
 				continue;
+			}
+			else if (instruction->opcode == XCHG)
+			{
+				if (instruction->operands[0].type == MEM_ADDRESS && !getRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				{
+					continue;
+				}
+				else if (instruction->operands[1].type == MEM_ADDRESS && !getRegVarByReg(params->currentFunc, instruction->operands[0].reg))
+				{
+					continue;
+				}
+				else if (!getRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				{
+					continue;
+				}
 			}
 
 			*intrinsicFuncRef = &voidIntrinsicFuncs[i];

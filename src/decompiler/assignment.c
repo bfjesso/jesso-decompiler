@@ -31,27 +31,31 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 {
 	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
 
-	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
+	for (int i = 0; i < 4; i++) 
 	{
-		struct JdcStr operation = initializeJdcStr();
-		if (!decompileOperation(params, NO_REG, 1, &operation))
+		if (currentInstruction->operands[i].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, i, 0, 0))
 		{
-			freeJdcStr(&operation);
-			return 0;
-		}
+			struct JdcStr operation = initializeJdcStr();
+			if (!decompileOperation(params, NO_REG, 1, i, &operation))
+			{
+				freeJdcStr(&operation);
+				return 0;
+			}
 
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, operation.buffer);
-		freeJdcStr(&operation);
-		strcatJdc(result, ";\n");
+			addIndents(result, params->numOfIndents);
+			strcatJdc(result, operation.buffer);
+			freeJdcStr(&operation);
+			strcatJdc(result, ";\n");
+		}
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		if (doesInstructionModifyRegister(currentInstruction, params->currentFunc->regVars[i].reg, 0, 0, 0))
+		unsigned char regOperandNum = 0;
+		if (doesInstructionModifyRegister(currentInstruction, params->currentFunc->regVars[i].reg, &regOperandNum, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, params->currentFunc->regVars[i].reg, 1, &operation))
+			if (!decompileOperation(params, params->currentFunc->regVars[i].reg, 1, regOperandNum, &operation))
 			{
 				freeJdcStr(&operation);
 				return 0;

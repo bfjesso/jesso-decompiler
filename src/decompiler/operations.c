@@ -3,7 +3,7 @@
 #include "../disassembler/operands.h"
 #include "expressions.h"
 
-unsigned char decompileOperation(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
+unsigned char decompileOperation(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
 
@@ -91,6 +91,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	else if (isOpcodeSETcc(instruction->opcode))
 	{
 		return decompileCMOVcc(params, getAssignment, result);
+	}
+	else if (instruction->opcode == XCHG)
+	{
+		return decompileXCHG(params, targetReg, getAssignment, dstOperandIndex, result);
 	}
 
 	return 0;
@@ -599,4 +603,58 @@ static unsigned char decompilePop(struct DecompilationParameters* params, unsign
 
 	freeJdcStr(&value);
 	return 0;
+}
+
+static unsigned char decompileXCHG(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
+{
+	struct Operand* firstOperand = &params->instructions[params->startInstructionIndex].operands[0];
+	struct Operand* secondOperand = &params->instructions[params->startInstructionIndex].operands[1];
+	
+	if (getAssignment) 
+	{
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (!decompileOperand(params, firstOperand, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (!decompileOperand(params, secondOperand, &decompiledSecondOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
+			return 0;
+		}
+		
+		if (dstOperandIndex == 0) 
+		{
+			sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+		}
+		else 
+		{
+			sprintfJdc(result, 0, "%s = %s", decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
+		}
+
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledSecondOperand);
+		return 1;
+	}
+
+	if (firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg))
+	{
+		if (!decompileOperand(params, secondOperand, result))
+		{
+			return 0;
+		}
+	}
+	else 
+	{
+		if (!decompileOperand(params, firstOperand, result))
+		{
+			return 0;
+		}
+	}
+
+	return 1;
 }

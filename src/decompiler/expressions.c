@@ -436,7 +436,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &srcOperandNum, &finished))
 		{
 			expressions[expressionIndex] = initializeJdcStr();
-			if (!decompileOperation(params, targetReg, 0, &expressions[expressionIndex]))
+			if (!decompileOperation(params, targetReg, 0, 0, &expressions[expressionIndex]))
 			{
 				for (int j = 0; j < expressionIndex; j++)
 				{
