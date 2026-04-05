@@ -426,7 +426,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			return 1;
 		}
 	}
-	else 
+	else if (condition->conditionType != DO_WHILE_CT)
 	{
 		if (condition->isFirstSwitchCase)
 		{
