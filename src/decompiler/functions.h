@@ -9,13 +9,13 @@ extern "C"
 
 	unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex);
 	
-	unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit);
+	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
 
-	unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numOfFunctions);
+	unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
 	void freeFunction(struct Function* function);
 
-	int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address);
+	int findFunctionByAddress(struct DecompilationParameters* params, int low, int high, unsigned long long address);
 
 #ifdef __cplusplus
 }
@@ -23,7 +23,7 @@ extern "C"
 
 static int getStackFrameChange(struct DisassembledInstruction* instruction);
 
-int getStackFrameSizeAtInstruction(struct Function* function, int instructionIndex);
+int getStackFrameSizeAtInstruction(struct DecompilationParameters* params);
 
 struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
 

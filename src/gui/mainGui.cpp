@@ -437,10 +437,9 @@ void MainGui::FindAllFunctions()
 {
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
-	decompParams.startInstructionIndex = 0;
 
-	decompParams.allInstructions = disassembledInstructions.data();
-	decompParams.totalNumOfInstructions = disassembledInstructions.size();
+	decompParams.instructions = disassembledInstructions.data();
+	decompParams.numOfInstructions = disassembledInstructions.size();
 
 	decompParams.imageBase = imageBase;
 	decompParams.dataSections = dataSections;
@@ -460,13 +459,16 @@ void MainGui::FindAllFunctions()
 	{
 		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
-			unsigned long long address = resolveJmpChain(&decompParams, i);
+			decompParams.startInstructionIndex = i;
+			unsigned long long address = resolveJmpChain(&decompParams);
 			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, address) == -1)
 			{
 				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
 			}
 		}
 	}
+
+	decompParams.startInstructionIndex = 0;
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
@@ -483,7 +485,7 @@ void MainGui::FindAllFunctions()
 		}
 
 		currentFunction.name = initializeJdcStr();
-		sprintfJdc(&currentFunction.name, 0, "func%llX", currentFunction.instructions[0].address - imageBase);
+		sprintfJdc(&currentFunction.name, 0, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
@@ -491,14 +493,14 @@ void MainGui::FindAllFunctions()
 		decompParams.startInstructionIndex = instructionIndex;
 	}
 
-	if (functions.size() > 0) 
-	{
-		fixAllFunctionReturnTypes(&functions[0], functions.size(), is64Bit);
-		fixAllFunctionArgs(&functions[0], functions.size());
-	}
-
 	decompParams.functions = &functions[0];
 	decompParams.numOfFunctions = functions.size();
+
+	if (functions.size() > 0) 
+	{
+		fixAllFunctionReturnTypes(&decompParams);
+		fixAllFunctionArgs(&decompParams);
+	}
 }
 
 void MainGui::UpdateDisassemblyTextCtrl()
@@ -562,17 +564,14 @@ void MainGui::UpdateFunctionsGrid()
 	{
 		functionsGrid->AppendRows(1);
 
-		if (functions[i].instructions)
-		{
-			char addressStr[10];
-			sprintf(addressStr, "%llX", functions[i].instructions[0].address);
-			functionsGrid->SetCellValue(i, 0, wxString(addressStr));
+		char addressStr[10];
+		sprintf(addressStr, "%llX", disassembledInstructions[functions[i].firstInstructionIndex].address);
+		functionsGrid->SetCellValue(i, 0, wxString(addressStr));
 
-			functionsGrid->SetCellValue(i, 1, wxString(callingConventionStrs[functions[i].callingConvention]));
-		}
+		functionsGrid->SetCellValue(i, 1, wxString(callingConventionStrs[functions[i].callingConvention]));
 
 		functionsGrid->SetCellValue(i, 2, wxString(functions[i].name.buffer));
-		functionsGrid->SetCellValue(i, 3, std::to_string(functions[i].numOfInstructions));
+		functionsGrid->SetCellValue(i, 3, std::to_string(functions[i].lastInstructionIndex - functions[i].firstInstructionIndex + 1));
 	}
 
 	functionsGrid->Thaw();
@@ -585,7 +584,7 @@ void MainGui::GetFunctionSymbols()
 	int numOfFunctions = functions.size();
 	for (int i = 0; i < numOfFunctions; i++)
 	{
-		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, functions[i].instructions[0].address, &functions[i].name))
+		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[functions[i].firstInstructionIndex].address, &functions[i].name))
 		{
 			functionsGrid->SetCellValue(i, 2, functions[i].name.buffer);
 		}
@@ -612,7 +611,7 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
 
 	menu.Append(ID_VIEW_INFO, "View info");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionInfoMenu(this, GetPosition(), &functions[row]); }, ID_VIEW_INFO);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionInfoMenu(this, GetPosition(), &disassembledInstructions[0], &functions[row]); }, ID_VIEW_INFO);
 
 	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionPropertiesMenu(this, GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
@@ -632,7 +631,7 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 			unsigned long long address = 0;
 			if (txt.ToULongLong(&address, 16)) 
 			{
-				int index = findFunctionByAddress(&functions[0], 0, functions.size() - 1, address);
+				int index = findFunctionByAddress(&decompParams, 0, functions.size() - 1, address);
 				if (index == -1)
 				{
 					wxMessageBox("No function with that address", "Failed to find function");

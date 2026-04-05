@@ -42,7 +42,7 @@ unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct Intrin
 
 unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result)
 {
-	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 
 	if (getAssignment)
 	{
@@ -98,7 +98,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 
 unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc** intrinsicFuncRef)
 {
-	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 	
 	for (int i = 0; i < numOfVoidIntrinsicFuncs; i++)
 	{
@@ -123,7 +123,7 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 
 unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result)
 {
-	struct DisassembledInstruction* instruction = &params->currentFunc->instructions[params->startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 
 	addIndents(result, params->numOfIndents);
 	

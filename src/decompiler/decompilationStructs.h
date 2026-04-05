@@ -148,8 +148,8 @@ struct Function
 	struct RegisterVariable* regVars;
 	unsigned char numOfRegVars;
 
-	struct DisassembledInstruction* instructions;
-	unsigned short numOfInstructions;
+	int firstInstructionIndex;
+	int lastInstructionIndex;
 
 	struct Condition* conditions;
 	int numOfConditions;
@@ -169,8 +169,8 @@ struct DecompilationParameters
 	int startInstructionIndex; // index of instruction to start decompiling from relative to function
 	unsigned char numOfIndents;
 
-	struct DisassembledInstruction* allInstructions;
-	int totalNumOfInstructions;
+	struct DisassembledInstruction* instructions;
+	int numOfInstructions;
 
 	unsigned long long imageBase;
 	struct FileSection* dataSections;

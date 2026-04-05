@@ -8,12 +8,13 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 	}
 }
 
-unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
+unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &params->allInstructions[startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
+	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	unsigned long long jmpAddress = 0;
-	if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &jmpAddress))
+	if (!operandToValue(params, &instruction->operands[0], &jmpAddress))
 	{
 		return 0;
 	}
@@ -23,13 +24,16 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 		jmpAddress += instruction->address;
 	}
 
-	int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jmpAddress);
+	int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
 	if (instructionIndex != -1)
 	{
-		struct DisassembledInstruction* jmpInstruction = &(params->allInstructions[instructionIndex]);
-		if (instructionIndex != startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
+		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
+		if (instructionIndex != params->startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
 		{
-			return resolveJmpChain(params, instructionIndex);
+			params->startInstructionIndex = instructionIndex;
+			unsigned long long result =  resolveJmpChain(params);
+			params->startInstructionIndex = ogStartInstructionIndex;
+			return result;
 		}
 	}
 
@@ -81,7 +85,7 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low
 	return 0;
 }
 
-static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+static unsigned char operandToValue(struct DecompilationParameters* params, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -92,7 +96,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			*result = params->allInstructions[startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			*result = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			return 1;
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
@@ -111,7 +115,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 			baseReg.reg = operand->memoryAddress.reg;
 
 			unsigned long long regValue = 0;
-			if (!operandToValue(params, startInstructionIndex, &baseReg, &regValue))
+			if (!operandToValue(params, &baseReg, &regValue))
 			{
 				return 0;
 			}
@@ -127,11 +131,16 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 	}
 	else if (operand->type == REGISTER)
 	{
-		for (int i = startInstructionIndex - 1; i >= 0; i--)
+		int ogStartInstructionIndex = params->startInstructionIndex;
+		
+		for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
 		{
-			if (params->allInstructions[i].opcode == MOV && compareRegisters(params->allInstructions[i].operands[0].reg, operand->reg))
+			if (params->instructions[i].opcode == MOV && compareRegisters(params->instructions[i].operands[0].reg, operand->reg))
 			{
-				return operandToValue(params, i, &(params->allInstructions[i].operands[1]), result);
+				params->startInstructionIndex = i;
+				unsigned char succeeded = operandToValue(params, &(params->instructions[i].operands[1]), result);
+				params->startInstructionIndex = ogStartInstructionIndex;
+				return succeeded;
 			}
 		}
 

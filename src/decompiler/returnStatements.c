@@ -6,8 +6,8 @@
 
 unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
-	unsigned long long address = params->currentFunc->instructions[params->startInstructionIndex].address;
+	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
+	unsigned long long address = params->instructions[params->startInstructionIndex].address;
 
 	if (doesInstructionModifyRegister(instruction, params->currentFunc->returnReg, 0, 0, 0))
 	{
@@ -16,7 +16,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	else if (isOpcodeCall(instruction->opcode))
 	{
 		unsigned long long calleeAddress = address + instruction->operands[0].immediate.value;
-		int calleeIndex = findFunctionByAddress(params->functions, 0, params->numOfFunctions - 1, calleeAddress);
+		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
 
 		if (calleeIndex == -1)
 		{
@@ -29,11 +29,11 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	return 0;
 }
 
-unsigned char checkForReturnStatement(struct DecompilationParameters* params, struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForReturnStatement(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 
-	if (isOpcodeReturn(instruction->opcode) || startInstructionIndex == numOfInstructions - 1)
+	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->startInstructionIndex == params->currentFunc->lastInstructionIndex))
 	{
 		return 1;
 	}
@@ -41,37 +41,40 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, st
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		return checkForJumpToReturnStatement(params, function, startInstructionIndex, instructions, numOfInstructions);
+		return checkForJumpToReturnStatement(params);
 	}
 
 	return 0;
 }
 
-unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params, struct Function* function, int startInstructionIndex, struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
 
 	if (instruction->operands[0].type != IMMEDIATE) 
 	{
 		return 0;
 	}
 
-	int currentInstructionIndex = findInstructionByAddress(instruction, 0, numOfInstructions, instruction->address);
-	unsigned long long jmpDstIndex = resolveJmpChain(params, currentInstructionIndex);
+	unsigned long long jmpDstAddr = resolveJmpChain(params);
+	int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
 
-	if (jmpDstIndex == -1 || jmpDstIndex >= numOfInstructions)
+	if (jmpDstIndex == -1 || (params->currentFunc && (jmpDstIndex < params->currentFunc->firstInstructionIndex || jmpDstIndex > params->currentFunc->lastInstructionIndex)))
 	{
 		return 1;
 	}
 
-	for (int i = jmpDstIndex; i < numOfInstructions; i++) // checking if the function leads to a return without doing anything in between
+	int lastInstruction = params->currentFunc ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
+	for (int i = jmpDstIndex; i <= lastInstruction; i++) // checking if the function leads to a return without doing anything in between
 	{
-		if (isOpcodeReturn(instructions[i].opcode) || i == numOfInstructions - 1)
+		if (isOpcodeReturn(params->instructions[i].opcode) || i == lastInstruction)
 		{
 			return 1;
 		}
 
-		if ((instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&instructions[i], 0, 0, 0)) || isOpcodeCall(instructions[i].opcode) || isOpcodeJcc(instructions[i].opcode) || doesInstructionModifyRegister(&instructions[i], function->returnReg, 0, 0, 0))
+		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) || 
+			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode) || 
+			(params->currentFunc && doesInstructionModifyRegister(&params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)))
 		{
 			return 0;
 		}

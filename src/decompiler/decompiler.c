@@ -59,9 +59,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 	params->numOfIndents = 1;
 	unsigned char isInUnreachableState = 0;
-	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 		
 		if (params->numOfIndents < 1)
 		{
@@ -103,7 +103,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			sprintfJdc(result, 0, "Error decompiling condition at 0x%llX.", currentInstruction->address);
 			return 0;
 		}
-		else if (checkForReturnStatement(params, params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+		else if (checkForReturnStatement(params))
 		{
 			if (!decompileReturnStatement(params, result))
 			{
@@ -161,9 +161,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 		int callInstructionIndex = i;
 		params->startInstructionIndex = i;
 		struct Function* callee = 0;
@@ -171,14 +171,13 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 		{
 			enum Register returnReg = callee ? callee->returnReg : AX;
 
-			int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, currentInstruction->address);
-			unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
+			unsigned long long calleeAddress = resolveJmpChain(params);
 
 			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
-			for (int j = i; j < params->currentFunc->numOfInstructions; j++)
+			for (int j = i; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
 				params->startInstructionIndex = j;
-				currentInstruction = &(params->currentFunc->instructions[j]);
+				currentInstruction = &(params->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
 				if (j != i)
@@ -189,7 +188,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 					}
 				}
 
-				if (checkForReturnStatement(params, params->currentFunc, j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				if (checkForReturnStatement(params))
 				{
 					returnType = params->currentFunc->returnType;
 					break;
@@ -275,12 +274,12 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					break;
 				}
 
-				if (checkForReturnStatement(params, params->currentFunc, j, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				if (checkForReturnStatement(params))
 				{
 					break;
 				}
 
-				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
+				struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
 
 				enum Register reg = NO_REG;
 
@@ -324,7 +323,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 
 			// checking if the modified regs are accessed before being overwritten after the condition
 			int checkingStart = condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
-			for (int j = checkingStart; j < params->currentFunc->numOfInstructions; j++)
+			for (int j = checkingStart; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
 				params->startInstructionIndex = j;
 				int conditionIndex = checkForConditionStart(params);
@@ -333,7 +332,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					break;
 				}
 
-				struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
+				struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
 
 				for (int k = 0; k < numOfRegs; k++)
 				{
@@ -368,7 +367,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			{
 				for (int j = end; j >= start; j--) 
 				{
-					struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[j]);
+					struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
 					
 					if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == TEST) 
 					{
@@ -398,9 +397,9 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 	}
 
 	// check for registers that depend on the value of a reg var
-	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
 		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 		{

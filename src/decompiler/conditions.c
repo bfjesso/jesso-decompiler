@@ -15,25 +15,26 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	unsigned char stopCombination = 0;
 	struct DisassembledInstruction* lastCmpInstruction = 0;
 	struct DisassembledInstruction* currentCmpInstruction = 0;
-	for (int i = 0; i < params->currentFunc->numOfInstructions; i++)
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[i]);
+		struct DisassembledInstruction* instruction = &(params->instructions[i]);
+
+		params->startInstructionIndex = i;
 
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, instruction->address);
-			unsigned long long jccDst = resolveJmpChain(params, currentInstructionIndex);
-			int dstIndex = findInstructionByAddress(params->currentFunc->instructions, 0, params->currentFunc->numOfInstructions - 1, jccDst);
+			unsigned long long jccDstAddr = resolveJmpChain(params);
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jccDstAddr);
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;
-			if (isOpcodeJmp(params->currentFunc->instructions[dstIndex - 1].opcode))
+			if (isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
 			{
 				// sometimes compiler puts multiple jmps next to each other at the end?
 				int firstJmpIndex = dstIndex - 1;
 				for (int j = dstIndex - 2; j > i; j--)
 				{
-					if (isOpcodeJmp(params->currentFunc->instructions[j].opcode))
+					if (isOpcodeJmp(params->instructions[j].opcode))
 					{
 						firstJmpIndex = j;
 					}
@@ -43,10 +44,12 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					}
 				}
 
-				int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, params->currentFunc->instructions[firstJmpIndex].address);
-				unsigned long long jmpDst = resolveJmpChain(params, instructionIndex);
-				exitIndex = findInstructionByAddress(params->currentFunc->instructions, 0, params->currentFunc->numOfInstructions - 1, jmpDst);
+				params->startInstructionIndex = firstJmpIndex;
+				unsigned long long jmpDstAddr = resolveJmpChain(params);
+				exitIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpDstAddr);
 			}
+
+			params->startInstructionIndex = i;
 
 			// a series of Jcc instructions that have the same destination are combined with a logical AND
 			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
@@ -89,7 +92,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				// setting the type
 				if (params->currentFunc->numOfConditions > 0 && exitIndex != -1 && exitIndex == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].exitIndex &&
 					i == params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex + 2 && // the Jccs need to be right next to eachother with only comparisson instructions between them
-					instruction->opcode == JZ_SHORT && params->currentFunc->instructions[params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
+					instruction->opcode == JZ_SHORT && params->instructions[params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].jccIndex].opcode == JZ_SHORT &&
 					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
 					combinationCount == 0 && params->currentFunc->conditions[params->currentFunc->numOfConditions - 1].numOfCombinedJccs == 0)
 				{
@@ -110,7 +113,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						params->currentFunc->conditions[params->currentFunc->numOfConditions].isFirstSwitchCase = 1;
 					}
 				}
-				else if (checkForJumpToReturnStatement(params, params->currentFunc, i, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+				else if (checkForJumpToReturnStatement(params))
 				{
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].decompileAsReturn = 1;
 					params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = IF_CT;
@@ -166,7 +169,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			params->currentFunc->conditions[i].exitIndex > params->currentFunc->conditions[i].dstIndex &&
 			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
-			if (!checkForReturnStatement(params, params->currentFunc, params->currentFunc->conditions[i].dstIndex - 1, params->currentFunc->instructions, params->currentFunc->numOfInstructions))
+			params->startInstructionIndex = params->currentFunc->conditions[i].dstIndex - 1;
+			if (!checkForReturnStatement(params))
 			{
 				if (!handleConditionsResize(params))
 				{
@@ -304,7 +308,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 		if (condition->decompileAsGoTo && params->startInstructionIndex == condition->dstIndex)
 		{
 			addIndents(result, params->numOfIndents - 1);
-			sprintfJdc(result, 1, "label_%llX:\n", params->currentFunc->instructions[condition->dstIndex].address - params->imageBase);
+			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
 			break;
 		}
 	}
@@ -341,7 +345,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 			else if (condition->decompileAsGoTo)
 			{
 				addIndents(result, params->numOfIndents);
-				sprintfJdc(result, 1, "goto label_%llX;\n", params->currentFunc->instructions[condition->dstIndex].address - params->imageBase);
+				sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
 
 				params->numOfIndents--;
 				addIndents(result, params->numOfIndents);
@@ -538,7 +542,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	if (condition->conditionType == LOOP_CT)
 	{
 		// check for for loop
-		if (params->currentFunc->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
+		if (params->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
 		{
 			struct JdcStr assignmentExpression = initializeJdcStr();
 			for (int i = condition->exitIndex; i < condition->jccIndex; i++)

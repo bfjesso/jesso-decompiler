@@ -32,7 +32,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
-		struct DisassembledInstruction* instruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+		struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
 
 		struct VarType memAddrType = getTypeOfOperand(instruction->opcode, operand);
 		struct JdcStr typeStr = initializeJdcStr();
@@ -43,7 +43,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 			int stackOffset = (int)(operand->memoryAddress.constDisplacement);
 			if (compareRegisters(operand->memoryAddress.reg, SP)) 
 			{
-				stackOffset -= getStackFrameSizeAtInstruction(params->currentFunc, params->startInstructionIndex);
+				stackOffset -= getStackFrameSizeAtInstruction(params);
 			}
 			
 			struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
@@ -67,7 +67,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 		}
 		else if (compareRegisters(operand->memoryAddress.reg, IP))
 		{
-			unsigned long long address = params->currentFunc->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			unsigned long long address = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
 			if (instruction->opcode == LEA) 
 			{
 				if (!getStringFromDataSection(params, address, result))
@@ -392,7 +392,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 	}
 	else if (compareRegisters(targetReg, IP))
 	{
-		return sprintfJdc(result, 0, "0x%llX", params->currentFunc->instructions[params->startInstructionIndex + 1].address);
+		return sprintfJdc(result, 0, "0x%llX", params->instructions[params->startInstructionIndex + 1].address);
 	}
 
 	struct RegisterVariable* regVar = getRegVarByReg(params->currentFunc, targetReg);
@@ -423,7 +423,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			break;
 		}
 
-		struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[i]);
+		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
 		if (isInUnreachableState || doesInstructionDoNothing(currentInstruction))
 		{
@@ -453,8 +453,9 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			struct Function* callee;
 			if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg))
 			{
-				int callNum = getFunctionCallNumber(params, callee->instructions[0].address);
-				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, callee->instructions[0].address);
+				unsigned long long calleeAddress = params->instructions[callee->firstInstructionIndex].address;
+				int callNum = getFunctionCallNumber(params, calleeAddress);
+				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
 				if (returnedVar != 0)
 				{
 					expressions[expressionIndex] = initializeJdcStr();
@@ -465,8 +466,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			}
 			else if (checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX))
 			{
-				int currentInstructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, currentInstruction->address);
-				unsigned long long calleeAddress = resolveJmpChain(params, currentInstructionIndex);
+				unsigned long long calleeAddress = resolveJmpChain(params);
 				int callNum = getFunctionCallNumber(params, calleeAddress);
 				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
 				if (returnedVar != 0)
@@ -564,7 +564,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 
 unsigned char decompileComparison(struct DecompilationParameters* params, unsigned char invertOperator, struct JdcStr* result)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
 
 	enum Mnemonic jcc = currentInstruction->opcode;
 
@@ -629,16 +629,16 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 	}
 
 	// looking for instruction that modifies the appropriate flags
-	for (int i = params->startInstructionIndex - 1; i >= 0; i--)
+	for (int i = params->startInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		currentInstruction = &(params->currentFunc->instructions[i]);
+		currentInstruction = &(params->instructions[i]);
 
 		params->startInstructionIndex = i;
 		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
 			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]))
 			{
-				if (params->currentFunc->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+				if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
 				{
 					i--;
 					continue;

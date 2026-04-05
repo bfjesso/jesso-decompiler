@@ -7,7 +7,7 @@ wxBEGIN_EVENT_TABLE(FunctionInfoMenu, wxFrame)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoMenu::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(800, 600))
+FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(800, 600))
 {
     SetOwnBackgroundColour(backgroundColor);
 
@@ -37,7 +37,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function*
 	functionNameStaticTxt = new wxStaticText(this, wxID_ANY, "Function Name: " + wxString(function->name.buffer));
 	functionNameStaticTxt->SetOwnForegroundColour(textColor);
 
-	numOfInstructionsStaticTxt = new wxStaticText(this, wxID_ANY, "Number of Instructions: " + wxString(std::to_string(function->numOfInstructions)));
+	numOfInstructionsStaticTxt = new wxStaticText(this, wxID_ANY, "Number of Instructions: " + wxString(std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1)));
 	numOfInstructionsStaticTxt->SetOwnForegroundColour(textColor);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -231,9 +231,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function*
 			struct Condition* condition = &function->conditions[i];
 			conditionsGrid->AppendRows(1);
 			conditionsGrid->SetCellValue(i, 0, wxString(conditionTypeStrs[condition->conditionType]));
-			sprintf(hexNumStr, "0x%llX", function->instructions[condition->jccIndex].address);
+			sprintf(hexNumStr, "0x%llX", instructions[condition->jccIndex].address);
 			conditionsGrid->SetCellValue(i, 1, wxString(std::to_string(condition->jccIndex)) + " (" + wxString(hexNumStr) + ")");
-			sprintf(hexNumStr, "0x%llX", function->instructions[condition->dstIndex].address);
+			sprintf(hexNumStr, "0x%llX", instructions[condition->dstIndex].address);
 			conditionsGrid->SetCellValue(i, 2, wxString(std::to_string(condition->dstIndex)) + " (" + wxString(hexNumStr) + ")");
 
 			if (condition->exitIndex == -1)
@@ -242,7 +242,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function*
 			}
 			else
 			{
-				sprintf(hexNumStr, "0x%llX", function->instructions[condition->exitIndex].address);
+				sprintf(hexNumStr, "0x%llX", instructions[condition->exitIndex].address);
 			}
 			conditionsGrid->SetCellValue(i, 3, wxString(std::to_string(condition->exitIndex)) + " (" + wxString(hexNumStr) + ")");
 
@@ -262,7 +262,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function*
 			wxString combinedJccsStr = "";
 			for (int j = 0; j < condition->numOfCombinedJccs; j++)
 			{
-				sprintf(hexNumStr, "0x%llX", function->instructions[condition->combinedJccIndexes[j]].address);
+				sprintf(hexNumStr, "0x%llX", instructions[condition->combinedJccIndexes[j]].address);
 				combinedJccsStr += wxString(std::to_string(condition->combinedJccIndexes[j]) + " (" + wxString(hexNumStr) + ")");
 				if (j != condition->numOfCombinedJccs - 1)
 				{
@@ -302,9 +302,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Function*
 			struct DirectJmp* directJmp = &function->directJmps[i];
 			directJmpsGrid->AppendRows(1);
 			directJmpsGrid->SetCellValue(i, 0, wxString(directJmpTypeStrs[directJmp->type]));
-			sprintf(hexNumStr, "0x%llX", function->instructions[directJmp->jmpIndex].address);
+			sprintf(hexNumStr, "0x%llX", instructions[directJmp->jmpIndex].address);
 			directJmpsGrid->SetCellValue(i, 1, wxString(std::to_string(directJmp->jmpIndex)) + " (" + wxString(hexNumStr) + ")");
-			sprintf(hexNumStr, "0x%llX", function->instructions[directJmp->dstIndex].address);
+			sprintf(hexNumStr, "0x%llX", instructions[directJmp->dstIndex].address);
 			directJmpsGrid->SetCellValue(i, 2, wxString(std::to_string(directJmp->dstIndex)) + " (" + wxString(hexNumStr) + ")");
 		}
 	}

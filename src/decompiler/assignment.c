@@ -4,7 +4,7 @@
 
 unsigned char checkForAssignment(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
 
 	if (doesInstructionDoNothing(currentInstruction)) 
 	{
@@ -29,7 +29,7 @@ unsigned char checkForAssignment(struct DecompilationParameters* params)
 
 unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->currentFunc->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
 
 	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 	{

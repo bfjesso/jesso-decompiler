@@ -9,6 +9,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	unsigned char initializedRegsAfterJmp[NUM_PLATFORM_REG_ARGS * 2] = { 0 };
 	unsigned char gottenRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
+	int ogStartInstructionIndex = params->startInstructionIndex;
+
 	int stackFrameSize = 0;
 
 	unsigned long long addressToJumpTo = 0;
@@ -16,11 +18,14 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	unsigned char canReturnNothing = 0;
 
 	unsigned char foundFirstInstruction = 0;
-	for (int i = params->startInstructionIndex; i < params->totalNumOfInstructions; i++)
+	for (int i = ogStartInstructionIndex; i < params->numOfInstructions; i++)
 	{
 		(*instructionIndex)++;
 
-		struct DisassembledInstruction* currentInstruction = &params->allInstructions[i];
+		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
+		params->startInstructionIndex = i;
+
+		result->lastInstructionIndex = i;
 
 		if (!foundFirstInstruction)
 		{
@@ -29,20 +34,17 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				continue;
 			}
 
-			result->instructions = &params->allInstructions[i];
-
+			result->firstInstructionIndex = i;
 			foundFirstInstruction = 1;
 		}
 
-		result->numOfInstructions++;
-
 		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params, i);
-			if (calleeAddress != result->instructions[0].address && calleeAddress != 0) // check for recursive function
+			unsigned long long calleeAddress = resolveJmpChain(params);
+			if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
 			{
 				result->addressOfFirstFuncCall = calleeAddress;
-				result->indexOfFirstFuncCall = result->numOfInstructions - 1;
+				result->indexOfFirstFuncCall = i;
 			}
 		}
 
@@ -201,8 +203,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			currentInstruction->operands[0].type == IMMEDIATE && 
 			currentInstruction->operands[0].immediate.value > 0)
 		{
-			unsigned long long jumpAddr = params->allInstructions[i].address + currentInstruction->operands[0].immediate.value;
-			int instructionIndex = findInstructionByAddress(params->allInstructions, 0, params->totalNumOfInstructions - 1, jumpAddr);
+			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
+			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
 			if (jumpAddr > addressToJumpTo && jumpAddr <= currentSectionEndAddress)
 			{
 				if(!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
@@ -237,8 +239,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params, i);
-				if (calleeAddress != result->instructions[0].address) // check for recursive function
+				unsigned long long calleeAddress = resolveJmpChain(params);
+				if (calleeAddress != params->instructions[result->firstInstructionIndex].address) // check for recursive function
 				{
 					result->addressOfReturnFunction = calleeAddress;
 				}
@@ -250,15 +252,15 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		}
 
-		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->allInstructions[i + 1].address) != -1)
+		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
 		{
-			result->addressOfReturnFunction = params->allInstructions[i + 1].address;
+			result->addressOfReturnFunction = params->instructions[i + 1].address;
 
 			sortFunctionArguments(result);
 			return 1;
 		}
 
-		isAfterJmp = addressToJumpTo != 0 && params->allInstructions[i].address < addressToJumpTo;
+		isAfterJmp = addressToJumpTo != 0 && params->instructions[i].address < addressToJumpTo;
 		if (isAfterJmp)
 		{
 			continue;
@@ -277,7 +279,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 		}
 		
-		if (checkForReturnStatement(params, result, i, params->allInstructions, params->totalNumOfInstructions) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(params) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (result->callingConvention == __CDECL && currentInstruction->operands[0].type != NO_OPERAND)
 			{
@@ -291,7 +293,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			sortFunctionArguments(result);
 			return 1;
 		}
-		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->allInstructions[i].address == currentSectionEndAddress)
+		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->instructions[i].address == currentSectionEndAddress)
 		{
 			result->returnType.primitiveType = VOID_TYPE;
 			result->returnReg = NO_REG;
@@ -305,33 +307,33 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	return 0;
 }
 
-unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned short numOfFunctions, unsigned char is64Bit) // resolves if a function's return type depends on another function
+unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) // resolves if a function's return type depends on another function
 {
-	for (int i = 0; i < numOfFunctions; i++)
+	for (int i = 0; i < params->numOfFunctions; i++)
 	{
-		if (functions[i].addressOfReturnFunction != 0)
+		if (params->functions[i].addressOfReturnFunction != 0)
 		{
-			int returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[i].addressOfReturnFunction);
+			int returnFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].addressOfReturnFunction);
 
 			int count = 0; // to avoid an infinite loop
-			while (returnFunctionIndex != -1 && functions[returnFunctionIndex].addressOfReturnFunction != 0 && count < 10)
+			while (returnFunctionIndex != -1 && params->functions[returnFunctionIndex].addressOfReturnFunction != 0 && count < 10)
 			{
-				returnFunctionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, functions[returnFunctionIndex].addressOfReturnFunction);
+				returnFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[returnFunctionIndex].addressOfReturnFunction);
 				count++;
 			}
 
 			if (returnFunctionIndex != -1)
 			{
-				if (functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE) 
+				if (params->functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE) 
 				{
-					functions[i].returnType = functions[returnFunctionIndex].returnType;
-					functions[i].returnReg = functions[returnFunctionIndex].returnReg;
+					params->functions[i].returnType = params->functions[returnFunctionIndex].returnType;
+					params->functions[i].returnReg = params->functions[returnFunctionIndex].returnReg;
 				}
 			}
 			else // probably an imported function
 			{
-				functions[i].returnType.primitiveType = is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
-				functions[i].returnReg = AX;
+				params->functions[i].returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
+				params->functions[i].returnReg = AX;
 			}
 		}
 	}
@@ -339,19 +341,19 @@ unsigned char fixAllFunctionReturnTypes(struct Function* functions, unsigned sho
 	return 1;
 }
 
-unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numOfFunctions) // checks for arguments that aren't used in the function but are just passed to another function call
+unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
 	int numFixed = 0;
 
-	for (int i = 0; i < numOfFunctions; i++) 
+	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
-		struct Function* currentFunc = &functions[i];
+		struct Function* currentFunc = &params->functions[i];
 		if (currentFunc->addressOfFirstFuncCall != 0)
 		{
-			int functionIndex = findFunctionByAddress(functions, 0, numOfFunctions - 1, currentFunc->addressOfFirstFuncCall);
-			if (functionIndex != -1 && functions[functionIndex].numOfRegArgs > 0)
+			int functionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, currentFunc->addressOfFirstFuncCall);
+			if (functionIndex != -1 && params->functions[functionIndex].numOfRegArgs > 0)
 			{
-				struct Function* callee = &functions[functionIndex];
+				struct Function* callee = &params->functions[functionIndex];
 
 				int numOfRegArgsInit = 0;
 				enum Register* initializedRegs = (enum Register*)malloc(sizeof(enum Register) * callee->numOfRegArgs);
@@ -360,9 +362,9 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 					return 0;
 				}
 
-				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= 0; j--)
+				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= currentFunc->firstInstructionIndex; j--)
 				{
-					struct DisassembledInstruction* instruction = &currentFunc->instructions[j];
+					struct DisassembledInstruction* instruction = &params->instructions[j];
 
 					if (isOpcodeJcc(instruction->opcode) || instruction->opcode == JMP_SHORT)
 					{
@@ -435,7 +437,7 @@ unsigned char fixAllFunctionArgs(struct Function* functions, unsigned short numO
 
 	if (numFixed != 0) 
 	{
-		return fixAllFunctionArgs(functions, numOfFunctions);
+		return fixAllFunctionArgs(params);
 	}
 
 	return 1;
@@ -505,27 +507,27 @@ static int getStackFrameChange(struct DisassembledInstruction* instruction)
 	return 0;
 }
 
-int getStackFrameSizeAtInstruction(struct Function* function, int instructionIndex)
+int getStackFrameSizeAtInstruction(struct DecompilationParameters* params)
 {
 	int result = 0;
-	for (int i = 0; i < instructionIndex; i++) 
+	for (int i = params->currentFunc->firstInstructionIndex; i < params->startInstructionIndex; i++) 
 	{
-		result += getStackFrameChange(&function->instructions[i]);
+		result += getStackFrameChange(&params->instructions[i]);
 	}
 
 	return result;
 }
 
 // returns index of function, -1 if not found
-int findFunctionByAddress(struct Function* functions, int low, int high, unsigned long long address)
+int findFunctionByAddress(struct DecompilationParameters* params, int low, int high, unsigned long long address)
 {
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
 
-		if (functions[mid].instructions[0].address == address) { return mid; }
+		if (params->instructions[params->functions[mid].firstInstructionIndex].address == address) { return mid; }
 
-		if (functions[mid].instructions[0].address < address) { low = mid + 1; }
+		if (params->instructions[params->functions[mid].firstInstructionIndex].address < address) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 
