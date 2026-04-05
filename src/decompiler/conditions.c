@@ -230,10 +230,10 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			int start2 = getConditionStart(&params->currentFunc->conditions[j]);
 			int end2 = getConditionEnd(&params->currentFunc->conditions[j]);
 			
-			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2))
+			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2) || (start1 == start2 && end1 > end2)) // last check is for do while loops
 			{
 				params->currentFunc->conditions[i].decompileAsGoTo = 1;
-				params->currentFunc->conditions[i].conditionType == IF_CT;
+				params->currentFunc->conditions[i].conditionType = IF_CT;
 				break;
 			}
 		}
