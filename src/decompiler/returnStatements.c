@@ -33,7 +33,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 
-	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->startInstructionIndex == params->currentFunc->lastInstructionIndex))
+	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->currentFunc->lastInstructionIndex != 0 && params->startInstructionIndex == params->currentFunc->lastInstructionIndex))
 	{
 		return 1;
 	}
