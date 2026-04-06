@@ -16,6 +16,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 	unsigned long long jmpAddress = 0;
 	if (!operandToValue(params, &instruction->operands[0], &jmpAddress))
 	{
+		params->startInstructionIndex = ogStartInstructionIndex;
 		return 0;
 	}
 
@@ -24,19 +25,23 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 		jmpAddress += instruction->address;
 	}
 
-	int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
-	if (instructionIndex != -1)
+	if(!isOpcodeCall(instruction->opcode))
 	{
-		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
-		if (instructionIndex != params->startInstructionIndex && (jmpInstruction->opcode == JMP_FAR || jmpInstruction->opcode == JMP_NEAR))
+		int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
+		if (instructionIndex != -1)
 		{
-			params->startInstructionIndex = instructionIndex;
-			unsigned long long result =  resolveJmpChain(params);
-			params->startInstructionIndex = ogStartInstructionIndex;
-			return result;
+			struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
+			if (instructionIndex != params->startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
+			{
+				params->startInstructionIndex = instructionIndex;
+				unsigned long long result =  resolveJmpChain(params);
+				params->startInstructionIndex = ogStartInstructionIndex;
+				return result;
+			}
 		}
 	}
 
+	params->startInstructionIndex = ogStartInstructionIndex;
 	return jmpAddress;
 }
 
@@ -129,11 +134,12 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 
 		return 1;
 	}
-	else if (operand->type == REGISTER)
+	else if (operand->type == REGISTER && !isRegisterPointer(operand->reg))
 	{
 		int ogStartInstructionIndex = params->startInstructionIndex;
 		
-		for (int i = ogStartInstructionIndex - 1; i >= 0; i--)
+		int upperBound = params->currentFunc ? params->currentFunc->firstInstructionIndex : 0;
+		for (int i = ogStartInstructionIndex - 1; i >= upperBound; i--)
 		{
 			if (params->instructions[i].opcode == MOV && compareRegisters(params->instructions[i].operands[0].reg, operand->reg))
 			{

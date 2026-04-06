@@ -17,6 +17,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	unsigned char isAfterJmp = 0;
 	unsigned char canReturnNothing = 0;
 
+	params->currentFunc = result;
+
 	unsigned char foundFirstInstruction = 0;
 	for (int i = ogStartInstructionIndex; i < params->numOfInstructions; i++)
 	{
@@ -24,8 +26,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
 		params->startInstructionIndex = i;
-
-		result->lastInstructionIndex = i;
 
 		if (!foundFirstInstruction)
 		{
@@ -257,6 +257,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->addressOfReturnFunction = params->instructions[i + 1].address;
 
 			sortFunctionArguments(result);
+			result->lastInstructionIndex = i;
 			return 1;
 		}
 
@@ -291,6 +292,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 
 			sortFunctionArguments(result);
+			result->lastInstructionIndex = i;
 			return 1;
 		}
 		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->instructions[i].address == currentSectionEndAddress)
@@ -300,6 +302,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->addressOfReturnFunction = 0;
 
 			sortFunctionArguments(result);
+			result->lastInstructionIndex = i;
 			return 1;
 		}
 	}
