@@ -59,6 +59,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 	params->numOfIndents = 1;
 	unsigned char isInUnreachableState = 0;
+	int numOfSkippedInstructions = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
@@ -77,14 +78,20 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		if (checkForDirectJmpDst(params) || checkForConditionDst(params))
+		if (isInUnreachableState)
 		{
-			isInUnreachableState = 0;
-		}
-
-		if (isInUnreachableState) 
-		{
-			continue;
+			if (checkForDirectJmpDst(params) || checkForConditionDst(params))
+			{
+				addIndents(result, params->numOfIndents);
+				sprintfJdc(result, 1, "// %i instructions skipped\n", numOfSkippedInstructions);
+				isInUnreachableState = 0;
+				numOfSkippedInstructions = 0;
+			}
+			else 
+			{
+				numOfSkippedInstructions++;
+				continue;
+			}
 		}
 
 		if (!decompileConditions(params, result))
