@@ -87,15 +87,15 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			continue;
 		}
 
-		if (!decompileDirectJmps(params, &isInUnreachableState, result))
-		{
-			sprintfJdc(result, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
-			return 0;
-		}
-
 		if (!decompileConditions(params, result))
 		{
 			sprintfJdc(result, 0, "Error decompiling condition at 0x%llX.", currentInstruction->address);
+			return 0;
+		}
+
+		if (!decompileDirectJmps(params, &isInUnreachableState, result))
+		{
+			sprintfJdc(result, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
 			return 0;
 		}
 
