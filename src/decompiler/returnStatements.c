@@ -59,12 +59,23 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 	unsigned long long jmpDstAddr = resolveJmpChain(params);
 	int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
 
-	if (jmpDstIndex == -1 || (params->currentFunc && (jmpDstIndex < params->currentFunc->firstInstructionIndex || jmpDstIndex > params->currentFunc->lastInstructionIndex)))
+	if (jmpDstIndex == -1)
 	{
 		return 1;
 	}
+	else if(params->currentFunc)
+	{
+		if(jmpDstIndex < params->currentFunc->firstInstructionIndex)
+		{
+			return 1;
+		}
+		else if(jmpDstIndex > params->currentFunc->lastInstructionIndex && params->currentFunc->lastInstructionIndex != 0)
+		{
+			return 1;
+		}
+	}
 
-	int lastInstruction = params->currentFunc ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
+	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = jmpDstIndex; i <= lastInstruction; i++) // checking if the function leads to a return without doing anything in between
 	{
 		if (isOpcodeReturn(params->instructions[i].opcode) || i == lastInstruction)

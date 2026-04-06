@@ -27,6 +27,11 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
 		params->startInstructionIndex = i;
 
+		if(currentInstruction->address == 0xE5BE71)
+		{
+			int ttt = 0;
+		}
+
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
@@ -245,7 +250,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 					result->addressOfReturnFunction = calleeAddress;
 				}
 			}
-			else if (isOpcodeReturn(currentInstruction->opcode) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction != 0)
+			else if (checkForReturnStatement(params) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction == 0)
 			{
 				canReturnNothing = 1;
 			}
