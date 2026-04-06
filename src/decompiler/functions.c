@@ -27,11 +27,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
 		params->startInstructionIndex = i;
 
-		if(currentInstruction->address == 0xE5BE71)
-		{
-			int ttt = 0;
-		}
-
 		if (!foundFirstInstruction)
 		{
 			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)

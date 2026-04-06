@@ -62,11 +62,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-
-		if (currentInstruction->address == 0x1401070A4) 
-		{
-			int tt = 0;
-		}
 		
 		if (params->numOfIndents < 1)
 		{
@@ -104,15 +99,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		if (checkForReturnStatement(params))
-		{
-			if (!decompileReturnStatement(params, &isInUnreachableState, result))
-			{
-				sprintfJdc(result, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
-				return 0;
-			}
-		}
-
 		struct Function* callee;
 		struct IntrinsicFunc* intrinsicFunc;
 		if (checkForKnownFunctionCall(params, &callee))
@@ -144,6 +130,15 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileAssignments(params, result))
 			{
 				sprintfJdc(result, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
+				return 0;
+			}
+		}
+
+		if (checkForReturnStatement(params))
+		{
+			if (!decompileReturnStatement(params, &isInUnreachableState, result))
+			{
+				sprintfJdc(result, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
 				return 0;
 			}
 		}
