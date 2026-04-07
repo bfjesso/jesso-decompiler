@@ -245,7 +245,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 					result->addressOfReturnFunction = calleeAddress;
 				}
 			}
-			else if (checkForReturnStatement(params) && result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction == 0)
+			else if ((checkForReturnStatement(params) || checkForJumpToReturnStatement(params)) &&
+				result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction == 0)
 			{
 				canReturnNothing = 1;
 			}

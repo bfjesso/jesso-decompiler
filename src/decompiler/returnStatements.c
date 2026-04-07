@@ -49,9 +49,9 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params)
 
 unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params)
 {
-	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex]; // this function assumes the current instruction is a jmp or jcc
+	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 
-	if (instruction->operands[0].type != IMMEDIATE) 
+	if (instruction->operands[0].type != IMMEDIATE || (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode)))
 	{
 		return 0;
 	}
