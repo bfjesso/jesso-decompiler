@@ -10,7 +10,7 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 	unsigned long long address = params->instructions[params->startInstructionIndex].address;
 
 	unsigned long long calleeAddress = 0;
-	if (isOpcodeCall(instruction->opcode))
+	if (isOpcodeCall(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 	{
 		calleeAddress = resolveJmpChain(params);
 	}
