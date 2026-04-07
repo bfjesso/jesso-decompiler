@@ -63,11 +63,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-
-		if (currentInstruction->address == 0x1400030AF) 
-		{
-			int ttt = 0;
-		}
 		
 		if (params->numOfIndents < 1)
 		{
@@ -194,7 +189,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 					}
 
 					struct Function* callee;
-					if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, returnReg))
+					if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, returnReg) && !getRegArgByReg(callee, returnReg))
 					{
 						break;
 					}
