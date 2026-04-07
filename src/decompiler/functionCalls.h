@@ -10,5 +10,3 @@ unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params
 unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* params, struct JdcStr* result);
 
 int getImportIndexByAddress(struct DecompilationParameters* params, unsigned long long calleeAddress);
-
-int getFunctionCallNumber(struct DecompilationParameters* params, unsigned long long calleeAddress);

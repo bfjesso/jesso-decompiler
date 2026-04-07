@@ -33,7 +33,7 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 
 struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register reg);
 
-struct ReturnedVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr);
+struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
 unsigned char addStackArg(struct Function* function, struct VarType type, int stackOffset);
 
@@ -43,6 +43,6 @@ unsigned char addRegArg(struct Function* function, struct VarType type, enum Reg
 
 unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg);
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, enum Register returnReg, const char* calleeName);
+unsigned char addReturnedVar(struct Function* function, struct VarType type, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
 
 static void sortFunctionArguments(struct Function* function);

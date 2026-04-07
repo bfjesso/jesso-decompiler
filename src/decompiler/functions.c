@@ -589,11 +589,11 @@ struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register
 	return 0;
 }
 
-struct ReturnedVariable* findReturnedVar(struct Function* function, char callNum, unsigned long long callAddr)
+struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress)
 {
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
-		if (function->returnedVars[i].callAddr == callAddr && function->returnedVars[i].callNum == callNum)
+		if (function->returnedVars[i].callInstructionAddress == callInstructionAddress)
 		{
 			return &function->returnedVars[i];
 		}
@@ -695,7 +695,7 @@ unsigned char addRegVar(struct Function* function, struct VarType type, enum Reg
 	return 1;
 }
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, char callNum, unsigned long long callAddr, enum Register returnReg, const char* calleeName)
+unsigned char addReturnedVar(struct Function* function, struct VarType type, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)
 {
 	struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(function->returnedVars, sizeof(struct ReturnedVariable) * (function->numOfReturnedVars + 1));
 	if (newReturnedVars)
@@ -707,11 +707,20 @@ unsigned char addReturnedVar(struct Function* function, struct VarType type, cha
 		return 0;
 	}
 
+	int callNum = 0;
+	for (int i = 0; i < function->numOfReturnedVars; i++)
+	{
+		if (function->returnedVars[i].calleeAddress == calleeAddress)
+		{
+			callNum++;
+		}
+	}
+
 	function->returnedVars[function->numOfReturnedVars].type = type;
 	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
 	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
-	function->returnedVars[function->numOfReturnedVars].callAddr = callAddr;
-	function->returnedVars[function->numOfReturnedVars].callNum = callNum;
+	function->returnedVars[function->numOfReturnedVars].calleeAddress = calleeAddress;
+	function->returnedVars[function->numOfReturnedVars].callInstructionAddress = callInstructionAddress;
 	function->returnedVars[function->numOfReturnedVars].returnReg = returnReg;
 	function->numOfReturnedVars++;
 

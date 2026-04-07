@@ -446,25 +446,11 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 		else 
 		{
-			unsigned long long calleeAddress = 0;
-			unsigned char isReturningFuncCall = 0;
-			
 			struct Function* callee;
-			if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg))
+			if ((checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg)) || 
+				(checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX)))
 			{
-				calleeAddress = params->instructions[callee->firstInstructionIndex].address;
-				isReturningFuncCall = 1;
-			}
-			else if (checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX))
-			{
-				calleeAddress = resolveJmpChain(params);
-				isReturningFuncCall = 1;
-			}
-
-			if (isReturningFuncCall)
-			{
-				int callNum = getFunctionCallNumber(params, calleeAddress);
-				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
+				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, currentInstruction->address);
 				if (!returnedVar)
 				{
 					for (int j = 0; j < expressionIndex; j++)

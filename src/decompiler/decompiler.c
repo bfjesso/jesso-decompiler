@@ -164,12 +164,12 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-		int callInstructionIndex = i;
 		params->startInstructionIndex = i;
 		struct Function* callee = 0;
 		if (checkForKnownFunctionCall(params, &callee) || checkForUnknownFunctionCall(params))
 		{
+			struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
+			int callInstructionIndex = i;
 			enum Register returnReg = callee ? callee->returnReg : AX;
 
 			unsigned long long calleeAddress = resolveJmpChain(params);
@@ -178,7 +178,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 			for (int j = i; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
 				params->startInstructionIndex = j;
-				currentInstruction = &(params->instructions[j]);
+				struct DisassembledInstruction*  currentInstruction = &(params->instructions[j]);
 				enum Mnemonic opcode = currentInstruction->opcode;
 				unsigned char overwrites = 0;
 				if (j != i)
@@ -217,22 +217,13 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 				continue;
 			}
 
-			int callNum = 0;
-			for (int j = 0; j < params->currentFunc->numOfReturnedVars; j++)
-			{
-				if (params->currentFunc->returnedVars[j].callAddr == calleeAddress)
-				{
-					callNum++;
-				}
-			}
-
 			if (callee)
 			{
 				if (callee->returnType.primitiveType == VOID_TYPE)
 				{
 					continue;
 				}
-				else if (!addReturnedVar(params->currentFunc, callee->returnType, callNum, calleeAddress, returnReg, callee->name.buffer))
+				else if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
 				{
 					return 0;
 				}
@@ -243,14 +234,14 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 				int importIndex = getImportIndexByAddress(params, calleeAddress);
 				if (importIndex != -1) 
 				{
-					if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, params->imports[importIndex].name.buffer))
+					if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
 					{
 						return 0;
 					}
 				}
 				else 
 				{
-					if (!addReturnedVar(params->currentFunc, returnType, callNum, calleeAddress, returnReg, "funcPtr"))
+					if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
 					{
 						return 0;
 					}

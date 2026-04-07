@@ -168,14 +168,14 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		returnedVarsGrid->EnableEditing(false);
 		returnedVarsGrid->SetColLabelValue(0, "Returned var type");
 		returnedVarsGrid->SetColLabelValue(1, "Name");
-		returnedVarsGrid->SetColLabelValue(2, "Call num");
-		returnedVarsGrid->SetColLabelValue(3, "Call address");
+		returnedVarsGrid->SetColLabelValue(2, "Callee address");
+		returnedVarsGrid->SetColLabelValue(3, "Call instruction address");
 		returnedVarsGrid->SetColLabelValue(4, "Return reg");
 		returnedVarsGrid->HideRowLabels();
 		returnedVarsGrid->SetColSize(0, 150);
-		returnedVarsGrid->SetColSize(1, 100);
-		returnedVarsGrid->SetColSize(2, 100);
-		returnedVarsGrid->SetColSize(3, 100);
+		returnedVarsGrid->SetColSize(1, 150);
+		returnedVarsGrid->SetColSize(2, 150);
+		returnedVarsGrid->SetColSize(3, 150);
 		returnedVarsGrid->SetColSize(4, 9999);
 		returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 		
@@ -184,10 +184,11 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 			struct ReturnedVariable* returnedVar = &function->returnedVars[i];
 			returnedVarsGrid->AppendRows(1);
 			varTypeToStr(returnedVar->type, &typeStr);
-			sprintf(hexNumStr, "0x%llX", returnedVar->callAddr);
 			returnedVarsGrid->SetCellValue(i, 0, wxString(typeStr.buffer));
 			returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
-			returnedVarsGrid->SetCellValue(i, 2, wxString(std::to_string(returnedVar->callNum)));
+			sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
+			returnedVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
+			sprintf(hexNumStr, "0x%llX", returnedVar->callInstructionAddress);
 			returnedVarsGrid->SetCellValue(i, 3, wxString(hexNumStr));
 			returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
 		}

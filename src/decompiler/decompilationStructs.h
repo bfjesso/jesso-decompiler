@@ -20,8 +20,8 @@ struct StackVariable
 struct ReturnedVariable // variables that contain the reuturn value of another function call
 {
 	struct VarType type;
-	char callNum;
-	unsigned long long callAddr;
+	unsigned long long calleeAddress;
+	unsigned long long callInstructionAddress;
 	enum Register returnReg;
 	struct JdcStr name;
 };
