@@ -450,30 +450,36 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 		else 
 		{
+			unsigned long long calleeAddress = 0;
+			unsigned char isReturningFuncCall = 0;
+			
 			struct Function* callee;
 			if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg))
 			{
-				unsigned long long calleeAddress = params->instructions[callee->firstInstructionIndex].address;
-				int callNum = getFunctionCallNumber(params, calleeAddress);
-				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
-				if (returnedVar != 0)
-				{
-					expressions[expressionIndex] = initializeJdcStr();
-					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
-				}
-				expressionIndex++;
-				finished = 1;
+				calleeAddress = params->instructions[callee->firstInstructionIndex].address;
+				isReturningFuncCall = 1;
 			}
 			else if (checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params);
+				calleeAddress = resolveJmpChain(params);
+				isReturningFuncCall = 1;
+			}
+
+			if (isReturningFuncCall)
+			{
 				int callNum = getFunctionCallNumber(params, calleeAddress);
 				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callNum, calleeAddress);
-				if (returnedVar != 0)
+				if (!returnedVar)
 				{
-					expressions[expressionIndex] = initializeJdcStr();
-					sprintfJdc(&expressions[expressionIndex], 0, "%s", returnedVar->name.buffer);
+					for (int j = 0; j < expressionIndex; j++)
+					{
+						freeJdcStr(&expressions[j]);
+					}
+					free(expressions);
+					return 0;
 				}
+
+				expressions[expressionIndex] = initializeJdcStrWithVal(returnedVar->name.buffer);
 				expressionIndex++;
 				finished = 1;
 			}
