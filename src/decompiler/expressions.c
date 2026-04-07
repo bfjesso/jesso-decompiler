@@ -420,13 +420,12 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
+		params->startInstructionIndex = i;
 
 		if (doesInstructionDoNothing(currentInstruction))
 		{
 			continue;
 		}
-
-		params->startInstructionIndex = i;
 
 		unsigned char srcOperandNum = 0;
 		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &srcOperandNum, &finished))
@@ -485,6 +484,17 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				free(expressions);
 				return 0;
 			}
+		}
+
+		int conditionIndex = checkForConditionEnd(params);
+		if(conditionIndex != -1)
+		{
+			i = getConditionStart(&params->currentFunc->conditions[conditionIndex]) + 1;
+		}
+		int directJmpIndex = checkForDirectJmpDst(params);
+		if(directJmpIndex != -1)
+		{
+			i = params->currentFunc->directJmps[directJmpIndex].jmpIndex + 1;
 		}
 	}
 

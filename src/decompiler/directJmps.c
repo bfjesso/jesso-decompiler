@@ -150,15 +150,15 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, unsign
 	return 1;
 }
 
-unsigned char checkForDirectJmpDst(struct DecompilationParameters* params)
+int checkForDirectJmpDst(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
 		if (params->startInstructionIndex == params->currentFunc->directJmps[i].dstIndex)
 		{
-			return 1;
+			return i;
 		}
 	}
 
-	return 0;
+	return -1;
 }

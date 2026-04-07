@@ -17,6 +17,6 @@ int getConditionEnd(struct Condition* condition);
 
 int checkForConditionStart(struct DecompilationParameters* params);
 
-unsigned char checkForConditionEnd(struct DecompilationParameters* params);
+int checkForConditionEnd(struct DecompilationParameters* params);
 
 unsigned char checkForConditionDst(struct DecompilationParameters* params);

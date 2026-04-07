@@ -7,4 +7,4 @@ static unsigned char handleDirectJmpsResize(struct DecompilationParameters* para
 
 unsigned char decompileDirectJmps(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
 
-unsigned char checkForDirectJmpDst(struct DecompilationParameters* params);
+int checkForDirectJmpDst(struct DecompilationParameters* params);

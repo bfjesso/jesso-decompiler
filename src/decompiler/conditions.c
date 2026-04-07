@@ -609,6 +609,11 @@ int getConditionStart(struct Condition* condition)
 		return condition->dstIndex;
 	}
 
+	if(condition->decompileAsGoTo || condition->decompileAsReturn)
+	{
+		return condition->jccIndex;
+	}
+
 	int start = condition->jccIndex;
 	if (start > condition->dstIndex)
 	{
@@ -623,6 +628,11 @@ int getConditionEnd(struct Condition* condition)
 	if (condition->isFirstSwitchCase)
 	{
 		return condition->exitIndex;
+	}
+
+	if(condition->decompileAsGoTo || condition->decompileAsReturn)
+	{
+		return condition->dstIndex;
 	}
 
 	int end = condition->dstIndex;
@@ -647,17 +657,17 @@ int checkForConditionStart(struct DecompilationParameters* params)
 	return -1;
 }
 
-unsigned char checkForConditionEnd(struct DecompilationParameters* params)
+int checkForConditionEnd(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (params->startInstructionIndex == getConditionEnd(&params->currentFunc->conditions[i]))
 		{
-			return 1;
+			return i;
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 unsigned char checkForConditionDst(struct DecompilationParameters* params)
