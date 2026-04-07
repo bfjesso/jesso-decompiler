@@ -183,7 +183,17 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 				unsigned char overwrites = 0;
 				if (j != i)
 				{
-					if (isOpcodeCall(opcode) || opcode == JMP_SHORT || (doesInstructionModifyRegister(currentInstruction, returnReg, 0, 0, &overwrites) && overwrites))
+					if (doesInstructionModifyRegister(currentInstruction, returnReg, 0, 0, &overwrites) && overwrites)
+					{
+						break;
+					}
+
+					struct Function* callee;
+					if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, returnReg))
+					{
+						break;
+					}
+					else if (checkForUnknownFunctionCall(params) && compareRegisters(returnReg, AX))
 					{
 						break;
 					}

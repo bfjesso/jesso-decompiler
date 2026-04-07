@@ -135,7 +135,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	return 1;
 }
 
-int checkForUnknownFunctionCall(struct DecompilationParameters* params)
+unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params)
 {
 	if (checkForKnownFunctionCall(params, 0)) 
 	{

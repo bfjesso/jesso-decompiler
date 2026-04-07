@@ -20,7 +20,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 
 		if (calleeIndex == -1)
 		{
-			return checkForUnknownFunctionCall(params);
+			return checkForUnknownFunctionCall(params) && compareRegisters(params->currentFunc->returnReg, AX);
 		}
 
 		return params->functions[calleeIndex].returnReg == params->currentFunc->returnReg;

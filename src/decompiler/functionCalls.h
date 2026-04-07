@@ -5,7 +5,7 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 
 unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params, struct Function* callee, struct JdcStr* result);
 
-int checkForUnknownFunctionCall(struct DecompilationParameters* params);
+unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params);
 
 unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* params, struct JdcStr* result);
 
