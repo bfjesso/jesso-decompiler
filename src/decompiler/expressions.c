@@ -408,15 +408,11 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 	
 	struct JdcStr* expressions = (struct JdcStr*)calloc(5, sizeof(struct JdcStr));
 	int expressionsBufferSize = 5;
-
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
-	unsigned char isInUnreachableState = 0;
-
 	int ogStartInstructionIndex = params->startInstructionIndex;
-
-	for (int i = params->startInstructionIndex; i >= 0; i--)
+	for (int i = params->startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		if (finished)
 		{
@@ -425,7 +421,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
-		if (isInUnreachableState || doesInstructionDoNothing(currentInstruction))
+		if (doesInstructionDoNothing(currentInstruction))
 		{
 			continue;
 		}
@@ -502,18 +498,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				}
 				free(expressions);
 				return 0;
-			}
-		}
-
-		if (i != ogStartInstructionIndex) 
-		{
-			if (isOpcodeReturn(currentInstruction->opcode) || currentInstruction->opcode == JMP_SHORT)
-			{
-				isInUnreachableState = 1;
-			}
-			else if (isOpcodeJcc(currentInstruction->opcode))
-			{
-				isInUnreachableState = 0;
 			}
 		}
 	}
