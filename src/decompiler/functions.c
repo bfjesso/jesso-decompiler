@@ -38,7 +38,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			foundFirstInstruction = 1;
 		}
 
-		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
+		if ((isOpcodeCall(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) && result->addressOfFirstFuncCall == 0)
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params);
 			if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
@@ -347,7 +347,6 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
 	int numFixed = 0;
-
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
 		struct Function* currentFunc = &params->functions[i];
