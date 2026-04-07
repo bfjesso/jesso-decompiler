@@ -82,8 +82,12 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		{
 			if (checkForDirectJmpDst(params) || checkForConditionDst(params))
 			{
-				addIndents(result, params->numOfIndents);
-				sprintfJdc(result, 1, "// %i instructions skipped\n", numOfSkippedInstructions);
+				if(numOfSkippedInstructions > 0)
+				{
+					addIndents(result, params->numOfIndents);
+					sprintfJdc(result, 1, "// %i instructions skipped\n", numOfSkippedInstructions);
+				}
+
 				isInUnreachableState = 0;
 				numOfSkippedInstructions = 0;
 			}
