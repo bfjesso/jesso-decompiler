@@ -25,19 +25,16 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 		jmpAddress += instruction->address;
 	}
 
-	if(!isOpcodeCall(instruction->opcode))
+	int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
+	if (instructionIndex != -1)
 	{
-		int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
-		if (instructionIndex != -1)
+		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
+		if (instructionIndex != params->startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
 		{
-			struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
-			if (instructionIndex != params->startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
-			{
-				params->startInstructionIndex = instructionIndex;
-				unsigned long long result =  resolveJmpChain(params);
-				params->startInstructionIndex = ogStartInstructionIndex;
-				return result;
-			}
+			params->startInstructionIndex = instructionIndex;
+			unsigned long long result =  resolveJmpChain(params);
+			params->startInstructionIndex = ogStartInstructionIndex;
+			return result;
 		}
 	}
 
