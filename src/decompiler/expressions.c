@@ -3,6 +3,7 @@
 #include "decompilationUtils.h"
 #include "functions.h"
 #include "functionCalls.h"
+#include "assignment.h"
 #include "operations.h"
 #include "dataTypes.h"
 
@@ -622,7 +623,14 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 		params->startInstructionIndex = i;
 		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
-			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]))
+			struct JdcStr operand1Str = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[0], &operand1Str))
+			{
+				freeJdcStr(&operand1Str);
+				return 0;
+			}
+			
+			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && checkForAssignment(params)))
 			{
 				if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
 				{
@@ -630,41 +638,23 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 					continue;
 				}
 
-				struct JdcStr operandStr = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[0], &operandStr))
-				{
-					freeJdcStr(&operandStr);
-					return 0;
-				}
-
-				sprintfJdc(result, 0, "%s %s 0", operandStr.buffer, compOperator);
-				freeJdcStr(&operandStr);
-
+				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+				freeJdcStr(&operand1Str);
 				return 1;
 			}
-			else 
+
+			struct JdcStr operand2Str = initializeJdcStr();
+			if (!decompileOperand(params, &currentInstruction->operands[1], &operand2Str))
 			{
-				struct JdcStr operand1Str = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[0], &operand1Str))
-				{
-					freeJdcStr(&operand1Str);
-					return 0;
-				}
-
-				struct JdcStr operand2Str = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[1], &operand2Str))
-				{
-					freeJdcStr(&operand1Str);
-					freeJdcStr(&operand2Str);
-					return 0;
-				}
-
-				sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
-
-				return 1;
+				return 0;
 			}
+
+			sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
+			freeJdcStr(&operand1Str);
+			freeJdcStr(&operand2Str);
+			return 1;
 		}
 		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
 		{
@@ -673,6 +663,13 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
+			}
+			
+			if (currentInstruction->opcode == SUB && checkForAssignment(params))
+			{
+				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+				freeJdcStr(&operand1Str);
+				return 1;
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
@@ -686,7 +683,6 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
-
 			return 1;
 		}
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
@@ -700,7 +696,6 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 
 			sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 			freeJdcStr(&operand1Str);
-
 			return 1;
 		}
 	}
