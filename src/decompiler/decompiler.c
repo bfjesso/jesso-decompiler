@@ -81,7 +81,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (isInUnreachableState)
 		{
-			if (checkForDirectJmpDst(params) != -1 || checkForConditionDst(params))
+			if (checkForDirectJmpDst(params) != -1 || checkForConditionEnd(params, 0) != -1)
 			{
 				if(numOfSkippedInstructions > 0)
 				{

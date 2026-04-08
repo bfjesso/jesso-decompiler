@@ -676,13 +676,16 @@ int checkForConditionStart(struct DecompilationParameters* params)
 	return -1;
 }
 
-int checkForConditionEnd(struct DecompilationParameters* params)
+int checkForConditionEnd(struct DecompilationParameters* params, unsigned char ignoreGoto)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex && !params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn)
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex)
 		{
-			return i;
+			if (!ignoreGoto || (!params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn))
+			{
+				return i;
+			}
 		}
 	}
 
