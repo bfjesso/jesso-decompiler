@@ -173,12 +173,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		params->startInstructionIndex = i;
 
-		unsigned char overwrites = 0;
-		if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
-		{
-			return 0;
-		}
-
 		struct Function* callee;
 		if (checkForKnownFunctionCall(params, &callee) && callee)
 		{
@@ -222,6 +216,12 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		{
 			if (typeRef) { *typeRef = getTypeOfOperand(instruction->opcode, &(instruction->operands[operandNum])); }
 			return 1;
+		}
+
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
+		{
+			return 0;
 		}
 
 		if (isOpcodeJmp(instruction->opcode))
