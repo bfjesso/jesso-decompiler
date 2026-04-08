@@ -64,6 +64,10 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
+		if (currentInstruction->address == 0x140086EDD) 
+		{
+			int ttt = 0;
+		}
 
 		if (params->numOfIndents < 1)
 		{
@@ -323,9 +327,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
 
-			int start = getConditionStart(condition);
-			int end = getConditionEnd(condition);
-			for (int j = start; j < end; j++)
+			for (int j = condition->startIndex; j < condition->endIndex; j++)
 			{
 				params->startInstructionIndex = j;
 				int conditionIndex = checkForConditionStart(params);
@@ -334,10 +336,9 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 					if (!cond->isCombinedByOther && !cond->decompileAsGoTo && !cond->decompileAsReturn) 
 					{
-						int conditionEnd = getConditionEnd(cond);
-						if (conditionEnd <= end) 
+						if (cond->endIndex <= condition->endIndex)
 						{
-							j = conditionEnd - 1;
+							j = cond->endIndex - 1;
 							continue;
 						}
 					}
@@ -391,7 +392,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			params->startInstructionIndex = end;
+			params->startInstructionIndex = condition->endIndex;
 			for (int k = 0; k < numOfRegs; k++)
 			{
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT) || // any modified reg in a loop will be added as a reg var

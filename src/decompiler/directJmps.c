@@ -60,8 +60,8 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 				}
 				else if (params->currentFunc->conditions[j].conditionType == LOOP_CT || params->currentFunc->conditions[j].conditionType == DO_WHILE_CT)
 				{
-					int loopStart = getConditionStart(&params->currentFunc->conditions[j]);
-					int loopEnd = getConditionEnd(&params->currentFunc->conditions[j]);
+					int loopStart = params->currentFunc->conditions[j].startIndex;
+					int loopEnd = params->currentFunc->conditions[j].endIndex;
 					
 					if (i > loopStart && i < loopEnd) 
 					{

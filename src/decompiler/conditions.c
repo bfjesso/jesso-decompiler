@@ -143,6 +143,34 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = dstIndex;
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].exitIndex = exitIndex;
 
+				int startIndex = i;
+				int endIndex = dstIndex;
+				if (params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType == SWITCH_CASE_CT)
+				{
+					startIndex = dstIndex;
+
+					// only one of the switch cases needs an exit index set
+					if (params->currentFunc->conditions[params->currentFunc->numOfConditions].isFirstSwitchCase)
+					{
+						endIndex = exitIndex;
+					}
+					else 
+					{
+						exitIndex = 0;
+					}
+				}
+				else 
+				{
+					if (startIndex > endIndex)
+					{
+						startIndex = dstIndex;
+						endIndex = i;
+					}
+				}
+
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].startIndex = startIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].endIndex = endIndex;
+
 				combinationCount = 0;
 				stopCombination = 0;
 				params->currentFunc->numOfConditions++;
@@ -216,8 +244,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			continue;
 		}
 
-		int start1 = getConditionStart(&params->currentFunc->conditions[i]);
-		int end1 = getConditionEnd(&params->currentFunc->conditions[i]);
+		int start1 = params->currentFunc->conditions[i].startIndex;
+		int end1 = params->currentFunc->conditions[i].endIndex;
 		
 		for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 		{
@@ -227,14 +255,47 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				continue;
 			}
 
-			int start2 = getConditionStart(&params->currentFunc->conditions[j]);
-			int end2 = getConditionEnd(&params->currentFunc->conditions[j]);
+			int start2 = params->currentFunc->conditions[j].startIndex;
+			int end2 = params->currentFunc->conditions[j].endIndex;
 			
 			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2) || (start1 == start2 && end1 > end2)) // last check is for do while loops
 			{
 				params->currentFunc->conditions[i].decompileAsGoTo = 1;
 				params->currentFunc->conditions[i].conditionType = IF_CT;
 				break;
+			}
+		}
+	}
+
+	// checking for returns/direct jmps that end a condition early
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (!condition->isCombinedByOther && !condition->decompileAsReturn && !condition->decompileAsGoTo)
+		{
+			for (int j = condition->startIndex; j < condition->endIndex - 1; j++)
+			{
+				struct DisassembledInstruction* instruction = &params->instructions[j];
+				params->startInstructionIndex = j;
+				int conditionIndex = checkForConditionStart(params);
+				if (conditionIndex != -1 && conditionIndex != i)
+				{
+					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
+					if (!cond->isCombinedByOther && !cond->decompileAsGoTo && !cond->decompileAsReturn)
+					{
+						if (cond->endIndex <= condition->endIndex)
+						{
+							j = cond->endIndex - 1;
+							continue;
+						}
+					}
+				}
+
+				if (checkForReturnStatement(params) || isOpcodeJmp(instruction->opcode))
+				{
+					condition->endIndex = j + 1;
+					break;
+				}
 			}
 		}
 	}
@@ -290,7 +351,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 			continue;
 		}
 
-		if (params->startInstructionIndex == getConditionEnd(condition))
+		if (params->startInstructionIndex == condition->endIndex)
 		{
 			if (!decompileCondition(params, i, 0, result))
 			{
@@ -322,7 +383,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 			continue;
 		}
 
-		if (params->startInstructionIndex == getConditionStart(condition))
+		if (params->startInstructionIndex == condition->startIndex)
 		{
 			if (!decompileCondition(params, i, 1, result))
 			{
@@ -602,43 +663,11 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	return freeJdcStr(&conditionExpression);
 }
 
-int getConditionStart(struct Condition* condition) 
-{
-	if (condition->conditionType == SWITCH_CASE_CT) 
-	{
-		return condition->dstIndex;
-	}
-
-	int start = condition->jccIndex;
-	if (start > condition->dstIndex)
-	{
-		start = condition->dstIndex;
-	}
-
-	return start;
-}
-
-int getConditionEnd(struct Condition* condition)
-{
-	if (condition->isFirstSwitchCase)
-	{
-		return condition->exitIndex;
-	}
-
-	int end = condition->dstIndex;
-	if (end < condition->jccIndex)
-	{
-		end = condition->jccIndex;
-	}
-
-	return end;
-}
-
 int checkForConditionStart(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == getConditionStart(&params->currentFunc->conditions[i]))
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].startIndex)
 		{
 			return i;
 		}
@@ -651,7 +680,7 @@ int checkForConditionEnd(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == getConditionEnd(&params->currentFunc->conditions[i]))
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex)
 		{
 			return i;
 		}

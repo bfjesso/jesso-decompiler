@@ -81,6 +81,8 @@ struct Condition
 	int jccIndex;
 	int dstIndex; // the index of the instruction jumped to by the jcc
 	int exitIndex; // if the instruction before dstIndex is a jmp, this is the index of the instruction jumped to by that jmp
+	int startIndex;
+	int endIndex;
 	enum ConditionType conditionType;
 	unsigned char decompileAsReturn;
 	unsigned char decompileAsGoTo;

@@ -490,9 +490,9 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 
 		int conditionIndex = checkForConditionEnd(params);
-		if(conditionIndex != -1 && !params->currentFunc->conditions[conditionIndex].decompileAsGoTo && !params->currentFunc->conditions[conditionIndex].decompileAsReturn)
+		if (conditionIndex != -1 && !params->currentFunc->conditions[conditionIndex].decompileAsGoTo && !params->currentFunc->conditions[conditionIndex].decompileAsReturn)
 		{
-			i = getConditionStart(&params->currentFunc->conditions[conditionIndex]) + 1;
+			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 
