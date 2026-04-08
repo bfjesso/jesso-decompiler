@@ -90,7 +90,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	}
 	else if (isOpcodeSETcc(instruction->opcode))
 	{
-		return decompileCMOVcc(params, getAssignment, result);
+		return decompileSETcc(params, getAssignment, result);
 	}
 	else if (instruction->opcode == XCHG)
 	{

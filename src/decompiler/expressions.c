@@ -549,6 +549,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 unsigned char decompileComparison(struct DecompilationParameters* params, unsigned char invertOperator, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
+	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	enum Mnemonic jcc = currentInstruction->opcode;
 
@@ -638,6 +639,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 
 				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
@@ -652,6 +654,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
@@ -667,6 +670,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			{
 				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
@@ -681,6 +685,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
@@ -694,6 +699,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 
 			sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 			freeJdcStr(&operand1Str);
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 	}

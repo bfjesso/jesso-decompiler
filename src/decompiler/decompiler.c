@@ -64,6 +64,10 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
+		if (currentInstruction->address == 0x140086E82) 
+		{
+			int ttt = 0;
+		}
 
 		if (params->numOfIndents < 1)
 		{
