@@ -227,26 +227,17 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		if (isOpcodeJmp(instruction->opcode))
 		{
 			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
-			if (dstIndex < i)
+			if (dstIndex > i)
 			{
-				lastInstructionIndex = i - 1;
+				i = dstIndex - 1;
 			}
-
-			i = dstIndex - 1;
 		}
 		else if (isOpcodeJcc(instruction->opcode)) 
 		{
 			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
-			params->startInstructionIndex = dstIndex;
-			if (dstIndex < i) 
+			if (dstIndex > i) 
 			{
-				if (isRegisterAccessedBeforeInit(params, i - 1, reg, typeRef))
-				{
-					return 1;
-				}
-			}
-			else 
-			{
+				params->startInstructionIndex = dstIndex;
 				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, typeRef))
 				{
 					return 1;
