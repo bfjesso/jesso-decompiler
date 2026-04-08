@@ -12,7 +12,7 @@ extern "C"
 }
 #endif
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, struct VarType* typeRef);
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef);
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params);
 

@@ -165,7 +165,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}\n");
 }
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, struct VarType* typeRef)
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef)
 {
 	int ogStartInstructionIndex = params->startInstructionIndex;
 	for (int i = ogStartInstructionIndex; i <= lastInstructionIndex; i++)
@@ -182,32 +182,32 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 				if (typeRef) { *typeRef = regArg->type; }
 				return 1;
 			}
-			else if (compareRegisters(callee->returnReg, reg)) 
+			else if (!ignoreInitialization && compareRegisters(callee->returnReg, reg))
 			{
 				return 0;
 			}
 
 			continue;
 		}
-		
+
 		if (checkForUnknownFunctionCall(params))
 		{
-			if (compareRegisters(reg, AX)) 
+			if (compareRegisters(reg, AX))
 			{
 				return 0;
 			}
-			
+
 			continue;
 		}
-		
+
 		if (checkForReturnStatement(params))
 		{
-			if (compareRegisters(params->currentFunc->returnReg, reg)) 
+			if (compareRegisters(params->currentFunc->returnReg, reg))
 			{
 				if (typeRef) { *typeRef = params->currentFunc->returnType; }
 				return 1;
 			}
-			
+
 			continue;
 		}
 
@@ -218,10 +218,13 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			return 1;
 		}
 
-		unsigned char overwrites = 0;
-		if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
+		if (!ignoreInitialization) 
 		{
-			return 0;
+			unsigned char overwrites = 0;
+			if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
+			{
+				return 0;
+			}
 		}
 
 		if (isOpcodeJmp(instruction->opcode))
@@ -238,7 +241,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			if (dstIndex > i) 
 			{
 				params->startInstructionIndex = dstIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, typeRef))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, typeRef))
 				{
 					return 1;
 				}
@@ -266,7 +269,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 
 			struct VarType returnType = { 0 }; // used both if its an import call and to check if the return value is used
 			params->startInstructionIndex++;
-			if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, &returnType))
+			if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType))
 			{
 				continue;
 			}
@@ -379,10 +382,22 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			params->startInstructionIndex = (condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT) ? condition->startIndex : condition->endIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
 			for (int k = 0; k < numOfRegs; k++)
 			{
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0))
+				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
+				{
+					params->startInstructionIndex = condition->startIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
+					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k].reg, 1, 0))
+					{
+						if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
+						{
+							return 0;
+						}
+					}
+				}
+				
+				params->startInstructionIndex = condition->endIndex;
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0, 0))
 				{
 					if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
 					{
