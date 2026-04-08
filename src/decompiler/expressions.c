@@ -1,6 +1,8 @@
 #include "expressions.h"
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
+#include "conditions.h"
+#include "directJmps.h"
 #include "functions.h"
 #include "functionCalls.h"
 #include "assignment.h"
