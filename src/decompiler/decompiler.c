@@ -379,11 +379,10 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			params->startInstructionIndex = condition->endIndex;
+			params->startInstructionIndex = (condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT) ? condition->startIndex : condition->endIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
 			for (int k = 0; k < numOfRegs; k++)
 			{
-				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT) || // any modified reg in a loop will be added as a reg var
-					isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0))
 				{
 					if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
 					{
