@@ -63,14 +63,14 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				}
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-				struct StackVariable* localVar = getStackVarByOffset(result, stackOffset);
+				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
 					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
-				else if (localVar)
+				else if (stackVar)
 				{
-					localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
 				else
 				{
@@ -97,14 +97,14 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				}
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
-				struct StackVariable* localVar = getStackVarByOffset(result, stackOffset);
+				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
 					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
-				else if (localVar)
+				else if (stackVar)
 				{
-					localVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
 				else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset))
 				{
@@ -604,6 +604,11 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 
 unsigned char addStackArg(struct Function* function, struct VarType type, int stackOffset) 
 {
+	if (getStackArgByOffset(function, stackOffset)) 
+	{
+		return 1;
+	}
+	
 	struct StackVariable* newStackArgs = (struct StackVariable*)realloc(function->stackArgs, sizeof(struct StackVariable) * (function->numOfStackArgs + 1));
 	if (newStackArgs)
 	{
@@ -625,6 +630,11 @@ unsigned char addStackArg(struct Function* function, struct VarType type, int st
 
 unsigned char addStackVar(struct Function* function, struct VarType type, int stackOffset)
 {
+	if (getStackVarByOffset(function, stackOffset))
+	{
+		return 1;
+	}
+	
 	struct StackVariable* newLocalVars = (struct StackVariable*)realloc(function->stackVars, sizeof(struct StackVariable) * (function->numOfStackVars + 1));
 	if (newLocalVars)
 	{
@@ -655,6 +665,11 @@ unsigned char addStackVar(struct Function* function, struct VarType type, int st
 
 unsigned char addRegArg(struct Function* function, struct VarType type, enum Register reg) 
 {
+	if (getRegArgByReg(function, reg))
+	{
+		return 1;
+	}
+	
 	struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(function->regArgs, sizeof(struct RegisterVariable) * (function->numOfRegArgs + 1));
 	if (newRegArgs)
 	{
@@ -676,6 +691,11 @@ unsigned char addRegArg(struct Function* function, struct VarType type, enum Reg
 
 unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg) 
 {
+	if (getRegVarByReg(function, reg))
+	{
+		return 1;
+	}
+	
 	struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(function->regVars, sizeof(struct RegisterVariable) * (function->numOfRegVars + 1));
 	if (newRegVars)
 	{
@@ -697,6 +717,11 @@ unsigned char addRegVar(struct Function* function, struct VarType type, enum Reg
 
 unsigned char addReturnedVar(struct Function* function, struct VarType type, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)
 {
+	if (findReturnedVar(function, callInstructionAddress))
+	{
+		return 1;
+	}
+	
 	struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(function->returnedVars, sizeof(struct ReturnedVariable) * (function->numOfReturnedVars + 1));
 	if (newReturnedVars)
 	{
