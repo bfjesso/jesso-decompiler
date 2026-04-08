@@ -13,4 +13,6 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 int checkForConditionStart(struct DecompilationParameters* params);
 
-int checkForConditionEnd(struct DecompilationParameters* params, unsigned char ignoreGoto);
+int checkForConditionEnd(struct DecompilationParameters* params);
+
+unsigned char checkForConditionDst(struct DecompilationParameters* params);

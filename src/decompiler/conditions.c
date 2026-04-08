@@ -267,39 +267,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		}
 	}
 
-	// checking for returns/direct jmps that end a condition early
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
-	{
-		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (!condition->isCombinedByOther && !condition->decompileAsReturn && !condition->decompileAsGoTo)
-		{
-			for (int j = condition->startIndex; j < condition->endIndex - 1; j++)
-			{
-				struct DisassembledInstruction* instruction = &params->instructions[j];
-				params->startInstructionIndex = j;
-				int conditionIndex = checkForConditionStart(params);
-				if (conditionIndex != -1 && conditionIndex != i)
-				{
-					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
-					if (!cond->isCombinedByOther && !cond->decompileAsGoTo && !cond->decompileAsReturn)
-					{
-						if (cond->endIndex <= condition->endIndex)
-						{
-							j = cond->endIndex - 1;
-							continue;
-						}
-					}
-				}
-
-				if (checkForReturnStatement(params) || isOpcodeJmp(instruction->opcode))
-				{
-					condition->endIndex = j + 1;
-					break;
-				}
-			}
-		}
-	}
-
 	return 1;
 }
 
@@ -676,16 +643,13 @@ int checkForConditionStart(struct DecompilationParameters* params)
 	return -1;
 }
 
-int checkForConditionEnd(struct DecompilationParameters* params, unsigned char ignoreGoto)
+int checkForConditionEnd(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex)
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex && !params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn)
 		{
-			if (!ignoreGoto || (!params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn))
-			{
-				return i;
-			}
+			return i;
 		}
 	}
 
@@ -704,3 +668,4 @@ unsigned char checkForConditionDst(struct DecompilationParameters* params)
 
 	return 0;
 }
+

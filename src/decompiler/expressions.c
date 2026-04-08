@@ -410,7 +410,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 	unsigned char finished = 0;
 	int ogStartInstructionIndex = params->startInstructionIndex;
 
-	int conditionIndex = checkForConditionEnd(params, 1);
+	int conditionIndex = checkForConditionEnd(params);
 	if (conditionIndex != -1)
 	{
 		params->startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
@@ -494,7 +494,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			}
 		}
 
-		int conditionIndex = checkForConditionEnd(params, 1);
+		int conditionIndex = checkForConditionEnd(params);
 		if (conditionIndex != -1)
 		{
 			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
