@@ -102,12 +102,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 
 static unsigned char decompileBinaryOperation(struct DecompilationParameters* params, unsigned char getAssignment, const char* regularOperator, const char* assignmentOperator, struct JdcStr* result)
 {
-	int ogStartInstructionIndex = params->startInstructionIndex;
 	struct Operand* secondOperand = &params->instructions[params->startInstructionIndex].operands[1];
-	if (secondOperand->type == REGISTER)
-	{
-		params->startInstructionIndex--;
-	}
 
 	struct JdcStr decompiledSecondOperand = initializeJdcStr();
 	if (!decompileOperand(params, secondOperand, &decompiledSecondOperand))
@@ -115,8 +110,6 @@ static unsigned char decompileBinaryOperation(struct DecompilationParameters* pa
 		freeJdcStr(&decompiledSecondOperand);
 		return 0;
 	}
-
-	params->startInstructionIndex = ogStartInstructionIndex;
 
 	if (getAssignment)
 	{

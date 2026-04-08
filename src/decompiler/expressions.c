@@ -102,9 +102,6 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 		}
 		else
 		{
-			int ogStartInstructionIndex = params->startInstructionIndex;
-			params->startInstructionIndex--;
-
 			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 			struct JdcStr baseOperandStr = initializeJdcStr();
 			if (!decompileRegister(params, operand->memoryAddress.reg, &baseOperandStr, &regArgVar))
@@ -125,7 +122,6 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 					sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
 				}
 
-				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
@@ -202,8 +198,6 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 
 			freeJdcStr(&baseOperandStr);
 			freeJdcStr(&displacementOperandStr);
-
-			params->startInstructionIndex = ogStartInstructionIndex;
 		}
 
 		freeJdcStr(&typeStr);
@@ -415,6 +409,17 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 
 	unsigned char finished = 0;
 	int ogStartInstructionIndex = params->startInstructionIndex;
+
+	int conditionIndex = checkForConditionEnd(params);
+	if (conditionIndex != -1)
+	{
+		params->startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
+	}
+	else 
+	{
+		params->startInstructionIndex--;
+	}
+
 	for (int i = params->startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		if (finished)
@@ -490,7 +495,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 
 		int conditionIndex = checkForConditionEnd(params);
-		if (conditionIndex != -1 && !params->currentFunc->conditions[conditionIndex].decompileAsGoTo && !params->currentFunc->conditions[conditionIndex].decompileAsReturn)
+		if (conditionIndex != -1)
 		{
 			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}

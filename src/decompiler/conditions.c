@@ -680,7 +680,7 @@ int checkForConditionEnd(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex)
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex && !params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn)
 		{
 			return i;
 		}
