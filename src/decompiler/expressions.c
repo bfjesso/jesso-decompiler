@@ -635,6 +635,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 				if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
 				{
 					i--;
+					freeJdcStr(&operand1Str);
 					continue;
 				}
 
