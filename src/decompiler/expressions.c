@@ -490,14 +490,9 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 
 		int conditionIndex = checkForConditionEnd(params);
-		if(conditionIndex != -1)
+		if(conditionIndex != -1 && !params->currentFunc->conditions[conditionIndex].decompileAsGoTo && !params->currentFunc->conditions[conditionIndex].decompileAsReturn)
 		{
 			i = getConditionStart(&params->currentFunc->conditions[conditionIndex]) + 1;
-		}
-		int directJmpIndex = checkForDirectJmpDst(params);
-		if(directJmpIndex != -1)
-		{
-			i = params->currentFunc->directJmps[directJmpIndex].jmpIndex + 1;
 		}
 	}
 

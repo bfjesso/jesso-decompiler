@@ -609,11 +609,6 @@ int getConditionStart(struct Condition* condition)
 		return condition->dstIndex;
 	}
 
-	if(condition->decompileAsGoTo || condition->decompileAsReturn)
-	{
-		return condition->jccIndex;
-	}
-
 	int start = condition->jccIndex;
 	if (start > condition->dstIndex)
 	{
@@ -628,11 +623,6 @@ int getConditionEnd(struct Condition* condition)
 	if (condition->isFirstSwitchCase)
 	{
 		return condition->exitIndex;
-	}
-
-	if(condition->decompileAsGoTo || condition->decompileAsReturn)
-	{
-		return condition->dstIndex;
 	}
 
 	int end = condition->dstIndex;

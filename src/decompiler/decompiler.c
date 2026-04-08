@@ -318,7 +318,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (!condition->isCombinedByOther && !condition->decompileAsReturn && !condition->decompileAsGoTo)
+		if (!condition->isCombinedByOther && !condition->decompileAsReturn)
 		{
 			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
 			int numOfRegs = 0;
@@ -407,7 +407,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			// if there are registers used in the comparisson of loop, they need to be a reg var
 			if (condition->conditionType == DO_WHILE_CT || condition->conditionType == LOOP_CT)
 			{
-				for (int j = end; j >= start; j--) 
+				for (int j = condition->jccIndex - 1; j >= params->currentFunc->firstInstructionIndex; j--)
 				{
 					struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
 					
