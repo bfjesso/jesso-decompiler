@@ -77,12 +77,20 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	{
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
+			int ogStartInstructionIndex = params->startInstructionIndex;
+			if (instruction->operands[i].type == REGISTER) 
+			{
+				params->startInstructionIndex--;
+			}
+			
 			struct JdcStr decompiledOperand = initializeJdcStr();
 			if (!decompileOperand(params, &instruction->operands[i], &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
 			}
+
+			params->startInstructionIndex = ogStartInstructionIndex;
 			
 			sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
 			freeJdcStr(&decompiledOperand);

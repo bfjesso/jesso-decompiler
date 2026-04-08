@@ -5,6 +5,7 @@
 #include "returnStatements.h"
 #include "functionCalls.h"
 #include "intrinsics.h"
+#include "conditions.h"
 #include "directJmps.h"
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
@@ -63,7 +64,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-		
+
 		if (params->numOfIndents < 1)
 		{
 			sprintfJdc(result, 0, "Bad indentation. There is an error with condition handling at 0x%llX.", currentInstruction->address);
@@ -164,13 +165,107 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}\n");
 }
 
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, struct VarType* typeRef)
+{
+	int ogStartInstructionIndex = params->startInstructionIndex;
+	for (int i = ogStartInstructionIndex; i <= lastInstructionIndex; i++)
+	{
+		struct DisassembledInstruction* instruction = &(params->instructions[i]);
+		params->startInstructionIndex = i;
+
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
+		{
+			return 0;
+		}
+
+		struct Function* callee;
+		if (checkForKnownFunctionCall(params, &callee) && callee)
+		{
+			struct RegisterVariable* regArg = getRegArgByReg(callee, reg);
+			if (regArg)
+			{
+				if (typeRef) { *typeRef = regArg->type; }
+				return 1;
+			}
+			else if (compareRegisters(callee->returnReg, reg)) 
+			{
+				return 0;
+			}
+
+			continue;
+		}
+		
+		if (checkForUnknownFunctionCall(params))
+		{
+			if (compareRegisters(reg, AX)) 
+			{
+				return 0;
+			}
+			
+			continue;
+		}
+		
+		if (checkForReturnStatement(params))
+		{
+			if (compareRegisters(params->currentFunc->returnReg, reg)) 
+			{
+				if (typeRef) { *typeRef = params->currentFunc->returnType; }
+				return 1;
+			}
+			
+			continue;
+		}
+
+		unsigned char operandNum = 0;
+		if (doesInstructionAccessRegister(instruction, reg, &operandNum))
+		{
+			if (typeRef) { *typeRef = getTypeOfOperand(instruction->opcode, &(instruction->operands[operandNum])); }
+			return 1;
+		}
+
+		if (isOpcodeJmp(instruction->opcode))
+		{
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
+			if (dstIndex < i)
+			{
+				lastInstructionIndex = i - 1;
+			}
+
+			i = dstIndex - 1;
+		}
+		else if (isOpcodeJcc(instruction->opcode)) 
+		{
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
+			params->startInstructionIndex = dstIndex;
+			if (dstIndex < i) 
+			{
+				if (isRegisterAccessedBeforeInit(params, i - 1, reg, typeRef))
+				{
+					return 1;
+				}
+			}
+			else 
+			{
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, typeRef))
+				{
+					return 1;
+				}
+			}
+		}
+	}
+
+	params->startInstructionIndex = ogStartInstructionIndex;
+	return 0;
+}
+
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		params->startInstructionIndex = i;
 		struct Function* callee = 0;
-		if (checkForKnownFunctionCall(params, &callee) || checkForUnknownFunctionCall(params))
+		if ((checkForKnownFunctionCall(params, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params))
 		{
 			struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
 			int callInstructionIndex = i;
@@ -178,56 +273,16 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 
 			unsigned long long calleeAddress = resolveJmpChain(params);
 
-			struct VarType returnType = { 0 }; // used if its an import call, also using this here to check if the return value is used
-			for (int j = i; j <= params->currentFunc->lastInstructionIndex; j++)
-			{
-				params->startInstructionIndex = j;
-				struct DisassembledInstruction*  currentInstruction = &(params->instructions[j]);
-				enum Mnemonic opcode = currentInstruction->opcode;
-				unsigned char overwrites = 0;
-				if (j != i)
-				{
-					if (doesInstructionModifyRegister(currentInstruction, returnReg, 0, 0, &overwrites) && overwrites)
-					{
-						break;
-					}
-
-					struct Function* callee;
-					if (checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, returnReg) && !getRegArgByReg(callee, returnReg))
-					{
-						break;
-					}
-					else if (checkForUnknownFunctionCall(params) && compareRegisters(returnReg, AX))
-					{
-						break;
-					}
-				}
-
-				if (checkForReturnStatement(params))
-				{
-					returnType = params->currentFunc->returnType;
-					break;
-				}
-
-				unsigned char operandNum = 0;
-				if (doesInstructionAccessRegister(currentInstruction, returnReg, &operandNum))
-				{
-					returnType = getTypeOfOperand(opcode, &(currentInstruction->operands[operandNum]));
-					break;
-				}
-			}
-			if (returnType.primitiveType == VOID_TYPE)
+			struct VarType returnType = { 0 }; // used both if its an import call and to check if the return value is used
+			params->startInstructionIndex++;
+			if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, &returnType))
 			{
 				continue;
 			}
 
 			if (callee)
 			{
-				if (callee->returnType.primitiveType == VOID_TYPE)
-				{
-					continue;
-				}
-				else if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
+				if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
 				{
 					return 0;
 				}
@@ -270,14 +325,22 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 
 			int start = getConditionStart(condition);
 			int end = getConditionEnd(condition);
-			
 			for (int j = start; j < end; j++)
 			{
 				params->startInstructionIndex = j;
 				int conditionIndex = checkForConditionStart(params);
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
-					break;
+					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
+					if (!cond->isCombinedByOther && !cond->decompileAsGoTo && !cond->decompileAsReturn) 
+					{
+						int conditionEnd = getConditionEnd(cond);
+						if (conditionEnd <= end) 
+						{
+							j = conditionEnd - 1;
+							continue;
+						}
+					}
 				}
 
 				if (checkForReturnStatement(params))
@@ -328,42 +391,15 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			int checkingStart = condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT ? start : end; // if it is a loop, the code can run more than once so it needs to start checking from the begining of the loop
-			for (int j = checkingStart; j <= params->currentFunc->lastInstructionIndex; j++)
+			params->startInstructionIndex = end;
+			for (int k = 0; k < numOfRegs; k++)
 			{
-				params->startInstructionIndex = j;
-				int conditionIndex = checkForConditionStart(params);
-				if (conditionIndex != -1 && conditionIndex != i)
+				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT) || // any modified reg in a loop will be added as a reg var
+					isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0))
 				{
-					break;
-				}
-
-				struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
-
-				for (int k = 0; k < numOfRegs; k++)
-				{
-					if (modifiedRegs[k].reg == NO_REG)
+					if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
 					{
-						continue;
-					}
-
-					unsigned char overwrites = 0;
-					if (doesInstructionAccessRegister(currentInstruction, modifiedRegs[k].reg, 0) || 
-						(doesInstructionModifyRegister(currentInstruction, modifiedRegs[k].reg, 0, 0, &overwrites) && !overwrites) ||
-						(isOpcodeReturn(currentInstruction->opcode) && compareRegisters(modifiedRegs[k].reg, AX)))
-					{
-						if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg)) 
-						{
-							return 0;
-						}
-
-						modifiedRegs[k].reg = NO_REG; // so it isnt checked again
-						break;
-					}
-					else if (overwrites && !isOpcodeCMOVcc(currentInstruction->opcode) && !isOpcodeSETcc(currentInstruction->opcode))
-					{
-						modifiedRegs[k].reg = NO_REG;
-						break;
+						return 0;
 					}
 				}
 			}

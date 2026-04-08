@@ -1,6 +1,5 @@
 #pragma once
 #include "decompilationStructs.h"
-#include "conditions.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -12,6 +11,8 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, struct VarType* typeRef);
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params);
 
