@@ -80,6 +80,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				lastCondition->combinedJccIndexes[combinationCount] = i;
 				lastCondition->combinedJccsLogicType = OR_LT;
 				lastCondition->dstIndex = dstIndex;
+				lastCondition->endIndex = dstIndex;
 				lastCondition->exitIndex = exitIndex;
 				combinationCount++;
 
