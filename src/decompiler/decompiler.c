@@ -309,14 +309,17 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 static unsigned char getAllRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
+
+	enum Register* modifiedRegs = (enum Register*)calloc(numOfRegisters, sizeof(enum Register));
+	int numOfRegs = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
+		memset(modifiedRegs, 0, numOfRegisters * sizeof(enum Register));
+		numOfRegs = 0;
+		
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (!condition->isCombinedByOther && !condition->decompileAsReturn)
 		{
-			struct RegisterVariable modifiedRegs[ST0 - RAX] = { 0 };
-			int numOfRegs = 0;
-
 			for (int j = condition->startIndex; j < condition->endIndex; j++)
 			{
 				params->startInstructionIndex = j;
@@ -363,7 +366,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					int alreadyFound = 0;
 					for (int k = 0; k < numOfRegs; k++)
 					{
-						if (compareRegisters(reg, modifiedRegs[k].reg))
+						if (compareRegisters(reg, modifiedRegs[k]))
 						{
 							alreadyFound = 1;
 							break;
@@ -374,9 +377,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 						continue;
 					}
 
-					struct VarType type = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]);
-					modifiedRegs[numOfRegs].reg = reg;
-					modifiedRegs[numOfRegs].type = type;
+					modifiedRegs[numOfRegs] = reg;
 					numOfRegs++;
 				}
 			}
@@ -384,23 +385,26 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			// checking if the modified regs are accessed before being overwritten after the condition
 			for (int k = 0; k < numOfRegs; k++)
 			{
+				struct VarType regVarType = { 0 };
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					params->startInstructionIndex = condition->startIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k].reg, 1, 0))
+					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k], 1, &regVarType))
 					{
-						if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
+						if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
 						{
+							free(modifiedRegs);
 							return 0;
 						}
 					}
 				}
 				
 				params->startInstructionIndex = condition->endIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k].reg, 0, 0))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k], 0, &regVarType))
 				{
-					if (!addRegVar(params->currentFunc, modifiedRegs[k].type, modifiedRegs[k].reg))
+					if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
 					{
+						free(modifiedRegs);
 						return 0;
 					}
 				}
@@ -421,6 +425,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 							{
 								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
 								{
+									free(modifiedRegs);
 									return 0;
 								}
 							}
@@ -428,6 +433,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 							{
 								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
 								{
+									free(modifiedRegs);
 									return 0;
 								}
 							}
@@ -440,6 +446,8 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 		}
 	}
 
+	free(modifiedRegs);
+
 	// check for registers that depend on the value of a reg var
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
@@ -448,48 +456,28 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
-			
-			unsigned char alreadyFound = 0;
-			for (int j = 0; j < params->currentFunc->numOfRegVars; j++)
-			{
-				if (compareRegisters(reg, params->currentFunc->regVars[j].reg))
-				{
-					params->currentFunc->regVars[j].type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-					alreadyFound = 1;
-					break;
-				}
-			}
-			if (alreadyFound)
+			if (getRegVarByReg(params->currentFunc, reg)) 
 			{
 				continue;
 			}
-
-			unsigned char dependsOnRegVar = 0;
-			for (int j = 0; j < params->currentFunc->numOfRegVars; j++)
+			else if (currentInstruction->operands[1].type == REGISTER)
 			{
-				if (currentInstruction->operands[1].type == REGISTER)
+				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg))
 				{
-					if (compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].reg))
+					if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 					{
-						dependsOnRegVar = 1;
-						break;
-					}
-				}
-				else if (currentInstruction->operands[1].type == MEM_ADDRESS)
-				{
-					if (compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.reg) || compareRegisters(params->currentFunc->regVars[j].reg, currentInstruction->operands[1].memoryAddress.regDisplacement))
-					{
-						dependsOnRegVar = 1;
-						break;
+						return 0;
 					}
 				}
 			}
-
-			if (dependsOnRegVar)
+			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
 			{
-				if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg) || getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement))
 				{
-					return 0;
+					if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+					{
+						return 0;
+					}
 				}
 			}
 		}
