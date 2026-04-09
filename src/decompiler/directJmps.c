@@ -1,12 +1,9 @@
 #include "directJmps.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
-#include "conditions.h"
 
 unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 {
-	params->currentFunc->directJmps = (struct DirectJmp*)calloc(20, sizeof(struct DirectJmp));
-	
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
