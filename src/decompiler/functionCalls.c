@@ -265,7 +265,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					regArgTypeStrs[j] = initializeJdcStr();
 					varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);
 					
-					params->startInstructionIndex = i;
+					params->startInstructionIndex = i + 1;
 					decompiledRegArgs[j] = initializeJdcStr();
 					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], &decompiledRegArgs[j]))
 					{
