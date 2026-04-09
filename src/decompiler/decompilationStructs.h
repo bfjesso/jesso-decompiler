@@ -47,6 +47,8 @@ enum ConditionType
 	IF_CT,
 	ELSE_IF_CT,
 	ELSE_CT,
+	CONDITIONAL_GOTO_CT,
+	CONDITIONAL_RETURN_CT,
 	LOOP_CT, // for or while loop
 	DO_WHILE_CT,
 	SWITCH_CASE_CT
@@ -57,6 +59,8 @@ static const char* conditionTypeStrs[] =
 	"IF_CT",
 	"ELSE_IF_CT",
 	"ELSE_CT",
+	"CONDITIONAL_GOTO_CT",
+	"CONDITIONAL_RETURN_CT",
 	"LOOP_CT",
 	"DO_WHILE_CT",
 	"SWITCH_CASE_CT"
@@ -84,8 +88,6 @@ struct Condition
 	int startIndex;
 	int endIndex;
 	enum ConditionType conditionType;
-	unsigned char decompileAsReturn;
-	unsigned char decompileAsGoTo;
 
 	int* combinedJccIndexes; // these will be either all connected by && or ||
 	int numOfCombinedJccs;

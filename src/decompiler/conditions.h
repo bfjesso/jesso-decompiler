@@ -11,6 +11,9 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 
 static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
 
+// a regular condition is not a conditional goto/return, and its not combined with another condition
+unsigned char isConditionRegular(struct Condition* condition);
+
 int checkForConditionStart(struct DecompilationParameters* params);
 
 int checkForConditionEnd(struct DecompilationParameters* params);

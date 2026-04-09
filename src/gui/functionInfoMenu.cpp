@@ -203,7 +203,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		conditionsGrid->SetLabelTextColour(textColor);
 		conditionsGrid->SetDefaultCellBackgroundColour(gridColor);
 		conditionsGrid->SetDefaultCellTextColour(textColor);
-		conditionsGrid->CreateGrid(0, 9);
+		conditionsGrid->CreateGrid(0, 8);
 		conditionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
 		conditionsGrid->SetScrollRate(0, 10);
 		conditionsGrid->DisableDragRowSize();
@@ -214,9 +214,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		conditionsGrid->SetColLabelValue(3, "Jcc index");
 		conditionsGrid->SetColLabelValue(4, "Dst index");
 		conditionsGrid->SetColLabelValue(5, "Exit index");
-		conditionsGrid->SetColLabelValue(6, "Decompilation type");
-		conditionsGrid->SetColLabelValue(7, "Combined jcc indexes");
-		conditionsGrid->SetColLabelValue(8, "Jcc combination type");
+		conditionsGrid->SetColLabelValue(6, "Combined jcc indexes");
+		conditionsGrid->SetColLabelValue(7, "Jcc combination type");
 		conditionsGrid->HideRowLabels();
 		conditionsGrid->SetColSize(0, 100);
 		conditionsGrid->SetColSize(1, 100);
@@ -225,8 +224,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		conditionsGrid->SetColSize(4, 100);
 		conditionsGrid->SetColSize(5, 100);
 		conditionsGrid->SetColSize(6, 150);
-		conditionsGrid->SetColSize(7, 150);
-		conditionsGrid->SetColSize(8, 9999);
+		conditionsGrid->SetColSize(7, 9999);
 		conditionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 		row1Sizer->Add(conditionsGrid, 2, wxEXPAND | wxRIGHT, 10);
@@ -257,19 +255,6 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 			}
 			conditionsGrid->SetCellValue(i, 5, wxString(std::to_string(condition->exitIndex)) + " (" + wxString(hexNumStr) + ")");
 
-			if (condition->decompileAsGoTo) 
-			{
-				conditionsGrid->SetCellValue(i, 6, "Conditional goto");
-			}
-			else if (condition->decompileAsReturn)
-			{
-				conditionsGrid->SetCellValue(i, 6, "Conditional return");
-			}
-			else
-			{
-				conditionsGrid->SetCellValue(i, 6, "Condition");
-			}
-
 			wxString combinedJccsStr = "";
 			for (int j = 0; j < condition->numOfCombinedJccs; j++)
 			{
@@ -280,8 +265,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 					combinedJccsStr += ", ";
 				}
 			}
-			conditionsGrid->SetCellValue(i, 7, combinedJccsStr);
-			conditionsGrid->SetCellValue(i, 8, wxString(logicalTypeStrs[condition->combinedJccsLogicType]));
+			conditionsGrid->SetCellValue(i, 6, combinedJccsStr);
+			conditionsGrid->SetCellValue(i, 7, wxString(logicalTypeStrs[condition->combinedJccsLogicType]));
 		}
 	}
 

@@ -122,8 +122,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 				else if (checkForJumpToReturnStatement(params))
 				{
-					currentCondition->decompileAsReturn = 1;
-					currentCondition->conditionType = IF_CT;
+					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
 				}
 				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
@@ -166,7 +165,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						exitIndex = 0;
 					}
 				}
-				else if(!currentCondition->decompileAsReturn)
+				else if(currentCondition->conditionType != CONDITIONAL_RETURN_CT)
 				{
 					if (startIndex > endIndex)
 					{
@@ -246,31 +245,25 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	// checking for overlapping conditions which need to be handled as go to
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->currentFunc->conditions[i].decompileAsReturn || params->currentFunc->conditions[i].conditionType == SWITCH_CASE_CT || params->currentFunc->conditions[i].conditionType == ELSE_CT)
+		struct Condition* cond1 = &params->currentFunc->conditions[i];
+		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == SWITCH_CASE_CT || cond1->conditionType == ELSE_CT)
 		{
 			continue;
 		}
 
-		int start1 = params->currentFunc->conditions[i].startIndex;
-		int end1 = params->currentFunc->conditions[i].endIndex;
-		
 		for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 		{
-			
-			if (i == j || params->currentFunc->conditions[j].decompileAsReturn || params->currentFunc->conditions[j].decompileAsGoTo || params->currentFunc->conditions[j].conditionType == SWITCH_CASE_CT)
+			struct Condition* cond2 = &params->currentFunc->conditions[j];
+			if (i == j || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT || cond2->conditionType == SWITCH_CASE_CT)
 			{
 				continue;
 			}
 
-			int start2 = params->currentFunc->conditions[j].startIndex;
-			int end2 = params->currentFunc->conditions[j].endIndex;
-			
-			if ((start1 < start2 && end1 > start2 && end1 < end2) || (start1 > start2 && start1 < end2 && end1 > end2) || (start1 == start2 && end1 > end2)) // last check is for do while loops
+			if ((cond1->startIndex < cond2->startIndex && cond1->endIndex > cond2->startIndex && cond1->endIndex < cond2->endIndex) || (cond1->startIndex > cond2->startIndex && cond1->startIndex < cond2->endIndex && cond1->endIndex > cond2->endIndex) || (cond1->startIndex == cond2->startIndex && cond1->endIndex > cond2->endIndex)) // last check is for do while loops
 			{
-				params->currentFunc->conditions[i].decompileAsGoTo = 1;
-				params->currentFunc->conditions[i].conditionType = IF_CT;
-				params->currentFunc->conditions[i].startIndex = params->currentFunc->conditions[i].jccIndex;
-				params->currentFunc->conditions[i].endIndex = params->currentFunc->conditions[i].dstIndex;
+				cond1->conditionType = CONDITIONAL_GOTO_CT;
+				cond1->startIndex = cond1->jccIndex;
+				cond1->endIndex = cond1->dstIndex;
 				break;
 			}
 		}
@@ -322,7 +315,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->decompileAsReturn || condition->decompileAsGoTo || condition->isCombinedByOther || condition->indentLevel != params->numOfIndents)
+		if (!isConditionRegular(condition) || condition->indentLevel != params->numOfIndents)
 		{
 			continue;
 		}
@@ -342,7 +335,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->decompileAsGoTo && params->startInstructionIndex == condition->dstIndex)
+		if (condition->conditionType == CONDITIONAL_GOTO_CT && params->startInstructionIndex == condition->dstIndex)
 		{
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
@@ -367,27 +360,6 @@ unsigned char decompileConditions(struct DecompilationParameters* params, struct
 			}
 
 			condition->indentLevel = params->numOfIndents;
-
-			if (condition->decompileAsReturn)
-			{
-				if (!decompileReturnStatement(params, 0, result))
-				{
-					return 0;
-				}
-
-				params->numOfIndents--;
-				addIndents(result, params->numOfIndents);
-				strcatJdc(result, "}\n");
-			}
-			else if (condition->decompileAsGoTo)
-			{
-				addIndents(result, params->numOfIndents);
-				sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
-
-				params->numOfIndents--;
-				addIndents(result, params->numOfIndents);
-				strcatJdc(result, "}\n");
-			}
 
 			break;
 		}
@@ -477,7 +449,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		return 1;
 	}
 
-	unsigned char invertCondition = condition->decompileAsReturn || condition->decompileAsGoTo || condition->conditionType == DO_WHILE_CT;
+	unsigned char invertCondition = condition->conditionType == CONDITIONAL_RETURN_CT || condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == DO_WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (condition->combinedJccsLogicType == OR_LT)
@@ -615,6 +587,40 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
 	}
+	else if (condition->conditionType == CONDITIONAL_RETURN_CT)
+	{
+		addIndents(result, params->numOfIndents);
+		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "{\n");
+		
+		params->numOfIndents++;
+		if (!decompileReturnStatement(params, 0, result))
+		{
+			return 0;
+		}
+		params->numOfIndents--;
+
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "}\n");
+
+		params->startInstructionIndex = ogStartInstructionIndex;
+		return freeJdcStr(&conditionExpression);
+	}
+	else if (condition->conditionType == CONDITIONAL_GOTO_CT)
+	{
+		addIndents(result, params->numOfIndents);
+		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "{\n");
+		addIndents(result, params->numOfIndents + 1);
+		sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
+		addIndents(result, params->numOfIndents);
+		strcatJdc(result, "}\n");
+
+		params->startInstructionIndex = ogStartInstructionIndex;
+		return freeJdcStr(&conditionExpression);
+	}
 	else if(condition->conditionType == ELSE_IF_CT)
 	{
 		addIndents(result, params->numOfIndents);
@@ -635,8 +641,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	params->numOfIndents++;
 
 	params->startInstructionIndex = ogStartInstructionIndex;
-
 	return freeJdcStr(&conditionExpression);
+}
+
+unsigned char isConditionRegular(struct Condition* condition) 
+{
+	return condition->conditionType != CONDITIONAL_GOTO_CT && condition->conditionType != CONDITIONAL_RETURN_CT && !condition->isCombinedByOther;
 }
 
 int checkForConditionStart(struct DecompilationParameters* params)
@@ -656,7 +666,7 @@ int checkForConditionEnd(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex && !params->currentFunc->conditions[i].decompileAsGoTo && !params->currentFunc->conditions[i].decompileAsReturn)
+		if (params->startInstructionIndex == params->currentFunc->conditions[i].endIndex && isConditionRegular(&params->currentFunc->conditions[i]))
 		{
 			return i;
 		}

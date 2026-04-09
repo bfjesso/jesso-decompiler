@@ -309,7 +309,6 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 static unsigned char getAllRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
-
 	enum Register* modifiedRegs = (enum Register*)calloc(numOfRegisters, sizeof(enum Register));
 	int numOfRegs = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
@@ -318,7 +317,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 		numOfRegs = 0;
 		
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (!condition->isCombinedByOther && !condition->decompileAsReturn)
+		if (!condition->isCombinedByOther && condition->conditionType != CONDITIONAL_RETURN_CT)
 		{
 			for (int j = condition->startIndex; j < condition->endIndex; j++)
 			{
@@ -327,7 +326,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
-					if (!cond->isCombinedByOther && !cond->decompileAsGoTo && !cond->decompileAsReturn) 
+					if (isConditionRegular(cond))
 					{
 						if (cond->endIndex <= condition->endIndex)
 						{
