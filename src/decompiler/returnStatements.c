@@ -83,11 +83,27 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 			return 1;
 		}
 
-		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) || 
-			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode) || 
-			(params->currentFunc && doesInstructionModifyRegister(&params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)))
+		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) ||
+			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode))
 		{
 			return 0;
+		}
+		else if (params->currentFunc) 
+		{
+			if (params->currentFunc->lastInstructionIndex != 0)
+			{
+				if (doesInstructionModifyRegister(&params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)) 
+				{
+					return 0;
+				}
+			}
+			else 
+			{
+				if (doesInstructionModifyRegister(&params->instructions[i], AX, 0, 0, 0))
+				{
+					return 0;
+				}
+			}
 		}
 	}
 
