@@ -12,20 +12,20 @@
 
 unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result)
 {
-	if(!params->currentFunc->conditions && !getAllConditions(params))
+	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
-		strcpyJdc(result, "Error getting all conditions.");
-		return 0;
-	}
+		if (!getAllConditions(params))
+		{
+			strcpyJdc(result, "Error getting all conditions.");
+			return 0;
+		}
 
-	if(!params->currentFunc->directJmps && !getAllDirectJmps(params))
-	{
-		strcpyJdc(result, "Error getting all direct jumps.");
-		return 0;
-	}
-	
-	if (!params->currentFunc->hasGottenLocalVars)
-	{
+		if (!getAllDirectJmps(params))
+		{
+			strcpyJdc(result, "Error getting all direct jumps.");
+			return 0;
+		}
+		
 		if (!getAllRegVars(params))
 		{
 			strcpyJdc(result, "Error getting all reg vars.");
@@ -38,7 +38,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
-		params->currentFunc->hasGottenLocalVars = 1;
+		params->currentFunc->hasDoneInitialAnalysis = 1;
 	}
 	
 	if (!generateFunctionHeader(params->currentFunc, result))

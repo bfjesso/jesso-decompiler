@@ -141,8 +141,6 @@ struct Function
 	struct StackVariable* stackArgs;
 	unsigned char numOfStackArgs;
 
-	unsigned char hasGottenLocalVars;
-
 	struct StackVariable* stackVars;
 	unsigned char numOfStackVars;
 	struct ReturnedVariable* returnedVars;
@@ -157,6 +155,8 @@ struct Function
 	int numOfConditions;
 	struct DirectJmp* directJmps;
 	int numOfDirectJmps;
+
+	unsigned char hasDoneInitialAnalysis;
 };
 
 struct DecompilationParameters
