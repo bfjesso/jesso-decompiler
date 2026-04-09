@@ -166,7 +166,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						exitIndex = 0;
 					}
 				}
-				else 
+				else if(!currentCondition->decompileAsReturn)
 				{
 					if (startIndex > endIndex)
 					{
@@ -269,6 +269,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			{
 				params->currentFunc->conditions[i].decompileAsGoTo = 1;
 				params->currentFunc->conditions[i].conditionType = IF_CT;
+				params->currentFunc->conditions[i].startIndex = params->currentFunc->conditions[i].jccIndex;
+				params->currentFunc->conditions[i].endIndex = params->currentFunc->conditions[i].dstIndex;
 				break;
 			}
 		}
