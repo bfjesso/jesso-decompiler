@@ -7,8 +7,6 @@
 
 unsigned char getAllConditions(struct DecompilationParameters* params)
 {
-	params->currentFunc->conditions = (struct Condition*)calloc(20, sizeof(struct Condition));
-	
 	int combinationCount = 0;
 	int lastDstIndex = -1;
 	int firstDstSwitchCaseIndex = -1;
@@ -51,15 +49,18 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 			params->startInstructionIndex = i;
 
-			struct Condition* lastCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions - 1];
-			struct Condition* currentCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
+			struct Condition* lastCondition = 0;
+			if (params->currentFunc->numOfConditions > 0) 
+			{
+				lastCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions - 1];
+			}
 
 			// a series of Jcc instructions that have the same destination are combined with a logical AND
 			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
 
-			if (params->currentFunc->numOfConditions > 0 && dstIndex == lastCondition->dstIndex && !stopCombination)
+			if (lastCondition && dstIndex == lastCondition->dstIndex && !stopCombination)
 			{
-				if (!handleCombinedJccResize(&params->currentFunc->conditions[params->currentFunc->numOfConditions - 1]))
+				if (!handleCombinedJccResize(lastCondition))
 				{
 					return 0;
 				}
@@ -70,9 +71,9 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 				lastCondition->numOfCombinedJccs = combinationCount;
 			}
-			else if (params->currentFunc->numOfConditions > 0 && lastDstIndex - 1 == i && !stopCombination)
+			else if (lastCondition && lastDstIndex - 1 == i && !stopCombination)
 			{
-				if (!handleCombinedJccResize(&params->currentFunc->conditions[params->currentFunc->numOfConditions - 1])) 
+				if (!handleCombinedJccResize(lastCondition))
 				{
 					return 0;
 				}
@@ -93,8 +94,10 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					return 0;
 				}
 
+				struct Condition* currentCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
+
 				// setting the type
-				if (params->currentFunc->numOfConditions > 0 && exitIndex != -1 && exitIndex == lastCondition->exitIndex &&
+				if (lastCondition && exitIndex != -1 && exitIndex == lastCondition->exitIndex &&
 					i == lastCondition->jccIndex + 2 && // the Jccs need to be right next to eachother with only comparisson instructions between them
 					instruction->opcode == JZ_SHORT && params->instructions[lastCondition->jccIndex].opcode == JZ_SHORT &&
 					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
@@ -130,7 +133,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				{
 					currentCondition->conditionType = DO_WHILE_CT;
 				}
-				else if (params->currentFunc->numOfConditions > 0 && 
+				else if (lastCondition &&
 					(lastCondition->conditionType == IF_CT || lastCondition->conditionType == ELSE_IF_CT) &&
 					i == lastCondition->dstIndex + 1 && // assuming again that the previous Jcc jumps directly to this one's comparisson instruction
 					exitIndex != -1 && lastCondition->exitIndex == exitIndex && // check for else if
