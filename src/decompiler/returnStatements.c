@@ -15,9 +15,7 @@ unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters
 	}
 	else if (isOpcodeCall(instruction->opcode))
 	{
-		unsigned long long calleeAddress = address + instruction->operands[0].immediate.value;
-		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
-
+		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params));
 		if (calleeIndex == -1)
 		{
 			return checkForUnknownFunctionCall(params) && compareRegisters(params->currentFunc->returnReg, AX);
