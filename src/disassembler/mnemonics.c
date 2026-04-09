@@ -362,7 +362,7 @@ unsigned char isOpcodeJcc(enum Mnemonic opcode)
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
 {
-	if (opcode >= CMOVO && opcode <= CMOVG)
+	if (opcode >= CMOVB && opcode <= CMOVG)
 	{
 		return 1;
 	}
