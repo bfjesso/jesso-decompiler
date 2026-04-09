@@ -10,7 +10,7 @@ struct IntrinsicFunc returningIntrinsicFuncs[] =
 	{ AESENC, { 1, 1, 0, 0 }, "_mm_aesenc" },
 	{ AESENCLAST, { 1, 1, 0, 0 }, "_mm_aesenclast" },
 	{ AESIMC, { 0, 1, 0, 0 }, "_mm_aesimc" },
-	{ AESKEYGENASSIST, { 0, 1, 1, 0 }, "_mm_aesimc" },
+	{ AESKEYGENASSIST, { 0, 1, 1, 0 }, "_mm_aeskeygenassist" },
 	{ STMXCSR, { 0, 0, 0, 0 }, "_mm_getcsr" },
 	{ SHUFPD, { 1, 1, 1, 0 }, "_mm_shuffle_pd" },
 	{ SHUFPS, { 1, 1, 1, 0 }, "_mm_shuffle_ps" },
