@@ -551,6 +551,8 @@ static unsigned char decompilePop(struct DecompilationParameters* params, unsign
 		}
 	}
 
+	params->startInstructionIndex = ogStartInstructionIndex;
+
 	struct Operand* firstOperand = &params->instructions[params->startInstructionIndex].operands[0];
 	if (getAssignment)
 	{
