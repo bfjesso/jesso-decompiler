@@ -1189,92 +1189,72 @@ FunctionPropertiesMenu::FunctionPropertiesMenu(wxWindow* parent, wxPoint positio
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	vSizer->Add(functionNameLabel, 0, wxEXPAND);
-	vSizer->Add(functionNameTextCtrl, 0, wxEXPAND);
+	vSizer->Add(functionNameLabel, 0, wxEXPAND | wxTOP | wxLEFT, 10);
+	vSizer->Add(functionNameTextCtrl, 0, wxEXPAND | wxLEFT | wxBOTTOM, 10);
 
-	if (function->numOfRegArgs > 0)
+	varsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
+	varsGrid->SetLabelBackgroundColour(foregroundColor);
+	varsGrid->SetLabelTextColour(textColor);
+	varsGrid->SetDefaultCellBackgroundColour(gridColor);
+	varsGrid->SetDefaultCellTextColour(textColor);
+	varsGrid->CreateGrid(0, 2);
+	varsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	varsGrid->SetScrollRate(0, 10);
+	varsGrid->DisableDragRowSize();
+	varsGrid->SetColLabelValue(0, "Var type");
+	varsGrid->SetColLabelValue(1, "Name");
+	varsGrid->HideRowLabels();
+	varsGrid->SetColSize(0, 200);
+	varsGrid->SetColSize(1, 200);
+	varsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+
+	vSizer->Add(varsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+
+	int rowIndex = 0;
+
+	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		wxStaticText* regArgLabel = new wxStaticText(this, wxID_ANY, "Reg Arg Names");
-		regArgLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(regArgLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfRegArgs; i++)
-		{
-			wxTextCtrl* regArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			regArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			regArgTextCtrl->SetOwnForegroundColour(textColor);
-
-			vSizer->Add(regArgTextCtrl, 0, wxEXPAND);
-
-			regArgNameTextCtrls.push_back(regArgTextCtrl);
-		}
+		varsGrid->AppendRows(1);
+		varsGrid->SetCellValue(rowIndex, 0, "Reg arg");
+		varsGrid->SetCellValue(rowIndex, 1, function->regArgs[i].name.buffer);
+		varsGrid->SetReadOnly(rowIndex, 0);
+		rowIndex++;
 	}
 
-	if (function->numOfRegVars > 0)
+	for (int i = 0; i < function->numOfRegVars; i++)
 	{
-		wxStaticText* regVarLabel = new wxStaticText(this, wxID_ANY, "Reg Var Names");
-		regVarLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(regVarLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfRegVars; i++)
-		{
-			wxTextCtrl* regVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->regVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			regVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			regVarTextCtrl->SetOwnForegroundColour(textColor);
-
-			vSizer->Add(regVarTextCtrl, 0, wxEXPAND);
-
-			regVarNameTextCtrls.push_back(regVarTextCtrl);
-		}
+		varsGrid->AppendRows(1);
+		varsGrid->SetCellValue(rowIndex, 0, "Reg var");
+		varsGrid->SetCellValue(rowIndex, 1, function->regVars[i].name.buffer);
+		varsGrid->SetReadOnly(rowIndex, 0);
+		rowIndex++;
 	}
 
-	if (function->numOfStackArgs > 0)
+	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		wxStaticText* stackArgLabel = new wxStaticText(this, wxID_ANY, "Stack Arg Names");
-		stackArgLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(stackArgLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfStackArgs; i++)
-		{
-			wxTextCtrl* stackArgTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackArgs[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			stackArgTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			stackArgTextCtrl->SetOwnForegroundColour(textColor);
-
-			vSizer->Add(stackArgTextCtrl, 0, wxEXPAND);
-
-			stackArgNameTextCtrls.push_back(stackArgTextCtrl);
-		}
+		varsGrid->AppendRows(1);
+		varsGrid->SetCellValue(rowIndex, 0, "Stack arg");
+		varsGrid->SetCellValue(rowIndex, 1, function->stackArgs[i].name.buffer);
+		varsGrid->SetReadOnly(rowIndex, 0);
+		rowIndex++;
 	}
 
-	if (function->numOfStackVars > 0)
+	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		wxStaticText* stackVarLabel = new wxStaticText(this, wxID_ANY, "Stack Var Names");
-		stackVarLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(stackVarLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfStackVars; i++)
-		{
-			wxTextCtrl* stackVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->stackVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			stackVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			stackVarTextCtrl->SetOwnForegroundColour(textColor);
-
-			vSizer->Add(stackVarTextCtrl, 0, wxEXPAND);
-
-			stackVarNameTextCtrls.push_back(stackVarTextCtrl);
-		}
+		varsGrid->AppendRows(1);
+		varsGrid->SetCellValue(rowIndex, 0, "Stack var");
+		varsGrid->SetCellValue(rowIndex, 1, function->stackVars[i].name.buffer);
+		varsGrid->SetReadOnly(rowIndex, 0);
+		rowIndex++;
 	}
 
-	if (function->numOfReturnedVars > 0)
+	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
-		wxStaticText* retVarLabel = new wxStaticText(this, wxID_ANY, "Returned Var Names");
-		retVarLabel->SetOwnForegroundColour(textColor);
-		vSizer->Add(retVarLabel, 0, wxEXPAND);
-		for (int i = 0; i < function->numOfReturnedVars; i++)
-		{
-			wxTextCtrl* retVarTextCtrl = new wxTextCtrl(this, wxID_ANY, function->returnedVars[i].name.buffer, wxPoint(0, 0), wxSize(100, 25));
-			retVarTextCtrl->SetOwnBackgroundColour(foregroundColor);
-			retVarTextCtrl->SetOwnForegroundColour(textColor);
-
-			vSizer->Add(retVarTextCtrl, 0, wxEXPAND);
-
-			retVarNameTextCtrls.push_back(retVarTextCtrl);
-		}
+		varsGrid->AppendRows(1);
+		varsGrid->SetCellValue(rowIndex, 0, "Returned var");
+		varsGrid->SetCellValue(rowIndex, 1, function->returnedVars[i].name.buffer);
+		varsGrid->SetReadOnly(rowIndex, 0);
+		rowIndex++;
 	}
 
 	SetSizerAndFit(vSizer);
@@ -1295,29 +1275,36 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 
 	strcpyJdc(&currentFunction->name, functionNameTextCtrl->GetValue().c_str());
 
+	int rowIndex = 0;
+
 	for (int i = 0; i < currentFunction->numOfRegArgs; i++)
 	{
-		strcpyJdc(&currentFunction->regArgs[i].name, regArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->regArgs[i].name, varsGrid->GetCellValue(rowIndex, 1).c_str());
+		rowIndex++;
 	}
 
 	for (int i = 0; i < currentFunction->numOfRegVars; i++)
 	{
-		strcpyJdc(&currentFunction->regVars[i].name, regVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->regVars[i].name, varsGrid->GetCellValue(rowIndex, 1).c_str());
+		rowIndex++;
 	}
 
 	for (int i = 0; i < currentFunction->numOfStackArgs; i++)
 	{
-		strcpyJdc(&currentFunction->stackArgs[i].name, stackArgNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackArgs[i].name, varsGrid->GetCellValue(rowIndex, 1).c_str());
+		rowIndex++;
 	}
 
 	for (int i = 0; i < currentFunction->numOfStackVars; i++)
 	{
-		strcpyJdc(&currentFunction->stackVars[i].name, stackVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->stackVars[i].name, varsGrid->GetCellValue(rowIndex, 1).c_str());
+		rowIndex++;
 	}
 
 	for (int i = 0; i < currentFunction->numOfReturnedVars; i++)
 	{
-		strcpyJdc(&currentFunction->returnedVars[i].name, retVarNameTextCtrls[i]->GetValue().c_str());
+		strcpyJdc(&currentFunction->returnedVars[i].name, varsGrid->GetCellValue(rowIndex, 1).c_str());
+		rowIndex++;
 	}
 
 	// update name in function grid

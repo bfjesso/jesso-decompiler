@@ -120,11 +120,7 @@ public:
 	wxStaticText* functionNameLabel = nullptr;
 	wxTextCtrl* functionNameTextCtrl;
 
-	std::vector<wxTextCtrl*> regArgNameTextCtrls;
-	std::vector<wxTextCtrl*> regVarNameTextCtrls;
-	std::vector<wxTextCtrl*> stackArgNameTextCtrls;
-	std::vector<wxTextCtrl*> stackVarNameTextCtrls;
-	std::vector<wxTextCtrl*> retVarNameTextCtrls;
+	wxGrid* varsGrid = nullptr;
 
 	wxBoxSizer* vSizer = nullptr;
 
