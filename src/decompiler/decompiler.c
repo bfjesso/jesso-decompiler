@@ -268,10 +268,17 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 			unsigned long long calleeAddress = resolveJmpChain(params);
 
 			struct VarType returnType = { 0 }; // used both if its an import call and to check if the return value is used
-			params->startInstructionIndex++;
-			if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType))
+			if(i == params->currentFunc->lastInstructionIndex)
 			{
-				continue;
+				returnType = params->currentFunc->returnType;
+			}
+			else
+			{
+				params->startInstructionIndex++;
+				if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType))
+				{
+					continue;
+				}
 			}
 
 			if (callee)

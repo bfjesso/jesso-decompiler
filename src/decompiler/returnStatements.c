@@ -128,12 +128,14 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, u
 		return strcatJdc(result, "return;\n");
 	}
 
+	params->startInstructionIndex++; // incase the current instruction is also an import call
 	struct JdcStr returnExpression = initializeJdcStr();
 	if (!decompileRegister(params, params->currentFunc->returnReg, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
 		return 0;
 	}
+	params->startInstructionIndex--;
 
 	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
 	freeJdcStr(&returnExpression);
