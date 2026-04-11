@@ -209,16 +209,23 @@ const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
 
 unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
 {
-	struct DisassembledInstruction* currentInstruction = &instructions[numOfInstructions - 1];
+	struct DisassembledInstruction* jmpInstruction = &instructions[numOfInstructions - 1];
 
-	if (currentInstruction->opcode == JMP_NEAR && currentInstruction->operands[0].type == REGISTER)
+	if (jmpInstruction->opcode != JMP_NEAR)
 	{
-		enum Register targetReg = currentInstruction->operands[0].reg;
+		return 0;
+	}
+
+	if (jmpInstruction->operands[0].type == REGISTER)
+	{
+		enum Register targetReg = jmpInstruction->operands[0].reg;
 		int i = numOfInstructions - 2;
 		struct DisassembledInstruction* instruction = &instructions[i];
 		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode))
 		{
-			if (instruction->opcode == MOV && instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) && instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+			if (instruction->opcode == MOV &&
+				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
+				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
 			{
 				return instruction->operands[1].memoryAddress.constDisplacement;
 			}
@@ -226,6 +233,22 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 			i--;
 			instruction = &instructions[i];
 		}
+	}
+	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
+	{
+		return jmpInstruction->operands[0].memoryAddress.constDisplacement;
+	}
+
+	return 0;
+}
+
+unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
+{
+	struct DisassembledInstruction* instruction = &instructions[numOfInstructions - 1];
+
+	if (instruction->opcode == MOVZX && instruction->operands[1].type == MEM_ADDRESS)
+	{
+		return instruction->operands[1].memoryAddress.constDisplacement;
 	}
 
 	return 0;

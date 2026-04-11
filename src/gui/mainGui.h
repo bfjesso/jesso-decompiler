@@ -55,6 +55,9 @@ public:
 	FileSection codeSections[codeSectionsBufferSize] = { 0 };
 	int numOfCodeSections = 0;
 
+	std::vector<unsigned long long> jmpTableStartAddresses;
+	std::vector<unsigned long long> indirectTableStartAddresses;
+
 	int currentDecompiledFunc = -1;
 
 	DecompilationParameters decompParams = { 0 };
@@ -84,6 +87,12 @@ public:
 	void LoadDataSectionBytes();
 
 	void DisassembleCodeSections();
+
+	int HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection);
+
+	unsigned char CheckForJmpTableStart(unsigned long long currentAddress);
+
+	unsigned char CheckForIndirectTableStart(unsigned long long currentAddress);
 
 	void DecompileFunction(int functionIndex);
 

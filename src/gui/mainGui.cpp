@@ -347,7 +347,6 @@ void MainGui::DisassembleCodeSections()
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
 		unsigned char numOfBytes = 0;
-		unsigned long long jmpTableAddress = 0;
 		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
 			if (numOfBytes == 0)
@@ -364,38 +363,113 @@ void MainGui::DisassembleCodeSections()
 			{
 				break;
 			}
-			else if (codeSections[i].virtualAddress + currentIndex == jmpTableAddress)
-			{
-				struct DisassembledInstruction dataInstruction;
-				dataInstruction.opcode = DATA;
-				dataInstruction.operands[0].type = IMMEDIATE;
-				dataInstruction.operands[1].type = NO_OPERAND;
-				dataInstruction.operands[2].type = NO_OPERAND;
-				dataInstruction.operands[3].type = NO_OPERAND;
-				dataInstruction.group1Prefix = NO_PREFIX;
-				dataInstruction.isInvalid = 0;
-
-				while (bytes[currentIndex] != 0xCC || bytes[currentIndex + 1] != 0xCC)
-				{
-					dataInstruction.operands[0].immediate.value = bytes[currentIndex];
-					dataInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
-					disassembledInstructions.push_back(dataInstruction);
-					currentIndex++;
-					instructionNum++;
-				}
-
-				jmpTableAddress = 0;
-			}
-			else if (jmpTableAddress == 0) 
-			{
-				jmpTableAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size()); // returns zero if there is none
-			}
 
 			instructionNum++;
+
+			instructionNum += HandleJmpTables(bytes, &currentIndex, codeSections[i]);
 		}
 
 		delete[] bytes;
 	}
+}
+
+int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection)
+{
+	unsigned long long jmpTableStartAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size());
+	if (jmpTableStartAddress != 0 &&
+		jmpTableStartAddress > currentCodeSection.virtualAddress + imageBase && jmpTableStartAddress < currentCodeSection.virtualAddress + imageBase + currentCodeSection.size)
+	{
+		jmpTableStartAddresses.push_back(jmpTableStartAddress);
+	}
+
+	unsigned long long indirectTableStartAddress = getIndirectTableAddress(&disassembledInstructions[0], disassembledInstructions.size());
+	if (indirectTableStartAddress != 0 &&
+		indirectTableStartAddress > currentCodeSection.virtualAddress + imageBase && indirectTableStartAddress < currentCodeSection.virtualAddress + imageBase + currentCodeSection.size)
+	{
+		indirectTableStartAddresses.push_back(indirectTableStartAddress);
+	}
+
+	struct DisassembledInstruction dataInstruction;
+	dataInstruction.opcode = DATA;
+	dataInstruction.operands[0].type = IMMEDIATE;
+	dataInstruction.operands[1].type = NO_OPERAND;
+	dataInstruction.operands[2].type = NO_OPERAND;
+	dataInstruction.operands[3].type = NO_OPERAND;
+	dataInstruction.group1Prefix = NO_PREFIX;
+	dataInstruction.isInvalid = 0;
+	
+	int numOfNewInstructions = 0;
+	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
+	{
+		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
+		{
+			unsigned long long addressInData = *(unsigned long long*)(bytes + *currentIndexRef);
+			unsigned char addressSize = 8;
+			if (!is64Bit)
+			{
+				addressInData = *(unsigned int*)(bytes + *currentIndexRef);
+				addressSize = 4;
+			}
+
+			dataInstruction.operands[0].immediate.value = addressInData;
+			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
+
+			if (addressInData < currentCodeSection.virtualAddress + imageBase || addressInData > currentCodeSection.virtualAddress + currentCodeSection.size + imageBase)
+			{
+				break;
+			}
+
+			disassembledInstructions.push_back(dataInstruction);
+			*currentIndexRef += addressSize;
+			numOfNewInstructions++;
+		}
+	}
+
+	if (CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
+	{
+		while (bytes[*currentIndexRef] != 0xCC)
+		{
+			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef)) 
+			{
+				numOfNewInstructions += HandleJmpTables(bytes, currentIndexRef, currentCodeSection);
+				break;
+			}
+			
+			dataInstruction.operands[0].immediate.value = bytes[*currentIndexRef];
+			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
+			disassembledInstructions.push_back(dataInstruction);
+			(*currentIndexRef)++;
+			numOfNewInstructions++;
+		}
+	}
+
+	return numOfNewInstructions;
+}
+
+unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress)
+{
+	for (int i = jmpTableStartAddresses.size() - 1; i >= 0; i--) 
+	{
+		if (jmpTableStartAddresses[i] == currentAddress) 
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+unsigned char MainGui::CheckForIndirectTableStart(unsigned long long currentAddress)
+{
+	for (int i = indirectTableStartAddresses.size() - 1; i >= 0; i--)
+	{
+		if (indirectTableStartAddresses[i] == currentAddress)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 void MainGui::DecompileFunction(int functionIndex)

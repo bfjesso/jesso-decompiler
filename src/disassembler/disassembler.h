@@ -16,6 +16,8 @@ extern "C"
 
 	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
 
+	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
+
 #ifdef __cplusplus
 }
 #endif
