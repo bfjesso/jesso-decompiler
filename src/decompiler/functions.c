@@ -38,7 +38,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			foundFirstInstruction = 1;
 		}
 
-		if ((isOpcodeCall(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) && result->addressOfFirstFuncCall == 0)
+		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params);
 			if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
@@ -359,20 +359,11 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 				struct Function* callee = &params->functions[functionIndex];
 
 				int numOfRegArgsInit = 0;
-				enum Register* initializedRegs = (enum Register*)malloc(sizeof(enum Register) * callee->numOfRegArgs);
-				if (!initializedRegs) 
-				{
-					return 0;
-				}
+				enum Register initializedRegs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
 				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= currentFunc->firstInstructionIndex; j--)
 				{
 					struct DisassembledInstruction* instruction = &params->instructions[j];
-
-					if (isOpcodeJcc(instruction->opcode) || instruction->opcode == JMP_SHORT)
-					{
-						break;
-					}
 
 					for (int k = 0; k < callee->numOfRegArgs; k++)
 					{
@@ -410,29 +401,19 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 								break;
 							}
 						}
-						if (isInitialized) { continue; }
 
-						int alreadyFound = 0;
-						for (int l = 0; l < currentFunc->numOfRegArgs; l++)
+						if (!isInitialized) 
 						{
-							if (compareRegisters(currentFunc->regArgs[l].reg, callee->regArgs[k].reg))
+							if (!addRegArg(currentFunc, callee->regArgs[k].type, callee->regArgs[k].reg))
 							{
-								alreadyFound = 1;
-								break;
+								return 0;
 							}
-						}
-						if (alreadyFound) { continue; }
-
-						if (!addRegArg(currentFunc, callee->regArgs[k].type, callee->regArgs[k].reg)) 
-						{
-							return 0;
 						}
 					}
 
 					numFixed++;
 				}
 
-				free(initializedRegs);
 				currentFunc->addressOfFirstFuncCall = 0;
 			}
 		}
