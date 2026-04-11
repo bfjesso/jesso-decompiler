@@ -8,20 +8,27 @@ The decompiler is still a work in progress, and the disassembler is not yet full
 ![Screenshot of GUI on Windows 10](./screenshot.png)
 
 # Installation
-If you do not want to compile it yourself, there are precompiled binaries already in bin.
+If you do not want to compile it yourself, there are binaries already in bin. 
 
-## Linux
-To compile the GUI on Linux you will need gcc, g++, and make. You will also need to get and build wxWidget's source. Once you clone jesso-decompiler,
-you will have to update the Makefile with the path to wx-config. After that just run "make jdc-gui" to build it.
+On Linux, you may need to install the wxWidgets GTK library to run JDC. You can do that with this command if you are on a Debian system.
 ```bash
+sudo apt install libwxgtk3.2-1
+```
+## Compiling
+### Linux
+To compile the GUI on Linux you will need gcc, g++, and make. You will also need to install [wxWidgets verison 3.2.10](https://github.com/wxWidgets/wxWidgets/releases/tag/v3.2.10) and configure it. The Makefile for JDC assumes that the path to wx-config is: 
+```
+"../wxWidgets-3.2.10/gtk-build/wx-config"
+```
 
+You will have to update the Makefile if you do not have the same path. After cloning this repository, use "make jdc-gui" to build JDC.
+```bash
 git clone https://github.com/bfjesso/jesso-decompiler.git
 cd jesso-decompiler
 make jdc-gui
-
 ```
 
-## Windows
+### Windows
 You can use the Visual Studio project included in this repository to build JDC. You will also need to have wxWidgets installed.
 
 # How it works
