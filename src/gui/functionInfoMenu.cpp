@@ -20,15 +20,12 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	returnRegStaticTxt->SetOwnForegroundColour(textColor);
 
     char hexNumStr[10] = { 0 };
-    sprintf(hexNumStr, "%llX", function->addressOfReturnFunction);
-    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Return Function: 0x" + wxString(hexNumStr));
+    sprintf(hexNumStr, "0x%llX", function->addressOfReturnFunction);
+    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Return Function: " + wxString(hexNumStr));
 	returnFunctionAddrStaticTxt->SetOwnForegroundColour(textColor);
 
-    sprintf(hexNumStr, "%llX", function->addressOfFirstFuncCall);
-    firstFuncCallAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of First Function Call: 0x" + wxString(hexNumStr));
-	firstFuncCallAddrStaticTxt->SetOwnForegroundColour(textColor);
-
-    indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call: " + wxString(std::to_string(function->indexOfFirstFuncCall)));
+    sprintf(hexNumStr, "0x%llX", instructions[function->indexOfFirstFuncCall].address);
+    indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call: " + wxString(std::to_string(function->indexOfFirstFuncCall)) + " (" + wxString(hexNumStr) + ")");
 	indexOfFirstFuncCallStaticTxt->SetOwnForegroundColour(textColor);
 
     callingConventionStaticTxt = new wxStaticText(this, wxID_ANY, "Calling Convention: " + wxString(callingConventionStrs[function->callingConvention]));
@@ -293,7 +290,6 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	vSizer->Add(returnTypeStaticTxt, 0, wxEXPAND | wxLEFT | wxTOP, 10);
 	vSizer->Add(returnRegStaticTxt, 0, wxEXPAND | wxLEFT, 10);
 	vSizer->Add(returnFunctionAddrStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(firstFuncCallAddrStaticTxt, 0, wxEXPAND | wxLEFT, 10);
 	vSizer->Add(indexOfFirstFuncCallStaticTxt, 0, wxEXPAND | wxLEFT, 10);
 	vSizer->Add(callingConventionStaticTxt, 0, wxEXPAND | wxLEFT, 10);
 	vSizer->Add(functionNameStaticTxt, 0, wxEXPAND | wxLEFT, 10);
