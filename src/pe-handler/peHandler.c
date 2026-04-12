@@ -52,89 +52,7 @@ unsigned long long getPEImageBase64(HANDLE file)
 	return imageNtHeaders.OptionalHeader.ImageBase;
 }
 
-int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-	
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	int bufferIndex = 0;
-
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
-		{
-			if (bufferIndex >= bufferLen)
-			{
-				break;
-			}
-			
-			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
-			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
-			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
-			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-			
-			bufferIndex++;
-		}
-	}
-	
-	return bufferIndex;
-}
-
-int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	int bufferIndex = 0;
-
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
-		{
-			if (bufferIndex >= bufferLen)
-			{
-				break;
-			}
-
-			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
-			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
-			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
-			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-
-			bufferIndex++;
-		}
-	}
-
-	return bufferIndex;
-}
-
-int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen)
+int getNumOfPESections32(HANDLE file)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -147,35 +65,10 @@ int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferL
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	int bufferIndex = 0;
-
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA && !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE))
-		{
-			if (bufferIndex >= bufferLen)
-			{
-				break;
-			}
-
-			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
-			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
-			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
-			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-
-			bufferIndex++;
-		}
-	}
-
-	return bufferIndex;
+	return imageNtHeaders.FileHeader.NumberOfSections;
 }
 
-int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen)
+int getNumOfPESections64(HANDLE file)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
@@ -188,7 +81,26 @@ int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
 
-	int bufferIndex = 0;
+	return imageNtHeaders.FileHeader.NumberOfSections;
+}
+
+unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+	
+	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections) 
+	{
+		return 0;
+	}
 
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
@@ -197,23 +109,87 @@ int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferL
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA && !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE))
+		buffer[i].name = initializeJdcStrWithVal(sectionHeader.Name);
+
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
 		{
-			if (bufferIndex >= bufferLen)
-			{
-				break;
-			}
-
-			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionHeader.Name);
-			buffer[bufferIndex].virtualAddress = sectionHeader.VirtualAddress;
-			buffer[bufferIndex].fileOffset = sectionHeader.PointerToRawData;
-			buffer[bufferIndex].size = sectionHeader.SizeOfRawData;
-
-			bufferIndex++;
+			buffer[i].type = CODE_FST;
 		}
+		else if (sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+		{
+			buffer[i].type = INIT_DATA_FST;
+		}
+		else if (sectionHeader.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
+		{
+			buffer[i].type = UNINIT_DATA_FST;
+		}
+		else
+		{
+			buffer[i].type = OTHER_FST;
+		}
+
+		buffer[i].isReadOnly = !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE);
+
+		buffer[i].virtualAddress = sectionHeader.VirtualAddress;
+		buffer[i].fileOffset = sectionHeader.PointerToRawData;
+		buffer[i].size = sectionHeader.SizeOfRawData;
+	}
+	
+	return 1;
+}
+
+unsigned char getAllPESectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+
+	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections)
+	{
+		return 0;
 	}
 
-	return bufferIndex;
+	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
+	{
+		IMAGE_SECTION_HEADER sectionHeader = { 0 };
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
+
+		buffer[i].name = initializeJdcStrWithVal(sectionHeader.Name);
+
+		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
+		{
+			buffer[i].type = CODE_FST;
+		}
+		else if(sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+		{
+			buffer[i].type = INIT_DATA_FST;
+		}
+		else if (sectionHeader.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
+		{
+			buffer[i].type = UNINIT_DATA_FST;
+		}
+		else 
+		{
+			buffer[i].type = OTHER_FST;
+		}
+
+		buffer[i].isReadOnly = !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE);
+
+		buffer[i].virtualAddress = sectionHeader.VirtualAddress;
+		buffer[i].fileOffset = sectionHeader.PointerToRawData;
+		buffer[i].size = sectionHeader.SizeOfRawData;
+	}
+
+	return 1;
 }
 
 unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result)

@@ -11,13 +11,13 @@ unsigned long long getPEImageBase32(HANDLE file);
 
 unsigned long long getPEImageBase64(HANDLE file);
 
-int getCodeSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
+int getNumOfPESections32(HANDLE file);
 
-int getCodeSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
+int getNumOfPESections64(HANDLE file);
 
-int getDataSectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
+unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
 
-int getDataSectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
+unsigned char getAllPESectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
 
 unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result);
 

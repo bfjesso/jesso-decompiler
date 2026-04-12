@@ -14,7 +14,7 @@ ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Imports", wxPoi
 	importsGrid->SetLabelTextColour(textColor);
 	importsGrid->SetDefaultCellBackgroundColour(gridColor);
 	importsGrid->SetDefaultCellTextColour(textColor);
-	importsGrid->CreateGrid(0, 4);
+	importsGrid->CreateGrid(0, 2);
 	importsGrid->EnableGridLines(false);
 	importsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
 	importsGrid->SetScrollRate(0, 10);

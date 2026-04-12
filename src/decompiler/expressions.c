@@ -217,21 +217,24 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 
 static unsigned char getValueFromDataSection(struct DecompilationParameters* params, struct VarType type, unsigned long long address, struct JdcStr* result)
 {
-	if (address < params->imageBase + params->dataSections[0].virtualAddress)
+	if (address < params->imageBase + params->sections[0].virtualAddress)
 	{
 		return 0;
 	}
 	
 	int dataSectionIndex = -1;
 	int totalSize = 0;
-	for (int i = 0; i < params->numOfDataSections; i++)
+	for (int i = 0; i < params->numOfSections; i++)
 	{
-		if (address > params->imageBase + params->dataSections[i].virtualAddress && address < params->imageBase + params->dataSections[i].virtualAddress + params->dataSections[i].size)
+		if (params->sections[i].type == INIT_DATA_FST && params->sections[i].isReadOnly) 
 		{
-			dataSectionIndex = (int)((totalSize + address) - (params->dataSections[i].virtualAddress + params->imageBase));
+			if (address > params->imageBase + params->sections[i].virtualAddress && address < params->imageBase + params->sections[i].virtualAddress + params->sections[i].size)
+			{
+				dataSectionIndex = (int)((totalSize + address) - (params->sections[i].virtualAddress + params->imageBase));
+			}
 		}
-
-		totalSize += params->dataSections[i].size;
+		
+		totalSize += params->sections[i].size;
 	}
 
 	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
@@ -241,11 +244,11 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 
 	if (type.primitiveType == FLOAT_TYPE) 
 	{
-		sprintfJdc(result, 0, "%f", *(float*)(params->dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%f", *(float*)(params->fileBytes + dataSectionIndex));
 	}
 	else if (type.primitiveType == DOUBLE_TYPE) 
 	{
-		sprintfJdc(result, 0, "%lf", *(double*)(params->dataSectionByte + dataSectionIndex));
+		sprintfJdc(result, 0, "%lf", *(double*)(params->fileBytes + dataSectionIndex));
 	}
 	else 
 	{
@@ -259,16 +262,16 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 			switch (type.primitiveType)
 			{
 			case CHAR_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned char*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%u", *(unsigned char*)(params->fileBytes + dataSectionIndex));
 				break;
 			case SHORT_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned short*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%u", *(unsigned short*)(params->fileBytes + dataSectionIndex));
 				break;
 			case INT_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned int*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%u", *(unsigned int*)(params->fileBytes + dataSectionIndex));
 				break;
 			case LONG_LONG_TYPE:
-				sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params->fileBytes + dataSectionIndex));
 				break;
 			}
 		}
@@ -277,16 +280,16 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 			switch (type.primitiveType)
 			{
 			case CHAR_TYPE:
-				sprintfJdc(result, 0, "%d", *(char*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%d", *(char*)(params->fileBytes + dataSectionIndex));
 				break;
 			case SHORT_TYPE:
-				sprintfJdc(result, 0, "%d", *(short*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%d", *(short*)(params->fileBytes + dataSectionIndex));
 				break;
 			case INT_TYPE:
-				sprintfJdc(result, 0, "%d", *(int*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%d", *(int*)(params->fileBytes + dataSectionIndex));
 				break;
 			case LONG_LONG_TYPE:
-				sprintfJdc(result, 0, "%lld", *(long long*)(params->dataSectionByte + dataSectionIndex));
+				sprintfJdc(result, 0, "%lld", *(long long*)(params->fileBytes + dataSectionIndex));
 				break;
 			}
 		}
@@ -297,21 +300,24 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 
 static unsigned char getStringFromDataSection(struct DecompilationParameters* params, unsigned long long address, struct JdcStr* result)
 {
-	if (address < params->imageBase + params->dataSections[0].virtualAddress)
+	if (address < params->imageBase + params->sections[0].virtualAddress)
 	{
 		return 0;
 	}
 
 	int dataSectionIndex = -1;
 	int totalSize = 0;
-	for (int i = 0; i < params->numOfDataSections; i++)
+	for (int i = 0; i < params->numOfSections; i++)
 	{
-		if (address > params->imageBase + params->dataSections[i].virtualAddress && address < params->imageBase + params->dataSections[i].virtualAddress + params->dataSections[i].size)
+		if (params->sections[i].type == INIT_DATA_FST && params->sections[i].isReadOnly)
 		{
-			dataSectionIndex = (int)((totalSize + address) - (params->dataSections[i].virtualAddress + params->imageBase));
+			if (address > params->imageBase + params->sections[i].virtualAddress && address < params->imageBase + params->sections[i].virtualAddress + params->sections[i].size)
+			{
+				dataSectionIndex = (int)((totalSize + address) - (params->sections[i].virtualAddress + params->imageBase));
+			}
 		}
 
-		totalSize += params->dataSections[i].size;
+		totalSize += params->sections[i].size;
 	}
 
 	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
@@ -326,7 +332,7 @@ static unsigned char getStringFromDataSection(struct DecompilationParameters* pa
 	char byte = 0;
 	while (1)
 	{
-		byte = *(char*)(params->dataSectionByte + len + dataSectionIndex);
+		byte = *(char*)(params->fileBytes + len + dataSectionIndex);
 
 		if (byte == 0)
 		{

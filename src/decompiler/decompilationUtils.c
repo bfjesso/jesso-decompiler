@@ -155,21 +155,24 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 
 static unsigned char getNumFromData(struct DecompilationParameters* params, unsigned long long address, unsigned long long* result)
 {
-	if (address < params->imageBase + params->dataSections[0].virtualAddress)
+	if (address < params->imageBase + params->sections[0].virtualAddress)
 	{
 		return 0;
 	}
 
 	int dataSectionIndex = -1;
 	int totalSize = 0;
-	for (int i = 0; i < params->numOfDataSections; i++)
+	for (int i = 0; i < params->numOfSections; i++)
 	{
-		if (address > params->imageBase + params->dataSections[i].virtualAddress && address < params->imageBase + params->dataSections[i].virtualAddress + params->dataSections[i].size)
+		if (params->sections[i].type == INIT_DATA_FST && params->sections[i].isReadOnly) 
 		{
-			dataSectionIndex = (int)((totalSize + address) - (params->dataSections[i].virtualAddress + params->imageBase));
+			if (address > params->imageBase + params->sections[i].virtualAddress && address < params->imageBase + params->sections[i].virtualAddress + params->sections[i].size)
+			{
+				dataSectionIndex = (int)((totalSize + address) - (params->sections[i].virtualAddress + params->imageBase));
+			}
 		}
 
-		totalSize += params->dataSections[i].size;
+		totalSize += params->sections[i].size;
 	}
 
 	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
@@ -179,11 +182,11 @@ static unsigned char getNumFromData(struct DecompilationParameters* params, unsi
 
 	if (params->is64Bit)
 	{
-		*result = *(unsigned long long*)(params->dataSectionByte + dataSectionIndex);
+		*result = *(unsigned long long*)(params->fileBytes + dataSectionIndex);
 	}
 	else
 	{
-		*result = *(unsigned int*)(params->dataSectionByte + dataSectionIndex);
+		*result = *(unsigned int*)(params->fileBytes + dataSectionIndex);
 	}
 
 	return 1;

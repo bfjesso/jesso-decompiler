@@ -138,7 +138,35 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 	return 0;
 }
 
-int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen)
+int getNumOfELFSections64(const char* filePath)
+{
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		Elf64_Ehdr elfHeader;
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		fclose(file);
+		return elfHeader.e_shnum;
+	}
+
+	return 0;
+}
+
+int getNumOfELFSections32(const char* filePath)
+{
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		Elf32_Ehdr elfHeader;
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		fclose(file);
+		return elfHeader.e_shnum;
+	}
+
+	return 0;
+}
+
+unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection* buffer, int bufferLen)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -158,25 +186,37 @@ int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int b
 
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
-			int bufferIndex = 0;
+			if (bufferLen != elfHeader.e_shnum) 
+			{
+				fclose(file);
+				return 0;
+			}
 
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
 				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
 				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
+				buffer[i].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
+
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
-					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
-					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-					buffer[bufferIndex].size = sectionHeader.sh_size;
-					bufferIndex++;
+					buffer[i].type = CODE_FST;
 				}
+				else 
+				{
+					buffer[i].type = INIT_DATA_FST;
+				}
+
+				buffer[i].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
+				
+				buffer[i].virtualAddress = sectionHeader.sh_addr;
+				buffer[i].fileOffset = sectionHeader.sh_offset;
+				buffer[i].size = sectionHeader.sh_size;
 			}
 
 			fclose(file);
-			return bufferIndex;
+			return 1;
 		}
 		else
 		{
@@ -197,7 +237,7 @@ int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int b
 	return 0;
 }
 
-int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int bufferLen)
+unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection* buffer, int bufferLen)
 {
 	Elf32_Ehdr elfHeader;
 	Elf32_Shdr sectionHeader;
@@ -217,143 +257,37 @@ int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int b
 
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
-			int bufferIndex = 0;
+			if (bufferLen != elfHeader.e_shnum)
+			{
+				fclose(file);
+				return 0;
+			}
 
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
 				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
 				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+				buffer[i].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
-					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
-					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-					buffer[bufferIndex].size = sectionHeader.sh_size;
-					bufferIndex++;
+					buffer[i].type = CODE_FST;
 				}
-			}
-
-			fclose(file);
-			return bufferIndex;
-		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
-
-		printf("Couldn't find section.\n");
-		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
-	}
-
-	return 0;
-}
-
-int getELFDataSections64(const char* filePath, struct FileSection* buffer, int bufferLen)
-{
-	Elf64_Ehdr elfHeader;
-	Elf64_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
-
-	if (file)
-	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-
-		Elf64_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
-
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
-		fread(sectionNames, 1, nameStrTable.sh_size, file);
-
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			int bufferIndex = 0;
-
-			for (int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if (sectionHeader.sh_flags & SHF_WRITE)
+				else
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
-					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
-					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-					buffer[bufferIndex].size = sectionHeader.sh_size;
-					bufferIndex++;
+					buffer[i].type = INIT_DATA_FST;
 				}
+
+				buffer[i].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
+
+				buffer[i].virtualAddress = sectionHeader.sh_addr;
+				buffer[i].fileOffset = sectionHeader.sh_offset;
+				buffer[i].size = sectionHeader.sh_size;
 			}
 
 			fclose(file);
-			return bufferIndex;
-		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
-
-		printf("Couldn't find section.\n");
-		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
-	}
-
-	return 0;
-}
-
-int getELFDataSections32(const char* filePath, struct FileSection* buffer, int bufferLen)
-{
-	Elf32_Ehdr elfHeader;
-	Elf32_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
-
-	if (file)
-	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-
-		Elf32_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
-
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
-		fread(sectionNames, 1, nameStrTable.sh_size, file);
-
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			int bufferIndex = 0;
-
-			for (int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if (sectionHeader.sh_flags & SHF_WRITE)
-				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
-					buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
-					buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-					buffer[bufferIndex].size = sectionHeader.sh_size;
-					bufferIndex++;
-				}
-			}
-
-			fclose(file);
-			return bufferIndex;
+			return 1;
 		}
 		else
 		{

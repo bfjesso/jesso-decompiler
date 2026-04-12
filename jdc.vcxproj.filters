@@ -111,6 +111,9 @@
     <ClCompile Include="src\decompiler\operations.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\sectionsViewerMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -225,6 +228,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\operations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\sectionsViewerMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

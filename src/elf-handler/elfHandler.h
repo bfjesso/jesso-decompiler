@@ -7,13 +7,17 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 
 unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result);
 
-int getELFCodeSections64(const char* filePath, struct FileSection* buffer, int bufferLen);
+int getNumOfELFSections64(const char* filePath);
 
-int getELFCodeSections32(const char* filePath, struct FileSection* buffer, int bufferLen);
+int getNumOfELFSections32(const char* filePath);
 
-int getELFDataSections64(const char* filePath, struct FileSection* buffer, int bufferLen);
+int getNumOfELFSections64(const char* filePath);
 
-int getELFDataSections32(const char* filePath, struct FileSection* buffer, int bufferLen);
+int getNumOfELFSections32(const char* filePath);
+
+unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection* buffer, int bufferLen);
+
+unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection* buffer, int bufferLen);
 
 unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_Shdr* result);
 

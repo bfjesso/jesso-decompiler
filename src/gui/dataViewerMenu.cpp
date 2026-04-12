@@ -45,9 +45,9 @@ void DataViewer::UpdateDataList(wxCommandEvent& e)
 
 void DataViewer::LoadData()
 {
-	if (!bytes)
+	if (!fileBytes)
 	{
-		wxMessageBox("No data section bytes", "Can't load data");
+		wxMessageBox("No file bytes", "Can't load data");
 		return;
 	}
 
@@ -60,15 +60,15 @@ void DataViewer::LoadData()
 	int typeSize = typeSizes[typeSelection];
 
 	int baseIndex = 0;
-	for (int j = 0; j < numOfDataSections; j++) 
+	for (int j = 0; j < numOfSections; j++) 
 	{
 		int i = 0;
-		while (i < dataSections[j].size) 
+		while (i < sections[j].size) 
 		{
-			uintptr_t address = imageBase + dataSections[j].virtualAddress + i;
+			uintptr_t address = imageBase + sections[j].virtualAddress + i;
 			char addressStrBuffer[20];
 			sprintf(addressStrBuffer, "%llX", address);
-			wxString addressStr = wxString(addressStrBuffer) + wxString(dataSections[j].name.buffer) + "\t";
+			wxString addressStr = wxString(addressStrBuffer) + wxString(sections[j].name.buffer) + "\t";
 
 			char dataStrBuffer[50];
 			switch (typeSelection)
@@ -77,11 +77,11 @@ void DataViewer::LoadData()
 			{
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStrBuffer, "0x%X", bytes[i + baseIndex]);
+					sprintf(dataStrBuffer, "0x%X", fileBytes[i + baseIndex]);
 				}
 				else
 				{
-					sprintf(dataStrBuffer, "%d", bytes[i + baseIndex]);
+					sprintf(dataStrBuffer, "%d", fileBytes[i + baseIndex]);
 				}
 				break;
 			}
@@ -89,11 +89,11 @@ void DataViewer::LoadData()
 			{
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStrBuffer, "0x%X", *(short*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "0x%X", *(short*)(fileBytes + baseIndex + i));
 				}
 				else
 				{
-					sprintf(dataStrBuffer, "%d", *(short*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "%d", *(short*)(fileBytes + baseIndex + i));
 				}
 				break;
 			}
@@ -101,11 +101,11 @@ void DataViewer::LoadData()
 			{
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStrBuffer, "0x%X", *(int*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "0x%X", *(int*)(fileBytes + baseIndex + i));
 				}
 				else
 				{
-					sprintf(dataStrBuffer, "%d", *(int*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "%d", *(int*)(fileBytes + baseIndex + i));
 				}
 				break;
 			}
@@ -113,22 +113,22 @@ void DataViewer::LoadData()
 			{
 				if (hexCheckBox->IsChecked())
 				{
-					sprintf(dataStrBuffer, "0x%llX", *(long long*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "0x%llX", *(long long*)(fileBytes + baseIndex + i));
 				}
 				else
 				{
-					sprintf(dataStrBuffer, "%lld", *(long long*)(bytes + baseIndex + i));
+					sprintf(dataStrBuffer, "%lld", *(long long*)(fileBytes + baseIndex + i));
 				}
 				break;
 			}
 			case 4: // float
 			{
-				sprintf(dataStrBuffer, "%f", *(float*)(bytes + baseIndex + i));
+				sprintf(dataStrBuffer, "%f", *(float*)(fileBytes + baseIndex + i));
 				break;
 			}
 			case 5: // double
 			{
-				sprintf(dataStrBuffer, "%lf", *(double*)(bytes + baseIndex + i));
+				sprintf(dataStrBuffer, "%lf", *(double*)(fileBytes + baseIndex + i));
 				break;
 			}
 			}
@@ -149,14 +149,14 @@ void DataViewer::LoadData()
 			i += typeSize;
 		}
 
-		baseIndex += dataSections[j].size;
+		baseIndex += sections[j].size;
 	}
 
 	dataTextCtrl->Thaw();
 	dataTextCtrl->SetReadOnly(true);
 }
 
-void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* dataSecs, int numOfDataSecs, unsigned char* dataBytes)
+void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* secs, int numOfSecs, unsigned char* bytes)
 {
 	position.x += 10;
 	position.y += 10;
@@ -165,9 +165,9 @@ void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* dat
 	Raise();
 
 	imageBase = imageBas;
-	dataSections = dataSecs;
-	numOfDataSections = numOfDataSecs;
-	bytes = dataBytes;
+	sections = secs;
+	numOfSections = numOfSecs;
+	fileBytes = bytes;
 
 	LoadData();
 }

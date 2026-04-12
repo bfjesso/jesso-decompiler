@@ -15,10 +15,10 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	unsigned char* bytes = nullptr;
+	unsigned char* fileBytes = nullptr;
 	uintptr_t imageBase = 0;
-	FileSection* dataSections = nullptr;
-	int numOfDataSections = 0;
+	FileSection* sections = nullptr;
+	int numOfSections = 0;
 
 	const char* dataTypeStrs[6] = 
 	{
@@ -51,7 +51,7 @@ public:
 
 	void LoadData();
 
-	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* dataSecs, int numOfDataSecs, unsigned char* dataBytes);
+	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* secs, int numOfSecs, unsigned char* bytes);
 
 	void CloseMenu(wxCloseEvent& e);
 

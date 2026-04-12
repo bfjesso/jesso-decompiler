@@ -56,6 +56,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	menuBar = new wxMenuBar();
 	bytesDisassemblerMenu = new BytesDisassembler();
+	sectionsViewerMenu = new SectionsViewer();
 	dataViewerMenu = new DataViewer();
 	importsViewerMenu = new ImportsViewer();
 	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
@@ -76,8 +77,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
 
+	wxMenuItem* openSectionsViewer = toolMenu->Append(OpenSectionsViewerID, "File sections");
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { sectionsViewerMenu->OpenMenu(GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
+
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, dataSections, numOfDataSections, dataSectionBytes); }, OpenDataViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
 
 	wxMenuItem* openImportsViewer = toolMenu->Append(OpenImportsViewerID, "Imports");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { importsViewerMenu->OpenMenu(GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
@@ -130,12 +134,25 @@ void MainGui::OpenFile()
 
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
 
+			numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
+			sections = new FileSection[numOfSections];
+			if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), is64Bit, sections, numOfSections))
+			{
+				wxMessageBox("Error getting all file sections", "Failed to open file");
+				currentFilePath = "";
+				delete[] sections;
+				return;
+			}
+
+			LoadFileBytes();
+
 			numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
 			imports = new ImportedFunction[numOfImports];
 			if (getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, numOfImports) != numOfImports)
 			{
 				wxMessageBox("Error getting all imports", "Failed to open file");
 				currentFilePath = "";
+				delete[] sections;
 				delete[] imports;
 				return;
 			}
@@ -186,15 +203,9 @@ void MainGui::DisassembleFile()
 
 	UpdateDisassemblyTextCtrl();
 
-	int answer = wxMessageBox("Do you want to load bytes from the data section?", "Get data section bytes", wxYES_NO, this);
-	if (answer == wxYES)
-	{
-		LoadDataSectionBytes();
-	}
-
 	statusStaticText->SetLabelText("Status: idle");
 
-	answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+	int answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
 	if (answer == wxYES)
 	{
 		AnalyzeFile();
@@ -246,15 +257,30 @@ void MainGui::AnalyzeFile()
 
 void MainGui::ClearData() 
 {
-	if (dataSectionBytes)
+	if (fileBytes)
 	{
-		delete[] dataSectionBytes;
+		delete[] fileBytes;
 	}
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
+
+	jmpTableStartAddresses.clear();
+	jmpTableStartAddresses.shrink_to_fit();
+
+	indirectTableStartAddresses.clear();
+	indirectTableStartAddresses.shrink_to_fit();
+
+	for (int i = 0; i < numOfSections; i++)
+	{
+		freeJdcStr(&sections[i].name);
+	}
+	if (sections)
+	{
+		delete[] sections;
+	}
 
 	for (int i = 0; i < numOfImports; i++) 
 	{
@@ -280,7 +306,7 @@ void MainGui::ClearData()
 	}
 }
 
-void MainGui::LoadDataSectionBytes()
+void MainGui::LoadFileBytes()
 {
 	if (currentFilePath == "")
 	{
@@ -288,54 +314,43 @@ void MainGui::LoadDataSectionBytes()
 		return;
 	}
 
-	numOfDataSections = getFileDataSections(currentFilePath.c_str().AsWChar(), is64Bit, dataSections, dataSectionsBufferSize);
-
-	if (numOfDataSections == 0)
-	{
-		wxMessageBox("Failed to get any data section headers", "Can't get data section header");
-		return;
-	}
-
 	int totalSize = 0;
-	for (int i = 0; i < numOfDataSections; i++) 
+	for (int i = 0; i < numOfSections; i++) 
 	{
-		totalSize += dataSections[i].size;
+		totalSize += sections[i].size;
 	}
 
-	dataSectionBytes = new unsigned char[totalSize];
+	fileBytes = new unsigned char[totalSize];
 
 	int currentIndex = 0;
-	for (int i = 0; i < numOfDataSections; i++)
+	for (int i = 0; i < numOfSections; i++)
 	{
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &dataSections[i], is64Bit, dataSectionBytes + currentIndex, dataSections[i].size))
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, fileBytes + currentIndex, sections[i].size))
 		{
-			wxMessageBox("Error reading bytes from file data section", "Can't load data");
+			wxMessageBox("Error reading bytes from file section " + wxString(sections[i].name.buffer), "Can't load data");
 
-			delete[] dataSectionBytes;
+			delete[] fileBytes;
 			return;
 		}
 
-		currentIndex += dataSections[i].size;
+		currentIndex += sections[i].size;
 	}
 }
 
 void MainGui::DisassembleCodeSections()
 {
-	numOfCodeSections = getFileCodeSections(currentFilePath.c_str().AsWChar(), is64Bit, codeSections, 10);
-
-	if (numOfCodeSections == 0)
-	{
-		wxMessageBox("No code sections found in file", "Can't disassemble");
-		return;
-	}
-
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 
-	for (int i = 0; i < numOfCodeSections; i++)
+	for (int i = 0; i < numOfSections; i++)
 	{
-		unsigned char* bytes = new unsigned char[codeSections[i].size];
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &codeSections[i], is64Bit, bytes, codeSections[i].size))
+		if (sections[i].type != CODE_FST) 
+		{
+			continue;
+		}
+		
+		unsigned char* bytes = new unsigned char[sections[i].size];
+		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, bytes, sections[i].size))
 		{
 			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
 			delete[] bytes;
@@ -347,14 +362,14 @@ void MainGui::DisassembleCodeSections()
 		struct DisassembledInstruction currentInstruction;
 		unsigned int currentIndex = 0;
 		unsigned char numOfBytes = 0;
-		while (disassembleInstruction(&bytes[currentIndex], bytes + codeSections[i].size - 1, &options, &currentInstruction, &numOfBytes))
+		while (disassembleInstruction(&bytes[currentIndex], bytes + sections[i].size - 1, &options, &currentInstruction, &numOfBytes))
 		{
 			if (numOfBytes == 0)
 			{
 				break;
 			}
 
-			currentInstruction.address = imageBase + codeSections[i].virtualAddress + currentIndex;
+			currentInstruction.address = imageBase + sections[i].virtualAddress + currentIndex;
 			currentIndex += numOfBytes;
 
 			disassembledInstructions.push_back(currentInstruction);
@@ -366,7 +381,7 @@ void MainGui::DisassembleCodeSections()
 
 			instructionNum++;
 
-			instructionNum += HandleJmpTables(bytes, &currentIndex, codeSections[i]);
+			instructionNum += HandleJmpTables(bytes, &currentIndex, sections[i]);
 		}
 
 		delete[] bytes;
@@ -516,9 +531,9 @@ void MainGui::FindAllFunctions()
 	decompParams.numOfInstructions = disassembledInstructions.size();
 
 	decompParams.imageBase = imageBase;
-	decompParams.dataSections = dataSections;
-	decompParams.numOfDataSections = numOfDataSections;
-	decompParams.dataSectionByte = dataSectionBytes;
+	decompParams.sections = sections;
+	decompParams.numOfSections = numOfSections;
+	decompParams.fileBytes = fileBytes;
 
 	decompParams.is64Bit = is64Bit;
 	
@@ -526,7 +541,15 @@ void MainGui::FindAllFunctions()
 	int instructionIndex = 0;
 
 	int codeSectionIndex = 0;
-	unsigned long long currentSectionEndAddress = imageBase + codeSections[0].virtualAddress + codeSections[0].size - 1;
+	for (int i = 0; i < numOfSections; i++) 
+	{
+		if (sections[i].type == CODE_FST) 
+		{
+			codeSectionIndex = i;
+			break;
+		}
+	}
+	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].virtualAddress + sections[codeSectionIndex].size - 1;
 
 	std::vector<unsigned long long> calledAddresses;
 	for (int i = 0; i < numOfInstructions; i++) 
@@ -550,11 +573,20 @@ void MainGui::FindAllFunctions()
 	{
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{
-			codeSectionIndex++;
-
-			if (codeSectionIndex < numOfCodeSections) 
+			unsigned foundNextCodeSection = 0;
+			for (int i = codeSectionIndex + 1; i < numOfSections; i++)
 			{
-				currentSectionEndAddress = imageBase + codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size - 1;
+				if (sections[i].type == CODE_FST)
+				{
+					codeSectionIndex = i;
+					foundNextCodeSection = 1;
+					break;
+				}
+			}
+
+			if (foundNextCodeSection)
+			{
+				currentSectionEndAddress = imageBase + sections[codeSectionIndex].virtualAddress + sections[codeSectionIndex].size - 1;
 			}
 		}
 
@@ -583,21 +615,25 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	disassemblyTextCtrl->Freeze();
 
 	int numOfInstructions = disassembledInstructions.size();
-	int codeSectionIndex = 0;
+	int sectionIndex = -1;
 
 	wxString disassemblyText = "";
 	disassemblyText.reserve(numOfInstructions * 50);
 
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		if (disassembledInstructions[i].address > codeSections[codeSectionIndex].virtualAddress + codeSections[codeSectionIndex].size + imageBase)
+		for (int j = sectionIndex + 1; j < numOfSections; j++)
 		{
-			codeSectionIndex++;
+			if (disassembledInstructions[i].address >= sections[j].virtualAddress + imageBase)
+			{
+				sectionIndex = j;
+				break;
+			}
 		}
 		
 		char addressStr[20] = { 0 };
 		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
-		wxString addressInfoStr = wxString(addressStr) + wxString(codeSections[codeSectionIndex].name.buffer) + "\t";
+		wxString addressInfoStr = wxString(addressStr) + wxString(sections[sectionIndex].name.buffer) + "\t";
 
 		char buffer[255] = { 0 };
 		wxString asmStr = "";

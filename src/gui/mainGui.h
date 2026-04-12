@@ -3,6 +3,7 @@
 #include <wx/grid.h>
 #include <wx/splitter.h>
 #include "disassembleBytesMenu.h"
+#include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
 #include "importsViewerMenu.h"
 #include "colorsMenu.h"
@@ -20,6 +21,7 @@ public:
 
 	wxMenuBar* menuBar = nullptr;
 	BytesDisassembler* bytesDisassemblerMenu = nullptr;
+	SectionsViewer* sectionsViewerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
 	ImportsViewer* importsViewerMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;;
@@ -39,21 +41,17 @@ public:
 	unsigned char is64Bit = 0;
 	unsigned long long imageBase = 0;
 
+	unsigned char* fileBytes = nullptr;
+
+	FileSection* sections = nullptr;
+	int numOfSections = 0;
+
 	ImportedFunction* imports = nullptr;
 	int numOfImports = 0;
 
 	std::vector<DisassembledInstruction> disassembledInstructions;
 
 	std::vector<Function> functions;
-
-	unsigned char* dataSectionBytes = nullptr;
-	static const int dataSectionsBufferSize = 10;
-	FileSection dataSections[dataSectionsBufferSize] = { 0 };
-	int numOfDataSections = 0;
-
-	static const int codeSectionsBufferSize = 10;
-	FileSection codeSections[codeSectionsBufferSize] = { 0 };
-	int numOfCodeSections = 0;
 
 	std::vector<unsigned long long> jmpTableStartAddresses;
 	std::vector<unsigned long long> indirectTableStartAddresses;
@@ -66,6 +64,7 @@ public:
 	{
 		MainWindowID,
 		OpenBytesDisassemblerID,
+		OpenSectionsViewerID,
 		OpenDataViewerID,
 		OpenImportsViewerID,
 		OpenColorsMenuID,
@@ -84,7 +83,7 @@ public:
 
 	void ClearData();
 
-	void LoadDataSectionBytes();
+	void LoadFileBytes();
 
 	void DisassembleCodeSections();
 

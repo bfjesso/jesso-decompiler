@@ -52,7 +52,41 @@ unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64B
 #endif
 }
 
-int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
+{
+#ifdef _WIN32
+	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (!file || file == INVALID_HANDLE_VALUE)
+	{
+		return 0;
+	}
+
+	if (is64Bit)
+	{
+		return getNumOfPESections64(file);
+	}
+	else
+	{
+		return getNumOfPESections64(file);
+	}
+#endif
+
+#ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	if (is64Bit)
+	{
+		return getNumOfELFSections64(filePathChar);
+	}
+	else
+	{
+		return getNumOfELFSections32(filePathChar);
+	}
+#endif
+}
+
+int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -63,11 +97,11 @@ int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct F
 
 	if(is64Bit)
 	{
-		return getCodeSectionHeaders64(file, buffer, bufferLen);
+		return getAllPESectionHeaders64(file, buffer, bufferLen);
 	}
 	else
 	{
-		return getCodeSectionHeaders32(file, buffer, bufferLen);
+		return getAllPESectionHeaders32(file, buffer, bufferLen);
 	}
 #endif
 
@@ -77,45 +111,11 @@ int getFileCodeSections(const wchar_t* filePath, unsigned char is64Bit, struct F
 
 	if (is64Bit)
 	{ 
-		return getELFCodeSections64(filePathChar, buffer, bufferLen);
+		return getAllELFSectionHeaders64(filePathChar, buffer, bufferLen);
 	}
 	else
 	{ 
-		return getELFCodeSections32(filePathChar, buffer, bufferLen);
-	}
-#endif
-}
-
-int getFileDataSections(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
-{
-#ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	if (is64Bit)
-	{
-		return getDataSectionHeaders64(file, buffer, bufferLen);
-	}
-	else
-	{
-		return getDataSectionHeaders32(file, buffer, bufferLen);
-	}
-#endif
-
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getELFDataSections64(filePathChar, buffer, bufferLen);
-	}
-	else
-	{
-		return getELFDataSections32(filePathChar, buffer, bufferLen);
+		return getAllELFSectionHeaders32(filePathChar, buffer, bufferLen);
 	}
 #endif
 }
