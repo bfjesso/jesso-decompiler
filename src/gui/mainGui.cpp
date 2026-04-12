@@ -258,6 +258,8 @@ void MainGui::ClearData()
 	{
 		delete[] fileBytes;
 	}
+
+	dataViewerMenu->ClearData();
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 

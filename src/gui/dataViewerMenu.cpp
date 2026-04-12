@@ -183,6 +183,16 @@ void DataViewer::LoadData()
 	dataTextCtrl->SetReadOnly(true);
 }
 
+void DataViewer::ClearData() 
+{
+	ClearStyledTextCtrl(dataTextCtrl);
+
+	fileBytes = nullptr;
+	sections = nullptr;
+	numOfSections = 0;
+	imageBase = 0;
+}
+
 void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* secs, int numOfSecs, unsigned char* bytes)
 {
 	position.x += 10;
@@ -191,12 +201,15 @@ void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* sec
 	Show();
 	Raise();
 
-	imageBase = imageBas;
-	sections = secs;
-	numOfSections = numOfSecs;
-	fileBytes = bytes;
+	if (!fileBytes) 
+	{
+		imageBase = imageBas;
+		sections = secs;
+		numOfSections = numOfSecs;
+		fileBytes = bytes;
 
-	LoadData();
+		LoadData();
+	}
 }
 
 void DataViewer::CloseMenu(wxCloseEvent& e) // stops this frame from being destroyed and the data being lost
