@@ -244,11 +244,11 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 
 	if (type.primitiveType == FLOAT_TYPE) 
 	{
-		sprintfJdc(result, 0, "%f", *(float*)(params->fileBytes + dataSectionIndex));
+		sprintfJdc(result, 0, "%0.8g", *(float*)(params->fileBytes + dataSectionIndex));
 	}
 	else if (type.primitiveType == DOUBLE_TYPE) 
 	{
-		sprintfJdc(result, 0, "%lf", *(double*)(params->fileBytes + dataSectionIndex));
+		sprintfJdc(result, 0, "%0.16g", *(double*)(params->fileBytes + dataSectionIndex));
 	}
 	else 
 	{
