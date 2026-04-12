@@ -924,12 +924,12 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					{
 						disassemblyTextCtrl->GotoLine(index);
 						int pos = disassemblyTextCtrl->PositionFromLine(index);
-						disassemblyTextCtrl->SetSelection(pos, pos + txt.size());
+						disassemblyTextCtrl->SetSelection(pos, pos + disassemblyTextCtrl->GetLineLength(index));
 					}
 				}
 				else
 				{
-					wxMessageBox("Not valid hex number", "Failed to find function");
+					wxMessageBox("Not valid hex number", "Failed to find address");
 				}
 			}
 			}, ID_GO_TO_ADDR);
