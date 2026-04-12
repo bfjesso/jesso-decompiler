@@ -6,7 +6,7 @@
 class SectionsViewer : public wxFrame, public Utils
 {
 public:
-	SectionsViewer();
+	SectionsViewer(wxWindow* parent, wxPoint position, FileSection* sections, int numOfSections);
 
 	wxGrid* sectionsGrid = nullptr;
 
@@ -17,11 +17,7 @@ public:
 		MainWindowID
 	};
 
-	void OpenMenu(wxPoint position, FileSection* sections, int numOfSections);
-
 	void GridRightClickOptions(wxGridEvent& e);
-
-	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };

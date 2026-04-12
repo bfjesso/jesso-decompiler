@@ -55,10 +55,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	menuBar = new wxMenuBar();
-	bytesDisassemblerMenu = new BytesDisassembler();
-	sectionsViewerMenu = new SectionsViewer();
 	dataViewerMenu = new DataViewer();
-	importsViewerMenu = new ImportsViewer();
 	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
 
 	wxMenu* fileMenu = new wxMenu();
@@ -75,16 +72,16 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	wxMenu* toolMenu = new wxMenu();
 
 	wxMenuItem* openBytesDisassembler = toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { bytesDisassemblerMenu->OpenMenu(GetPosition()); }, OpenBytesDisassemblerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new BytesDisassembler(this, GetPosition()); }, OpenBytesDisassemblerID);
 
 	wxMenuItem* openSectionsViewer = toolMenu->Append(OpenSectionsViewerID, "File sections");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { sectionsViewerMenu->OpenMenu(GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new SectionsViewer(this, GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
 
 	wxMenuItem* openDataViewer = toolMenu->Append(OpenDataViewerID, "Data viewer");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
 
 	wxMenuItem* openImportsViewer = toolMenu->Append(OpenImportsViewerID, "Imports");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { importsViewerMenu->OpenMenu(GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new ImportsViewer(this, GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
 
 	wxMenu* optionsMenu = new wxMenu();
 
@@ -942,9 +939,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 void MainGui::CloseApp(wxCloseEvent& e)
 {
 	ClearData();
-	bytesDisassemblerMenu->Destroy();
 	dataViewerMenu->Destroy();
-	importsViewerMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
 }

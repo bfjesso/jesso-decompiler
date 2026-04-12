@@ -1,12 +1,17 @@
 #include "sectionsViewerMenu.h"
 
 wxBEGIN_EVENT_TABLE(SectionsViewer, wxFrame)
-EVT_CLOSE(SectionsViewer::CloseMenu)
 EVT_GRID_CELL_RIGHT_CLICK(SectionsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-SectionsViewer::SectionsViewer() : wxFrame(nullptr, MainWindowID, "File Sections", wxPoint(50, 50), wxSize(600, 600))
+SectionsViewer::SectionsViewer(wxWindow* parent, wxPoint position, FileSection* sections, int numOfSections) : wxFrame(parent, MainWindowID, "File Sections", wxPoint(50, 50), wxSize(600, 600))
 {
+	position.x += 10;
+	position.y += 10;
+	SetPosition(position);
+	Show();
+	Raise();
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	sectionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
@@ -38,27 +43,6 @@ SectionsViewer::SectionsViewer() : wxFrame(nullptr, MainWindowID, "File Sections
 	sectionsGrid->SetColSize(5, 9999);
 	sectionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	vSizer = new wxBoxSizer(wxVERTICAL);
-
-	vSizer->Add(sectionsGrid, 1, wxEXPAND);
-
-	SetSizerAndFit(vSizer);
-}
-
-void SectionsViewer::OpenMenu(wxPoint position, FileSection* sections, int numOfSections)
-{
-	position.x += 10;
-	position.y += 10;
-	SetPosition(position);
-	Show();
-	Raise();
-
-	int rows = sectionsGrid->GetNumberRows();
-	if (rows > 0)
-	{
-		sectionsGrid->DeleteRows(0, sectionsGrid->GetNumberRows());
-	}
-
 	for (int i = 0; i < numOfSections; i++)
 	{
 		sectionsGrid->AppendRows(1);
@@ -66,11 +50,11 @@ void SectionsViewer::OpenMenu(wxPoint position, FileSection* sections, int numOf
 		sectionsGrid->SetCellValue(i, 0, wxString(sections[i].name.buffer));
 		sectionsGrid->SetCellValue(i, 1, wxString(fileSectionTypeStrs[sections[i].type]));
 
-		if (sections[i].isReadOnly) 
+		if (sections[i].isReadOnly)
 		{
 			sectionsGrid->SetCellValue(i, 2, "Yes");
 		}
-		else 
+		else
 		{
 			sectionsGrid->SetCellValue(i, 2, "No");
 		}
@@ -85,6 +69,12 @@ void SectionsViewer::OpenMenu(wxPoint position, FileSection* sections, int numOf
 		sprintf(hexNumStr, "%X", sections[i].size);
 		sectionsGrid->SetCellValue(i, 5, wxString(hexNumStr));
 	}
+
+	vSizer = new wxBoxSizer(wxVERTICAL);
+
+	vSizer->Add(sectionsGrid, 1, wxEXPAND);
+
+	SetSizerAndFit(vSizer);
 }
 
 void SectionsViewer::GridRightClickOptions(wxGridEvent& e)
@@ -142,10 +132,4 @@ void SectionsViewer::GridRightClickOptions(wxGridEvent& e)
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
-}
-
-
-void SectionsViewer::CloseMenu(wxCloseEvent& e)
-{
-	Hide();
 }

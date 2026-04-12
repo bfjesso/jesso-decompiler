@@ -2,12 +2,17 @@
 #include "../disassembler/disassembler.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassembler, wxFrame)
-EVT_CLOSE(BytesDisassembler::CloseMenu)
 EVT_BUTTON(DisassembleButtonID, BytesDisassembler::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
-BytesDisassembler::BytesDisassembler() : wxFrame(nullptr, MainWindowID, "Bytes Disassembler", wxPoint(50, 50), wxSize(300, 175))
+BytesDisassembler::BytesDisassembler(wxWindow* parent, wxPoint position) : wxFrame(parent, MainWindowID, "Bytes Disassembler", wxPoint(50, 50), wxSize(300, 175))
 {
+	position.x += 10;
+	position.y += 10;
+	SetPosition(position);
+	Show();
+	Raise();
+	
 	SetOwnBackgroundColour(backgroundColor);
 	
 	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(300, 25));
@@ -116,18 +121,4 @@ int BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffer
 	}
 
 	return currentByte;
-}
-
-void BytesDisassembler::OpenMenu(wxPoint position)
-{
-	position.x += 10;
-	position.y += 10;
-	SetPosition(position);
-	Show();
-	Raise();
-}
-
-void BytesDisassembler::CloseMenu(wxCloseEvent& e) // stops this frame from being destroyed and the data being lost
-{
-	Hide();
 }

@@ -6,7 +6,7 @@
 class ImportsViewer : public wxFrame, public Utils
 {
 public:
-	ImportsViewer();
+	ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunction* imports, int numOfImports);
 
 	wxGrid* importsGrid = nullptr;
 
@@ -17,11 +17,7 @@ public:
 		MainWindowID
 	};
 
-	void OpenMenu(wxPoint position, ImportedFunction* imports, int numOfImports);
-
 	void GridRightClickOptions(wxGridEvent& e);
-
-	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };

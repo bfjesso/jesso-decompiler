@@ -1,12 +1,17 @@
 #include "importsViewerMenu.h"
 
 wxBEGIN_EVENT_TABLE(ImportsViewer, wxFrame)
-EVT_CLOSE(ImportsViewer::CloseMenu)
 EVT_GRID_CELL_RIGHT_CLICK(ImportsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Imports", wxPoint(50, 50), wxSize(600, 600))
+ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunction* imports, int numOfImports) : wxFrame(parent, MainWindowID, "Imports", wxPoint(50, 50), wxSize(600, 600))
 {
+	position.x += 10;
+	position.y += 10;
+	SetPosition(position);
+	Show();
+	Raise();
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	importsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
@@ -30,28 +35,7 @@ ImportsViewer::ImportsViewer() : wxFrame(nullptr, MainWindowID, "Imports", wxPoi
 	importsGrid->SetColSize(1, 9999);
 	importsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	vSizer = new wxBoxSizer(wxVERTICAL);
-
-	vSizer->Add(importsGrid, 1, wxEXPAND);
-
-	SetSizerAndFit(vSizer);
-}
-
-void ImportsViewer::OpenMenu(wxPoint position, ImportedFunction* imports, int numOfImports)
-{
-	position.x += 10;
-	position.y += 10;
-	SetPosition(position);
-	Show();
-	Raise();
-
-	int rows = importsGrid->GetNumberRows();
-	if (rows > 0)
-	{
-		importsGrid->DeleteRows(0, importsGrid->GetNumberRows());
-	}
-
-	for (int i = 0; i < numOfImports; i++) 
+	for (int i = 0; i < numOfImports; i++)
 	{
 		importsGrid->AppendRows(1);
 
@@ -61,6 +45,12 @@ void ImportsViewer::OpenMenu(wxPoint position, ImportedFunction* imports, int nu
 
 		importsGrid->SetCellValue(i, 1, imports[i].name.buffer);
 	}
+
+	vSizer = new wxBoxSizer(wxVERTICAL);
+
+	vSizer->Add(importsGrid, 1, wxEXPAND);
+
+	SetSizerAndFit(vSizer);
 }
 
 void ImportsViewer::GridRightClickOptions(wxGridEvent& e)
@@ -110,10 +100,4 @@ void ImportsViewer::GridRightClickOptions(wxGridEvent& e)
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
-}
-
-
-void ImportsViewer::CloseMenu(wxCloseEvent& e)
-{
-	Hide();
 }

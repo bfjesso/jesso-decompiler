@@ -4,7 +4,7 @@
 class BytesDisassembler : public wxFrame, public Utils
 {
 public:
-	BytesDisassembler();
+	BytesDisassembler(wxWindow* parent, wxPoint position);
 
 	wxTextCtrl* bytesTextCtrl = nullptr;
 	wxButton* disassembleButton = nullptr;
@@ -25,10 +25,6 @@ public:
 	void DisassembleBytes(wxCommandEvent& e);
 
 	int ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
-
-	void OpenMenu(wxPoint position);
-
-	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };

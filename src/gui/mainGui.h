@@ -20,11 +20,8 @@ public:
 	MainGui();
 
 	wxMenuBar* menuBar = nullptr;
-	BytesDisassembler* bytesDisassemblerMenu = nullptr;
-	SectionsViewer* sectionsViewerMenu = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
-	ImportsViewer* importsViewerMenu = nullptr;
-	ColorsMenu* colorsMenu = nullptr;;
+	ColorsMenu* colorsMenu = nullptr;
 
 	wxStaticText* statusStaticText = nullptr;
 
