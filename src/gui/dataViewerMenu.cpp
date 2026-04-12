@@ -7,7 +7,7 @@ EVT_CHOICE(DataTypeChoiceID, DataViewer::UpdateDataList)
 EVT_CHECKBOX(HexCheckBoxID, DataViewer::UpdateDataList)
 wxEND_EVENT_TABLE()
 
-DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(600, 600))
+DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(900, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -20,7 +20,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	hexCheckBox->SetOwnForegroundColour(textColor);
 	hexCheckBox->SetValue(true);
 
-	dataTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
+	dataTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 500));
 	SetUpStyledTextCtrl(dataTextCtrl);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -66,11 +66,11 @@ void DataViewer::LoadData()
 	}
 
 	wxString dataText = "";
-	dataText.reserve(totalSize * 50);
+	dataText.reserve(totalSize);
 
 	char sprintfBuffer[100] = { 0 };
 
-	const int bytesPerLine = 8;
+	const int bytesPerLine = 16;
 
 	unsigned char isHex = hexCheckBox->IsChecked();
 
