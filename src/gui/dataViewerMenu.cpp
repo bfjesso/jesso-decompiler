@@ -4,6 +4,7 @@
 wxBEGIN_EVENT_TABLE(DataViewer, wxFrame)
 EVT_CLOSE(DataViewer::CloseMenu)
 EVT_CHOICE(DataTypeChoiceID, DataViewer::UpdateDataList)
+EVT_CHOICE(SectionChoiceID, DataViewer::UpdateDataList)
 EVT_CHECKBOX(HexCheckBoxID, DataViewer::UpdateDataList)
 wxEND_EVENT_TABLE()
 
@@ -15,6 +16,10 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	dataTypeChoice->SetSelection(0);
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
+
+	sectionChoice = new wxChoice(this, SectionChoiceID, wxPoint(0, 0), wxSize(120, 50));
+	sectionChoice->SetOwnBackgroundColour(foregroundColor);
+	sectionChoice->SetOwnForegroundColour(textColor);
 
 	hexCheckBox = new wxCheckBox(this, HexCheckBoxID, "Hexadecimal");
 	hexCheckBox->SetOwnForegroundColour(textColor);
@@ -28,6 +33,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(dataTypeChoice, 0, wxLEFT | wxTOP | wxRIGHT, 10);
+	row1Sizer->Add(sectionChoice, 0, wxTOP | wxRIGHT, 10);
 	row1Sizer->Add(hexCheckBox, 0, wxTOP, 10);
 
 	row2Sizer->Add(dataTextCtrl, 1, wxLEFT | wxBOTTOM | wxRIGHT | wxEXPAND, 10);
@@ -58,102 +64,100 @@ void DataViewer::LoadData()
 
 	int typeSelection = dataTypeChoice->GetSelection();
 	int typeSize = typeSizes[typeSelection];
-
-	int totalSize = 0;
-	for (int i = 0; i < numOfSections; i++) 
-	{
-		totalSize += sections[i].size;
-	}
-
-	wxString dataText = "";
-	dataText.reserve(totalSize);
-
-	char sprintfBuffer[100] = { 0 };
-
+	int sectionSelection = sectionChoice->GetSelection();
 	const int bytesPerLine = 16;
-
 	unsigned char isHex = hexCheckBox->IsChecked();
 
 	int baseIndex = 0;
-	for (int i = 0; i < numOfSections; i++) 
+	for (int i = 0; i < sectionSelection; i++) 
 	{
-		for(int j = 0; j < sections[i].size; j += bytesPerLine)
+		baseIndex += sections[i].size;
+	}
+
+	wxString dataText = "";
+	dataText.reserve(sections[sectionSelection].size * 6);
+
+	char sprintfBuffer[100] = { 0 };
+
+	for (int i = 0; i < sections[sectionSelection].size; i += bytesPerLine)
+	{
+		unsigned long long address = imageBase + sections[sectionSelection].virtualAddress + i;
+		sprintf(sprintfBuffer, "%llX", address);
+		dataText += wxString(sprintfBuffer) + wxString(sections[sectionSelection].name.buffer) + "\t";
+
+		for (int j = 0; j < bytesPerLine / typeSize; j++)
 		{
-			unsigned long long address = imageBase + sections[i].virtualAddress + j;
-			sprintf(sprintfBuffer, "%llX", address);
-			dataText += wxString(sprintfBuffer) + wxString(sections[i].name.buffer) + "\t";
-
-			for (int k = 0; k < bytesPerLine / typeSize; k++)
+			if (i + j >= sections[sectionSelection].size) 
 			{
-				switch (typeSelection)
+				break;
+			}
+			
+			switch (typeSelection)
+			{
+			case 0: // 1-byte int
+			{
+				if (isHex)
 				{
-				case 0: // 1-byte int
+					sprintf(sprintfBuffer, "0x%02X", fileBytes[i + j + baseIndex]);
+				}
+				else
 				{
-					if (isHex)
-					{
-						sprintf(sprintfBuffer, "0x%02X", fileBytes[j + k + baseIndex]);
-					}
-					else
-					{
-						sprintf(sprintfBuffer, "%d", fileBytes[j + k + baseIndex]);
-					}
-					break;
+					sprintf(sprintfBuffer, "%d", fileBytes[i + j + baseIndex]);
 				}
-				case 1: // 2-byte int
+				break;
+			}
+			case 1: // 2-byte int
+			{
+				if (isHex)
 				{
-					if (isHex)
-					{
-						sprintf(sprintfBuffer, "0x%04X", *(short*)(fileBytes + j + k + baseIndex));
-					}
-					else
-					{
-						sprintf(sprintfBuffer, "%d", *(short*)(fileBytes + j + k + baseIndex));
-					}
-					break;
+					sprintf(sprintfBuffer, "0x%04X", *(short*)(fileBytes + i + j + baseIndex));
 				}
-				case 2: // 4-byte int
+				else
 				{
-					if (isHex)
-					{
-						sprintf(sprintfBuffer, "0x%08X", *(int*)(fileBytes + j + k + baseIndex));
-					}
-					else
-					{
-						sprintf(sprintfBuffer, "%d", *(int*)(fileBytes + j + k + baseIndex));
-					}
-					break;
+					sprintf(sprintfBuffer, "%d", *(short*)(fileBytes + i + j + baseIndex));
 				}
-				case 3: // 8-byte int
+				break;
+			}
+			case 2: // 4-byte int
+			{
+				if (isHex)
 				{
-					if (isHex)
-					{
-						sprintf(sprintfBuffer, "0x%016llX", *(long long*)(fileBytes + j + k + baseIndex));
-					}
-					else
-					{
-						sprintf(sprintfBuffer, "%lld", *(long long*)(fileBytes + j + k + baseIndex));
-					}
-					break;
+					sprintf(sprintfBuffer, "0x%08X", *(int*)(fileBytes + i + j + baseIndex));
 				}
-				case 4: // float
+				else
 				{
-					sprintf(sprintfBuffer, "%0.8g", *(float*)(fileBytes + j + k + baseIndex));
-					break;
+					sprintf(sprintfBuffer, "%d", *(int*)(fileBytes + i + j + baseIndex));
 				}
-				case 5: // double
+				break;
+			}
+			case 3: // 8-byte int
+			{
+				if (isHex)
 				{
-					sprintf(sprintfBuffer, "%0.16g", *(double*)(fileBytes + j + k + baseIndex));
-					break;
+					sprintf(sprintfBuffer, "0x%016llX", *(long long*)(fileBytes + i + j + baseIndex));
 				}
+				else
+				{
+					sprintf(sprintfBuffer, "%lld", *(long long*)(fileBytes + i + j + baseIndex));
 				}
-
-				dataText += wxString(sprintfBuffer) + " ";
+				break;
+			}
+			case 4: // float
+			{
+				sprintf(sprintfBuffer, "%0.8g", *(float*)(fileBytes + i + j + baseIndex));
+				break;
+			}
+			case 5: // double
+			{
+				sprintf(sprintfBuffer, "%0.16g", *(double*)(fileBytes + i + j + baseIndex));
+				break;
+			}
 			}
 
-			dataText += "\n";
+			dataText += wxString(sprintfBuffer) + " ";
 		}
 
-		baseIndex += sections[i].size;
+		dataText += "\n";
 	}
 
 	dataTextCtrl->SetText(dataText);
@@ -207,6 +211,13 @@ void DataViewer::OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* sec
 		sections = secs;
 		numOfSections = numOfSecs;
 		fileBytes = bytes;
+
+		sectionChoice->Clear();
+		for (int i = 0; i < numOfSections; i++) 
+		{
+			sectionChoice->Append(sections[i].name.buffer);
+		}
+		sectionChoice->SetSelection(0);
 
 		LoadData();
 	}

@@ -8,6 +8,7 @@ public:
 	DataViewer();
 
 	wxChoice* dataTypeChoice = nullptr;
+	wxChoice* sectionChoice = nullptr;
 	wxCheckBox* hexCheckBox = nullptr;
 	wxStyledTextCtrl* dataTextCtrl = nullptr;
 
@@ -44,6 +45,7 @@ public:
 	{
 		MainWindowID,
 		DataTypeChoiceID,
+		SectionChoiceID,
 		HexCheckBoxID
 	};
 
