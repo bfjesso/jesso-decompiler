@@ -16,7 +16,7 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	const int bytesPerLine = 16;
+	const int bytesPerLine = 8;
 
 	unsigned char* fileBytes = nullptr;
 	uintptr_t imageBase = 0;

@@ -8,7 +8,7 @@ EVT_CHOICE(SectionChoiceID, DataViewer::UpdateDataList)
 EVT_CHECKBOX(HexCheckBoxID, DataViewer::UpdateDataList)
 wxEND_EVENT_TABLE()
 
-DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(900, 600))
+DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(500, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -25,7 +25,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	hexCheckBox->SetOwnForegroundColour(textColor);
 	hexCheckBox->SetValue(true);
 
-	dataTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 500));
+	dataTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
 	SetUpStyledTextCtrl(dataTextCtrl);
 	dataTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
