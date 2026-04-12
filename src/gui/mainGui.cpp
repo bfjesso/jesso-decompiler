@@ -940,7 +940,6 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
-	ClearData();
 	dataViewerMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
