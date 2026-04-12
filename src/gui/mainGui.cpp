@@ -624,7 +624,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	{
 		for (int j = sectionIndex + 1; j < numOfSections; j++)
 		{
-			if (disassembledInstructions[i].address >= sections[j].virtualAddress + imageBase)
+			if (sections[j].type == CODE_FST && disassembledInstructions[i].address >= sections[j].virtualAddress + imageBase)
 			{
 				sectionIndex = j;
 				break;
