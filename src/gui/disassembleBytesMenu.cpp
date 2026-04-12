@@ -5,7 +5,7 @@ wxBEGIN_EVENT_TABLE(BytesDisassembler, wxFrame)
 EVT_BUTTON(DisassembleButtonID, BytesDisassembler::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
-BytesDisassembler::BytesDisassembler(wxWindow* parent, wxPoint position) : wxFrame(parent, MainWindowID, "Bytes Disassembler", wxPoint(50, 50), wxSize(300, 175))
+BytesDisassembler::BytesDisassembler(wxWindow* parent, wxPoint position) : wxFrame(parent, MainWindowID, "Bytes Disassembler", wxPoint(50, 50), wxSize(400, 175))
 {
 	position.x += 10;
 	position.y += 10;
@@ -15,7 +15,7 @@ BytesDisassembler::BytesDisassembler(wxWindow* parent, wxPoint position) : wxFra
 	
 	SetOwnBackgroundColour(backgroundColor);
 	
-	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(300, 25));
+	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(400, 25));
 	bytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	bytesTextCtrl->SetOwnForegroundColour(textColor);
 	bytesTextCtrl->SetToolTip("Bytes to disassemble");
@@ -86,12 +86,16 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	{
 		disassemblyStaticText->SetLabel("Error disassembling instruction");
 	}
+
+	Layout(); // recenters disassemblyStaticText
 }
 
 int BytesDisassembler::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
 {
 	str.Replace(" ", "", true);
 	str.Replace("\\", "", true);
+	str.Replace("0x", "", true);
+	str.Replace("0X", "", true);
 	str.Replace("x", "", true);
 	str.Replace("X", "", true);
 
