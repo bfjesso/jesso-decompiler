@@ -12,7 +12,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	SetOwnBackgroundColour(backgroundColor);
 
 	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(6, dataTypeStrs));
-	dataTypeChoice->SetSelection(2);
+	dataTypeChoice->SetSelection(0);
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
 
@@ -59,97 +59,124 @@ void DataViewer::LoadData()
 	int typeSelection = dataTypeChoice->GetSelection();
 	int typeSize = typeSizes[typeSelection];
 
-	int baseIndex = 0;
-	for (int j = 0; j < numOfSections; j++) 
+	int totalSize = 0;
+	for (int i = 0; i < numOfSections; i++) 
 	{
-		int i = 0;
-		while (i < sections[j].size) 
+		totalSize += sections[i].size;
+	}
+
+	wxString dataText = "";
+	dataText.reserve(totalSize * 50);
+
+	char sprintfBuffer[100] = { 0 };
+
+	const int bytesPerLine = 8;
+
+	unsigned char isHex = hexCheckBox->IsChecked();
+
+	int baseIndex = 0;
+	for (int i = 0; i < numOfSections; i++) 
+	{
+		for(int j = 0; j < sections[i].size; j += bytesPerLine)
 		{
-			uintptr_t address = imageBase + sections[j].virtualAddress + i;
-			char addressStrBuffer[20];
-			sprintf(addressStrBuffer, "%llX", address);
-			wxString addressStr = wxString(addressStrBuffer) + wxString(sections[j].name.buffer) + "\t";
+			unsigned long long address = imageBase + sections[i].virtualAddress + j;
+			sprintf(sprintfBuffer, "%llX", address);
+			dataText += wxString(sprintfBuffer) + wxString(sections[i].name.buffer) + "\t";
 
-			char dataStrBuffer[50];
-			switch (typeSelection)
+			for (int k = 0; k < bytesPerLine / typeSize; k++)
 			{
-			case 0: // 1-byte int
-			{
-				if (hexCheckBox->IsChecked())
+				switch (typeSelection)
 				{
-					sprintf(dataStrBuffer, "0x%X", fileBytes[i + baseIndex]);
-				}
-				else
+				case 0: // 1-byte int
 				{
-					sprintf(dataStrBuffer, "%d", fileBytes[i + baseIndex]);
+					if (isHex)
+					{
+						sprintf(sprintfBuffer, "0x%02X", fileBytes[j + k + baseIndex]);
+					}
+					else
+					{
+						sprintf(sprintfBuffer, "%d", fileBytes[j + k + baseIndex]);
+					}
+					break;
 				}
-				break;
-			}
-			case 1: // 2-byte int
-			{
-				if (hexCheckBox->IsChecked())
+				case 1: // 2-byte int
 				{
-					sprintf(dataStrBuffer, "0x%X", *(short*)(fileBytes + baseIndex + i));
+					if (isHex)
+					{
+						sprintf(sprintfBuffer, "0x%04X", *(short*)(fileBytes + j + k + baseIndex));
+					}
+					else
+					{
+						sprintf(sprintfBuffer, "%d", *(short*)(fileBytes + j + k + baseIndex));
+					}
+					break;
 				}
-				else
+				case 2: // 4-byte int
 				{
-					sprintf(dataStrBuffer, "%d", *(short*)(fileBytes + baseIndex + i));
+					if (isHex)
+					{
+						sprintf(sprintfBuffer, "0x%08X", *(int*)(fileBytes + j + k + baseIndex));
+					}
+					else
+					{
+						sprintf(sprintfBuffer, "%d", *(int*)(fileBytes + j + k + baseIndex));
+					}
+					break;
 				}
-				break;
-			}
-			case 2: // 4-byte int
-			{
-				if (hexCheckBox->IsChecked())
+				case 3: // 8-byte int
 				{
-					sprintf(dataStrBuffer, "0x%X", *(int*)(fileBytes + baseIndex + i));
+					if (isHex)
+					{
+						sprintf(sprintfBuffer, "0x%016llX", *(long long*)(fileBytes + j + k + baseIndex));
+					}
+					else
+					{
+						sprintf(sprintfBuffer, "%lld", *(long long*)(fileBytes + j + k + baseIndex));
+					}
+					break;
 				}
-				else
+				case 4: // float
 				{
-					sprintf(dataStrBuffer, "%d", *(int*)(fileBytes + baseIndex + i));
+					sprintf(sprintfBuffer, "%0.8g", *(float*)(fileBytes + j + k + baseIndex));
+					break;
 				}
-				break;
-			}
-			case 3: // 8-byte int
-			{
-				if (hexCheckBox->IsChecked())
+				case 5: // double
 				{
-					sprintf(dataStrBuffer, "0x%llX", *(long long*)(fileBytes + baseIndex + i));
+					sprintf(sprintfBuffer, "%0.16g", *(double*)(fileBytes + j + k + baseIndex));
+					break;
 				}
-				else
-				{
-					sprintf(dataStrBuffer, "%lld", *(long long*)(fileBytes + baseIndex + i));
 				}
-				break;
-			}
-			case 4: // float
-			{
-				sprintf(dataStrBuffer, "%f", *(float*)(fileBytes + baseIndex + i));
-				break;
-			}
-			case 5: // double
-			{
-				sprintf(dataStrBuffer, "%lf", *(double*)(fileBytes + baseIndex + i));
-				break;
-			}
+
+				dataText += wxString(sprintfBuffer) + " ";
 			}
 
-			wxString dataStr = wxString(dataStrBuffer) + "\n";
-
-			int pos = dataTextCtrl->GetLength() - 1;
-			dataTextCtrl->AppendText(addressStr);
-			dataTextCtrl->StartStyling(pos);
-			dataTextCtrl->SetStyling(addressStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
-
-			pos += addressStr.length() + 1;
-
-			dataTextCtrl->AppendText(dataStr);
-			dataTextCtrl->StartStyling(pos);
-			dataTextCtrl->SetStyling(dataStr.length(), ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
-
-			i += typeSize;
+			dataText += "\n";
 		}
 
-		baseIndex += sections[j].size;
+		baseIndex += sections[i].size;
+	}
+
+	dataTextCtrl->SetText(dataText);
+
+	dataTextCtrl->StartStyling(0);
+	dataTextCtrl->SetStyling(dataText.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
+
+	int start = 0;
+	while (start < dataText.length())
+	{
+		int pos = dataText.find("\t", start);
+		int end = dataText.find("\n", pos);
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+		{
+			dataTextCtrl->StartStyling(pos);
+			dataTextCtrl->SetStyling(end - pos + 1, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
 	}
 
 	dataTextCtrl->Thaw();
