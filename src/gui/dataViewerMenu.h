@@ -16,6 +16,8 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
+	const int bytesPerLine = 16;
+
 	unsigned char* fileBytes = nullptr;
 	uintptr_t imageBase = 0;
 	FileSection* sections = nullptr;
@@ -52,6 +54,8 @@ public:
 	void UpdateDataList(wxCommandEvent& e);
 
 	void LoadData();
+
+	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
 	void ClearData();
 

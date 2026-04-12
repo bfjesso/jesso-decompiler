@@ -27,6 +27,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 
 	dataTextCtrl = new wxStyledTextCtrl(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 500));
 	SetUpStyledTextCtrl(dataTextCtrl);
+	dataTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -65,7 +66,6 @@ void DataViewer::LoadData()
 	int typeSelection = dataTypeChoice->GetSelection();
 	int typeSize = typeSizes[typeSelection];
 	int sectionSelection = sectionChoice->GetSelection();
-	const int bytesPerLine = 16;
 	unsigned char isHex = hexCheckBox->IsChecked();
 
 	int baseIndex = 0;
@@ -185,6 +185,94 @@ void DataViewer::LoadData()
 
 	dataTextCtrl->Thaw();
 	dataTextCtrl->SetReadOnly(true);
+}
+
+void DataViewer::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	const int ID_COPY = 100;
+	const int ID_SELECT_ALL = 101;
+	const int ID_FIND = 102;
+	const int ID_GO_TO_ADDR = 103;
+
+	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
+
+	long start;
+	long end;
+	ctrl->GetSelection(&start, &end);
+	wxString selection = "";
+
+	if (start != end)
+	{
+		wxString text = ctrl->GetValue();
+		selection = text.substr(start, end - start);
+
+		menu.Append(ID_COPY, "Copy");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
+	}
+
+
+	menu.Append(ID_SELECT_ALL, "Select all");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ctrl->SetSelection(0, ctrl->GetLastPosition());
+		ctrl->SetFocus();
+	}, ID_SELECT_ALL);
+
+	menu.Append(ID_FIND, "Find");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Find text");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			if (!txt.IsEmpty())
+			{
+				int pos = ctrl->FindText(0, ctrl->GetLength(), txt);
+				if (pos == -1)
+				{
+					wxMessageBox("Text not found", "Failed to find text");
+				}
+				else
+				{
+					ctrl->GotoPos(pos);
+					ctrl->SetSelection(pos, pos + txt.size());
+				}
+			}
+		}
+	}, ID_FIND);
+
+	menu.Append(ID_GO_TO_ADDR, "Go to address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Address");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			unsigned long long address = 0;
+			if (txt.ToULongLong(&address, 16))
+			{
+				FileSection* section = &sections[sectionChoice->GetSelection()];
+				unsigned long long minAddress = section->virtualAddress + imageBase;
+				unsigned long long maxAddress = section->virtualAddress + section->size + imageBase;
+				if (address >= minAddress && address < maxAddress)
+				{
+					int row = ((float)(address - minAddress) / (maxAddress - minAddress)) * (section->size / bytesPerLine);
+					dataTextCtrl->GotoLine(row);
+					int pos = dataTextCtrl->PositionFromLine(row);
+					dataTextCtrl->SetSelection(pos, pos + dataTextCtrl->GetLineLength(row));
+				}
+				else 
+				{
+					wxMessageBox("Address not in currently selected section", "Failed to find address");
+				}
+			}
+			else
+			{
+				wxMessageBox("Not valid hex number", "Failed to find address");
+			}
+		}
+	}, ID_GO_TO_ADDR);
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
 void DataViewer::ClearData() 
