@@ -1,5 +1,6 @@
 #include "dataViewerMenu.h"
 #include "colorsMenu.h"
+#include <string>
 
 wxBEGIN_EVENT_TABLE(DataViewer, wxFrame)
 EVT_CLOSE(DataViewer::CloseMenu)
@@ -74,16 +75,14 @@ void DataViewer::LoadData()
 		baseIndex += sections[i].size;
 	}
 
-	wxString dataText = "";
+	std::string dataText;
 	dataText.reserve(sections[sectionSelection].size * 6);
 
-	char sprintfBuffer[100] = { 0 };
-
+	char lineBuffer[512] = { 0 };
 	for (int i = 0; i < sections[sectionSelection].size; i += bytesPerLine)
 	{
 		unsigned long long address = imageBase + sections[sectionSelection].virtualAddress + i;
-		sprintf(sprintfBuffer, "%llX", address);
-		dataText += wxString(sprintfBuffer) + wxString(sections[sectionSelection].name.buffer) + "\t";
+		sprintf(lineBuffer, "%llX%s\t", address, sections[sectionSelection].name.buffer);
 
 		for (int j = 0; j < bytesPerLine; j += typeSize)
 		{
@@ -98,11 +97,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(sprintfBuffer, "0x%02X", fileBytes[i + j + baseIndex]);
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + baseIndex]);
 				}
 				else
 				{
-					sprintf(sprintfBuffer, "%d", fileBytes[i + j + baseIndex]);
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", fileBytes[i + j + baseIndex]);
 				}
 				break;
 			}
@@ -110,11 +109,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(sprintfBuffer, "0x%04X", *(unsigned short*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X ", *(unsigned short*)(fileBytes + i + j + baseIndex));
 				}
 				else
 				{
-					sprintf(sprintfBuffer, "%d", *(unsigned short*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned short*)(fileBytes + i + j + baseIndex));
 				}
 				break;
 			}
@@ -122,11 +121,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(sprintfBuffer, "0x%08X", *(unsigned int*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X ", *(unsigned int*)(fileBytes + i + j + baseIndex));
 				}
 				else
 				{
-					sprintf(sprintfBuffer, "%d", *(unsigned int*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned int*)(fileBytes + i + j + baseIndex));
 				}
 				break;
 			}
@@ -134,30 +133,29 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(sprintfBuffer, "0x%016llX", *(unsigned long long*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX ", *(unsigned long long*)(fileBytes + i + j + baseIndex));
 				}
 				else
 				{
-					sprintf(sprintfBuffer, "%lld", *(unsigned long long*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%lld ", *(unsigned long long*)(fileBytes + i + j + baseIndex));
 				}
 				break;
 			}
 			case 4: // float
 			{
-				sprintf(sprintfBuffer, "%0.8g", *(float*)(fileBytes + i + j + baseIndex));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g ", *(float*)(fileBytes + i + j + baseIndex));
 				break;
 			}
 			case 5: // double
 			{
-				sprintf(sprintfBuffer, "%0.16g", *(double*)(fileBytes + i + j + baseIndex));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g ", *(double*)(fileBytes + i + j + baseIndex));
 				break;
 			}
 			}
-
-			dataText += wxString(sprintfBuffer) + " ";
 		}
 
-		dataText += "\n";
+		dataText += lineBuffer;
+		dataText += '\n';
 	}
 
 	dataTextCtrl->SetText(dataText);
