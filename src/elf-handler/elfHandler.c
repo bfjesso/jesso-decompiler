@@ -145,8 +145,25 @@ int getNumOfELFSections64(const char* filePath)
 	{
 		Elf64_Ehdr elfHeader;
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
+
+		Elf64_Shdr sectionHeader;
+
+		int result = 0;
+		for (int i = 0; i < elfHeader.e_shnum; i++)
+		{
+			fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+			fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+			if(sectionHeader.sh_size == 0)
+			{
+				continue;
+			}
+
+			result++;
+		}
+
 		fclose(file);
-		return elfHeader.e_shnum;
+		return result;
 	}
 
 	return 0;
@@ -159,8 +176,25 @@ int getNumOfELFSections32(const char* filePath)
 	{
 		Elf32_Ehdr elfHeader;
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
+
+		Elf32_Shdr sectionHeader;
+
+		int result = 0;
+		for (int i = 0; i < elfHeader.e_shnum; i++)
+		{
+			fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
+			fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+
+			if(sectionHeader.sh_size == 0)
+			{
+				continue;
+			}
+
+			result++;
+		}
+
 		fclose(file);
-		return elfHeader.e_shnum;
+		return result;
 	}
 
 	return 0;
@@ -186,33 +220,40 @@ unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection
 
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
-			if (bufferLen != elfHeader.e_shnum) 
-			{
-				fclose(file);
-				return 0;
-			}
-
+			int bufferIndex = 0;
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
+				if (bufferIndex >= bufferLen)
+				{
+					fclose(file);
+					return 0;
+				}
+
 				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
 				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
-				buffer[i].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
+				if(sectionHeader.sh_size == 0)
+				{
+					continue;
+				}
+
+				buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
-					buffer[i].type = CODE_FST;
+					buffer[bufferIndex].type = CODE_FST;
 				}
 				else 
 				{
-					buffer[i].type = INIT_DATA_FST;
+					buffer[bufferIndex].type = INIT_DATA_FST;
 				}
 
-				buffer[i].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
+				buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
 				
-				buffer[i].virtualAddress = sectionHeader.sh_addr;
-				buffer[i].fileOffset = sectionHeader.sh_offset;
-				buffer[i].size = sectionHeader.sh_size;
+				buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
+				buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
+				buffer[bufferIndex].size = sectionHeader.sh_size;
+				bufferIndex++;
 			}
 
 			fclose(file);
@@ -257,33 +298,40 @@ unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection
 
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
-			if (bufferLen != elfHeader.e_shnum)
-			{
-				fclose(file);
-				return 0;
-			}
-
+			int bufferIndex = 0;
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
+				if (bufferIndex >= bufferLen)
+				{
+					fclose(file);
+					return 0;
+				}
+
 				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
 				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
-				buffer[i].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
+				if(sectionHeader.sh_size == 0)
+				{
+					continue;
+				}
+
+				buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
 
 				if (sectionHeader.sh_flags & SHF_EXECINSTR)
 				{
-					buffer[i].type = CODE_FST;
+					buffer[bufferIndex].type = CODE_FST;
 				}
 				else
 				{
-					buffer[i].type = INIT_DATA_FST;
+					buffer[bufferIndex].type = INIT_DATA_FST;
 				}
 
-				buffer[i].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
+				buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
 
-				buffer[i].virtualAddress = sectionHeader.sh_addr;
-				buffer[i].fileOffset = sectionHeader.sh_offset;
-				buffer[i].size = sectionHeader.sh_size;
+				buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
+				buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
+				buffer[bufferIndex].size = sectionHeader.sh_size;
+				bufferIndex++;
 			}
 
 			fclose(file);
