@@ -1,5 +1,60 @@
 #include "elfHandler.h"
 
+extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int* status);
+
+char* demangleSymbol(const char* mangledStr, int* status)
+{
+	char* result = 0;
+
+	char* demangleResult = __cxa_demangle(mangledStr, 0, 0, status);
+	if(*status == 0)
+	{
+		result = (char*)calloc(strlen(demangleResult), 1);
+
+		int startIndex = 0;
+		int i = 0;
+		while(demangleResult[i] != 0)
+		{
+			if(demangleResult[i] == ' ') // this is looking for the return type
+			{
+				startIndex = i + 1;
+				break;
+			}
+			else if(demangleResult[i] == '<' || demangleResult[i] == '(')
+			{
+				break;
+			}
+
+			i++;
+		}
+
+		int numOfBrakets = 0;
+		int bufferIndex = 0;
+		i = startIndex;
+		while(demangleResult[i] != 0)
+		{
+			if(demangleResult[i] == '<' || demangleResult[i] == '(')
+			{
+				numOfBrakets++;
+			}
+			else if(demangleResult[i] == '>' || demangleResult[i] == ')')
+			{
+				numOfBrakets--;
+			}
+			else if(numOfBrakets == 0 && demangleResult[i] != ' ')
+			{
+				result[bufferIndex] = demangleResult[i];
+				bufferIndex++;
+			}
+
+			i++;
+		}
+	}
+
+	free(demangleResult);
+	return result;
+}
+
 unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 {
 	FILE* file = fopen(filePath, "r");
@@ -69,7 +124,18 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 		
 		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
-			strcpyJdc(result, stringBytes + symbol->st_name);
+			int status = 0;
+			char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+			if(status == 0 && demangledStr != 0)
+			{
+				strcpyJdc(result, demangledStr);
+			}
+			else
+			{
+				strcpyJdc(result, stringBytes + symbol->st_name);
+			}
+
+			free(demangledStr);
 			free(stringBytes);
 			free(bytes);
 			return 1;
@@ -123,7 +189,18 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 
 		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
 		{
-			strcpyJdc(result, stringBytes + symbol->st_name);
+			int status = 0;
+			char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+			if(status == 0 && demangledStr != 0)
+			{
+				strcpyJdc(result, demangledStr);
+			}
+			else
+			{
+				strcpyJdc(result, stringBytes + symbol->st_name);
+			}
+
+			free(demangledStr);
 			free(stringBytes);
 			free(bytes);
 			return 1;

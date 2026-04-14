@@ -1,6 +1,8 @@
 #include "../fileStructs.h"
 #include <elf.h>
 
+char* demangleSymbol(const char* mangledStr, int* status);
+
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);
 
 unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result);
