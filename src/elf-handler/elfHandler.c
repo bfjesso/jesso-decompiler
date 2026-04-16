@@ -62,24 +62,13 @@ unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 	{
 		unsigned char e_ident[5];
 		fread(e_ident, 1, 5, file);
+		fclose(file);
+
 		if(memcmp(e_ident, ELFMAG, SELFMAG) == 0)
 		{
 			*isX64 = e_ident[EI_CLASS] == ELFCLASS64;
-			fclose(file);
 			return 1;
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
-
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -90,14 +79,12 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	Elf64_Shdr strtabSection;
 	if(!getSectionHeaderByName64(filePath, ".strtab", &strtabSection))
 	{
-		printf("Failed to find .strtab section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(strtabSection.sh_size);
 	if(!readSectionBytes64(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
-		printf("Failed to read .strtab section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -105,14 +92,12 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	Elf64_Shdr symtabSection;
 	if(!getSectionHeaderByName64(filePath, ".symtab", &symtabSection))
 	{
-		printf("Failed to find .symtab section.\n");
 		return 0;
 	}
 
 	char* bytes = (char*)malloc(symtabSection.sh_size);
 	if(!readSectionBytes64(filePath, &symtabSection, bytes, symtabSection.sh_size))
 	{
-		printf("Failed to read .symtab section bytes.\n");
 		free(bytes);
 		return 0;
 	}
@@ -146,7 +131,6 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	
 	free(stringBytes);
 	free(bytes);
-
 	return 0;
 }
 
@@ -155,14 +139,12 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 	Elf32_Shdr strtabSection;
 	if(!getSectionHeaderByName32(filePath, ".strtab", &strtabSection))
 	{
-		printf("Failed to find .strtab section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(strtabSection.sh_size);
 	if(!readSectionBytes32(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
-		printf("Failed to read .strtab section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -170,14 +152,12 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 	Elf32_Shdr symtabSection;
 	if(!getSectionHeaderByName32(filePath, ".symtab", &symtabSection))
 	{
-		printf("Failed to find .symtab section.\n");
 		return 0;
 	}
 
 	char* bytes = (char*)malloc(symtabSection.sh_size);
 	if(!readSectionBytes32(filePath, &symtabSection, bytes, symtabSection.sh_size))
 	{
-		printf("Failed to read .symtab section bytes.\n");
 		free(bytes);
 		return 0;
 	}
@@ -211,7 +191,6 @@ unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long val
 
 	free(stringBytes);
 	free(bytes);
-
 	return 0;
 }
 
@@ -336,20 +315,8 @@ unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection
 			fclose(file);
 			return 1;
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
 
-		printf("Couldn't find section.\n");
 		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -414,20 +381,8 @@ unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection
 			fclose(file);
 			return 1;
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
 
-		printf("Couldn't find section.\n");
 		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -464,28 +419,13 @@ unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_S
 
 					fclose(file);
 					free(sectionNames);
-
 					return 1;
 				}
 			}
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			free(sectionNames);
-			return 0;
-		}
-
-		printf("Couldn't find section '%s'\n", name);
 
 		fclose(file);
 		free(sectionNames);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -526,23 +466,9 @@ unsigned char getSectionHeaderByName32(const char* filePath, char* name, Elf32_S
 				}
 			}
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			free(sectionNames);
-			return 0;
-		}
-
-		printf("Couldn't find section '%s'\n", name);
 
 		fclose(file);
 		free(sectionNames);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -608,20 +534,8 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 				}
 			}
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
 
-		printf("Couldn't find section.\n");
 		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -659,20 +573,8 @@ unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, 
 				}
 			}
 		}
-		else
-		{
-			printf("Not a valid ELF binary.\n");
-			fclose(file);
-			return 0;
-		}
 
-		printf("Couldn't find section.\n");
 		fclose(file);
-	}
-	else
-	{
-		printf("Failed to open file.\n");
-		return 0;
 	}
 
 	return 0;
@@ -683,14 +585,12 @@ int getNumOfELFImports64(const char* filePath)
 	Elf64_Shdr dynstrSection;
 	if (!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
 	{
-		printf("Failed to find .dynstr section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
 	if (!readSectionBytes64(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
-		printf("Failed to read .dynstr section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -698,7 +598,6 @@ int getNumOfELFImports64(const char* filePath)
 	Elf64_Shdr dynsymSection;
 	if (!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
 	{
-		printf("Failed to find .dynsym section.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -706,7 +605,6 @@ int getNumOfELFImports64(const char* filePath)
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
 	if (!readSectionBytes64(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
-		printf("Failed to read .dynsym section bytes.\n");
 		free(stringBytes);
 		free(dynsymBytes);
 		return 0;
@@ -720,7 +618,6 @@ int getNumOfELFImports64(const char* filePath)
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
 		if (!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
-			printf("Failed to read rela section bytes.\n");
 			free(stringBytes);
 			free(dynsymBytes);
 			free(relaBytes);
@@ -758,14 +655,12 @@ int getNumOfELFImports32(const char* filePath)
 	Elf32_Shdr dynstrSection;
 	if (!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
 	{
-		printf("Failed to find .dynstr section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
 	if (!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
-		printf("Failed to read .dynstr section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -773,7 +668,6 @@ int getNumOfELFImports32(const char* filePath)
 	Elf32_Shdr dynsymSection;
 	if (!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
 	{
-		printf("Failed to find .dynsym section.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -781,7 +675,6 @@ int getNumOfELFImports32(const char* filePath)
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
 	if (!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
-		printf("Failed to read .dynsym section bytes.\n");
 		free(stringBytes);
 		free(dynsymBytes);
 		return 0;
@@ -795,7 +688,6 @@ int getNumOfELFImports32(const char* filePath)
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
 		if (!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
-			printf("Failed to read rela section bytes.\n");
 			free(stringBytes);
 			free(dynsymBytes);
 			free(relaBytes);
@@ -833,14 +725,12 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 	Elf64_Shdr dynstrSection;
 	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
 	{
-		printf("Failed to find .dynstr section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
 	if(!readSectionBytes64(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
-		printf("Failed to read .dynstr section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -848,7 +738,6 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 	Elf64_Shdr dynsymSection;
 	if(!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
 	{
-		printf("Failed to find .dynsym section.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -856,7 +745,6 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
 	if(!readSectionBytes64(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
-		printf("Failed to read .dynsym section bytes.\n");
 		free(stringBytes);
 		free(dynsymBytes);
 		return 0;
@@ -870,7 +758,6 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
 		if(!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
-			printf("Failed to read rela section bytes.\n");
 			free(stringBytes);
 			free(dynsymBytes);
 			free(relaBytes);
@@ -910,14 +797,12 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 	Elf32_Shdr dynstrSection;
 	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
 	{
-		printf("Failed to find .dynstr section.\n");
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
 	if(!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
-		printf("Failed to read .dynstr section bytes.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -925,7 +810,6 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 	Elf32_Shdr dynsymSection;
 	if(!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
 	{
-		printf("Failed to find .dynsym section.\n");
 		free(stringBytes);
 		return 0;
 	}
@@ -933,7 +817,6 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
 	if(!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
-		printf("Failed to read .dynsym section bytes.\n");
 		free(stringBytes);
 		free(dynsymBytes);
 		return 0;
@@ -947,7 +830,6 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
 		if(!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
-			printf("Failed to read rela section bytes.\n");
 			free(stringBytes);
 			free(dynsymBytes);
 			free(relaBytes);
