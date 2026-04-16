@@ -86,7 +86,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				if(numOfSkippedInstructions > 0)
 				{
 					addIndents(result, params->numOfIndents);
-					sprintfJdc(result, 1, "// %i instructions skipped\n", numOfSkippedInstructions);
+					sprintfJdc(result, 1, "// %i instruction(s) skipped\n", numOfSkippedInstructions);
 				}
 
 				isInUnreachableState = 0;
