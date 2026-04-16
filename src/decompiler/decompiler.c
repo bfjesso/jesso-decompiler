@@ -162,7 +162,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
-	return strcatJdc(result, "}\n");
+	return strcatJdc(result, "}");
 }
 
 static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef)
