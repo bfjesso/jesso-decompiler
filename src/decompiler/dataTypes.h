@@ -44,4 +44,6 @@ unsigned char compareTypes(struct VarType t1, struct VarType t2);
 
 struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
 
+struct VarType getTypeOfMemoryAddress(enum Mnemonic opcode, struct MemoryAddress* memAddress);
+
 struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);

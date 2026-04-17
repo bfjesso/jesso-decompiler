@@ -7,6 +7,8 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 
 static unsigned char getStringFromDataSection(struct DecompilationParameters* params, unsigned long long address, struct JdcStr* result);
 
+static unsigned char decompileMemoryAddress(struct DecompilationParameters* params, struct MemoryAddress* memAddress, struct JdcStr* result);
+
 unsigned char decompileRegister(struct DecompilationParameters* params, enum Register targetReg, struct JdcStr* result, struct RegisterVariable** regArgVarRef);
 
 unsigned char decompileComparison(struct DecompilationParameters* params, unsigned char invertOperator, struct JdcStr* result);

@@ -51,6 +51,15 @@ struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
 	return getTypeOfOperand(opcode, &regOperand);
 }
 
+struct VarType getTypeOfMemoryAddress(enum Mnemonic opcode, struct MemoryAddress* memAddress)
+{
+	struct Operand memAddrOperand = { 0 };
+	memAddrOperand.type = MEM_ADDRESS;
+	memAddrOperand.memoryAddress = *memAddress;
+
+	return getTypeOfOperand(opcode, &memAddrOperand);
+}
+
 struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
 {
 	struct VarType result = { 0 };

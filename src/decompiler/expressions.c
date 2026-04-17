@@ -35,148 +35,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
-		struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
-
-		struct VarType memAddrType = getTypeOfOperand(instruction->opcode, operand);
-		struct JdcStr typeStr = initializeJdcStr();
-		varTypeToStr(memAddrType, &typeStr);
-		
-		if (compareRegisters(operand->memoryAddress.reg, BP) || compareRegisters(operand->memoryAddress.reg, SP))
-		{
-			int stackOffset = (int)(operand->memoryAddress.constDisplacement);
-			if (compareRegisters(operand->memoryAddress.reg, SP)) 
-			{
-				stackOffset -= getStackFrameSizeAtInstruction(params);
-			}
-			
-			struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
-			if (localVar)
-			{
-				strcpyJdc(result, localVar->name.buffer);
-			}
-			else
-			{
-				struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
-				if (stackArg)
-				{
-					strcpyJdc(result, stackArg->name.buffer);
-				}
-				else
-				{
-					freeJdcStr(&typeStr);
-					return 0;
-				}
-			}
-		}
-		else if (compareRegisters(operand->memoryAddress.reg, IP))
-		{
-			unsigned long long address = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
-			if (instruction->opcode == LEA) 
-			{
-				if (!getStringFromDataSection(params, address, result))
-				{
-					sprintfJdc(result, 0, "0x%llX", address);
-				}
-			}
-			else 
-			{
-				sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, address);
-			}
-		}
-		else if (operand->memoryAddress.reg == NO_REG)
-		{
-			if (instruction->opcode == LEA)
-			{
-				if (!getStringFromDataSection(params, operand->memoryAddress.constDisplacement, result)) 
-				{
-					sprintfJdc(result, 0, "0x%llX", operand->memoryAddress.constDisplacement);
-				}
-			}
-			else
-			{
-				if (!getValueFromDataSection(params, memAddrType, operand->memoryAddress.constDisplacement, result))
-				{
-					sprintfJdc(result, 0, "*(%s*)(0x%llX)", typeStr.buffer, operand->memoryAddress.constDisplacement);
-				}
-			}
-		}
-		else
-		{
-			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
-
-			struct JdcStr baseRegStr = initializeJdcStr();
-			if (!decompileRegister(params, operand->memoryAddress.reg, &baseRegStr, &regArgVar))
-			{
-				freeJdcStr(&typeStr);
-				freeJdcStr(&baseRegStr);
-				return 0;
-			}
-
-			if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == memAddrType.primitiveType && regArgVar->type.isUnsigned == memAddrType.isUnsigned && operand->memoryAddress.regDisplacement == NO_REG && operand->memoryAddress.constDisplacement == 0)
-			{
-				if (instruction->opcode == LEA)
-				{
-					sprintfJdc(result, 0, "%s", regArgVar->name.buffer);
-				}
-				else
-				{
-					sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
-				}
-
-				freeJdcStr(&typeStr);
-				freeJdcStr(&baseRegStr);
-				return 1;
-			}
-
-			struct JdcStr memAddrStr = copyJdcStr(&baseRegStr);
-			if(operand->memoryAddress.scale != 1)
-			{
-				sprintfJdc(&memAddrStr, 1, " * %d", operand->memoryAddress.scale);
-			}
-
-			if(operand->memoryAddress.regDisplacement != NO_REG)
-			{
-				struct JdcStr displacementRegStr = initializeJdcStr();
-				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, &displacementRegStr, 0))
-				{
-					freeJdcStr(&typeStr);
-					freeJdcStr(&baseRegStr);
-					freeJdcStr(&displacementRegStr);
-					return 0;
-				}
-
-				sprintfJdc(&memAddrStr, 1, " + %s", displacementRegStr.buffer);
-				freeJdcStr(&displacementRegStr);
-			}
-
-			long long constDisplacement = operand->memoryAddress.constDisplacement;
-			if(constDisplacement != 0)
-			{
-				char constDisplacementOperator = '+';
-				if (constDisplacement < 0)
-				{
-					constDisplacement = -constDisplacement;
-					constDisplacementOperator = '-';
-				}
-
-				sprintfJdc(&memAddrStr, 1, " %c 0x%llX", constDisplacementOperator, constDisplacement);
-			}
-
-			if (instruction->opcode != LEA)
-			{
-				sprintfJdc(result, 0, "*(%s*)(%s)", typeStr.buffer, memAddrStr.buffer);
-			}
-			else
-			{
-				strcatJdc(result, memAddrStr.buffer);
-			}
-
-			freeJdcStr(&baseRegStr);
-			freeJdcStr(&memAddrStr);
-		}
-
-		freeJdcStr(&typeStr);
-		return 1;
+		return decompileMemoryAddress(params, &operand->memoryAddress, result);
 	}
 	else if (operand->type == REGISTER)
 	{
@@ -360,6 +219,130 @@ static unsigned char getStringFromDataSection(struct DecompilationParameters* pa
 
 	freeJdcStr(&tmp);
 	return 0;
+}
+
+static unsigned char decompileMemoryAddress(struct DecompilationParameters* params, struct MemoryAddress* memAddress, struct JdcStr* result)
+{
+	if (compareRegisters(memAddress->reg, BP) || compareRegisters(memAddress->reg, SP))
+	{
+		int stackOffset = (int)(memAddress->constDisplacement);
+		if (compareRegisters(memAddress->reg, SP))
+		{
+			stackOffset -= getStackFrameSizeAtInstruction(params);
+		}
+
+		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
+		if (localVar)
+		{
+			strcpyJdc(result, localVar->name.buffer);
+		}
+		else
+		{
+			struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
+			if (stackArg)
+			{
+				strcpyJdc(result, stackArg->name.buffer);
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		return 1;
+	}
+
+	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
+	struct VarType memAddrType = getTypeOfMemoryAddress(instruction->opcode, memAddress);
+
+	struct JdcStr memAddrStr = initializeJdcStr();
+	unsigned char hasGotFirstTerm = 0;
+
+	if (memAddress->reg != NO_REG) 
+	{
+		struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
+		struct JdcStr baseRegStr = initializeJdcStr();
+		if (!decompileRegister(params, memAddress->reg, &baseRegStr, &regArgVar))
+		{
+			freeJdcStr(&memAddrStr);
+			freeJdcStr(&baseRegStr);
+			return 0;
+		}
+
+		strcpyJdc(&memAddrStr, baseRegStr.buffer);
+		freeJdcStr(&baseRegStr);
+
+		if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == memAddrType.primitiveType && regArgVar->type.isUnsigned == memAddrType.isUnsigned && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
+		{
+			if (instruction->opcode == LEA)
+			{
+				sprintfJdc(result, 0, "%s", regArgVar->name.buffer);
+			}
+			else
+			{
+				sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
+			}
+
+			return 1;
+		}
+
+		if (memAddress->scale != 1)
+		{
+			sprintfJdc(&memAddrStr, 1, " * %d", memAddress->scale);
+		}
+
+		hasGotFirstTerm = 1;
+	}
+
+	if (memAddress->regDisplacement != NO_REG)
+	{
+		struct JdcStr displacementRegStr = initializeJdcStr();
+		if (!decompileRegister(params, memAddress->regDisplacement, &displacementRegStr, 0))
+		{
+			freeJdcStr(&displacementRegStr);
+			return 0;
+		}
+
+		if (hasGotFirstTerm) 
+		{
+			sprintfJdc(&memAddrStr, 1, " + %s", displacementRegStr.buffer);
+		}
+		else 
+		{
+			strcpyJdc(&memAddrStr, displacementRegStr.buffer);
+		}
+		
+		freeJdcStr(&displacementRegStr);
+		hasGotFirstTerm = 1;
+	}
+
+	if (!hasGotFirstTerm) 
+	{
+		sprintfJdc(&memAddrStr, 0, "0x%llX", memAddress->constDisplacement);
+	}
+	else if (memAddress->constDisplacement < 0)
+	{
+		sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
+	}
+	else if(memAddress->constDisplacement > 0)
+	{
+		sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
+	}
+
+	if (instruction->opcode != LEA)
+	{
+		struct JdcStr typeStr = initializeJdcStr();
+		varTypeToStr(memAddrType, &typeStr);
+		sprintfJdc(result, 0, "*(%s*)(%s)", typeStr.buffer, memAddrStr.buffer);
+		freeJdcStr(&typeStr);
+	}
+	else
+	{
+		strcatJdc(result, memAddrStr.buffer);
+	}
+	
+	freeJdcStr(&memAddrStr);
+	return 1;
 }
 
 unsigned char decompileRegister(struct DecompilationParameters* params, enum Register targetReg, struct JdcStr* result, struct RegisterVariable** regArgVarRef)
