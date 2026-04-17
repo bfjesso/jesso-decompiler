@@ -103,11 +103,12 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 		else
 		{
 			struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
-			struct JdcStr baseOperandStr = initializeJdcStr();
-			if (!decompileRegister(params, operand->memoryAddress.reg, &baseOperandStr, &regArgVar))
+
+			struct JdcStr baseRegStr = initializeJdcStr();
+			if (!decompileRegister(params, operand->memoryAddress.reg, &baseRegStr, &regArgVar))
 			{
 				freeJdcStr(&typeStr);
-				freeJdcStr(&baseOperandStr);
+				freeJdcStr(&baseRegStr);
 				return 0;
 			}
 
@@ -122,82 +123,56 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 					sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
 				}
 
+				freeJdcStr(&typeStr);
+				freeJdcStr(&baseRegStr);
 				return 1;
 			}
 
-			struct JdcStr displacementOperandStr = initializeJdcStr();
-			if (operand->memoryAddress.regDisplacement != NO_REG) 
+			struct JdcStr memAddrStr = copyJdcStr(&baseRegStr);
+			if(operand->memoryAddress.scale != 1)
 			{
-				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, &displacementOperandStr, 0))
+				sprintfJdc(&memAddrStr, 1, " * %d", operand->memoryAddress.scale);
+			}
+
+			if(operand->memoryAddress.regDisplacement != NO_REG)
+			{
+				struct JdcStr displacementRegStr = initializeJdcStr();
+				if (!decompileRegister(params, operand->memoryAddress.regDisplacement, &displacementRegStr, 0))
 				{
 					freeJdcStr(&typeStr);
-					freeJdcStr(&baseOperandStr);
-					freeJdcStr(&displacementOperandStr);
+					freeJdcStr(&baseRegStr);
+					freeJdcStr(&displacementRegStr);
 					return 0;
 				}
+
+				sprintfJdc(&memAddrStr, 1, " + %s", displacementRegStr.buffer);
+				freeJdcStr(&displacementRegStr);
 			}
 
 			long long constDisplacement = operand->memoryAddress.constDisplacement;
-			char constDisplacementOperator = '+';
-			if (constDisplacement < 0) 
+			if(constDisplacement != 0)
 			{
-				constDisplacement = -constDisplacement;
-				constDisplacementOperator = '-';
+				char constDisplacementOperator = '+';
+				if (constDisplacement < 0)
+				{
+					constDisplacement = -constDisplacement;
+					constDisplacementOperator = '-';
+				}
+
+				sprintfJdc(&memAddrStr, 1, " %c 0x%llX", constDisplacementOperator, constDisplacement);
 			}
-			
-			if (constDisplacement != 0)
+
+			if (instruction->opcode != LEA)
 			{
-				if (operand->memoryAddress.regDisplacement != NO_REG) 
-				{
-					if (instruction->opcode == LEA)
-					{
-						sprintfJdc(result, 0, "%s + %s %c 0x%llX", baseOperandStr.buffer, displacementOperandStr.buffer, constDisplacementOperator, constDisplacement);
-					}
-					else
-					{
-						sprintfJdc(result, 0, "*(%s*)(%s + %s %c 0x%llX)", typeStr.buffer, baseOperandStr.buffer, displacementOperandStr.buffer, constDisplacementOperator, constDisplacement);
-					}
-				}
-				else 
-				{
-					if (instruction->opcode == LEA)
-					{
-						sprintfJdc(result, 0, "%s %c 0x%llX", baseOperandStr.buffer, constDisplacementOperator, constDisplacement);
-					}
-					else
-					{
-						sprintfJdc(result, 0, "*(%s*)(%s %c 0x%llX)", typeStr.buffer, baseOperandStr.buffer, constDisplacementOperator, constDisplacement);
-					}
-				}
+				sprintfJdc(result, 0, "*(%s*)(%s)", typeStr.buffer, memAddrStr.buffer);
 			}
 			else
 			{
-				if (operand->memoryAddress.regDisplacement != NO_REG) 
-				{
-					if (instruction->opcode == LEA)
-					{
-						sprintfJdc(result, 0, "%s + %s", baseOperandStr.buffer, displacementOperandStr.buffer);
-					}
-					else
-					{
-						sprintfJdc(result, 0, "*(%s*)(%s + %s)", typeStr.buffer, baseOperandStr.buffer, displacementOperandStr.buffer);
-					}
-				}
-				else 
-				{
-					if (instruction->opcode == LEA)
-					{
-						sprintfJdc(result, 0, "%s", baseOperandStr.buffer);
-					}
-					else
-					{
-						sprintfJdc(result, 0, "*(%s*)(%s)", typeStr.buffer, baseOperandStr.buffer);
-					}
-				}
+				strcatJdc(result, memAddrStr.buffer);
 			}
 
-			freeJdcStr(&baseOperandStr);
-			freeJdcStr(&displacementOperandStr);
+			freeJdcStr(&baseRegStr);
+			freeJdcStr(&memAddrStr);
 		}
 
 		freeJdcStr(&typeStr);
