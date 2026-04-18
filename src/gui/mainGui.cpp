@@ -741,15 +741,22 @@ void MainGui::GridRightClickOptions(wxGridEvent& e)
 			unsigned long long address = 0;
 			if (txt.ToULongLong(&address, 16)) 
 			{
-				int index = findFunctionByAddress(&decompParams, 0, functions.size() - 1, address);
-				if (index == -1)
+				unsigned char foundFunction = 0;
+				int numOfFunctions = functions.size();
+				for (int i = 0; i < numOfFunctions; i++) 
+				{
+					if (address >= disassembledInstructions[functions[i].firstInstructionIndex].address && address <= disassembledInstructions[functions[i].lastInstructionIndex].address) 
+					{
+						functionsGrid->GoToCell(i, 0);
+						functionsGrid->SelectRow(i);
+						foundFunction = 1;
+						break;
+					}
+				}
+
+				if (!foundFunction)
 				{
 					wxMessageBox("No function with that address", "Failed to find function");
-				}
-				else
-				{
-					functionsGrid->GoToCell(index, 0);
-					functionsGrid->SelectRow(index);
 				}
 			}
 			else 
