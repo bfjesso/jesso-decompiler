@@ -893,6 +893,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_FIND, "Find");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		findCtrl = ctrl;
+		lastFindText = "";
 
 		if (!findDialog)
 		{
@@ -963,6 +964,19 @@ void MainGui::OnFindDialog(wxFindDialogEvent& e)
 		flags |= wxSTC_FIND_WHOLEWORD;
 	}
 
+	if (!text.IsSameAs(lastFindText))
+	{
+		totalFindResults = CountNumOfResults(findCtrl, text, findCtrl->GetLength(), flags);
+
+		if (totalFindResults == 0)
+		{
+			wxMessageBox("Text not found", "Failed to find text");
+			return;
+		}
+
+		lastFindText = text;
+	}
+
 	long selStart = findCtrl->GetSelectionStart();
 	long selEnd = findCtrl->GetSelectionEnd();
 	unsigned char forward = (e.GetFlags() & wxFR_DOWN) != 0;
@@ -978,14 +992,9 @@ void MainGui::OnFindDialog(wxFindDialogEvent& e)
 		pos = FindInRange(findCtrl, text, wrapStart, wrapEnd, flags, forward);
 	}
 
-	if (pos == -1)
-	{
-		wxMessageBox("Text not found", "Failed to find text");
-		return;
-	}
-
 	findCtrl->GotoPos(pos);
 	findCtrl->SetSelection(pos, pos + text.size());
+	statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(findCtrl, text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
 }
 
 int MainGui::FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward)
@@ -1006,6 +1015,22 @@ int MainGui::FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start
 	return lastPos;
 }
 
+int MainGui::CountNumOfResults(wxStyledTextCtrl* ctrl, const wxString& text, int end, int flags)
+{
+	int result = 0;
+
+	int start = 0;
+	int pos = ctrl->FindText(start, end, text, flags);
+	while (pos != -1)
+	{
+		result++;
+		start = pos + 1;
+		pos = ctrl->FindText(pos + 1, end, text, flags);
+	}
+
+	return result;
+}
+
 void MainGui::OnFindDialogClose(wxFindDialogEvent& e)
 {
 	if (findDialog)
@@ -1013,6 +1038,8 @@ void MainGui::OnFindDialogClose(wxFindDialogEvent& e)
 		findDialog->Destroy();
 		findDialog = nullptr;
 	}
+
+	statusStaticText->SetLabelText("Status: idle");
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)

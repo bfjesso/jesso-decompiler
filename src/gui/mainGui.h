@@ -61,6 +61,8 @@ public:
 	wxFindReplaceData findData;
 	wxFindReplaceDialog* findDialog = nullptr;
 	wxStyledTextCtrl* findCtrl = nullptr;
+	wxString lastFindText = "";
+	int totalFindResults = 0;
 	
 	enum ids 
 	{
@@ -112,6 +114,8 @@ public:
 	void OnFindDialog(wxFindDialogEvent& e);
 
 	int FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward);
+
+	int CountNumOfResults(wxStyledTextCtrl* ctrl, const wxString& text, int end, int flags);
 
 	void OnFindDialogClose(wxFindDialogEvent& e);
 
