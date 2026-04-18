@@ -841,7 +841,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
-					}, ID_CONVERT_NUMBER);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToLongLong(&num, 16))
 			{
@@ -853,7 +853,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
-					}, ID_CONVERT_NUMBER);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToULongLong(&unum, 10))
 			{
@@ -866,7 +866,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
-					}, ID_CONVERT_NUMBER);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToULongLong(&unum, 16))
 			{
@@ -878,7 +878,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
 					ctrl->SetReadOnly(true);
-					}, ID_CONVERT_NUMBER);
+				}, ID_CONVERT_NUMBER);
 			}
 		}
 	}
@@ -888,29 +888,23 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ctrl->SetSelection(0, ctrl->GetLastPosition());
 		ctrl->SetFocus();
-		}, ID_SELECT_ALL);
+	}, ID_SELECT_ALL);
 
 	menu.Append(ID_FIND, "Find");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		wxTextEntryDialog dlg(this, "", "Find text");
-		if (dlg.ShowModal() == wxID_OK) 
+		findCtrl = ctrl;
+
+		if (!findDialog)
 		{
-			wxString txt = dlg.GetValue();
-			if (!txt.IsEmpty()) 
-			{
-				int pos = ctrl->FindText(0, ctrl->GetLength(), txt);
-				if (pos == -1) 
-				{
-					wxMessageBox("Text not found", "Failed to find text");
-				}
-				else 
-				{
-					ctrl->GotoPos(pos);
-					ctrl->SetSelection(pos, pos + txt.size());
-				}
-			}
+			findDialog = new wxFindReplaceDialog(this, &findData, "Find");
+			findDialog->Bind(wxEVT_FIND, &MainGui::OnFindDialog, this);
+			findDialog->Bind(wxEVT_FIND_NEXT, &MainGui::OnFindDialog, this);
+			findDialog->Bind(wxEVT_FIND_CLOSE, &MainGui::OnFindDialogClose, this);
 		}
-		}, ID_FIND);
+
+		findDialog->Show();
+		findDialog->Raise();
+	}, ID_FIND);
 
 	if(ctrl == disassemblyTextCtrl)
 	{
@@ -940,14 +934,95 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					wxMessageBox("Not valid hex number", "Failed to find address");
 				}
 			}
-			}, ID_GO_TO_ADDR);
+		}, ID_GO_TO_ADDR);
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
+void MainGui::OnFindDialog(wxFindDialogEvent& e)
+{
+	if (!findCtrl)
+	{
+		return;
+	}
+
+	wxString text = e.GetFindString();
+	if (text.IsEmpty())
+	{
+		return;
+	}
+
+	int flags = 0;
+	if (e.GetFlags() & wxFR_MATCHCASE)
+	{
+		flags |= wxSTC_FIND_MATCHCASE;
+	}
+	if (e.GetFlags() & wxFR_WHOLEWORD)
+	{
+		flags |= wxSTC_FIND_WHOLEWORD;
+	}
+
+	long selStart = findCtrl->GetSelectionStart();
+	long selEnd = findCtrl->GetSelectionEnd();
+	unsigned char forward = (e.GetFlags() & wxFR_DOWN) != 0;
+
+	int start = forward ? selEnd : 0;
+	int end = forward ? findCtrl->GetLength() : selStart;
+
+	int pos = FindInRange(findCtrl, text, start, end, flags, forward);
+	if (pos == -1)
+	{
+		int wrapStart = forward ? 0 : selEnd;
+		int wrapEnd = forward ? selStart : findCtrl->GetLength();
+		pos = FindInRange(findCtrl, text, wrapStart, wrapEnd, flags, forward);
+	}
+
+	if (pos == -1)
+	{
+		wxMessageBox("Text not found", "Failed to find text");
+		return;
+	}
+
+	findCtrl->GotoPos(pos);
+	findCtrl->SetSelection(pos, pos + text.size());
+}
+
+int MainGui::FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward)
+{
+	if (forward)
+	{
+		return ctrl->FindText(start, end, text, flags);
+	}
+
+	int lastPos = -1;
+	int pos = ctrl->FindText(start, end, text, flags);
+	while (pos != -1)
+	{
+		lastPos = pos;
+		pos = ctrl->FindText(pos + 1, end, text, flags);
+	}
+
+	return lastPos;
+}
+
+void MainGui::OnFindDialogClose(wxFindDialogEvent& e)
+{
+	if (findDialog)
+	{
+		findDialog->Destroy();
+		findDialog = nullptr;
+	}
+}
+
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	if (findDialog)
+	{
+		findDialog->Destroy();
+		findDialog = nullptr;
+	}
+	
 	dataViewerMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();

@@ -2,6 +2,7 @@
 #include "guiUtils.h"
 #include <wx/grid.h>
 #include <wx/splitter.h>
+#include <wx/fdrepdlg.h>
 #include "disassembleBytesMenu.h"
 #include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
@@ -56,6 +57,10 @@ public:
 	int currentDecompiledFunc = -1;
 
 	DecompilationParameters decompParams = { 0 };
+
+	wxFindReplaceData findData;
+	wxFindReplaceDialog* findDialog = nullptr;
+	wxStyledTextCtrl* findCtrl = nullptr;
 	
 	enum ids 
 	{
@@ -103,6 +108,12 @@ public:
 	void GridRightClickOptions(wxGridEvent& e);
 
 	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
+
+	void OnFindDialog(wxFindDialogEvent& e);
+
+	int FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward);
+
+	void OnFindDialogClose(wxFindDialogEvent& e);
 
 	void CloseApp(wxCloseEvent& e);
 
