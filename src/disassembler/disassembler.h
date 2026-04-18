@@ -18,6 +18,8 @@ extern "C"
 
 	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
 
+	unsigned char isInstructionAlignment(struct DisassembledInstruction* instruction);
+
 #ifdef __cplusplus
 }
 #endif

@@ -413,29 +413,30 @@ int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef
 	dataInstruction.isInvalid = 0;
 	
 	int numOfNewInstructions = 0;
-	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
+	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) || isInstructionAlignment(&disassembledInstructions[disassembledInstructions.size() - 1]))
 	{
-		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
+		unsigned long long addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
+		unsigned char addressSize = 8;
+		if (!is64Bit)
 		{
-			unsigned long long addressInData = *(unsigned long long*)(bytes + *currentIndexRef);
-			unsigned char addressSize = 8;
-			if (!is64Bit)
-			{
-				addressInData = *(unsigned int*)(bytes + *currentIndexRef);
-				addressSize = 4;
-			}
-
-			dataInstruction.operands[0].immediate.value = addressInData;
+			addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
+			addressSize = 4;
+		}
+		
+		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) && 
+			addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase)
+		{
+			dataInstruction.operands[0].immediate.value = addressInCode;
 			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
-
-			if (addressInData < currentCodeSection.virtualAddress + imageBase || addressInData > currentCodeSection.virtualAddress + currentCodeSection.size + imageBase)
-			{
-				break;
-			}
-
 			disassembledInstructions.push_back(dataInstruction);
 			*currentIndexRef += addressSize;
 			numOfNewInstructions++;
+
+			addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
+			if (!is64Bit)
+			{
+				addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
+			}
 		}
 	}
 
