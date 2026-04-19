@@ -280,9 +280,9 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0xFF)
+		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE)
 		{
-			if (overwrites != 0) { *overwrites = 1; }
+			if (overwrites != 0) { *overwrites = isImmediateAllOnes(&instruction->operands[1].immediate); }
 			return 1;
 		}
 
@@ -449,6 +449,23 @@ unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instructi
 	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0)
 	{
 		return 1;
+	}
+
+	return 0;
+}
+
+unsigned char isImmediateAllOnes(struct Immediate* immediate) 
+{
+	switch (immediate->size)
+	{
+	case 1:
+		return immediate->value == 0xFF;
+	case 2:
+		return immediate->value == 0xFFFF;
+	case 4:
+		return immediate->value == 0xFFFFFFFF;
+	case 8:
+		return immediate->value == 0xFFFFFFFFFFFFFFFF;
 	}
 
 	return 0;

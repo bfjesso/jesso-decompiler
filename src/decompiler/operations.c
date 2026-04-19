@@ -30,7 +30,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, enum Re
 	}
 	else if (isOpcodeOr(instruction->opcode))
 	{
-		return decompileBinaryOperation(params, getAssignment, " | ", " |= ", result);
+		return decompileOr(params, getAssignment, result);
 	}
 	else if (isOpcodeShl(instruction->opcode))
 	{
@@ -201,6 +201,24 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, unsign
 
 	strcpyJdc(result, " * -1");
 	return 1;
+}
+
+static unsigned char decompileOr(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result)
+{
+	struct Operand* secondOperand = &params->instructions[params->startInstructionIndex].operands[1];
+	if (secondOperand->type == IMMEDIATE && isImmediateAllOnes(&secondOperand->immediate))
+	{
+		if (getAssignment)
+		{
+			sprintfJdc(result, 0, "%s = 0x%llX", secondOperand->immediate.value);
+			return 1;
+		}
+
+		sprintfJdc(result, 0, "0x%llX", secondOperand->immediate.value);
+		return 1;
+	}
+
+	return decompileBinaryOperation(params, getAssignment, " | ", " |= ", result);
 }
 
 static unsigned char decompileXor(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result)

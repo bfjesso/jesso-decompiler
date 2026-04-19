@@ -13,6 +13,8 @@ static unsigned char decompileDec(struct DecompilationParameters* params, unsign
 
 static unsigned char decompileNeg(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result);
 
+static unsigned char decompileOr(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result);
+
 static unsigned char decompileXor(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result);
 
 static unsigned char decompileFLD(struct DecompilationParameters* params, unsigned char getAssignment, struct JdcStr* result);

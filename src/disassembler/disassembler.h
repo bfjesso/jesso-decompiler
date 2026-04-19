@@ -33,3 +33,5 @@ unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* inst
 unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites);
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
+
+unsigned char isImmediateAllOnes(struct Immediate* immediate);
