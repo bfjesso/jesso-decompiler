@@ -254,29 +254,6 @@ unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char isInstructionAlignment(struct DisassembledInstruction* instruction)
-{
-	if (instruction->opcode == NOP) 
-	{
-		return 1;
-	}
-	else if (instruction->opcode == MOV && 
-		instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER && 
-		compareRegisters(instruction->operands[0].reg, instruction->operands[1].reg)) 
-	{
-		return 1;
-	}
-	else if (instruction->opcode == LEA && 
-		instruction->operands[0].type == REGISTER && instruction->operands[1].type == MEM_ADDRESS && 
-		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) && 
-		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
 {
 	if (overwrites != 0) 
@@ -454,15 +431,22 @@ unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instructio
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 {
-	if (isOpcodeMov(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
+	if (instruction->opcode == NOP)
+	{
+		return 1;
+	}
+	else if (isOpcodeMov(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
+	{
+		return 1;
+	}
+	else if (instruction->opcode == LEA &&
+		instruction->operands[0].type == REGISTER && instruction->operands[1].type == MEM_ADDRESS &&
+		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) &&
+		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)
 	{
 		return 1;
 	}
 	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0)
-	{
-		return 1;
-	}
-	else if (instruction->opcode == NOP) 
 	{
 		return 1;
 	}

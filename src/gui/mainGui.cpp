@@ -413,7 +413,7 @@ int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef
 	dataInstruction.isInvalid = 0;
 	
 	int numOfNewInstructions = 0;
-	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) || isInstructionAlignment(&disassembledInstructions[disassembledInstructions.size() - 1]))
+	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) || doesInstructionDoNothing(&disassembledInstructions[disassembledInstructions.size() - 1]))
 	{
 		unsigned long long addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
 		unsigned char addressSize = 8;

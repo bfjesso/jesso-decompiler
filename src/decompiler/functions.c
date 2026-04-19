@@ -38,6 +38,11 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			foundFirstInstruction = 1;
 		}
 
+		if (doesInstructionDoNothing(currentInstruction)) 
+		{
+			continue;
+		}
+
 		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params);
