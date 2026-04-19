@@ -37,6 +37,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationTextCtrl->SetMarginBackground(1, backgroundColor);
 	decompilationTextCtrl->SetIndentationGuides(wxSTC_IV_LOOKBOTH);
 	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, darkerTextColor);
+	decompilationTextCtrl->SetEdgeMode(wxSTC_EDGE_LINE);
+	decompilationTextCtrl->SetEdgeColumn(0);
+	decompilationTextCtrl->SetEdgeColour(darkerTextColor);
 	decompilationTextCtrl->SetTabWidth(4);
 	decompilationTextCtrl->SetIndent(4);
 
