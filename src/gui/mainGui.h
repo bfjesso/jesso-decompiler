@@ -111,6 +111,8 @@ public:
 
 	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
+	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
+
 	void OnFindDialog(wxFindDialogEvent& e);
 
 	int FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward);

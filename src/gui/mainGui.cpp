@@ -42,6 +42,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationTextCtrl->SetEdgeColour(darkerTextColor);
 	decompilationTextCtrl->SetTabWidth(4);
 	decompilationTextCtrl->SetIndent(4);
+	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_BRACELIGHT, textColor);
+	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_BRACELIGHT, foregroundColor);
+	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_BRACEBAD, wxColour(200, 80, 80));
+	decompilationTextCtrl->Bind(wxEVT_STC_UPDATEUI, &MainGui::OnDecompilationUpdateUI, this);
 
 	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -953,6 +957,42 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
+{
+	if (!decompilationTextCtrl)
+	{
+		return;
+	}
+
+	int pos = decompilationTextCtrl->GetCurrentPos();
+	int bracePos1 = -1;
+	int bracePos2 = -1;
+
+	int ch = decompilationTextCtrl->GetCharAt(pos);
+	if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '[' || ch == ']')
+	{
+		bracePos1 = pos;
+	}
+
+	if (bracePos1 != -1)
+	{
+		bracePos2 = decompilationTextCtrl->BraceMatch(bracePos1);
+	}
+
+	if (bracePos1 != -1 && bracePos2 != -1)
+	{
+		decompilationTextCtrl->BraceHighlight(bracePos1, bracePos2);
+	}
+	else if (bracePos1 != -1)
+	{
+		decompilationTextCtrl->BraceBadLight(bracePos1);
+	}
+	else
+	{
+		decompilationTextCtrl->BraceHighlight(-1, -1);
+	}
 }
 
 void MainGui::OnFindDialog(wxFindDialogEvent& e)
