@@ -209,6 +209,11 @@ const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
 
 unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
 {
+	if (numOfInstructions < 2) 
+	{
+		return 0;
+	}
+	
 	struct DisassembledInstruction* jmpInstruction = &instructions[numOfInstructions - 1];
 
 	if (jmpInstruction->opcode != JMP_NEAR)
@@ -221,7 +226,7 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 		enum Register targetReg = jmpInstruction->operands[0].reg;
 		int i = numOfInstructions - 2;
 		struct DisassembledInstruction* instruction = &instructions[i];
-		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode))
+		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode) && i >= 0)
 		{
 			if (instruction->opcode == MOV &&
 				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
