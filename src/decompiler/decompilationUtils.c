@@ -103,11 +103,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 		}
 		else if (operand->memoryAddress.reg == NO_REG)
 		{
-			unsigned long long address = operand->memoryAddress.constDisplacement;
-			if (!getNumFromData(params, address, result))
-			{
-				*result = address;
-			}
+			*result = operand->memoryAddress.constDisplacement;
 			return 1;
 		}
 		else
@@ -122,11 +118,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 				return 0;
 			}
 
-			unsigned long long address = regValue + operand->memoryAddress.constDisplacement;
-			if (!getNumFromData(params, address, result))
-			{
-				*result = address;
-			}
+			*result = regValue + operand->memoryAddress.constDisplacement;
 		}
 
 		return 1;
@@ -151,43 +143,4 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 	}
 
 	return 0;
-}
-
-static unsigned char getNumFromData(struct DecompilationParameters* params, unsigned long long address, unsigned long long* result)
-{
-	if (address < params->imageBase + params->sections[0].virtualAddress)
-	{
-		return 0;
-	}
-
-	int dataSectionIndex = -1;
-	int totalSize = 0;
-	for (int i = 0; i < params->numOfSections; i++)
-	{
-		if (params->sections[i].type == INIT_DATA_FST && params->sections[i].isReadOnly) 
-		{
-			if (address > params->imageBase + params->sections[i].virtualAddress && address < params->imageBase + params->sections[i].virtualAddress + params->sections[i].size)
-			{
-				dataSectionIndex = (int)((totalSize + address) - (params->sections[i].virtualAddress + params->imageBase));
-			}
-		}
-
-		totalSize += params->sections[i].size;
-	}
-
-	if (dataSectionIndex == -1 || dataSectionIndex >= totalSize)
-	{
-		return 0;
-	}
-
-	if (params->is64Bit)
-	{
-		*result = *(unsigned long long*)(params->fileBytes + dataSectionIndex);
-	}
-	else
-	{
-		*result = *(unsigned int*)(params->fileBytes + dataSectionIndex);
-	}
-
-	return 1;
 }
