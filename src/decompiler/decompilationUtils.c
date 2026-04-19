@@ -123,8 +123,14 @@ static unsigned char operandToValue(struct DecompilationParameters* params, stru
 
 		return 1;
 	}
-	else if (operand->type == REGISTER && !isRegisterPointer(operand->reg))
+	else if (operand->type == REGISTER)
 	{
+		if (compareRegisters(operand->reg, IP)) 
+		{
+			*result = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
+			return 1;
+		}
+		
 		int ogStartInstructionIndex = params->startInstructionIndex;
 		
 		int upperBound = params->currentFunc ? params->currentFunc->firstInstructionIndex : 0;
