@@ -4,7 +4,7 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 {
 	for (int i = 0; i < numOfIndents; i++)
 	{
-		strcatJdc(result, "    ");
+		strcatJdc(result, "\t");
 	}
 }
 

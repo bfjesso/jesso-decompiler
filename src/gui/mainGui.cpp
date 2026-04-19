@@ -35,6 +35,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationTextCtrl->SetMarginType(1, wxSTC_MARGIN_COLOUR);
 	decompilationTextCtrl->SetMarginWidth(1, 20);
 	decompilationTextCtrl->SetMarginBackground(1, backgroundColor);
+	decompilationTextCtrl->SetIndentationGuides(wxSTC_IV_LOOKBOTH);
+	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, darkerTextColor);
+	decompilationTextCtrl->SetTabWidth(4);
+	decompilationTextCtrl->SetIndent(4);
 
 	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
