@@ -28,6 +28,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	decompilationTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
+	decompilationTextCtrl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
+	decompilationTextCtrl->SetMarginWidth(0, decompilationTextCtrl->TextWidth(wxSTC_STYLE_LINENUMBER, "9999"));
+	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_LINENUMBER, darkerTextColor);
+	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_LINENUMBER, backgroundColor);
+	decompilationTextCtrl->SetMarginType(1, wxSTC_MARGIN_COLOUR);
+	decompilationTextCtrl->SetMarginWidth(1, 20);
+	decompilationTextCtrl->SetMarginBackground(1, backgroundColor);
 
 	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
 	functionsGrid->SetLabelBackgroundColour(foregroundColor);
