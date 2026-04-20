@@ -29,11 +29,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	SetUpStyledTextCtrl(decompilationTextCtrl);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 	decompilationTextCtrl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
-	decompilationTextCtrl->SetMarginWidth(0, decompilationTextCtrl->TextWidth(wxSTC_STYLE_LINENUMBER, "9999"));
+	decompilationTextCtrl->SetMarginWidth(0, decompilationTextCtrl->TextWidth(wxSTC_STYLE_LINENUMBER, "99999"));
 	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_LINENUMBER, darkerTextColor);
-	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_LINENUMBER, backgroundColor);
-	decompilationTextCtrl->SetMarginType(1, wxSTC_MARGIN_COLOUR);
-	decompilationTextCtrl->SetMarginWidth(1, 20);
+	decompilationTextCtrl->StyleSetBackground(wxSTC_STYLE_LINENUMBER, gridColor);
 	decompilationTextCtrl->SetMarginBackground(1, backgroundColor);
 	decompilationTextCtrl->SetIndentationGuides(wxSTC_IV_LOOKBOTH);
 	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, darkerTextColor);
