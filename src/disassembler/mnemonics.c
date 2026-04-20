@@ -22,6 +22,8 @@ extern const char* mnemonicStrs[] =
 
 	"XCHG",
 
+	"ROL", "ROR",
+
 	"CBW", "CWDE", "CDQE",
 
 	"CMP", "VCOMISS", "COMISS", "VCOMISD", "COMISD",
@@ -86,7 +88,7 @@ extern const char* mnemonicStrs[] =
 	"NOT",
 	"OUT", "OUTS",
 	"POPAD", "POP DS", "POP ES", "POP FS", "POP GS", "POP SS", "POPF", "PREFETCHW", "PUSHAD", "PUSH CS", "PUSH DS", "PUSH ES", "PUSH FS", "PUSH GS", "PUSH SS", "POPCNT", "VPINSRW", "PINSRW", "VPEXTRW", "PEXTRW",
-	"RCL", "RCR", "RDMSR", "RDPMC", "RDTSC", "ROL", "ROR", "RSM", "VRCPPS", "RCPPS", "VRCPSS", "RCPSS",
+	"RCL", "RCR", "RDMSR", "RDPMC", "RDTSC", "RSM", "VRCPPS", "RCPPS", "VRCPSS", "RCPSS",
 	"SAHF", "SBB", "SCAS", "STAC", "STC", "STD", "STI", "STOS", "SYSCALL", "SYSENTER", "SYSEXIT", "SYSRET",
 	"TZCNT",
 	"VUCOMISD", "UCOMISD", "VUCOMISS", "UCOMISS", "VUNPCKHPD", "UNPCKHPD", "VUNPCKHPS", "UNPCKHPS", "VUNPCKLPD", "UNPCKLPD", "VUNPCKLPS", "UNPCKLPS",

@@ -14,8 +14,10 @@ struct IntrinsicFunc returningIntrinsicFuncs[] =
 	{ STMXCSR, { 0, 0, 0, 0 }, "_mm_getcsr" },
 	{ SHUFPD, { 1, 1, 1, 0 }, "_mm_shuffle_pd" },
 	{ SHUFPS, { 1, 1, 1, 0 }, "_mm_shuffle_ps" },
+	{ ROL, { 1, 1, 0, 0 }, "_rotl" },
+	{ ROR, { 1, 1, 0, 0 }, "_rotr" },
 };
-const int numOfReturningIntrinsicFuncs = 9;
+const int numOfReturningIntrinsicFuncs = 11;
 
 struct IntrinsicFunc voidIntrinsicFuncs[] =
 {
