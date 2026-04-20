@@ -195,7 +195,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
 		params->startInstructionIndex = i;
-		if (currentInstruction->opcode == JMP_SHORT || checkForUnknownFunctionCall(params)) // stop looking for parameters if instruction is jmp or another call with unknown parameters
+		if (isOpcodeJmp(currentInstruction->opcode) || isOpcodeJcc(currentInstruction->opcode) || checkForUnknownFunctionCall(params)) // stop looking for parameters if instruction is jmp or another call with unknown parameters
 		{
 			break;
 		}
