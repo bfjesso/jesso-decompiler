@@ -186,7 +186,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 			return 0;
 		}
 
-		sprintfJdc(result, 1, "%s)", intrinsicFunc->name, code.buffer);
+		sprintfJdc(result, 1, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
 	else if (intrinsicFunc->opcode == MOVS)
@@ -214,7 +214,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 			break;
 		}
 
-		sprintfJdc(result, 1, ", %s)", count.buffer);
+		sprintfJdc(result, 1, ", %s", count.buffer);
 		freeJdcStr(&count);
 	}
 
