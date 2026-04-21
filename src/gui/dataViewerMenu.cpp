@@ -249,11 +249,10 @@ void DataViewer::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 			if (txt.ToULongLong(&address, 16))
 			{
 				FileSection* section = &sections[sectionChoice->GetSelection()];
-				unsigned long long minAddress = section->virtualAddress + imageBase;
-				unsigned long long maxAddress = section->virtualAddress + section->size + imageBase;
-				if (address >= minAddress && address < maxAddress)
+				unsigned long long sectionStart = section->virtualAddress + imageBase;
+				if (address >= sectionStart && address < sectionStart + section->size)
 				{
-					int row = ((float)(address - minAddress) / (maxAddress - minAddress)) * (section->size / bytesPerLine);
+					int row = (address - sectionStart) / bytesPerLine;
 					dataTextCtrl->GotoLine(row);
 					int pos = dataTextCtrl->PositionFromLine(row);
 					dataTextCtrl->SetSelection(pos, pos + dataTextCtrl->GetLineLength(row));
