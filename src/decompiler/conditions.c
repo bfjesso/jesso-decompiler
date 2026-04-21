@@ -26,7 +26,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;
-			if (isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
+			if (dstIndex > 0 && isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
 			{
 				// sometimes compiler puts multiple jmps next to each other at the end?
 				int firstJmpIndex = dstIndex - 1;
