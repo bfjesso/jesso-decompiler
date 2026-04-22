@@ -295,7 +295,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 
 	params->startInstructionIndex = ogStartInstructionIndex;
 
-	if (!finished) 
+	if (!finished)
 	{
 		// check if register argument
 		struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, targetReg);
@@ -310,6 +310,12 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				*regArgVarRef = regArg;
 			}
 		}
+		else if (defaultToReg) 
+		{
+			expressions[expressionIndex] = initializeJdcStr();
+			strcpyJdc(&expressions[expressionIndex], registerStrs[targetReg]);
+			expressionIndex++;
+		}
 		else
 		{
 			for (int i = 0; i < expressionIndex; i++)
@@ -317,15 +323,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				freeJdcStr(&expressions[i]);
 			}
 			free(expressions);
-
-			if (defaultToReg) 
-			{
-				return strcpyJdc(result, registerStrs[targetReg]);
-			}
-			else 
-			{
-				return 0;
-			}
+			return 0;
 		}
 	}
 
