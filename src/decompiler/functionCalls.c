@@ -183,6 +183,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
 
+	const int maxStackArgs = 10;
 	struct JdcStr stackArgTypeStrs[10] = { 0 };
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
@@ -209,7 +210,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			}
 		}
 
-		if (numOfStackArgs < 10 && currentInstruction->opcode == PUSH)
+		if (numOfStackArgs < maxStackArgs && currentInstruction->opcode == PUSH)
 		{
 			if (currentInstruction->operands[0].type == REGISTER && isRegisterPointer(currentInstruction->operands[0].reg)) 
 			{
@@ -225,7 +226,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				numOfStackArgs++;
 			}
 		}
-		else if (numOfStackArgs < 10 && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
+		else if (numOfStackArgs < maxStackArgs && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, 0, &overwrites) && overwrites)
@@ -255,8 +256,8 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					decompiledRegArgs[j] = initializeJdcStr();
 					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], 1, &decompiledRegArgs[j]))
 					{
-						for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
-						for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
+						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
+						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&decompiledStackArgs[j]); }
 						for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&regArgTypeStrs[j]); }
 						for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 						return 0;
