@@ -67,7 +67,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	{
 		struct JdcStr argStr = initializeJdcStr();
 		enum Register reg = callee->regArgs[i].reg;
-		if (!decompileRegister(params, reg, &argStr, 0))
+		if (!decompileRegister(params, reg, 1, &argStr, 0))
 		{
 			freeJdcStr(&argStr);
 			return 0;
@@ -89,7 +89,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			params->startInstructionIndex = i;
 
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &argStr))
+			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &argStr))
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -103,7 +103,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &argStr)) // this should just get the stack var or arg
+			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &argStr)) // this should just get the stack var or arg
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -216,42 +216,28 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				continue;
 			}
 
-			stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-			varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
-
 			params->startInstructionIndex = i;
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &decompiledStackArgs[numOfStackArgs]))
+			if (decompileOperand(params, &currentInstruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
 			{
-				for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
-				for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-				for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&regArgTypeStrs[j]); }
-				for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
-				return 0;
+				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
+				varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
+				numOfStackArgs++;
 			}
-
-			numOfStackArgs++;
 		}
 		else if (numOfStackArgs < 10 && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, 0, &overwrites) && overwrites)
 			{
-				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-				varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
-
 				params->startInstructionIndex = i;
 				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-				if (!decompileOperand(params, &currentInstruction->operands[1], &decompiledStackArgs[numOfStackArgs]))
+				if (decompileOperand(params, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
 				{
-					for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
-					for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-					for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&regArgTypeStrs[j]); }
-					for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
-					return 0;
+					stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
+					varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
+					numOfStackArgs++;
 				}
-
-				numOfStackArgs++;
 			}
 		}
 
@@ -267,7 +253,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					
 					params->startInstructionIndex = i + 1;
 					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], &decompiledRegArgs[j]))
+					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], 1, &decompiledRegArgs[j]))
 					{
 						for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
 						for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
@@ -330,7 +316,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 		params->startInstructionIndex = ogStartInstructionIndex;
 		struct JdcStr functionPointer = initializeJdcStr();
-		if (!decompileOperand(params, &callInstruction->operands[0], &functionPointer))
+		if (!decompileOperand(params, &callInstruction->operands[0], 1, &functionPointer))
 		{
 			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
 			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }

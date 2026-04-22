@@ -130,7 +130,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, u
 
 	params->startInstructionIndex++; // incase the current instruction is also an import call
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, params->currentFunc->returnReg, &returnExpression, 0))
+	if (!decompileRegister(params, params->currentFunc->returnReg, 1, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
 		return 0;

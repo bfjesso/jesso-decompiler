@@ -9,7 +9,7 @@
 #include "operations.h"
 #include "dataTypes.h"
 
-unsigned char decompileOperand(struct DecompilationParameters* params, struct Operand* operand, struct JdcStr* result)
+unsigned char decompileOperand(struct DecompilationParameters* params, struct Operand* operand, unsigned char defaultToReg, struct JdcStr* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -39,7 +39,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, struct Op
 	}
 	else if (operand->type == REGISTER)
 	{
-		return decompileRegister(params, operand->reg, result, 0);
+		return decompileRegister(params, operand->reg, defaultToReg, result, 0);
 	}
 	else if (operand->type == SEGMENT) 
 	{
@@ -90,7 +90,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	{
 		struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 		struct JdcStr baseRegStr = initializeJdcStr();
-		if (!decompileRegister(params, memAddress->reg, &baseRegStr, &regArgVar))
+		if (!decompileRegister(params, memAddress->reg, 1, &baseRegStr, &regArgVar))
 		{
 			freeJdcStr(&memAddrStr);
 			freeJdcStr(&baseRegStr);
@@ -125,7 +125,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	if (memAddress->regDisplacement != NO_REG)
 	{
 		struct JdcStr displacementRegStr = initializeJdcStr();
-		if (!decompileRegister(params, memAddress->regDisplacement, &displacementRegStr, 0))
+		if (!decompileRegister(params, memAddress->regDisplacement, 1, &displacementRegStr, 0))
 		{
 			freeJdcStr(&displacementRegStr);
 			return 0;
@@ -173,7 +173,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	return 1;
 }
 
-unsigned char decompileRegister(struct DecompilationParameters* params, enum Register targetReg, struct JdcStr* result, struct RegisterVariable** regArgVarRef)
+unsigned char decompileRegister(struct DecompilationParameters* params, enum Register targetReg, unsigned char defaultToReg, struct JdcStr* result, struct RegisterVariable** regArgVarRef)
 {
 	if (compareRegisters(targetReg, BP) || compareRegisters(targetReg, SP))
 	{
@@ -310,7 +310,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 				*regArgVarRef = regArg;
 			}
 		}
-		else 
+		else
 		{
 			for (int i = 0; i < expressionIndex; i++)
 			{
@@ -318,7 +318,14 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			}
 			free(expressions);
 
-			return strcpyJdc(result, registerStrs[targetReg]);
+			if (defaultToReg) 
+			{
+				return strcpyJdc(result, registerStrs[targetReg]);
+			}
+			else 
+			{
+				return 0;
+			}
 		}
 	}
 
@@ -419,7 +426,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &operand1Str))
+			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
@@ -441,7 +448,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[1], &operand2Str))
+			if (!decompileOperand(params, &currentInstruction->operands[1], 1, &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
@@ -457,7 +464,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &operand1Str))
+			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
@@ -472,7 +479,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[1], &operand2Str))
+			if (!decompileOperand(params, &currentInstruction->operands[1], 1, &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
@@ -488,7 +495,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], &operand1Str))
+			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;

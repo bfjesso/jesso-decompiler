@@ -393,7 +393,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			if (condition->isFirstSwitchCase)
 			{
 				struct JdcStr switchVar = initializeJdcStr();
-				if (!decompileOperand(params, &condition->cmpInstruction->operands[0], &switchVar))
+				if (!decompileOperand(params, &condition->cmpInstruction->operands[0], 1, &switchVar))
 				{
 					freeJdcStr(&switchVar);
 					return 0;
@@ -414,7 +414,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			}
 
 			struct JdcStr value = initializeJdcStr();
-			if (!decompileOperand(params, &condition->cmpInstruction->operands[1], &value))
+			if (!decompileOperand(params, &condition->cmpInstruction->operands[1], 1, &value))
 			{
 				freeJdcStr(&value);
 				return 0;

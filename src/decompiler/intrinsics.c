@@ -51,7 +51,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
-		if (!decompileOperand(params, &instruction->operands[0], &decompiledFirstOperand))
+		if (!decompileOperand(params, &instruction->operands[0], 1, &decompiledFirstOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			return 0;
@@ -80,7 +80,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, &instruction->operands[i], &decompiledOperand))
+			if (!decompileOperand(params, &instruction->operands[i], 1, &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
@@ -163,7 +163,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		if (intrinsicFunc->operandsToDecompile[i])
 		{
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, &instruction->operands[i], &decompiledOperand))
+			if (!decompileOperand(params, &instruction->operands[i], 1, &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
@@ -182,7 +182,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	if (intrinsicFunc->opcode == _INT)
 	{
 		struct JdcStr code = initializeJdcStr();
-		if (!decompileRegister(params, CX, &code, 0))
+		if (!decompileRegister(params, CX, 1, &code, 0))
 		{
 			freeJdcStr(&code);
 			return 0;
@@ -194,7 +194,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	else if (intrinsicFunc->opcode == MOVS)
 	{
 		struct JdcStr count = initializeJdcStr();
-		if (!decompileRegister(params, CX, &count, 0))
+		if (!decompileRegister(params, CX, 1, &count, 0))
 		{
 			freeJdcStr(&count);
 			return 0;
