@@ -55,6 +55,12 @@ ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunctio
 
 void ImportsViewer::GridRightClickOptions(wxGridEvent& e)
 {
+	wxGrid* grid = (wxGrid*)(e.GetEventObject());
+	if(grid != importsGrid)
+	{
+		return;
+	}
+
 	wxMenu menu;
 
 	int row = e.GetRow(); // row right-clicked on

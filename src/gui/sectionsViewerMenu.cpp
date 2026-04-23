@@ -79,6 +79,12 @@ SectionsViewer::SectionsViewer(wxWindow* parent, wxPoint position, FileSection* 
 
 void SectionsViewer::GridRightClickOptions(wxGridEvent& e)
 {
+	wxGrid* grid = (wxGrid*)(e.GetEventObject());
+	if(grid != sectionsGrid)
+	{
+		return;
+	}
+
 	wxMenu menu;
 
 	int row = e.GetRow(); // row right-clicked on

@@ -721,6 +721,12 @@ void MainGui::GetFunctionSymbols()
 
 void MainGui::GridRightClickOptions(wxGridEvent& e)
 {
+	wxGrid* grid = (wxGrid*)(e.GetEventObject());
+	if(grid != functionsGrid)
+	{
+		return;
+	}
+
 	wxMenu menu;
 
 	int row = e.GetRow(); // row right-clicked on
