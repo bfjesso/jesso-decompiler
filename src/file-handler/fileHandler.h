@@ -23,6 +23,8 @@ extern "C"
 
 	int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
+	unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
+
 #ifdef __cplusplus
 }
 #endif

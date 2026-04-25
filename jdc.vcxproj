@@ -191,6 +191,7 @@
     <ClCompile Include="src\gui\colorsMenu.cpp" />
     <ClCompile Include="src\gui\dataViewerMenu.cpp" />
     <ClCompile Include="src\gui\disassembleBytesMenu.cpp" />
+    <ClCompile Include="src\gui\fileHeadersMenu.cpp" />
     <ClCompile Include="src\gui\functionInfoMenu.cpp" />
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\importsViewerMenu.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="src\gui\colorsMenu.h" />
     <ClInclude Include="src\gui\dataViewerMenu.h" />
     <ClInclude Include="src\gui\disassembleBytesMenu.h" />
+    <ClInclude Include="src\gui\fileHeadersMenu.h" />
     <ClInclude Include="src\gui\functionInfoMenu.h" />
     <ClInclude Include="src\gui\guiUtils.h" />
     <ClInclude Include="src\gui\importsViewerMenu.h" />

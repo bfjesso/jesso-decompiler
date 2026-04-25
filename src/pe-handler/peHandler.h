@@ -34,3 +34,11 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 DWORD rvaToFileOffset32(HANDLE file, DWORD rva);
 
 DWORD rvaToFileOffset64(HANDLE file, DWORD rva);
+
+unsigned char generatePEHeadersInfoStr(HANDLE file, struct JdcStr* result);
+
+static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr* result);
+
+static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcStr* result);
+
+static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER* optionalHeader, struct JdcStr* result);

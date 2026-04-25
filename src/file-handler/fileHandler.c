@@ -257,3 +257,23 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 	}
 #endif
 }
+
+unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
+{
+#ifdef _WIN32
+	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (!file || file == INVALID_HANDLE_VALUE)
+	{
+		return 0;
+	}
+
+	return generatePEHeadersInfoStr(file, result);
+#endif
+
+#ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	return 0;
+#endif
+}
