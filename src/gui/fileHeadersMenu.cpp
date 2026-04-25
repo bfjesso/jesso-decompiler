@@ -48,7 +48,6 @@ FileHeadersMenu::FileHeadersMenu(wxWindow* parent, wxPoint position, wxString fi
 		grid->EnableGridLines(false);
 		grid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
 		grid->SetScrollRate(0, 10);
-		grid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
 		grid->SetCellHighlightPenWidth(0);
 		grid->SetCellHighlightROPenWidth(0);
 		grid->DisableDragRowSize();
@@ -77,15 +76,15 @@ FileHeadersMenu::FileHeadersMenu(wxWindow* parent, wxPoint position, wxString fi
 			grid->AppendRows(1);
 
 			int offsetEndPos = fileHeadersInfoStr.find("\t", rowStartPos);
-			grid->SetCellValue(rowIndex, 0, fileHeadersInfoStr.SubString(rowStartPos, offsetEndPos));
+			grid->SetCellValue(rowIndex, 0, fileHeadersInfoStr.SubString(rowStartPos, offsetEndPos - 1));
 
 			int fieldEndPos = fileHeadersInfoStr.find("\t", offsetEndPos + 1);
-			grid->SetCellValue(rowIndex, 1, fileHeadersInfoStr.SubString(offsetEndPos, fieldEndPos));
+			grid->SetCellValue(rowIndex, 1, fileHeadersInfoStr.SubString(offsetEndPos + 1, fieldEndPos - 1));
 
 			int valueEndPos = fileHeadersInfoStr.find("\t", fieldEndPos + 1);
-			grid->SetCellValue(rowIndex, 2, fileHeadersInfoStr.SubString(fieldEndPos, valueEndPos));
+			grid->SetCellValue(rowIndex, 2, fileHeadersInfoStr.SubString(fieldEndPos + 1, valueEndPos - 1));
 
-			grid->SetCellValue(rowIndex, 3, fileHeadersInfoStr.SubString(valueEndPos, rowEndPos));
+			grid->SetCellValue(rowIndex, 3, fileHeadersInfoStr.SubString(valueEndPos + 1, rowEndPos - 1));
 
 			rowIndex++;
 
