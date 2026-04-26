@@ -24,11 +24,11 @@ CalculatorMenu::CalculatorMenu(wxWindow* parent, wxPoint position) : wxFrame(par
 	firstHexCheckBox->SetOwnForegroundColour(textColor);
 	firstHexCheckBox->SetValue(true);
 
-	firstValueInput = new wxTextCtrl(this, FirstValueInputID, "0xC", wxPoint(0, 0), wxSize(150, 25));
+	firstValueInput = new wxTextCtrl(this, FirstValueInputID, "0xC", wxPoint(0, 0), wxSize(150, 30));
 	firstValueInput->SetOwnBackgroundColour(foregroundColor);
 	firstValueInput->SetOwnForegroundColour(textColor);
 
-	selectOperation = new wxChoice(this, SelectOperationID, wxPoint(0, 0), wxSize(30, 25), wxArrayString(4, operationChars));
+	selectOperation = new wxChoice(this, SelectOperationID, wxPoint(0, 0), wxSize(50, 30), wxArrayString(4, operationChars));
 	selectOperation->SetSelection(0);
 	selectOperation->SetOwnBackgroundColour(foregroundColor);
 	selectOperation->SetOwnForegroundColour(textColor);
@@ -37,7 +37,7 @@ CalculatorMenu::CalculatorMenu(wxWindow* parent, wxPoint position) : wxFrame(par
 	secondHexCheckBox->SetOwnForegroundColour(textColor);
 	secondHexCheckBox->SetValue(true);
 
-	secondValueInput = new wxTextCtrl(this, SecondValueInputID, "0x4", wxPoint(0, 0), wxSize(150, 25));
+	secondValueInput = new wxTextCtrl(this, SecondValueInputID, "0x4", wxPoint(0, 0), wxSize(150, 30));
 	secondValueInput->SetOwnBackgroundColour(foregroundColor);
 	secondValueInput->SetOwnForegroundColour(textColor);
 
