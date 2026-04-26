@@ -126,7 +126,7 @@ void CalculatorMenu::CalculateResult(wxCommandEvent& e)
 	}
 
 	int operation = selectOperation->GetSelection();
-	if(operation == 3 && (secondValue > firstValue || secondValue == 0))
+	if(operation == 3 && secondValue == 0) // division by zero check
 	{
 		return;
 	}
