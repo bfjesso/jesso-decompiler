@@ -88,12 +88,13 @@ CalculatorMenu::CalculatorMenu(wxWindow* parent, wxPoint position) : wxFrame(par
 void CalculatorMenu::CalculateResult(wxCommandEvent& e)
 {
 	hexResultTxt->SetLabelText("Hex Result: ");
+	hexResultStr = "";
+
 	decResultTxt->SetLabelText("Dec Result: ");
+	decResultStr = "";
 	
 	long long firstValue = 0;
 	long long secondValue = 0;
-
-	unsigned char succeeded = 1;
 
 	if (firstHexCheckBox->IsChecked()) 
 	{
