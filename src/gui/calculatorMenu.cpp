@@ -47,6 +47,7 @@ CalculatorMenu::CalculatorMenu(wxWindow* parent, wxPoint position) : wxFrame(par
 
 	hexResultTxt = new wxStaticText(this, wxID_ANY, "Hex Result: 0x10");
 	hexResultTxt->SetOwnForegroundColour(textColor);
+	hexResultStr = "0x10";
 
 	copyDecResult = new wxButton(this, CopyDecResultID, "Copy", wxPoint(0, 0), wxSize(50, 25));
 	copyDecResult->SetOwnBackgroundColour(foregroundColor);
@@ -54,6 +55,7 @@ CalculatorMenu::CalculatorMenu(wxWindow* parent, wxPoint position) : wxFrame(par
 
 	decResultTxt = new wxStaticText(this, wxID_ANY, "Dec Result: 16");
 	decResultTxt->SetOwnForegroundColour(textColor);
+	decResultStr = "16";
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
