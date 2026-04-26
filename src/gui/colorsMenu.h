@@ -24,6 +24,9 @@ public:
 	wxBoxSizer* hSizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
+	wxScrolledWindow* disassemblyScrollWindow = nullptr;
+	wxScrolledWindow* decompilationScrollWindow = nullptr;
+
 	enum DisassemblyColor
 	{
 		PUNCTUATION_COLOR,
