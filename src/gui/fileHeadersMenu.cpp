@@ -62,7 +62,7 @@ FileHeadersMenu::FileHeadersMenu(wxWindow* parent, wxPoint position, wxString fi
 		grid->SetColSize(2, 200);
 		grid->SetColSize(3, 9999);
 		grid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-		vSizer->Add(grid, 1, wxEXPAND);
+		vSizer->Add(grid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 		int rowIndex = 0;
 
