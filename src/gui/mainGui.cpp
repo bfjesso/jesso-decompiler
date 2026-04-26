@@ -1,5 +1,6 @@
 #include "mainGui.h"
 #include "fileHeadersMenu.h"
+#include "calculatorMenu.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../decompiler/dataTypes.h"
 #include "../disassembler/registers.h"
@@ -102,6 +103,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	wxMenuItem* openFileHeadersMenu = toolMenu->Append(OpenFileHeadersMenuID, "File headers");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new FileHeadersMenu(this, GetPosition(), currentFilePath); }, OpenFileHeadersMenuID);
+
+	wxMenuItem* openCalculator = toolMenu->Append(OpenCalculatorMenuID, "Calculator");
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new CalculatorMenu(this, GetPosition()); }, OpenCalculatorMenuID);
 
 	wxMenu* optionsMenu = new wxMenu();
 

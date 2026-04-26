@@ -72,6 +72,7 @@ public:
 		OpenDataViewerID,
 		OpenImportsViewerID,
 		OpenFileHeadersMenuID,
+		OpenCalculatorMenuID,
 		OpenColorsMenuID,
 		OpenFileID,
 		DisassembleFileID,
