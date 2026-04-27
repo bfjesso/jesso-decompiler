@@ -274,6 +274,6 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr*
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
 
-	return 0;
+	return generateELFHeadersInfoStr(filePathChar, result);
 #endif
 }

@@ -863,3 +863,40 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 
 	return bufferIndex;
 }
+
+unsigned char generateELFHeadersInfoStr(const char* filePath, struct JdcStr* result)
+{
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		Elf64_Ehdr elfHeader;
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+
+		generateELFHeaderInfoStr(&elfHeader, result);
+
+		fclose(file);
+		return 1;
+	}
+
+	return 0;
+}
+
+static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
+{
+	strcatJdc(result, "Elf_Ehdr\n\n");
+	sprintfJdc(result, 1, "0x0\te_ident[0-4]\t0x%llX\tMagic number\n", *(unsigned int*)(ehdr->e_ident));
+
+	sprintfJdc(result, 1, "0x4\te_ident[EI_CLASS]\t");
+	switch(ehdr->e_ident[EI_CLASS])
+	{
+	case ELFCLASSNONE:
+		sprintfJdc(result, 1, "ELFCLASSNONE (0x%X)\tThis class is invalid\n", ehdr->e_ident[EI_CLASS]);
+		break;
+	case ELFCLASS32:
+		sprintfJdc(result, 1, "ELFCLASS32 (0x%X)\t32-bit architecture\n", ehdr->e_ident[EI_CLASS]);
+		break;
+	case ELFCLASS64:
+		sprintfJdc(result, 1, "ELFCLASS64 (0x%X)\t64-bit architecture\n", ehdr->e_ident[EI_CLASS]);
+		break;
+	}
+}

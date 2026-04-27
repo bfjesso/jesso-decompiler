@@ -40,3 +40,7 @@ int getNumOfELFImports32(const char* filePath);
 int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
 
 int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+
+unsigned char generateELFHeadersInfoStr(const char* filePath, struct JdcStr* result);
+
+static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result);
