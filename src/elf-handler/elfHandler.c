@@ -974,4 +974,125 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 			strcatJdc(result, "\tReserved padding bytes\n");
 		}
 	}
+
+	sprintfJdc(result, 1, "0x10\te_type\t");
+	switch(ehdr->e_type)
+	{
+	case ET_NONE:
+		sprintfJdc(result, 1, "ET_NONE (0x%llX)\tUnknown type\n", ehdr->e_type);
+		break;
+	case ET_REL:
+		sprintfJdc(result, 1, "ET_REL (0x%llX)\tRelocatable file\n", ehdr->e_type);
+		break;
+	case ET_EXEC:
+		sprintfJdc(result, 1, "ET_EXEC (0x%llX)\tExecutable file\n", ehdr->e_type);
+		break;
+	case ET_DYN:
+		sprintfJdc(result, 1, "ET_DYN (0x%llX)\tShared object\n", ehdr->e_type);
+		break;
+	case ET_CORE:
+		sprintfJdc(result, 1, "ET_CORE (0x%llX)\tCore file\n", ehdr->e_type);
+		break;
+	}
+
+	sprintfJdc(result, 1, "0x12\te_machine\t");
+	switch(ehdr->e_machine)
+	{
+	case EM_NONE:
+		sprintfJdc(result, 1, "EM_NONE (0x%llX)\tUnknown machine\n", ehdr->e_machine);
+		break;
+	case EM_M32:
+		sprintfJdc(result, 1, "EM_M32 (0x%llX)\tAT&T WE 32100\n", ehdr->e_machine);
+		break;
+	case EM_SPARC:
+		sprintfJdc(result, 1, "EM_SPARC (0x%llX)\tSun Microsystems SPARC\n", ehdr->e_machine);
+		break;
+	case EM_386:
+		sprintfJdc(result, 1, "EM_386 (0x%llX)\tIntel 80386\n", ehdr->e_machine);
+		break;
+	case EM_68K:
+		sprintfJdc(result, 1, "EM_68K (0x%llX)\tMotorola 68000\n", ehdr->e_machine);
+		break;
+	case EM_88K:
+		sprintfJdc(result, 1, "EM_88K (0x%llX)\tMotorola 88000\n", ehdr->e_machine);
+		break;
+	case EM_860:
+		sprintfJdc(result, 1, "EM_860 (0x%llX)\tIntel 80860\n", ehdr->e_machine);
+		break;
+	case EM_MIPS:
+		sprintfJdc(result, 1, "EM_MIPS (0x%llX)\tMIPS RS3000 (big-endian only)\n", ehdr->e_machine);
+		break;
+	case EM_PARISC:
+		sprintfJdc(result, 1, "EM_PARISC (0x%llX)\tHP/PA\n", ehdr->e_machine);
+		break;
+	case EM_SPARC32PLUS:
+		sprintfJdc(result, 1, "EM_SPARC32PLUS (0x%llX)\tSPARC with enhanced instruction set\n", ehdr->e_machine);
+		break;
+	case EM_PPC:
+		sprintfJdc(result, 1, "EM_PPC (0x%llX)\tPowerPC\n", ehdr->e_machine);
+		break;
+	case EM_PPC64:
+		sprintfJdc(result, 1, "EM_PPC64 (0x%llX)\tPowerPC 64-bit\n", ehdr->e_machine);
+		break;
+	case EM_S390:
+		sprintfJdc(result, 1, "EM_S390 (0x%llX)\tIBM S/390\n", ehdr->e_machine);
+		break;
+	case EM_ARM:
+		sprintfJdc(result, 1, "EM_ARM (0x%llX)\tAdvanced RISC Machines\n", ehdr->e_machine);
+		break;
+	case EM_SH:
+		sprintfJdc(result, 1, "EM_SH (0x%llX)\tRenesas SuperH\n", ehdr->e_machine);
+		break;
+	case EM_SPARCV9:
+		sprintfJdc(result, 1, "EM_SPARCV9 (0x%llX)\tSPARC v9 64-bit\n", ehdr->e_machine);
+		break;
+	case EM_IA_64:
+		sprintfJdc(result, 1, "EM_IA_64 (0x%llX)\tIntel Itanium\n", ehdr->e_machine);
+		break;
+	case EM_X86_64:
+		sprintfJdc(result, 1, "EM_X86_64 (0x%llX)\tAMD x86-64\n", ehdr->e_machine);
+		break;
+	case EM_VAX:
+		sprintfJdc(result, 1, "EM_VAX (0x%llX)\tDEC Vax\n", ehdr->e_machine);
+		break;
+	}
+
+	sprintfJdc(result, 1, "0x14\te_version\t");
+	switch(ehdr->e_version)
+	{
+	case EV_NONE:
+		sprintfJdc(result, 1, "EV_NONE (0x%llX)\tInvalid version\n", ehdr->e_version);
+		break;
+	case EV_CURRENT:
+		sprintfJdc(result, 1, "EV_CURRENT (0x%llX)\tCurrent version\n", ehdr->e_version);
+		break;
+	}
+
+	unsigned char x64 = ehdr->e_ident[EI_CLASS] == ELFCLASS64;
+	if(x64)
+	{
+		sprintfJdc(result, 1, "0x18\te_entry\t0x%llX\tVirtual address to which the system first transfers control\n", ehdr->e_entry);
+		sprintfJdc(result, 1, "0x20\te_phoff\t0x%llX\tProgram header table's file offset in bytes\n", ehdr->e_phoff);
+		sprintfJdc(result, 1, "0x28\te_shoff\t0x%llX\tSection header table's file offset in bytes\n", ehdr->e_shoff);
+		sprintfJdc(result, 1, "0x30\te_flags\t0x%llX\tProcessor-specific flags associated with the file\n", ehdr->e_flags);
+		sprintfJdc(result, 1, "0x34\te_ehsize\t0x%llX\tELF header's size in bytes\n", ehdr->e_ehsize);
+		sprintfJdc(result, 1, "0x36\te_phentsize\t0x%llX\tSize in bytes of one entry in the file's program header table\n", ehdr->e_phentsize);
+		sprintfJdc(result, 1, "0x38\te_phnum\t%d\tNumber of entries in the program header table\n", ehdr->e_phnum);
+		sprintfJdc(result, 1, "0x3A\te_shentsize\t0x%llX\tA sections header's size in bytes\n", ehdr->e_shentsize);
+		sprintfJdc(result, 1, "0x3C\te_shnum\t%d\tNumber of entries in the section header table\n", ehdr->e_shnum);
+		sprintfJdc(result, 1, "0x3E\te_shstrndx\t0x%llX\tSection header table index of the entry associated with the section name string table\n", ehdr->e_shstrndx);
+	}
+	else
+	{
+		sprintfJdc(result, 1, "0x18\te_entry\t0x%llX\tVirtual address to which the system first transfers control\n", ((Elf32_Ehdr*)ehdr)->e_entry);
+		sprintfJdc(result, 1, "0x1C\te_phoff\t0x%llX\tProgram header table's file offset in bytes\n", ((Elf32_Ehdr*)ehdr)->e_phoff);
+		sprintfJdc(result, 1, "0x20\te_shoff\t0x%llX\tSection header table's file offset in bytes\n", ((Elf32_Ehdr*)ehdr)->e_shoff);
+		sprintfJdc(result, 1, "0x24\te_flags\t0x%llX\tProcessor-specific flags associated with the file\n", ((Elf32_Ehdr*)ehdr)->e_flags);
+		sprintfJdc(result, 1, "0x28\te_ehsize\t0x%llX\tELF header's size in bytes\n", ((Elf32_Ehdr*)ehdr)->e_ehsize);
+		sprintfJdc(result, 1, "0x2A\te_phentsize\t0x%llX\tSize in bytes of one entry in the file's program header table\n", ((Elf32_Ehdr*)ehdr)->e_phentsize);
+		sprintfJdc(result, 1, "0x2C\te_phnum\t%d\tNumber of entries in the program header table\n", ((Elf32_Ehdr*)ehdr)->e_phnum);
+		sprintfJdc(result, 1, "0x2E\te_shentsize\t0x%llX\tA sections header's size in bytes\n", ((Elf32_Ehdr*)ehdr)->e_shentsize);
+		sprintfJdc(result, 1, "0x30\te_shnum\t%d\tNumber of entries in the section header table\n", ((Elf32_Ehdr*)ehdr)->e_shnum);
+		sprintfJdc(result, 1, "0x32\te_shstrndx\t0x%llX\tSection header table index of the entry associated with the section name string table\n", ((Elf32_Ehdr*)ehdr)->e_shstrndx);
+	}
 }
