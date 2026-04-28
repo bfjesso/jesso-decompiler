@@ -899,4 +899,79 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 		sprintfJdc(result, 1, "ELFCLASS64 (0x%X)\t64-bit architecture\n", ehdr->e_ident[EI_CLASS]);
 		break;
 	}
+
+	sprintfJdc(result, 1, "0x5\te_ident[EI_DATA]\t");
+	switch(ehdr->e_ident[EI_DATA])
+	{
+	case ELFDATANONE:
+		sprintfJdc(result, 1, "ELFDATANONE (0x%X)\tUnknown data format\n", ehdr->e_ident[EI_DATA]);
+		break;
+	case ELFDATA2LSB:
+		sprintfJdc(result, 1, "ELFDATA2LSB (0x%X)\tTwo's complement, little-endian\n", ehdr->e_ident[EI_DATA]);
+		break;
+	case ELFDATA2MSB:
+		sprintfJdc(result, 1, "ELFDATA2MSB (0x%X)\tTwo's complement, big-endian\n", ehdr->e_ident[EI_DATA]);
+		break;
+	}
+
+	sprintfJdc(result, 1, "0x6\te_ident[EI_VERSION]\t");
+	switch(ehdr->e_ident[EI_VERSION])
+	{
+	case EV_NONE:
+		sprintfJdc(result, 1, "EV_NONE (0x%X)\tInvalid version\n", ehdr->e_ident[EI_VERSION]);
+		break;
+	case EV_CURRENT:
+		sprintfJdc(result, 1, "EV_CURRENT (0x%X)\tCurrent version\n", ehdr->e_ident[EI_VERSION]);
+		break;
+	}
+
+	sprintfJdc(result, 1, "0x7\te_ident[EI_OSABI]\t");
+	switch(ehdr->e_ident[EI_OSABI])
+	{
+	case ELFOSABI_SYSV:
+		sprintfJdc(result, 1, "ELFOSABI_SYSV (0x%X)\tUNIX System V ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_HPUX:
+		sprintfJdc(result, 1, "ELFOSABI_HPUX (0x%X)\tHP-UX ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_NETBSD:
+		sprintfJdc(result, 1, "ELFOSABI_NETBSD (0x%X)\tNetBSD ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_LINUX:
+		sprintfJdc(result, 1, "ELFOSABI_LINUX (0x%X)\tLinux ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_SOLARIS:
+		sprintfJdc(result, 1, "ELFOSABI_SOLARIS (0x%X)\tSolaris ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_IRIX:
+		sprintfJdc(result, 1, "ELFOSABI_IRIX (0x%X)\tIRIX ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_FREEBSD:
+		sprintfJdc(result, 1, "ELFOSABI_FREEBSD (0x%X)\tFreeBSD ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_TRU64:
+		sprintfJdc(result, 1, "ELFOSABI_TRU64 (0x%X)\tTRU64 UNIX ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_ARM:
+		sprintfJdc(result, 1, "ELFOSABI_ARM (0x%X)\tARM architecture ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	case ELFOSABI_STANDALONE:
+		sprintfJdc(result, 1, "ELFOSABI_STANDALONE (0x%X)\tStand-alone (embedded) ABI\n", ehdr->e_ident[EI_OSABI]);
+		break;
+	}
+
+	sprintfJdc(result, 1, "0x8\te_ident[EI_ABIVERSION]\t0x%llX\tVersion of the ABI to which the object is targeted\n", ehdr->e_ident[EI_ABIVERSION]);
+	sprintfJdc(result, 1, "0x9\te_ident[EI_PAD]\t");
+	for (int i = EI_PAD; i < EI_NIDENT; i++)
+	{
+		sprintfJdc(result, 1, "0x%llX", ehdr->e_ident[i]);
+		if (i != EI_NIDENT - 1)
+		{
+			strcatJdc(result, ", ");
+		}
+		else
+		{
+			strcatJdc(result, "\tReserved padding bytes\n");
+		}
+	}
 }
