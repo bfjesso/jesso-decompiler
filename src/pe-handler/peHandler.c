@@ -332,7 +332,22 @@ int getNumOfPEImports32(HANDLE file)
 					break;
 				}
 
-				result++;
+				if (!(lookupValue & 0x80000000)) // import by name
+				{
+					// checking for null name
+					char firstChar = 0;
+					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
+					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+					if (!ReadFile(file, &firstChar, 1, 0, 0)) { return 0; }
+
+					if (firstChar == 0) 
+					{
+						continue;
+					}
+
+					result++;
+				}
+
 				j += 4;
 			}
 		}
@@ -387,7 +402,23 @@ int getNumOfPEImports64(HANDLE file)
 					break;
 				}
 
-				result++;
+				
+				if (!(lookupValue & 0x80000000))
+				{
+					// checking for null name
+					char firstChar = 0;
+					DWORD nameFileOffset = rvaToFileOffset64(file, lookupValue + 2);
+					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+					if (!ReadFile(file, &firstChar, 1, 0, 0)) { return 0; }
+
+					if (firstChar == 0)
+					{
+						continue;
+					}
+
+					result++;
+				}
+
 				j += 8;
 			}
 		}
@@ -442,22 +473,24 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					break;
 				}
 
-				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
-				{
-					buffer[bufferIndex].name = initializeJdcStr();
-					strcpyJdc(&buffer[bufferIndex].name, "");
-				}
-				else // import by name
+				if(!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 				{
 					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
 					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
+
+					if (buffer[bufferIndex].name.buffer[0] == 0) 
+					{
+						freeJdcStr(&buffer[bufferIndex].name);
+						continue;
+					}
+
+					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+
+					bufferIndex++;
 				}
 
-				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
-
-				bufferIndex++;
 				j += 4;
 			}
 		}
@@ -512,17 +545,17 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					break;
 				}
 
-				if (lookupValue & 0x80000000) // import by ordinal, needs to be implemented
-				{
-					buffer[bufferIndex].name = initializeJdcStr();
-					strcpyJdc(&buffer[bufferIndex].name, "");
-				}
-				else // import by name
+				if (!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 				{
 					char tmp[255] = { 0 };
 					DWORD nameFileOffset = rvaToFileOffset64(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, tmp, 255, 0, 0)) { return 0; }
+
+					if (tmp[0] == 0)
+					{
+						continue;
+					}
 
 					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
 					if (UnDecorateSymbolName(tmp, buffer[bufferIndex].name.buffer, 255, UNDNAME_NAME_ONLY))
@@ -564,11 +597,12 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 					{
 						strcpyJdc(&buffer[bufferIndex].name, tmp);
 					}
+
+					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+
+					bufferIndex++;
 				}
 
-				buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
-
-				bufferIndex++;
 				j += 8;
 			}
 		}
