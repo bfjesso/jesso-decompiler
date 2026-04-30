@@ -883,7 +883,16 @@ unsigned char generateELFHeadersInfoStr(const char* filePath, struct JdcStr* res
 
 static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 {
-	strcatJdc(result, "Elf_Ehdr\n\n");
+	unsigned char x64 = ehdr->e_ident[EI_CLASS] == ELFCLASS64;
+	if(x64)
+	{
+		strcatJdc(result, "Elf64_Ehdr\n\n");
+	}
+	else
+	{
+		strcatJdc(result, "Elf32_Ehdr\n\n");
+	}
+	
 	sprintfJdc(result, 1, "0x0\te_ident[0-4]\t0x%llX\tMagic number\n", *(unsigned int*)(ehdr->e_ident));
 
 	sprintfJdc(result, 1, "0x4\te_ident[EI_CLASS]\t");
@@ -1068,7 +1077,6 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 		break;
 	}
 
-	unsigned char x64 = ehdr->e_ident[EI_CLASS] == ELFCLASS64;
 	if(x64)
 	{
 		sprintfJdc(result, 1, "0x18\te_entry\t0x%llX\tVirtual address to which the system first transfers control\n", ehdr->e_entry);
