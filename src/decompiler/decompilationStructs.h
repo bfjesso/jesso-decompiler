@@ -1,5 +1,5 @@
 #pragma once
-#include "../disassembler/disassembler.h"
+#include "../disassembler/disassemblyUtils.h"
 #include "../fileStructs.h"
 #include "dataTypes.h"
 

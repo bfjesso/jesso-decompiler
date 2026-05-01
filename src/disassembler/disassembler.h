@@ -18,20 +18,8 @@ extern "C"
 
 	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
 
-	unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
-
 #ifdef __cplusplus
 }
 #endif
 
 static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize);
-
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites);
-
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum);
-
-unsigned char doesInstructionModifyRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites);
-
-unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
-
-unsigned char isImmediateAllOnes(struct Immediate* immediate);
