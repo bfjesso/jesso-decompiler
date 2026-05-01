@@ -773,9 +773,21 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 
 			if(strcmp(stringBytes + symbol->st_name, "") != 0)
 			{
-				buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				int status = 0;
+				char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+				if(status == 0 && demangledStr != 0)
+				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(demangledStr);
+				}
+				else
+				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				}
+				
 				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 				bufferIndex++;
+
+				free(demangledStr);
 			}
 
 			i++;
@@ -845,9 +857,21 @@ int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, in
 
 			if(strcmp(stringBytes + symbol->st_name, "") != 0)
 			{
-				buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				int status = 0;
+				char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+				if(status == 0 && demangledStr != 0)
+				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(demangledStr);
+				}
+				else
+				{
+					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+				}
+				
 				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
 				bufferIndex++;
+
+				free(demangledStr);
 			}
 
 			i++;
