@@ -31,6 +31,8 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
 
+unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
+
 DWORD rvaToFileOffset32(HANDLE file, DWORD rva);
 
 DWORD rvaToFileOffset64(HANDLE file, DWORD rva);

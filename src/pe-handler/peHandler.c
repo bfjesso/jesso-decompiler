@@ -475,15 +475,20 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 				if(!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+					char symbolName[255] = { 0 };
 					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, buffer[bufferIndex].name.buffer, buffer[bufferIndex].name.bufferSize, 0, 0)) { return 0; }
+					if (!ReadFile(file, symbolName, 255, 0, 0)) { return 0; }
 
-					if (buffer[bufferIndex].name.buffer[0] == 0) 
+					if (symbolName[0] == 0)
 					{
-						freeJdcStr(&buffer[bufferIndex].name);
 						continue;
+					}
+
+					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+					if (!demangleCppSymbol(symbolName, buffer[bufferIndex].name.buffer, 255))
+					{
+						strcpyJdc(&buffer[bufferIndex].name, symbolName);
 					}
 
 					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
@@ -547,55 +552,20 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 
 				if (!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 				{
-					char tmp[255] = { 0 };
+					char symbolName[255] = { 0 };
 					DWORD nameFileOffset = rvaToFileOffset64(file, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, tmp, 255, 0, 0)) { return 0; }
+					if (!ReadFile(file, symbolName, 255, 0, 0)) { return 0; }
 
-					if (tmp[0] == 0)
+					if (symbolName[0] == 0)
 					{
 						continue;
 					}
 
 					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
-					if (UnDecorateSymbolName(tmp, buffer[bufferIndex].name.buffer, 255, UNDNAME_NAME_ONLY))
+					if (!demangleCppSymbol(symbolName, buffer[bufferIndex].name.buffer, 255))
 					{
-						// removing template parameters
-						int nameLen = strlen(buffer[bufferIndex].name.buffer);
-						int k = 0;
-						int openIndex = -1;
-						int openNum = 0;
-						int closeNum = 0;
-						while (buffer[bufferIndex].name.buffer[k] != 0)
-						{
-							if (buffer[bufferIndex].name.buffer[k] == '<')
-							{
-								if (openIndex == -1) { openIndex = k; }
-								openNum++;
-							}
-							else if (buffer[bufferIndex].name.buffer[k] == '>')
-							{
-								closeNum++;
-
-								if (closeNum == openNum) 
-								{
-									int len = strlen(buffer[bufferIndex].name.buffer + k + 1);
-									memcpy(buffer[bufferIndex].name.buffer + openIndex, buffer[bufferIndex].name.buffer + k + 1, len);
-									memset(buffer[bufferIndex].name.buffer + openIndex + len, 0, nameLen - (openIndex + len));
-
-									openIndex = -1;
-									openNum = 0;
-									closeNum = 0;
-								}
-								
-							}
-
-							k++;
-						}
-					}
-					else 
-					{
-						strcpyJdc(&buffer[bufferIndex].name, tmp);
+						strcpyJdc(&buffer[bufferIndex].name, symbolName);
 					}
 
 					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
@@ -609,6 +579,49 @@ int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 	}
 
 	return bufferIndex;
+}
+
+unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen) 
+{
+	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
+	{
+		// removing template parameters
+		int nameLen = strlen(buffer);
+		int k = 0;
+		int openIndex = -1;
+		int openNum = 0;
+		int closeNum = 0;
+		while (buffer[k] != 0)
+		{
+			if (buffer[k] == '<')
+			{
+				if (openIndex == -1) { openIndex = k; }
+				openNum++;
+			}
+			else if (buffer[k] == '>')
+			{
+				closeNum++;
+
+				if (closeNum == openNum)
+				{
+					int len = strlen(buffer + k + 1);
+					memcpy(buffer + openIndex, buffer + k + 1, len);
+					memset(buffer + openIndex + len, 0, nameLen - (openIndex + len));
+
+					openIndex = -1;
+					openNum = 0;
+					closeNum = 0;
+				}
+
+			}
+
+			k++;
+		}
+
+		return 1;
+	}
+
+	return 0;
 }
 
 DWORD rvaToFileOffset32(HANDLE file, DWORD rva)
