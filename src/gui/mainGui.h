@@ -52,6 +52,7 @@ public:
 	std::vector<Function> functions;
 
 	std::vector<unsigned long long> jmpTableStartAddresses;
+	std::vector<unsigned char> jmpTableAddressSizes;
 	std::vector<unsigned long long> indirectTableStartAddresses;
 
 	int currentDecompiledFunc = -1;
@@ -95,7 +96,7 @@ public:
 
 	int HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection);
 
-	unsigned char CheckForJmpTableStart(unsigned long long currentAddress);
+	unsigned char CheckForJmpTableStart(unsigned long long currentAddress, unsigned char* size);
 
 	unsigned char CheckForIndirectTableStart(unsigned long long currentAddress);
 

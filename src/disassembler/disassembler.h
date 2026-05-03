@@ -14,7 +14,7 @@ extern "C"
 
 	const char* getGroup1PrefixStr(enum LegacyPrefix prefix);
 
-	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
+	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size);
 
 	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
 

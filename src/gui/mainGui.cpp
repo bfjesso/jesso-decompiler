@@ -290,6 +290,9 @@ void MainGui::ClearData()
 	jmpTableStartAddresses.clear();
 	jmpTableStartAddresses.shrink_to_fit();
 
+	jmpTableAddressSizes.clear();
+	jmpTableAddressSizes.shrink_to_fit();
+
 	indirectTableStartAddresses.clear();
 	indirectTableStartAddresses.shrink_to_fit();
 
@@ -401,6 +404,11 @@ void MainGui::DisassembleCodeSections()
 
 			instructionNum++;
 
+			if (currentInstruction.address == 0x140080EA2)
+			{
+				int ttt = 0;
+			}
+
 			instructionNum += HandleJmpTables(bytes, &currentIndex, sections[i]);
 		}
 
@@ -410,11 +418,13 @@ void MainGui::DisassembleCodeSections()
 
 int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection)
 {
-	unsigned long long jmpTableStartAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size());
+	unsigned char ptrSize = 0;
+	unsigned long long jmpTableStartAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size(), &ptrSize);
 	if (jmpTableStartAddress != 0 &&
 		jmpTableStartAddress > currentCodeSection.virtualAddress + imageBase && jmpTableStartAddress < currentCodeSection.virtualAddress + imageBase + currentCodeSection.size)
 	{
 		jmpTableStartAddresses.push_back(jmpTableStartAddress);
+		jmpTableAddressSizes.push_back(ptrSize);
 	}
 
 	unsigned long long indirectTableStartAddress = getIndirectTableAddress(&disassembledInstructions[0], disassembledInstructions.size());
@@ -433,19 +443,24 @@ int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef
 	dataInstruction.group1Prefix = NO_PREFIX;
 	dataInstruction.isInvalid = 0;
 	
+	unsigned char addressSize = 0;
 	int numOfNewInstructions = 0;
-	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) || doesInstructionDoNothing(&disassembledInstructions[disassembledInstructions.size() - 1]))
+	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, &addressSize) || doesInstructionDoNothing(&disassembledInstructions[disassembledInstructions.size() - 1]))
 	{
 		unsigned long long addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
-		unsigned char addressSize = 8;
-		if (!is64Bit)
+		if (addressSize == 4)
 		{
 			addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
-			addressSize = 4;
+		}
+
+		if (addressInCode < imageBase)
+		{
+			addressInCode += imageBase;
 		}
 		
 		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) && 
-			addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase)
+			addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase && 
+			*currentIndexRef < currentCodeSection.size && numOfNewInstructions < 1000)
 		{
 			dataInstruction.operands[0].immediate.value = addressInCode;
 			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
@@ -454,18 +469,23 @@ int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef
 			numOfNewInstructions++;
 
 			addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
-			if (!is64Bit)
+			if (addressSize == 4)
 			{
 				addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
+			}
+
+			if (addressInCode < imageBase)
+			{
+				addressInCode += imageBase;
 			}
 		}
 	}
 
 	if (CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
 	{
-		while (bytes[*currentIndexRef] != 0xCC)
+		while (*currentIndexRef < currentCodeSection.size && bytes[*currentIndexRef] != 0xCC && numOfNewInstructions < 1000)
 		{
-			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef)) 
+			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, 0)) 
 			{
 				numOfNewInstructions += HandleJmpTables(bytes, currentIndexRef, currentCodeSection);
 				break;
@@ -482,12 +502,13 @@ int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef
 	return numOfNewInstructions;
 }
 
-unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress)
+unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress, unsigned char* size)
 {
 	for (int i = jmpTableStartAddresses.size() - 1; i >= 0; i--) 
 	{
 		if (jmpTableStartAddresses[i] == currentAddress) 
 		{
+			if (size) { *size = jmpTableAddressSizes[i]; }
 			return 1;
 		}
 	}

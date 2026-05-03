@@ -1,4 +1,84 @@
 #include "disassemblyUtils.h"
+#include "operands.h"
+
+unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate.value;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
+		{
+			*result = instructions[startInstructionIndex + 1].address;
+		}
+		else 
+		{
+			unsigned long long baseRegVal = 0;
+			if (regToValue(instructions, startInstructionIndex - 1, minInstructionIndex, operand->memoryAddress.reg, &baseRegVal))
+			{
+				*result = baseRegVal;
+			}
+		}
+		
+		*result *= operand->memoryAddress.scale;
+
+		if (compareRegisters(operand->memoryAddress.regDisplacement, IP))
+		{
+			*result += instructions[startInstructionIndex + 1].address;
+		}
+		else 
+		{
+			unsigned long long displacementRegVal = 0;
+			if (regToValue(instructions, startInstructionIndex - 1, minInstructionIndex, operand->memoryAddress.regDisplacement, &displacementRegVal))
+			{
+				*result += displacementRegVal;
+			}
+		}
+
+		*result += operand->memoryAddress.constDisplacement;
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		return regToValue(instructions, startInstructionIndex, minInstructionIndex, operand->reg, result);
+	}
+
+	return 0;
+}
+
+unsigned char regToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, enum Register reg, unsigned long long* result)
+{
+	if (reg == NO_REG) 
+	{
+		return 0;
+	}
+	
+	if (compareRegisters(reg, IP))
+	{
+		*result = instructions[startInstructionIndex + 1].address;
+		return 1;
+	}
+
+	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
+	{
+		if ((instructions[i].opcode == MOV || instructions[i].opcode == LEA) && instructions[i].operands[0].type == REGISTER && compareRegisters(instructions[i].operands[0].reg, reg))
+		{
+			int start = i;
+			if (instructions[i].operands[1].type == REGISTER && compareRegisters(instructions[i].operands[0].reg, instructions[i].operands[1].reg)) 
+			{
+				start--;
+			}
+
+			return operandToValue(instructions, start, minInstructionIndex, &(instructions[i].operands[1]), result);
+		}
+	}
+
+	return 0;
+}
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
 {

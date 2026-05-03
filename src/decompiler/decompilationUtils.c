@@ -1,4 +1,5 @@
 #include "decompilationUtils.h"
+#include "../disassembler/disassemblyUtils.h"
 
 void addIndents(struct JdcStr* result, int numOfIndents)
 {
@@ -14,7 +15,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 	int ogStartInstructionIndex = params->startInstructionIndex;
 
 	unsigned long long jmpAddress = 0;
-	if (!operandToValue(params, &instruction->operands[0], &jmpAddress))
+	if (!operandToValue(params->instructions, params->startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : 0, &instruction->operands[0], &jmpAddress))
 	{
 		params->startInstructionIndex = ogStartInstructionIndex;
 		return 0;
@@ -82,70 +83,6 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low
 
 		if (addresses[mid] < minAddress) { low = mid + 1; }
 		else { high = mid - 1; }
-	}
-
-	return 0;
-}
-
-static unsigned char operandToValue(struct DecompilationParameters* params, struct Operand* operand, unsigned long long* result)
-{
-	if (operand->type == IMMEDIATE)
-	{
-		*result = operand->immediate.value;
-		return 1;
-	}
-	else if (operand->type == MEM_ADDRESS)
-	{
-		if (compareRegisters(operand->memoryAddress.reg, IP))
-		{
-			*result = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
-			return 1;
-		}
-		else if (operand->memoryAddress.reg == NO_REG)
-		{
-			*result = operand->memoryAddress.constDisplacement;
-			return 1;
-		}
-		else
-		{
-			struct Operand baseReg = { 0 };
-			baseReg.type = REGISTER;
-			baseReg.reg = operand->memoryAddress.reg;
-
-			unsigned long long regValue = 0;
-			if (!operandToValue(params, &baseReg, &regValue))
-			{
-				return 0;
-			}
-
-			*result = regValue + operand->memoryAddress.constDisplacement;
-		}
-
-		return 1;
-	}
-	else if (operand->type == REGISTER)
-	{
-		if (compareRegisters(operand->reg, IP)) 
-		{
-			*result = params->instructions[params->startInstructionIndex + 1].address + operand->memoryAddress.constDisplacement;
-			return 1;
-		}
-		
-		int ogStartInstructionIndex = params->startInstructionIndex;
-		
-		int upperBound = params->currentFunc ? params->currentFunc->firstInstructionIndex : 0;
-		for (int i = ogStartInstructionIndex - 1; i >= upperBound; i--)
-		{
-			if (params->instructions[i].opcode == MOV && compareRegisters(params->instructions[i].operands[0].reg, operand->reg))
-			{
-				params->startInstructionIndex = i;
-				unsigned char succeeded = operandToValue(params, &(params->instructions[i].operands[1]), result);
-				params->startInstructionIndex = ogStartInstructionIndex;
-				return succeeded;
-			}
-		}
-
-		return 0;
 	}
 
 	return 0;

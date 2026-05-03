@@ -1,4 +1,5 @@
 #include "disassembler.h"
+#include "disassemblyUtils.h"
 #include "prefixes.h"
 #include "opcodes.h"
 #include "operands.h"
@@ -207,7 +208,7 @@ const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
 	return group1PrefixStrs[prefix - LOCK];
 }
 
-unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size)
 {
 	if (numOfInstructions < 2) 
 	{
@@ -223,16 +224,35 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 
 	if (jmpInstruction->operands[0].type == REGISTER)
 	{
+		unsigned long long result = 0;
+		
 		enum Register targetReg = jmpInstruction->operands[0].reg;
 		int i = numOfInstructions - 2;
 		struct DisassembledInstruction* instruction = &instructions[i];
 		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode) && i >= 0)
 		{
-			if (instruction->opcode == MOV &&
-				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
-				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+			if (instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg)) 
 			{
-				return instruction->operands[1].memoryAddress.constDisplacement;
+				if (instruction->opcode == ADD) 
+				{
+					unsigned long long val = 0;
+					if (operandToValue(instructions, i, 0, &instruction->operands[1], &val)) 
+					{
+						result += val;
+					}
+				}
+				else if ((instruction->opcode == MOV || instruction->opcode == LEA) && instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+				{
+					unsigned long long regDisplacementVal = 0;
+					if (regToValue(instructions, numOfInstructions - 2, 0, jmpInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+					{
+						result += regDisplacementVal;
+					}
+
+					*size = instruction->operands[1].memoryAddress.ptrSize;
+
+					return result + instruction->operands[1].memoryAddress.constDisplacement;
+				}
 			}
 
 			i--;
@@ -241,7 +261,17 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 	}
 	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
 	{
-		return jmpInstruction->operands[0].memoryAddress.constDisplacement;
+		unsigned long long result = jmpInstruction->operands[0].memoryAddress.constDisplacement;
+
+		unsigned long long regDisplacementVal = 0;
+		if (regToValue(instructions, numOfInstructions - 2, 0, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal)) 
+		{
+			result += regDisplacementVal;
+		}
+
+		*size = jmpInstruction->operands[0].memoryAddress.ptrSize;
+
+		return result;
 	}
 
 	return 0;
@@ -253,7 +283,15 @@ unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instr
 
 	if (instruction->opcode == MOVZX && instruction->operands[1].type == MEM_ADDRESS)
 	{
-		return instruction->operands[1].memoryAddress.constDisplacement;
+		unsigned long long result = instruction->operands[1].memoryAddress.constDisplacement;
+		
+		unsigned long long regDisplacementVal = 0;
+		if (regToValue(instructions, numOfInstructions - 2, 0, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+		{
+			result += regDisplacementVal;
+		}
+
+		return result;
 	}
 
 	return 0;
