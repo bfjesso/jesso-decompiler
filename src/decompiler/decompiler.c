@@ -165,8 +165,15 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}");
 }
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef)
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef, int callNum)
 {
+	// preventing recursive loop. this assumes it is accessed
+	if(callNum > 9)
+	{
+		if (typeRef) { *typeRef = getTypeOfRegister(NO_MNEMONIC, reg); }
+		return 1;
+	}
+	
 	int ogStartInstructionIndex = params->startInstructionIndex;
 	for (int i = ogStartInstructionIndex; i <= lastInstructionIndex; i++)
 	{
@@ -241,7 +248,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			if (dstIndex > i) 
 			{
 				params->startInstructionIndex = dstIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, typeRef))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, typeRef, callNum + 1))
 				{
 					return 1;
 				}
@@ -275,7 +282,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 			else
 			{
 				params->startInstructionIndex++;
-				if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType))
+				if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0))
 				{
 					continue;
 				}
@@ -335,7 +342,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 					if (isConditionRegular(cond))
 					{
-						if (cond->endIndex <= condition->endIndex)
+						if (cond->endIndex > j && cond->endIndex <= condition->endIndex)
 						{
 							j = cond->endIndex - 1;
 							continue;
@@ -395,7 +402,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					params->startInstructionIndex = condition->startIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k], 1, &regVarType))
+					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k], 1, &regVarType, 0))
 					{
 						if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
 						{
@@ -406,7 +413,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				}
 				
 				params->startInstructionIndex = condition->endIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k], 0, &regVarType))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k], 0, &regVarType, 0))
 				{
 					if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
 					{
