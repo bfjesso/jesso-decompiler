@@ -13,7 +13,7 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(6, dataTypeStrs));
+	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(numOfDataTypes, dataTypeStrs));
 	dataTypeChoice->SetSelection(0);
 	dataTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataTypeChoice->SetOwnForegroundColour(textColor);
@@ -149,6 +149,19 @@ void DataViewer::LoadData()
 			case 5: // double
 			{
 				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g ", *(double*)(fileBytes + i + j + baseIndex));
+				break;
+			}
+			case 6: // ASCII character
+			{
+				char c = *(char*)(fileBytes + i + j + baseIndex);
+				if(c > 31 && c < 127)
+				{
+					sprintf(lineBuffer + strlen(lineBuffer), "'%c' ", c);
+				}
+				else
+				{
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + baseIndex]);			
+				}
 				break;
 			}
 			}

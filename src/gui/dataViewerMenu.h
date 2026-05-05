@@ -23,25 +23,27 @@ public:
 	FileSection* sections = nullptr;
 	int numOfSections = 0;
 
-	const char* dataTypeStrs[6] = 
+	const char* dataTypeStrs[7] = 
 	{
 		"1-byte int",
 		"2-byte int",
 		"4-byte int",
 		"8-byte int",
 		"float",
-		"double"
+		"double",
+		"ASCII character"
 	};
-
-	const int typeSizes[6] =
+	const int typeSizes[7] =
 	{
 		1,
 		2,
 		4,
 		8,
 		4,
-		8
+		8,
+		1,
 	};
+	const int numOfDataTypes = 7;
 
 	enum ids
 	{
