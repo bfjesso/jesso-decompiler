@@ -74,6 +74,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	menuBar = new wxMenuBar();
 	dataViewerMenu = new DataViewer();
+	stringsMenu = new StringsMenu();
 	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
 
 	wxMenu* fileMenu = new wxMenu();
@@ -95,6 +96,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	toolMenu->Append(OpenDataViewerID, "Data viewer");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
+
+	toolMenu->Append(OpenStringsMenuID, "Strings");
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenStringsMenuID);
 
 	toolMenu->Append(OpenImportsViewerID, "Imports");
 	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new ImportsViewer(this, GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
@@ -281,6 +285,7 @@ void MainGui::ClearData()
 	}
 
 	dataViewerMenu->ClearData();
+	stringsMenu->ClearData();
 	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 

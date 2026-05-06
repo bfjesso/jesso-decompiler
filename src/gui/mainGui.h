@@ -6,6 +6,7 @@
 #include "disassembleBytesMenu.h"
 #include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
+#include "stringsMenu.h"
 #include "importsViewerMenu.h"
 #include "colorsMenu.h"
 #include "functionInfoMenu.h"
@@ -22,6 +23,7 @@ public:
 
 	wxMenuBar* menuBar = nullptr;
 	DataViewer* dataViewerMenu = nullptr;
+	StringsMenu* stringsMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
 	wxStaticText* statusStaticText = nullptr;
@@ -71,6 +73,7 @@ public:
 		OpenBytesDisassemblerID,
 		OpenSectionsViewerID,
 		OpenDataViewerID,
+		OpenStringsMenuID,
 		OpenImportsViewerID,
 		OpenFileHeadersMenuID,
 		OpenCalculatorMenuID,
