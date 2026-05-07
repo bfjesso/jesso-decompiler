@@ -1140,6 +1140,7 @@ void MainGui::CloseApp(wxCloseEvent& e)
 	}
 	
 	dataViewerMenu->Destroy();
+	stringsMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
 }

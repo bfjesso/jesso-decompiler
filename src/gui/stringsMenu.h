@@ -26,6 +26,8 @@ public:
 
 	void ClearData();
 
+	void GridRightClickOptions(wxGridEvent& e);
+
 	void OpenMenu(wxPoint position, unsigned long long imageBas, FileSection* secs, int numOfSecs, unsigned char* bytes);
 
 	void CloseMenu(wxCloseEvent& e);
