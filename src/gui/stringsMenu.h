@@ -8,6 +8,7 @@ class StringsMenu : public wxFrame, public Utils
 public:
 	StringsMenu();
 
+	wxStaticText* infoStaticText = nullptr;
 	wxGrid* stringsGrid = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 

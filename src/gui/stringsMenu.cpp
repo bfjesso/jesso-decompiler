@@ -10,6 +10,9 @@ StringsMenu::StringsMenu() : wxFrame(nullptr, MainWindowID, "Strings", wxPoint(5
 {
     SetOwnBackgroundColour(backgroundColor);
 
+    infoStaticText = new wxStaticText(this, wxID_ANY, "These are null-terminated strings of ASCII printable characters that are atleast 2 characters long.");
+	infoStaticText->SetOwnForegroundColour(textColor);
+
     stringsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
 	stringsGrid->SetLabelBackgroundColour(foregroundColor);
 	stringsGrid->SetLabelTextColour(textColor);
@@ -32,6 +35,7 @@ StringsMenu::StringsMenu() : wxFrame(nullptr, MainWindowID, "Strings", wxPoint(5
 	stringsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
     vSizer = new wxBoxSizer(wxVERTICAL);
+    vSizer->Add(infoStaticText, 0, wxEXPAND);
     vSizer->Add(stringsGrid, 1, wxEXPAND);
     SetSizerAndFit(vSizer);
 }
@@ -60,6 +64,16 @@ void StringsMenu::LoadStrings()
             {
                 if (!foundStr)
                 {
+                    currentStr = "";
+                    foundStr = 1;
+                }
+
+                currentStr += c;
+            }
+            else
+            {
+                if (foundStr && c == 0 && currentStr.length() > 1)
+                {
                     stringsGrid->AppendRows(1);
 
                     unsigned long long address = imageBase + sections[i].virtualAddress + j;
@@ -67,23 +81,7 @@ void StringsMenu::LoadStrings()
                     sprintf(addressStr, "%llX", address);
 
                     stringsGrid->SetCellValue(numOfStrings, 0, std::string(addressStr) + std::string(sections[i].name.buffer));
-
-                    currentStr = "";
-                    foundStr = 1;
-                }
-
-                currentStr += c;
-
-                if(j == sections[i].size - 1 && currentStr.length() > 1)
-                {
-                    stringsGrid->SetCellValue(numOfStrings, 1, currentStr);
-                    numOfStrings++;
-                }
-            }
-            else
-            {
-                if (foundStr && currentStr.length() > 1)
-                {
+                    
                     stringsGrid->SetCellValue(numOfStrings, 1, currentStr);
                     numOfStrings++;
                 }
