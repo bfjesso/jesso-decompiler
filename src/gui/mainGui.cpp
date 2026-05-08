@@ -409,11 +409,6 @@ void MainGui::DisassembleCodeSections()
 
 			instructionNum++;
 
-			if (currentInstruction.address == 0x140080EA2)
-			{
-				int ttt = 0;
-			}
-
 			instructionNum += HandleJmpTables(bytes, &currentIndex, sections[i]);
 		}
 
