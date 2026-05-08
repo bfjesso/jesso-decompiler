@@ -200,6 +200,7 @@
     <ClCompile Include="src\gui\main.cpp" />
     <ClCompile Include="src\gui\mainGui.cpp" />
     <ClCompile Include="src\gui\sectionsViewerMenu.cpp" />
+    <ClCompile Include="src\gui\stringsMenu.cpp" />
     <ClCompile Include="src\jdc-str\jdcStr.c" />
     <ClCompile Include="src\pe-handler\peHandler.c" />
   </ItemGroup>
@@ -249,6 +250,7 @@
     <ClInclude Include="src\gui\mainGui.h" />
     <ClInclude Include="src\fileStructs.h" />
     <ClInclude Include="src\gui\sectionsViewerMenu.h" />
+    <ClInclude Include="src\gui\stringsMenu.h" />
     <ClInclude Include="src\jdc-str\jdcStr.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
   </ItemGroup>
