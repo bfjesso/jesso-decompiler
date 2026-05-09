@@ -284,6 +284,8 @@ void MainGui::ClearData()
 		delete[] fileBytes;
 	}
 
+	memset(&decompParams, 0, sizeof(decompParams));
+
 	dataViewerMenu->ClearData();
 	stringsMenu->ClearData();
 	
