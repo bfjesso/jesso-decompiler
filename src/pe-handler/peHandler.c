@@ -957,8 +957,6 @@ static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcS
 	{
 		strcatJdc(result, ")");
 	}
-	strcatJdc(result, "\n");
-
 	strcatJdc(result, "\tFlags that indicate the attributes of the file\n");
 }
 
@@ -1123,7 +1121,7 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 	{
 		strcatJdc(result, ")");
 	}
-	strcatJdc(result, "\n");
+	strcatJdc(result, "\tDLL characteristics of the image\n");
 
 	sprintfJdc(result, 1, "0x48\tSizeOfStackReserve\t0x%llX\tSize of the stack to reserve\n", optionalHeader->SizeOfStackReserve);
 
