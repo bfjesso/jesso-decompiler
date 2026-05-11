@@ -26,10 +26,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
 	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
+	disassemblyTextCtrl->Bind(wxEVT_CHAR_HOOK, &MainGui::OnStyledTextCtrlKeyDown, this);
 
 	decompilationTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
 	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
+	decompilationTextCtrl->Bind(wxEVT_CHAR_HOOK, &MainGui::OnStyledTextCtrlKeyDown, this);
 	decompilationTextCtrl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
 	decompilationTextCtrl->SetMarginWidth(0, decompilationTextCtrl->TextWidth(wxSTC_STYLE_LINENUMBER, "99999"));
 	decompilationTextCtrl->StyleSetForeground(wxSTC_STYLE_LINENUMBER, darkerTextColor);
@@ -942,19 +944,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 
 	menu.Append(ID_FIND, "Find");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		findCtrl = ctrl;
-		lastFindText = "";
-
-		if (!findDialog)
-		{
-			findDialog = new wxFindReplaceDialog(this, &findData, "Find");
-			findDialog->Bind(wxEVT_FIND, &MainGui::OnFindDialog, this);
-			findDialog->Bind(wxEVT_FIND_NEXT, &MainGui::OnFindDialog, this);
-			findDialog->Bind(wxEVT_FIND_CLOSE, &MainGui::OnFindDialogClose, this);
-		}
-
-		findDialog->Show();
-		findDialog->Raise();
+		ShowFindDialog(ctrl);
 	}, ID_FIND);
 
 	if(ctrl == disassemblyTextCtrl)
@@ -989,6 +979,38 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void MainGui::OnStyledTextCtrlKeyDown(wxKeyEvent& e)
+{
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0)
+	{
+		int key = e.GetKeyCode();
+		if (key == 'F' || key == 'f')
+		{
+			ShowFindDialog((wxStyledTextCtrl*)e.GetEventObject());
+			return;
+		}
+	}
+
+	e.Skip();
+}
+
+void MainGui::ShowFindDialog(wxStyledTextCtrl* ctrl)
+{
+	findCtrl = ctrl;
+	lastFindText = "";
+
+	if (!findDialog)
+	{
+		findDialog = new wxFindReplaceDialog(this, &findData, "Find");
+		findDialog->Bind(wxEVT_FIND, &MainGui::OnFindDialog, this);
+		findDialog->Bind(wxEVT_FIND_NEXT, &MainGui::OnFindDialog, this);
+		findDialog->Bind(wxEVT_FIND_CLOSE, &MainGui::OnFindDialogClose, this);
+	}
+
+	findDialog->Show();
+	findDialog->Raise();
 }
 
 void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)

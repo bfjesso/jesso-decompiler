@@ -117,6 +117,10 @@ public:
 
 	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
+	void OnStyledTextCtrlKeyDown(wxKeyEvent& e);
+
+	void ShowFindDialog(wxStyledTextCtrl * ctrl);
+
 	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
 
 	void OnFindDialog(wxFindDialogEvent& e);
