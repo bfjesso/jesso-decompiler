@@ -119,7 +119,9 @@ public:
 
 	void OnStyledTextCtrlKeyDown(wxKeyEvent& e);
 
-	void ShowFindDialog(wxStyledTextCtrl * ctrl);
+	void ShowFindDialog(wxStyledTextCtrl* ctrl);
+
+	void ShowGoToAddrDialog();
 
 	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
 
