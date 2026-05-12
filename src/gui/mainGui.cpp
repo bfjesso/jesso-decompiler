@@ -9,30 +9,28 @@
 #include "../decompiler/intrinsics.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
-	EVT_CLOSE(MainGui::CloseApp)
-		EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
-			wxEND_EVENT_TABLE()
+EVT_CLOSE(MainGui::CloseApp)
+EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
+wxEND_EVENT_TABLE()
 
-				MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
+MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
 
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
-
+	
 	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
 	disassemblyTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
-	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void
-							  { StyledTextCtrlRightClickOptions(e); });
+	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 	disassemblyTextCtrl->Bind(wxEVT_CHAR_HOOK, &MainGui::OnStyledTextCtrlKeyDown, this);
 
 	decompilationTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
-	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent &e) -> void
-								{ StyledTextCtrlRightClickOptions(e); });
+	decompilationTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 	decompilationTextCtrl->Bind(wxEVT_CHAR_HOOK, &MainGui::OnStyledTextCtrlKeyDown, this);
 	decompilationTextCtrl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
 	decompilationTextCtrl->SetMarginWidth(0, decompilationTextCtrl->TextWidth(wxSTC_STYLE_LINENUMBER, "99999"));
@@ -81,52 +79,41 @@ wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 	stringsMenu = new StringsMenu();
 	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
 
-	wxMenu *fileMenu = new wxMenu();
+	wxMenu* fileMenu = new wxMenu();
 	fileMenu->Append(OpenFileID, "Open file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { OpenFile(); }, OpenFileID);
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
 
 	fileMenu->Append(DisassembleFileID, "Disassemble file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { DisassembleFile(); }, DisassembleFileID);
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { DisassembleFile(); }, DisassembleFileID);
 
 	fileMenu->Append(AnalyzeFileID, "Analyze file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { AnalyzeFile(); }, AnalyzeFileID);
+	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { AnalyzeFile(); }, AnalyzeFileID);
 
-	wxMenu *toolMenu = new wxMenu();
+	wxMenu* toolMenu = new wxMenu();
 	toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { new BytesDisassembler(this, GetPosition()); }, OpenBytesDisassemblerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new BytesDisassembler(this, GetPosition()); }, OpenBytesDisassemblerID);
 
 	toolMenu->Append(OpenSectionsViewerID, "File sections");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { new SectionsViewer(this, GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new SectionsViewer(this, GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
 
 	toolMenu->Append(OpenDataViewerID, "Data viewer");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
 
 	toolMenu->Append(OpenStringsMenuID, "Strings");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenStringsMenuID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenStringsMenuID);
 
 	toolMenu->Append(OpenImportsViewerID, "Imports");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { new ImportsViewer(this, GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new ImportsViewer(this, GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
 
 	toolMenu->Append(OpenFileHeadersMenuID, "File headers");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { new FileHeadersMenu(this, GetPosition(), currentFilePath); }, OpenFileHeadersMenuID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new FileHeadersMenu(this, GetPosition(), currentFilePath); }, OpenFileHeadersMenuID);
 
 	toolMenu->Append(OpenCalculatorMenuID, "Calculator");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-				   { new CalculatorMenu(this, GetPosition()); }, OpenCalculatorMenuID);
+	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new CalculatorMenu(this, GetPosition()); }, OpenCalculatorMenuID);
 
-	wxMenu *optionsMenu = new wxMenu();
+	wxMenu* optionsMenu = new wxMenu();
 	optionsMenu->Append(OpenColorsMenuID, "Colors");
-	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent &ce) -> void
-					  { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
+	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
 
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
@@ -193,7 +180,7 @@ void MainGui::OpenFile()
 				delete[] imports;
 				return;
 			}
-
+			
 			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
@@ -222,7 +209,7 @@ void MainGui::DisassembleFile()
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
-	if (disassembledInstructions.size() > 0)
+	if (disassembledInstructions.size() > 0) 
 	{
 		wxMessageBox("File already disassembled", "Can't disassemble");
 		return;
@@ -249,14 +236,14 @@ void MainGui::DisassembleFile()
 	}
 }
 
-void MainGui::AnalyzeFile()
+void MainGui::AnalyzeFile() 
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
 	}
-	if (disassembledInstructions.size() == 0)
+	if (disassembledInstructions.size() == 0) 
 	{
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
@@ -285,14 +272,14 @@ void MainGui::AnalyzeFile()
 		statusStaticText->SetLabelText("Status: looking for function name symbols...");
 		statusStaticText->Refresh();
 		statusStaticText->Update();
-
+		
 		GetFunctionSymbols();
 	}
 
 	statusStaticText->SetLabelText("Status: idle");
 }
 
-void MainGui::ClearData()
+void MainGui::ClearData() 
 {
 	if (fileBytes)
 	{
@@ -303,7 +290,7 @@ void MainGui::ClearData()
 
 	dataViewerMenu->ClearData();
 	stringsMenu->ClearData();
-
+	
 	ClearStyledTextCtrl(disassemblyTextCtrl);
 
 	disassembledInstructions.clear();
@@ -327,7 +314,7 @@ void MainGui::ClearData()
 		delete[] sections;
 	}
 
-	for (int i = 0; i < numOfImports; i++)
+	for (int i = 0; i < numOfImports; i++) 
 	{
 		freeJdcStr(&imports[i].name);
 	}
@@ -335,7 +322,7 @@ void MainGui::ClearData()
 	{
 		delete[] imports;
 	}
-
+	
 	for (int i = 0; i < functions.size(); i++)
 	{
 		freeFunction(&functions[i]);
@@ -360,7 +347,7 @@ void MainGui::LoadFileBytes()
 	}
 
 	int totalSize = 0;
-	for (int i = 0; i < numOfSections; i++)
+	for (int i = 0; i < numOfSections; i++) 
 	{
 		totalSize += sections[i].size;
 	}
@@ -384,17 +371,17 @@ void MainGui::LoadFileBytes()
 
 void MainGui::DisassembleCodeSections()
 {
-	struct DisassemblerOptions options = {0};
+	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 
 	for (int i = 0; i < numOfSections; i++)
 	{
-		if (sections[i].type != CODE_FST)
+		if (sections[i].type != CODE_FST) 
 		{
 			continue;
 		}
-
-		unsigned char *bytes = new unsigned char[sections[i].size];
+		
+		unsigned char* bytes = new unsigned char[sections[i].size];
 		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, bytes, sections[i].size))
 		{
 			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
@@ -433,7 +420,7 @@ void MainGui::DisassembleCodeSections()
 	}
 }
 
-int MainGui::HandleJmpTables(unsigned char *bytes, unsigned int *currentIndexRef, FileSection currentCodeSection)
+int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection)
 {
 	unsigned char ptrSize = 0;
 	unsigned long long jmpTableStartAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size(), &ptrSize);
@@ -459,25 +446,25 @@ int MainGui::HandleJmpTables(unsigned char *bytes, unsigned int *currentIndexRef
 	dataInstruction.operands[3].type = NO_OPERAND;
 	dataInstruction.group1Prefix = NO_PREFIX;
 	dataInstruction.isInvalid = 0;
-
+	
 	unsigned char addressSize = 0;
 	int numOfNewInstructions = 0;
 	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, &addressSize) || doesInstructionDoNothing(&disassembledInstructions[disassembledInstructions.size() - 1]))
 	{
-		unsigned long long addressInCode = *(unsigned long long *)(bytes + *currentIndexRef);
+		unsigned long long addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
 		if (addressSize == 4)
 		{
-			addressInCode = *(unsigned int *)(bytes + *currentIndexRef);
+			addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
 		}
 
 		if (addressInCode < imageBase)
 		{
 			addressInCode += imageBase;
 		}
-
-		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) &&
-			   addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase &&
-			   *currentIndexRef < currentCodeSection.size && numOfNewInstructions < 1000)
+		
+		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) && 
+			addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase && 
+			*currentIndexRef < currentCodeSection.size && numOfNewInstructions < 1000)
 		{
 			dataInstruction.operands[0].immediate.value = addressInCode;
 			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
@@ -485,10 +472,10 @@ int MainGui::HandleJmpTables(unsigned char *bytes, unsigned int *currentIndexRef
 			*currentIndexRef += addressSize;
 			numOfNewInstructions++;
 
-			addressInCode = *(unsigned long long *)(bytes + *currentIndexRef);
+			addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
 			if (addressSize == 4)
 			{
-				addressInCode = *(unsigned int *)(bytes + *currentIndexRef);
+				addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
 			}
 
 			if (addressInCode < imageBase)
@@ -502,12 +489,12 @@ int MainGui::HandleJmpTables(unsigned char *bytes, unsigned int *currentIndexRef
 	{
 		while (*currentIndexRef < currentCodeSection.size && bytes[*currentIndexRef] != 0xCC && numOfNewInstructions < 1000)
 		{
-			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, 0))
+			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, 0)) 
 			{
 				numOfNewInstructions += HandleJmpTables(bytes, currentIndexRef, currentCodeSection);
 				break;
 			}
-
+			
 			dataInstruction.operands[0].immediate.value = bytes[*currentIndexRef];
 			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
 			disassembledInstructions.push_back(dataInstruction);
@@ -519,16 +506,13 @@ int MainGui::HandleJmpTables(unsigned char *bytes, unsigned int *currentIndexRef
 	return numOfNewInstructions;
 }
 
-unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress, unsigned char *size)
+unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress, unsigned char* size)
 {
-	for (int i = jmpTableStartAddresses.size() - 1; i >= 0; i--)
+	for (int i = jmpTableStartAddresses.size() - 1; i >= 0; i--) 
 	{
-		if (jmpTableStartAddresses[i] == currentAddress)
+		if (jmpTableStartAddresses[i] == currentAddress) 
 		{
-			if (size)
-			{
-				*size = jmpTableAddressSizes[i];
-			}
+			if (size) { *size = jmpTableAddressSizes[i]; }
 			return 1;
 		}
 	}
@@ -584,7 +568,7 @@ void MainGui::DecompileFunction(int functionIndex)
 	currentDecompiledFunc = functionIndex;
 }
 
-void MainGui::FindAllFunctions()
+void MainGui::FindAllFunctions() 
 {
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
@@ -598,14 +582,14 @@ void MainGui::FindAllFunctions()
 	decompParams.fileBytes = fileBytes;
 
 	decompParams.is64Bit = is64Bit;
-
+	
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 
 	int codeSectionIndex = 0;
-	for (int i = 0; i < numOfSections; i++)
+	for (int i = 0; i < numOfSections; i++) 
 	{
-		if (sections[i].type == CODE_FST)
+		if (sections[i].type == CODE_FST) 
 		{
 			codeSectionIndex = i;
 			break;
@@ -614,9 +598,9 @@ void MainGui::FindAllFunctions()
 	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].virtualAddress + sections[codeSectionIndex].size - 1;
 
 	std::vector<unsigned long long> calledAddresses;
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		if (disassembledInstructions[i].opcode == CALL_NEAR)
+		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
 			decompParams.startInstructionIndex = i;
 			unsigned long long address = resolveJmpChain(&decompParams);
@@ -664,7 +648,7 @@ void MainGui::FindAllFunctions()
 	decompParams.functions = &functions[0];
 	decompParams.numOfFunctions = functions.size();
 
-	if (functions.size() > 0)
+	if (functions.size() > 0) 
 	{
 		fixAllFunctionReturnTypes(&decompParams);
 		fixAllFunctionArgs(&decompParams);
@@ -682,7 +666,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	wxString disassemblyText = "";
 	disassemblyText.reserve(numOfInstructions * 50);
 
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int i = 0; i < numOfInstructions; i++) 
 	{
 		for (int j = sectionIndex + 1; j < numOfSections; j++)
 		{
@@ -692,12 +676,12 @@ void MainGui::UpdateDisassemblyTextCtrl()
 				break;
 			}
 		}
-
-		char addressStr[20] = {0};
+		
+		char addressStr[20] = { 0 };
 		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
 		wxString addressInfoStr = wxString(addressStr) + wxString(sections[sectionIndex].name.buffer) + "\t";
 
-		char buffer[255] = {0};
+		char buffer[255] = { 0 };
 		wxString asmStr = "";
 		if (instructionToStr(&disassembledInstructions[i], buffer, 255))
 		{
@@ -708,10 +692,10 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		{
 			asmStr += " ; invalid opcode";
 		}
-		else if (disassembledInstructions[i].operands[0].type == IMMEDIATE &&
-				 (isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
+		else if(disassembledInstructions[i].operands[0].type == IMMEDIATE && 
+			(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
 		{
-			char jmpAddressStr[20] = {0};
+			char jmpAddressStr[20] = { 0 };
 			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value);
 
 			asmStr += " ; jump to " + wxString(jmpAddressStr);
@@ -732,7 +716,7 @@ void MainGui::UpdateFunctionsGrid()
 	functionsGrid->Freeze();
 
 	int numOfFunctions = functions.size();
-	for (int i = 0; i < numOfFunctions; i++)
+	for (int i = 0; i < numOfFunctions; i++) 
 	{
 		functionsGrid->AppendRows(1);
 
@@ -749,7 +733,7 @@ void MainGui::UpdateFunctionsGrid()
 	functionsGrid->Thaw();
 }
 
-void MainGui::GetFunctionSymbols()
+void MainGui::GetFunctionSymbols() 
 {
 	functionsGrid->Freeze();
 
@@ -765,10 +749,10 @@ void MainGui::GetFunctionSymbols()
 	functionsGrid->Thaw();
 }
 
-void MainGui::GridRightClickOptions(wxGridEvent &e)
+void MainGui::GridRightClickOptions(wxGridEvent& e)
 {
-	wxGrid *grid = (wxGrid *)(e.GetEventObject());
-	if (grid != functionsGrid)
+	wxGrid* grid = (wxGrid*)(e.GetEventObject());
+	if(grid != functionsGrid)
 	{
 		return;
 	}
@@ -786,28 +770,22 @@ void MainGui::GridRightClickOptions(wxGridEvent &e)
 	const int ID_FIND_BY_NAME = 106;
 
 	menu.Append(ID_DECOMPILE, "Decompile");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { DecompileFunction(row); }, ID_DECOMPILE);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
 
 	menu.Append(ID_VIEW_INFO, "View info");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { new FunctionInfoMenu(this, GetPosition(), &disassembledInstructions[0], &functions[row]); }, ID_VIEW_INFO);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionInfoMenu(this, GetPosition(), &disassembledInstructions[0], &functions[row]); }, ID_VIEW_INFO);
 
 	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { new FunctionPropertiesMenu(this, GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionPropertiesMenu(this, GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
 
 	menu.Append(ID_COPY_ADDRESS, "Copy address");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
 
 	menu.Append(ID_COPY_NAME, "Copy name");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { CopyToClipboard(functionsGrid->GetCellValue(row, 2)); }, ID_COPY_NAME);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 2)); }, ID_COPY_NAME);
 
 	menu.Append(ID_FIND_BY_ADDR, "Find function by address");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  { 
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { 
 		wxTextEntryDialog dlg(this, "", "Address");
 		if (dlg.ShowModal() == wxID_OK)
 		{
@@ -837,11 +815,11 @@ void MainGui::GridRightClickOptions(wxGridEvent &e)
 			{
 				wxMessageBox("Not valid hex number", "Failed to find function");
 			}
-		} }, ID_FIND_BY_ADDR);
+		}
+	}, ID_FIND_BY_ADDR);
 
 	menu.Append(ID_FIND_BY_NAME, "Find function by name");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &bs) -> void
-			  {
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
 		wxTextEntryDialog dlg(this, "", "Name");
 		if (dlg.ShowModal() == wxID_OK)
 		{
@@ -867,13 +845,14 @@ void MainGui::GridRightClickOptions(wxGridEvent &e)
 			{
 				wxMessageBox("No function with that name", "Failed to find function");
 			}
-		} }, ID_FIND_BY_NAME);
+		}
+		}, ID_FIND_BY_NAME);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
 }
 
-void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent &e)
+void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e) 
 {
 	wxMenu menu;
 
@@ -883,7 +862,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent &e)
 	const int ID_FIND = 103;
 	const int ID_GO_TO_ADDR = 104;
 
-	wxStyledTextCtrl *ctrl = (wxStyledTextCtrl *)(e.GetEventObject());
+	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
 	long start;
 	long end;
@@ -896,8 +875,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent &e)
 		selection = text.substr(start, end - start);
 
 		menu.Append(ID_COPY, "Copy");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-				  { CopyToClipboard(selection); }, ID_COPY);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
 		int numColor = ctrl == disassemblyTextCtrl ? ColorsMenu::DisassemblyColor::CONSTANT_COLOR : ColorsMenu::DecompilationColor::NUMBER_COLOR;
 		if (ctrl->GetStyleAt(start) == numColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
@@ -907,80 +885,82 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent &e)
 			if (selection.ToLongLong(&num, 10))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-						  {
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ctrl->SetReadOnly(false);
 					char numStr[50] = { 0 };
 					sprintf(numStr, "0x%llX", num);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
-					ctrl->SetReadOnly(true); }, ID_CONVERT_NUMBER);
+					ctrl->SetReadOnly(true);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToLongLong(&num, 16))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-						  { 
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { 
 					ctrl->SetReadOnly(false);
 					wxString numStr = std::to_string(num);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
-					ctrl->SetReadOnly(true); }, ID_CONVERT_NUMBER);
+					ctrl->SetReadOnly(true);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToULongLong(&unum, 10))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-						  {
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ctrl->SetReadOnly(false);
 					char numStr[50] = { 0 };
 					sprintf(numStr, "0x%llX", unum);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
-					ctrl->SetReadOnly(true); }, ID_CONVERT_NUMBER);
+					ctrl->SetReadOnly(true);
+				}, ID_CONVERT_NUMBER);
 			}
 			else if (selection.ToULongLong(&unum, 16))
 			{
 				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-						  {
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ctrl->SetReadOnly(false);
 					wxString numStr = std::to_string(unum);
 					ctrl->Replace(start, end, numStr);
 					ctrl->StartStyling(start);
 					ctrl->SetStyling(strlen(numStr), numColor);
-					ctrl->SetReadOnly(true); }, ID_CONVERT_NUMBER);
+					ctrl->SetReadOnly(true);
+				}, ID_CONVERT_NUMBER);
 			}
 		}
 	}
 
+	
 	menu.Append(ID_SELECT_ALL, "Select all");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-			  {
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ctrl->SetSelection(0, ctrl->GetLastPosition());
-		ctrl->SetFocus(); }, ID_SELECT_ALL);
+		ctrl->SetFocus();
+	}, ID_SELECT_ALL);
 
 	menu.Append(ID_FIND, "Find");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-			  { ShowFindDialog(ctrl); }, ID_FIND);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ShowFindDialog(ctrl);
+	}, ID_FIND);
 
-	if (ctrl == disassemblyTextCtrl)
+	if(ctrl == disassemblyTextCtrl)
 	{
 		menu.Append(ID_GO_TO_ADDR, "Go to address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent &)
-				  { ShowGoToAddrDialog(); }, ID_GO_TO_ADDR);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			ShowGoToAddrDialog();
+		}, ID_GO_TO_ADDR);
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
-void MainGui::OnStyledTextCtrlKeyDown(wxKeyEvent &e)
+void MainGui::OnStyledTextCtrlKeyDown(wxKeyEvent& e)
 {
-	wxStyledTextCtrl *ctrl = (wxStyledTextCtrl *)e.GetEventObject();
-
+	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)e.GetEventObject();
 	if ((e.GetModifiers() & wxMOD_CONTROL) != 0)
 	{
 		int key = e.GetKeyCode();
@@ -988,7 +968,7 @@ void MainGui::OnStyledTextCtrlKeyDown(wxKeyEvent &e)
 		{
 			ShowFindDialog(ctrl);
 		}
-		else if ((key == 'G' || key == 'g') && ctrl == disassemblyTextCtrl)
+		if ((key == 'G' || key == 'g') && ctrl == disassemblyTextCtrl)
 		{
 			ShowGoToAddrDialog();
 		}
@@ -997,7 +977,7 @@ void MainGui::OnStyledTextCtrlKeyDown(wxKeyEvent &e)
 	e.Skip();
 }
 
-void MainGui::ShowFindDialog(wxStyledTextCtrl *ctrl)
+void MainGui::ShowFindDialog(wxStyledTextCtrl* ctrl)
 {
 	findCtrl = ctrl;
 	lastFindText = "";
@@ -1042,7 +1022,7 @@ void MainGui::ShowGoToAddrDialog()
 	}
 }
 
-void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent &e)
+void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 {
 	if (!decompilationTextCtrl)
 	{
@@ -1078,7 +1058,7 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent &e)
 	}
 }
 
-void MainGui::OnFindDialog(wxFindDialogEvent &e)
+void MainGui::OnFindDialog(wxFindDialogEvent& e)
 {
 	if (!findCtrl)
 	{
@@ -1134,7 +1114,7 @@ void MainGui::OnFindDialog(wxFindDialogEvent &e)
 	statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(findCtrl, text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
 }
 
-int MainGui::FindInRange(wxStyledTextCtrl *ctrl, const wxString &text, int start, int end, int flags, unsigned char forward)
+int MainGui::FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward)
 {
 	if (forward)
 	{
@@ -1152,7 +1132,7 @@ int MainGui::FindInRange(wxStyledTextCtrl *ctrl, const wxString &text, int start
 	return lastPos;
 }
 
-int MainGui::CountNumOfResults(wxStyledTextCtrl *ctrl, const wxString &text, int end, int flags)
+int MainGui::CountNumOfResults(wxStyledTextCtrl* ctrl, const wxString& text, int end, int flags)
 {
 	int result = 0;
 
@@ -1168,7 +1148,7 @@ int MainGui::CountNumOfResults(wxStyledTextCtrl *ctrl, const wxString &text, int
 	return result;
 }
 
-void MainGui::OnFindDialogClose(wxFindDialogEvent &e)
+void MainGui::OnFindDialogClose(wxFindDialogEvent& e)
 {
 	if (findDialog)
 	{
@@ -1179,14 +1159,14 @@ void MainGui::OnFindDialogClose(wxFindDialogEvent &e)
 	statusStaticText->SetLabelText("Status: idle");
 }
 
-void MainGui::CloseApp(wxCloseEvent &e)
+void MainGui::CloseApp(wxCloseEvent& e)
 {
 	if (findDialog)
 	{
 		findDialog->Destroy();
 		findDialog = nullptr;
 	}
-
+	
 	dataViewerMenu->Destroy();
 	stringsMenu->Destroy();
 	colorsMenu->Destroy();
@@ -1198,7 +1178,7 @@ char MainGui::IsCharDigit(char c)
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
 }
 
-void MainGui::ApplySyntaxHighlighting(Function *function)
+void MainGui::ApplySyntaxHighlighting(Function* function)
 {
 	wxString text = decompilationTextCtrl->GetValue();
 
@@ -1206,7 +1186,7 @@ void MainGui::ApplySyntaxHighlighting(Function *function)
 	decompilationTextCtrl->SetStyling(text.length(), ColorsMenu::DecompilationColor::OPERATOR_COLOR);
 
 	// stack vars
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int i = 0; i < function->numOfStackVars; i++) 
 	{
 		ColorAllStrs(text, function->stackVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
@@ -1264,7 +1244,7 @@ void MainGui::ApplySyntaxHighlighting(Function *function)
 	}
 
 	// primitive data types
-	for (int i = 0; i < numOfPrimitiveTypes; i++)
+	for (int i = 0; i < numOfPrimitiveTypes; i++) 
 	{
 		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
@@ -1272,7 +1252,7 @@ void MainGui::ApplySyntaxHighlighting(Function *function)
 	ColorAllStrs(text, "sizeof", ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 
 	// keywords
-	const char *keywordStrs[11] = {"if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return"};
+	const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
 	for (int i = 0; i < 11; i++)
 	{
 		ColorAllStrs(text, keywordStrs[i], ColorsMenu::DecompilationColor::KEYWORD_COLOR, 0);
@@ -1322,7 +1302,7 @@ void MainGui::ApplySyntaxHighlighting(Function *function)
 	{
 		int pos = text.find("label_", start);
 		int end = text.find("\n", pos + 1);
-
+		
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			decompilationTextCtrl->StartStyling(pos);
@@ -1348,7 +1328,7 @@ void MainGui::ApplySyntaxHighlighting(Function *function)
 	ColorAllStrs(text, "ERROR", ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 
 	// numbers
-	const char *numberChars[17] = {"0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
 		ColorAllStrs(text, numberChars[i], ColorsMenu::DecompilationColor::NUMBER_COLOR, 0);
@@ -1361,14 +1341,14 @@ void MainGui::ApplyAsmHighlighting()
 	int pos = 0;
 	wxString disassemblyText = disassemblyTextCtrl->GetValue();
 
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int i = 0; i < numOfInstructions; i++) 
 	{
-		struct DisassembledInstruction *instruction = &disassembledInstructions[i];
-
+		struct DisassembledInstruction* instruction = &disassembledInstructions[i];
+		
 		int tabPos = disassemblyText.find('\t', pos);
 		wxString addressInfoStr = disassemblyText.substr(pos, tabPos - pos);
 		wxString asmStr = disassemblyText.substr(tabPos + 1, disassemblyText.find('\n', tabPos) - (tabPos + 1));
-
+		
 		disassemblyTextCtrl->StartStyling(pos);
 		disassemblyTextCtrl->SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
 
@@ -1380,7 +1360,7 @@ void MainGui::ApplyAsmHighlighting()
 		disassemblyTextCtrl->StartStyling(pos);
 
 		int opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
-		if (instruction->group1Prefix != NO_PREFIX)
+		if (instruction->group1Prefix != NO_PREFIX) 
 		{
 			opcodeLen += strlen(getGroup1PrefixStr(instruction->group1Prefix)) + 1;
 		}
@@ -1489,9 +1469,9 @@ void MainGui::ApplyAsmHighlighting()
 	}
 }
 
-void MainGui::ColorAllStrs(wxString text, const char *str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
+void MainGui::ColorAllStrs(wxString text, const char* str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
 {
-	if (!str || !strcmp(str, ""))
+	if(!str || !strcmp(str, ""))
 	{
 		return;
 	}
@@ -1505,8 +1485,8 @@ void MainGui::ColorAllStrs(wxString text, const char *str, ColorsMenu::Decompila
 		{
 			int end = pos + strlen(str);
 
-			if (forceColor ||
-				decompilationTextCtrl->GetStyleAt(pos) == color ||										  // incase there are two strs that are equal except for one having more text at the end
+			if (forceColor || 
+				decompilationTextCtrl->GetStyleAt(pos) == color || // incase there are two strs that are equal except for one having more text at the end
 				decompilationTextCtrl->GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				decompilationTextCtrl->StartStyling(pos);
@@ -1525,13 +1505,13 @@ void MainGui::ColorAllStrs(wxString text, const char *str, ColorsMenu::Decompila
 // Function Properties Menu
 
 wxBEGIN_EVENT_TABLE(FunctionPropertiesMenu, wxFrame)
-	EVT_CLOSE(FunctionPropertiesMenu::CloseMenu)
-		wxEND_EVENT_TABLE()
+EVT_CLOSE(FunctionPropertiesMenu::CloseMenu)
+wxEND_EVENT_TABLE()
 
-			FunctionPropertiesMenu::FunctionPropertiesMenu(wxWindow *parent, wxPoint position, MainGui *main, int funcIndex) : wxFrame(parent, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
+FunctionPropertiesMenu::FunctionPropertiesMenu(wxWindow* parent, wxPoint position, MainGui* main, int funcIndex) : wxFrame(parent, MainWindowID, "Change Function Properties", wxPoint(50, 50), wxSize(600, 600))
 {
-	Function *function = &(main->functions[funcIndex]);
-
+	Function* function = &(main->functions[funcIndex]);
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	functionNameLabel = new wxStaticText(this, wxID_ANY, "Function Name");
@@ -1623,9 +1603,9 @@ wxBEGIN_EVENT_TABLE(FunctionPropertiesMenu, wxFrame)
 	Raise();
 }
 
-void FunctionPropertiesMenu::CloseMenu(wxCloseEvent &e)
+void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 {
-	Function *currentFunction = &(mainGui->functions[functionIndex]);
+	Function* currentFunction = &(mainGui->functions[functionIndex]);
 
 	strcpyJdc(&currentFunction->name, functionNameTextCtrl->GetValue().c_str());
 
