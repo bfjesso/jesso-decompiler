@@ -4,7 +4,7 @@ wxBEGIN_EVENT_TABLE(ImportsViewer, wxFrame)
 EVT_GRID_CELL_RIGHT_CLICK(ImportsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunction* imports, int numOfImports) : wxFrame(parent, MainWindowID, "Imports", wxPoint(50, 50), wxSize(600, 600))
+ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunction* imports, int numOfImports) : wxFrame(parent, MainWindowID, "Imports", wxPoint(50, 50), wxSize(600, 300))
 {
 	position.x += 10;
 	position.y += 10;
@@ -14,7 +14,7 @@ ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunctio
 	
 	SetOwnBackgroundColour(backgroundColor);
 
-	importsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
+	importsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
 	importsGrid->SetLabelBackgroundColour(foregroundColor);
 	importsGrid->SetLabelTextColour(textColor);
 	importsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -31,7 +31,7 @@ ImportsViewer::ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunctio
 	importsGrid->SetColLabelValue(0, "Address");
 	importsGrid->SetColLabelValue(1, "Name");
 	importsGrid->HideRowLabels();
-	importsGrid->SetColSize(0, 200);
+	importsGrid->SetColSize(0, 100);
 	importsGrid->SetColSize(1, 9999);
 	importsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 

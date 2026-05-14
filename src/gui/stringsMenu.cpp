@@ -7,14 +7,14 @@ EVT_GRID_CELL_RIGHT_CLICK(StringsMenu::GridRightClickOptions)
 EVT_CLOSE(StringsMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-StringsMenu::StringsMenu() : wxFrame(nullptr, MainWindowID, "Strings", wxPoint(50, 50), wxSize(500, 600))
+StringsMenu::StringsMenu() : wxFrame(nullptr, MainWindowID, "Strings", wxPoint(50, 50), wxSize(250, 300))
 {
     SetOwnBackgroundColour(backgroundColor);
 
     infoStaticText = new wxStaticText(this, wxID_ANY, "These are null-terminated strings of ASCII printable characters that are atleast 2 characters long.");
 	infoStaticText->SetOwnForegroundColour(textColor);
 
-    stringsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(500, 500));
+    stringsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(250, 250));
 	stringsGrid->SetLabelBackgroundColour(foregroundColor);
 	stringsGrid->SetLabelTextColour(textColor);
 	stringsGrid->SetDefaultCellBackgroundColour(gridColor);

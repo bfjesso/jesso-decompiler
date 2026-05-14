@@ -4,7 +4,7 @@ wxBEGIN_EVENT_TABLE(SectionsViewer, wxFrame)
 EVT_GRID_CELL_RIGHT_CLICK(SectionsViewer::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-SectionsViewer::SectionsViewer(wxWindow* parent, wxPoint position, FileSection* sections, int numOfSections) : wxFrame(parent, MainWindowID, "File Sections", wxPoint(50, 50), wxSize(600, 600))
+SectionsViewer::SectionsViewer(wxWindow* parent, wxPoint position, FileSection* sections, int numOfSections) : wxFrame(parent, MainWindowID, "File Sections", wxPoint(50, 50), wxSize(600, 300))
 {
 	position.x += 10;
 	position.y += 10;
@@ -14,7 +14,7 @@ SectionsViewer::SectionsViewer(wxWindow* parent, wxPoint position, FileSection* 
 	
 	SetOwnBackgroundColour(backgroundColor);
 
-	sectionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 600));
+	sectionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 300));
 	sectionsGrid->SetLabelBackgroundColour(foregroundColor);
 	sectionsGrid->SetLabelTextColour(textColor);
 	sectionsGrid->SetDefaultCellBackgroundColour(gridColor);
