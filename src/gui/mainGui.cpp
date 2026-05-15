@@ -80,40 +80,22 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
 
 	wxMenu* fileMenu = new wxMenu();
-	fileMenu->Append(OpenFileID, "Open file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { OpenFile(); }, OpenFileID);
-
-	fileMenu->Append(DisassembleFileID, "Disassemble file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { DisassembleFile(); }, DisassembleFileID);
-
-	fileMenu->Append(AnalyzeFileID, "Analyze file");
-	fileMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { AnalyzeFile(); }, AnalyzeFileID);
+	AddMenuItem(fileMenu, OpenFileID, "Open file", [&](wxCommandEvent& ce) -> void { OpenFile(); });
+	AddMenuItem(fileMenu, DisassembleFileID, "Disassemble file", [&](wxCommandEvent& ce) -> void { DisassembleFile(); });
+	AddMenuItem(fileMenu, AnalyzeFileID, "Analyze file", [&](wxCommandEvent& ce) -> void { AnalyzeFile(); });
 
 	wxMenu* toolMenu = new wxMenu();
-	toolMenu->Append(OpenBytesDisassemblerID, "Bytes disassembler");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new BytesDisassembler(this, GetPosition()); }, OpenBytesDisassemblerID);
+	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { new BytesDisassembler(this, GetPosition()); });
+	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { new SectionsViewer(this, GetPosition(), sections, numOfSections); });
+	AddMenuItem(toolMenu, OpenDataViewerID, "Data viewer", [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); });
+	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); });
+	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { new ImportsViewer(this, GetPosition(), imports, numOfImports); });
+	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { new FileHeadersMenu(this, GetPosition(), currentFilePath); });
+	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { new CalculatorMenu(this, GetPosition()); });
 
-	toolMenu->Append(OpenSectionsViewerID, "File sections");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new SectionsViewer(this, GetPosition(), sections, numOfSections); }, OpenSectionsViewerID);
-
-	toolMenu->Append(OpenDataViewerID, "Data viewer");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { dataViewerMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenDataViewerID);
-
-	toolMenu->Append(OpenStringsMenuID, "Strings");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); }, OpenStringsMenuID);
-
-	toolMenu->Append(OpenImportsViewerID, "Imports");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new ImportsViewer(this, GetPosition(), imports, numOfImports); }, OpenImportsViewerID);
-
-	toolMenu->Append(OpenFileHeadersMenuID, "File headers");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new FileHeadersMenu(this, GetPosition(), currentFilePath); }, OpenFileHeadersMenuID);
-
-	toolMenu->Append(OpenCalculatorMenuID, "Calculator");
-	toolMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { new CalculatorMenu(this, GetPosition()); }, OpenCalculatorMenuID);
 
 	wxMenu* optionsMenu = new wxMenu();
-	optionsMenu->Append(OpenColorsMenuID, "Colors");
-	optionsMenu->Bind(wxEVT_MENU, [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); }, OpenColorsMenuID);
+	AddMenuItem(optionsMenu, OpenColorsMenuID, "Colors", [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); });
 
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
@@ -133,6 +115,15 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	vSizer->Add(mainSplitter, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	SetSizerAndFit(vSizer);
+}
+
+void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function)
+{
+	wxMenuItem* menuItem = new wxMenuItem(0, id, name);
+	menuItem->SetBackgroundColour(foregroundColor);
+	menuItem->SetTextColour(textColor);
+	menu->Append(menuItem);
+	menu->Bind(wxEVT_MENU, function, id);
 }
 
 void MainGui::OpenFile()
