@@ -71,23 +71,23 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
-					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackArg->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
 				else if (stackVar)
 				{
-					stackVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackVar->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
 				else
 				{
 					doesInstructionModifyOperand(currentInstruction, j, 0, &overwrites);
 					if (!overwrites)
 					{
-						if (!addStackArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) 
+						if (!addStackArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) 
 						{
 							return 0;
 						}
 					}
-					else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
+					else if(!addStackVar(result, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
 					{
 						return 0;
 					}
@@ -105,13 +105,13 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
 				if (stackArg)
 				{
-					stackArg->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackArg->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
 				else if (stackVar)
 				{
-					stackVar->type.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
+					stackVar->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
 				}
-				else if(!addStackVar(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), stackOffset))
+				else if(!addStackVar(result, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
 				{
 					return 0;
 				}
@@ -143,7 +143,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 						}
 						else if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
 						{
-							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->reg)) 
+							if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), currentOperand->reg)) 
 							{
 								return 0;
 							}
@@ -180,12 +180,12 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 					{
 						if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
 						{
-							if (!addRegArg(result, getTypeOfOperand(currentInstruction->opcode, currentOperand), currentOperand->memoryAddress.reg))
+							if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), currentOperand->memoryAddress.reg))
 							{
 								return 0;
 							}
 
-							result->regArgs[result->numOfRegArgs - 1].type.pointerLevel = 1;
+							result->regArgs[result->numOfRegArgs - 1].dataType.pointerLevel = 1;
 
 							result->callingConvention = __FASTCALL;
 							initializedRegs[k + altRegOffset] = 1;
@@ -226,13 +226,13 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			unsigned char srcOperandNum = 0;
 			if (doesInstructionModifyRegister(currentInstruction, AX, &regOperandNum, 0, 0))
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
+				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 				result->returnReg = AX;
 				result->addressOfReturnFunction = 0;
 			}
 			else if (doesInstructionModifyRegister(currentInstruction, XMM0, 0, &srcOperandNum, 0) && result->returnReg != AX) // assuming AX is more likely to be the return register
 			{
-				result->returnType = getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
 				result->returnReg = XMM0;
 				result->addressOfReturnFunction = 0;
 			}
@@ -409,7 +409,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 
 						if (!isInitialized) 
 						{
-							if (!addRegArg(currentFunc, callee->regArgs[k].type, callee->regArgs[k].reg))
+							if (!addRegArg(currentFunc, callee->regArgs[k].dataType, callee->regArgs[k].reg))
 							{
 								return 0;
 							}
@@ -588,7 +588,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-unsigned char addStackArg(struct Function* function, struct VarType type, int stackOffset) 
+unsigned char addStackArg(struct Function* function, struct DataType dataType, int stackOffset)
 {
 	if (getStackArgByOffset(function, stackOffset)) 
 	{
@@ -606,7 +606,7 @@ unsigned char addStackArg(struct Function* function, struct VarType type, int st
 	}
 
 	function->stackArgs[function->numOfStackArgs].stackOffset = stackOffset;
-	function->stackArgs[function->numOfStackArgs].type = type;
+	function->stackArgs[function->numOfStackArgs].dataType = dataType;
 	function->stackArgs[function->numOfStackArgs].name = initializeJdcStr();
 	sprintfJdc(&(function->stackArgs[function->numOfStackArgs].name), 0, "arg%X", stackOffset);
 	function->numOfStackArgs++;
@@ -614,7 +614,7 @@ unsigned char addStackArg(struct Function* function, struct VarType type, int st
 	return 1;
 }
 
-unsigned char addStackVar(struct Function* function, struct VarType type, int stackOffset)
+unsigned char addStackVar(struct Function* function, struct DataType dataType, int stackOffset)
 {
 	if (getStackVarByOffset(function, stackOffset))
 	{
@@ -632,7 +632,7 @@ unsigned char addStackVar(struct Function* function, struct VarType type, int st
 	}
 
 	function->stackVars[function->numOfStackVars].stackOffset = stackOffset;
-	function->stackVars[function->numOfStackVars].type = type;
+	function->stackVars[function->numOfStackVars].dataType = dataType;
 	function->stackVars[function->numOfStackVars].name = initializeJdcStr();
 
 	if (stackOffset > 0)
@@ -649,7 +649,7 @@ unsigned char addStackVar(struct Function* function, struct VarType type, int st
 	return 1;
 }
 
-unsigned char addRegArg(struct Function* function, struct VarType type, enum Register reg) 
+unsigned char addRegArg(struct Function* function, struct DataType dataType, enum Register reg)
 {
 	if (getRegArgByReg(function, reg))
 	{
@@ -667,7 +667,7 @@ unsigned char addRegArg(struct Function* function, struct VarType type, enum Reg
 	}
 
 	function->regArgs[function->numOfRegArgs].reg = reg;
-	function->regArgs[function->numOfRegArgs].type = type;
+	function->regArgs[function->numOfRegArgs].dataType = dataType;
 	function->regArgs[function->numOfRegArgs].name = initializeJdcStr();
 	sprintfJdc(&(function->regArgs[function->numOfRegArgs].name), 0, "arg%s", registerStrs[reg]);
 	function->numOfRegArgs++;
@@ -675,7 +675,7 @@ unsigned char addRegArg(struct Function* function, struct VarType type, enum Reg
 	return 1;
 }
 
-unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg) 
+unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg)
 {
 	if (getRegVarByReg(function, reg))
 	{
@@ -693,7 +693,7 @@ unsigned char addRegVar(struct Function* function, struct VarType type, enum Reg
 	}
 
 	function->regVars[function->numOfRegVars].reg = reg;
-	function->regVars[function->numOfRegVars].type = type;
+	function->regVars[function->numOfRegVars].dataType = dataType;
 	function->regVars[function->numOfRegVars].name = initializeJdcStr();
 	sprintfJdc(&(function->regVars[function->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
 	function->numOfRegVars++;
@@ -701,7 +701,7 @@ unsigned char addRegVar(struct Function* function, struct VarType type, enum Reg
 	return 1;
 }
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)
+unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)
 {
 	if (findReturnedVar(function, callInstructionAddress))
 	{
@@ -727,7 +727,7 @@ unsigned char addReturnedVar(struct Function* function, struct VarType type, uns
 		}
 	}
 
-	function->returnedVars[function->numOfReturnedVars].type = type;
+	function->returnedVars[function->numOfReturnedVars].dataType = dataType;
 	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
 	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
 	function->returnedVars[function->numOfReturnedVars].calleeAddress = calleeAddress;

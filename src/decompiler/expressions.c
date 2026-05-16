@@ -81,7 +81,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	}
 
 	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
-	struct VarType memAddrType = getTypeOfMemoryAddress(instruction->opcode, memAddress);
+	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
 
 	struct JdcStr memAddrStr = initializeJdcStr();
 	unsigned char hasGotFirstTerm = 0;
@@ -100,7 +100,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		strcpyJdc(&memAddrStr, baseRegStr.buffer);
 		freeJdcStr(&baseRegStr);
 
-		if (regArgVar && regArgVar->type.pointerLevel == 1 && regArgVar->type.primitiveType == memAddrType.primitiveType && regArgVar->type.isUnsigned == memAddrType.isUnsigned && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
+		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && regArgVar->dataType.isUnsigned == memAddrType.isUnsigned && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
 		{
 			if (instruction->opcode == LEA)
 			{
@@ -160,7 +160,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	if (instruction->opcode != LEA)
 	{
 		struct JdcStr typeStr = initializeJdcStr();
-		varTypeToStr(memAddrType, &typeStr);
+		dataTypeToStr(memAddrType, &typeStr);
 		sprintfJdc(result, 0, "*(%s*)(%s)", typeStr.buffer, memAddrStr.buffer);
 		freeJdcStr(&typeStr);
 	}
@@ -509,7 +509,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, unsign
 	return 0;
 }
 
-static unsigned char getValueFromDataSection(struct DecompilationParameters* params, struct VarType type, unsigned long long address, struct JdcStr* result)
+static unsigned char getValueFromDataSection(struct DecompilationParameters* params, struct DataType dataType, unsigned long long address, struct JdcStr* result)
 {
 	if (address < params->imageBase + params->sections[0].virtualAddress)
 	{
@@ -536,11 +536,11 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 		return 0;
 	}
 
-	if (type.primitiveType == FLOAT_TYPE)
+	if (dataType.primitiveType == FLOAT_TYPE)
 	{
 		sprintfJdc(result, 0, "%0.8g", *(float*)(params->fileBytes + dataSectionIndex));
 	}
-	else if (type.primitiveType == DOUBLE_TYPE)
+	else if (dataType.primitiveType == DOUBLE_TYPE)
 	{
 		sprintfJdc(result, 0, "%0.16g", *(double*)(params->fileBytes + dataSectionIndex));
 	}
@@ -551,9 +551,9 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 			return 1;
 		}
 
-		if (type.isUnsigned)
+		if (dataType.isUnsigned)
 		{
-			switch (type.primitiveType)
+			switch (dataType.primitiveType)
 			{
 			case CHAR_TYPE:
 				sprintfJdc(result, 0, "%u", *(unsigned char*)(params->fileBytes + dataSectionIndex));
@@ -571,7 +571,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 		}
 		else
 		{
-			switch (type.primitiveType)
+			switch (dataType.primitiveType)
 			{
 			case CHAR_TYPE:
 				sprintfJdc(result, 0, "%d", *(char*)(params->fileBytes + dataSectionIndex));

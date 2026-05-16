@@ -5,21 +5,21 @@
 
 struct RegisterVariable
 {
-	struct VarType type;
+	struct DataType dataType;
 	enum Register reg;
 	struct JdcStr name;
 };
 
 struct StackVariable
 {
-	struct VarType type;
+	struct DataType dataType;
 	int stackOffset;
 	struct JdcStr name;
 };
 
 struct ReturnedVariable // variables that contain the reuturn value of another function call
 {
-	struct VarType type;
+	struct DataType dataType;
 	unsigned long long calleeAddress;
 	unsigned long long callInstructionAddress;
 	enum Register returnReg;
@@ -128,7 +128,7 @@ struct DirectJmp
 
 struct Function
 {
-	struct VarType returnType;
+	struct DataType returnType;
 	enum Register returnReg;
 	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
 	unsigned long long addressOfFirstFuncCall; // if the function has arguments that it only uses to pass to this function call

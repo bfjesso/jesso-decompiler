@@ -11,9 +11,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 {
     SetOwnBackgroundColour(backgroundColor);
 
-    struct JdcStr typeStr = initializeJdcStr();
-    varTypeToStr(function->returnType, &typeStr);
-    returnTypeStaticTxt = new wxStaticText(this, wxID_ANY, "Return Type: " + wxString(typeStr.buffer));
+    struct JdcStr dataTypeStr = initializeJdcStr();
+    dataTypeToStr(function->returnType, &dataTypeStr);
+    returnTypeStaticTxt = new wxStaticText(this, wxID_ANY, "Return Type: " + wxString(dataTypeStr.buffer));
 	returnTypeStaticTxt->SetOwnForegroundColour(textColor);
 
     returnRegStaticTxt = new wxStaticText(this, wxID_ANY, "Return Reg: " + wxString(registerStrs[function->returnReg]));
@@ -68,8 +68,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	{
 		struct RegisterVariable* regArg = &function->regArgs[i];
 		regVarsGrid->AppendRows(1);
-		varTypeToStr(regArg->type, &typeStr);
-		regVarsGrid->SetCellValue(i, 0, wxString(typeStr.buffer));
+		dataTypeToStr(regArg->dataType, &dataTypeStr);
+		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		regVarsGrid->SetCellValue(i, 1, wxString(regArg->name.buffer));
 		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regArg->reg]));
 		regVarsGrid->SetCellValue(i, 3, "Yes");
@@ -78,8 +78,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	{
 		struct RegisterVariable* regVar = &function->regVars[i];
 		regVarsGrid->AppendRows(1);
-		varTypeToStr(regVar->type, &typeStr);
-		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 0, wxString(typeStr.buffer));
+		dataTypeToStr(regVar->dataType, &dataTypeStr);
+		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 0, wxString(dataTypeStr.buffer));
 		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 1, wxString(regVar->name.buffer));
 		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 2, wxString(registerStrs[regVar->reg]));
 		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 3, "No");
@@ -112,7 +112,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	{
 		struct StackVariable* stackArg = &function->stackArgs[i];
 		stackVarsGrid->AppendRows(1);
-		varTypeToStr(stackArg->type, &typeStr);
+		dataTypeToStr(stackArg->dataType, &dataTypeStr);
 		if (stackArg->stackOffset > 0)
 		{
 			sprintf(hexNumStr, "0x%X", stackArg->stackOffset);
@@ -121,7 +121,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		{
 			sprintf(hexNumStr, "-0x%X", -stackArg->stackOffset);
 		}
-		stackVarsGrid->SetCellValue(i, 0, wxString(typeStr.buffer));
+		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i, 1, wxString(stackArg->name.buffer));
 		stackVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
 		stackVarsGrid->SetCellValue(i, 3, "Yes");
@@ -130,7 +130,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	{
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
-		varTypeToStr(stackVar->type, &typeStr);
+		dataTypeToStr(stackVar->dataType, &dataTypeStr);
 		if (stackVar->stackOffset > 0)
 		{
 			sprintf(hexNumStr, "0x%X", stackVar->stackOffset);
@@ -139,7 +139,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		{
 			sprintf(hexNumStr, "-0x%X", -stackVar->stackOffset);
 		}
-		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 0, wxString(typeStr.buffer));
+		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 1, wxString(stackVar->name.buffer));
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 2, wxString(hexNumStr));
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 3, "No");
@@ -172,8 +172,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	{
 		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
 		returnedVarsGrid->AppendRows(1);
-		varTypeToStr(returnedVar->type, &typeStr);
-		returnedVarsGrid->SetCellValue(i, 0, wxString(typeStr.buffer));
+		dataTypeToStr(returnedVar->dataType, &dataTypeStr);
+		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
 		sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
 		returnedVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
@@ -182,7 +182,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
 	}
 
-	freeJdcStr(&typeStr);
+	freeJdcStr(&dataTypeStr);
 
 	conditionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
 	conditionsGrid->SetLabelBackgroundColour(foregroundColor);

@@ -19,7 +19,7 @@ enum PrimitiveType
 	INT_512_TPYE
 };
 
-struct VarType 
+struct DataType
 {
 	unsigned char isUnsigned;
 	unsigned char pointerLevel;
@@ -34,16 +34,16 @@ extern "C"
 	extern const char* primitiveTypeStrs[];
 	extern const int numOfPrimitiveTypes;
 
-	void varTypeToStr(struct VarType type, struct JdcStr* result);
+	void dataTypeToStr(struct DataType dataType, struct JdcStr* result);
 
 #ifdef __cplusplus
 }
 #endif
 
-unsigned char compareTypes(struct VarType t1, struct VarType t2);
+unsigned char compareDataTypes(struct DataType t1, struct DataType t2);
 
-struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg);
+struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg);
 
-struct VarType getTypeOfMemoryAddress(enum Mnemonic opcode, struct MemoryAddress* memAddress);
+struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress);
 
-struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand);
+struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand);

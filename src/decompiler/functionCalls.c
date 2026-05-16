@@ -222,7 +222,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			if (decompileOperand(params, &currentInstruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
 			{
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-				varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
+				dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
 			}
 		}
@@ -236,7 +236,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				if (decompileOperand(params, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
 				{
 					stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-					varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
+					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
 					numOfStackArgs++;
 				}
 			}
@@ -250,7 +250,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &regOperandNum, 0, 0))
 				{
 					regArgTypeStrs[j] = initializeJdcStr();
-					varTypeToStr(getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);
+					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);
 					
 					params->startInstructionIndex = i + 1;
 					decompiledRegArgs[j] = initializeJdcStr();
@@ -279,7 +279,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		if (returnedVar != 0) 
 		{
 			struct JdcStr returnTypeStr = initializeJdcStr();
-			varTypeToStr(returnedVar->type, &returnTypeStr);
+			dataTypeToStr(returnedVar->dataType, &returnTypeStr);
 			strcatJdc(result, returnTypeStr.buffer);
 			freeJdcStr(&returnTypeStr);
 		}

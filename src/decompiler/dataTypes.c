@@ -20,49 +20,49 @@ extern const char* primitiveTypeStrs[] =
 
 extern const int numOfPrimitiveTypes = 10;
 
-void varTypeToStr(struct VarType type, struct JdcStr* result)
+void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 {
-	if (!type.isUnsigned || type.primitiveType == FLOAT_TYPE || type.primitiveType == DOUBLE_TYPE || type.primitiveType == VOID_TYPE)
+	if (!dataType.isUnsigned || dataType.primitiveType == FLOAT_TYPE || dataType.primitiveType == DOUBLE_TYPE || dataType.primitiveType == VOID_TYPE)
 	{
-		sprintfJdc(result, 0, "%s", primitiveTypeStrs[type.primitiveType]);
+		sprintfJdc(result, 0, "%s", primitiveTypeStrs[dataType.primitiveType]);
 	}
 	else 
 	{
-		sprintfJdc(result, 0, "unsigned %s", primitiveTypeStrs[type.primitiveType]);
+		sprintfJdc(result, 0, "unsigned %s", primitiveTypeStrs[dataType.primitiveType]);
 	}
 
-	for (int i = 0; i < type.pointerLevel; i++) 
+	for (int i = 0; i < dataType.pointerLevel; i++)
 	{
 		strcatJdc(result, "*");
 	}
 }
 
-unsigned char compareTypes(struct VarType t1, struct VarType t2) 
+unsigned char compareDataTypes(struct DataType t1, struct DataType t2)
 {
 	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel;
 }
 
-struct VarType getTypeOfRegister(enum Mnemonic opcode, enum Register reg)
+struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg)
 {
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER;
 	regOperand.reg = reg;
 
-	return getTypeOfOperand(opcode, &regOperand);
+	return getOperandDataType(opcode, &regOperand);
 }
 
-struct VarType getTypeOfMemoryAddress(enum Mnemonic opcode, struct MemoryAddress* memAddress)
+struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress)
 {
 	struct Operand memAddrOperand = { 0 };
 	memAddrOperand.type = MEM_ADDRESS;
 	memAddrOperand.memoryAddress = *memAddress;
 
-	return getTypeOfOperand(opcode, &memAddrOperand);
+	return getOperandDataType(opcode, &memAddrOperand);
 }
 
-struct VarType getTypeOfOperand(enum Mnemonic opcode, struct Operand* operand)
+struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand)
 {
-	struct VarType result = { 0 };
+	struct DataType result = { 0 };
 
 	switch (opcode)
 	{

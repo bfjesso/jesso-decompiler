@@ -35,14 +35,14 @@ struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
-unsigned char addStackArg(struct Function* function, struct VarType type, int stackOffset);
+unsigned char addStackArg(struct Function* function, struct DataType dataType, int stackOffset);
 
-unsigned char addStackVar(struct Function* function, struct VarType type, int stackOffset);
+unsigned char addStackVar(struct Function* function, struct DataType dataType, int stackOffset);
 
-unsigned char addRegArg(struct Function* function, struct VarType type, enum Register reg);
+unsigned char addRegArg(struct Function* function, struct DataType dataType, enum Register reg);
 
-unsigned char addRegVar(struct Function* function, struct VarType type, enum Register reg);
+unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg);
 
-unsigned char addReturnedVar(struct Function* function, struct VarType type, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
+unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
 
 static void sortFunctionArguments(struct Function* function);

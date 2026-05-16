@@ -165,12 +165,12 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}");
 }
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct VarType* typeRef, int callNum)
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct DataType* dataTypeRef, int callNum)
 {
 	// preventing recursive loop. this assumes it is accessed
 	if(callNum > 9)
 	{
-		if (typeRef) { *typeRef = getTypeOfRegister(NO_MNEMONIC, reg); }
+		if (dataTypeRef) { *dataTypeRef = getRegisterDataType(NO_MNEMONIC, reg); }
 		return 1;
 	}
 	
@@ -186,7 +186,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			struct RegisterVariable* regArg = getRegArgByReg(callee, reg);
 			if (regArg)
 			{
-				if (typeRef) { *typeRef = regArg->type; }
+				if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
 				return 1;
 			}
 			else if (!ignoreInitialization && compareRegisters(callee->returnReg, reg))
@@ -211,7 +211,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		{
 			if (compareRegisters(params->currentFunc->returnReg, reg))
 			{
-				if (typeRef) { *typeRef = params->currentFunc->returnType; }
+				if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
 				return 1;
 			}
 
@@ -221,7 +221,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		unsigned char operandNum = 0;
 		if (doesInstructionAccessRegister(instruction, reg, &operandNum))
 		{
-			if (typeRef) { *typeRef = getTypeOfOperand(instruction->opcode, &(instruction->operands[operandNum])); }
+			if (dataTypeRef) { *dataTypeRef = getOperandDataType(instruction->opcode, &(instruction->operands[operandNum])); }
 			return 1;
 		}
 
@@ -248,7 +248,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			if (dstIndex > i) 
 			{
 				params->startInstructionIndex = dstIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, typeRef, callNum + 1))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, dataTypeRef, callNum + 1))
 				{
 					return 1;
 				}
@@ -274,7 +274,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 
 			unsigned long long calleeAddress = resolveJmpChain(params);
 
-			struct VarType returnType = { 0 }; // used both if its an import call and to check if the return value is used
+			struct DataType returnType = { 0 }; // used both if its an import call and to check if the return value is used
 			if(i == params->currentFunc->lastInstructionIndex)
 			{
 				returnType = params->currentFunc->returnType;
@@ -398,7 +398,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			// checking if the modified regs are accessed before being overwritten after the condition
 			for (int k = 0; k < numOfRegs; k++)
 			{
-				struct VarType regVarType = { 0 };
+				struct DataType regVarType = { 0 };
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					params->startInstructionIndex = condition->startIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
@@ -443,7 +443,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			{
 				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg))
 				{
-					if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+					if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 					{
 						return 0;
 					}
@@ -453,7 +453,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			{
 				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg) || getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement))
 				{
-					if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+					if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 					{
 						return 0;
 					}
@@ -469,12 +469,12 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 {
 	struct JdcStr typeStr = initializeJdcStr();
 
-	varTypeToStr(function->returnType, &typeStr);
+	dataTypeToStr(function->returnType, &typeStr);
 	sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
-		varTypeToStr(function->regArgs[i].type, &typeStr);
+		dataTypeToStr(function->regArgs[i].dataType, &typeStr);
 		
 		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
 		{
@@ -488,7 +488,7 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		varTypeToStr(function->stackArgs[i].type, &typeStr);
+		dataTypeToStr(function->stackArgs[i].dataType, &typeStr);
 		
 		if (i == function->numOfStackArgs - 1)
 		{
@@ -510,7 +510,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 	
 	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
-		varTypeToStr(params->currentFunc->stackVars[i].type, &typeStr);
+		dataTypeToStr(params->currentFunc->stackVars[i].dataType, &typeStr);
 		addIndents(result, 1);
 		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
 	}
@@ -527,7 +527,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			}
 		}
 
-		varTypeToStr(params->currentFunc->regVars[i].type, &typeStr);
+		dataTypeToStr(params->currentFunc->regVars[i].dataType, &typeStr);
 
 		addIndents(result, 1);
 		if (argIndex != -1)
@@ -554,7 +554,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 
 		if (!isReturnRegVar) 
 		{
-			varTypeToStr(params->currentFunc->returnedVars[i].type, &typeStr);
+			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
 			addIndents(result, 1);
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
 		}
