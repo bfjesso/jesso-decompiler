@@ -422,40 +422,6 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					}
 				}
 			}
-
-			// if there are registers used in the comparisson of loop, they need to be a reg var
-			if (condition->conditionType == DO_WHILE_CT || condition->conditionType == LOOP_CT)
-			{
-				for (int j = condition->jccIndex - 1; j >= params->currentFunc->firstInstructionIndex; j--)
-				{
-					struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
-					
-					if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == TEST) 
-					{
-						for (int k = 0; k < 2; k++) 
-						{
-							if (currentInstruction->operands[k].type == REGISTER && !isRegisterPointer(currentInstruction->operands[k].reg) && !getRegVarByReg(params->currentFunc, currentInstruction->operands[k].reg))
-							{
-								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].reg))
-								{
-									free(modifiedRegs);
-									return 0;
-								}
-							}
-							else if (currentInstruction->operands[k].type == MEM_ADDRESS && !isRegisterPointer(currentInstruction->operands[k].memoryAddress.reg) && !getRegVarByReg(params->currentFunc, currentInstruction->operands[k].memoryAddress.reg))
-							{
-								if (!addRegVar(params->currentFunc, getTypeOfOperand(currentInstruction->opcode, &currentInstruction->operands[k]), currentInstruction->operands[k].memoryAddress.reg))
-								{
-									free(modifiedRegs);
-									return 0;
-								}
-							}
-						}
-
-						break;
-					}
-				}
-			}
 		}
 	}
 
