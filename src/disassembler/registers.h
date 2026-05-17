@@ -65,6 +65,8 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2);
 
 unsigned char isRegisterPointer(enum Register reg);
 
+unsigned char isRegisterPlatformArg(enum Register reg, int* index);
+
 unsigned char getSizeOfRegister(enum Register reg);
 
 enum Register extendRegister(enum Register reg);

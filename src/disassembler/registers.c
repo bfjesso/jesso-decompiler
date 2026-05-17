@@ -126,6 +126,30 @@ unsigned char isRegisterPointer(enum Register reg)
 	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
 }
 
+unsigned char isRegisterPlatformArg(enum Register reg, int* index) 
+{
+	if (!index) 
+	{
+		return 0;
+	}
+	
+	for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++)
+	{
+		if (compareRegisters(reg, platformRegArgs[i]))
+		{
+			*index = i;
+			return 1;
+		}
+		else if (compareRegisters(reg, altPlatformRegArgs[i])) 
+		{
+			*index = i + NUM_PLATFORM_REG_ARGS;
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 unsigned char getSizeOfRegister(enum Register reg) // in bytes
 {
 	if (reg >= AL && reg <= R15B) 

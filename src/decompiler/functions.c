@@ -69,15 +69,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
 				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
-				if (stackArg)
-				{
-					stackArg->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-				}
-				else if (stackVar)
-				{
-					stackVar->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-				}
-				else
+				if(!stackArg && !stackVar)
 				{
 					doesInstructionModifyOperand(currentInstruction, j, 0, &overwrites);
 					if (!overwrites)
@@ -103,96 +95,63 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 				struct StackVariable* stackArg = getStackArgByOffset(result, stackOffset);
 				struct StackVariable* stackVar = getStackVarByOffset(result, stackOffset);
-				if (stackArg)
+				if(!stackArg && !stackVar)
 				{
-					stackArg->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-				}
-				else if (stackVar)
-				{
-					stackVar->dataType.isUnsigned = doesOpcodeUseUnsignedInt(currentInstruction->opcode);
-				}
-				else if(!addStackVar(result, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
-				{
-					return 0;
+					if (!addStackVar(result, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) 
+					{
+						return 0;
+					}
 				}
 			}
 			else if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
 			{
-				if (isRegisterPointer(currentOperand->reg)) { continue; }
-				
-				for(int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
+				enum Register reg = currentOperand->reg;
+				if (isRegisterPointer(reg)) { continue; }
+
+				int regIndex = -1;
+				if (isRegisterPlatformArg(reg, &regIndex)) 
 				{
-					enum Register reg = NO_REG;
-					int altRegOffset = 0;
-					if (compareRegisters(currentOperand->reg, platformRegArgs[k])) 
+					int argIndex = regIndex >= NUM_PLATFORM_REG_ARGS ? regIndex - NUM_PLATFORM_REG_ARGS : regIndex;
+					if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
 					{
-						reg = platformRegArgs[k];
+						initializedRegs[regIndex] = 1;
+						initializedRegsAfterJmp[regIndex] = isAfterJmp;
 					}
-					else if (compareRegisters(currentOperand->reg, altPlatformRegArgs[k])) 
+					else if (!initializedRegs[regIndex] && !gottenRegArgs[argIndex])
 					{
-						reg = altPlatformRegArgs[k];
-						altRegOffset = NUM_PLATFORM_REG_ARGS;
-					}
-					
-					if (reg != NO_REG)
-					{
-						if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
+						if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), reg))
 						{
-							initializedRegs[k + altRegOffset] = 1;
-							initializedRegsAfterJmp[k + altRegOffset] = isAfterJmp;
-						}
-						else if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
-						{
-							if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), currentOperand->reg)) 
-							{
-								return 0;
-							}
-
-							result->callingConvention = __FASTCALL;
-							initializedRegs[k + altRegOffset] = 1;
-							gottenRegArgs[k] = 1;
+							return 0;
 						}
 
-						break;
+						result->callingConvention = __FASTCALL;
+						initializedRegs[regIndex] = 1;
+						gottenRegArgs[argIndex] = 1;
 					}
 				}
 			}
 			else if (currentOperand->type == MEM_ADDRESS)
 			{
 				// maybe memoryAddress.regDisplacement should be checked too ?
-				if (currentOperand->memoryAddress.reg == NO_REG || compareRegisters(currentOperand->memoryAddress.reg, IP)) { continue; }
+				enum Register reg = currentOperand->memoryAddress.reg;
+				if (reg == NO_REG || isRegisterPointer(reg)) { continue; }
 
-				for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
+				int regIndex = -1;
+				if (isRegisterPlatformArg(reg, &regIndex))
 				{
-					enum Register reg = NO_REG;
-					int altRegOffset = 0;
-					if (compareRegisters(currentOperand->memoryAddress.reg, platformRegArgs[k]))
+					int argIndex = regIndex >= NUM_PLATFORM_REG_ARGS ? regIndex - NUM_PLATFORM_REG_ARGS : regIndex;
+					if (!initializedRegs[regIndex] && !gottenRegArgs[argIndex])
 					{
-						reg = platformRegArgs[k];
-					}
-					else if (compareRegisters(currentOperand->memoryAddress.reg, altPlatformRegArgs[k]))
-					{
-						reg = altPlatformRegArgs[k];
-						altRegOffset = NUM_PLATFORM_REG_ARGS;
-					}
-					
-					if (reg != NO_REG)
-					{
-						if (!initializedRegs[k + altRegOffset] && !gottenRegArgs[k])
+						if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), reg))
 						{
-							if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), currentOperand->memoryAddress.reg))
-							{
-								return 0;
-							}
-
-							result->regArgs[result->numOfRegArgs - 1].dataType.pointerLevel = 1;
-
-							result->callingConvention = __FASTCALL;
-							initializedRegs[k + altRegOffset] = 1;
-							gottenRegArgs[k] = 1;
+							return 0;
 						}
 
-						break;
+						result->regArgs[result->numOfRegArgs - 1].dataType.pointerLevel = 1;
+
+						result->callingConvention = __FASTCALL;
+						initializedRegs[regIndex] = 1;
+						gottenRegArgs[argIndex] = 1;
 					}
 				}
 			}
