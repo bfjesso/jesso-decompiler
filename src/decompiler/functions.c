@@ -399,6 +399,11 @@ void freeFunction(struct Function* function)
 	{
 		freeJdcStr(&function->regArgs[i].name);
 	}
+	for (int i = 0; i < function->numOfRegVars; i++)
+	{
+		freeJdcStr(&function->regVars[i].name);
+	}
+
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
 		freeJdcStr(&function->stackArgs[i].name);
@@ -407,12 +412,14 @@ void freeFunction(struct Function* function)
 	{
 		freeJdcStr(&function->stackVars[i].name);
 	}
+
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
 		freeJdcStr(&function->returnedVars[i].name);
 	}
 
 	free(function->regArgs);
+	free(function->regVars);
 	free(function->stackArgs);
 	free(function->stackVars);
 	free(function->returnedVars);
