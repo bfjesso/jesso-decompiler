@@ -5,9 +5,8 @@
 
 unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
-	unsigned char initializedRegs[NUM_PLATFORM_REG_ARGS * 2] = { 0 }; // * 2 is to account for the alternate reg args
-	unsigned char initializedRegsAfterJmp[NUM_PLATFORM_REG_ARGS * 2] = { 0 };
-	unsigned char gottenRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
+	unsigned char initializedRegs[ST0 - RAX] = { 0 };
+	unsigned char initializedRegsAfterJmp[ST0 - RAX] = { 0 };
 
 	int ogStartInstructionIndex = params->startInstructionIndex;
 
@@ -103,55 +102,58 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 					}
 				}
 			}
-			else if (currentOperand->type == REGISTER && currentInstruction->opcode != PUSH)
+			else if ((currentOperand->type == REGISTER && currentInstruction->opcode != PUSH) || currentOperand->type == MEM_ADDRESS)
 			{
 				enum Register reg = currentOperand->reg;
-				if (isRegisterPointer(reg)) { continue; }
-
-				int regIndex = -1;
-				if (isRegisterPlatformArg(reg, &regIndex)) 
+				if (currentOperand->type == REGISTER) 
 				{
-					int argIndex = regIndex >= NUM_PLATFORM_REG_ARGS ? regIndex - NUM_PLATFORM_REG_ARGS : regIndex;
-					if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
-					{
-						initializedRegs[regIndex] = 1;
-						initializedRegsAfterJmp[regIndex] = isAfterJmp;
-					}
-					else if (!initializedRegs[regIndex] && !gottenRegArgs[argIndex])
-					{
-						if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), reg))
-						{
-							return 0;
-						}
-
-						result->callingConvention = __FASTCALL;
-						initializedRegs[regIndex] = 1;
-						gottenRegArgs[argIndex] = 1;
-					}
+					reg = currentOperand->reg;
 				}
-			}
-			else if (currentOperand->type == MEM_ADDRESS)
-			{
-				// maybe memoryAddress.regDisplacement should be checked too ?
-				enum Register reg = currentOperand->memoryAddress.reg;
-				if (reg == NO_REG || isRegisterPointer(reg)) { continue; }
-
-				int regIndex = -1;
-				if (isRegisterPlatformArg(reg, &regIndex))
+				else 
 				{
-					int argIndex = regIndex >= NUM_PLATFORM_REG_ARGS ? regIndex - NUM_PLATFORM_REG_ARGS : regIndex;
-					if (!initializedRegs[regIndex] && !gottenRegArgs[argIndex])
+					// maybe memoryAddress.regDisplacement should be checked too ?
+					reg = currentOperand->memoryAddress.reg;
+				}
+
+				if (reg == NO_REG || isRegisterPointer(reg)) 
+				{ 
+					continue; 
+				}
+
+				for (int k = RAX; k < ST0; k++) 
+				{
+					if (k == RBP || k == RSP || k == RIP) 
 					{
-						if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), reg))
+						continue;
+					}
+
+					if (compareRegisters(reg, k)) 
+					{
+						if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
 						{
-							return 0;
+							initializedRegs[k - RAX] = 1;
+							initializedRegsAfterJmp[k - RAX] = isAfterJmp;
 						}
+						else if (!initializedRegs[k - RAX])
+						{
+							if (!addRegArg(result, getOperandDataType(currentInstruction->opcode, currentOperand), reg))
+							{
+								return 0;
+							}
 
-						result->regArgs[result->numOfRegArgs - 1].dataType.pointerLevel = 1;
+							if (isRegisterPlatformArg(reg) && result->callingConvention != __UNKNOWNCALL)
+							{
+								result->callingConvention = __FASTCALL;
+							}
+							else 
+							{
+								result->callingConvention = __UNKNOWNCALL;
+							}
 
-						result->callingConvention = __FASTCALL;
-						initializedRegs[regIndex] = 1;
-						gottenRegArgs[argIndex] = 1;
+							// this is so it is not added again
+							initializedRegs[k - RAX] = 1;
+							initializedRegsAfterJmp[k - RAX] = 0;
+						}
 					}
 				}
 			}
@@ -323,7 +325,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 				struct Function* callee = &params->functions[functionIndex];
 
 				int numOfRegArgsInit = 0;
-				enum Register initializedRegs[NUM_PLATFORM_REG_ARGS] = { 0 };
+				enum Register* initializedRegs = (enum Register*)calloc(callee->numOfRegArgs, sizeof(enum Register));
 
 				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= currentFunc->firstInstructionIndex; j--)
 				{
@@ -370,6 +372,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 						{
 							if (!addRegArg(currentFunc, callee->regArgs[k].dataType, callee->regArgs[k].reg))
 							{
+								free(initializedRegs);
 								return 0;
 							}
 						}
@@ -377,6 +380,8 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 
 					numFixed++;
 				}
+
+				free(initializedRegs);
 
 				currentFunc->addressOfFirstFuncCall = 0;
 			}

@@ -1229,7 +1229,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// calling conventions
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
 	{
 		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}

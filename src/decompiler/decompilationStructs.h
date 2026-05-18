@@ -31,16 +31,18 @@ enum CallingConvention
 	__CDECL,
 	__STDCALL,
 	__FASTCALL,
-	__THISCALL
+	__THISCALL,
+	__UNKNOWNCALL
 };
-
 static const char* callingConventionStrs[] =
 {
 	"__cdecl",
 	"__stdcall",
 	"__fastcall",
-	"__thiscall"
+	"__thiscall",
+	"__unknowncall"
 };
+#define NUM_OF_CALLING_CONVENTIONS 5
 
 enum ConditionType
 {
