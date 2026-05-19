@@ -1219,11 +1219,11 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// intrinsic functions
-	for (int i = 0; i < numOfReturningIntrinsicFuncs; i++)
+	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		ColorAllStrs(text, returningIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
 	}
-	for (int i = 0; i < numOfVoidIntrinsicFuncs; i++)
+	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		ColorAllStrs(text, voidIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
 	}
@@ -1235,7 +1235,7 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// primitive data types
-	for (int i = 0; i < numOfPrimitiveTypes; i++) 
+	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
 		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
@@ -1308,11 +1308,11 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	}
 
 	// regs/segs that arent variables/arguments
-	for (int i = 0; i < numOfRegisters; i++)
+	for (int i = 0; i < NUM_OF_REGISTERS; i++)
 	{
 		ColorAllStrs(text, registerStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 	}
-	for (int i = 0; i < numOfSegments; i++)
+	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
 	{
 		ColorAllStrs(text, segmentStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
 	}

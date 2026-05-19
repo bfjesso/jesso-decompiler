@@ -2,6 +2,8 @@
 #include "../jdc-str/jdcStr.h"
 #include "../disassembler/disassemblyStructs.h"
 
+#define NUM_OF_PRIMITIVE_TYPES 10
+
 enum PrimitiveType
 {
 	VOID_TYPE,
@@ -32,7 +34,6 @@ extern "C"
 #endif
 
 	extern const char* primitiveTypeStrs[];
-	extern const int numOfPrimitiveTypes;
 
 	void dataTypeToStr(struct DataType dataType, struct JdcStr* result);
 

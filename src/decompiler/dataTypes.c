@@ -1,7 +1,7 @@
 #include "dataTypes.h"
 #include "../disassembler/operands.h"
 
-extern const char* primitiveTypeStrs[] =
+extern const char* primitiveTypeStrs[NUM_OF_PRIMITIVE_TYPES] =
 {
 	"void",
 
@@ -17,8 +17,6 @@ extern const char* primitiveTypeStrs[] =
 	"__int256",
 	"__int512"
 };
-
-extern const int numOfPrimitiveTypes = 10;
 
 void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 {

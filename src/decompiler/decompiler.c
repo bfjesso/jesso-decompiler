@@ -323,11 +323,11 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 static unsigned char getAllRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
-	enum Register* modifiedRegs = (enum Register*)calloc(numOfRegisters, sizeof(enum Register));
+	enum Register* modifiedRegs = (enum Register*)calloc(NUM_OF_REGISTERS, sizeof(enum Register));
 	int numOfRegs = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		memset(modifiedRegs, 0, numOfRegisters * sizeof(enum Register));
+		memset(modifiedRegs, 0, NUM_OF_REGISTERS * sizeof(enum Register));
 		numOfRegs = 0;
 		
 		struct Condition* condition = &params->currentFunc->conditions[i];

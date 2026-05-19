@@ -1,6 +1,9 @@
 #pragma once
 #include "decompilationStructs.h"
 
+#define NUM_OF_RETURNING_INTRINSICS 11
+#define NUM_OF_VOID_INTRINSICS 6
+
 struct IntrinsicFunc 
 {
 	enum Mnemonic opcode;
@@ -13,13 +16,9 @@ extern "C"
 {
 #endif
 
-	// these modify the dst operand
-	extern struct IntrinsicFunc returningIntrinsicFuncs[];
-	extern const int numOfReturningIntrinsicFuncs;
+	extern struct IntrinsicFunc returningIntrinsicFuncs[]; // these modify the dst operand
 
-	// these do not modify any operand
-	extern struct IntrinsicFunc voidIntrinsicFuncs[];
-	extern const int numOfVoidIntrinsicFuncs;
+	extern struct IntrinsicFunc voidIntrinsicFuncs[]; // these do not modify any operand
 
 #ifdef __cplusplus
 }

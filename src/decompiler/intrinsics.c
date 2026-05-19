@@ -3,7 +3,7 @@
 #include "expressions.h"
 #include "functions.h"
 
-struct IntrinsicFunc returningIntrinsicFuncs[] =
+struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 {
 	{ AESDEC, { 1, 1, 0, 0 }, "_mm_aesdec" },
 	{ AESDECLAST, { 1, 1, 0, 0 }, "_mm_aesdeclast" },
@@ -17,9 +17,8 @@ struct IntrinsicFunc returningIntrinsicFuncs[] =
 	{ ROL, { 1, 1, 0, 0 }, "_rotl" },
 	{ ROR, { 1, 1, 0, 0 }, "_rotr" },
 };
-const int numOfReturningIntrinsicFuncs = 11;
 
-struct IntrinsicFunc voidIntrinsicFuncs[] =
+struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
 {
 	{ INT3, { 0, 0, 0, 0 }, "__debugbreak" },
 	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
@@ -28,11 +27,10 @@ struct IntrinsicFunc voidIntrinsicFuncs[] =
 	{ MOVS, { 1, 1, 0, 0 }, "__movs" }, // REPZ prefix must be used
 	{ XCHG, { 1, 1, 0, 0 }, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
-const int numOfVoidIntrinsicFuncs = 6;
 
 unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
 {
-	for (int i = 0; i < numOfReturningIntrinsicFuncs; i++)
+	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		if (opcode == returningIntrinsicFuncs[i].opcode)
 		{
@@ -104,7 +102,7 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 {
 	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
 	
-	for (int i = 0; i < numOfVoidIntrinsicFuncs; i++)
+	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (instruction->opcode == voidIntrinsicFuncs[i].opcode)
 		{

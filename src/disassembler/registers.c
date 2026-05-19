@@ -1,6 +1,6 @@
 #include "registers.h"
 
-extern const char* segmentStrs[] =
+extern const char* segmentStrs[NUM_OF_SEGMENTS] =
 {
 	"CS",
 	"SS",
@@ -10,9 +10,7 @@ extern const char* segmentStrs[] =
 	"GS"
 };
 
-extern const int numOfSegments = 6;
-
-extern const char* registerStrs[] =
+extern const char* registerStrs[NUM_OF_REGISTERS + 1] = // + 1 is for NO REG
 {
 	"NO REG",
 	
@@ -34,8 +32,6 @@ extern const char* registerStrs[] =
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
 };
-
-extern const int numOfRegisters = 179;
 
 #ifdef _WIN32
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9

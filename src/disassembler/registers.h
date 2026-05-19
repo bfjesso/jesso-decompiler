@@ -1,5 +1,8 @@
 #pragma once
 
+#define NUM_OF_SEGMENTS 6
+#define NUM_OF_REGISTERS 179
+
 enum Segment
 {
 	CS,
@@ -42,11 +45,7 @@ extern "C"
 
 	extern const char* segmentStrs[];
 
-	extern const int numOfSegments;
-
 	extern const char* registerStrs[];
-
-	extern const int numOfRegisters;
 
 #ifdef __cplusplus
 }
