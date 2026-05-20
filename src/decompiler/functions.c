@@ -57,13 +57,19 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			continue;
 		}
 
-		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
+		if (isOpcodeCall(currentInstruction->opcode))
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params);
-			if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
+			initializedRegs[0] = 1; // RAX
+			initializedRegsAfterJmp[0] = isAfterJmp;
+			
+			if (result->addressOfFirstFuncCall == 0) 
 			{
-				result->addressOfFirstFuncCall = calleeAddress;
-				result->indexOfFirstFuncCall = i;
+				unsigned long long calleeAddress = resolveJmpChain(params);
+				if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
+				{
+					result->addressOfFirstFuncCall = calleeAddress;
+					result->indexOfFirstFuncCall = i;
+				}
 			}
 		}
 
