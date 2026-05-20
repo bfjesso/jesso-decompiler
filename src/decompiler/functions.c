@@ -37,6 +37,21 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			foundFirstInstruction = 1;
 		}
 
+		isAfterJmp = addressToJumpTo != 0 && params->instructions[i].address < addressToJumpTo;
+		if(!isAfterJmp)
+		{
+			addressToJumpTo = 0;
+
+			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+			{
+				if (initializedRegsAfterJmp[j])
+				{
+					initializedRegs[j] = 0;
+					initializedRegsAfterJmp[j] = 0;
+				}
+			}
+		}
+
 		if (doesInstructionDoNothing(currentInstruction)) 
 		{
 			continue;
@@ -105,11 +120,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			else if ((currentOperand->type == REGISTER && currentInstruction->opcode != PUSH) || currentOperand->type == MEM_ADDRESS)
 			{
 				enum Register reg = currentOperand->reg;
-				if (currentOperand->type == REGISTER) 
-				{
-					reg = currentOperand->reg;
-				}
-				else 
+				if (currentOperand->type == MEM_ADDRESS)
 				{
 					// maybe memoryAddress.regDisplacement should be checked too ?
 					reg = currentOperand->memoryAddress.reg;
@@ -154,6 +165,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 							initializedRegs[k - RAX] = 1;
 							initializedRegsAfterJmp[k - RAX] = 0;
 						}
+
+						break;
 					}
 				}
 			}
@@ -228,23 +241,9 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			return 1;
 		}
 
-		isAfterJmp = addressToJumpTo != 0 && params->instructions[i].address < addressToJumpTo;
 		if (isAfterJmp)
 		{
 			continue;
-		}
-		else
-		{
-			addressToJumpTo = 0;
-
-			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
-			{
-				if (initializedRegsAfterJmp[j]) 
-				{
-					initializedRegs[j] = 0;
-					initializedRegsAfterJmp[j] = 0;
-				}
-			}
 		}
 		
 		if (checkForReturnStatement(params) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
