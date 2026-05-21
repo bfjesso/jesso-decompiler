@@ -132,7 +132,7 @@ struct Function
 {
 	struct DataType returnType;
 	enum Register returnReg;
-	unsigned long long addressOfReturnFunction; // if the function's return value depends on another function, this will be the address of that function
+	unsigned long long returningFunctionAddress; // if this function's return value depends on another function's return value, this will be that function's address
 	unsigned long long addressOfFirstFuncCall; // if the function has arguments that it only uses to pass to this function call
 	int indexOfFirstFuncCall;
 

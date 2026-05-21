@@ -9,6 +9,8 @@ extern "C"
 
 	unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex);
 	
+	unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params);
+
 	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
 
 	unsigned char getAllFunctionArguments(struct DecompilationParameters* params);

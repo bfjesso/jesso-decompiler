@@ -61,47 +61,9 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 		}
 
-		// check for return value
-		if (!canReturnNothing) // if the function can return nothing, its return type must be void
-		{
-			unsigned char regOperandNum = 0;
-			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(params, currentInstruction, AX, &regOperandNum, 0, 0))
-			{
-				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
-				result->returnReg = AX;
-				result->addressOfReturnFunction = 0;
-			}
-			else if (doesInstructionModifyRegister(params, currentInstruction, XMM0, 0, &srcOperandNum, 0) && result->returnReg != AX) // assuming AX is more likely to be the return register
-			{
-				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
-				result->returnReg = XMM0;
-				result->addressOfReturnFunction = 0;
-			}
-			else if (doesInstructionModifyRegister(params, currentInstruction, ST0, 0, 0, 0))
-			{
-				result->returnType.primitiveType = FLOAT_TYPE;
-				result->returnReg = ST0;
-				result->addressOfReturnFunction = 0;
-			}
-			else if (isOpcodeCall(currentInstruction->opcode))
-			{
-				unsigned long long calleeAddress = resolveJmpChain(params);
-				if (calleeAddress != params->instructions[result->firstInstructionIndex].address) // check for recursive function
-				{
-					result->addressOfReturnFunction = calleeAddress;
-				}
-			}
-			else if ((checkForReturnStatement(params) || checkForJumpToReturnStatement(params)) &&
-				result->returnType.primitiveType == VOID_TYPE && result->addressOfReturnFunction == 0)
-			{
-				canReturnNothing = 1;
-			}
-		}
-
 		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
 		{
-			result->addressOfReturnFunction = params->instructions[i + 1].address;
+			result->returningFunctionAddress = params->instructions[i + 1].address;
 
 			sortFunctionArguments(result);
 			result->lastInstructionIndex = i;
@@ -130,9 +92,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		}
 		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->instructions[i].address == currentSectionEndAddress)
 		{
-			result->returnType.primitiveType = VOID_TYPE;
-			result->returnReg = NO_REG;
-			result->addressOfReturnFunction = 0;
+			result->callingConvention = __UNKNOWNCALL;
 
 			sortFunctionArguments(result);
 			result->lastInstructionIndex = i;
@@ -143,33 +103,107 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	return 0;
 }
 
+unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params) 
+{
+	for (int i = 0; i < params->numOfFunctions; i++)
+	{
+		struct Function* currentFunction = &params->functions[i];
+		for (int j = currentFunction->firstInstructionIndex; j <= currentFunction->lastInstructionIndex; j++)
+		{
+			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
+			params->startInstructionIndex = j;
+
+			if (doesInstructionDoNothing(currentInstruction))
+			{
+				continue;
+			}
+
+			// this will take every jump
+			if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
+				currentInstruction->operands[0].type == IMMEDIATE &&
+				currentInstruction->operands[0].immediate.value > 0)
+			{
+				unsigned long long jumpAddr = params->instructions[j].address + currentInstruction->operands[0].immediate.value;
+				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+				if (instructionIndex > j && instructionIndex <= currentFunction->lastInstructionIndex)
+				{
+					j = instructionIndex - 1;
+					continue;
+				}
+			}
+
+			unsigned char regOperandNum = 0;
+			unsigned char srcOperandNum = 0;
+			if (doesInstructionModifyRegister(params, currentInstruction, AX, &regOperandNum, 0, 0))
+			{
+				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
+				currentFunction->returnReg = AX;
+				currentFunction->returningFunctionAddress = 0;
+			}
+			else if (doesInstructionModifyRegister(params, currentInstruction, XMM0, 0, &srcOperandNum, 0) && currentFunction->returnReg != AX) // assuming AX is more likely to be the return register
+			{
+				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				currentFunction->returnReg = XMM0;
+				currentFunction->returningFunctionAddress = 0;
+			}
+			else if (doesInstructionModifyRegister(params, currentInstruction, ST0, 0, 0, 0))
+			{
+				currentFunction->returnType.primitiveType = FLOAT_TYPE;
+				currentFunction->returnReg = ST0;
+				currentFunction->returningFunctionAddress = 0;
+			}
+			else if (isOpcodeCall(currentInstruction->opcode))
+			{
+				unsigned long long calleeAddress = resolveJmpChain(params);
+				int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
+				if (calleeIndex == -1) // imported function
+				{
+					currentFunction->returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
+					currentFunction->returnReg = AX;
+					currentFunction->returningFunctionAddress = 0;
+				}
+				else if (params->functions[calleeIndex].returnType.primitiveType != VOID_TYPE)
+				{
+					currentFunction->returnType = params->functions[calleeIndex].returnType;
+					currentFunction->returnReg = params->functions[calleeIndex].returnReg;
+					currentFunction->returningFunctionAddress = 0;
+				}
+				else if(calleeIndex > i) // the callee's return value has not been handled yet
+				{
+					currentFunction->returningFunctionAddress = calleeAddress;
+				}
+			}
+			else if ((checkForReturnStatement(params) || checkForJumpToReturnStatement(params)))
+			{
+				break;
+			}
+		}
+	}
+}
+
 unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) // resolves if a function's return type depends on another function
 {
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
-		if (params->functions[i].addressOfReturnFunction != 0)
+		if (params->functions[i].returningFunctionAddress != 0)
 		{
-			int returnFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].addressOfReturnFunction);
+			int returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].returningFunctionAddress);
+			if (returningFunctionIndex == -1) 
+			{
+				return 0;
+			}
 
 			int count = 0; // to avoid an infinite loop
-			while (returnFunctionIndex != -1 && params->functions[returnFunctionIndex].addressOfReturnFunction != 0 && count < 10)
+			while (params->functions[returningFunctionIndex].returningFunctionAddress != 0 && count < 10)
 			{
-				returnFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[returnFunctionIndex].addressOfReturnFunction);
+				returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[returningFunctionIndex].returningFunctionAddress);
 				count++;
 			}
 
-			if (returnFunctionIndex != -1)
+			if (params->functions[returningFunctionIndex].returnType.primitiveType != VOID_TYPE)
 			{
-				if (params->functions[returnFunctionIndex].returnType.primitiveType != VOID_TYPE) 
-				{
-					params->functions[i].returnType = params->functions[returnFunctionIndex].returnType;
-					params->functions[i].returnReg = params->functions[returnFunctionIndex].returnReg;
-				}
-			}
-			else // probably an imported function
-			{
-				params->functions[i].returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
-				params->functions[i].returnReg = AX;
+				params->functions[i].returnType = params->functions[returningFunctionIndex].returnType;
+				params->functions[i].returnReg = params->functions[returningFunctionIndex].returnReg;
 			}
 		}
 	}

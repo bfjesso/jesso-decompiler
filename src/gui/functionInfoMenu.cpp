@@ -20,8 +20,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	returnRegStaticTxt->SetOwnForegroundColour(textColor);
 
     char hexNumStr[10] = { 0 };
-    sprintf(hexNumStr, "0x%llX", function->addressOfReturnFunction);
-    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Return Function: " + wxString(hexNumStr));
+    sprintf(hexNumStr, "0x%llX", function->returningFunctionAddress);
+    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Returning Function: " + wxString(hexNumStr));
 	returnFunctionAddrStaticTxt->SetOwnForegroundColour(textColor);
 
     sprintf(hexNumStr, "0x%llX", instructions[function->indexOfFirstFuncCall].address);
