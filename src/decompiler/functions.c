@@ -38,11 +38,11 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		}
 
 		isAfterJmp = addressToJumpTo != 0 && params->instructions[i].address < addressToJumpTo;
-		if(!isAfterJmp)
+		if(!isAfterJmp && addressToJumpTo != 0)
 		{
 			addressToJumpTo = 0;
 
-			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+			for (int j = 0; j < (ST0 - RAX); j++)
 			{
 				if (initializedRegsAfterJmp[j])
 				{
