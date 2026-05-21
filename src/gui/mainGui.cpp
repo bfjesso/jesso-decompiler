@@ -638,10 +638,10 @@ void MainGui::FindAllFunctions()
 
 	decompParams.functions = &functions[0];
 	decompParams.numOfFunctions = functions.size();
-
 	if (functions.size() > 0) 
 	{
 		fixAllFunctionReturnTypes(&decompParams);
+		getAllFunctionArguments(&decompParams);
 		fixAllFunctionArgs(&decompParams);
 	}
 }

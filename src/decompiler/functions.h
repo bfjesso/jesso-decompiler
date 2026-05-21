@@ -11,6 +11,8 @@ extern "C"
 	
 	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
 
+	unsigned char getAllFunctionArguments(struct DecompilationParameters* params);
+
 	unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
 	void freeFunction(struct Function* function);

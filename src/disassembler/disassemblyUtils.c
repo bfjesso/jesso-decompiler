@@ -178,22 +178,39 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum) // this returns 1 if it only reads the register, not writes
+unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, enum Register* specificReg) // this will return 0 if the instruction only writes to the reg without reading its value
 {
 	for (int i = 0; i < 4; i++)
 	{
-		if (regOperandNum != 0)
-		{
-			*regOperandNum = i;
-		}
-		
 		struct Operand* op = &(instruction->operands[i]);
-		if (op->type == MEM_ADDRESS && (compareRegisters(op->memoryAddress.reg, reg) || compareRegisters(op->memoryAddress.regDisplacement, reg)))
+		if (op->type == MEM_ADDRESS)
 		{
-			return 1;
+			if (compareRegisters(op->memoryAddress.reg, reg))
+			{
+				if (specificReg)
+				{
+					*specificReg = op->memoryAddress.reg;
+				}
+
+				return 1;
+			}
+			else if (compareRegisters(op->memoryAddress.regDisplacement, reg)) 
+			{
+				if (specificReg)
+				{
+					*specificReg = op->memoryAddress.regDisplacement;
+				}
+
+				return 1;
+			}
 		}
 		else if (!doesInstructionModifyOperand(instruction, i, 0, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
+			if (specificReg)
+			{
+				*specificReg = op->reg;
+			}
+			
 			return 1;
 		}
 	}
