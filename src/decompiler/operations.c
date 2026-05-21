@@ -1,4 +1,5 @@
 #include "operations.h"
+#include "functions.h"
 #include "intrinsics.h"
 #include "../disassembler/operands.h"
 #include "expressions.h"
@@ -6,6 +7,17 @@
 unsigned char decompileOperation(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
+	if (isOpcodeCall(instruction->opcode)) 
+	{
+		struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, instruction->address);
+		if (!returnedVar) 
+		{
+			return 0;
+		}
+
+		strcpyJdc(result, returnedVar->name.buffer);
+		return 1;
+	}
 
 	struct IntrinsicFunc* intrinsicFunc;
 	if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))

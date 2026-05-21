@@ -228,7 +228,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 		}
 
 		unsigned char srcOperandNum = 0;
-		if (doesInstructionModifyRegister(currentInstruction, targetReg, 0, &srcOperandNum, &finished))
+		if (doesInstructionModifyRegister(params, currentInstruction, targetReg, 0, &srcOperandNum, &finished))
 		{
 			expressions[expressionIndex] = initializeJdcStr();
 			if (!decompileOperation(params, targetReg, 0, 0, &expressions[expressionIndex]))
@@ -242,28 +242,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, enum Reg
 			}
 
 			expressionIndex++;
-		}
-		else 
-		{
-			struct Function* callee;
-			if ((checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, targetReg)) || 
-				(checkForUnknownFunctionCall(params) && compareRegisters(targetReg, AX)))
-			{
-				struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, currentInstruction->address);
-				if (!returnedVar)
-				{
-					for (int j = 0; j < expressionIndex; j++)
-					{
-						freeJdcStr(&expressions[j]);
-					}
-					free(expressions);
-					return 0;
-				}
-
-				expressions[expressionIndex] = initializeJdcStrWithVal(returnedVar->name.buffer);
-				expressionIndex++;
-				finished = 1;
-			}
 		}
 
 		if (expressionIndex >= expressionsBufferSize)

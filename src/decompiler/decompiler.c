@@ -189,20 +189,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 				if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
 				return 1;
 			}
-			else if (!ignoreInitialization && compareRegisters(callee->returnReg, reg))
-			{
-				return 0;
-			}
-
-			continue;
-		}
-
-		if (checkForUnknownFunctionCall(params))
-		{
-			if (compareRegisters(reg, AX))
-			{
-				return 0;
-			}
 
 			continue;
 		}
@@ -228,7 +214,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		if (!ignoreInitialization) 
 		{
 			unsigned char overwrites = 0;
-			if (doesInstructionModifyRegister(instruction, reg, 0, 0, &overwrites) && overwrites)
+			if (doesInstructionModifyRegister(params, instruction, reg, 0, 0, &overwrites) && overwrites)
 			{
 				return 0;
 			}

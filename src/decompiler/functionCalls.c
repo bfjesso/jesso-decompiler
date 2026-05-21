@@ -247,7 +247,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			if (!decompiledRegArgs[j].buffer)
 			{
 				unsigned char regOperandNum = 0;
-				if(doesInstructionModifyRegister(currentInstruction, platformRegArgs[j], &regOperandNum, 0, 0))
+				if(doesInstructionModifyRegister(params, currentInstruction, platformRegArgs[j], &regOperandNum, 0, 0))
 				{
 					regArgTypeStrs[j] = initializeJdcStr();
 					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);

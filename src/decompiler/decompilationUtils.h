@@ -19,3 +19,5 @@ extern "C"
 void addIndents(struct JdcStr* result, int numOfIndents);
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress);
+
+unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites);

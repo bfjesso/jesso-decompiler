@@ -1,31 +1,6 @@
 #include "returnStatements.h"
 #include "decompilationUtils.h"
-#include "functions.h"
 #include "expressions.h"
-#include "functionCalls.h"
-
-unsigned char doesInstructionModifyReturnRegister(struct DecompilationParameters* params)
-{
-	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
-	unsigned long long address = params->instructions[params->startInstructionIndex].address;
-
-	if (doesInstructionModifyRegister(instruction, params->currentFunc->returnReg, 0, 0, 0))
-	{
-		return 1;
-	}
-	else if (isOpcodeCall(instruction->opcode))
-	{
-		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params));
-		if (calleeIndex == -1)
-		{
-			return checkForUnknownFunctionCall(params) && compareRegisters(params->currentFunc->returnReg, AX);
-		}
-
-		return params->functions[calleeIndex].returnReg == params->currentFunc->returnReg;
-	}
-
-	return 0;
-}
 
 unsigned char checkForReturnStatement(struct DecompilationParameters* params)
 {
@@ -90,14 +65,14 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 		{
 			if (params->currentFunc->lastInstructionIndex != 0)
 			{
-				if (doesInstructionModifyRegister(&params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)) 
+				if (doesInstructionModifyRegister(params, &params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)) 
 				{
 					return 0;
 				}
 			}
 			else 
 			{
-				if (doesInstructionModifyRegister(&params->instructions[i], AX, 0, 0, 0))
+				if (doesInstructionModifyRegister(params, &params->instructions[i], AX, 0, 0, 0))
 				{
 					return 0;
 				}

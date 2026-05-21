@@ -146,7 +146,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 					if (compareRegisters(reg, k)) 
 					{
-						if (doesInstructionModifyRegister(currentInstruction, reg, 0, 0, &overwrites) && overwrites)
+						if (doesInstructionModifyRegister(params, currentInstruction, reg, 0, 0, &overwrites) && overwrites)
 						{
 							initializedRegs[k - RAX] = 1;
 							initializedRegsAfterJmp[k - RAX] = isAfterJmp;
@@ -204,19 +204,19 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		{
 			unsigned char regOperandNum = 0;
 			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(currentInstruction, AX, &regOperandNum, 0, 0))
+			if (doesInstructionModifyRegister(params, currentInstruction, AX, &regOperandNum, 0, 0))
 			{
 				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 				result->returnReg = AX;
 				result->addressOfReturnFunction = 0;
 			}
-			else if (doesInstructionModifyRegister(currentInstruction, XMM0, 0, &srcOperandNum, 0) && result->returnReg != AX) // assuming AX is more likely to be the return register
+			else if (doesInstructionModifyRegister(params, currentInstruction, XMM0, 0, &srcOperandNum, 0) && result->returnReg != AX) // assuming AX is more likely to be the return register
 			{
 				result->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
 				result->returnReg = XMM0;
 				result->addressOfReturnFunction = 0;
 			}
-			else if (doesInstructionModifyRegister(currentInstruction, ST0, 0, 0, 0))
+			else if (doesInstructionModifyRegister(params, currentInstruction, ST0, 0, 0, 0))
 			{
 				result->returnType.primitiveType = FLOAT_TYPE;
 				result->returnReg = ST0;
@@ -331,6 +331,10 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 
 				int numOfRegArgsInit = 0;
 				enum Register* initializedRegs = (enum Register*)calloc(callee->numOfRegArgs, sizeof(enum Register));
+				if (!initializedRegs) 
+				{
+					return 0;
+				}
 
 				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= currentFunc->firstInstructionIndex; j--)
 				{
@@ -350,7 +354,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 						if (alreadyFound) { continue; }
 
 						int overwrites = 0;
-						if (doesInstructionModifyRegister(instruction, callee->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
+						if (doesInstructionModifyRegister(params, instruction, callee->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
 						{
 							initializedRegs[numOfRegArgsInit] = callee->regArgs[k].reg;
 							numOfRegArgsInit++;
