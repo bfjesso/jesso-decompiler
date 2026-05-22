@@ -86,7 +86,12 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	struct JdcStr memAddrStr = initializeJdcStr();
 	unsigned char hasGotFirstTerm = 0;
 
-	if (memAddress->reg != NO_REG) 
+	unsigned long long baseRegVal = 0;
+	if (compareRegisters(memAddress->reg, IP)) 
+	{
+		baseRegVal = params->instructions[params->startInstructionIndex + 1].address * memAddress->scale;
+	}
+	else if (memAddress->reg != NO_REG) 
 	{
 		struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 		struct JdcStr baseRegStr = initializeJdcStr();
@@ -122,7 +127,12 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		hasGotFirstTerm = 1;
 	}
 
-	if (memAddress->regDisplacement != NO_REG)
+	unsigned long long displacementRegVal = 0;
+	if (compareRegisters(memAddress->regDisplacement, IP))
+	{
+		displacementRegVal = params->instructions[params->startInstructionIndex + 1].address;
+	}
+	else if (memAddress->regDisplacement != NO_REG)
 	{
 		struct JdcStr displacementRegStr = initializeJdcStr();
 		if (!decompileRegister(params, memAddress->regDisplacement, 1, &displacementRegStr, 0))
@@ -144,17 +154,32 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		hasGotFirstTerm = 1;
 	}
 
-	if (!hasGotFirstTerm) 
+	if (baseRegVal != 0 || displacementRegVal != 0) 
 	{
-		sprintfJdc(&memAddrStr, 0, "0x%llX", memAddress->constDisplacement);
+		unsigned long long totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
+		if (!hasGotFirstTerm)
+		{
+			sprintfJdc(&memAddrStr, 0, "0x%llX", totalDisplacement);
+		}
+		else if (totalDisplacement > 0)
+		{
+			sprintfJdc(&memAddrStr, 1, " + 0x%llX", totalDisplacement);
+		}
 	}
-	else if (memAddress->constDisplacement < 0)
+	else // this is seperate because the constDisplacement is signed, but the IP is unsigned
 	{
-		sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
-	}
-	else if(memAddress->constDisplacement > 0)
-	{
-		sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
+		if (!hasGotFirstTerm)
+		{
+			sprintfJdc(&memAddrStr, 0, "0x%llX", memAddress->constDisplacement);
+		}
+		else if (memAddress->constDisplacement < 0)
+		{
+			sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
+		}
+		else if (memAddress->constDisplacement > 0)
+		{
+			sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
+		}
 	}
 
 	if (instruction->opcode != LEA)
