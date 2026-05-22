@@ -213,6 +213,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[i].dstIndex;
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[i].exitIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].startIndex = params->currentFunc->conditions[i].dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].endIndex = params->currentFunc->conditions[i].exitIndex;
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
 				params->currentFunc->numOfConditions++;
 			}
