@@ -213,157 +213,177 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 
 unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 {
+	unsigned char* initializedRegs = (unsigned char*)malloc(ST0 - RAX);
+	if (!initializedRegs) 
+	{
+		return 0;
+	}
+	
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
-		unsigned char initializedRegs[ST0 - RAX] = { 0 };
-		unsigned char initializedRegsAfterJmp[ST0 - RAX] = { 0 };
+		memset(initializedRegs, 0, ST0 - RAX);
 
-		int stackFrameSize = 0;
-		int indexToJumpTo = 0;
-		
-		struct Function* currentFunction = &params->functions[i];
-		for (int j = currentFunction->firstInstructionIndex; j <= currentFunction->lastInstructionIndex; j++)
+		params->currentFunc = &params->functions[i];
+		params->startInstructionIndex = params->currentFunc->firstInstructionIndex;
+		if (!getFunctionArguments(params, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 1))
 		{
-			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
-			params->startInstructionIndex = j;
+			free(initializedRegs);
+			return 0;
+		}
+	}
 
-			if (indexToJumpTo != 0 && j >= indexToJumpTo)
+	free(initializedRegs);
+	return 1;
+}
+
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int endIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum)
+{
+	for (int i = params->startInstructionIndex; i <= endIndex; i++)
+	{
+		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
+		params->startInstructionIndex = i;
+
+		if (doesInstructionDoNothing(currentInstruction))
+		{
+			continue;
+		}
+
+		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
+			currentInstruction->operands[0].type == IMMEDIATE &&
+			currentInstruction->operands[0].immediate.value > 0)
+		{
+			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
+			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+			if (instructionIndex > i && instructionIndex <= params->currentFunc->lastInstructionIndex)
 			{
-				indexToJumpTo = 0;
-
-				for (int k = 0; k < (ST0 - RAX); k++)
+				if (callNum < 5 && isOpcodeJcc(currentInstruction->opcode))
 				{
-					if (initializedRegsAfterJmp[k])
+					unsigned char* newInitializedRegs = (unsigned char*)malloc(ST0 - RAX);
+					if (!newInitializedRegs)
 					{
-						initializedRegs[k] = 0;
-						initializedRegsAfterJmp[k] = 0;
+						return 0;
 					}
+
+					memcpy(newInitializedRegs, initializedRegs, ST0 - RAX);
+
+					params->startInstructionIndex = i + 1;
+					if (!getFunctionArguments(params, instructionIndex - 1, stackFrameSize, newInitializedRegs, callNum + 1))
+					{
+						free(newInitializedRegs);
+						return 0;
+					}
+
+					free(newInitializedRegs);
 				}
+
+				i = instructionIndex - 1;
 			}
 
-			if (doesInstructionDoNothing(currentInstruction))
+			continue;
+		}
+
+		// checking for reg args
+		for (int j = RAX; j < ST0; j++)
+		{
+			if (currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER)
+			{
+				break;
+			}
+
+			if (j == RBP || j == RSP || j == RIP)
 			{
 				continue;
 			}
 
-			// checking for reg args
-			for (int k = RAX; k < ST0; k++)
-			{
-				if (currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER) 
-				{
-					break;
-				}
-				
-				if (k == RBP || k == RSP || k == RIP)
-				{
-					continue;
-				}
-
-				unsigned char overwrites = 0;
-				enum Register reg = NO_REG;
-				if (doesInstructionAccessRegister(currentInstruction, k, &reg))
-				{
-					if (!initializedRegs[k - RAX])
-					{
-						if (!addRegArg(currentFunction, getRegisterDataType(currentInstruction->opcode, reg), reg))
-						{
-							return 0;
-						}
-
-						if (currentFunction->numOfRegArgs == 1 && compareRegisters(reg, CX))
-						{
-							currentFunction->callingConvention = __THISCALL;
-						}
-						if (isRegisterPlatformArg(reg) && currentFunction->callingConvention != __UNKNOWNCALL)
-						{
-							currentFunction->callingConvention = __FASTCALL;
-						}
-						else
-						{
-							currentFunction->callingConvention = __UNKNOWNCALL;
-						}
-
-						// this is so it is not added again
-						initializedRegs[k - RAX] = 1;
-						initializedRegsAfterJmp[k - RAX] = 0;
-					}
-				}
-				else if (doesInstructionModifyRegister(params, currentInstruction, k, 0, 0, &overwrites) && overwrites)
-				{
-					initializedRegs[k - RAX] = 1;
-					initializedRegsAfterJmp[k - RAX] = j < indexToJumpTo;
-				}
-			}
-
-			// checking for stack arguments and stack vars
 			unsigned char overwrites = 0;
-			for (int k = 3; k >= 0; k--)
+			enum Register reg = NO_REG;
+			if (doesInstructionAccessRegister(currentInstruction, j, &reg))
 			{
-				struct Operand* currentOperand = &currentInstruction->operands[k];
-
-				if (isOperandStackArg(currentOperand, stackFrameSize))
+				if (!initializedRegs[j - RAX])
 				{
-					int stackOffset = currentOperand->memoryAddress.constDisplacement;
-					if (compareRegisters(currentOperand->memoryAddress.reg, SP))
+					if (!addRegArg(params->currentFunc, getRegisterDataType(currentInstruction->opcode, reg), reg))
 					{
-						stackOffset -= stackFrameSize;
+						return 0;
 					}
 
-					struct StackVariable* stackArg = getStackArgByOffset(currentFunction, stackOffset);
-					struct StackVariable* stackVar = getStackVarByOffset(currentFunction, stackOffset);
-					if (!stackArg && !stackVar)
+					if (params->currentFunc->numOfRegArgs == 1 && compareRegisters(reg, CX))
 					{
-						doesInstructionModifyOperand(currentInstruction, k, 0, &overwrites);
-						if (!overwrites)
-						{
-							if (!addStackArg(currentFunction, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
-							{
-								return 0;
-							}
-						}
-						else if (!addStackVar(currentFunction, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
+						params->currentFunc->callingConvention = __THISCALL;
+					}
+					if (isRegisterPlatformArg(reg) && params->currentFunc->callingConvention != __UNKNOWNCALL)
+					{
+						params->currentFunc->callingConvention = __FASTCALL;
+					}
+					else
+					{
+						params->currentFunc->callingConvention = __UNKNOWNCALL;
+					}
+
+					// this is so it is not added again
+					initializedRegs[j - RAX] = 1;
+				}
+			}
+			else if (doesInstructionModifyRegister(params, currentInstruction, j, 0, 0, &overwrites) && overwrites)
+			{
+				initializedRegs[j - RAX] = 1;
+			}
+		}
+
+		// checking for stack arguments and stack vars
+		unsigned char overwrites = 0;
+		for (int j = 3; j >= 0; j--)
+		{
+			struct Operand* currentOperand = &currentInstruction->operands[j];
+			if (isOperandStackArg(currentOperand, stackFrameSize))
+			{
+				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
+				{
+					stackOffset -= stackFrameSize;
+				}
+
+				struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
+				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+				if (!stackArg && !stackVar)
+				{
+					doesInstructionModifyOperand(currentInstruction, j, 0, &overwrites);
+					if (!overwrites)
+					{
+						if (!addStackArg(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
 						{
 							return 0;
 						}
 					}
-				}
-				else if (isOperandStackVar(currentOperand, stackFrameSize))
-				{
-					int stackOffset = currentOperand->memoryAddress.constDisplacement;
-					if (compareRegisters(currentOperand->memoryAddress.reg, SP))
+					else if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
 					{
-						stackOffset -= stackFrameSize;
-					}
-
-					struct StackVariable* stackArg = getStackArgByOffset(currentFunction, stackOffset);
-					struct StackVariable* stackVar = getStackVarByOffset(currentFunction, stackOffset);
-					if (!stackArg && !stackVar)
-					{
-						if (!addStackVar(currentFunction, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
-						{
-							return 0;
-						}
+						return 0;
 					}
 				}
 			}
-
-			int stackFrameSizeChange = getStackFrameChange(currentInstruction);
-			if (stackFrameSizeChange != 0)
+			else if (isOperandStackVar(currentOperand, stackFrameSize))
 			{
-				stackFrameSize += stackFrameSizeChange;
-			}
-
-			if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
-				currentInstruction->operands[0].type == IMMEDIATE &&
-				currentInstruction->operands[0].immediate.value > 0)
-			{
-				unsigned long long jumpAddr = params->instructions[j].address + currentInstruction->operands[0].immediate.value;
-				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
-				if (instructionIndex > indexToJumpTo && instructionIndex <= currentFunction->lastInstructionIndex)
+				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
 				{
-					indexToJumpTo = instructionIndex;
+					stackOffset -= stackFrameSize;
+				}
+
+				struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
+				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+				if (!stackArg && !stackVar)
+				{
+					if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
+					{
+						return 0;
+					}
 				}
 			}
+		}
+
+		int stackFrameSizeChange = getStackFrameChange(currentInstruction);
+		if (stackFrameSizeChange != 0)
+		{
+			stackFrameSize += stackFrameSizeChange;
 		}
 	}
 
