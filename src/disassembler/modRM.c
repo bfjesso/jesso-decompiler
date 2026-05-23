@@ -452,7 +452,7 @@ static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned ch
 		result->memoryAddress.scale *= 2;
 	}
 
-	if (index != 4)
+	if (index != 4 || params->rexPrefix.X) // ESP cant be the index, but if rex.X is used it can encode R12
 	{
 		result->memoryAddress.reg = (enum Register)(index + EAX);
 		result->memoryAddress.regDisplacement = (enum Register)(base + EAX);
@@ -485,7 +485,7 @@ static unsigned char handleSIB(struct DisassemblyParameters* params, unsigned ch
 		switch (params->modRM.mod)
 		{
 		case 0:
-			if (index != 4) { result->memoryAddress.regDisplacement = NO_REG; }
+			if (index != 4 || params->rexPrefix.X) { result->memoryAddress.regDisplacement = NO_REG; }
 			else { result->memoryAddress.reg = NO_REG; }
 			result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
 			break;
