@@ -178,7 +178,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, enum Register* specificReg) // this will return 0 if the instruction only writes to the reg without reading its value
+unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, enum Register* specificReg)
 {
 	for (int i = 0; i < 4; i++)
 	{

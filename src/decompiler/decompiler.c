@@ -180,6 +180,27 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		params->startInstructionIndex = i;
 
+		if (isOpcodeJmp(instruction->opcode) || isOpcodeJcc(instruction->opcode))
+		{
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
+			if (dstIndex > i)
+			{
+				if (isOpcodeJcc(instruction->opcode)) 
+				{
+					params->startInstructionIndex = i + 1;
+					if (isRegisterAccessedBeforeInit(params, dstIndex - 1, reg, ignoreInitialization, dataTypeRef, callNum + 1))
+					{
+						params->startInstructionIndex = ogStartInstructionIndex;
+						return 1;
+					}
+				}
+				
+				i = dstIndex - 1;
+			}
+
+			continue;
+		}
+
 		struct Function* callee;
 		if (checkForKnownFunctionCall(params, &callee) && callee)
 		{
@@ -187,6 +208,8 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			if (regArg)
 			{
 				if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
+
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
@@ -198,16 +221,21 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			if (compareRegisters(params->currentFunc->returnReg, reg))
 			{
 				if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
+
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
 
-			continue;
+			params->startInstructionIndex = ogStartInstructionIndex;
+			return 0;
 		}
 
-		unsigned char operandNum = 0;
-		if (doesInstructionAccessRegister(instruction, reg, &operandNum))
+		enum Register specificReg = NO_REG;
+		if (doesInstructionAccessRegister(instruction, reg, &specificReg))
 		{
-			if (dataTypeRef) { *dataTypeRef = getOperandDataType(instruction->opcode, &(instruction->operands[operandNum])); }
+			if (dataTypeRef) { *dataTypeRef = getRegisterDataType(instruction->opcode, specificReg); }
+
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 
@@ -216,28 +244,8 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyRegister(params, instruction, reg, 0, 0, &overwrites) && overwrites)
 			{
+				params->startInstructionIndex = ogStartInstructionIndex;
 				return 0;
-			}
-		}
-
-		if (isOpcodeJmp(instruction->opcode))
-		{
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
-			if (dstIndex > i)
-			{
-				i = dstIndex - 1;
-			}
-		}
-		else if (isOpcodeJcc(instruction->opcode)) 
-		{
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
-			if (dstIndex > i) 
-			{
-				params->startInstructionIndex = dstIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, reg, ignoreInitialization, dataTypeRef, callNum + 1))
-				{
-					return 1;
-				}
 			}
 		}
 	}
@@ -310,11 +318,10 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
 	enum Register* modifiedRegs = (enum Register*)calloc(NUM_OF_REGISTERS, sizeof(enum Register));
-	int numOfRegs = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		memset(modifiedRegs, 0, NUM_OF_REGISTERS * sizeof(enum Register));
-		numOfRegs = 0;
+		int numOfRegs = 0;
 		
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (!condition->isCombinedByOther && condition->conditionType != CONDITIONAL_RETURN_CT)
@@ -382,15 +389,15 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int k = 0; k < numOfRegs; k++)
+			for (int j = 0; j < numOfRegs; j++)
 			{
 				struct DataType regVarType = { 0 };
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					params->startInstructionIndex = condition->startIndex; // if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[k], 1, &regVarType, 0))
+					if (isRegisterAccessedBeforeInit(params, condition->endIndex - 1, modifiedRegs[j], 1, &regVarType, 0))
 					{
-						if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
+						if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[j]))
 						{
 							free(modifiedRegs);
 							return 0;
@@ -399,9 +406,9 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				}
 				
 				params->startInstructionIndex = condition->endIndex;
-				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[k], 0, &regVarType, 0))
+				if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, &regVarType, 0))
 				{
-					if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[k]))
+					if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[j]))
 					{
 						free(modifiedRegs);
 						return 0;
