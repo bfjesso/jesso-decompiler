@@ -261,12 +261,31 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				continue;
 			}
 
-			if ((cond1->startIndex < cond2->startIndex && cond1->endIndex > cond2->startIndex && cond1->endIndex < cond2->endIndex) || (cond1->startIndex > cond2->startIndex && cond1->startIndex < cond2->endIndex && cond1->endIndex > cond2->endIndex) || (cond1->startIndex == cond2->startIndex && cond1->endIndex > cond2->endIndex)) // last check is for do while loops
+			if ((cond1->startIndex < cond2->startIndex && cond1->endIndex > cond2->startIndex && cond1->endIndex < cond2->endIndex) || 
+				(cond1->startIndex > cond2->startIndex && cond1->startIndex < cond2->endIndex && cond1->endIndex > cond2->endIndex) || 
+				(cond1->startIndex == cond2->startIndex && cond1->endIndex > cond2->endIndex)) // last check is for do while loops
 			{
 				cond1->conditionType = CONDITIONAL_GOTO_CT;
 				cond1->startIndex = cond1->jccIndex;
 				cond1->endIndex = cond1->dstIndex;
 				break;
+			}
+		}
+	}
+
+	// checking for ELSE conditions that are associated with a conditional goto, which need to be removed
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* gotoCond = &params->currentFunc->conditions[i];
+		if (gotoCond->conditionType == CONDITIONAL_GOTO_CT)
+		{
+			for (int j = i + 1; j < params->currentFunc->numOfConditions; j++)
+			{
+				struct Condition* elseCond = &params->currentFunc->conditions[j];
+				if (elseCond->conditionType == ELSE_CT && gotoCond->dstIndex == elseCond->startIndex)
+				{
+					memset(elseCond, 0, sizeof(struct Condition));
+				}
 			}
 		}
 	}
