@@ -64,8 +64,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
 		{
 			result->returningFunctionAddress = params->instructions[i + 1].address;
-
-			sortFunctionArguments(result);
 			result->lastInstructionIndex = i;
 			return 1;
 		}
@@ -86,7 +84,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				result->callingConvention = __CDECL;
 			}
 
-			sortFunctionArguments(result);
 			result->lastInstructionIndex = i;
 			return 1;
 		}
@@ -94,7 +91,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		{
 			result->callingConvention = __UNKNOWNCALL;
 
-			sortFunctionArguments(result);
 			result->lastInstructionIndex = i;
 			return 1;
 		}
@@ -469,6 +465,8 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 				currentFunc->addressOfFirstFuncCall = 0;
 			}
 		}
+
+		sortFunctionArguments(currentFunc);
 	}
 
 	if (numFixed != 0) 
@@ -477,6 +475,41 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 	}
 
 	return 1;
+}
+
+static void sortFunctionArguments(struct Function* function)
+{
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+		{
+			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
+			{
+				struct RegisterVariable temp = function->regArgs[j];
+				function->regArgs[j] = function->regArgs[i];
+				function->regArgs[i] = temp;
+				break;
+			}
+		}
+	}
+
+	// order should be from least to greatest stack offset
+	for (int i = 0; i < function->numOfStackArgs - 1; i++)
+	{
+		char swapped = 0;
+		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
+		{
+			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
+			{
+				struct StackVariable temp = function->stackArgs[j];
+				function->stackArgs[j] = function->stackArgs[j + 1];
+				function->stackArgs[j + 1] = temp;
+
+				swapped = 1;
+			}
+		}
+		if (!swapped) { break; }
+	}
 }
 
 void freeFunction(struct Function* function) 
@@ -790,39 +823,4 @@ unsigned char addReturnedVar(struct Function* function, struct DataType dataType
 	function->numOfReturnedVars++;
 
 	return 1;
-}
-
-static void sortFunctionArguments(struct Function* function) 
-{
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
-		{
-			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
-			{
-				struct RegisterVariable temp = function->regArgs[j];
-				function->regArgs[j] = function->regArgs[i];
-				function->regArgs[i] = temp;
-				break;
-			}
-		}
-	}
-
-	// order should be from least to greatest stack offset
-	for (int i = 0; i < function->numOfStackArgs - 1; i++)
-	{
-		char swapped = 0;
-		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
-		{
-			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
-			{
-				struct StackVariable temp = function->stackArgs[j];
-				function->stackArgs[j] = function->stackArgs[j + 1];
-				function->stackArgs[j + 1] = temp;
-
-				swapped = 1;
-			}
-		}
-		if (!swapped) { break; }
-	}
 }

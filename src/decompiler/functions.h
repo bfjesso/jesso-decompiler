@@ -27,6 +27,8 @@ extern "C"
 
 static unsigned char getFunctionArguments(struct DecompilationParameters* params, int endIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum);
 
+static void sortFunctionArguments(struct Function* function);
+
 static int getStackFrameChange(struct DisassembledInstruction* instruction);
 
 int getStackFrameSizeAtInstruction(struct DecompilationParameters* params);
@@ -50,5 +52,3 @@ unsigned char addRegArg(struct Function* function, struct DataType dataType, enu
 unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg);
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
-
-static void sortFunctionArguments(struct Function* function);
