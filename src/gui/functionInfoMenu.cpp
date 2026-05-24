@@ -24,8 +24,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
     returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Returning Function: " + wxString(hexNumStr));
 	returnFunctionAddrStaticTxt->SetOwnForegroundColour(textColor);
 
-    sprintf(hexNumStr, "0x%llX", instructions[function->indexOfFirstFuncCall].address);
-    indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call: " + wxString(std::to_string(function->indexOfFirstFuncCall)) + " (" + wxString(hexNumStr) + ")");
+    sprintf(hexNumStr, "0x%llX", instructions[function->firstFuncCallInstructionIndex].address);
+    indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call Instruction: " + wxString(std::to_string(function->firstFuncCallInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
 	indexOfFirstFuncCallStaticTxt->SetOwnForegroundColour(textColor);
 
     callingConventionStaticTxt = new wxStaticText(this, wxID_ANY, "Calling Convention: " + wxString(callingConventionStrs[function->callingConvention]));

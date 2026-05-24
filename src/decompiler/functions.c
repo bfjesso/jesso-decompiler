@@ -36,16 +36,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			continue;
 		}
 
-		if (isOpcodeCall(currentInstruction->opcode) && result->addressOfFirstFuncCall == 0)
-		{
-			unsigned long long calleeAddress = resolveJmpChain(params);
-			if (calleeAddress != params->instructions[result->firstInstructionIndex].address && calleeAddress != 0) // check for recursive function
-			{
-				result->addressOfFirstFuncCall = calleeAddress;
-				result->indexOfFirstFuncCall = i;
-			}
-		}
-
 		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
 			currentInstruction->operands[0].type == IMMEDIATE && 
 			currentInstruction->operands[0].immediate.value > 0)
@@ -221,7 +211,7 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 
 		params->currentFunc = &params->functions[i];
 		params->startInstructionIndex = params->currentFunc->firstInstructionIndex;
-		if (!getFunctionArguments(params, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 1))
+		if (!getFunctionArguments(params, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 0))
 		{
 			free(initializedRegs);
 			return 0;
@@ -242,6 +232,16 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 		if (doesInstructionDoNothing(currentInstruction))
 		{
 			continue;
+		}
+
+		if (isOpcodeCall(currentInstruction->opcode) && params->currentFunc->firstCalledFunc == 0)
+		{
+			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params));
+			if (calleeIndex != -1 && &params->functions[calleeIndex] != params->currentFunc)
+			{
+				params->currentFunc->firstCalledFunc = &params->functions[calleeIndex];
+				params->currentFunc->firstFuncCallInstructionIndex = i;
+			}
 		}
 
 		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
@@ -306,7 +306,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					{
 						params->currentFunc->callingConvention = __THISCALL;
 					}
-					if (isRegisterPlatformArg(reg) && params->currentFunc->callingConvention != __UNKNOWNCALL)
+					else if (isRegisterPlatformArg(reg) && params->currentFunc->callingConvention != __UNKNOWNCALL)
 					{
 						params->currentFunc->callingConvention = __FASTCALL;
 					}
@@ -376,11 +376,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 		}
 
-		int stackFrameSizeChange = getStackFrameChange(currentInstruction);
-		if (stackFrameSizeChange != 0)
-		{
-			stackFrameSize += stackFrameSizeChange;
-		}
+		stackFrameSize += getStackFrameChange(currentInstruction);
 	}
 
 	return 1;
@@ -392,78 +388,72 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
 		struct Function* currentFunc = &params->functions[i];
-		if (currentFunc->addressOfFirstFuncCall != 0)
+		if (currentFunc->firstCalledFunc != 0)
 		{
-			int functionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, currentFunc->addressOfFirstFuncCall);
-			if (functionIndex != -1 && params->functions[functionIndex].numOfRegArgs > 0)
+			int numOfRegArgsInit = 0;
+			enum Register* initializedRegs = (enum Register*)calloc(currentFunc->firstCalledFunc->numOfRegArgs, sizeof(enum Register));
+			if (!initializedRegs)
 			{
-				struct Function* callee = &params->functions[functionIndex];
+				return 0;
+			}
 
-				int numOfRegArgsInit = 0;
-				enum Register* initializedRegs = (enum Register*)calloc(callee->numOfRegArgs, sizeof(enum Register));
-				if (!initializedRegs) 
+			for (int j = currentFunc->firstFuncCallInstructionIndex - 1; j >= currentFunc->firstInstructionIndex; j--)
+			{
+				struct DisassembledInstruction* instruction = &params->instructions[j];
+
+				for (int k = 0; k < currentFunc->firstCalledFunc->numOfRegArgs; k++)
 				{
-					return 0;
-				}
-
-				for (int j = currentFunc->indexOfFirstFuncCall - 1; j >= currentFunc->firstInstructionIndex; j--)
-				{
-					struct DisassembledInstruction* instruction = &params->instructions[j];
-
-					for (int k = 0; k < callee->numOfRegArgs; k++)
+					int alreadyFound = 0;
+					for (int l = 0; l < numOfRegArgsInit; l++)
 					{
-						int alreadyFound = 0;
-						for (int l = 0; l < numOfRegArgsInit; l++) 
+						if (initializedRegs[l] == currentFunc->firstCalledFunc->regArgs[k].reg)
 						{
-							if (initializedRegs[l] == callee->regArgs[k].reg) 
-							{
-								alreadyFound = 1;
-								break;
-							}
-						}
-						if (alreadyFound) { continue; }
-
-						int overwrites = 0;
-						if (doesInstructionModifyRegister(params, instruction, callee->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
-						{
-							initializedRegs[numOfRegArgsInit] = callee->regArgs[k].reg;
-							numOfRegArgsInit++;
+							alreadyFound = 1;
 							break;
 						}
 					}
-				}
+					if (alreadyFound) { continue; }
 
-				if (numOfRegArgsInit != callee->numOfRegArgs) 
-				{
-					for (int k = 0; k < callee->numOfRegArgs; k++)
+					int overwrites = 0;
+					if (doesInstructionModifyRegister(params, instruction, currentFunc->firstCalledFunc->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
 					{
-						int isInitialized = 0;
-						for (int l = 0; l < numOfRegArgsInit; l++)
-						{
-							if (initializedRegs[l] == callee->regArgs[k].reg)
-							{
-								isInitialized = 1;
-								break;
-							}
-						}
+						initializedRegs[numOfRegArgsInit] = currentFunc->firstCalledFunc->regArgs[k].reg;
+						numOfRegArgsInit++;
+						break;
+					}
+				}
+			}
 
-						if (!isInitialized) 
+			if (numOfRegArgsInit != currentFunc->firstCalledFunc->numOfRegArgs)
+			{
+				for (int k = 0; k < currentFunc->firstCalledFunc->numOfRegArgs; k++)
+				{
+					int isInitialized = 0;
+					for (int l = 0; l < numOfRegArgsInit; l++)
+					{
+						if (initializedRegs[l] == currentFunc->firstCalledFunc->regArgs[k].reg)
 						{
-							if (!addRegArg(currentFunc, callee->regArgs[k].dataType, callee->regArgs[k].reg))
-							{
-								free(initializedRegs);
-								return 0;
-							}
+							isInitialized = 1;
+							break;
 						}
 					}
 
-					numFixed++;
+					if (!isInitialized)
+					{
+						if (!addRegArg(currentFunc, currentFunc->firstCalledFunc->regArgs[k].dataType, currentFunc->firstCalledFunc->regArgs[k].reg))
+						{
+							free(initializedRegs);
+							return 0;
+						}
+					}
 				}
 
-				free(initializedRegs);
-
-				currentFunc->addressOfFirstFuncCall = 0;
+				numFixed++;
 			}
+
+			free(initializedRegs);
+
+			currentFunc->firstCalledFunc = 0;
 		}
 
 		sortFunctionArguments(currentFunc);
