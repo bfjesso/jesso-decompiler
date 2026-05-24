@@ -201,6 +201,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			continue;
 		}
 
+		// this is to check if the function accesses the reg as an argument
 		struct Function* callee;
 		if (checkForKnownFunctionCall(params, &callee) && callee)
 		{
@@ -212,8 +213,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 				params->startInstructionIndex = ogStartInstructionIndex;
 				return 1;
 			}
-
-			continue;
 		}
 
 		if (checkForReturnStatement(params))
@@ -262,49 +261,39 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 		struct Function* callee = 0;
 		if ((checkForKnownFunctionCall(params, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params))
 		{
-			struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
-			int callInstructionIndex = i;
 			enum Register returnReg = callee ? callee->returnReg : AX;
 
-			unsigned long long calleeAddress = resolveJmpChain(params);
-
-			struct DataType returnType = { 0 }; // used both if its an import call and to check if the return value is used
-			if(i == params->currentFunc->lastInstructionIndex)
+			params->startInstructionIndex++;
+			struct DataType returnType = { 0 }; // used if its an unknown function
+			if (isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0))
 			{
-				returnType = params->currentFunc->returnType;
-			}
-			else
-			{
-				params->startInstructionIndex++;
-				if(!isRegisterAccessedBeforeInit(params, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0))
+				params->startInstructionIndex = i;
+				unsigned long long calleeAddress = resolveJmpChain(params);
+				struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
+				
+				if (callee)
 				{
-					continue;
-				}
-			}
-
-			if (callee)
-			{
-				if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
-				{
-					return 0;
-				}
-			}
-			else
-			{
-				params->startInstructionIndex = callInstructionIndex;
-				int importIndex = getImportIndexByAddress(params, calleeAddress);
-				if (importIndex != -1) 
-				{
-					if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
+					if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
 					{
 						return 0;
 					}
 				}
-				else 
+				else
 				{
-					if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
+					int importIndex = getImportIndexByAddress(params, calleeAddress);
+					if (importIndex != -1)
 					{
-						return 0;
+						if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
+						{
+							return 0;
+						}
+					}
+					else
+					{
+						if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
+						{
+							return 0;
+						}
 					}
 				}
 			}
