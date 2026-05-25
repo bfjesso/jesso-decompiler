@@ -7,7 +7,7 @@
 unsigned char decompileOperation(struct DecompilationParameters* params, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
-	if (isOpcodeCall(instruction->opcode)) 
+	if (isOpcodeCall(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 	{
 		struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, instruction->address);
 		if (!returnedVar) 

@@ -173,33 +173,19 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		if (dataTypeRef) { *dataTypeRef = getRegisterDataType(NO_MNEMONIC, reg); }
 		return 1;
 	}
+
+	// this happens if the last instruction of the function also initializes the return reg. the start instruction index is incremented before isRegisterAccessedBeforeInit is called, so the loop here wont run
+	if (params->startInstructionIndex > params->currentFunc->lastInstructionIndex && compareRegisters(params->currentFunc->returnReg, reg))
+	{
+		if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
+		return 1;
+	}
 	
 	int ogStartInstructionIndex = params->startInstructionIndex;
 	for (int i = ogStartInstructionIndex; i <= lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		params->startInstructionIndex = i;
-
-		if (isOpcodeJmp(instruction->opcode) || isOpcodeJcc(instruction->opcode))
-		{
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
-			if (dstIndex > i)
-			{
-				if (isOpcodeJcc(instruction->opcode)) 
-				{
-					params->startInstructionIndex = i + 1;
-					if (isRegisterAccessedBeforeInit(params, dstIndex - 1, reg, ignoreInitialization, dataTypeRef, callNum + 1))
-					{
-						params->startInstructionIndex = ogStartInstructionIndex;
-						return 1;
-					}
-				}
-				
-				i = dstIndex - 1;
-			}
-
-			continue;
-		}
 
 		// this is to check if the function accesses the reg as an argument
 		struct Function* callee;
@@ -245,6 +231,25 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			{
 				params->startInstructionIndex = ogStartInstructionIndex;
 				return 0;
+			}
+		}
+
+		if (isOpcodeJmp(instruction->opcode) || isOpcodeJcc(instruction->opcode))
+		{
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params));
+			if (dstIndex > i)
+			{
+				if (isOpcodeJcc(instruction->opcode))
+				{
+					params->startInstructionIndex = i + 1;
+					if (isRegisterAccessedBeforeInit(params, dstIndex - 1, reg, ignoreInitialization, dataTypeRef, callNum + 1))
+					{
+						params->startInstructionIndex = ogStartInstructionIndex;
+						return 1;
+					}
+				}
+
+				i = dstIndex - 1;
 			}
 		}
 	}
