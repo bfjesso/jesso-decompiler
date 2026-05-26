@@ -203,8 +203,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			params->currentFunc->conditions[i].exitIndex > params->currentFunc->conditions[i].dstIndex &&
 			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
-			params->startInstructionIndex = params->currentFunc->conditions[i].dstIndex - 1;
-			if (!checkForReturnStatement(params))
+			params->startInstructionIndex = params->currentFunc->conditions[i].exitIndex;
+			if (!doesInstructionLeadStraightToReturn(params))
 			{
 				if (!handleConditionsResize(params))
 				{

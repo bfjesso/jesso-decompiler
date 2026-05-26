@@ -48,39 +48,57 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 		}
 	}
 
+	int ogStartInstructionIndex = params->startInstructionIndex;
+
+	params->startInstructionIndex = jmpDstIndex;
+	unsigned char result = doesInstructionLeadStraightToReturn(params);
+
+	params->startInstructionIndex = ogStartInstructionIndex;
+	return result;
+}
+
+unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params) // checks if the function leads to a return without doing anything in between
+{
+	int ogStartInstructionIndex = params->startInstructionIndex;
+	
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
-	for (int i = jmpDstIndex; i <= lastInstruction; i++) // checking if the function leads to a return without doing anything in between
+	for (int i = params->startInstructionIndex; i <= lastInstruction; i++) 
 	{
-		if (isOpcodeReturn(params->instructions[i].opcode) || i == lastInstruction)
+		params->startInstructionIndex = i;
+		if (checkForReturnStatement(params))
 		{
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 
 		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) ||
 			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode))
 		{
+			params->startInstructionIndex = ogStartInstructionIndex;
 			return 0;
 		}
-		else if (params->currentFunc) 
+		else if (params->currentFunc)
 		{
 			if (params->currentFunc->lastInstructionIndex != 0)
 			{
-				if (doesInstructionModifyRegister(params, &params->instructions[i], params->currentFunc->returnReg, 0, 0, 0)) 
+				if (doesInstructionModifyRegister(params, &params->instructions[i], params->currentFunc->returnReg, 0, 0, 0))
 				{
+					params->startInstructionIndex = ogStartInstructionIndex;
 					return 0;
 				}
 			}
-			else 
+			else
 			{
 				if (doesInstructionModifyRegister(params, &params->instructions[i], AX, 0, 0, 0))
 				{
+					params->startInstructionIndex = ogStartInstructionIndex;
 					return 0;
 				}
 			}
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
 unsigned char decompileReturnStatement(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
