@@ -2,9 +2,9 @@
 #include "decompilationUtils.h"
 #include "operations.h"
 
-unsigned char checkForAssignment(struct DecompilationParameters* params)
+unsigned char checkForAssignment(struct DecompilationParameters* params, int instructionIndex)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->instructions[instructionIndex]);
 
 	if (doesInstructionDoNothing(currentInstruction)) 
 	{
@@ -18,7 +18,7 @@ unsigned char checkForAssignment(struct DecompilationParameters* params)
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
-		if (doesInstructionModifyRegister(params, currentInstruction, params->currentFunc->regVars[i].reg, 0, 0, 0))
+		if (doesInstructionModifyRegister(params, instructionIndex, params->currentFunc->regVars[i].reg, 0, 0, 0))
 		{
 			return 1;
 		}
@@ -27,16 +27,16 @@ unsigned char checkForAssignment(struct DecompilationParameters* params)
 	return 0;
 }
 
-unsigned char decompileAssignments(struct DecompilationParameters* params, struct JdcStr* result)
+unsigned char decompileAssignments(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* currentInstruction = &(params->instructions[instructionIndex]);
 
 	for (int i = 0; i < 4; i++) 
 	{
 		if (currentInstruction->operands[i].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, i, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, NO_REG, 1, i, &operation))
+			if (!decompileOperation(params, instructionIndex, NO_REG, 1, i, &operation))
 			{
 				freeJdcStr(&operation);
 				return 0;
@@ -52,10 +52,10 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, struc
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
 		unsigned char regOperandNum = 0;
-		if (doesInstructionModifyRegister(params, currentInstruction, params->currentFunc->regVars[i].reg, &regOperandNum, 0, 0))
+		if (doesInstructionModifyRegister(params, instructionIndex, params->currentFunc->regVars[i].reg, &regOperandNum, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, params->currentFunc->regVars[i].reg, 1, regOperandNum, &operation))
+			if (!decompileOperation(params, instructionIndex, params->currentFunc->regVars[i].reg, 1, regOperandNum, &operation))
 			{
 				freeJdcStr(&operation);
 				return 0;

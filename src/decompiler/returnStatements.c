@@ -2,11 +2,11 @@
 #include "decompilationUtils.h"
 #include "expressions.h"
 
-unsigned char checkForReturnStatement(struct DecompilationParameters* params)
+unsigned char checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex)
 {
-	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->currentFunc->lastInstructionIndex != 0 && params->startInstructionIndex == params->currentFunc->lastInstructionIndex))
+	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->currentFunc->lastInstructionIndex != 0 && instructionIndex == params->currentFunc->lastInstructionIndex))
 	{
 		return 1;
 	}
@@ -14,22 +14,22 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params)
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		return checkForJumpToReturnStatement(params);
+		return checkForJumpToReturnStatement(params, instructionIndex);
 	}
 
 	return 0;
 }
 
-unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params)
+unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params, int instructionIndex)
 {
-	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	if (instruction->operands[0].type != IMMEDIATE || (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode)))
 	{
 		return 0;
 	}
 
-	unsigned long long jmpDstAddr = resolveJmpChain(params);
+	unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
 	int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
 
 	if (jmpDstIndex == -1)
@@ -48,50 +48,37 @@ unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* para
 		}
 	}
 
-	int ogStartInstructionIndex = params->startInstructionIndex;
-
-	params->startInstructionIndex = jmpDstIndex;
-	unsigned char result = doesInstructionLeadStraightToReturn(params);
-
-	params->startInstructionIndex = ogStartInstructionIndex;
-	return result;
+	return doesInstructionLeadStraightToReturn(params, jmpDstIndex);
 }
 
-unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params) // checks if the function leads to a return without doing anything in between
+unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex) // checks if the function leads to a return without doing anything in between
 {
-	int ogStartInstructionIndex = params->startInstructionIndex;
-	
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
-	for (int i = params->startInstructionIndex; i <= lastInstruction; i++) 
+	for (int i = startInstructionIndex; i <= lastInstruction; i++)
 	{
-		params->startInstructionIndex = i;
-		if (checkForReturnStatement(params))
+		if (checkForReturnStatement(params, i))
 		{
-			params->startInstructionIndex = ogStartInstructionIndex;
 			return 1;
 		}
 
 		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) ||
 			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode))
 		{
-			params->startInstructionIndex = ogStartInstructionIndex;
 			return 0;
 		}
 		else if (params->currentFunc)
 		{
 			if (params->currentFunc->lastInstructionIndex != 0)
 			{
-				if (doesInstructionModifyRegister(params, &params->instructions[i], params->currentFunc->returnReg, 0, 0, 0))
+				if (doesInstructionModifyRegister(params, i, params->currentFunc->returnReg, 0, 0, 0))
 				{
-					params->startInstructionIndex = ogStartInstructionIndex;
 					return 0;
 				}
 			}
 			else
 			{
-				if (doesInstructionModifyRegister(params, &params->instructions[i], AX, 0, 0, 0))
+				if (doesInstructionModifyRegister(params, i, AX, 0, 0, 0))
 				{
-					params->startInstructionIndex = ogStartInstructionIndex;
 					return 0;
 				}
 			}
@@ -101,12 +88,12 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	return 1;
 }
 
-unsigned char decompileReturnStatement(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+unsigned char decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->conditionType == SWITCH_CASE_CT && params->startInstructionIndex == condition->dstIndex - 1) 
+		if (condition->conditionType == SWITCH_CASE_CT && instructionIndex == condition->dstIndex - 1)
 		{
 			return 1;
 		}
@@ -121,14 +108,12 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, u
 		return strcatJdc(result, "return;\n");
 	}
 
-	params->startInstructionIndex++; // incase the current instruction is also an import call
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, params->currentFunc->returnReg, 1, &returnExpression, 0))
+	if (!decompileRegister(params, instructionIndex + 1, params->currentFunc->returnReg, 1, &returnExpression, 0)) // the + 1 is incase the current instruction is also an import call
 	{
 		freeJdcStr(&returnExpression);
 		return 0;
 	}
-	params->startInstructionIndex--;
 
 	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
 	freeJdcStr(&returnExpression);

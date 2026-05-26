@@ -535,7 +535,6 @@ void MainGui::DecompileFunction(int functionIndex)
 	ClearStyledTextCtrl(decompilationTextCtrl);
 
 	decompParams.currentFunc = &functions[functionIndex];
-	decompParams.startInstructionIndex = 0;
 
 	struct JdcStr decompilationResult = initializeJdcStr();
 	if (decompilationResult.bufferSize == 0)
@@ -600,16 +599,13 @@ void MainGui::FindAllFunctions()
 	{
 		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
-			decompParams.startInstructionIndex = i;
-			unsigned long long address = resolveJmpChain(&decompParams);
+			unsigned long long address = resolveJmpChain(&decompParams, i);
 			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, address) == -1)
 			{
 				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
 			}
 		}
 	}
-
-	decompParams.startInstructionIndex = 0;
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
@@ -639,8 +635,6 @@ void MainGui::FindAllFunctions()
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
-
-		decompParams.startInstructionIndex = instructionIndex;
 	}
 
 	decompParams.functions = &functions[0];

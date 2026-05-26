@@ -4,19 +4,18 @@
 #include "expressions.h"
 #include "dataTypes.h"
 
-unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, struct Function** calleeRef)
+unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, int instructionIndex, struct Function** calleeRef)
 {
-	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
-	unsigned long long address = params->instructions[params->startInstructionIndex].address;
+	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
 	unsigned long long calleeAddress = 0;
 	if (isOpcodeCall(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 	{
-		calleeAddress = resolveJmpChain(params);
+		calleeAddress = resolveJmpChain(params, instructionIndex);
 	}
-	else if (params->startInstructionIndex == params->currentFunc->lastInstructionIndex && !isOpcodeReturn(instruction->opcode))
+	else if (instructionIndex == params->currentFunc->lastInstructionIndex && !isOpcodeReturn(instruction->opcode))
 	{
-		calleeAddress = params->instructions[params->startInstructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
+		calleeAddress = params->instructions[instructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
 	}
 
 	int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
@@ -33,9 +32,9 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 	return 1;
 }
 
-unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params, struct Function* callee, struct JdcStr* result)
+unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params, int callInstructionIndex, struct Function* callee, struct JdcStr* result)
 {
-	struct DisassembledInstruction* callInstruction = &(params->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* callInstruction = &(params->instructions[callInstructionIndex]);
 
 	addIndents(result, params->numOfIndents);
 
@@ -61,13 +60,11 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
 
-	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
-
 	for (int i = 0; i < callee->numOfRegArgs; i++)
 	{
 		struct JdcStr argStr = initializeJdcStr();
 		enum Register reg = callee->regArgs[i].reg;
-		if (!decompileRegister(params, reg, 1, &argStr, 0))
+		if (!decompileRegister(params, callInstructionIndex, reg, 1, &argStr, 0))
 		{
 			freeJdcStr(&argStr);
 			return 0;
@@ -78,7 +75,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	}
 
 	int stackArgsFound = 0;
-	for (int i = ogStartInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		if (stackArgsFound == callee->numOfStackArgs) { break; }
 
@@ -86,10 +83,8 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 		if (currentInstruction->opcode == PUSH)
 		{
-			params->startInstructionIndex = i;
-
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &argStr))
+			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &argStr))
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -103,7 +98,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, &currentInstruction->operands[0], 1, &argStr)) // this should just get the stack var or arg
+			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &argStr)) // this should just get the stack var or arg
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -127,19 +122,17 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	}
 
 	strcatJdc(result, ";\n");
-
-	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
 }
 
-unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params)
+unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params, int instructionIndex)
 {
-	if (checkForKnownFunctionCall(params, 0)) 
+	if (checkForKnownFunctionCall(params, instructionIndex, 0))
 	{
 		return 0;
 	}
 	
-	struct DisassembledInstruction* instruction = &(params->instructions[params->startInstructionIndex]);
+	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
 	if (isOpcodeCall(instruction->opcode)) 
 	{
@@ -147,17 +140,17 @@ unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params
 	}
 	else if (instruction->opcode == JMP_NEAR)
 	{
-		unsigned long long calleeAddress = resolveJmpChain(params);
+		unsigned long long calleeAddress = resolveJmpChain(params, instructionIndex);
 		return getImportIndexByAddress(params, calleeAddress) != -1;
 	}
 
 	return 0;
 }
 
-unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* params, struct JdcStr* result)
+unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* params, int callInstructionIndex, struct JdcStr* result)
 {
-	struct DisassembledInstruction* callInstruction = &(params->instructions[params->startInstructionIndex]);
-	unsigned long long unknownFuncAddress = resolveJmpChain(params);
+	struct DisassembledInstruction* callInstruction = &(params->instructions[callInstructionIndex]);
+	unsigned long long unknownFuncAddress = resolveJmpChain(params, callInstructionIndex);
 
 	addIndents(result, params->numOfIndents);
 
@@ -181,8 +174,6 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		}
 	}
 
-	unsigned short ogStartInstructionIndex = params->startInstructionIndex;
-
 	const int maxStackArgs = 10;
 	struct JdcStr stackArgTypeStrs[10] = { 0 };
 	struct JdcStr decompiledStackArgs[10] = { 0 };
@@ -191,18 +182,17 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
 	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
-	for (int i = ogStartInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
-		params->startInstructionIndex = i;
-		if (isOpcodeJmp(currentInstruction->opcode) || isOpcodeJcc(currentInstruction->opcode) || checkForUnknownFunctionCall(params)) // stop looking for parameters if instruction is jmp or another call with unknown parameters
+		if (isOpcodeJmp(currentInstruction->opcode) || isOpcodeJcc(currentInstruction->opcode) || checkForUnknownFunctionCall(params, i)) // stop looking for parameters if instruction is jmp or another call with unknown parameters
 		{
 			break;
 		}
 		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params);
+			unsigned long long calleeAddress = resolveJmpChain(params, i);
 			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
 			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || params->functions[calleeIndex].numOfStackArgs > 0))
 			{
@@ -217,9 +207,8 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				continue;
 			}
 
-			params->startInstructionIndex = i;
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-			if (decompileOperand(params, &currentInstruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
+			if (decompileOperand(params, i, &currentInstruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
 			{
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
 				dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
@@ -231,9 +220,8 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			unsigned char overwrites = 0;
 			if (doesInstructionModifyOperand(currentInstruction, 0, 0, &overwrites) && overwrites)
 			{
-				params->startInstructionIndex = i;
 				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-				if (decompileOperand(params, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
+				if (decompileOperand(params, i, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
 				{
 					stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
 					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
@@ -247,14 +235,13 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			if (!decompiledRegArgs[j].buffer)
 			{
 				unsigned char regOperandNum = 0;
-				if(doesInstructionModifyRegister(params, currentInstruction, platformRegArgs[j], &regOperandNum, 0, 0))
+				if(doesInstructionModifyRegister(params, i, platformRegArgs[j], &regOperandNum, 0, 0))
 				{
 					regArgTypeStrs[j] = initializeJdcStr();
 					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);
 					
-					params->startInstructionIndex = i + 1;
 					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileOperand(params, &currentInstruction->operands[regOperandNum], 1, &decompiledRegArgs[j]))
+					if (!decompileOperand(params, i + 1, &currentInstruction->operands[regOperandNum], 1, &decompiledRegArgs[j]))
 					{
 						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
 						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&decompiledStackArgs[j]); }
@@ -315,9 +302,8 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 		strcatJdc(result, ")");
 
-		params->startInstructionIndex = ogStartInstructionIndex;
 		struct JdcStr functionPointer = initializeJdcStr();
-		if (!decompileOperand(params, &callInstruction->operands[0], 1, &functionPointer))
+		if (!decompileOperand(params, callInstructionIndex, &callInstruction->operands[0], 1, &functionPointer))
 		{
 			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
 			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
@@ -368,7 +354,6 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		strcatJdc(result, ");\n");
 	}
 
-	params->startInstructionIndex = ogStartInstructionIndex;
 	return 1;
 }
 

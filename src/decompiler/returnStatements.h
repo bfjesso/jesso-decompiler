@@ -1,10 +1,10 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char checkForReturnStatement(struct DecompilationParameters* params);
+unsigned char checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params);
+unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params); // checks if the function leads to a return without doing anything in between
+unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex); // checks if the function leads to a return without doing anything in between
 
-unsigned char decompileReturnStatement(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
+unsigned char decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);

@@ -7,17 +7,14 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
-
-		params->startInstructionIndex = i;
-
 		if (isOpcodeJmp(instruction->opcode))
 		{
-			if (checkForReturnStatement(params))
+			if (checkForReturnStatement(params, i))
 			{
 				continue;
 			}
 			
-			unsigned long long jmpDstAddr = resolveJmpChain(params);
+			unsigned long long jmpDstAddr = resolveJmpChain(params, i);
 			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpDstAddr);
 
 			if (dstIndex == -1 || dstIndex == i + 1 || dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
@@ -112,17 +109,17 @@ static unsigned char handleDirectJmpsResize(struct DecompilationParameters* para
 	return 1;
 }
 
-unsigned char decompileDirectJmps(struct DecompilationParameters* params, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+unsigned char decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->directJmps[i].dstIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
+		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
 		{
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
 			break;
 		}
-		else if (params->startInstructionIndex == params->currentFunc->directJmps[i].jmpIndex)
+		else if (instructionIndex == params->currentFunc->directJmps[i].jmpIndex)
 		{
 			addIndents(result, params->numOfIndents);
 
@@ -147,11 +144,11 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, unsign
 	return 1;
 }
 
-int checkForDirectJmpDst(struct DecompilationParameters* params)
+int getDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
-		if (params->startInstructionIndex == params->currentFunc->directJmps[i].dstIndex)
+		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex)
 		{
 			return i;
 		}

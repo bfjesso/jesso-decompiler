@@ -25,13 +25,13 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int endIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum);
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum);
 
 static void sortFunctionArguments(struct Function* function);
 
 static int getStackFrameChange(struct DisassembledInstruction* instruction);
 
-int getStackFrameSizeAtInstruction(struct DecompilationParameters* params);
+int getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
 
 struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
 

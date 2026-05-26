@@ -10,15 +10,13 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 	}
 }
 
-unsigned long long resolveJmpChain(struct DecompilationParameters* params)
+unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
 {
-	struct DisassembledInstruction* instruction = &params->instructions[params->startInstructionIndex];
-	int ogStartInstructionIndex = params->startInstructionIndex;
+	struct DisassembledInstruction* instruction = &params->instructions[startInstructionIndex];
 
 	unsigned long long jmpAddress = 0;
-	if (!operandToValue(params->instructions, params->startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : 0, &instruction->operands[0], &jmpAddress))
+	if (!operandToValue(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : 0, &instruction->operands[0], &jmpAddress))
 	{
-		params->startInstructionIndex = ogStartInstructionIndex;
 		return 0;
 	}
 
@@ -31,16 +29,12 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params)
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
-		if (instructionIndex != params->startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
+		if (instructionIndex != startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
 		{
-			params->startInstructionIndex = instructionIndex;
-			unsigned long long result =  resolveJmpChain(params);
-			params->startInstructionIndex = ogStartInstructionIndex;
-			return result;
+			return resolveJmpChain(params, instructionIndex);
 		}
 	}
 
-	params->startInstructionIndex = ogStartInstructionIndex;
 	return jmpAddress;
 }
 
@@ -89,16 +83,18 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low
 	return 0;
 }
 
-unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, struct DisassembledInstruction* instruction, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
 {
 	struct Function* callee;
-	if ((checkForKnownFunctionCall(params, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
-		(checkForUnknownFunctionCall(params) && compareRegisters(reg, AX)))
+	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
+		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
 	{
 		if (overwrites) { *overwrites = 1; }
 		return 1;
 	}
-	
+
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
 		switch (instruction->opcode)

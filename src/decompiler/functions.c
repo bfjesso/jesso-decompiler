@@ -5,20 +5,19 @@
 
 unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
-	int ogStartInstructionIndex = params->startInstructionIndex;
-
 	int indexToJumpTo = 0;
 	unsigned char canReturnNothing = 0;
 
 	params->currentFunc = result;
 
+	int startInstructionIndex = *instructionIndex;
+
 	unsigned char foundFirstInstruction = 0;
-	for (int i = ogStartInstructionIndex; i < params->numOfInstructions; i++)
+	for (int i = startInstructionIndex; i < params->numOfInstructions; i++)
 	{
 		(*instructionIndex)++;
 
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
-		params->startInstructionIndex = i;
 
 		if (!foundFirstInstruction)
 		{
@@ -63,7 +62,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			continue;
 		}
 		
-		if (checkForReturnStatement(params) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(params, i) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
 		{
 			if (currentInstruction->opcode == RET_NEAR && currentInstruction->operands[0].type != NO_OPERAND)
 			{
@@ -97,7 +96,6 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 		for (int j = currentFunction->firstInstructionIndex; j <= currentFunction->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
-			params->startInstructionIndex = j;
 
 			if (doesInstructionDoNothing(currentInstruction))
 			{
@@ -120,19 +118,19 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 
 			unsigned char regOperandNum = 0;
 			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(params, currentInstruction, AX, &regOperandNum, 0, 0))
+			if (doesInstructionModifyRegister(params, j, AX, &regOperandNum, 0, 0))
 			{
 				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
 				currentFunction->returnReg = AX;
 				currentFunction->returningFunctionAddress = 0;
 			}
-			else if (doesInstructionModifyRegister(params, currentInstruction, XMM0, 0, &srcOperandNum, 0) && currentFunction->returnReg != AX) // assuming AX is more likely to be the return register
+			else if (doesInstructionModifyRegister(params, j, XMM0, 0, &srcOperandNum, 0) && currentFunction->returnReg != AX) // assuming AX is more likely to be the return register
 			{
 				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
 				currentFunction->returnReg = XMM0;
 				currentFunction->returningFunctionAddress = 0;
 			}
-			else if (doesInstructionModifyRegister(params, currentInstruction, ST0, 0, 0, 0))
+			else if (doesInstructionModifyRegister(params, j, ST0, 0, 0, 0))
 			{
 				currentFunction->returnType.primitiveType = FLOAT_TYPE;
 				currentFunction->returnReg = ST0;
@@ -140,7 +138,7 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params);
+				unsigned long long calleeAddress = resolveJmpChain(params, j);
 				int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
 				if (calleeIndex == -1) // imported function
 				{
@@ -159,7 +157,7 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 					currentFunction->returningFunctionAddress = calleeAddress;
 				}
 			}
-			else if ((checkForReturnStatement(params) || checkForJumpToReturnStatement(params)))
+			else if ((checkForReturnStatement(params, j) || checkForJumpToReturnStatement(params, j)))
 			{
 				break;
 			}
@@ -210,8 +208,7 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 		memset(initializedRegs, 0, ST0 - RAX);
 
 		params->currentFunc = &params->functions[i];
-		params->startInstructionIndex = params->currentFunc->firstInstructionIndex;
-		if (!getFunctionArguments(params, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 0))
+		if (!getFunctionArguments(params, params->currentFunc->firstInstructionIndex, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 0))
 		{
 			free(initializedRegs);
 			return 0;
@@ -222,12 +219,11 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 	return 1;
 }
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int endIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum)
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum)
 {
-	for (int i = params->startInstructionIndex; i <= endIndex; i++)
+	for (int i = startInstructionIndex; i <= endInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
-		params->startInstructionIndex = i;
 
 		if (doesInstructionDoNothing(currentInstruction))
 		{
@@ -236,7 +232,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 		if (isOpcodeCall(currentInstruction->opcode) && params->currentFunc->firstCalledFunc == 0)
 		{
-			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params));
+			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params, i));
 			if (calleeIndex != -1 && &params->functions[calleeIndex] != params->currentFunc)
 			{
 				params->currentFunc->firstCalledFunc = &params->functions[calleeIndex];
@@ -262,8 +258,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 					memcpy(newInitializedRegs, initializedRegs, ST0 - RAX);
 
-					params->startInstructionIndex = i + 1;
-					if (!getFunctionArguments(params, instructionIndex - 1, stackFrameSize, newInitializedRegs, callNum + 1))
+					if (!getFunctionArguments(params, i + 1, instructionIndex - 1, stackFrameSize, newInitializedRegs, callNum + 1))
 					{
 						free(newInitializedRegs);
 						return 0;
@@ -319,7 +314,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					initializedRegs[j - RAX] = 1;
 				}
 			}
-			else if (doesInstructionModifyRegister(params, currentInstruction, j, 0, 0, &overwrites) && overwrites)
+			else if (doesInstructionModifyRegister(params, i, j, 0, 0, &overwrites) && overwrites)
 			{
 				initializedRegs[j - RAX] = 1;
 			}
@@ -415,7 +410,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 					if (alreadyFound) { continue; }
 
 					int overwrites = 0;
-					if (doesInstructionModifyRegister(params, instruction, currentFunc->firstCalledFunc->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
+					if (doesInstructionModifyRegister(params, j, currentFunc->firstCalledFunc->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
 					{
 						initializedRegs[numOfRegArgsInit] = currentFunc->firstCalledFunc->regArgs[k].reg;
 						numOfRegArgsInit++;
@@ -573,10 +568,10 @@ static int getStackFrameChange(struct DisassembledInstruction* instruction)
 	return 0;
 }
 
-int getStackFrameSizeAtInstruction(struct DecompilationParameters* params)
+int getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	int result = 0;
-	for (int i = params->currentFunc->firstInstructionIndex; i < params->startInstructionIndex; i++) 
+	for (int i = params->currentFunc->firstInstructionIndex; i < instructionIndex; i++)
 	{
 		result += getStackFrameChange(&params->instructions[i]);
 	}

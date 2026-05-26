@@ -7,15 +7,15 @@ static unsigned char handleConditionsResize(struct DecompilationParameters* para
 
 static unsigned char handleCombinedJccResize(struct Condition* condition);
 
-unsigned char decompileConditions(struct DecompilationParameters* params, struct JdcStr* result);
+unsigned char decompileConditions(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
 
-static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
+static unsigned char decompileCondition(struct DecompilationParameters* params, int instructionIndex, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
 
 // a regular condition is not a conditional goto/return, and its not combined with another condition
 unsigned char isConditionRegular(struct Condition* condition);
 
-int checkForConditionStart(struct DecompilationParameters* params);
+int getConditionStart(struct DecompilationParameters* params, int instructionIndex);
 
-int checkForConditionEnd(struct DecompilationParameters* params);
+int getConditionEnd(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char checkForConditionDst(struct DecompilationParameters* params);
+unsigned char checkForConditionDst(struct DecompilationParameters* params, int instructionIndex);
