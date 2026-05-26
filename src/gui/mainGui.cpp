@@ -544,11 +544,18 @@ void MainGui::DecompileFunction(int functionIndex)
 		return;
 	}
 
-	if (!decompileFunction(&decompParams, &decompilationResult))
+	struct JdcStr statusMessage = initializeJdcStr();
+	if (!decompileFunction(&decompParams, &decompilationResult, &statusMessage))
 	{
-		wxMessageBox(decompilationResult.buffer, "Can't decompile");
-		freeJdcStr(&decompilationResult);
-		return;
+		wxMessageBox(statusMessage.buffer, "Can't decompile");
+		freeJdcStr(&statusMessage);
+
+		int showOutput = wxMessageBox("Do you still want to see the mangled output?", "Show output", wxYES_NO, this);
+		if (showOutput == wxNO)
+		{
+			freeJdcStr(&decompilationResult);
+			return;
+		}
 	}
 
 	decompilationTextCtrl->SetReadOnly(false);

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-	unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result);
+	unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage);
 
 #ifdef __cplusplus
 }
