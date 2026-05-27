@@ -13,9 +13,13 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[startInstructionIndex];
+	if (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode) && !isOpcodeCall(instruction->opcode)) 
+	{
+		return 0;
+	}
 
 	unsigned long long jmpAddress = 0;
-	if (!operandToValue(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : 0, &instruction->operands[0], &jmpAddress))
+	if (!operandToValue(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000, &instruction->operands[0], &jmpAddress))
 	{
 		return 0;
 	}

@@ -56,13 +56,8 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = startInstructionIndex; i <= lastInstruction; i++)
 	{
-		if (checkForReturnStatement(params, i))
-		{
-			return 1;
-		}
-
 		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0, 0)) ||
-			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode))
+			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode) | isOpcodeJmp(params->instructions[i].opcode))
 		{
 			return 0;
 		}
@@ -82,6 +77,11 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 					return 0;
 				}
 			}
+		}
+
+		if (checkForReturnStatement(params, i))
+		{
+			return 1;
 		}
 	}
 

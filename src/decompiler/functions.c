@@ -92,8 +92,8 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
-		struct Function* currentFunction = &params->functions[i];
-		for (int j = currentFunction->firstInstructionIndex; j <= currentFunction->lastInstructionIndex; j++)
+		params->currentFunc = &params->functions[i];
+		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
 
@@ -109,7 +109,7 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			{
 				unsigned long long jumpAddr = params->instructions[j].address + currentInstruction->operands[0].immediate.value;
 				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
-				if (instructionIndex > j && instructionIndex <= currentFunction->lastInstructionIndex)
+				if (instructionIndex > j && instructionIndex <= params->currentFunc->lastInstructionIndex)
 				{
 					j = instructionIndex - 1;
 					continue;
@@ -120,21 +120,21 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			unsigned char srcOperandNum = 0;
 			if (doesInstructionModifyRegister(params, j, AX, &regOperandNum, 0, 0))
 			{
-				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
-				currentFunction->returnReg = AX;
-				currentFunction->returningFunctionAddress = 0;
+				params->currentFunc->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
+				params->currentFunc->returnReg = AX;
+				params->currentFunc->returningFunctionAddress = 0;
 			}
-			else if (doesInstructionModifyRegister(params, j, XMM0, 0, &srcOperandNum, 0) && currentFunction->returnReg != AX) // assuming AX is more likely to be the return register
+			else if (doesInstructionModifyRegister(params, j, XMM0, 0, &srcOperandNum, 0) && params->currentFunc->returnReg != AX) // assuming AX is more likely to be the return register
 			{
-				currentFunction->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
-				currentFunction->returnReg = XMM0;
-				currentFunction->returningFunctionAddress = 0;
+				params->currentFunc->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				params->currentFunc->returnReg = XMM0;
+				params->currentFunc->returningFunctionAddress = 0;
 			}
 			else if (doesInstructionModifyRegister(params, j, ST0, 0, 0, 0))
 			{
-				currentFunction->returnType.primitiveType = FLOAT_TYPE;
-				currentFunction->returnReg = ST0;
-				currentFunction->returningFunctionAddress = 0;
+				params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
+				params->currentFunc->returnReg = ST0;
+				params->currentFunc->returningFunctionAddress = 0;
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
@@ -142,19 +142,19 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 				int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
 				if (calleeIndex == -1) // imported function
 				{
-					currentFunction->returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
-					currentFunction->returnReg = AX;
-					currentFunction->returningFunctionAddress = 0;
+					params->currentFunc->returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
+					params->currentFunc->returnReg = AX;
+					params->currentFunc->returningFunctionAddress = 0;
 				}
 				else if (params->functions[calleeIndex].returnType.primitiveType != VOID_TYPE)
 				{
-					currentFunction->returnType = params->functions[calleeIndex].returnType;
-					currentFunction->returnReg = params->functions[calleeIndex].returnReg;
-					currentFunction->returningFunctionAddress = 0;
+					params->currentFunc->returnType = params->functions[calleeIndex].returnType;
+					params->currentFunc->returnReg = params->functions[calleeIndex].returnReg;
+					params->currentFunc->returningFunctionAddress = 0;
 				}
 				else if(calleeIndex > i) // the callee's return value has not been handled yet
 				{
-					currentFunction->returningFunctionAddress = calleeAddress;
+					params->currentFunc->returningFunctionAddress = calleeAddress;
 				}
 			}
 			else if ((checkForReturnStatement(params, j) || checkForJumpToReturnStatement(params, j)))
@@ -169,6 +169,7 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 {
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
+		params->currentFunc = &params->functions[i];
 		if (params->functions[i].returningFunctionAddress != 0)
 		{
 			int returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].returningFunctionAddress);
