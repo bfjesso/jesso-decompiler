@@ -79,7 +79,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->instructions[i].address == currentSectionEndAddress)
 		{
 			result->callingConvention = __UNKNOWNCALL;
-
 			result->lastInstructionIndex = i;
 			return 1;
 		}
@@ -296,19 +295,6 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					if (!addRegArg(params->currentFunc, getRegisterDataType(currentInstruction->opcode, reg), reg))
 					{
 						return 0;
-					}
-
-					if (params->currentFunc->numOfRegArgs == 1 && compareRegisters(reg, CX))
-					{
-						params->currentFunc->callingConvention = __THISCALL;
-					}
-					else if (isRegisterPlatformArg(reg) && params->currentFunc->callingConvention != __UNKNOWNCALL)
-					{
-						params->currentFunc->callingConvention = __FASTCALL;
-					}
-					else
-					{
-						params->currentFunc->callingConvention = __UNKNOWNCALL;
 					}
 
 					// this is so it is not added again
@@ -744,6 +730,19 @@ unsigned char addRegArg(struct Function* function, struct DataType dataType, enu
 	function->regArgs[function->numOfRegArgs].name = initializeJdcStr();
 	sprintfJdc(&(function->regArgs[function->numOfRegArgs].name), 0, "arg%s", registerStrs[reg]);
 	function->numOfRegArgs++;
+
+	if (function->numOfRegArgs == 1 && compareRegisters(reg, CX))
+	{
+		function->callingConvention = __THISCALL;
+	}
+	else if (isRegisterPlatformArg(reg) && function->callingConvention != __UNKNOWNCALL)
+	{
+		function->callingConvention = __FASTCALL;
+	}
+	else
+	{
+		function->callingConvention = __UNKNOWNCALL;
+	}
 
 	return 1;
 }
