@@ -14,41 +14,29 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		return checkForJumpToReturnStatement(params, instructionIndex);
+		unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
+		int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
+
+		if (jmpDstIndex == -1)
+		{
+			return 1;
+		}
+		else if (params->currentFunc)
+		{
+			if (jmpDstIndex < params->currentFunc->firstInstructionIndex)
+			{
+				return 1;
+			}
+			else if (jmpDstIndex > params->currentFunc->lastInstructionIndex && params->currentFunc->lastInstructionIndex != 0)
+			{
+				return 1;
+			}
+		}
+
+		return doesInstructionLeadStraightToReturn(params, jmpDstIndex);
 	}
 
 	return 0;
-}
-
-unsigned char checkForJumpToReturnStatement(struct DecompilationParameters* params, int instructionIndex)
-{
-	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-
-	if (instruction->operands[0].type != IMMEDIATE || (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode)))
-	{
-		return 0;
-	}
-
-	unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
-	int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
-
-	if (jmpDstIndex == -1)
-	{
-		return 1;
-	}
-	else if(params->currentFunc)
-	{
-		if(jmpDstIndex < params->currentFunc->firstInstructionIndex)
-		{
-			return 1;
-		}
-		else if(jmpDstIndex > params->currentFunc->lastInstructionIndex && params->currentFunc->lastInstructionIndex != 0)
-		{
-			return 1;
-		}
-	}
-
-	return doesInstructionLeadStraightToReturn(params, jmpDstIndex);
 }
 
 unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex) // checks if the function leads to a return without doing anything in between

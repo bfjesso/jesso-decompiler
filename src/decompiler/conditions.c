@@ -114,7 +114,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						currentCondition->isFirstSwitchCase = 1;
 					}
 				}
-				else if (checkForJumpToReturnStatement(params, i))
+				else if (doesInstructionLeadStraightToReturn(params, dstIndex))
 				{
 					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
 				}

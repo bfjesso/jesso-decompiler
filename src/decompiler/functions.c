@@ -157,7 +157,7 @@ unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params)
 					params->currentFunc->returningFunctionAddress = calleeAddress;
 				}
 			}
-			else if ((checkForReturnStatement(params, j) || checkForJumpToReturnStatement(params, j)))
+			else if ((checkForReturnStatement(params, j)))
 			{
 				break;
 			}
