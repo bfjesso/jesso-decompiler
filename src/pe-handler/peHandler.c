@@ -586,7 +586,7 @@ unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
 	{
 		// removing template parameters
-		int nameLen = strlen(buffer);
+		size_t nameLen = strlen(buffer);
 		int k = 0;
 		int openIndex = -1;
 		int openNum = 0;
@@ -604,7 +604,7 @@ unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 
 				if (closeNum == openNum)
 				{
-					int len = strlen(buffer + k + 1);
+					size_t len = strlen(buffer + k + 1);
 					memcpy(buffer + openIndex, buffer + k + 1, len);
 					memset(buffer + openIndex + len, 0, nameLen - (openIndex + len));
 

@@ -87,7 +87,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	return 0;
 }
 
-unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params) 
+void getAllFunctionReturnTypes(struct DecompilationParameters* params) 
 {
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
@@ -219,7 +219,7 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 	return 1;
 }
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum)
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, long long stackFrameSize, unsigned char* initializedRegs, int callNum)
 {
 	for (int i = startInstructionIndex; i <= endInstructionIndex; i++)
 	{
@@ -314,7 +314,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 			if (isOperandStackArg(currentOperand, stackFrameSize))
 			{
-				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				long long stackOffset = currentOperand->memoryAddress.constDisplacement;
 				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
 				{
 					stackOffset -= stackFrameSize;
@@ -340,7 +340,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 			else if (isOperandStackVar(currentOperand, stackFrameSize))
 			{
-				int stackOffset = currentOperand->memoryAddress.constDisplacement;
+				long long stackOffset = currentOperand->memoryAddress.constDisplacement;
 				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
 				{
 					stackOffset -= stackFrameSize;
@@ -396,7 +396,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 					}
 					if (alreadyFound) { continue; }
 
-					int overwrites = 0;
+					unsigned char overwrites = 0;
 					if (doesInstructionModifyRegister(params, j, currentFunc->firstCalledFunc->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
 					{
 						initializedRegs[numOfRegArgsInit] = currentFunc->firstCalledFunc->regArgs[k].reg;
@@ -525,7 +525,7 @@ void freeFunction(struct Function* function)
 	free(function->directJmps);
 }
 
-static int getStackFrameChange(struct DisassembledInstruction* instruction) 
+static long long getStackFrameChange(struct DisassembledInstruction* instruction) 
 {
 	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)) 
 	{
@@ -555,9 +555,9 @@ static int getStackFrameChange(struct DisassembledInstruction* instruction)
 	return 0;
 }
 
-int getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex)
+long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
-	int result = 0;
+	long long result = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i < instructionIndex; i++)
 	{
 		result += getStackFrameChange(&params->instructions[i]);
@@ -582,7 +582,7 @@ int findFunctionByAddress(struct DecompilationParameters* params, int low, int h
 	return -1;
 }
 
-struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset)
+struct StackVariable* getStackArgByOffset(struct Function* function, long long stackOffset)
 {
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
@@ -595,7 +595,7 @@ struct StackVariable* getStackArgByOffset(struct Function* function, int stackOf
 	return 0;
 }
 
-struct StackVariable* getStackVarByOffset(struct Function* function, int stackOffset)
+struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset)
 {
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
@@ -647,7 +647,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-unsigned char addStackArg(struct Function* function, struct DataType dataType, int stackOffset)
+unsigned char addStackArg(struct Function* function, struct DataType dataType, long long stackOffset)
 {
 	if (getStackArgByOffset(function, stackOffset)) 
 	{
@@ -673,7 +673,7 @@ unsigned char addStackArg(struct Function* function, struct DataType dataType, i
 	return 1;
 }
 
-unsigned char addStackVar(struct Function* function, struct DataType dataType, int stackOffset)
+unsigned char addStackVar(struct Function* function, struct DataType dataType, long long stackOffset)
 {
 	if (getStackVarByOffset(function, stackOffset))
 	{
@@ -781,14 +781,12 @@ unsigned char addReturnedVar(struct Function* function, struct DataType dataType
 	}
 	
 	struct ReturnedVariable* newReturnedVars = (struct ReturnedVariable*)realloc(function->returnedVars, sizeof(struct ReturnedVariable) * (function->numOfReturnedVars + 1));
-	if (newReturnedVars)
-	{
-		function->returnedVars = newReturnedVars;
-	}
-	else
+	if (!newReturnedVars)
 	{
 		return 0;
 	}
+
+	function->returnedVars = newReturnedVars;
 
 	int callNum = 0;
 	for (int i = 0; i < function->numOfReturnedVars; i++)

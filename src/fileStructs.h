@@ -30,5 +30,5 @@ struct FileSection
 	unsigned char isReadOnly;
 	unsigned long long virtualAddress;
 	unsigned long long fileOffset;
-	int size;
+	unsigned int size;
 };

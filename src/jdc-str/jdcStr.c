@@ -33,7 +33,7 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
-		int srcLen = strlen(src);
+		int srcLen = (int)strlen(src);
 		if (srcLen >= jdcStr->bufferSize)
 		{
 			if (resizeJdcStr(jdcStr, srcLen + 1))
@@ -59,7 +59,7 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 	if (jdcStr && jdcStr->buffer && src)
 	{
 		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-		int newLen = strlen(src) + strlen(jdcStr->buffer);
+		int newLen = (int)strlen(src) + (int)strlen(jdcStr->buffer);
 		if (newLen >= jdcStr->bufferSize)
 		{
 			if (resizeJdcStr(jdcStr, newLen + 1))
@@ -96,7 +96,7 @@ static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, co
 		if (cat)
 		{
 			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-			int ogLen = strlen(jdcStr->buffer);
+			int ogLen = (int)strlen(jdcStr->buffer);
 			int result = vsnprintf(jdcStr->buffer + ogLen, jdcStr->bufferSize - ogLen, format, args);
 			if (result < 0)
 			{
@@ -193,7 +193,7 @@ struct JdcStr initializeJdcStrWithVal(const char* initStr)
 
 	if(initStr)
 	{
-		int len = strlen(initStr);
+		int len = (int)strlen(initStr);
 		result.buffer = (char*)calloc(len + 1, sizeof(char));
 		if (result.buffer)
 		{
@@ -230,7 +230,7 @@ static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 			jdcStr->bufferSize = newSize;
 
 			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-			int len = strlen(jdcStr->buffer);
+			int len = (int)strlen(jdcStr->buffer);
 			memset(jdcStr->buffer + len, 0, jdcStr->bufferSize - len);
 			return 1;
 		}

@@ -53,7 +53,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 {
 	if (compareRegisters(memAddress->reg, BP) || compareRegisters(memAddress->reg, SP))
 	{
-		int stackOffset = (int)(memAddress->constDisplacement);
+		long long stackOffset = memAddress->constDisplacement;
 		if (compareRegisters(memAddress->reg, SP))
 		{
 			stackOffset -= getStackFrameSizeAtInstruction(params, instructionIndex);
@@ -221,6 +221,11 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	}
 	
 	struct JdcStr* expressions = (struct JdcStr*)calloc(5, sizeof(struct JdcStr));
+	if (!expressions) 
+	{
+		return 0;
+	}
+
 	int expressionsBufferSize = 5;
 	int expressionIndex = 0;
 

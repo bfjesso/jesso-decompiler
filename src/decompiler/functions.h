@@ -9,7 +9,7 @@ extern "C"
 
 	unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex);
 	
-	unsigned char getAllFunctionReturnTypes(struct DecompilationParameters* params);
+	void getAllFunctionReturnTypes(struct DecompilationParameters* params);
 
 	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
 
@@ -25,17 +25,17 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, int stackFrameSize, unsigned char* initializedRegs, int callNum);
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, long long stackFrameSize, unsigned char* initializedRegs, int callNum);
 
 static void sortFunctionArguments(struct Function* function);
 
-static int getStackFrameChange(struct DisassembledInstruction* instruction);
+static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
-int getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
+long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
 
-struct StackVariable* getStackArgByOffset(struct Function* function, int stackOffset);
+struct StackVariable* getStackArgByOffset(struct Function* function, long long stackOffset);
 
-struct StackVariable* getStackVarByOffset(struct Function* function, int stackOffset);
+struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset);
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
@@ -43,9 +43,9 @@ struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
-unsigned char addStackArg(struct Function* function, struct DataType dataType, int stackOffset);
+unsigned char addStackArg(struct Function* function, struct DataType dataType, long long stackOffset);
 
-unsigned char addStackVar(struct Function* function, struct DataType dataType, int stackOffset);
+unsigned char addStackVar(struct Function* function, struct DataType dataType, long long stackOffset);
 
 unsigned char addRegArg(struct Function* function, struct DataType dataType, enum Register reg);
 

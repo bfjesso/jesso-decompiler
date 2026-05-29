@@ -58,7 +58,7 @@ void StringsMenu::LoadStrings()
     for (int i = 0; i < numOfSections; i++)
     {
         unsigned char foundStr = 0;
-        for (int j = 0; j < sections[i].size; j++)
+        for (unsigned int j = 0; j < sections[i].size; j++)
         {
             char c = *(char*)(fileBytes + j + baseIndex);
             if (c > 31 && c < 127)

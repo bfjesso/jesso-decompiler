@@ -291,15 +291,14 @@ static unsigned char handleConditionsResize(struct DecompilationParameters* para
 	if (params->currentFunc->numOfConditions % 5 == 0)
 	{
 		struct Condition* newConditions = (struct Condition*)realloc(params->currentFunc->conditions, (params->currentFunc->numOfConditions + 5) * sizeof(struct Condition));
-		if (newConditions)
-		{
-			params->currentFunc->conditions = newConditions;
-			memset(params->currentFunc->conditions + params->currentFunc->numOfConditions, 0, sizeof(struct Condition) * 5);
-		}
-		else
+		if (!newConditions)
 		{
 			return 0;
+			
 		}
+
+		params->currentFunc->conditions = newConditions;
+		memset(params->currentFunc->conditions + params->currentFunc->numOfConditions, 0, sizeof(struct Condition) * 5);
 	}
 
 	return 1;
@@ -310,14 +309,12 @@ static unsigned char handleCombinedJccResize(struct Condition* condition)
 	if (condition->numOfCombinedJccs % 5 == 0)
 	{
 		int* newCombinedJccIndexes = (int*)realloc(condition->combinedJccIndexes, (condition->numOfCombinedJccs + 5) * sizeof(int));
-		if (newCombinedJccIndexes)
-		{
-			condition->combinedJccIndexes = newCombinedJccIndexes;
-		}
-		else
+		if (!newCombinedJccIndexes)
 		{
 			return 0;
 		}
+
+		condition->combinedJccIndexes = newCombinedJccIndexes;
 	}
 
 	return 1;

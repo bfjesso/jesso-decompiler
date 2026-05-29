@@ -13,7 +13,7 @@ struct RegisterVariable
 struct StackVariable
 {
 	struct DataType dataType;
-	int stackOffset;
+	long long stackOffset;
 	struct JdcStr name;
 };
 

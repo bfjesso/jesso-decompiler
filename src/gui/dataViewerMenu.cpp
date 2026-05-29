@@ -79,12 +79,12 @@ void DataViewer::LoadData()
 	dataText.reserve(sections[sectionSelection].size * 6);
 
 	char lineBuffer[512] = { 0 };
-	for (int i = 0; i < sections[sectionSelection].size; i += bytesPerLine)
+	for (unsigned int i = 0; i < sections[sectionSelection].size; i += bytesPerLine)
 	{
 		unsigned long long address = imageBase + sections[sectionSelection].virtualAddress + i;
 		sprintf(lineBuffer, "%llX%s\t", address, sections[sectionSelection].name.buffer);
 
-		for (int j = 0; j < bytesPerLine; j += typeSize)
+		for (unsigned int j = 0; j < bytesPerLine; j += typeSize)
 		{
 			if (i + j >= sections[sectionSelection].size) 
 			{

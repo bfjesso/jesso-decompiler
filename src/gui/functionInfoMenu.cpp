@@ -115,11 +115,11 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		dataTypeToStr(stackArg->dataType, &dataTypeStr);
 		if (stackArg->stackOffset > 0)
 		{
-			sprintf(hexNumStr, "0x%X", stackArg->stackOffset);
+			sprintf(hexNumStr, "0x%llX", stackArg->stackOffset);
 		}
 		else
 		{
-			sprintf(hexNumStr, "-0x%X", -stackArg->stackOffset);
+			sprintf(hexNumStr, "-0x%llX", -stackArg->stackOffset);
 		}
 		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i, 1, wxString(stackArg->name.buffer));
@@ -133,11 +133,11 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		dataTypeToStr(stackVar->dataType, &dataTypeStr);
 		if (stackVar->stackOffset > 0)
 		{
-			sprintf(hexNumStr, "0x%X", stackVar->stackOffset);
+			sprintf(hexNumStr, "0x%llX", stackVar->stackOffset);
 		}
 		else
 		{
-			sprintf(hexNumStr, "-0x%X", -stackVar->stackOffset);
+			sprintf(hexNumStr, "-0x%llX", -stackVar->stackOffset);
 		}
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 1, wxString(stackVar->name.buffer));
