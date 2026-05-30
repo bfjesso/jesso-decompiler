@@ -29,7 +29,7 @@ make jdc-gui
 ```
 
 ### Windows
-You can use the Visual Studio project included in this repository to build JDC. You will also need to have wxWidgets installed.
+You can use the Visual Studio project included in this repository to build JDC. You will need to have a build of wxWidgets 3.2.10, and the JDC project expects an environment variable called "WXWIN" to be defined as the location of the folder containing the wxWidgets "include" and "lib" folders.
 
 # How it works
 Jesso Decompiler works by taking a binary, gathering information from the file data, disassembling the code bytes, and then analyzing the
