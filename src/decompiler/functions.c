@@ -437,8 +437,6 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 
 			currentFunc->firstCalledFunc = 0;
 		}
-
-		sortFunctionArguments(currentFunc);
 	}
 
 	if (numFixed != 0) 
@@ -447,41 +445,6 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 	}
 
 	return 1;
-}
-
-static void sortFunctionArguments(struct Function* function)
-{
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
-		{
-			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
-			{
-				struct RegisterVariable temp = function->regArgs[j];
-				function->regArgs[j] = function->regArgs[i];
-				function->regArgs[i] = temp;
-				break;
-			}
-		}
-	}
-
-	// order should be from least to greatest stack offset
-	for (int i = 0; i < function->numOfStackArgs - 1; i++)
-	{
-		char swapped = 0;
-		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
-		{
-			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
-			{
-				struct StackVariable temp = function->stackArgs[j];
-				function->stackArgs[j] = function->stackArgs[j + 1];
-				function->stackArgs[j + 1] = temp;
-
-				swapped = 1;
-			}
-		}
-		if (!swapped) { break; }
-	}
 }
 
 void freeFunction(struct Function* function) 
@@ -670,6 +633,24 @@ unsigned char addStackArg(struct Function* function, struct DataType dataType, l
 	sprintfJdc(&(function->stackArgs[function->numOfStackArgs].name), 0, "arg%X", stackOffset);
 	function->numOfStackArgs++;
 
+	// sorting from least to greatest stack offset
+	for (int i = 0; i < function->numOfStackArgs - 1; i++)
+	{
+		char swapped = 0;
+		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
+		{
+			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
+			{
+				struct StackVariable temp = function->stackArgs[j];
+				function->stackArgs[j] = function->stackArgs[j + 1];
+				function->stackArgs[j + 1] = temp;
+
+				swapped = 1;
+			}
+		}
+		if (!swapped) { break; }
+	}
+
 	return 1;
 }
 
@@ -731,17 +712,35 @@ unsigned char addRegArg(struct Function* function, struct DataType dataType, enu
 	sprintfJdc(&(function->regArgs[function->numOfRegArgs].name), 0, "arg%s", registerStrs[reg]);
 	function->numOfRegArgs++;
 
+	// sorting
+	for (int i = 0; i < function->numOfRegArgs; i++)
+	{
+		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+		{
+			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
+			{
+				struct RegisterVariable temp = function->regArgs[j];
+				function->regArgs[j] = function->regArgs[i];
+				function->regArgs[i] = temp;
+				break;
+			}
+		}
+	}
+
 	if (function->numOfRegArgs == 1 && compareRegisters(reg, CX))
 	{
 		function->callingConvention = __THISCALL;
 	}
-	else if (isRegisterPlatformArg(reg) && function->callingConvention != __UNKNOWNCALL)
+	else 
 	{
 		function->callingConvention = __FASTCALL;
-	}
-	else
-	{
-		function->callingConvention = __UNKNOWNCALL;
+		for (int i = 0; i < function->numOfRegArgs && i < NUM_PLATFORM_REG_ARGS; i++)
+		{
+			if (!compareRegisters(function->regArgs[i].reg, platformRegArgs[i]) && !compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[i]))
+			{
+				function->callingConvention = __UNKNOWNCALL;
+			}
+		}
 	}
 
 	return 1;

@@ -27,8 +27,6 @@ extern "C"
 
 static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, long long stackFrameSize, unsigned char* initializedRegs, int callNum);
 
-static void sortFunctionArguments(struct Function* function);
-
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
