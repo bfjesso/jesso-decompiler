@@ -49,15 +49,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		
 		if (checkForReturnStatement(params, i))
 		{
-			if (currentInstruction->opcode == RET_NEAR && currentInstruction->operands[0].type != NO_OPERAND)
-			{
-				result->callingConvention = __STDCALL;
-			}
-			else 
-			{
-				result->callingConvention = __CDECL;
-			}
-
 			result->lastInstructionIndex = i;
 			return 1;
 		}

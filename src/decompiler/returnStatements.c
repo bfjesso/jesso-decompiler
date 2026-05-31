@@ -6,7 +6,23 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (isOpcodeReturn(instruction->opcode) || (params->currentFunc && params->currentFunc->lastInstructionIndex != 0 && instructionIndex == params->currentFunc->lastInstructionIndex))
+	if (isOpcodeReturn(instruction->opcode))
+	{
+		if (params->currentFunc->lastInstructionIndex == 0) // this is for when this function is called in findNextFunction
+		{
+			if (instruction->opcode == RET_NEAR && instruction->operands[0].type != NO_OPERAND) // this isn't checked in findNextFunction because this function can return 1 if there is a jmp to a return instruction
+			{
+				params->currentFunc->callingConvention = __STDCALL;
+			}
+			else
+			{
+				params->currentFunc->callingConvention = __CDECL;
+			}
+		}
+		
+		return 1;
+	}
+	else if (params->currentFunc->lastInstructionIndex != 0 && instructionIndex == params->currentFunc->lastInstructionIndex) 
 	{
 		return 1;
 	}
