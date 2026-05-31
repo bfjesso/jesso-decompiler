@@ -63,7 +63,7 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 		return 1;
 	}
 
-	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
+	for (int i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
 		if ((instructions[i].opcode == MOV || instructions[i].opcode == LEA) && instructions[i].operands[0].type == REGISTER && compareRegisters(instructions[i].operands[0].reg, reg))
 		{
