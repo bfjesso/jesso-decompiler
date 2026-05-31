@@ -35,21 +35,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			continue;
 		}
 
-		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
-			currentInstruction->operands[0].type == IMMEDIATE && 
-			currentInstruction->operands[0].immediate.value > 0)
-		{
-			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
-			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
-			if (instructionIndex > indexToJumpTo && jumpAddr <= currentSectionEndAddress)
-			{
-				if(!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
-				{
-					indexToJumpTo = instructionIndex;
-				}
-			}
-		}
-
 		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
 		{
 			result->returningFunctionAddress = params->instructions[i + 1].address;
@@ -62,7 +47,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			continue;
 		}
 		
-		if (checkForReturnStatement(params, i) || currentInstruction->opcode == JMP_NEAR) // if it is a JMP_NEAR that isn't a return, that will have already been checked by isAfterJmp
+		if (checkForReturnStatement(params, i))
 		{
 			if (currentInstruction->opcode == RET_NEAR && currentInstruction->operands[0].type != NO_OPERAND)
 			{
@@ -81,6 +66,21 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->callingConvention = __UNKNOWNCALL;
 			result->lastInstructionIndex = i;
 			return 1;
+		}
+
+		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
+			currentInstruction->operands[0].type == IMMEDIATE &&
+			currentInstruction->operands[0].immediate.value > 0)
+		{
+			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
+			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+			if (instructionIndex > indexToJumpTo && jumpAddr <= currentSectionEndAddress)
+			{
+				if (!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
+				{
+					indexToJumpTo = instructionIndex;
+				}
+			}
 		}
 	}
 
