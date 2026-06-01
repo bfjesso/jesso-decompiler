@@ -333,7 +333,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 
 		if (instructionIndex == condition->endIndex)
 		{
-			if (!decompileCondition(params, instructionIndex, i, 0, result))
+			if (!decompileCondition(params, i, 0, result))
 			{
 				return 0;
 			}
@@ -365,7 +365,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 
 		if (instructionIndex == condition->startIndex)
 		{
-			if (!decompileCondition(params, instructionIndex, i, 1, result))
+			if (!decompileCondition(params, i, 1, result))
 			{
 				return 0;
 			}
@@ -378,12 +378,15 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 	return 1;
 }
 
-static unsigned char decompileCondition(struct DecompilationParameters* params, int instructionIndex, int conditionIndex, unsigned char decompileStart, struct JdcStr* result)
+static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result)
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
+	int instructionIndex = condition->endIndex;
 	if (decompileStart) 
 	{
+		instructionIndex = condition->startIndex;
+		
 		if (condition->conditionType == DO_WHILE_CT)
 		{
 			addIndents(result, params->numOfIndents);
@@ -402,7 +405,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			if (condition->isFirstSwitchCase)
 			{
 				struct JdcStr switchVar = initializeJdcStr();
-				if (!decompileOperand(params, instructionIndex, &condition->cmpInstruction->operands[0], 1, &switchVar))
+				if (!decompileOperand(params, condition->startIndex, &condition->cmpInstruction->operands[0], 1, &switchVar))
 				{
 					freeJdcStr(&switchVar);
 					return 0;
@@ -423,7 +426,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			}
 
 			struct JdcStr value = initializeJdcStr();
-			if (!decompileOperand(params, instructionIndex, &condition->cmpInstruction->operands[1], 1, &value))
+			if (!decompileOperand(params, condition->startIndex, &condition->cmpInstruction->operands[1], 1, &value))
 			{
 				freeJdcStr(&value);
 				return 0;
@@ -517,7 +520,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	struct JdcStr combinedConditionExpression = initializeJdcStr();
 	if (condition->combinedConditionIndex)
 	{
-		if (decompileCondition(params, params->currentFunc->conditions[condition->combinedConditionIndex].jccIndex, condition->combinedConditionIndex, 1, &combinedConditionExpression))
+		if (decompileCondition(params, condition->combinedConditionIndex, 1, &combinedConditionExpression))
 		{
 			if (!wrapJdcStrInParentheses(&conditionExpression))
 			{
