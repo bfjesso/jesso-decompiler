@@ -99,6 +99,34 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
+	if (instruction->opcode == POP && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, reg))
+	{
+		int stackOffset = 0;
+		for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--) 
+		{
+			if (params->instructions[i].opcode == PUSH) 
+			{
+				stackOffset++;
+				if (stackOffset == 0)
+				{
+					if (params->instructions[i].operands[0].type == REGISTER && instruction->operands[0].reg == params->instructions[i].operands[0].reg)
+					{
+						return 0;
+					}
+
+					if (overwrites) { *overwrites = 1; }
+					return 1;
+				}
+			}
+			else if (params->instructions[i].opcode == POP)
+			{
+				stackOffset--;
+			}
+		}
+
+		return 0;
+	}
+
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
 		switch (instruction->opcode)
