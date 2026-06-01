@@ -392,7 +392,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 
 	free(modifiedRegs);
 
-	// check for registers that depend on the value of a reg var
+	// if a reg is set to a regVar, and then that regVar changes before the reg is accessed, the reg needs to also be a regVar
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
@@ -404,23 +404,39 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			{
 				continue;
 			}
-			else if (currentInstruction->operands[1].type == REGISTER)
+
+			struct RegisterVariable* regVar = 0;
+			if (currentInstruction->operands[1].type == REGISTER)
 			{
-				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg))
-				{
-					if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
-					{
-						return 0;
-					}
-				}
+				regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg);
 			}
 			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
 			{
-				if (getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg) || getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement))
+				regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg);
+				if (!regVar) 
 				{
-					if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+					regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement);
+				}
+			}
+
+			if (regVar) 
+			{
+				for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
+				{
+					unsigned char overwrites = 0;
+					if (doesInstructionModifyRegister(params, j, reg, 0, 0, &overwrites) && overwrites) 
 					{
-						return 0;
+						break;
+					}
+					
+					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0, 0)) 
+					{
+						if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+						{
+							return 0;
+						}
+
+						break;
 					}
 				}
 			}
