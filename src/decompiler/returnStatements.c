@@ -1,5 +1,6 @@
 #include "returnStatements.h"
 #include "decompilationUtils.h"
+#include "functionCalls.h"
 #include "expressions.h"
 
 unsigned char checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex)
@@ -112,8 +113,13 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 		return strcatJdc(result, "return;\n");
 	}
 
+	if (checkForUnknownFunctionCall(params, instructionIndex)) 
+	{
+		instructionIndex++; // this is because decompileRegister decrements the instruction index
+	}
+
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex + 1, params->currentFunc->returnReg, 1, &returnExpression, 0)) // the + 1 is incase the current instruction is also an import call
+	if (!decompileRegister(params, instructionIndex, params->currentFunc->returnReg, 1, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
 		return 0;
