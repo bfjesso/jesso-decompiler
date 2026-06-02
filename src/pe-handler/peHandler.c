@@ -605,6 +605,7 @@ unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 				if (closeNum == openNum)
 				{
 					size_t len = strlen(buffer + k + 1);
+					if ((size_t)openIndex + len >= (size_t)bufferLen) { break; }
 					memcpy(buffer + openIndex, buffer + k + 1, len);
 					memset(buffer + openIndex + len, 0, nameLen - (openIndex + len));
 
