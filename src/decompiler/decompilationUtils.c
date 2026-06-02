@@ -1,4 +1,5 @@
 #include "decompilationUtils.h"
+#include "functions.h"
 #include "functionCalls.h"
 #include "../disassembler/disassemblyUtils.h"
 
@@ -82,6 +83,75 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low
 
 		if (addresses[mid] < minAddress) { low = mid + 1; }
 		else { high = mid - 1; }
+	}
+
+	return 0;
+}
+
+unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataTypeRef)
+{
+	struct Function* callee;
+	if (checkForKnownFunctionCall(params, instructionIndex, &callee) && callee)
+	{
+		struct RegisterVariable* regArg = getRegArgByReg(callee, reg);
+		if (regArg)
+		{
+			if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
+			return 1;
+		}
+	}
+	
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	for (int i = 0; i < 4; i++)
+	{
+		struct Operand* op = &(instruction->operands[i]);
+		if (op->type == MEM_ADDRESS)
+		{
+			if (compareRegisters(op->memoryAddress.reg, reg))
+			{
+				if (specificReg)
+				{
+					*specificReg = op->memoryAddress.reg;
+				}
+
+				if (dataTypeRef) 
+				{ 
+					*dataTypeRef = getOperandDataType(instruction->opcode, op);
+					dataTypeRef->pointerLevel = 1;
+				}
+
+				return 1;
+			}
+			else if (compareRegisters(op->memoryAddress.regDisplacement, reg))
+			{
+				if (specificReg)
+				{
+					*specificReg = op->memoryAddress.regDisplacement;
+				}
+
+				if (dataTypeRef)
+				{
+					*dataTypeRef = getOperandDataType(instruction->opcode, op);
+					dataTypeRef->pointerLevel = 1;
+				}
+
+				return 1;
+			}
+		}
+		else if (!doesInstructionModifyOperand(instruction, i, 0, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		{
+			if (specificReg)
+			{
+				*specificReg = op->reg;
+			}
+
+			if (dataTypeRef)
+			{
+				*dataTypeRef = getOperandDataType(instruction->opcode, op);
+			}
+
+			return 1;
+		}
 	}
 
 	return 0;

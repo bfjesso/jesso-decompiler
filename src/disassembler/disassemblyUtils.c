@@ -178,46 +178,6 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, enum Register* specificReg)
-{
-	for (int i = 0; i < 4; i++)
-	{
-		struct Operand* op = &(instruction->operands[i]);
-		if (op->type == MEM_ADDRESS)
-		{
-			if (compareRegisters(op->memoryAddress.reg, reg))
-			{
-				if (specificReg)
-				{
-					*specificReg = op->memoryAddress.reg;
-				}
-
-				return 1;
-			}
-			else if (compareRegisters(op->memoryAddress.regDisplacement, reg)) 
-			{
-				if (specificReg)
-				{
-					*specificReg = op->memoryAddress.regDisplacement;
-				}
-
-				return 1;
-			}
-		}
-		else if (!doesInstructionModifyOperand(instruction, i, 0, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
-		{
-			if (specificReg)
-			{
-				*specificReg = op->reg;
-			}
-			
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
 {
 	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0, 0); // this isn't a full check

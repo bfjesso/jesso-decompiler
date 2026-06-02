@@ -181,20 +181,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 	
 	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* instruction = &(params->instructions[i]);
-
-		// this is to check if the function accesses the reg as an argument
-		struct Function* callee;
-		if (checkForKnownFunctionCall(params, i,  &callee) && callee)
-		{
-			struct RegisterVariable* regArg = getRegArgByReg(callee, reg);
-			if (regArg)
-			{
-				if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
-				return 1;
-			}
-		}
-
 		if (checkForReturnStatement(params, i))
 		{
 			if (compareRegisters(params->currentFunc->returnReg, reg))
@@ -205,10 +191,8 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			return 0;
 		}
 
-		enum Register specificReg = NO_REG;
-		if (doesInstructionAccessRegister(instruction, reg, &specificReg))
+		if (doesInstructionAccessRegister(params, i, reg, 0, dataTypeRef))
 		{
-			if (dataTypeRef) { *dataTypeRef = getRegisterDataType(instruction->opcode, specificReg); }
 			return 1;
 		}
 
@@ -221,6 +205,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			}
 		}
 
+		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJmp(instruction->opcode) || isOpcodeJcc(instruction->opcode))
 		{
 			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));

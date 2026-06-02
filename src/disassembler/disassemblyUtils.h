@@ -18,8 +18,6 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites);
 
-unsigned char doesInstructionAccessRegister(struct DisassembledInstruction* instruction, enum Register reg, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
-
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
 
 unsigned char isImmediateAllOnes(struct Immediate* immediate);
