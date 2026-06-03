@@ -515,7 +515,19 @@ long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params,
 	long long result = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i < instructionIndex; i++)
 	{
-		result += getStackFrameChange(&params->instructions[i]);
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		if (isOpcodeJcc(instruction->opcode) || isOpcodeJmp(instruction->opcode))
+		{
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
+			if (dstIndex > i && dstIndex <= instructionIndex && !doesInstructionLeadStraightToReturn(params, dstIndex))
+			{
+				i = dstIndex - 1;
+			}
+		}
+		else 
+		{
+			result += getStackFrameChange(&params->instructions[i]);
+		}
 	}
 
 	return result;
