@@ -46,6 +46,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 			strcatJdc(result, operation.buffer);
 			freeJdcStr(&operation);
 			strcatJdc(result, ";\n");
+			params->currentFunc->numOfLines++;
 		}
 	}
 
@@ -65,6 +66,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 			strcatJdc(result, operation.buffer);
 			freeJdcStr(&operation);
 			strcatJdc(result, ";\n");
+			params->currentFunc->numOfLines++;
 		}
 	}
 

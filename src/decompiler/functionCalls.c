@@ -98,6 +98,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			freeJdcStr(&argStr);
 
 			stackArgsFound++;
+			addAssociatedInstruction(params->currentFunc, i);
 		}
 		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
@@ -112,6 +113,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			freeJdcStr(&argStr);
 
 			stackArgsFound++;
+			addAssociatedInstruction(params->currentFunc, i);
 		}
 	}
 
@@ -126,6 +128,9 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	}
 
 	strcatJdc(result, ";\n");
+	addAssociatedInstruction(params->currentFunc, callInstructionIndex);
+	params->currentFunc->numOfLines++;
+
 	return 1;
 }
 
@@ -217,6 +222,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
 				dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
+				addAssociatedInstruction(params->currentFunc, i);
 			}
 		}
 		else if (numOfStackArgs < maxStackArgs && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
@@ -230,6 +236,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
 					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
 					numOfStackArgs++;
+					addAssociatedInstruction(params->currentFunc, i);
 				}
 			}
 		}
@@ -253,6 +260,8 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 						for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
 						return 0;
 					}
+
+					addAssociatedInstruction(params->currentFunc, i);
 				}
 			}
 		}
@@ -357,6 +366,9 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	{
 		strcatJdc(result, ");\n");
 	}
+
+	addAssociatedInstruction(params->currentFunc, callInstructionIndex);
+	params->currentFunc->numOfLines++;
 
 	return 1;
 }

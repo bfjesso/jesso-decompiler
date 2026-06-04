@@ -6,6 +6,8 @@
 
 unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
 {
+	addAssociatedInstruction(params->currentFunc, instructionIndex);
+	
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 	if (isOpcodeCall(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 	{

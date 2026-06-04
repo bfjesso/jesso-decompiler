@@ -50,3 +50,5 @@ unsigned char addRegArg(struct Function* function, struct DataType dataType, enu
 unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg);
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
+
+unsigned char addAssociatedInstruction(struct Function* function, int instructionIndex);

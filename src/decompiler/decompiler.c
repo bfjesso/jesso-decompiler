@@ -38,6 +38,13 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 
+		params->currentFunc->associatedInstructionsBufferLen = params->currentFunc->lastInstructionIndex - params->currentFunc->firstInstructionIndex;
+		params->currentFunc->associatedInstructions = (struct AssociatedInstructions*)calloc(params->currentFunc->associatedInstructionsBufferLen, sizeof(struct AssociatedInstructions));
+		if (!params->currentFunc->associatedInstructions) 
+		{
+			return 0;
+		}
+
 		params->currentFunc->hasDoneInitialAnalysis = 1;
 	}
 	
@@ -48,6 +55,8 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	strcatJdc(result, "{\n");
+
+	params->currentFunc->numOfLines = 2;
 
 	if (params->currentFunc->numOfStackVars > 0 || params->currentFunc->numOfReturnedVars > 0 || params->currentFunc->numOfRegVars > 0)
 	{
@@ -85,6 +94,12 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				{
 					addIndents(result, params->numOfIndents);
 					sprintfJdc(result, 1, "// %i instruction(s) skipped\n", numOfSkippedInstructions);
+
+					for (int j = numOfSkippedInstructions; j > 0; j--)
+					{
+						addAssociatedInstruction(params->currentFunc, i - j);
+					}
+					params->currentFunc->numOfLines++;
 				}
 
 				isInUnreachableState = 0;
@@ -479,6 +494,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		dataTypeToStr(params->currentFunc->stackVars[i].dataType, &typeStr);
 		addIndents(result, 1);
 		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
+		params->currentFunc->numOfLines++;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
@@ -503,6 +519,8 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		{
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
 		}
+
+		params->currentFunc->numOfLines++;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
@@ -522,9 +540,11 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
 			addIndents(result, 1);
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
+			params->currentFunc->numOfLines++;
 		}
 	}
 
+	params->currentFunc->numOfLines++;
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, "\n");
 }

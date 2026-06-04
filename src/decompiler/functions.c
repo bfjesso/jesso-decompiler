@@ -810,3 +810,37 @@ unsigned char addReturnedVar(struct Function* function, struct DataType dataType
 
 	return 1;
 }
+
+unsigned char addAssociatedInstruction(struct Function* function, int instructionIndex)
+{
+	if (function->numOfLines >= function->associatedInstructionsBufferLen) 
+	{
+		function->associatedInstructionsBufferLen += 10;
+		struct AssociatedInstructions* newAssociatedInstructions = (struct AssociatedInstructions*)realloc(function->associatedInstructions, function->associatedInstructionsBufferLen * sizeof(struct AssociatedInstructions));
+		if (!newAssociatedInstructions) 
+		{
+			return 0;
+		}
+
+		function->associatedInstructions = newAssociatedInstructions;
+		memset(function->associatedInstructions + function->associatedInstructionsBufferLen - 10, 0, sizeof(struct AssociatedInstructions));
+	}
+	
+	struct AssociatedInstructions* a = &function->associatedInstructions[function->numOfLines];
+	if (!a) 
+	{
+		return 0;
+	}
+
+	int* newIndexes = (int*)realloc(a->indexes, (a->numOfIndexes + 1) * sizeof(int));
+	if (!newIndexes)
+	{
+		return 0;
+	}
+
+	a->indexes = newIndexes;
+	a->indexes[a->numOfIndexes] = instructionIndex;
+	a->numOfIndexes++;
+
+	return 1;
+}

@@ -1,4 +1,5 @@
 #include "conditions.h"
+#include "functions.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 #include "expressions.h"
@@ -391,8 +392,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "do\n");
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "{\n");
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			params->numOfIndents++;
 			return 1;
 		}
@@ -413,8 +420,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 				addIndents(result, params->numOfIndents);
 				sprintfJdc(result, 1, "switch(%s)\n", switchVar.buffer);
+				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				params->currentFunc->numOfLines++;
+
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "{\n");
+				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				params->currentFunc->numOfLines++;
+
 				params->numOfIndents++;
 
 				freeJdcStr(&switchVar);
@@ -423,6 +436,8 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			{
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "break;\n");
+				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				params->currentFunc->numOfLines++;
 			}
 
 			struct JdcStr value = initializeJdcStr();
@@ -434,6 +449,9 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "case %s:\n", value.buffer);
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			freeJdcStr(&value);
 			return 1;
 		}
@@ -441,8 +459,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "else\n");
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "{\n");
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			params->numOfIndents++;
 			return 1;
 		}
@@ -453,11 +477,15 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "break;\n");
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
 		}
 
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
 		return 1;
 	}
 
@@ -582,25 +610,37 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addIndents(result, params->numOfIndents);
 			sprintfJdc(result, 1, "for (; %s; %s)\n", conditionExpression.buffer, assignmentExpression.buffer);
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+
 			freeJdcStr(&assignmentExpression);
 		}
 		else
 		{
 			addIndents(result, params->numOfIndents);
 			sprintfJdc(result, 1, "while (%s)\n", conditionExpression.buffer);
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
 		}
 	}
 	else if (condition->conditionType == IF_CT)
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
 	}
 	else if (condition->conditionType == CONDITIONAL_RETURN_CT)
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
+
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "{\n");
+		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		params->currentFunc->numOfLines++;
 		
 		params->numOfIndents++;
 		if (!decompileReturnStatement(params, instructionIndex, 0, result))
@@ -611,6 +651,8 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
+		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		params->currentFunc->numOfLines++;
 
 		return freeJdcStr(&conditionExpression);
 	}
@@ -618,12 +660,23 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
+
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "{\n");
+		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		params->currentFunc->numOfLines++;
+
 		addIndents(result, params->numOfIndents + 1);
 		sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
+		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		params->currentFunc->numOfLines++;
+
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
+		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		params->currentFunc->numOfLines++;
 
 		return freeJdcStr(&conditionExpression);
 	}
@@ -631,18 +684,26 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "else if (%s)\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
 	}
 	else if (condition->conditionType == DO_WHILE_CT)
 	{
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "} while (%s);\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
+
 		return freeJdcStr(&conditionExpression);
 	}
 
 	
 	addIndents(result, params->numOfIndents);
 	strcatJdc(result, "{\n");
+	addAssociatedInstruction(params->currentFunc, instructionIndex + 1);
+	params->currentFunc->numOfLines++;
+
 	params->numOfIndents++;
 
 	return freeJdcStr(&conditionExpression);

@@ -4,7 +4,6 @@
 #include "conditions.h"
 #include "directJmps.h"
 #include "functions.h"
-#include "functionCalls.h"
 #include "assignment.h"
 #include "operations.h"
 #include "dataTypes.h"
@@ -439,6 +438,8 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 
 				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
+
+				addAssociatedInstruction(params->currentFunc, i);
 				return 1;
 			}
 
@@ -453,6 +454,8 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
+
+			addAssociatedInstruction(params->currentFunc, i);
 			return 1;
 		}
 		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
@@ -468,6 +471,8 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			{
 				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
+
+				addAssociatedInstruction(params->currentFunc, i);
 				return 1;
 			}
 
@@ -482,6 +487,8 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
 			freeJdcStr(&operand1Str);
 			freeJdcStr(&operand2Str);
+
+			addAssociatedInstruction(params->currentFunc, i);
 			return 1;
 		}
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
@@ -495,6 +502,8 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 
 			sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 			freeJdcStr(&operand1Str);
+
+			addAssociatedInstruction(params->currentFunc, i);
 			return 1;
 		}
 	}

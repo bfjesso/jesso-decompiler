@@ -128,6 +128,12 @@ struct DirectJmp
 	enum DirectJmpType type;
 };
 
+struct AssociatedInstructions
+{
+	int* indexes;
+	int numOfIndexes;
+};
+
 struct Function
 {
 	struct DataType returnType;
@@ -163,6 +169,10 @@ struct Function
 	int numOfConditions;
 	struct DirectJmp* directJmps;
 	int numOfDirectJmps;
+
+	struct AssociatedInstructions* associatedInstructions; // these are a list of instructions indexes that correspond to each line of the decompilation
+	int numOfLines;
+	int associatedInstructionsBufferLen;
 
 	unsigned char hasDoneInitialAnalysis;
 };

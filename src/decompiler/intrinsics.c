@@ -219,5 +219,8 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	}
 
 	strcatJdc(result, ");\n");
+	addAssociatedInstruction(params->currentFunc, instructionIndex);
+	params->currentFunc->numOfLines++;
+
 	return 1;
 }

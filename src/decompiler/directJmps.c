@@ -1,4 +1,5 @@
 #include "directJmps.h"
+#include "functions.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
@@ -117,6 +118,8 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 		{
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
 			break;
 		}
 		else if (instructionIndex == params->currentFunc->directJmps[i].jmpIndex)
@@ -136,6 +139,9 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 				sprintfJdc(result, 1, "break;\n");
 				break;
 			}
+
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
 
 			break;
 		}

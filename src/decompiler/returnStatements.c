@@ -1,4 +1,5 @@
 #include "returnStatements.h"
+#include "functions.h"
 #include "decompilationUtils.h"
 #include "functionCalls.h"
 #include "expressions.h"
@@ -110,6 +111,8 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 	
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
 		return strcatJdc(result, "return;\n");
 	}
 
@@ -125,8 +128,10 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 		return 0;
 	}
 
+	addAssociatedInstruction(params->currentFunc, instructionIndex);
+	params->currentFunc->numOfLines++;
 	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
-	freeJdcStr(&returnExpression);
 
+	freeJdcStr(&returnExpression);
 	return 1;
 }
