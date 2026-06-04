@@ -1051,9 +1051,9 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		decompilationTextCtrl->BraceHighlight(-1, -1);
 	}
 
+	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
 	if (currentDecompiledFunc != -1) 
 	{
-		disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
 		disassemblyTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
 		disassemblyTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
 		disassemblyTextCtrl->IndicatorSetAlpha(0, 80);
@@ -1062,6 +1062,11 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[decompilationTextCtrl->GetCurrentLine()];
 		for (int i = 0; i < a->numOfIndexes; i++)
 		{
+			if (i == a->numOfIndexes - 1)
+			{
+				disassemblyTextCtrl->GotoLine(a->indexes[i]);
+			}
+			
 			int start = disassemblyTextCtrl->PositionFromLine(a->indexes[i]);
 			int len = disassemblyTextCtrl->GetLineLength(a->indexes[i]);
 			disassemblyTextCtrl->IndicatorFillRange(start, len);
