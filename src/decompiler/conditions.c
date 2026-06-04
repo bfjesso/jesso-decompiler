@@ -516,6 +516,8 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 				return 0;
 			}
 
+			addAssociatedInstruction(params->currentFunc, condition->combinedJccIndexes[i]);
+
 			strcatJdc(&conditionExpression, !invertCondition ? " || " : " && ");
 			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
 			freeJdcStr(&currentConditionExpression);
@@ -538,6 +540,8 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 				freeJdcStr(&currentConditionExpression);
 				return 0;
 			}
+
+			addAssociatedInstruction(params->currentFunc, condition->combinedJccIndexes[i]);
 
 			strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
 			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
