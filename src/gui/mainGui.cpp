@@ -1060,17 +1060,21 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		disassemblyTextCtrl->SetIndicatorCurrent(0);
 		
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[decompilationTextCtrl->GetCurrentLine()];
+
+		int largestIndex = 0;
 		for (int i = 0; i < a->numOfIndexes; i++)
 		{
-			if (i == a->numOfIndexes - 1)
+			if (a->indexes[i] > largestIndex)
 			{
-				disassemblyTextCtrl->GotoLine(a->indexes[i]);
+				largestIndex = a->indexes[i];
 			}
 			
 			int start = disassemblyTextCtrl->PositionFromLine(a->indexes[i]);
 			int len = disassemblyTextCtrl->GetLineLength(a->indexes[i]);
 			disassemblyTextCtrl->IndicatorFillRange(start, len);
 		}
+
+		disassemblyTextCtrl->GotoLine(largestIndex);
 	}
 }
 
