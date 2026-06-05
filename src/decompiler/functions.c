@@ -439,7 +439,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 	return 1;
 }
 
-void freeFunction(struct Function* function) 
+void freeFunction(struct Function* function)
 {
 	freeJdcStr(&function->name);
 
@@ -472,12 +472,18 @@ void freeFunction(struct Function* function)
 	free(function->stackVars);
 	free(function->returnedVars);
 
-	for (int i = 0; i < function->numOfConditions; i++) 
+	for (int i = 0; i < function->numOfConditions; i++)
 	{
 		free(function->conditions[i].combinedJccIndexes);
 	}
 	free(function->conditions);
 	free(function->directJmps);
+
+	for (int i = 0; i < function->numOfLines; i++) 
+	{
+		free(function->associatedInstructions[i].indexes);
+	}
+	free(function->associatedInstructions);
 }
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction) 
