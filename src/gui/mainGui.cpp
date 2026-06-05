@@ -27,6 +27,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	SetUpStyledTextCtrl(disassemblyTextCtrl);
 	disassemblyTextCtrl->Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { StyledTextCtrlRightClickOptions(e); });
 	disassemblyTextCtrl->Bind(wxEVT_CHAR_HOOK, &MainGui::OnStyledTextCtrlKeyDown, this);
+	disassemblyTextCtrl->Bind(wxEVT_STC_UPDATEUI, &MainGui::OnDisassemblyUpdateUI, this);
 
 	decompilationTextCtrl = new wxStyledTextCtrl(topSplitter, wxID_ANY, wxPoint(0, 0), wxSize(150, 400));
 	SetUpStyledTextCtrl(decompilationTextCtrl);
@@ -1016,9 +1017,52 @@ void MainGui::ShowGoToAddrDialog()
 	}
 }
 
+void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
+{
+	if (!disassemblyTextCtrl || !decompilationTextCtrl || !disassemblyTextCtrl->HasFocus())
+	{
+		return;
+	}
+
+	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
+	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
+	if (currentDecompiledFunc != -1)
+	{
+		decompilationTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
+		decompilationTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
+		decompilationTextCtrl->IndicatorSetAlpha(0, 80);
+		decompilationTextCtrl->SetIndicatorCurrent(0);
+
+		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
+		int lastLine = 0;
+		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
+		{
+			struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[i];
+			for (int j = 0; j < a->numOfIndexes; j++) 
+			{
+				if (a->indexes[j] == instructionIndex) 
+				{
+					int start = decompilationTextCtrl->PositionFromLine(i);
+					int len = decompilationTextCtrl->GetLineLength(i);
+					decompilationTextCtrl->IndicatorFillRange(start, len);
+
+					lastLine = i;
+					break;
+				}
+			}
+		}
+
+		decompilationTextCtrl->GotoLine(lastLine);
+
+		int start = disassemblyTextCtrl->PositionFromLine(instructionIndex);
+		int len = disassemblyTextCtrl->GetLineLength(instructionIndex);
+		disassemblyTextCtrl->IndicatorFillRange(start, len);
+	}
+}
+
 void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 {
-	if (!decompilationTextCtrl)
+	if (!decompilationTextCtrl || !disassemblyTextCtrl || !decompilationTextCtrl->HasFocus())
 	{
 		return;
 	}
@@ -1052,6 +1096,7 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 	}
 
 	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
+	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
 	if (currentDecompiledFunc != -1) 
 	{
 		disassemblyTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
@@ -1059,7 +1104,8 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		disassemblyTextCtrl->IndicatorSetAlpha(0, 80);
 		disassemblyTextCtrl->SetIndicatorCurrent(0);
 		
-		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[decompilationTextCtrl->GetCurrentLine()];
+		int selectedLine = decompilationTextCtrl->GetCurrentLine();
+		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
 		int largestIndex = 0;
 		for (int i = 0; i < a->numOfIndexes; i++)
@@ -1075,6 +1121,10 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		}
 
 		disassemblyTextCtrl->GotoLine(largestIndex);
+
+		int start = decompilationTextCtrl->PositionFromLine(selectedLine);
+		int len = decompilationTextCtrl->GetLineLength(selectedLine);
+		decompilationTextCtrl->IndicatorFillRange(start, len);
 	}
 }
 

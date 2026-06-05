@@ -125,6 +125,8 @@ public:
 
 	void ShowGoToAddrDialog();
 
+	void OnDisassemblyUpdateUI(wxStyledTextEvent& e);
+
 	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
 
 	void OnFindDialog(wxFindDialogEvent& e);
