@@ -96,7 +96,16 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 		struct RegisterVariable* regArg = getRegArgByReg(callee, reg);
 		if (regArg)
 		{
-			if (dataTypeRef) { *dataTypeRef = regArg->dataType; }
+			if (specificReg)
+			{
+				*specificReg = regArg->reg;
+			}
+
+			if (dataTypeRef) 
+			{ 
+				*dataTypeRef = regArg->dataType; 
+			}
+
 			return 1;
 		}
 	}

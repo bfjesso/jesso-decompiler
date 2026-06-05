@@ -278,13 +278,13 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 
 			unsigned char overwrites = 0;
-			enum Register reg = NO_REG;
+			enum Register specificReg = NO_REG;
 			struct DataType regDataType = { 0 };
-			if (doesInstructionAccessRegister(params, i, j, &reg, &regDataType))
+			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType))
 			{
 				if (!initializedRegs[j - RAX])
 				{
-					if (!addRegArg(params->currentFunc, regDataType, reg))
+					if (!addRegArg(params->currentFunc, regDataType, specificReg))
 					{
 						return 0;
 					}
