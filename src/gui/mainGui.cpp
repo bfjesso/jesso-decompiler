@@ -856,6 +856,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	const int ID_CONVERT_NUMBER = 102;
 	const int ID_FIND = 103;
 	const int ID_GO_TO_ADDR = 104;
+	const int ID_SHOW_ASSOCIATED = 105;
 
 	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
@@ -950,6 +951,22 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 		}, ID_GO_TO_ADDR);
 	}
 
+	if (ctrl == disassemblyTextCtrl)
+	{
+		menu.AppendCheckItem(ID_SHOW_ASSOCIATED, "Show associated decompilation lines");
+	}
+	else 
+	{
+		menu.AppendCheckItem(ID_SHOW_ASSOCIATED, "Show associated instructions");
+	}
+
+	menu.Check(ID_SHOW_ASSOCIATED, showAssociatedInstructions);
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+		showAssociatedInstructions = e.IsChecked();
+		disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
+		decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
+		}, ID_SHOW_ASSOCIATED);
+
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
@@ -1026,7 +1043,7 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 
 	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
 	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
-	if (currentDecompiledFunc != -1)
+	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
 		decompilationTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
 		decompilationTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
@@ -1097,7 +1114,7 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 
 	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
 	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
-	if (currentDecompiledFunc != -1) 
+	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
 		disassemblyTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
 		disassemblyTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));

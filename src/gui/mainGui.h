@@ -66,6 +66,8 @@ public:
 	wxStyledTextCtrl* findCtrl = nullptr;
 	wxString lastFindText = "";
 	int totalFindResults = 0;
+
+	unsigned char showAssociatedInstructions = 1;
 	
 	enum ids 
 	{
