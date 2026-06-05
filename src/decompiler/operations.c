@@ -561,6 +561,7 @@ static unsigned char decompilePop(struct DecompilationParameters* params, int in
 					return 0;
 				}
 
+				addAssociatedInstruction(params->currentFunc, i);
 				gotValue = 1;
 				break;
 			}
@@ -571,6 +572,8 @@ static unsigned char decompilePop(struct DecompilationParameters* params, int in
 			if (stackOffset == 0)
 			{
 				strcpyJdc(&value, "__readeflags()"); // Windows function
+
+				addAssociatedInstruction(params->currentFunc, i);
 				gotValue = 1;
 				break;
 			}
