@@ -1045,11 +1045,6 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
-		decompilationTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
-		decompilationTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
-		decompilationTextCtrl->IndicatorSetAlpha(0, 80);
-		decompilationTextCtrl->SetIndicatorCurrent(0);
-
 		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 		int lastLine = 0;
 		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
@@ -1116,11 +1111,6 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
-		disassemblyTextCtrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
-		disassemblyTextCtrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
-		disassemblyTextCtrl->IndicatorSetAlpha(0, 80);
-		disassemblyTextCtrl->SetIndicatorCurrent(0);
-		
 		int selectedLine = decompilationTextCtrl->GetCurrentLine();
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 

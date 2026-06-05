@@ -24,6 +24,10 @@ void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 	ctrl->SetScrollWidthTracking(true);
 	ctrl->SetScrollWidth(1);
 	ctrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
+	ctrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
+	ctrl->IndicatorSetAlpha(0, 80);
+	ctrl->SetIndicatorCurrent(0);
 }
 
 void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
