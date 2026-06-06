@@ -1111,12 +1111,12 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 	}
 
 	ClearTextCtrlIndicators();
-	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
+	int selectedLine = decompilationTextCtrl->GetCurrentLine();
+	if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 	{
 		disassemblyTextCtrl->SetIndicatorCurrent(0);
 		decompilationTextCtrl->SetIndicatorCurrent(0);
 		
-		int selectedLine = decompilationTextCtrl->GetCurrentLine();
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
 		int largestIndex = 0;

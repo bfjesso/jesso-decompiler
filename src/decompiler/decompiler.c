@@ -55,8 +55,8 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	strcatJdc(result, "{\n");
-
-	params->currentFunc->numOfLines = 2;
+	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
+	params->currentFunc->numOfLines++;
 
 	if (params->currentFunc->numOfStackVars > 0 || params->currentFunc->numOfReturnedVars > 0 || params->currentFunc->numOfRegVars > 0)
 	{
@@ -175,6 +175,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
+	addAssociatedInstruction(params->currentFunc, params->currentFunc->lastInstructionIndex);
 	params->currentFunc->numOfLines++;
 	return strcatJdc(result, "}");
 }
@@ -482,6 +483,8 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 		}
 	}
 
+	addAssociatedInstruction(function, function->firstInstructionIndex);
+	function->numOfLines++;
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, ")\n");
 }
