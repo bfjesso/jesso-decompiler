@@ -27,11 +27,11 @@ void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 
 	ctrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
 	ctrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
-	ctrl->IndicatorSetAlpha(0, 80);
+	ctrl->IndicatorSetAlpha(0, 40);
 
 	ctrl->IndicatorSetStyle(1, wxSTC_INDIC_ROUNDBOX);
 	ctrl->IndicatorSetForeground(1, wxColour(200, 200, 200));
-	ctrl->IndicatorSetAlpha(1, 80);
+	ctrl->IndicatorSetAlpha(1, 40);
 }
 
 void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
