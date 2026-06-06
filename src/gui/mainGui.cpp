@@ -1041,10 +1041,12 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 		return;
 	}
 
-	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
-	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
+	ClearTextCtrlIndicators();
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
+		disassemblyTextCtrl->SetIndicatorCurrent(0);
+		decompilationTextCtrl->SetIndicatorCurrent(0);
+		
 		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 		int lastLine = 0;
 		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
@@ -1107,10 +1109,12 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		decompilationTextCtrl->BraceHighlight(-1, -1);
 	}
 
-	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
-	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
+	ClearTextCtrlIndicators();
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
+		disassemblyTextCtrl->SetIndicatorCurrent(0);
+		decompilationTextCtrl->SetIndicatorCurrent(0);
+		
 		int selectedLine = decompilationTextCtrl->GetCurrentLine();
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
@@ -1133,6 +1137,35 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 		int len = decompilationTextCtrl->GetLineLength(selectedLine);
 		decompilationTextCtrl->IndicatorFillRange(start, len);
 	}
+
+	wxString selection = decompilationTextCtrl->GetSelectedText();
+	if (selection != "") 
+	{
+		decompilationTextCtrl->SetIndicatorCurrent(1);
+
+		int selectionLen = selection.Length();
+		int minPos = 0;
+		while (1)
+		{
+			int index = decompilationTextCtrl->FindText(minPos, decompilationTextCtrl->GetTextLength(), selection);
+			if (index == -1)
+			{
+				break;
+			}
+
+			decompilationTextCtrl->IndicatorFillRange(index, selectionLen);
+			minPos = index + selectionLen;
+		}
+	}
+	
+}
+
+void MainGui::ClearTextCtrlIndicators()
+{
+	disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
+	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
+	disassemblyTextCtrl->IndicatorClearRange(1, disassemblyTextCtrl->GetTextLength());
+	decompilationTextCtrl->IndicatorClearRange(1, decompilationTextCtrl->GetTextLength());
 }
 
 void MainGui::OnFindDialog(wxFindDialogEvent& e)

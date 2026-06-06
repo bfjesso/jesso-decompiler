@@ -131,6 +131,8 @@ public:
 
 	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
 
+	void ClearTextCtrlIndicators();
+
 	void OnFindDialog(wxFindDialogEvent& e);
 
 	int FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward);
