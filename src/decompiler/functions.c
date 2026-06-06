@@ -829,7 +829,7 @@ unsigned char addAssociatedInstruction(struct Function* function, int instructio
 		}
 
 		function->associatedInstructions = newAssociatedInstructions;
-		memset(function->associatedInstructions + function->associatedInstructionsBufferLen - 10, 0, sizeof(struct AssociatedInstructions));
+		memset(function->associatedInstructions + function->associatedInstructionsBufferLen - 10, 0, 10 * sizeof(struct AssociatedInstructions));
 	}
 	
 	struct AssociatedInstructions* a = &function->associatedInstructions[function->numOfLines];
