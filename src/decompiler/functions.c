@@ -824,7 +824,8 @@ unsigned char addAssociatedInstruction(struct Function* function, int instructio
 {
 	if (function->numOfLines >= function->associatedInstructionsBufferLen) 
 	{
-		function->associatedInstructionsBufferLen += 10;
+		int ogBufferLen = function->associatedInstructionsBufferLen;
+		function->associatedInstructionsBufferLen = function->numOfLines + 10;
 		struct AssociatedInstructions* newAssociatedInstructions = (struct AssociatedInstructions*)realloc(function->associatedInstructions, function->associatedInstructionsBufferLen * sizeof(struct AssociatedInstructions));
 		if (!newAssociatedInstructions) 
 		{
@@ -832,7 +833,7 @@ unsigned char addAssociatedInstruction(struct Function* function, int instructio
 		}
 
 		function->associatedInstructions = newAssociatedInstructions;
-		memset(function->associatedInstructions + function->associatedInstructionsBufferLen - 10, 0, 10 * sizeof(struct AssociatedInstructions));
+		memset(function->associatedInstructions + ogBufferLen, 0, (function->associatedInstructionsBufferLen - ogBufferLen) * sizeof(struct AssociatedInstructions));
 	}
 	
 	struct AssociatedInstructions* a = &function->associatedInstructions[function->numOfLines];
