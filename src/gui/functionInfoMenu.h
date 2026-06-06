@@ -7,14 +7,7 @@ class FunctionInfoMenu : public wxFrame, public Utils
 public:
 	FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function);
 
-    wxStaticText* returnTypeStaticTxt = nullptr;
-    wxStaticText* returnRegStaticTxt = nullptr;
-    wxStaticText* returnFunctionAddrStaticTxt = nullptr;
-    wxStaticText* indexOfFirstFuncCallStaticTxt = nullptr;
-    wxStaticText* callingConventionStaticTxt = nullptr;
-	wxStaticText* functionNameStaticTxt = nullptr;
-    wxStaticText* numOfInstructionsStaticTxt = nullptr;
-
+	wxGrid* infoGrid = nullptr;
 	wxGrid* regVarsGrid = nullptr;
 	wxGrid* stackVarsGrid = nullptr;
 	wxGrid* returnedVarsGrid = nullptr;
@@ -23,6 +16,7 @@ public:
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
+	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	enum ids

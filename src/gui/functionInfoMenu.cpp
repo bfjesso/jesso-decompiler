@@ -7,39 +7,99 @@ wxBEGIN_EVENT_TABLE(FunctionInfoMenu, wxFrame)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoMenu::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(800, 600))
+FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(900, 600))
 {
     SetOwnBackgroundColour(backgroundColor);
 
+	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
+	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
+	vSizer = new wxBoxSizer(wxVERTICAL);
+
+	infoGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
+	infoGrid->SetLabelBackgroundColour(foregroundColor);
+	infoGrid->SetLabelTextColour(textColor);
+	infoGrid->SetDefaultCellBackgroundColour(gridColor);
+	infoGrid->SetDefaultCellTextColour(textColor);
+	infoGrid->CreateGrid(0, 2);
+	infoGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	infoGrid->SetScrollRate(0, 10);
+	infoGrid->DisableDragRowSize();
+	infoGrid->EnableEditing(false);
+	infoGrid->SetColLabelValue(0, "Function property");
+	infoGrid->SetColLabelValue(1, "Value");
+	infoGrid->HideRowLabels();
+	infoGrid->SetColSize(0, 200);
+	infoGrid->SetColSize(1, 9999);
+	infoGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+	infoGrid->AppendRows(7);
+
     struct JdcStr dataTypeStr = initializeJdcStr();
     dataTypeToStr(function->returnType, &dataTypeStr);
-    returnTypeStaticTxt = new wxStaticText(this, wxID_ANY, "Return Type: " + wxString(dataTypeStr.buffer));
-	returnTypeStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(0, 0, "Return type");
+	infoGrid->SetCellValue(0, 1, dataTypeStr.buffer);
 
-    returnRegStaticTxt = new wxStaticText(this, wxID_ANY, "Return Reg: " + wxString(registerStrs[function->returnReg]));
-	returnRegStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(1, 0, "Return register");
+	infoGrid->SetCellValue(1, 1, registerStrs[function->returnReg]);
 
     char hexNumStr[10] = { 0 };
     sprintf(hexNumStr, "0x%llX", function->returningFunctionAddress);
-    returnFunctionAddrStaticTxt = new wxStaticText(this, wxID_ANY, "Address of Returning Function: " + wxString(hexNumStr));
-	returnFunctionAddrStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(2, 0, "Returning function address");
+	infoGrid->SetCellValue(2, 1, hexNumStr);
 
     sprintf(hexNumStr, "0x%llX", instructions[function->firstFuncCallInstructionIndex].address);
-    indexOfFirstFuncCallStaticTxt = new wxStaticText(this, wxID_ANY, "Index of First Function Call Instruction: " + wxString(std::to_string(function->firstFuncCallInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
-	indexOfFirstFuncCallStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(3, 0, "First call instruction index");
+	infoGrid->SetCellValue(3, 1, wxString(std::to_string(function->firstFuncCallInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
 
-    callingConventionStaticTxt = new wxStaticText(this, wxID_ANY, "Calling Convention: " + wxString(callingConventionStrs[function->callingConvention]));
-	callingConventionStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(4, 0, "Calling convention");
+	infoGrid->SetCellValue(4, 1, callingConventionStrs[function->callingConvention]);
 
-	functionNameStaticTxt = new wxStaticText(this, wxID_ANY, "Function Name: " + wxString(function->name.buffer));
-	functionNameStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(5, 0, "Function name");
+	infoGrid->SetCellValue(5, 1, function->name.buffer);
 
-	numOfInstructionsStaticTxt = new wxStaticText(this, wxID_ANY, "Number of Instructions: " + wxString(std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1)));
-	numOfInstructionsStaticTxt->SetOwnForegroundColour(textColor);
+	infoGrid->SetCellValue(6, 0, "Number of instructions");
+	infoGrid->SetCellValue(6, 1, std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1));
 
-	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	vSizer = new wxBoxSizer(wxVERTICAL);
+	row1Sizer->Add(infoGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+
+	returnedVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 200));
+	returnedVarsGrid->SetLabelBackgroundColour(foregroundColor);
+	returnedVarsGrid->SetLabelTextColour(textColor);
+	returnedVarsGrid->SetDefaultCellBackgroundColour(gridColor);
+	returnedVarsGrid->SetDefaultCellTextColour(textColor);
+	returnedVarsGrid->CreateGrid(0, 5);
+	returnedVarsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	returnedVarsGrid->SetScrollRate(0, 10);
+	returnedVarsGrid->DisableDragRowSize();
+	returnedVarsGrid->EnableEditing(false);
+	returnedVarsGrid->SetColLabelValue(0, "Returned var type");
+	returnedVarsGrid->SetColLabelValue(1, "Name");
+	returnedVarsGrid->SetColLabelValue(2, "Callee address");
+	returnedVarsGrid->SetColLabelValue(3, "Call instruction address");
+	returnedVarsGrid->SetColLabelValue(4, "Return reg");
+	returnedVarsGrid->HideRowLabels();
+	returnedVarsGrid->SetColSize(0, 150);
+	returnedVarsGrid->SetColSize(1, 150);
+	returnedVarsGrid->SetColSize(2, 150);
+	returnedVarsGrid->SetColSize(3, 150);
+	returnedVarsGrid->SetColSize(4, 9999);
+	returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+
+	for (int i = 0; i < function->numOfReturnedVars; i++)
+	{
+		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
+		returnedVarsGrid->AppendRows(1);
+		dataTypeToStr(returnedVar->dataType, &dataTypeStr);
+		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
+		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
+		sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
+		returnedVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
+		sprintf(hexNumStr, "0x%llX", returnedVar->callInstructionAddress);
+		returnedVarsGrid->SetCellValue(i, 3, wxString(hexNumStr));
+		returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
+	}
+
+	row1Sizer->Add(returnedVarsGrid, 2, wxEXPAND | wxRIGHT, 10);
 
     regVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
 	regVarsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -62,7 +122,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	regVarsGrid->SetColSize(3, 9999);
 	regVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row1Sizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	row2Sizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
@@ -106,7 +166,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	stackVarsGrid->SetColSize(3, 9999);
 	stackVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row2Sizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	row3Sizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
@@ -145,46 +205,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 3, "No");
 	}
 
-	returnedVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(600, 200));
-	returnedVarsGrid->SetLabelBackgroundColour(foregroundColor);
-	returnedVarsGrid->SetLabelTextColour(textColor);
-	returnedVarsGrid->SetDefaultCellBackgroundColour(gridColor);
-	returnedVarsGrid->SetDefaultCellTextColour(textColor);
-	returnedVarsGrid->CreateGrid(0, 5);
-	returnedVarsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	returnedVarsGrid->SetScrollRate(0, 10);
-	returnedVarsGrid->DisableDragRowSize();
-	returnedVarsGrid->EnableEditing(false);
-	returnedVarsGrid->SetColLabelValue(0, "Returned var type");
-	returnedVarsGrid->SetColLabelValue(1, "Name");
-	returnedVarsGrid->SetColLabelValue(2, "Callee address");
-	returnedVarsGrid->SetColLabelValue(3, "Call instruction address");
-	returnedVarsGrid->SetColLabelValue(4, "Return reg");
-	returnedVarsGrid->HideRowLabels();
-	returnedVarsGrid->SetColSize(0, 150);
-	returnedVarsGrid->SetColSize(1, 150);
-	returnedVarsGrid->SetColSize(2, 150);
-	returnedVarsGrid->SetColSize(3, 150);
-	returnedVarsGrid->SetColSize(4, 9999);
-	returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-
-	for (int i = 0; i < function->numOfReturnedVars; i++)
-	{
-		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
-		returnedVarsGrid->AppendRows(1);
-		dataTypeToStr(returnedVar->dataType, &dataTypeStr);
-		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
-		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
-		sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
-		returnedVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
-		sprintf(hexNumStr, "0x%llX", returnedVar->callInstructionAddress);
-		returnedVarsGrid->SetCellValue(i, 3, wxString(hexNumStr));
-		returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
-	}
-
 	freeJdcStr(&dataTypeStr);
 
-	conditionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
+	conditionsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 200));
 	conditionsGrid->SetLabelBackgroundColour(foregroundColor);
 	conditionsGrid->SetLabelTextColour(textColor);
 	conditionsGrid->SetDefaultCellBackgroundColour(gridColor);
@@ -213,7 +236,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	conditionsGrid->SetColSize(7, 9999);
 	conditionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row1Sizer->Add(conditionsGrid, 2, wxEXPAND | wxRIGHT, 10);
+	row2Sizer->Add(conditionsGrid, 2, wxEXPAND | wxRIGHT, 10);
 
 	for (int i = 0; i < function->numOfConditions; i++)
 	{
@@ -274,7 +297,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	directJmpsGrid->SetColSize(2, 9999);
 	directJmpsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row2Sizer->Add(directJmpsGrid, 2, wxEXPAND | wxRIGHT, 10);
+	row3Sizer->Add(directJmpsGrid, 2, wxEXPAND | wxRIGHT, 10);
 
 	for (int i = 0; i < function->numOfDirectJmps; i++)
 	{
@@ -287,18 +310,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		directJmpsGrid->SetCellValue(i, 2, wxString(std::to_string(directJmp->dstIndex)) + " (" + wxString(hexNumStr) + ")");
 	}
 
-	vSizer->Add(returnTypeStaticTxt, 0, wxEXPAND | wxLEFT | wxTOP, 10);
-	vSizer->Add(returnRegStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(returnFunctionAddrStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(indexOfFirstFuncCallStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(callingConventionStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(functionNameStaticTxt, 0, wxEXPAND | wxLEFT, 10);
-	vSizer->Add(numOfInstructionsStaticTxt, 0, wxEXPAND | wxLEFT | wxBOTTOM, 10);
-
-	vSizer->Add(row1Sizer, 0, wxEXPAND | wxBOTTOM, 10);
+	vSizer->Add(row1Sizer, 0, wxEXPAND | wxBOTTOM | wxUP, 10);
 	vSizer->Add(row2Sizer, 0, wxEXPAND | wxBOTTOM, 10);
-
-	vSizer->Add(returnedVarsGrid, 0, wxEXPAND | wxBOTTOM | wxLEFT | wxRIGHT, 10);
+	vSizer->Add(row3Sizer, 0, wxEXPAND | wxBOTTOM, 10);
 
 	SetSizerAndFit(vSizer);
 
