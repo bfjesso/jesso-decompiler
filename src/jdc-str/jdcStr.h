@@ -34,6 +34,8 @@ extern "C"
 
 unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr);
 
+unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr);
+
 unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
 
 static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);

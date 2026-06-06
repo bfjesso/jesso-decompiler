@@ -1410,6 +1410,9 @@ void MainGui::ApplySyntaxHighlighting(Function* function)
 	{
 		ColorAllStrs(text, numberChars[i], ColorsMenu::DecompilationColor::NUMBER_COLOR, 0);
 	}
+
+	// this is for when :: is part of a function name
+	ColorAllStrs(text, ":", ColorsMenu::DecompilationColor::OPERATOR_COLOR, 1);
 }
 
 void MainGui::ApplyAsmHighlighting()

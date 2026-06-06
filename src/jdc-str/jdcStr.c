@@ -29,6 +29,48 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 	return 0;
 }
 
+unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr)
+{
+	if (jdcStr && jdcStr->buffer && oldStr && newStr)
+	{
+		struct JdcStr result = initializeJdcStr();
+
+		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
+		int jdcStrLen = (int)strlen(jdcStr->buffer);
+
+		int oldLen = (int)strlen(oldStr);
+		for (int i = 0; i < jdcStrLen; i++)
+		{
+			unsigned char foundStr = 1;
+			for (int j = 0; j < oldLen; j++)
+			{
+				if (i + j >= jdcStrLen || jdcStr->buffer[i + j] != oldStr[j])
+				{
+					foundStr = 0;
+					break;
+				}
+			}
+
+			if (foundStr)
+			{
+				strcatJdc(&result, newStr);
+				i += oldLen - 1;
+			}
+			else
+			{
+				char c[2] = { jdcStr->buffer[i], 0 };
+				strcatJdc(&result, &c);
+			}
+		}
+
+		strcpyJdc(jdcStr, result.buffer);
+		freeJdcStr(&result);
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)

@@ -807,8 +807,11 @@ unsigned char addReturnedVar(struct Function* function, struct DataType dataType
 	}
 
 	function->returnedVars[function->numOfReturnedVars].dataType = dataType;
+
 	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
 	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
+	replaceJdc(&(function->returnedVars[function->numOfReturnedVars].name), "::", "_");
+
 	function->returnedVars[function->numOfReturnedVars].calleeAddress = calleeAddress;
 	function->returnedVars[function->numOfReturnedVars].callInstructionAddress = callInstructionAddress;
 	function->returnedVars[function->numOfReturnedVars].returnReg = returnReg;
