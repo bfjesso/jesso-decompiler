@@ -175,6 +175,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
+	params->currentFunc->numOfLines++;
 	return strcatJdc(result, "}");
 }
 
