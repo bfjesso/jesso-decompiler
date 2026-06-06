@@ -533,6 +533,7 @@ void MainGui::DecompileFunction(int functionIndex)
 		return;
 	}
 
+	ClearTextCtrlIndicators();
 	ClearStyledTextCtrl(decompilationTextCtrl);
 
 	decompParams.currentFunc = &functions[functionIndex];
