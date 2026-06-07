@@ -30,16 +30,29 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			foundFirstInstruction = 1;
 		}
 
-		if (doesInstructionDoNothing(currentInstruction)) 
-		{
-			continue;
-		}
-
 		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
 		{
 			result->returningFunctionAddress = params->instructions[i + 1].address;
 			result->lastInstructionIndex = i;
 			return 1;
+		}
+
+		if (doesInstructionDoNothing(currentInstruction))
+		{
+			continue;
+		}
+
+		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
+		{
+			unsigned long long jumpAddr = resolveJmpChain(params, i);
+			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+			if (instructionIndex > indexToJumpTo && instructionIndex > i && jumpAddr <= currentSectionEndAddress)
+			{
+				if (!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
+				{
+					indexToJumpTo = instructionIndex;
+				}
+			}
 		}
 
 		if (i < indexToJumpTo)
@@ -57,21 +70,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->callingConvention = __UNKNOWNCALL;
 			result->lastInstructionIndex = i;
 			return 1;
-		}
-
-		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
-			currentInstruction->operands[0].type == IMMEDIATE &&
-			currentInstruction->operands[0].immediate.value > 0)
-		{
-			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
-			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
-			if (instructionIndex > indexToJumpTo && jumpAddr <= currentSectionEndAddress)
-			{
-				if (!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
-				{
-					indexToJumpTo = instructionIndex;
-				}
-			}
 		}
 	}
 
