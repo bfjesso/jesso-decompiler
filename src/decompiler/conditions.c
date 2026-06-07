@@ -351,6 +351,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 		{
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
+			params->currentFunc->numOfLines++;
 			break;
 		}
 	}
