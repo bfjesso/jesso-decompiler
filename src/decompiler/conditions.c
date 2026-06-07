@@ -19,8 +19,11 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			unsigned long long jccDstAddr = resolveJmpChain(params, i);
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jccDstAddr);
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
+			if (dstIndex == -1) 
+			{
+				continue;
+			}
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;

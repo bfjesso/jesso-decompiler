@@ -1,6 +1,7 @@
 #include "functions.h"
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
+#include "conditions.h"
 #include "returnStatements.h"
 
 unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
@@ -184,33 +185,29 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 	return 1;
 }
 
-unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
+unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params)
 {
-	unsigned char* initializedRegs = (unsigned char*)malloc(ST0 - RAX);
-	if (!initializedRegs) 
-	{
-		return 0;
-	}
-	
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
-		memset(initializedRegs, 0, ST0 - RAX);
-
 		params->currentFunc = &params->functions[i];
-		if (!getFunctionArguments(params, params->currentFunc->firstInstructionIndex, params->currentFunc->lastInstructionIndex, initializedRegs, 0))
+
+		if (!getAllConditions(params))
 		{
-			free(initializedRegs);
+			return 0;
+		}
+
+		if (!getFunctionArguments(params))
+		{
 			return 0;
 		}
 	}
 
-	free(initializedRegs);
 	return 1;
 }
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, unsigned char* initializedRegs, int callNum)
+static unsigned char getFunctionArguments(struct DecompilationParameters* params)
 {
-	for (int i = startInstructionIndex; i <= endInstructionIndex; i++)
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
 
@@ -229,36 +226,6 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 		}
 
-		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
-		{
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
-			if (dstIndex > i && dstIndex <= params->currentFunc->lastInstructionIndex)
-			{
-				if (callNum < 10 && isOpcodeJcc(currentInstruction->opcode))
-				{
-					unsigned char* newInitializedRegs = (unsigned char*)malloc(ST0 - RAX);
-					if (!newInitializedRegs)
-					{
-						return 0;
-					}
-
-					memcpy(newInitializedRegs, initializedRegs, ST0 - RAX);
-
-					if (!getFunctionArguments(params, i + 1, dstIndex - 1, newInitializedRegs, callNum + 1))
-					{
-						free(newInitializedRegs);
-						return 0;
-					}
-
-					free(newInitializedRegs);
-				}
-
-				i = dstIndex - 1;
-			}
-
-			continue;
-		}
-
 		// checking for reg args
 		for (int j = RAX; j < ST0; j++)
 		{
@@ -275,22 +242,31 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			unsigned char overwrites = 0;
 			enum Register specificReg = NO_REG;
 			struct DataType regDataType = { 0 };
-			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType))
+			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType) && !getRegArgByReg(params->currentFunc, j))
 			{
-				if (!initializedRegs[j - RAX])
+				unsigned char isInitialized = 0;
+				for (int k = i - 1; k >= params->currentFunc->firstInstructionIndex; k--) 
+				{
+					if (doesInstructionModifyRegister(params, i, j, 0, 0, &overwrites) && overwrites)
+					{
+						isInitialized = 1;
+						break;
+					}
+					
+					int conditionIndex = getConditionEnd(params, i);
+					if (conditionIndex != -1)
+					{
+						i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
+					}
+				}
+				
+				if (!isInitialized)
 				{
 					if (!addRegArg(params->currentFunc, regDataType, specificReg))
 					{
 						return 0;
 					}
-
-					// this is so it is not added again
-					initializedRegs[j - RAX] = 1;
 				}
-			}
-			else if (doesInstructionModifyRegister(params, i, j, 0, 0, &overwrites) && overwrites)
-			{
-				initializedRegs[j - RAX] = 1;
 			}
 		}
 

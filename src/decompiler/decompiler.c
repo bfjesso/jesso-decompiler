@@ -14,12 +14,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 {
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
-		if (!getAllConditions(params))
-		{
-			strcpyJdc(statusMessage, "Error getting all conditions.");
-			return 0;
-		}
-
 		if (!getAllDirectJmps(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all direct jumps.");

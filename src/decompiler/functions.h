@@ -13,7 +13,7 @@ extern "C"
 
 	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
 
-	unsigned char getAllFunctionArguments(struct DecompilationParameters* params);
+	unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params);
 
 	unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
@@ -25,7 +25,7 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, unsigned char* initializedRegs, int callNum);
+static unsigned char getFunctionArguments(struct DecompilationParameters* params);
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 

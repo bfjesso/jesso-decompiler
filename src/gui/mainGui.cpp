@@ -646,7 +646,7 @@ void MainGui::FindAllFunctions()
 		getAllFunctionReturnTypes(&decompParams);
 		fixAllFunctionReturnTypes(&decompParams);
 
-		getAllFunctionArguments(&decompParams);
+		getAllFunctionConditionsAndArguments(&decompParams);
 		fixAllFunctionArgs(&decompParams);
 	}
 }
