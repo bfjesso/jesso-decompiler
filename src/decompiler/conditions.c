@@ -669,17 +669,17 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "{\n");
-		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents + 1);
 		sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
-		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
-		addAssociatedInstruction(params->currentFunc, condition->dstIndex);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
 		params->currentFunc->numOfLines++;
 
 		return freeJdcStr(&conditionExpression);
