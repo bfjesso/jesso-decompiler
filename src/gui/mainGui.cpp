@@ -692,7 +692,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 			(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
 		{
 			char jmpAddressStr[20] = { 0 };
-			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i].address + disassembledInstructions[i].operands[0].immediate.value);
+			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i + 1].address + disassembledInstructions[i].operands[0].immediate.value);
 
 			asmStr += " ; jump to " + wxString(jmpAddressStr);
 		}

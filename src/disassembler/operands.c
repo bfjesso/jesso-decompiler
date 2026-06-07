@@ -331,14 +331,14 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Jb:
 			if (params->bytes > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate.value = (char)(getUIntFromBytes(&params->bytes, 1) + (params->bytes - params->startBytePtr)); // add instruction size
+			currentOperand->immediate.value = (char)getUIntFromBytes(&params->bytes, 1);
 			currentOperand->immediate.size = 1;
 			break;
 		case Jz:
 			operandSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate.value = (int)getUIntFromBytes(&params->bytes, operandSize) + (params->bytes - params->startBytePtr); // add instruction size
+			currentOperand->immediate.value = (int)getUIntFromBytes(&params->bytes, operandSize);
 			currentOperand->immediate.size = operandSize;
 			break;
 		case Ob:
