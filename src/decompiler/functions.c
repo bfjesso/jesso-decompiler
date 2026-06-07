@@ -197,7 +197,7 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 		memset(initializedRegs, 0, ST0 - RAX);
 
 		params->currentFunc = &params->functions[i];
-		if (!getFunctionArguments(params, params->currentFunc->firstInstructionIndex, params->currentFunc->lastInstructionIndex, 0, initializedRegs, 0))
+		if (!getFunctionArguments(params, params->currentFunc->firstInstructionIndex, params->currentFunc->lastInstructionIndex, initializedRegs, 0))
 		{
 			free(initializedRegs);
 			return 0;
@@ -208,7 +208,7 @@ unsigned char getAllFunctionArguments(struct DecompilationParameters* params)
 	return 1;
 }
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, long long stackFrameSize, unsigned char* initializedRegs, int callNum)
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, unsigned char* initializedRegs, int callNum)
 {
 	for (int i = startInstructionIndex; i <= endInstructionIndex; i++)
 	{
@@ -229,15 +229,12 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 		}
 
-		if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
-			currentInstruction->operands[0].type == IMMEDIATE &&
-			currentInstruction->operands[0].immediate.value > 0)
+		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
-			unsigned long long jumpAddr = params->instructions[i].address + currentInstruction->operands[0].immediate.value;
-			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
-			if (instructionIndex > i && instructionIndex <= params->currentFunc->lastInstructionIndex)
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
+			if (dstIndex > i && dstIndex <= params->currentFunc->lastInstructionIndex)
 			{
-				if (callNum < 5 && isOpcodeJcc(currentInstruction->opcode))
+				if (callNum < 10 && isOpcodeJcc(currentInstruction->opcode))
 				{
 					unsigned char* newInitializedRegs = (unsigned char*)malloc(ST0 - RAX);
 					if (!newInitializedRegs)
@@ -247,7 +244,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 					memcpy(newInitializedRegs, initializedRegs, ST0 - RAX);
 
-					if (!getFunctionArguments(params, i + 1, instructionIndex - 1, stackFrameSize, newInitializedRegs, callNum + 1))
+					if (!getFunctionArguments(params, i + 1, dstIndex - 1, newInitializedRegs, callNum + 1))
 					{
 						free(newInitializedRegs);
 						return 0;
@@ -256,7 +253,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					free(newInitializedRegs);
 				}
 
-				i = instructionIndex - 1;
+				i = dstIndex - 1;
 			}
 
 			continue;
@@ -298,6 +295,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 		}
 
 		// checking for stack arguments and stack vars
+		long long stackFrameSize = getStackFrameSizeAtInstruction(params, i);
 		unsigned char overwrites = 0;
 		for (int j = 3; j >= 0; j--)
 		{
@@ -347,8 +345,6 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 				}
 			}
 		}
-
-		stackFrameSize += getStackFrameChange(currentInstruction);
 	}
 
 	return 1;

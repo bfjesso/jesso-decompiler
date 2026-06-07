@@ -25,7 +25,7 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, long long stackFrameSize, unsigned char* initializedRegs, int callNum);
+static unsigned char getFunctionArguments(struct DecompilationParameters* params, int startInstructionIndex, int endInstructionIndex, unsigned char* initializedRegs, int callNum);
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
