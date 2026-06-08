@@ -27,6 +27,8 @@ extern "C"
 
 static unsigned char getFunctionArguments(struct DecompilationParameters* params);
 
+static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg);
+
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);

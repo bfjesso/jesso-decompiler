@@ -241,23 +241,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			struct DataType regDataType = { 0 };
 			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType) && !getRegArgByReg(params->currentFunc, j))
 			{
-				unsigned char isInitialized = 0;
-				for (int k = i - 1; k >= params->currentFunc->firstInstructionIndex; k--) 
-				{
-					if (doesInstructionModifyRegister(params, k, j, 0, 0, &overwrites) && overwrites)
-					{
-						isInitialized = 1;
-						break;
-					}
-					
-					int conditionIndex = getConditionEnd(params, k);
-					if (conditionIndex != -1)
-					{
-						k = params->currentFunc->conditions[conditionIndex].startIndex + 1;
-					}
-				}
-				
-				if (!isInitialized)
+				if (!isRegInitialized(params, i, params->currentFunc->firstInstructionIndex, j))
 				{
 					if (!addRegArg(params->currentFunc, regDataType, specificReg))
 					{
@@ -321,6 +305,43 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 	}
 
 	return 1;
+}
+
+static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg)
+{
+	for (int i = startInstructionIndex - 1; i >= minInstructionIndex; i--)
+	{
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(params, i, reg, 0, 0, &overwrites) && overwrites)
+		{
+			return 1;
+		}
+
+		int conditionIndex = getConditionEnd(params, i);
+		if (conditionIndex != -1)
+		{
+			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
+			if (cond->conditionType == ELSE_CT)
+			{
+				if (isRegInitialized(params, cond->endIndex, cond->startIndex, reg))
+				{
+					int ifIndex = getConditionEnd(params, cond->startIndex);
+					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
+					{
+						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
+						if (isRegInitialized(params, ifCond->endIndex, ifCond->startIndex, reg)) 
+						{
+							return 1;
+						}
+					}
+				}
+			}
+
+			i = cond->startIndex + 1;
+		}
+	}
+
+	return 0;
 }
 
 unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
