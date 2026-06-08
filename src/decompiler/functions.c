@@ -92,12 +92,9 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			}
 
 			// this will take every jump
-			if ((isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode)) &&
-				currentInstruction->operands[0].type == IMMEDIATE &&
-				currentInstruction->operands[0].immediate.value > 0)
+			if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 			{
-				unsigned long long jumpAddr = params->instructions[j].address + currentInstruction->operands[0].immediate.value;
-				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, j));
 				if (instructionIndex > j && instructionIndex <= params->currentFunc->lastInstructionIndex)
 				{
 					j = instructionIndex - 1;
