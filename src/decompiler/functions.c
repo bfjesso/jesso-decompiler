@@ -247,16 +247,16 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 				unsigned char isInitialized = 0;
 				for (int k = i - 1; k >= params->currentFunc->firstInstructionIndex; k--) 
 				{
-					if (doesInstructionModifyRegister(params, i, j, 0, 0, &overwrites) && overwrites)
+					if (doesInstructionModifyRegister(params, k, j, 0, 0, &overwrites) && overwrites)
 					{
 						isInitialized = 1;
 						break;
 					}
 					
-					int conditionIndex = getConditionEnd(params, i);
+					int conditionIndex = getConditionEnd(params, k);
 					if (conditionIndex != -1)
 					{
-						i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
+						k = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 					}
 				}
 				
