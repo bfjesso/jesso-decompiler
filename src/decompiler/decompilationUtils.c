@@ -25,7 +25,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 		return 0;
 	}
 
-	if ((isOpcodeJcc(instruction->opcode) || instruction->opcode == JMP_SHORT || instruction->opcode == JMP_NEAR) && instruction->operands[0].type == IMMEDIATE)
+	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
 	{
 		jmpAddress += params->instructions[startInstructionIndex + 1].address;
 	}
