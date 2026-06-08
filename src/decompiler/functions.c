@@ -337,7 +337,10 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 				}
 			}
 
-			i = cond->startIndex + 1;
+			if (cond->startIndex < i) 
+			{
+				i = cond->startIndex + 1;
+			}
 		}
 	}
 
