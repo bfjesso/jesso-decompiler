@@ -728,22 +728,29 @@ unsigned char addRegArg(struct Function* function, struct DataType dataType, enu
 		}
 	}
 
-	if (function->numOfRegArgs == 1 && compareRegisters(reg, CX))
+	if (function->callingConvention != __UNKNOWNCALL) 
 	{
-		function->callingConvention = __THISCALL;
-	}
-	else 
-	{
-		function->callingConvention = __FASTCALL;
-		for (int i = 0; i < function->numOfRegArgs && i < NUM_PLATFORM_REG_ARGS; i++)
+		if (!isRegisterPlatformArg(reg))
 		{
-			if (!compareRegisters(function->regArgs[i].reg, platformRegArgs[i]) && !compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[i]))
+			function->callingConvention = __UNKNOWNCALL;
+		}
+		else if (function->numOfRegArgs == 1 && compareRegisters(reg, CX))
+		{
+			function->callingConvention = __THISCALL;
+		}
+		else
+		{
+			function->callingConvention = __FASTCALL;
+			for (int i = 0; i < function->numOfRegArgs && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
 			{
-				function->callingConvention = __UNKNOWNCALL;
+				if (!compareRegisters(function->regArgs[i].reg, platformRegArgs[i]) && !compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[i]))
+				{
+					function->callingConvention = __UNKNOWNCALL;
+				}
 			}
 		}
 	}
-
+	
 	return 1;
 }
 
