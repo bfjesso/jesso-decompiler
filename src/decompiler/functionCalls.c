@@ -150,7 +150,7 @@ unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params
 	else if (instruction->opcode == JMP_NEAR)
 	{
 		unsigned long long calleeAddress = resolveJmpChain(params, instructionIndex);
-		return getImportIndexByAddress(params, calleeAddress) != -1;
+		return (calleeAddress == 0) || (getImportIndexByAddress(params, calleeAddress) != -1);
 	}
 
 	return 0;
