@@ -36,7 +36,11 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
 		if (instructionIndex != startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
 		{
-			return resolveJmpChain(params, instructionIndex);
+			unsigned long long nextJmpAddress = resolveJmpChain(params, instructionIndex);
+			if (nextJmpAddress != 0) 
+			{
+				return nextJmpAddress;
+			}
 		}
 	}
 

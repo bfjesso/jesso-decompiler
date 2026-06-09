@@ -75,6 +75,10 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 
 			return operandToValue(instructions, start, minInstructionIndex, &(instructions[i].operands[1]), result);
 		}
+		else if (isOpcodeCall(instructions[i].opcode) || isOpcodeJmp(instructions[i].opcode))
+		{
+			return 0;
+		}
 	}
 
 	return 0;
