@@ -285,6 +285,46 @@ void DataViewer::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
+void DataViewer::HighlightInstruction(unsigned long long address, int numOfBytes)
+{
+	dataTextCtrl->IndicatorClearRange(0, dataTextCtrl->GetTextLength());
+	dataTextCtrl->SetIndicatorCurrent(0);
+
+	FileSection* section = &sections[sectionChoice->GetSelection()];
+	unsigned long long sectionStart = section->virtualAddress + imageBase;
+	if (address >= sectionStart && address < sectionStart + section->size)
+	{
+		int row = (address - sectionStart) / bytesPerLine;
+		int rowStart = dataTextCtrl->PositionFromLine(row);
+		int dataStart = dataTextCtrl->FindText(rowStart, rowStart + 50, "\t") + 1;
+
+		if (dataTypeChoice->GetSelection() == 0) // 1 byte
+		{
+			int remainder = (address - sectionStart) % bytesPerLine;
+			int start = dataStart + (remainder * 5);
+			if (numOfBytes + remainder > bytesPerLine) 
+			{
+				dataTextCtrl->IndicatorFillRange(start, (5 * (bytesPerLine - remainder)) - 1);
+
+				rowStart = dataTextCtrl->PositionFromLine(row + 1);
+				dataStart = dataTextCtrl->FindText(rowStart, rowStart + 50, "\t") + 1; 
+				dataTextCtrl->IndicatorFillRange(dataStart, (5 * (numOfBytes - (bytesPerLine - remainder))) - 1);
+			}
+			else 
+			{
+				dataTextCtrl->IndicatorFillRange(start, (5 * numOfBytes) - 1);
+			}
+		}
+		else 
+		{
+			int dataEnd = dataTextCtrl->FindText(rowStart, rowStart + 50, "\n");
+			dataTextCtrl->IndicatorFillRange(rowStart, dataEnd - rowStart - 1);
+		}
+
+		dataTextCtrl->GotoLine(row);
+	}
+}
+
 void DataViewer::ClearData() 
 {
 	ClearStyledTextCtrl(dataTextCtrl);

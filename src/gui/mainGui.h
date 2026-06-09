@@ -68,6 +68,7 @@ public:
 	int totalFindResults = 0;
 
 	unsigned char showAssociatedInstructions = 1;
+	unsigned char showBytesInDataViewer = 1;
 	
 	enum ids 
 	{

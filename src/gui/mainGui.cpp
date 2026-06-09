@@ -858,6 +858,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	const int ID_FIND = 103;
 	const int ID_GO_TO_ADDR = 104;
 	const int ID_SHOW_ASSOCIATED = 105;
+	const int ID_SHOW_BYTES = 106;
 
 	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
@@ -950,6 +951,17 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			ShowGoToAddrDialog();
 		}, ID_GO_TO_ADDR);
+
+		if (dataViewerMenu->IsShown()) 
+		{
+			menu.AppendCheckItem(ID_SHOW_BYTES, "Show bytes in data viewer");
+			menu.Check(ID_SHOW_BYTES, showBytesInDataViewer);
+			menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+				showBytesInDataViewer = e.IsChecked();
+				disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
+				dataViewerMenu->dataTextCtrl->IndicatorClearRange(0, dataViewerMenu->dataTextCtrl->GetTextLength());
+			}, ID_SHOW_BYTES);
+		}
 	}
 
 	if (ctrl == disassemblyTextCtrl)
@@ -1043,12 +1055,13 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 	}
 
 	ClearTextCtrlIndicators();
+	disassemblyTextCtrl->SetIndicatorCurrent(0);
+	int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
+
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
-		disassemblyTextCtrl->SetIndicatorCurrent(0);
 		decompilationTextCtrl->SetIndicatorCurrent(0);
 		
-		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 		int lastLine = 0;
 		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
 		{
@@ -1068,6 +1081,15 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 		}
 
 		decompilationTextCtrl->GotoLine(lastLine);
+
+		int start = disassemblyTextCtrl->PositionFromLine(instructionIndex);
+		int len = disassemblyTextCtrl->GetLineLength(instructionIndex);
+		disassemblyTextCtrl->IndicatorFillRange(start, len);
+	}
+
+	if (dataViewerMenu->IsShown() && showBytesInDataViewer)
+	{
+		dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex + 1].address - disassembledInstructions[instructionIndex].address);
 
 		int start = disassemblyTextCtrl->PositionFromLine(instructionIndex);
 		int len = disassemblyTextCtrl->GetLineLength(instructionIndex);

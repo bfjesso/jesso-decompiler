@@ -59,6 +59,8 @@ public:
 
 	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
+	void HighlightInstruction(unsigned long long address, int numOfBytes);
+
 	void ClearData();
 
 	void OpenMenu(wxPoint position, uintptr_t imageBas, FileSection* secs, int numOfSecs, unsigned char* bytes);
