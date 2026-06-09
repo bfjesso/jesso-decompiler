@@ -208,6 +208,10 @@ unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instructi
 	{
 		return 1;
 	}
+	else if ((instruction->opcode == JMP_NEAR || instruction->opcode == JMP_SHORT) && instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0)
+	{
+		return 1;
+	}
 
 	return 0;
 }
