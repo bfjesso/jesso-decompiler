@@ -1,5 +1,6 @@
 #include "directJmps.h"
 #include "functions.h"
+#include "expressions.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
@@ -10,15 +11,25 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJmp(instruction->opcode))
 		{
-			if (checkForReturnStatement(params, i))
+			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
+			if (dstIndex == -1 || dstIndex == i + 1) 
 			{
 				continue;
 			}
-			
-			unsigned long long jmpDstAddr = resolveJmpChain(params, i);
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpDstAddr);
+			else if (dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
+			{
+				if (!handleDirectJmpsResize(params))
+				{
+					return 0;
+				}
 
-			if (dstIndex == -1 || dstIndex == i + 1 || dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
+				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].dstIndex = dstIndex;
+				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].jmpIndex = i;
+				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].type = JUMP_TO_DJT;
+				params->currentFunc->numOfDirectJmps++;
+				continue;
+			}
+			else if (checkForReturnStatement(params, i))
 			{
 				continue;
 			}
@@ -138,11 +149,14 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 			case BREAK_DJT:
 				sprintfJdc(result, 1, "break;\n");
 				break;
+			case JUMP_TO_DJT:
+				sprintfJdc(result, 1, "jumpTo(0x%llX);\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
+				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
+				break;
 			}
 
 			addAssociatedInstruction(params->currentFunc, instructionIndex);
 			params->currentFunc->numOfLines++;
-
 			break;
 		}
 	}

@@ -110,7 +110,8 @@ enum DirectJmpType
 	NONE_DJT,
 	GO_TO_DJT,
 	BREAK_DJT,
-	CONTINUE_DJT
+	CONTINUE_DJT,
+	JUMP_TO_DJT
 };
 
 static const char* directJmpTypeStrs[] =
@@ -118,7 +119,8 @@ static const char* directJmpTypeStrs[] =
 	"NONE_DJT",
 	"GO_TO_DJT",
 	"BREAK_DJT",
-	"CONTINUE_DJT"
+	"CONTINUE_DJT",
+	"JUMP_TO_DJT"
 };
 
 struct DirectJmp
