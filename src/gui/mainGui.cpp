@@ -108,7 +108,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	topSplitter->SetMinimumPaneSize(100);
 
 	mainSplitter->SplitHorizontally(topSplitter, functionsGrid, 150);
-	mainSplitter->SetSashGravity(0.5);
+	mainSplitter->SetSashGravity(1);
 	mainSplitter->SetMinimumPaneSize(100);
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
