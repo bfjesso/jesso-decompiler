@@ -2,8 +2,8 @@
 #include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 #include "conditions.h"
-#include "directJmps.h"
 #include "functions.h"
+#include "functionCalls.h"
 #include "assignment.h"
 #include "operations.h"
 #include "dataTypes.h"
@@ -12,25 +12,37 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 {
 	if (operand->type == IMMEDIATE)
 	{
-		if (!getStringFromDataSection(params, operand->immediate.value, result))
+		if (operand->immediate.value > -10 && operand->immediate.value < 0)
 		{
-			if (operand->immediate.value > -10 && operand->immediate.value < 0)
-			{
-				return sprintfJdc(result, 0, "-%lli", -operand->immediate.value);
-			}
-			else if (operand->immediate.value >= 0 && operand->immediate.value < 10)
-			{
-				return sprintfJdc(result, 0, "%lli", operand->immediate.value);
-			}
-			else if (operand->immediate.value < 0)
-			{
-				return sprintfJdc(result, 0, "-0x%llX", -operand->immediate.value);
-			}
-
-			return sprintfJdc(result, 0, "0x%llX", operand->immediate.value);
+			return sprintfJdc(result, 0, "-%lli", -operand->immediate.value);
 		}
-		
-		return 1;
+		else if (operand->immediate.value >= 0 && operand->immediate.value < 10)
+		{
+			return sprintfJdc(result, 0, "%lli", operand->immediate.value);
+		}
+		else if (operand->immediate.value < 0)
+		{
+			return sprintfJdc(result, 0, "-0x%llX", -operand->immediate.value);
+		}
+
+		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, (unsigned long long)(operand->immediate.value));
+		if (calleeIndex != -1)
+		{
+			return strcpyJdc(result, params->functions[calleeIndex].name.buffer);
+		}
+
+		int importIndex = getImportIndexByAddress(params, (unsigned long long)(operand->immediate.value));
+		if (calleeIndex != -1)
+		{
+			return strcpyJdc(result, params->imports[importIndex].name.buffer);
+		}
+
+		if (getStringFromDataSection(params, operand->immediate.value, result))
+		{
+			return 1;
+		}
+
+		return sprintfJdc(result, 0, "0x%llX", operand->immediate.value);
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
@@ -153,32 +165,39 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		hasGotFirstTerm = 1;
 	}
 
-	if (baseRegVal != 0 || displacementRegVal != 0) 
+	if (!hasGotFirstTerm)
 	{
 		unsigned long long totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
-		if (!hasGotFirstTerm)
+
+		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, totalDisplacement);
+		if (calleeIndex != -1)
 		{
-			sprintfJdc(&memAddrStr, 0, "0x%llX", totalDisplacement);
+			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);
 		}
-		else if (totalDisplacement > 0)
+		else 
 		{
-			sprintfJdc(&memAddrStr, 1, " + 0x%llX", totalDisplacement);
+			int importIndex = getImportIndexByAddress(params, totalDisplacement);
+			if (calleeIndex != -1)
+			{
+				strcpyJdc(&memAddrStr, params->imports[importIndex].name.buffer);
+			}
+			else 
+			{
+				sprintfJdc(&memAddrStr, 0, "0x%llX", totalDisplacement);
+			}
 		}
 	}
-	else // this is seperate because the constDisplacement is signed, but the IP is unsigned
+	else if (baseRegVal != 0 || displacementRegVal != 0) 
 	{
-		if (!hasGotFirstTerm)
-		{
-			sprintfJdc(&memAddrStr, 0, "0x%llX", memAddress->constDisplacement);
-		}
-		else if (memAddress->constDisplacement < 0)
-		{
-			sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
-		}
-		else if (memAddress->constDisplacement > 0)
-		{
-			sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
-		}
+		sprintfJdc(&memAddrStr, 1, " + 0x%llX", baseRegVal + displacementRegVal + memAddress->constDisplacement); // this has to be positive because baseRegVal and displacementRegVal are either zero or the IP
+	}
+	else if (memAddress->constDisplacement < 0)
+	{
+		sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
+	}
+	else if (memAddress->constDisplacement > 0)
+	{
+		sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
 	}
 
 	if (instruction->opcode != LEA)
