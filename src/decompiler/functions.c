@@ -124,24 +124,8 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params, j);
-				int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
-				if (calleeIndex == -1) // imported function
-				{
-					params->currentFunc->returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE; // assume something is returned
-					params->currentFunc->returnReg = AX;
-					params->currentFunc->returningFunctionAddress = 0;
-				}
-				else if (params->functions[calleeIndex].returnType.primitiveType != VOID_TYPE)
-				{
-					params->currentFunc->returnType = params->functions[calleeIndex].returnType;
-					params->currentFunc->returnReg = params->functions[calleeIndex].returnReg;
-					params->currentFunc->returningFunctionAddress = 0;
-				}
-				else if(calleeIndex > i) // the callee's return value has not been handled yet
-				{
-					params->currentFunc->returningFunctionAddress = calleeAddress;
-				}
+				params->currentFunc->returnReg = NO_REG;
+				params->currentFunc->returningFunctionAddress = resolveJmpChain(params, j);
 			}
 			else if ((checkForReturnStatement(params, j)))
 			{
@@ -161,7 +145,9 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 			int returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].returningFunctionAddress);
 			if (returningFunctionIndex == -1) 
 			{
-				return 0;
+				params->functions[i].returnReg = params->is64Bit ? RAX : EAX;
+				params->functions[i].returnType = getRegisterDataType(NO_MNEMONIC, params->functions[i].returnReg);
+				continue;
 			}
 
 			int count = 0; // to avoid an infinite loop
