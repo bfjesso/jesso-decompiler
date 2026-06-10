@@ -234,6 +234,17 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		{
 			*regArgVarRef = regVar;
 		}
+
+		struct DataType targetType = getRegisterDataType(params->instructions[instructionIndex].opcode, targetReg);
+		if (!compareDataTypes(targetType, regVar->dataType)) 
+		{
+			struct JdcStr targetTypeStr = initializeJdcStr();
+			dataTypeToStr(targetType, &targetTypeStr);
+
+			sprintfJdc(result, 0, "(%s)%s", targetTypeStr.buffer, regVar->name.buffer);
+			freeJdcStr(&targetTypeStr);
+			return 1;
+		}
 		
 		return strcpyJdc(result, regVar->name.buffer);
 	}
@@ -322,7 +333,21 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		if (regArg)
 		{
 			expressions[expressionIndex] = initializeJdcStr();
-			strcpyJdc(&expressions[expressionIndex], regArg->name.buffer);
+
+			struct DataType targetType = getRegisterDataType(params->instructions[instructionIndex].opcode, targetReg);
+			if (!compareDataTypes(targetType, regArg->dataType))
+			{
+				struct JdcStr targetTypeStr = initializeJdcStr();
+				dataTypeToStr(targetType, &targetTypeStr);
+
+				sprintfJdc(&expressions[expressionIndex], 0, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
+				freeJdcStr(&targetTypeStr);
+			}
+			else 
+			{
+				strcpyJdc(&expressions[expressionIndex], regArg->name.buffer);
+			}
+			
 			expressionIndex++;
 
 			if (regArgVarRef && expressionIndex == 1)
