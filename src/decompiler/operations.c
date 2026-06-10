@@ -4,7 +4,7 @@
 #include "../disassembler/operands.h"
 #include "expressions.h"
 
-unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
+unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
 {
 	addAssociatedInstruction(params->currentFunc, instructionIndex);
 	
@@ -108,7 +108,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 	else if (instruction->opcode == XCHG)
 	{
-		return decompileXCHG(params, instructionIndex, targetReg, getAssignment, dstOperandIndex, result);
+		return decompileXCHG(params, instructionIndex, targetReg, getAssignment, result);
 	}
 
 	return 0;
@@ -631,7 +631,7 @@ static unsigned char decompilePop(struct DecompilationParameters* params, int in
 	return 0;
 }
 
-static unsigned char decompileXCHG(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, int dstOperandIndex, struct JdcStr* result)
+static unsigned char decompileXCHG(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct Operand* firstOperand = &params->instructions[instructionIndex].operands[0];
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
@@ -653,7 +653,7 @@ static unsigned char decompileXCHG(struct DecompilationParameters* params, int i
 			return 0;
 		}
 		
-		if (dstOperandIndex == 0) 
+		if (firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg))
 		{
 			sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}

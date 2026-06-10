@@ -210,7 +210,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		if (!ignoreInitialization) 
 		{
 			unsigned char overwrites = 0;
-			if (doesInstructionModifyRegister(params, i, reg, 0, 0, &overwrites) && overwrites)
+			if (doesInstructionModifyRegister(params, i, reg, 0, &overwrites) && overwrites)
 			{
 				return 0;
 			}
@@ -331,7 +331,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				{
 					reg = params->is64Bit ? RAX : EAX;
 				}
-				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
+				else if (currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
 				{
 					reg = currentInstruction->operands[0].reg;
 				}
@@ -393,7 +393,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
-		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0, 0))
+		if (currentInstruction->operands[0].type == REGISTER && !isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
 			if (getRegVarByReg(params->currentFunc, reg)) 
@@ -420,12 +420,12 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 				{
 					unsigned char overwrites = 0;
-					if (doesInstructionModifyRegister(params, j, reg, 0, 0, &overwrites) && overwrites) 
+					if (doesInstructionModifyRegister(params, j, reg, 0, &overwrites) && overwrites) 
 					{
 						break;
 					}
 					
-					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0, 0)) 
+					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0)) 
 					{
 						if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
 						{

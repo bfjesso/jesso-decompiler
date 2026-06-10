@@ -16,7 +16,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 
 unsigned char regToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, enum Register reg, unsigned long long* result);
 
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites);
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
 

@@ -233,7 +233,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		else if (numOfStackArgs < maxStackArgs && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			unsigned char overwrites = 0;
-			if (doesInstructionModifyOperand(currentInstruction, 0, 0, &overwrites) && overwrites)
+			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
 			{
 				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
 				if (decompileOperand(params, i, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
@@ -250,14 +250,14 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		{
 			if (!decompiledRegArgs[j].buffer)
 			{
-				unsigned char regOperandNum = 0;
-				if(doesInstructionModifyRegister(params, i, platformRegArgs[j], &regOperandNum, 0, 0))
+				enum Register specificReg = NO_REG;
+				if(doesInstructionModifyRegister(params, i, platformRegArgs[j], &specificReg, 0))
 				{
 					regArgTypeStrs[j] = initializeJdcStr();
-					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]), &regArgTypeStrs[j]);
+					dataTypeToStr(getRegisterDataType(currentInstruction->opcode, specificReg), &regArgTypeStrs[j]);
 					
 					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileOperand(params, i + 1, &currentInstruction->operands[regOperandNum], 1, &decompiledRegArgs[j]))
+					if (!decompileRegister(params, i + 1, specificReg, 1, &decompiledRegArgs[j], 0))
 					{
 						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
 						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&decompiledStackArgs[j]); }

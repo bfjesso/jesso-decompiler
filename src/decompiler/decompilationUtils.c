@@ -151,7 +151,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 				return 1;
 			}
 		}
-		else if (!doesInstructionModifyOperand(instruction, i, 0, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		else if (!doesInstructionModifyOperand(instruction, i, 0) && op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
 			if (specificReg)
 			{
@@ -170,13 +170,17 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 	return 0;
 }
 
-unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char* regOperandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites)
 {
-	struct Function* callee;
+	if (specificReg) { *specificReg = params->is64Bit ? RAX : EAX; }
+	if (overwrites) { *overwrites = 0; }
+	
+	struct Function* callee = 0;
 	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
 		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
 	{
 		if (overwrites) { *overwrites = 1; }
+		if (specificReg && callee) { *specificReg = callee->returnReg; }
 		return 1;
 	}
 
@@ -197,6 +201,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 						return 0;
 					}
 
+					if (specificReg) { *specificReg = instruction->operands[0].reg; }
 					if (overwrites) { *overwrites = 1; }
 					return 1;
 				}
@@ -246,9 +251,9 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
-			if (doesInstructionModifyOperand(instruction, i, srcOperandNum, overwrites))
+			if (doesInstructionModifyOperand(instruction, i, overwrites))
 			{
-				if (regOperandNum != 0) { *regOperandNum = i; }
+				if (specificReg) { *specificReg = op->reg; }
 				return 1;
 			}
 		}

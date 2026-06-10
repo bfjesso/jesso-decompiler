@@ -84,23 +84,11 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 	return 0;
 }
 
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* srcOperandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
 {
 	if (overwrites != 0) 
 	{
 		*overwrites = 0;
-	}
-
-	if (srcOperandNum != 0) 
-	{
-		for (int i = 3; i >= 0; i--) 
-		{
-			if (instruction->operands[i].type != NO_OPERAND) 
-			{
-				*srcOperandNum = i;
-				break;
-			}
-		}
 	}
 
 	if (operandNum == 0)
@@ -184,7 +172,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
 {
-	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0, 0); // this isn't a full check
+	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
 }
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)

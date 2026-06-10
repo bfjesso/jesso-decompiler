@@ -102,21 +102,20 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 				}
 			}
 
-			unsigned char regOperandNum = 0;
-			unsigned char srcOperandNum = 0;
-			if (doesInstructionModifyRegister(params, j, AX, &regOperandNum, 0, 0))
+			enum Register specificReg = NO_REG;
+			if (doesInstructionModifyRegister(params, j, AX, &specificReg, 0))
 			{
-				params->currentFunc->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[regOperandNum]);
-				params->currentFunc->returnReg = AX;
+				params->currentFunc->returnType = getRegisterDataType(currentInstruction->opcode, specificReg);
+				params->currentFunc->returnReg = specificReg;
 				params->currentFunc->returningFunctionAddress = 0;
 			}
-			else if (doesInstructionModifyRegister(params, j, XMM0, 0, &srcOperandNum, 0) && params->currentFunc->returnReg != AX) // assuming AX is more likely to be the return register
+			else if (doesInstructionModifyRegister(params, j, XMM0, 0, 0) && !compareRegisters(params->currentFunc->returnReg, AX)) // assuming AX is more likely to be the return register
 			{
-				params->currentFunc->returnType = getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[srcOperandNum]);
+				params->currentFunc->returnType = getRegisterDataType(currentInstruction->opcode, XMM0);
 				params->currentFunc->returnReg = XMM0;
 				params->currentFunc->returningFunctionAddress = 0;
 			}
-			else if (doesInstructionModifyRegister(params, j, ST0, 0, 0, 0))
+			else if (doesInstructionModifyRegister(params, j, ST0, 0, 0))
 			{
 				params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
 				params->currentFunc->returnReg = ST0;
@@ -124,6 +123,7 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			}
 			else if (isOpcodeCall(currentInstruction->opcode))
 			{
+				params->currentFunc->returnType.primitiveType = VOID_TYPE;
 				params->currentFunc->returnReg = NO_REG;
 				params->currentFunc->returningFunctionAddress = resolveJmpChain(params, j);
 			}
@@ -145,8 +145,8 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 			int returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].returningFunctionAddress);
 			if (returningFunctionIndex == -1) 
 			{
+				params->functions[i].returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
 				params->functions[i].returnReg = params->is64Bit ? RAX : EAX;
-				params->functions[i].returnType = getRegisterDataType(NO_MNEMONIC, params->functions[i].returnReg);
 				continue;
 			}
 
@@ -255,7 +255,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
 				if (!stackArg && !stackVar)
 				{
-					doesInstructionModifyOperand(currentInstruction, j, 0, &overwrites);
+					doesInstructionModifyOperand(currentInstruction, j, &overwrites);
 					if (!overwrites)
 					{
 						if (!addStackArg(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
@@ -298,7 +298,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 	for (int i = startInstructionIndex - 1; i >= minInstructionIndex; i--)
 	{
 		unsigned char overwrites = 0;
-		if (doesInstructionModifyRegister(params, i, reg, 0, 0, &overwrites) && overwrites)
+		if (doesInstructionModifyRegister(params, i, reg, 0, &overwrites) && overwrites)
 		{
 			return 1;
 		}
@@ -366,7 +366,7 @@ unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // chec
 					if (alreadyFound) { continue; }
 
 					unsigned char overwrites = 0;
-					if (doesInstructionModifyRegister(params, j, currentFunc->firstCalledFunc->regArgs[k].reg, 0, 0, &overwrites) && overwrites)
+					if (doesInstructionModifyRegister(params, j, currentFunc->firstCalledFunc->regArgs[k].reg, 0, &overwrites) && overwrites)
 					{
 						initializedRegs[numOfRegArgsInit] = currentFunc->firstCalledFunc->regArgs[k].reg;
 						numOfRegArgsInit++;

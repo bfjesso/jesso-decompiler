@@ -282,11 +282,10 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			continue;
 		}
 
-		unsigned char srcOperandNum = 0;
-		if (doesInstructionModifyRegister(params, i, targetReg, 0, &srcOperandNum, &finished))
+		if (doesInstructionModifyRegister(params, i, targetReg, 0, &finished))
 		{
 			expressions[expressionIndex] = initializeJdcStr();
-			if (!decompileOperation(params, i, targetReg, 0, 0, &expressions[expressionIndex]))
+			if (!decompileOperation(params, i, targetReg, 0, &expressions[expressionIndex]))
 			{
 				for (int j = 0; j < expressionIndex; j++)
 				{
