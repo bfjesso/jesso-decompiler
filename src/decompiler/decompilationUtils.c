@@ -172,7 +172,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 
 unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites)
 {
-	if (specificReg) { *specificReg = params->is64Bit ? RAX : EAX; }
+	if (specificReg) { *specificReg = NO_REG; }
 	if (overwrites) { *overwrites = 0; }
 	
 	struct Function* callee = 0;
@@ -180,7 +180,11 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
 	{
 		if (overwrites) { *overwrites = 1; }
-		if (specificReg && callee) { *specificReg = callee->returnReg; }
+		if (specificReg) 
+		{ 
+			if (callee) { *specificReg = callee->returnReg; }
+			else { *specificReg = params->is64Bit ? RAX : EAX; }
+		}
 		return 1;
 	}
 
@@ -217,14 +221,61 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
-		switch (instruction->opcode)
+		if (instruction->opcode == IDIV) // remainder needs to be handled
 		{
-		case IDIV:
+			if (specificReg) 
+			{
+				int size = getSizeOfRegister(instruction->operands[0].reg);
+				if (instruction->operands[0].type == MEM_ADDRESS)
+				{
+					size = instruction->operands[0].memoryAddress.ptrSize;
+				}
+
+				switch (size)
+				{
+				case 1:
+					*specificReg = AL;
+					break;
+				case 2:
+					*specificReg = AX;
+					break;
+				case 4:
+					*specificReg = EAX;
+					break;
+				case 8:
+					*specificReg = RAX;
+					break;
+				}
+			}
+			
 			return 1;
 		}
 
 		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
 		{
+			if (specificReg)
+			{
+				int size = getSizeOfRegister(instruction->operands[0].reg);
+				if (instruction->operands[0].type == MEM_ADDRESS)
+				{
+					size = instruction->operands[0].memoryAddress.ptrSize;
+				}
+
+				switch (size)
+				{
+				case 1:
+				case 2:
+					*specificReg = AX;
+					break;
+				case 4:
+					*specificReg = EAX;
+					break;
+				case 8:
+					*specificReg = RAX;
+					break;
+				}
+			}
+
 			return 1;
 		}
 	}
@@ -232,6 +283,28 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	{
 		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
 		{
+			if (specificReg) 
+			{ 
+				int size = getSizeOfRegister(instruction->operands[0].reg);
+				if (instruction->operands[0].type == MEM_ADDRESS) 
+				{
+					size = instruction->operands[0].memoryAddress.ptrSize;
+				}
+
+				switch (size)
+				{
+				case 2:
+					*specificReg = DX;
+					break;
+				case 4:
+					*specificReg = EDX;
+					break;
+				case 8:
+					*specificReg = RDX;
+					break;
+				}
+			}
+
 			if (overwrites) { *overwrites = 1; }
 			return 1;
 		}
@@ -241,6 +314,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		switch (instruction->opcode)
 		{
 		case FLD:
+			if (specificReg) { *specificReg = ST0; }
 			if (overwrites) { *overwrites = 1; }
 			return 1;
 		}
