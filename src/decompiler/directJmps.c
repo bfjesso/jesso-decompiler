@@ -1,6 +1,6 @@
 #include "directJmps.h"
 #include "functions.h"
-#include "expressions.h"
+#include "functionCalls.h"
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
@@ -16,7 +16,7 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 			{
 				continue;
 			}
-			else if (dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
+			else if ((dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex) && !checkForKnownFunctionCall(params, i, 0) && !checkForUnknownFunctionCall(params, i))
 			{
 				if (!handleDirectJmpsResize(params))
 				{
@@ -150,7 +150,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 				sprintfJdc(result, 1, "break;\n");
 				break;
 			case JUMP_TO_DJT:
-				sprintfJdc(result, 1, "jumpTo(0x%llX);\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
+				sprintfJdc(result, 1, "jumpTo(0x%llX);\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address);
 				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 				break;
 			}
