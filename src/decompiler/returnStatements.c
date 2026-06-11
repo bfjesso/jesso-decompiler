@@ -116,7 +116,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 		return strcatJdc(result, "return;\n");
 	}
 
-	if (checkForUnknownFunctionCall(params, instructionIndex)) 
+	if (checkForKnownFunctionCall(params, instructionIndex, 0) || checkForUnknownFunctionCall(params, instructionIndex))
 	{
 		instructionIndex++; // this is because decompileRegister decrements the instruction index
 	}
