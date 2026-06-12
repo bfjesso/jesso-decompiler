@@ -268,7 +268,7 @@ void DataViewer::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 					int row = (address - sectionStart) / bytesPerLine;
 					dataTextCtrl->GotoLine(row);
 					int pos = dataTextCtrl->PositionFromLine(row);
-					dataTextCtrl->SetSelection(pos, pos + dataTextCtrl->GetLineLength(row));
+					dataTextCtrl->SetSelection(pos, pos + dataTextCtrl->GetLineLength(row) - 1);
 				}
 				else 
 				{
