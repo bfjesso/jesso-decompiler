@@ -52,6 +52,38 @@ unsigned long long getPEImageBase64(HANDLE file)
 	return imageNtHeaders.OptionalHeader.ImageBase;
 }
 
+unsigned long long getPEEntryPoint32(HANDLE file)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+
+	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	return imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
+}
+
+unsigned long long getPEEntryPoint64(HANDLE file)
+{
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
+
+	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+
+	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
+	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+	return imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
+}
+
 int getNumOfPESections32(HANDLE file)
 {
 	IMAGE_DOS_HEADER dosHeader = { 0 };

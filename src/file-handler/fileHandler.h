@@ -11,6 +11,8 @@ extern "C"
 
 	unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64Bit);
 
+	unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64Bit);
+
 	int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit);
 
 	int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);

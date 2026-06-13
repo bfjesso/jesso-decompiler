@@ -52,6 +52,40 @@ unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64B
 #endif
 }
 
+unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64Bit)
+{
+#ifdef _WIN32
+	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (!file || file == INVALID_HANDLE_VALUE)
+	{
+		return 0;
+	}
+
+	if (is64Bit)
+	{
+		return getPEEntryPoint64(file);
+	}
+	else
+	{
+		return getPEEntryPoint32(file);
+	}
+#endif
+
+#ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	if (is64Bit)
+	{
+		return getELFEntryPoint64(filePathChar);
+	}
+	else
+	{
+		return getELFEntryPoint32(filePathChar);
+	}
+#endif
+}
+
 int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
 {
 #ifdef _WIN32

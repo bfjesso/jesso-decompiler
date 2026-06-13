@@ -149,6 +149,7 @@ void MainGui::OpenFile()
 			}
 
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
+			entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
 
 			numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
 			sections = new FileSection[numOfSections];

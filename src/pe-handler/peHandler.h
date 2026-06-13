@@ -11,6 +11,10 @@ unsigned long long getPEImageBase32(HANDLE file);
 
 unsigned long long getPEImageBase64(HANDLE file);
 
+unsigned long long getPEEntryPoint32(HANDLE file);
+
+unsigned long long getPEEntryPoint64(HANDLE file);
+
 int getNumOfPESections32(HANDLE file);
 
 int getNumOfPESections64(HANDLE file);

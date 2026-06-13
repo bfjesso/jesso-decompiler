@@ -74,6 +74,36 @@ unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 	return 0;
 }
 
+unsigned long long getELFEntryPoint64(const char* filePath)
+{
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		Elf64_Ehdr elfHeader;
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		fclose(file);
+
+		return elfHeader->e_entry;
+	}
+
+	return 0;
+}
+
+unsigned long long getELFEntryPoint32(const char* filePath)
+{
+	FILE* file = fopen(filePath, "r");
+	if (file)
+	{
+		Elf32_Ehdr elfHeader;
+		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		fclose(file);
+
+		return elfHeader->e_entry;
+	}
+
+	return 0;
+}
+
 unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result)
 {
 	Elf64_Shdr strtabSection;

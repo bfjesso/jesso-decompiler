@@ -5,6 +5,10 @@ char* demangleSymbol(const char* mangledStr, int* status);
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);
 
+unsigned long long getELFEntryPoint64(const char* filePath);
+
+unsigned long long getELFEntryPoint32(const char* filePath);
+
 unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result);
 
 unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result);
