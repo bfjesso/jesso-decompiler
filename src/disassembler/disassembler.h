@@ -14,6 +14,8 @@ extern "C"
 
 	const char* getGroup1PrefixStr(enum LegacyPrefix prefix);
 
+	unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop);
+
 	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size);
 
 	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);

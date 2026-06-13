@@ -10,6 +10,8 @@ extern "C"
 
 	int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
 
+	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
+
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
 
 #ifdef __cplusplus

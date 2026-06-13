@@ -1,6 +1,28 @@
 #include "disassemblyUtils.h"
 #include "operands.h"
 
+unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex)
+{
+	struct DisassembledInstruction* instruction = &instructions[startInstructionIndex];
+	if (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode) && !isOpcodeCall(instruction->opcode))
+	{
+		return 0;
+	}
+
+	unsigned long long dst = 0;
+	if (!operandToValue(instructions, startInstructionIndex, startInstructionIndex - 0x1000, &instruction->operands[0], &dst))
+	{
+		return 0;
+	}
+
+	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
+	{
+		dst += instructions[startInstructionIndex + 1].address;
+	}
+
+	return dst;
+}
+
 unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)

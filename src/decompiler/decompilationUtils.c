@@ -13,21 +13,10 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 
 unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
 {
-	struct DisassembledInstruction* instruction = &params->instructions[startInstructionIndex];
-	if (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode) && !isOpcodeCall(instruction->opcode)) 
+	unsigned long long jmpAddress = getJmpDst(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000);
+	if (jmpAddress == 0)
 	{
 		return 0;
-	}
-
-	unsigned long long jmpAddress = 0;
-	if (!operandToValue(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000, &instruction->operands[0], &jmpAddress))
-	{
-		return 0;
-	}
-
-	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
-	{
-		jmpAddress += params->instructions[startInstructionIndex + 1].address;
 	}
 
 	int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
@@ -60,6 +49,21 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int l
 	}
 
 	return -1;
+}
+
+int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address)
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (instructions[mid].address < address && (mid == high || instructions[mid + 1].address > address)) { return mid + 1; }
+
+		if (instructions[mid].address < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return 0;
 }
 
 int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address)

@@ -208,6 +208,35 @@ const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
 	return group1PrefixStrs[prefix - LOCK];
 }
 
+unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop)
+{
+	if (!instructions || !jmpDst || !stop)
+	{
+		return 0;
+	}
+	
+	if (isOpcodeReturn(instructions[instructionIndex].opcode))
+	{
+		*jmpDst = instructions[instructionIndex].address;
+		*stop = 1;
+		return 1;
+	}
+	else if (isOpcodeJmp(instructions[instructionIndex].opcode))
+	{
+		*jmpDst = getJmpDst(instructions, instructionIndex, instructionIndex - 0x1000);
+		*stop = 1;
+		return 1;
+	}
+	else if (isOpcodeJcc(instructions[instructionIndex].opcode) || isOpcodeCall(instructions[instructionIndex].opcode))
+	{
+		*jmpDst = getJmpDst(instructions, instructionIndex, instructionIndex - 0x1000);
+		*stop = 0;
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size)
 {
 	if (numOfInstructions < 2) 

@@ -212,7 +212,13 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	DisassembleCodeSections();
+	struct DisassemblerOptions options = { 0 };
+	options.is64BitMode = is64Bit;
+	if (!DisassembleAtLocation(entryPoint, &options))
+	{
+		wxMessageBox("An error occured while disassembling", "Can't disassemble");
+		return;
+	}
 
 	statusStaticText->SetLabelText("Status: finished disassembling, updating GUI...");
 	statusStaticText->Refresh();
@@ -289,15 +295,6 @@ void MainGui::ClearData()
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
 
-	jmpTableStartAddresses.clear();
-	jmpTableStartAddresses.shrink_to_fit();
-
-	jmpTableAddressSizes.clear();
-	jmpTableAddressSizes.shrink_to_fit();
-
-	indirectTableStartAddresses.clear();
-	indirectTableStartAddresses.shrink_to_fit();
-
 	for (int i = 0; i < numOfSections; i++)
 	{
 		freeJdcStr(&sections[i].name);
@@ -346,6 +343,7 @@ void MainGui::LoadFileBytes()
 	}
 
 	fileBytes = new unsigned char[totalSize];
+	numOfFileBytes = totalSize;
 
 	int currentIndex = 0;
 	for (int i = 0; i < numOfSections; i++)
@@ -362,168 +360,51 @@ void MainGui::LoadFileBytes()
 	}
 }
 
-void MainGui::DisassembleCodeSections()
+unsigned char MainGui::DisassembleAtLocation(unsigned long long startByteOffset, struct DisassemblerOptions* options)
 {
-	struct DisassemblerOptions options = { 0 };
-	options.is64BitMode = is64Bit;
-
-	for (int i = 0; i < numOfSections; i++)
+	struct DisassembledInstruction currentInstruction;
+	unsigned long long currentOffset = startByteOffset;
+	unsigned char numOfBytes = 0;
+	while (disassembleInstruction(&fileBytes[currentOffset], fileBytes + numOfFileBytes - 1, options, &currentInstruction, &numOfBytes))
 	{
-		if (sections[i].type != CODE_FST) 
+		if (numOfBytes == 0)
 		{
-			continue;
-		}
-		
-		unsigned char* bytes = new unsigned char[sections[i].size];
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, bytes, sections[i].size))
-		{
-			wxMessageBox("Error reading bytes from file code section", "Can't disassemble");
-			delete[] bytes;
-			return;
+			return 0;
 		}
 
-		int instructionNum = 0;
-
-		struct DisassembledInstruction currentInstruction;
-		unsigned int currentIndex = 0;
-		unsigned char numOfBytes = 0;
-		while (disassembleInstruction(&bytes[currentIndex], bytes + sections[i].size - 1, &options, &currentInstruction, &numOfBytes))
-		{
-			if (numOfBytes == 0)
-			{
-				break;
-			}
-
-			currentInstruction.address = imageBase + sections[i].virtualAddress + currentIndex;
-			currentIndex += numOfBytes;
-
-			disassembledInstructions.push_back(currentInstruction);
-
-			if (currentInstruction.opcode == NO_MNEMONIC)
-			{
-				break;
-			}
-
-			instructionNum++;
-
-			instructionNum += HandleJmpTables(bytes, &currentIndex, sections[i]);
-		}
-
-		delete[] bytes;
-	}
-}
-
-int MainGui::HandleJmpTables(unsigned char* bytes, unsigned int* currentIndexRef, FileSection currentCodeSection)
-{
-	unsigned char ptrSize = 0;
-	unsigned long long jmpTableStartAddress = getJumpTableAddress(&disassembledInstructions[0], disassembledInstructions.size(), &ptrSize);
-	if (jmpTableStartAddress != 0 &&
-		jmpTableStartAddress > currentCodeSection.virtualAddress + imageBase && jmpTableStartAddress < currentCodeSection.virtualAddress + imageBase + currentCodeSection.size)
-	{
-		jmpTableStartAddresses.push_back(jmpTableStartAddress);
-		jmpTableAddressSizes.push_back(ptrSize);
-	}
-
-	unsigned long long indirectTableStartAddress = getIndirectTableAddress(&disassembledInstructions[0], disassembledInstructions.size());
-	if (indirectTableStartAddress != 0 &&
-		indirectTableStartAddress > currentCodeSection.virtualAddress + imageBase && indirectTableStartAddress < currentCodeSection.virtualAddress + imageBase + currentCodeSection.size)
-	{
-		indirectTableStartAddresses.push_back(indirectTableStartAddress);
-	}
-
-	struct DisassembledInstruction dataInstruction;
-	dataInstruction.opcode = DATA;
-	dataInstruction.operands[0].type = IMMEDIATE;
-	dataInstruction.operands[1].type = NO_OPERAND;
-	dataInstruction.operands[2].type = NO_OPERAND;
-	dataInstruction.operands[3].type = NO_OPERAND;
-	dataInstruction.group1Prefix = NO_PREFIX;
-	dataInstruction.isInvalid = 0;
-	
-	unsigned char addressSize = 0;
-	int numOfNewInstructions = 0;
-	if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, &addressSize) || doesInstructionDoNothing(&disassembledInstructions[disassembledInstructions.size() - 1]))
-	{
-		unsigned long long addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
-		if (addressSize == 4)
-		{
-			addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
-		}
-
-		if (addressInCode < imageBase)
-		{
-			addressInCode += imageBase;
-		}
-		
-		while (!CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef) && 
-			addressInCode > currentCodeSection.virtualAddress + imageBase && addressInCode < currentCodeSection.virtualAddress + currentCodeSection.size + imageBase && 
-			*currentIndexRef < currentCodeSection.size && numOfNewInstructions < 1000)
-		{
-			dataInstruction.operands[0].immediate.value = addressInCode;
-			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
-			disassembledInstructions.push_back(dataInstruction);
-			*currentIndexRef += addressSize;
-			numOfNewInstructions++;
-
-			addressInCode = *(unsigned long long*)(bytes + *currentIndexRef);
-			if (addressSize == 4)
-			{
-				addressInCode = *(unsigned int*)(bytes + *currentIndexRef);
-			}
-
-			if (addressInCode < imageBase)
-			{
-				addressInCode += imageBase;
-			}
-		}
-	}
-
-	if (CheckForIndirectTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef))
-	{
-		while (*currentIndexRef < currentCodeSection.size && bytes[*currentIndexRef] != 0xCC && numOfNewInstructions < 1000)
-		{
-			if (CheckForJmpTableStart(currentCodeSection.virtualAddress + imageBase + *currentIndexRef, 0)) 
-			{
-				numOfNewInstructions += HandleJmpTables(bytes, currentIndexRef, currentCodeSection);
-				break;
-			}
-			
-			dataInstruction.operands[0].immediate.value = bytes[*currentIndexRef];
-			dataInstruction.address = currentCodeSection.virtualAddress + imageBase + *currentIndexRef;
-			disassembledInstructions.push_back(dataInstruction);
-			(*currentIndexRef)++;
-			numOfNewInstructions++;
-		}
-	}
-
-	return numOfNewInstructions;
-}
-
-unsigned char MainGui::CheckForJmpTableStart(unsigned long long currentAddress, unsigned char* size)
-{
-	for (int i = jmpTableStartAddresses.size() - 1; i >= 0; i--) 
-	{
-		if (jmpTableStartAddresses[i] == currentAddress) 
-		{
-			if (size) { *size = jmpTableAddressSizes[i]; }
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-unsigned char MainGui::CheckForIndirectTableStart(unsigned long long currentAddress)
-{
-	for (int i = indirectTableStartAddresses.size() - 1; i >= 0; i--)
-	{
-		if (indirectTableStartAddresses[i] == currentAddress)
+		currentInstruction.address = imageBase + currentOffset;
+		if (!findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction.address))
 		{
 			return 1;
 		}
+
+		currentOffset += numOfBytes;
+
+		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction.address);
+		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, currentInstruction);
+
+		if (currentInstruction.opcode == NO_MNEMONIC)
+		{
+			return 0;
+		}
+
+		unsigned long long jmpDst = 0;
+		unsigned char stop = 0;
+		if (checkForControlFlowJump(&disassembledInstructions[0], instructionIndex, &jmpDst, &stop))
+		{
+			if (jmpDst != currentInstruction.address && !DisassembleAtLocation(jmpDst - imageBase, options))
+			{
+				return 0;
+			}
+
+			if (stop)
+			{
+				return 1;
+			}
+		}
 	}
 
-	return 0;
+	return 1;
 }
 
 void MainGui::DecompileFunction(int functionIndex)

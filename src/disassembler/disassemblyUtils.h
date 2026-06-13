@@ -12,6 +12,8 @@ extern "C"
 }
 #endif
 
+unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex);
+
 unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, struct Operand* operand, unsigned long long* result);
 
 unsigned char regToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, enum Register reg, unsigned long long* result);
