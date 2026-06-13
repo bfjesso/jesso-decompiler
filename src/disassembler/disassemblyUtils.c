@@ -17,7 +17,7 @@ unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int s
 
 	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
 	{
-		dst += instructions[startInstructionIndex + 1].address;
+		dst += instruction->address + instruction->numOfBytes;
 	}
 
 	return dst;
@@ -34,7 +34,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 	{
 		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
-			*result = instructions[startInstructionIndex + 1].address;
+			*result = instructions[startInstructionIndex].address + instructions[startInstructionIndex].numOfBytes;
 		}
 		else 
 		{
@@ -49,7 +49,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 
 		if (compareRegisters(operand->memoryAddress.regDisplacement, IP))
 		{
-			*result += instructions[startInstructionIndex + 1].address;
+			*result += instructions[startInstructionIndex].address + instructions[startInstructionIndex].numOfBytes;
 		}
 		else 
 		{
@@ -81,7 +81,7 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 	
 	if (compareRegisters(reg, IP))
 	{
-		*result = instructions[startInstructionIndex + 1].address;
+		*result = instructions[startInstructionIndex].address + instructions[startInstructionIndex].numOfBytes;
 		return 1;
 	}
 

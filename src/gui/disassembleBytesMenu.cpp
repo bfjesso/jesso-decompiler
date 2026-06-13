@@ -63,7 +63,7 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
 	struct DisassembledInstruction result;
-	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result, 0))
+	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result))
 	{
 		char buffer[255] = { 0 };
 		if (instructionToStr(&result, buffer, 255))

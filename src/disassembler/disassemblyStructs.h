@@ -218,5 +218,6 @@ struct DisassembledInstruction
 	enum LegacyPrefix group1Prefix;
 
 	unsigned long long address;
+	unsigned char numOfBytes;
 	unsigned char isInvalid;
 };

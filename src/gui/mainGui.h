@@ -96,7 +96,9 @@ public:
 
 	void ClearData();
 
-	unsigned char DisassembleAtLocation(unsigned long long startRVA, struct DisassemblerOptions* options);
+	unsigned char DisassembleAtLocation(unsigned long long startRVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options);
+
+	struct FileSection* GetAddressSection(unsigned long long rva);
 
 	void DecompileFunction(int functionIndex);
 

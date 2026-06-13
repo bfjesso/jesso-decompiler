@@ -27,7 +27,7 @@ static const char* ptrSizeStrs[] =
 	"ZMMWORD PTR"
 };
 
-unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result, unsigned char* numOfBytes)
+unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	struct DisassemblyParameters params = { 0 };
 	params.bytes = bytes;
@@ -71,12 +71,8 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 
 	result->opcode = params.opcode.mnemonic;
 	result->group1Prefix = params.legPrefixes.group1;
+	result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
-
-	if (numOfBytes) 
-	{
-		*numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
-	}
 
 	return 1;
 }
