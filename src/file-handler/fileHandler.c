@@ -154,7 +154,7 @@ int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, str
 #endif
 }
 
-unsigned char readFileSection(const wchar_t* filePath, struct FileSection* section, unsigned char is64Bit, unsigned char* buffer, unsigned int bufferSize)
+unsigned int getNumOfFileBytes(const wchar_t* filePath)
 {
 #ifdef _WIN32
 	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -163,7 +163,40 @@ unsigned char readFileSection(const wchar_t* filePath, struct FileSection* secti
 		return 0;
 	}
 
-	if (SetFilePointer(file, (LONG)(section->fileOffset), NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+	unsigned int result = GetFileSize(file, NULL);
+	if (result == INVALID_FILE_SIZE) 
+	{
+		return 0;
+	}
+
+	return result;
+#endif
+
+#ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+
+	FILE* file = fopen(filePathChar, "r");
+	if (file)
+	{
+		fseek(file, 0, SEEK_END);
+		return ftell(f);
+	}
+
+	return 0;
+#endif
+}
+
+unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize)
+{
+#ifdef _WIN32
+	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	if (!file || file == INVALID_HANDLE_VALUE)
+	{
+		return 0;
+	}
+
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 	{
 		CloseHandle(file);
 		return 0;

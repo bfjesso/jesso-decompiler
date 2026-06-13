@@ -96,9 +96,7 @@ public:
 
 	void ClearData();
 
-	void LoadFileBytes();
-
-	unsigned char DisassembleAtLocation(unsigned long long startByteOffset, struct DisassemblerOptions* options);
+	unsigned char DisassembleAtLocation(unsigned long long startRVA, struct DisassemblerOptions* options);
 
 	void DecompileFunction(int functionIndex);
 

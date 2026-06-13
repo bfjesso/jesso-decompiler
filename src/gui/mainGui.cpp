@@ -151,17 +151,32 @@ void MainGui::OpenFile()
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
 			entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
 
+			numOfFileBytes = getNumOfFileBytes(filePath.c_str().AsWChar());
+			if (numOfFileBytes == 0) 
+			{
+				wxMessageBox("Error getting number of bytes in file", "Can't load data");
+				return;
+			}
+
+			fileBytes = new unsigned char[numOfFileBytes];
+			if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+			{
+				wxMessageBox("Error reading bytes from file", "Can't load data");
+				currentFilePath = "";
+				delete[] fileBytes;
+				return;
+			}
+
 			numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
 			sections = new FileSection[numOfSections];
 			if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), is64Bit, sections, numOfSections))
 			{
 				wxMessageBox("Error getting all file sections", "Failed to open file");
 				currentFilePath = "";
+				delete[] fileBytes;
 				delete[] sections;
 				return;
 			}
-
-			LoadFileBytes();
 
 			numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
 			imports = new ImportedFunction[numOfImports];
@@ -169,6 +184,7 @@ void MainGui::OpenFile()
 			{
 				wxMessageBox("Error getting all imports", "Failed to open file");
 				currentFilePath = "";
+				delete[] fileBytes;
 				delete[] sections;
 				delete[] imports;
 				return;
@@ -328,57 +344,38 @@ void MainGui::ClearData()
 	}
 }
 
-void MainGui::LoadFileBytes()
+unsigned char MainGui::DisassembleAtLocation(unsigned long long startRVA, struct DisassemblerOptions* options)
 {
-	if (currentFilePath == "")
-	{
-		wxMessageBox("No file opened", "Can't load data");
-		return;
-	}
-
-	int totalSize = 0;
+	unsigned long long currentFileOffset = 0;
 	for (int i = 0; i < numOfSections; i++) 
 	{
-		totalSize += sections[i].size;
-	}
-
-	fileBytes = new unsigned char[totalSize];
-	numOfFileBytes = totalSize;
-
-	int currentIndex = 0;
-	for (int i = 0; i < numOfSections; i++)
-	{
-		if (!readFileSection(currentFilePath.c_str().AsWChar(), &sections[i], is64Bit, fileBytes + currentIndex, sections[i].size))
+		if (startRVA >= sections[i].virtualAddress && startRVA < sections[i].virtualAddress + sections[i].size)
 		{
-			wxMessageBox("Error reading bytes from file section " + wxString(sections[i].name.buffer), "Can't load data");
-
-			delete[] fileBytes;
-			return;
+			currentFileOffset = (startRVA - sections[i].virtualAddress) + sections[i].fileOffset;
+			break;
 		}
-
-		currentIndex += sections[i].size;
+		else if(i == numOfSections - 1)
+		{
+			return 0;
+		}
 	}
-}
-
-unsigned char MainGui::DisassembleAtLocation(unsigned long long startByteOffset, struct DisassemblerOptions* options)
-{
+	
 	struct DisassembledInstruction currentInstruction;
-	unsigned long long currentOffset = startByteOffset;
 	unsigned char numOfBytes = 0;
-	while (disassembleInstruction(&fileBytes[currentOffset], fileBytes + numOfFileBytes - 1, options, &currentInstruction, &numOfBytes))
+	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, &currentInstruction, &numOfBytes))
 	{
 		if (numOfBytes == 0)
 		{
 			return 0;
 		}
 
-		currentInstruction.address = imageBase + currentOffset;
-		if (!findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction.address))
+		currentInstruction.address = imageBase + currentFileOffset;
+		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction.address) != -1)
 		{
 			return 1;
 		}
 
-		currentOffset += numOfBytes;
+		currentFileOffset += numOfBytes;
 
 		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction.address);
 		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, currentInstruction);
