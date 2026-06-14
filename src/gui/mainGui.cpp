@@ -211,6 +211,11 @@ void MainGui::OpenFile()
 	openFileDialog.Close(true);
 }
 
+unsigned char CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
+{
+	return a.address < b.address;
+}
+
 void MainGui::DisassembleFile()
 {
 	if (currentFilePath == "")
@@ -228,13 +233,68 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
+	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 	struct DisassembledInstruction currentInstruction;
-	if (!DisassembleAtLocation(entryPoint, &currentInstruction, &options))
+	if (!DisassembleTakingJumps(entryPoint + imageBase, &currentInstruction, &options))
 	{
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
+
+	unsigned long long firstAddress = disassembledInstructions[0].address;
+	unsigned long long lastAddress = disassembledInstructions[disassembledInstructions.size() - 1].address + disassembledInstructions[disassembledInstructions.size() - 1].numOfBytes;
+	for (int i = 0; i < numOfSections; i++)
+	{
+		if (sections[i].type == CODE_FST)
+		{
+			unsigned long long sectionStart = sections[i].virtualAddress + imageBase;
+			unsigned long long sectionEnd = sections[i].virtualAddress + sections[i].size + imageBase;
+			if (sectionEnd < firstAddress || sectionStart > lastAddress)
+			{
+				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &currentInstruction, &options))
+				{
+					wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+				}
+			}
+			else 
+			{
+				if (sectionStart < firstAddress && sectionEnd > firstAddress)
+				{
+					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &currentInstruction, &options))
+					{
+						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+					}
+				}
+
+				if (sectionStart < lastAddress && sectionEnd > lastAddress)
+				{
+					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &currentInstruction, &options))
+					{
+						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+					}
+				}
+			}
+		}
+	}
+
+	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
+
+	int numOfInstructions = disassembledInstructions.size();
+	for (int i = 0; i < numOfInstructions - 1; i++)
+	{
+		unsigned long long startVA = disassembledInstructions[i].address + disassembledInstructions[i].numOfBytes;
+		unsigned long long endVA = disassembledInstructions[i + 1].address;
+		if (startVA != endVA)
+		{
+			if (!DisassembleBetweenBounds(startVA, endVA, &currentInstruction, &options)) 
+			{
+				wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+			}
+		}
+	}
+
+	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
 
 	statusStaticText->SetLabelText("Status: finished disassembling, updating GUI...");
 	statusStaticText->Refresh();
@@ -344,16 +404,18 @@ void MainGui::ClearData()
 	}
 }
 
-unsigned char MainGui::DisassembleAtLocation(unsigned long long startRVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
+unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
 {
-	struct FileSection* currentSection = GetAddressSection(startRVA);
+	struct FileSection* currentSection = 0;
+	unsigned long long currentFileOffset = VirtualAddressToFileOffset(startVA, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
 		return 1;
 	}
 
-	unsigned long long currentFileOffset = (startRVA - currentSection->virtualAddress) + currentSection->fileOffset;
-	unsigned long long currentVirtualAddress = imageBase + startRVA;
+	unsigned long long sectionEndAddress = currentSection->virtualAddress + currentSection->size + imageBase;
+
+	unsigned long long currentVirtualAddress = startVA;
 	memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
 	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, currentInstruction))
 	{
@@ -362,32 +424,33 @@ unsigned char MainGui::DisassembleAtLocation(unsigned long long startRVA, struct
 			return 0;
 		}
 
+		if (currentVirtualAddress + currentInstruction->numOfBytes > sectionEndAddress)
+		{
+			return 1;
+		}
+
 		currentInstruction->address = currentVirtualAddress;
 		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address) != -1)
 		{
 			return 1;
 		}
 
-		currentFileOffset += currentInstruction->numOfBytes;
-		currentVirtualAddress += currentInstruction->numOfBytes;
-
-		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address);
-		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *currentInstruction);
-
-		if (currentInstruction->opcode == NO_MNEMONIC)
+		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
 		{
 			return 0;
 		}
+
+		currentFileOffset += currentInstruction->numOfBytes;
+		currentVirtualAddress += currentInstruction->numOfBytes;
+
+		// this needs to be sorted here because the jump handling may need to determine a reg's value
+		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address);
+		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *currentInstruction);
 
 		unsigned long long jmpDst = 0;
 		unsigned char stop = 0;
 		if (checkForControlFlowJump(&disassembledInstructions[0], instructionIndex, &jmpDst, &stop))
 		{
-			if (currentInstruction->address == 0x1800020F8) 
-			{
-				int ttt = 0;
-			}
-			
 			if (jmpDst == 0) 
 			{
 				continue;
@@ -397,16 +460,16 @@ unsigned char MainGui::DisassembleAtLocation(unsigned long long startRVA, struct
 			{
 				if (stop)
 				{
-					struct FileSection* section = GetAddressSection(jmpDst - imageBase);
+					struct FileSection* section = 0;
+					currentFileOffset = VirtualAddressToFileOffset(jmpDst, &section);
 					if (!section || section->type != CODE_FST)
 					{
 						return 1;
 					}
-					
-					currentFileOffset = (jmpDst - imageBase - section->virtualAddress) + section->fileOffset;
+
 					currentVirtualAddress = jmpDst;
 				}
-				else if (!DisassembleAtLocation(jmpDst - imageBase, currentInstruction, options)) 
+				else if (!DisassembleTakingJumps(jmpDst, currentInstruction, options))
 				{
 					return 0;
 				}
@@ -421,15 +484,59 @@ unsigned char MainGui::DisassembleAtLocation(unsigned long long startRVA, struct
 	return 1;
 }
 
-struct FileSection* MainGui::GetAddressSection(unsigned long long rva)
+unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
 {
-	unsigned long long currentFileOffset = 0;
+	struct FileSection* currentSection = 0;
+	unsigned long long currentFileOffset = VirtualAddressToFileOffset(startVA, &currentSection);
+	if (!currentSection || currentSection->type != CODE_FST)
+	{
+		return 1;
+	}
+
+	unsigned long long currentVirtualAddress = startVA;
+	memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
+	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, currentInstruction))
+	{
+		if (currentInstruction->numOfBytes == 0)
+		{
+			return 0;
+		}
+
+		if (currentVirtualAddress + currentInstruction->numOfBytes > endVA)
+		{
+			return 1;
+		}
+
+		currentInstruction->address = currentVirtualAddress;
+
+		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
+		{
+			memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
+			currentInstruction->opcode = DATA;
+			currentInstruction->address = currentVirtualAddress;
+			currentInstruction->group1Prefix = NO_PREFIX;
+			currentInstruction->operands[0].type = IMMEDIATE;
+			currentInstruction->operands[0].immediate.size = 1;
+			currentInstruction->operands[0].immediate.value = fileBytes[currentFileOffset];
+			currentInstruction->numOfBytes = 1;
+		}
+
+		currentFileOffset += currentInstruction->numOfBytes;
+		currentVirtualAddress += currentInstruction->numOfBytes;
+		disassembledInstructions.push_back(*currentInstruction);
+	}
+
+	return 1;
+}
+
+unsigned long long MainGui::VirtualAddressToFileOffset(unsigned long long va, struct FileSection** section)
+{
 	for (int i = 0; i < numOfSections; i++)
 	{
-		if (rva >= sections[i].virtualAddress && rva < sections[i].virtualAddress + sections[i].size)
+		if (va - imageBase >= sections[i].virtualAddress && va - imageBase < sections[i].virtualAddress + sections[i].size)
 		{
-			// *fileOffset = (rva - sections[i].virtualAddress) + sections[i].fileOffset;
-			return &sections[i];
+			if (section) { *section = &sections[i]; }
+			return (va - imageBase - sections[i].virtualAddress) + sections[i].fileOffset;;
 		}
 	}
 
