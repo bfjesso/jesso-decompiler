@@ -680,6 +680,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	wxString disassemblyText = "";
 	disassemblyText.reserve(numOfInstructions * 50);
 
+	int entryPointIndex = 0;
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
 		for (int j = sectionIndex + 1; j < numOfSections; j++)
@@ -706,6 +707,11 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		{
 			asmStr += " ; invalid opcode";
 		}
+		else if (disassembledInstructions[i].address == entryPoint + imageBase) 
+		{
+			asmStr += " ; entry point";
+			entryPointIndex = i;
+		}
 		else if(disassembledInstructions[i].operands[0].type == IMMEDIATE && 
 			(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
 		{
@@ -723,6 +729,8 @@ void MainGui::UpdateDisassemblyTextCtrl()
 
 	disassemblyTextCtrl->Thaw();
 	disassemblyTextCtrl->SetReadOnly(true);
+
+	disassemblyTextCtrl->GotoLine(entryPointIndex);
 }
 
 void MainGui::UpdateFunctionsGrid()
