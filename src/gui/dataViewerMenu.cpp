@@ -69,12 +69,6 @@ void DataViewer::LoadData()
 	int sectionSelection = sectionChoice->GetSelection();
 	unsigned char isHex = hexCheckBox->IsChecked();
 
-	int baseIndex = 0;
-	for (int i = 0; i < sectionSelection; i++) 
-	{
-		baseIndex += sections[i].size;
-	}
-
 	std::string dataText;
 	dataText.reserve(sections[sectionSelection].size * 6);
 
@@ -97,11 +91,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + baseIndex]);
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + sections[sectionSelection].fileOffset]);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", fileBytes[i + j + baseIndex]);
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", fileBytes[i + j + sections[sectionSelection].fileOffset]);
 				}
 				break;
 			}
@@ -109,11 +103,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X ", *(unsigned short*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X ", *(unsigned short*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned short*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned short*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				break;
 			}
@@ -121,11 +115,11 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X ", *(unsigned int*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X ", *(unsigned int*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned int*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned int*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				break;
 			}
@@ -133,34 +127,34 @@ void DataViewer::LoadData()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX ", *(unsigned long long*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX ", *(unsigned long long*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%lld ", *(unsigned long long*)(fileBytes + i + j + baseIndex));
+					sprintf(lineBuffer + strlen(lineBuffer), "%lld ", *(unsigned long long*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				}
 				break;
 			}
 			case 4: // float
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g ", *(float*)(fileBytes + i + j + baseIndex));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g ", *(float*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				break;
 			}
 			case 5: // double
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g ", *(double*)(fileBytes + i + j + baseIndex));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g ", *(double*)(fileBytes + i + j + sections[sectionSelection].fileOffset));
 				break;
 			}
 			case 6: // ASCII character
 			{
-				char c = *(char*)(fileBytes + i + j + baseIndex);
+				char c = *(char*)(fileBytes + i + j + sections[sectionSelection].fileOffset);
 				if(c > 31 && c < 127)
 				{
 					sprintf(lineBuffer + strlen(lineBuffer), "'%c' ", c);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + baseIndex]);			
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j + sections[sectionSelection].fileOffset]);			
 				}
 				break;
 			}
