@@ -26,12 +26,16 @@ void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 	ctrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
 
 	ctrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
-	ctrl->IndicatorSetForeground(0, wxColour(255, 0, 255));
+	ctrl->IndicatorSetForeground(0, wxColour(255, 0, 255)); // purple
 	ctrl->IndicatorSetAlpha(0, 40);
 
 	ctrl->IndicatorSetStyle(1, wxSTC_INDIC_ROUNDBOX);
-	ctrl->IndicatorSetForeground(1, wxColour(200, 200, 200));
+	ctrl->IndicatorSetForeground(1, wxColour(200, 200, 200)); // gray
 	ctrl->IndicatorSetAlpha(1, 40);
+
+	ctrl->IndicatorSetStyle(2, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(2, wxColour(255, 200, 0)); // yellow
+	ctrl->IndicatorSetAlpha(2, 40);
 }
 
 void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)

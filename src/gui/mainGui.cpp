@@ -731,6 +731,12 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	disassemblyTextCtrl->SetReadOnly(true);
 
 	disassemblyTextCtrl->GotoLine(entryPointIndex);
+	disassemblyTextCtrl->LineScroll(0, entryPointIndex - disassemblyTextCtrl->GetFirstVisibleLine() - (disassemblyTextCtrl->LinesOnScreen() / 2));
+
+	disassemblyTextCtrl->SetIndicatorCurrent(2);
+	int start = disassemblyTextCtrl->PositionFromLine(entryPointIndex);
+	int len = disassemblyTextCtrl->GetLineLength(entryPointIndex);
+	disassemblyTextCtrl->IndicatorFillRange(start, len);
 }
 
 void MainGui::UpdateFunctionsGrid()
@@ -1215,6 +1221,8 @@ void MainGui::ClearTextCtrlIndicators()
 	decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
 	disassemblyTextCtrl->IndicatorClearRange(1, disassemblyTextCtrl->GetTextLength());
 	decompilationTextCtrl->IndicatorClearRange(1, decompilationTextCtrl->GetTextLength());
+	disassemblyTextCtrl->IndicatorClearRange(2, disassemblyTextCtrl->GetTextLength());
+	decompilationTextCtrl->IndicatorClearRange(2, decompilationTextCtrl->GetTextLength());
 }
 
 void MainGui::OnFindDialog(wxFindDialogEvent& e)
