@@ -66,7 +66,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->lastInstructionIndex = i;
 			return 1;
 		}
-		else if(currentInstruction->opcode == HLT || currentInstruction->opcode == INT3 || params->instructions[i].address == currentSectionEndAddress)
+		else if(doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) || params->instructions[i].address == currentSectionEndAddress)
 		{
 			result->callingConvention = __UNKNOWNCALL;
 			result->lastInstructionIndex = i;

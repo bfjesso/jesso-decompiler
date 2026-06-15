@@ -13,7 +13,7 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 	{
 		calleeAddress = resolveJmpChain(params, instructionIndex);
 	}
-	else if (instructionIndex == params->currentFunc->lastInstructionIndex && !isOpcodeReturn(instruction->opcode))
+	else if (instructionIndex == params->currentFunc->lastInstructionIndex && !isOpcodeReturn(instruction->opcode) && !doesOpcodeGenerateInterruptOrException(instruction->opcode))
 	{
 		calleeAddress = params->instructions[instructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
 	}
