@@ -192,16 +192,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 	
 	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
-		if (checkForReturnStatement(params, i))
-		{
-			if (compareRegisters(params->currentFunc->returnReg, reg))
-			{
-				if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
-				return 1;
-			}
-			return 0;
-		}
-
 		if (doesInstructionAccessRegister(params, i, reg, 0, dataTypeRef))
 		{
 			return 1;
@@ -214,6 +204,16 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			{
 				return 0;
 			}
+		}
+
+		if (checkForReturnStatement(params, i))
+		{
+			if (compareRegisters(params->currentFunc->returnReg, reg))
+			{
+				if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
+				return 1;
+			}
+			return 0;
 		}
 
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);

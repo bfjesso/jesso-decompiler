@@ -435,17 +435,17 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			return 1;
 		}
 
-		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
-		{
-			return 0;
-		}
-
 		currentFileOffset += currentInstruction->numOfBytes;
 		currentVirtualAddress += currentInstruction->numOfBytes;
 
 		// this needs to be sorted here because the jump handling may need to determine a reg's value
 		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address);
 		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *currentInstruction);
+
+		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
+		{
+			return 0;
+		}
 
 		unsigned long long jmpDst = 0;
 		unsigned char stop = 0;
@@ -705,7 +705,11 @@ void MainGui::UpdateDisassemblyTextCtrl()
 
 		if (disassembledInstructions[i].isInvalid)
 		{
-			asmStr += " ; invalid opcode";
+			asmStr += " ; invalid instruction";
+		}
+		else if (disassembledInstructions[i].opcode == NO_MNEMONIC)
+		{
+			asmStr += " ; unrecognized opcode";
 		}
 		else if (disassembledInstructions[i].address == entryPoint + imageBase) 
 		{
