@@ -100,8 +100,6 @@ public:
 
 	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options);
 
-	unsigned long long VirtualAddressToFileOffset(unsigned long long va, struct FileSection** section);
-
 	void DecompileFunction(int functionIndex);
 
 	void FindAllFunctions();

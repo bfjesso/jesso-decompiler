@@ -344,3 +344,17 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr*
 	return generateELFHeadersInfoStr(filePathChar, result);
 #endif
 }
+
+unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)
+{
+	for (int i = 0; i < numOfSections; i++)
+	{
+		if (rva >= sections[i].virtualAddress && rva < sections[i].virtualAddress + sections[i].size)
+		{
+			if (section) { *section = &sections[i]; }
+			return (rva - sections[i].virtualAddress) + sections[i].fileOffset;
+		}
+	}
+
+	return 0;
+}

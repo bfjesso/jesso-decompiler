@@ -196,7 +196,9 @@ struct DecompilationParameters
 	unsigned long long imageBase;
 	struct FileSection* sections;
 	int numOfSections;
+
 	unsigned char* fileBytes;
+	unsigned long long numOfFileBytes;
 
 	unsigned char is64Bit;
 };

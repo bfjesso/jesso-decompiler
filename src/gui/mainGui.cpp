@@ -407,7 +407,7 @@ void MainGui::ClearData()
 unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
-	unsigned long long currentFileOffset = VirtualAddressToFileOffset(startVA, &currentSection);
+	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
 		return 1;
@@ -461,7 +461,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 				if (stop)
 				{
 					struct FileSection* section = 0;
-					currentFileOffset = VirtualAddressToFileOffset(jmpDst, &section);
+					currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
 					if (!section || section->type != CODE_FST)
 					{
 						return 1;
@@ -487,7 +487,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
-	unsigned long long currentFileOffset = VirtualAddressToFileOffset(startVA, &currentSection);
+	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
 		return 1;
@@ -527,20 +527,6 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	}
 
 	return 1;
-}
-
-unsigned long long MainGui::VirtualAddressToFileOffset(unsigned long long va, struct FileSection** section)
-{
-	for (int i = 0; i < numOfSections; i++)
-	{
-		if (va - imageBase >= sections[i].virtualAddress && va - imageBase < sections[i].virtualAddress + sections[i].size)
-		{
-			if (section) { *section = &sections[i]; }
-			return (va - imageBase - sections[i].virtualAddress) + sections[i].fileOffset;;
-		}
-	}
-
-	return 0;
 }
 
 void MainGui::DecompileFunction(int functionIndex)
@@ -596,7 +582,9 @@ void MainGui::FindAllFunctions()
 	decompParams.imageBase = imageBase;
 	decompParams.sections = sections;
 	decompParams.numOfSections = numOfSections;
+
 	decompParams.fileBytes = fileBytes;
+	decompParams.numOfFileBytes = numOfFileBytes;
 
 	decompParams.is64Bit = is64Bit;
 	

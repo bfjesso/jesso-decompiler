@@ -29,6 +29,8 @@ extern "C"
 
 	unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
 
+	unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section);
+
 #ifdef __cplusplus
 }
 #endif
