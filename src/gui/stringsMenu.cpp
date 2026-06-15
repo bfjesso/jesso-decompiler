@@ -1,6 +1,5 @@
 #include "stringsMenu.h"
 #include "colorsMenu.h"
-#include "../file-handler/fileHandler.h"
 #include <string>
 
 wxBEGIN_EVENT_TABLE(StringsMenu, wxFrame)
