@@ -6,13 +6,11 @@ extern "C"
 {
 #endif
 
-	unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
+	unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex);
 
 #ifdef __cplusplus
 }
 #endif
-
-unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex);
 
 unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, struct Operand* operand, unsigned long long* result);
 
@@ -21,5 +19,7 @@ unsigned char regToValue(struct DisassembledInstruction* instructions, int start
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
+
+unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
 
 unsigned char isImmediateAllOnes(struct Immediate* immediate);

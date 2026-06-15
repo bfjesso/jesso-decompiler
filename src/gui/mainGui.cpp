@@ -712,13 +712,13 @@ void MainGui::UpdateDisassemblyTextCtrl()
 			asmStr += " ; entry point";
 			entryPointIndex = i;
 		}
-		else if(disassembledInstructions[i].operands[0].type == IMMEDIATE && 
-			(isOpcodeJcc(disassembledInstructions[i].opcode) || disassembledInstructions[i].opcode == JMP_SHORT || disassembledInstructions[i].opcode == JMP_NEAR))
-		{
-			char jmpAddressStr[20] = { 0 };
-			sprintf(jmpAddressStr, "%llX", disassembledInstructions[i + 1].address + disassembledInstructions[i].operands[0].immediate.value);
 
-			asmStr += " ; jump to " + wxString(jmpAddressStr);
+		unsigned long long dst = getJmpDst(&disassembledInstructions[0], i, i - 0x1000);
+		if (dst != 0)
+		{
+			char dstStr[20] = { 0 };
+			sprintf(dstStr, "%llX", dst);
+			asmStr += " ; dst: " + wxString(dstStr);
 		}
 
 		disassemblyText += addressInfoStr + asmStr + "\n";
