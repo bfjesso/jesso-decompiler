@@ -317,7 +317,7 @@ unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode)
 
 unsigned char isOpcodeCall(enum Mnemonic opcode)
 {
-	if (opcode == CALL_FAR || opcode == CALL_NEAR || opcode == JMP_FAR)
+	if (opcode == CALL_FAR || opcode == CALL_NEAR)
 	{
 		return 1;
 	}
@@ -327,7 +327,7 @@ unsigned char isOpcodeCall(enum Mnemonic opcode)
 
 unsigned char isOpcodeReturn(enum Mnemonic opcode)
 {
-	if (opcode == RET_NEAR || opcode == RET_FAR || opcode == JMP_FAR)
+	if (opcode == RET_NEAR || opcode == RET_FAR)
 	{
 		return 1;
 	}
@@ -337,7 +337,7 @@ unsigned char isOpcodeReturn(enum Mnemonic opcode)
 
 unsigned char isOpcodeJmp(enum Mnemonic opcode)
 {
-	if (opcode == JMP_SHORT || opcode == JMP_NEAR)
+	if (opcode == JMP_SHORT || opcode == JMP_NEAR || opcode == JMP_FAR)
 	{
 		return 1;
 	}

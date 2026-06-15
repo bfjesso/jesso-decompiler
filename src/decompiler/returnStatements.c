@@ -37,16 +37,19 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 
 		if (jmpDstIndex == -1)
 		{
+			params->currentFunc->callingConvention = __UNKNOWNCALL;
 			return 1;
 		}
 		else if (params->currentFunc)
 		{
 			if (jmpDstIndex < params->currentFunc->firstInstructionIndex)
 			{
+				params->currentFunc->callingConvention = __UNKNOWNCALL;
 				return 1;
 			}
 			else if (jmpDstIndex > params->currentFunc->lastInstructionIndex && params->currentFunc->lastInstructionIndex != 0)
 			{
+				params->currentFunc->callingConvention = __UNKNOWNCALL;
 				return 1;
 			}
 		}
