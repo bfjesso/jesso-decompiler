@@ -1,5 +1,6 @@
 #include "stringsMenu.h"
 #include "colorsMenu.h"
+#include "../file-handler/fileHandler.h"
 #include <string>
 
 wxBEGIN_EVENT_TABLE(StringsMenu, wxFrame)
@@ -54,13 +55,12 @@ void StringsMenu::LoadStrings()
     std::string currentStr = "";
     int numOfStrings = 0;
 
-    int baseIndex = 0;
     for (int i = 0; i < numOfSections; i++)
     {
         unsigned char foundStr = 0;
         for (unsigned int j = 0; j < sections[i].size; j++)
         {
-            char c = *(char*)(fileBytes + j + baseIndex);
+            char c = *(char*)(fileBytes + sections[i].fileOffset + j);
             if (c > 31 && c < 127)
             {
                 if (!foundStr)
@@ -90,8 +90,6 @@ void StringsMenu::LoadStrings()
                 foundStr = 0;
             }
         }
-        
-        baseIndex += sections[i].size;
     }
 
     stringsGrid->Thaw();
