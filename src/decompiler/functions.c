@@ -7,7 +7,6 @@
 unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
 	int indexToJumpTo = 0;
-	unsigned char canReturnNothing = 0;
 
 	params->currentFunc = result;
 
@@ -22,25 +21,13 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		if (!foundFirstInstruction)
 		{
-			if (currentInstruction->opcode == INT3 || currentInstruction->opcode == NOP)
+			if (doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) || doesInstructionDoNothing(currentInstruction))
 			{
 				continue;
 			}
 
 			result->firstInstructionIndex = i;
 			foundFirstInstruction = 1;
-		}
-
-		if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
-		{
-			result->returningFunctionAddress = params->instructions[i + 1].address;
-			result->lastInstructionIndex = i;
-			return 1;
-		}
-
-		if (doesInstructionDoNothing(currentInstruction))
-		{
-			continue;
 		}
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
@@ -55,20 +42,21 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				}
 			}
 		}
-
-		if (i < indexToJumpTo)
-		{
-			continue;
-		}
 		
-		if (checkForReturnStatement(params, i))
+		if (checkForReturnStatement(params, i) && i >= indexToJumpTo)
 		{
 			result->lastInstructionIndex = i;
 			return 1;
 		}
-		else if(doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) || params->instructions[i].address == currentSectionEndAddress)
+		else if((doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) || params->instructions[i].address == currentSectionEndAddress) && i >= indexToJumpTo)
 		{
 			result->callingConvention = __UNKNOWNCALL;
+			result->lastInstructionIndex = i;
+			return 1;
+		}
+		else if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
+		{
+			result->returningFunctionAddress = params->instructions[i + 1].address;
 			result->lastInstructionIndex = i;
 			return 1;
 		}
