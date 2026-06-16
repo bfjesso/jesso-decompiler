@@ -10,7 +10,7 @@
 #include "dataTypes.h"
 #include "../disassembler/registers.h"
 
-unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage)
+unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int* errorInstructionIndex)
 {
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
@@ -45,6 +45,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	if (!generateFunctionHeader(params->currentFunc, result))
 	{
 		strcpyJdc(statusMessage, "Error generating function header.");
+		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
 		return 0;
 	}
 
@@ -57,6 +58,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		if (!declareAllLocalVariables(params, result))
 		{
 			strcpyJdc(statusMessage, "Error declaring local variables.");
+			if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
 			return 0;
 		}
 	}
@@ -71,12 +73,14 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		if (params->numOfIndents < 1)
 		{
 			sprintfJdc(statusMessage, 0, "Bad indentation. There is an error with condition handling at 0x%llX.", currentInstruction->address);
+			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return 0;
 		}
 		
 		if (currentInstruction->opcode > lastImplementedOpcode && currentInstruction->opcode < EXTENDED_OPCODE) // temporary check
 		{
 			sprintfJdc(statusMessage, 0, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
+			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return 0;
 		}
 
@@ -109,12 +113,14 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		if (!decompileConditions(params, i, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling condition at 0x%llX.", currentInstruction->address);
+			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return 0;
 		}
 
 		if (!decompileDirectJmps(params, i, &isInUnreachableState, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
+			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return 0;
 		}
 
@@ -125,6 +131,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileKnownFunctionCall(params, i, callee, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling known function call at 0x%llX.", currentInstruction->address);
+				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return 0;
 			}
 		}
@@ -133,6 +140,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileUnknownFunctionCall(params, i, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling unknown function call at 0x%llX.", currentInstruction->address);
+				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return 0;
 			}
 		}
@@ -141,6 +149,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileVoidIntrinsicFunc(params, i, intrinsicFunc, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling intrinsic function at 0x%llX.", currentInstruction->address);
+				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return 0;
 			}
 		}
@@ -149,6 +158,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileAssignments(params, i, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
+				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return 0;
 			}
 		}
@@ -158,6 +168,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			if (!decompileReturnStatement(params, i, &isInUnreachableState, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
+				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return 0;
 			}
 		}
@@ -166,6 +177,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	if (params->numOfIndents != 1)
 	{
 		strcpyJdc(statusMessage, "Bad indentation. There is an error with condition handling and the decompilation did not finish at one indentation.");
+		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->lastInstructionIndex; }
 		return 0;
 	}
 

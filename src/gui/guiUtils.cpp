@@ -25,17 +25,21 @@ void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 	ctrl->SetScrollWidth(1);
 	ctrl->SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
 
-	ctrl->IndicatorSetStyle(0, wxSTC_INDIC_ROUNDBOX);
-	ctrl->IndicatorSetForeground(0, wxColour(255, 0, 255)); // purple
-	ctrl->IndicatorSetAlpha(0, 40);
+	ctrl->IndicatorSetStyle(PURPLE_INDICATOR, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(PURPLE_INDICATOR, wxColour(255, 0, 255));
+	ctrl->IndicatorSetAlpha(PURPLE_INDICATOR, 40);
 
-	ctrl->IndicatorSetStyle(1, wxSTC_INDIC_ROUNDBOX);
-	ctrl->IndicatorSetForeground(1, wxColour(200, 200, 200)); // gray
-	ctrl->IndicatorSetAlpha(1, 40);
+	ctrl->IndicatorSetStyle(GRAY_INDICATOR, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(GRAY_INDICATOR, wxColour(200, 200, 200));
+	ctrl->IndicatorSetAlpha(GRAY_INDICATOR, 40);
 
-	ctrl->IndicatorSetStyle(2, wxSTC_INDIC_ROUNDBOX);
-	ctrl->IndicatorSetForeground(2, wxColour(255, 200, 0)); // yellow
-	ctrl->IndicatorSetAlpha(2, 40);
+	ctrl->IndicatorSetStyle(YELLOW_INDICATOR, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(YELLOW_INDICATOR, wxColour(255, 200, 0));
+	ctrl->IndicatorSetAlpha(YELLOW_INDICATOR, 40);
+
+	ctrl->IndicatorSetStyle(RED_INDICATOR, wxSTC_INDIC_ROUNDBOX);
+	ctrl->IndicatorSetForeground(RED_INDICATOR, wxColour(255, 0, 0));
+	ctrl->IndicatorSetAlpha(RED_INDICATOR, 40);
 }
 
 void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)

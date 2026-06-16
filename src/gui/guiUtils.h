@@ -13,6 +13,15 @@ public:
 	const wxColour darkerTextColor = wxColour(154, 154, 154);
 	const wxFont codeFont = wxFontInfo(10).FaceName("Cascadia Mono").Bold();
 
+	enum IndicatorColor 
+	{
+		PURPLE_INDICATOR,
+		GRAY_INDICATOR,
+		YELLOW_INDICATOR,
+		RED_INDICATOR
+	};
+	const int numOfIndicators = 4;
+
 	void CopyToClipboard(const char* txt);
 
 	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
