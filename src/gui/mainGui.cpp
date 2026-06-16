@@ -429,6 +429,11 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			return 1;
 		}
 
+		if (currentVirtualAddress == 0x00401AF0) 
+		{
+			int ttt = 0;
+		}
+
 		currentInstruction->address = currentVirtualAddress;
 		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address) != -1)
 		{
