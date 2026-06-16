@@ -169,7 +169,7 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 		strcat(buffer, registerStrs[memAddr->regDisplacement]);
 	}
 
-	if (memAddr->constDisplacement != 0) 
+	if (memAddr->constDisplacement != 0 || memAddr->reg == NO_REG)
 	{
 		char constDisp[20] = { 0 };
 		if (memAddr->constDisplacement < 0) 
