@@ -7,10 +7,10 @@ enum Segment
 {
 	NO_SEGMENT,
 	
+	ES,
 	CS,
 	SS,
 	DS,
-	ES,
 	FS,
 	GS
 };

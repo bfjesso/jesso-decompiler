@@ -4,10 +4,10 @@ extern const char* segmentStrs[NUM_OF_SEGMENTS + 1] = // + 1 is for NO SEGMENT
 {
 	"NO SEGMENT",
 	
+	"ES",
 	"CS",
 	"SS",
 	"DS",
-	"ES",
 	"FS",
 	"GS"
 };

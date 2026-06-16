@@ -56,7 +56,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	else if (selection == GET_SEGMENT)
 	{
 		result->type = SEGMENT;
-		result->segment = params->modRM.reg;
+		result->segment = (params->modRM.reg + ES);
 
 		return 1;
 	}
