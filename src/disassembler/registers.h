@@ -5,14 +5,14 @@
 
 enum Segment
 {
+	NO_SEGMENT,
+	
 	CS,
 	SS,
 	DS,
 	ES,
 	FS,
-	GS,
-
-	NO_SEGMENT
+	GS
 };
 
 enum Register

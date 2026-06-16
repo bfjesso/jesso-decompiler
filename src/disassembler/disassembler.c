@@ -9,6 +9,8 @@
 
 static const char* group1PrefixStrs[] =
 {
+	"NONE",
+	
 	"LOCK",
 	"REPNZ", // BND if the instruction is a near call/ret/jmp/jcc or short jcc. also BND if some other flags are set
 	"REP"
@@ -34,6 +36,8 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	params.maxBytesAddr = maxBytesAddr;
 	params.startBytePtr = bytes;
 	params.is64BitMode = disassemblerOptions->is64BitMode;
+
+	memset(result, 0, sizeof(struct DisassembledInstruction));
 	
 	if (!handleLegacyPrefixes(&params))
 	{
@@ -207,7 +211,12 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 		return "BND";
 	}
 	
-	return group1PrefixStrs[instruction->group1Prefix - LOCK];
+	if (instruction->group1Prefix < 0 || instruction->group1Prefix > REPZ)
+	{
+		return "ERORR";
+	}
+
+	return group1PrefixStrs[instruction->group1Prefix];
 }
 
 unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop)

@@ -130,7 +130,9 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	}
 
 	result->type = MEM_ADDRESS;
+	result->memoryAddress.scale = 1;
 	result->memoryAddress.ptrSize = operandSize;
+
 	switch (params->legPrefixes.group2) 
 	{
 	case CSO_BNT:

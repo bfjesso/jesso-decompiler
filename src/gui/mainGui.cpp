@@ -236,8 +236,8 @@ void MainGui::DisassembleFile()
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
-	struct DisassembledInstruction currentInstruction;
-	if (!DisassembleTakingJumps(entryPoint + imageBase, &currentInstruction, &options))
+	struct DisassembledInstruction instructionBuffer;
+	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options))
 	{
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
@@ -252,7 +252,7 @@ void MainGui::DisassembleFile()
 			unsigned long long sectionEnd = sections[i].virtualAddress + sections[i].size + imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
-				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &currentInstruction, &options))
+				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
 				{
 					wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 				}
@@ -261,7 +261,7 @@ void MainGui::DisassembleFile()
 			{
 				if (sectionStart < firstAddress && sectionEnd > firstAddress)
 				{
-					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &currentInstruction, &options))
+					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
 					{
 						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 					}
@@ -269,7 +269,7 @@ void MainGui::DisassembleFile()
 
 				if (sectionStart < lastAddress && sectionEnd > lastAddress)
 				{
-					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &currentInstruction, &options))
+					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
 					{
 						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 					}
@@ -287,7 +287,7 @@ void MainGui::DisassembleFile()
 		unsigned long long endVA = disassembledInstructions[i + 1].address;
 		if (startVA != endVA)
 		{
-			if (!DisassembleBetweenBounds(startVA, endVA, &currentInstruction, &options)) 
+			if (!DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
 			{
 				wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 			}
@@ -404,7 +404,7 @@ void MainGui::ClearData()
 	}
 }
 
-unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
+unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
 	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
@@ -416,33 +416,32 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	unsigned long long sectionEndAddress = currentSection->virtualAddress + currentSection->size + imageBase;
 
 	unsigned long long currentVirtualAddress = startVA;
-	memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
-	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, currentInstruction))
+	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, instructionBuffer))
 	{
-		if (currentInstruction->numOfBytes == 0)
+		if (instructionBuffer->numOfBytes == 0)
 		{
 			return 0;
 		}
 
-		if (currentVirtualAddress + currentInstruction->numOfBytes > sectionEndAddress)
+		if (currentVirtualAddress + instructionBuffer->numOfBytes > sectionEndAddress)
 		{
 			return 1;
 		}
 
-		currentInstruction->address = currentVirtualAddress;
-		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address) != -1)
+		instructionBuffer->address = currentVirtualAddress;
+		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, instructionBuffer->address) != -1)
 		{
 			return 1;
 		}
 
-		currentFileOffset += currentInstruction->numOfBytes;
-		currentVirtualAddress += currentInstruction->numOfBytes;
+		currentFileOffset += instructionBuffer->numOfBytes;
+		currentVirtualAddress += instructionBuffer->numOfBytes;
 
 		// this needs to be sorted here because the jump handling may need to determine a reg's value
-		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentInstruction->address);
-		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *currentInstruction);
+		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, instructionBuffer->address);
+		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
 
-		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
+		if (instructionBuffer->opcode == NO_MNEMONIC || instructionBuffer->isInvalid)
 		{
 			return 0;
 		}
@@ -456,7 +455,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 				continue;
 			}
 
-			if (jmpDst != currentInstruction->address)
+			if (jmpDst != instructionBuffer->address)
 			{
 				if (stop)
 				{
@@ -469,7 +468,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 
 					currentVirtualAddress = jmpDst;
 				}
-				else if (!DisassembleTakingJumps(jmpDst, currentInstruction, options))
+				else if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options))
 				{
 					return 0;
 				}
@@ -484,7 +483,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	return 1;
 }
 
-unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options)
+unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
 	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
@@ -494,36 +493,35 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	}
 
 	unsigned long long currentVirtualAddress = startVA;
-	memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
-	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, currentInstruction))
+	while (disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + numOfFileBytes - 1, options, instructionBuffer))
 	{
-		if (currentInstruction->numOfBytes == 0)
+		if (instructionBuffer->numOfBytes == 0)
 		{
 			return 0;
 		}
 
-		if (currentVirtualAddress + currentInstruction->numOfBytes > endVA)
+		if (currentVirtualAddress + instructionBuffer->numOfBytes > endVA)
 		{
 			return 1;
 		}
 
-		currentInstruction->address = currentVirtualAddress;
+		instructionBuffer->address = currentVirtualAddress;
 
-		if (currentInstruction->opcode == NO_MNEMONIC || currentInstruction->isInvalid)
+		if (instructionBuffer->opcode == NO_MNEMONIC || instructionBuffer->isInvalid)
 		{
-			memset(currentInstruction, 0, sizeof(struct DisassembledInstruction));
-			currentInstruction->opcode = DATA;
-			currentInstruction->address = currentVirtualAddress;
-			currentInstruction->group1Prefix = NO_PREFIX;
-			currentInstruction->operands[0].type = IMMEDIATE;
-			currentInstruction->operands[0].immediate.size = 1;
-			currentInstruction->operands[0].immediate.value = fileBytes[currentFileOffset];
-			currentInstruction->numOfBytes = 1;
+			memset(instructionBuffer, 0, sizeof(struct DisassembledInstruction));
+			instructionBuffer->opcode = DATA;
+			instructionBuffer->address = currentVirtualAddress;
+			instructionBuffer->group1Prefix = NO_PREFIX;
+			instructionBuffer->operands[0].type = IMMEDIATE;
+			instructionBuffer->operands[0].immediate.size = 1;
+			instructionBuffer->operands[0].immediate.value = fileBytes[currentFileOffset];
+			instructionBuffer->numOfBytes = 1;
 		}
 
-		currentFileOffset += currentInstruction->numOfBytes;
-		currentVirtualAddress += currentInstruction->numOfBytes;
-		disassembledInstructions.push_back(*currentInstruction);
+		currentFileOffset += instructionBuffer->numOfBytes;
+		currentVirtualAddress += instructionBuffer->numOfBytes;
+		disassembledInstructions.push_back(*instructionBuffer);
 	}
 
 	return 1;

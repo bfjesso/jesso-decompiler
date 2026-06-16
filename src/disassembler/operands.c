@@ -11,17 +11,6 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		enum OperandCode currentOperandCode = params->opcode.operands[i];
 		struct Operand* currentOperand = &(result[operandIndex]);
 
-		currentOperand->type = NO_OPERAND;
-		currentOperand->reg = NO_REG;
-		currentOperand->immediate.value = 0;
-		currentOperand->memoryAddress.ptrSize = 0;
-		currentOperand->memoryAddress.segment = NO_SEGMENT;
-		currentOperand->memoryAddress.reg = NO_REG;
-		currentOperand->memoryAddress.regDisplacement = NO_REG;
-		currentOperand->memoryAddress.constDisplacement = 0;
-		currentOperand->memoryAddress.constSegment = 0;
-		currentOperand->memoryAddress.scale = 1;
-
 		if (params->opcode.mnemonic == NO_MNEMONIC) { break; }
 
 		unsigned char is64BitOperandSize = 0;
@@ -295,36 +284,42 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Yb:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xb:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
@@ -346,6 +341,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
 			break;
@@ -354,6 +350,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = OSO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
 			break;
@@ -378,6 +375,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		case Ap:
 			if ((params->bytes + 5) > params->maxBytesAddr) { return 0; }
 			currentOperand->type = MEM_ADDRESS;
+			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4);
 			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(&params->bytes, 2);
 			break;

@@ -1,7 +1,9 @@
 #include "registers.h"
 
-extern const char* segmentStrs[NUM_OF_SEGMENTS] =
+extern const char* segmentStrs[NUM_OF_SEGMENTS + 1] = // + 1 is for NO SEGMENT
 {
+	"NO SEGMENT",
+	
 	"CS",
 	"SS",
 	"DS",

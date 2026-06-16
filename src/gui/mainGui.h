@@ -96,9 +96,9 @@ public:
 
 	void ClearData();
 
-	unsigned char DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options);
+	unsigned char DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
-	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* currentInstruction, struct DisassemblerOptions* options);
+	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
 	void DecompileFunction(int functionIndex);
 

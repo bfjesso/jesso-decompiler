@@ -9,6 +9,8 @@ struct DisassemblerOptions
 
 enum LegacyPrefix
 {
+	NO_PREFIX,
+	
 	// group 1
 	LOCK,      // 0xF0
 	REPNZ_BND, // 0xF2
@@ -23,9 +25,7 @@ enum LegacyPrefix
 	// group 3
 	OSO,       // 0x66
 	// group 4
-	ASO,       // 0x67
-
-	NO_PREFIX
+	ASO        // 0x67
 };
 
 struct LegacyPrefixes
@@ -92,6 +92,8 @@ struct EVEXPrefix
 //	the addressing method; the second character, a lowercase letter, specifies the type of operand."
 enum OperandCode
 {
+	NO_OPERAND_CODE,
+	
 	ONE,
 	AL_CODE, CL_CODE, AX_CODE, DX_CODE,
 	rAX, rCX, rDX, rBX, rSP, rBP, rSI, rDI,
@@ -123,19 +125,18 @@ enum OperandCode
 
 	EVEXvvvv,
 
-	A_BYTE, // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
-	NO_OPERAND_CODE
+	A_BYTE // added for the F3 0F 1E FA (ENDBR) instruction. IDK what FA is supposed to be so leaving this here
 };
 
 enum OpcodeSuperscript
 {
+	NO_SUPERSCRIPT,
+	
 	i64,  // invalid in 64-bit mode
 	o64,  // only available in 64-bit mode
 	d64,  // operand size defaults to 64-bit size
 	f64,  // operand size forced to 64-bit size
-	f256, // operand size forced to 256-bit size
-
-	NO_SUPERSCRIPT
+	f256  // operand size forced to 256-bit size
 };
 
 struct Opcode
@@ -149,6 +150,7 @@ struct Opcode
 enum OperandType
 {
 	NO_OPERAND,
+
 	SEGMENT,
 	REGISTER,
 	MEM_ADDRESS,
