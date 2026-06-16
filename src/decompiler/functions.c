@@ -48,7 +48,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->lastInstructionIndex = i;
 			return 1;
 		}
-		else if((doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) || params->instructions[i].address == currentSectionEndAddress) && i >= indexToJumpTo)
+		else if((doesOpcodeGenerateInterruptOrException(currentInstruction->opcode) && i >= indexToJumpTo) || 
+			i == params->numOfInstructions - 1 || params->instructions[i + 1].address >= currentSectionEndAddress)
 		{
 			result->callingConvention = __UNKNOWNCALL;
 			result->lastInstructionIndex = i;
