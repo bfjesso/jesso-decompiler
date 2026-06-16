@@ -230,21 +230,6 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				addAssociatedInstruction(params->currentFunc, i);
 			}
 		}
-		else if (numOfStackArgs < maxStackArgs && currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
-		{
-			unsigned char overwrites = 0;
-			if (doesInstructionModifyOperand(currentInstruction, 0, &overwrites) && overwrites)
-			{
-				decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-				if (decompileOperand(params, i, &currentInstruction->operands[1], 0, &decompiledStackArgs[numOfStackArgs]))
-				{
-					stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-					dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[1]), &stackArgTypeStrs[numOfStackArgs]);
-					numOfStackArgs++;
-					addAssociatedInstruction(params->currentFunc, i);
-				}
-			}
-		}
 
 		for(int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
 		{
