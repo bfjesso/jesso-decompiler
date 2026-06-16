@@ -878,6 +878,7 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	const int ID_GO_TO_ADDR = 104;
 	const int ID_SHOW_ASSOCIATED = 105;
 	const int ID_SHOW_BYTES = 106;
+	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 107;
 
 	wxStyledTextCtrl* ctrl = (wxStyledTextCtrl*)(e.GetEventObject());
 
@@ -979,8 +980,16 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 				showBytesInDataViewer = e.IsChecked();
 				disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
 				dataViewerMenu->dataTextCtrl->IndicatorClearRange(0, dataViewerMenu->dataTextCtrl->GetTextLength());
+				ClearTextCtrlIndicators();
 			}, ID_SHOW_BYTES);
 		}
+
+		menu.AppendCheckItem(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, "Highlight selected instructions");
+		menu.Check(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, highlightSelectedInstructions);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+			highlightSelectedInstructions = e.IsChecked();
+			ClearTextCtrlIndicators();
+		}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
 	}
 
 	if (ctrl == disassemblyTextCtrl)
@@ -995,9 +1004,8 @@ void MainGui::StyledTextCtrlRightClickOptions(wxContextMenuEvent& e)
 	menu.Check(ID_SHOW_ASSOCIATED, showAssociatedInstructions);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
 		showAssociatedInstructions = e.IsChecked();
-		disassemblyTextCtrl->IndicatorClearRange(0, disassemblyTextCtrl->GetTextLength());
-		decompilationTextCtrl->IndicatorClearRange(0, decompilationTextCtrl->GetTextLength());
-		}, ID_SHOW_ASSOCIATED);
+		ClearTextCtrlIndicators();
+	}, ID_SHOW_ASSOCIATED);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
@@ -1054,7 +1062,7 @@ void MainGui::ShowGoToAddrDialog()
 			}
 			else
 			{
-				HighlightLineStyledTextCtrl(disassemblyTextCtrl, index, YELLOW_INDICATOR, 1);
+				CenterLineStyledTextCtrl(disassemblyTextCtrl, index);
 			}
 		}
 		else
@@ -1072,10 +1080,10 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 	}
 
 	ClearTextCtrlIndicators();
-	disassemblyTextCtrl->SetIndicatorCurrent(PURPLE_INDICATOR);
 	int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 
-	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
+	if (currentDecompiledFunc != -1 && showAssociatedInstructions && 
+		instructionIndex >= functions[currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[currentDecompiledFunc].lastInstructionIndex)
 	{
 		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
 		{
@@ -1091,6 +1099,10 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 		}
 
 		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 0);
+	}
+	else if (highlightSelectedInstructions)
+	{
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, YELLOW_INDICATOR, 0);
 	}
 
 	if (dataViewerMenu->IsShown() && showBytesInDataViewer)

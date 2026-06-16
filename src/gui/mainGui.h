@@ -67,6 +67,7 @@ public:
 
 	unsigned char showAssociatedInstructions = 1;
 	unsigned char showBytesInDataViewer = 1;
+	unsigned char highlightSelectedInstructions = 1;
 	
 	enum ids 
 	{
