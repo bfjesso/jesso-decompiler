@@ -70,6 +70,11 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
 		params->currentFunc = &params->functions[i];
+		if (params->currentFunc->callingConvention == __UNKNOWNCALL) // __UNKNOWNCALL will only be set at this point if the function ends without a return instruction
+		{
+			continue;
+		}
+
 		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
