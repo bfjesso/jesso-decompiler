@@ -1,4 +1,5 @@
 #include "mainGui.h"
+#include <wx/numdlg.h>
 #include "fileHeadersMenu.h"
 #include "calculatorMenu.h"
 #include "../decompiler/decompilationUtils.h"
@@ -140,23 +141,57 @@ void MainGui::OpenFile()
 		{
 			currentFilePath = filePath;
 
+			numOfFileBytes = getNumOfFileBytes(filePath.c_str().AsWChar());
+			if (numOfFileBytes == 0)
+			{
+				wxMessageBox("Error getting number of bytes in file", "Can't load data");
+				return;
+			}
+
+			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
+
 			if (!isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
 			{
+				int loadAnyway = wxMessageBox("Error determining file architecture. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
+				if (loadAnyway == wxYES)
+				{
+					imageBase = 0;
+					entryPoint = wxGetNumberFromUser("Specify the entry point as a file offset (image base will be zero):", "Entry point:", "Specify the entry point", 0, 0, numOfFileBytes - 1, this);
+				
+					fileBytes = new unsigned char[numOfFileBytes];
+					if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+					{
+						wxMessageBox("Error reading bytes from file", "Can't load data");
+						currentFilePath = "";
+						delete[] fileBytes;
+						return;
+					}
+
+					numOfSections = 1;
+					sections = new FileSection[1];
+					sections[0].name = initializeJdcStrWithVal(wxString("." + fileName).c_str());
+					sections[0].type = CODE_FST;
+					sections[0].isReadOnly = 1;
+					sections[0].virtualAddress = 0;
+					sections[0].fileOffset = 0;
+					sections[0].size = numOfFileBytes;
+
+					numOfImports = 0;
+
+					this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
+
+					DisassembleFile();
+					openFileDialog.Close(true);
+					return;
+				}
+				
 				this->SetTitle("Jesso Decompiler x64");
-				wxMessageBox("Error determining file architecture", "Failed to open file");
 				currentFilePath = "";
 				return;
 			}
 
 			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
 			entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
-
-			numOfFileBytes = getNumOfFileBytes(filePath.c_str().AsWChar());
-			if (numOfFileBytes == 0) 
-			{
-				wxMessageBox("Error getting number of bytes in file", "Can't load data");
-				return;
-			}
 
 			fileBytes = new unsigned char[numOfFileBytes];
 			if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
@@ -190,7 +225,6 @@ void MainGui::OpenFile()
 				return;
 			}
 			
-			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
 			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
