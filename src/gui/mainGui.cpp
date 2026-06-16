@@ -551,12 +551,7 @@ void MainGui::DecompileFunction(int functionIndex)
 	int errorInstructionIndex = 0;
 	if (!decompileFunction(&decompParams, &decompilationResult, &statusMessage, &errorInstructionIndex))
 	{
-		disassemblyTextCtrl->GotoLine(errorInstructionIndex);
-		disassemblyTextCtrl->LineScroll(0, errorInstructionIndex - disassemblyTextCtrl->GetFirstVisibleLine() - (disassemblyTextCtrl->LinesOnScreen() / 2));
-		disassemblyTextCtrl->SetIndicatorCurrent(RED_INDICATOR);
-		int start = disassemblyTextCtrl->PositionFromLine(errorInstructionIndex);
-		int len = disassemblyTextCtrl->GetLineLength(errorInstructionIndex);
-		disassemblyTextCtrl->IndicatorFillRange(start, len);
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, errorInstructionIndex, RED_INDICATOR, 1);
 
 		wxMessageBox(statusMessage.buffer, "Can't decompile");
 		freeJdcStr(&statusMessage);
@@ -728,13 +723,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	disassemblyTextCtrl->Thaw();
 	disassemblyTextCtrl->SetReadOnly(true);
 
-	disassemblyTextCtrl->GotoLine(entryPointIndex);
-	disassemblyTextCtrl->LineScroll(0, entryPointIndex - disassemblyTextCtrl->GetFirstVisibleLine() - (disassemblyTextCtrl->LinesOnScreen() / 2));
-
-	disassemblyTextCtrl->SetIndicatorCurrent(YELLOW_INDICATOR);
-	int start = disassemblyTextCtrl->PositionFromLine(entryPointIndex);
-	int len = disassemblyTextCtrl->GetLineLength(entryPointIndex);
-	disassemblyTextCtrl->IndicatorFillRange(start, len);
+	HighlightLineStyledTextCtrl(disassemblyTextCtrl, entryPointIndex, YELLOW_INDICATOR, 1);
 }
 
 void MainGui::UpdateFunctionsGrid()
@@ -1065,9 +1054,7 @@ void MainGui::ShowGoToAddrDialog()
 			}
 			else
 			{
-				disassemblyTextCtrl->GotoLine(index);
-				int pos = disassemblyTextCtrl->PositionFromLine(index);
-				disassemblyTextCtrl->SetSelection(pos, pos + disassemblyTextCtrl->GetLineLength(index));
+				HighlightLineStyledTextCtrl(disassemblyTextCtrl, index, YELLOW_INDICATOR, 1);
 			}
 		}
 		else
@@ -1090,9 +1077,6 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions)
 	{
-		decompilationTextCtrl->SetIndicatorCurrent(PURPLE_INDICATOR);
-		
-		int lastLine = 0;
 		for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++) 
 		{
 			struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[i];
@@ -1100,30 +1084,19 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 			{
 				if (a->indexes[j] == instructionIndex) 
 				{
-					int start = decompilationTextCtrl->PositionFromLine(i);
-					int len = decompilationTextCtrl->GetLineLength(i);
-					decompilationTextCtrl->IndicatorFillRange(start, len);
-
-					lastLine = i;
+					HighlightLineStyledTextCtrl(decompilationTextCtrl, i, PURPLE_INDICATOR, 1);
 					break;
 				}
 			}
 		}
 
-		decompilationTextCtrl->GotoLine(lastLine);
-
-		int start = disassemblyTextCtrl->PositionFromLine(instructionIndex);
-		int len = disassemblyTextCtrl->GetLineLength(instructionIndex);
-		disassemblyTextCtrl->IndicatorFillRange(start, len);
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 0);
 	}
 
 	if (dataViewerMenu->IsShown() && showBytesInDataViewer)
 	{
 		dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex + 1].address - disassembledInstructions[instructionIndex].address);
-
-		int start = disassemblyTextCtrl->PositionFromLine(instructionIndex);
-		int len = disassemblyTextCtrl->GetLineLength(instructionIndex);
-		disassemblyTextCtrl->IndicatorFillRange(start, len);
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 1);
 	}
 }
 
@@ -1166,29 +1139,14 @@ void MainGui::OnDecompilationUpdateUI(wxStyledTextEvent& e)
 	int selectedLine = decompilationTextCtrl->GetCurrentLine();
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 	{
-		disassemblyTextCtrl->SetIndicatorCurrent(PURPLE_INDICATOR);
-		decompilationTextCtrl->SetIndicatorCurrent(PURPLE_INDICATOR);
-		
 		struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
-		int largestIndex = 0;
 		for (int i = 0; i < a->numOfIndexes; i++)
 		{
-			if (a->indexes[i] > largestIndex)
-			{
-				largestIndex = a->indexes[i];
-			}
-			
-			int start = disassemblyTextCtrl->PositionFromLine(a->indexes[i]);
-			int len = disassemblyTextCtrl->GetLineLength(a->indexes[i]);
-			disassemblyTextCtrl->IndicatorFillRange(start, len);
+			HighlightLineStyledTextCtrl(disassemblyTextCtrl, a->indexes[i], PURPLE_INDICATOR, 1);
 		}
 
-		disassemblyTextCtrl->GotoLine(largestIndex);
-
-		int start = decompilationTextCtrl->PositionFromLine(selectedLine);
-		int len = decompilationTextCtrl->GetLineLength(selectedLine);
-		decompilationTextCtrl->IndicatorFillRange(start, len);
+		HighlightLineStyledTextCtrl(decompilationTextCtrl, selectedLine, PURPLE_INDICATOR, 0);
 	}
 
 	wxString selection = decompilationTextCtrl->GetSelectedText();

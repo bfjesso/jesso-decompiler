@@ -27,4 +27,6 @@ public:
 	void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl);
 
 	void ClearStyledTextCtrl(wxStyledTextCtrl* ctrl);
+
+	void HighlightLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line, enum IndicatorColor color, unsigned char gotoLine);
 };

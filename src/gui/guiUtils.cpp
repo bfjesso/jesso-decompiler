@@ -48,3 +48,17 @@ void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
 	ctrl->SetText("");
 	ctrl->SetReadOnly(true);
 }
+
+void Utils::HighlightLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line, enum IndicatorColor color, unsigned char gotoLine)
+{
+	if(gotoLine)
+	{
+		ctrl->GotoLine(line);
+		ctrl->LineScroll(0, line - ctrl->GetFirstVisibleLine() - (ctrl->LinesOnScreen() / 2)); // this centers it
+	}
+	
+	ctrl->SetIndicatorCurrent(color);
+	int start = ctrl->PositionFromLine(line);
+	int len = ctrl->GetLineLength(line);
+	ctrl->IndicatorFillRange(start, len);
+}
