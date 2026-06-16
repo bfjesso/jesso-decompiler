@@ -1566,7 +1566,7 @@ void MainGui::ApplyAsmHighlighting()
 					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
 					int loc = asmStr.find(segStr, segStart);
 					disassemblyTextCtrl->StartStyling(pos + loc);
-					disassemblyTextCtrl->SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+					disassemblyTextCtrl->SetStyling(segStr.length() - 1, ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
 					segStart = loc + segStr.length();
 				}
 
