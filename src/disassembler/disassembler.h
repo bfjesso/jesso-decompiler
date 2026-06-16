@@ -12,7 +12,7 @@ extern "C"
 
 	const char* getPtrSizeStr(int ptrSize);
 
-	const char* getGroup1PrefixStr(enum LegacyPrefix prefix);
+	const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction);
 
 	unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop);
 

@@ -10,20 +10,20 @@ struct DisassemblerOptions
 enum LegacyPrefix
 {
 	// group 1
-	LOCK,    // 0xF0
-	REPNZ,   // 0xF2
-	REPZ,    // 0xF3
+	LOCK,      // 0xF0
+	REPNZ_BND, // 0xF2
+	REPZ,      // 0xF3
 	// group 2
-	CSO_BNT, // 0x2E
-	SSO,     // 0x36
-	DSO_BT,  // 0x3E
-	ESO,     // 0x26
-	FSO,     // 0x64
-	GSO,     // 0x65
+	CSO_BNT,   // 0x2E
+	SSO,       // 0x36
+	DSO_BT,    // 0x3E
+	ESO,       // 0x26
+	FSO,       // 0x64
+	GSO,       // 0x65
 	// group 3
-	OSO,     // 0x66
+	OSO,       // 0x66
 	// group 4
-	ASO,     // 0x67
+	ASO,       // 0x67
 
 	NO_PREFIX
 };

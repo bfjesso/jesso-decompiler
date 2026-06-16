@@ -1525,7 +1525,7 @@ void MainGui::ApplyAsmHighlighting()
 		int opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
 		if (instruction->group1Prefix != NO_PREFIX) 
 		{
-			opcodeLen += strlen(getGroup1PrefixStr(instruction->group1Prefix)) + 1;
+			opcodeLen += strlen(getGroup1PrefixStr(instruction)) + 1;
 		}
 		disassemblyTextCtrl->SetStyling(opcodeLen, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
 

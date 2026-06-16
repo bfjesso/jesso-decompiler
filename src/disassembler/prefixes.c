@@ -17,7 +17,7 @@ unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params)
 			params->legPrefixes.group1 = LOCK;
 			break;
 		case 0xF2:
-			params->legPrefixes.group1 = REPNZ;
+			params->legPrefixes.group1 = REPNZ_BND;
 			break;
 		case 0xF3:
 			params->legPrefixes.group1 = REPZ;
@@ -122,7 +122,7 @@ unsigned char handleVEXPrefix(struct DisassemblyParameters* params)
 			params->legPrefixes.group1 = REPZ; // 0xF3
 			break;
 		case 0b11:
-			params->legPrefixes.group1 = REPNZ; // 0xF2
+			params->legPrefixes.group1 = REPNZ_BND; // 0xF2
 			break;
 		}
 	}
@@ -168,7 +168,7 @@ unsigned char handleEVEXPrefix(struct DisassemblyParameters* params)
 			params->legPrefixes.group1 = REPZ; // 0xF3
 			break;
 		case 0b11:
-			params->legPrefixes.group1 = REPNZ; // 0xF2
+			params->legPrefixes.group1 = REPNZ_BND; // 0xF2
 			break;
 		}
 

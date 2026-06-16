@@ -11,7 +11,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return 0; }
 
-	unsigned char prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ ? 3 : 0;
+	unsigned char prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
 	unsigned char opcodeByte = 0;
 	unsigned char escapeToCoprocessor = 0;
 

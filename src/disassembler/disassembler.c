@@ -10,7 +10,7 @@
 static const char* group1PrefixStrs[] =
 {
 	"LOCK",
-	"REPNZ",
+	"REPNZ", // BND if the instruction is a near call/ret/jmp/jcc or short jcc. also BND if some other flags are set
 	"REP"
 };
 
@@ -81,7 +81,7 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 {
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
-		strcpy(buffer, getGroup1PrefixStr(instruction->group1Prefix));
+		strcpy(buffer, getGroup1PrefixStr(instruction));
 		strcat(buffer, " ");
 	}
 
@@ -199,9 +199,15 @@ const char* getPtrSizeStr(int ptrSize)
 	return ptrSizeStrs[ptrSize <= 10 ? ptrSize / 2 : ptrSize == 16 ? 6 : ptrSize == 32 ? 7 : ptrSize == 64 ? 8 : 0];
 }
 
-const char* getGroup1PrefixStr(enum LegacyPrefix prefix)
+const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 {
-	return group1PrefixStrs[prefix - LOCK];
+	if (instruction->group1Prefix == REPNZ_BND &&
+		(instruction->opcode == CALL_NEAR || instruction->opcode == RET_NEAR || instruction->opcode == JMP_NEAR || isOpcodeJcc(instruction->opcode))) 
+	{
+		return "BND";
+	}
+	
+	return group1PrefixStrs[instruction->group1Prefix - LOCK];
 }
 
 unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop)
