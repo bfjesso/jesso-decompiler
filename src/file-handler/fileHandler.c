@@ -349,7 +349,7 @@ unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSectio
 {
 	for (int i = 0; i < numOfSections; i++)
 	{
-		if (rva >= sections[i].virtualAddress && rva < sections[i].virtualAddress + sections[i].size)
+		if (rva >= sections[i].virtualAddress && rva <= sections[i].virtualAddress + sections[i].size) // if it is equal to virtualAddress + size it isn't actually in the section, but the resulting file offset is used as a max offset
 		{
 			if (section) { *section = &sections[i]; }
 			return (rva - sections[i].virtualAddress) + sections[i].fileOffset;

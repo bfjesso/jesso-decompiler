@@ -284,7 +284,7 @@ void MainGui::DisassembleFile()
 		if (sections[i].type == CODE_FST)
 		{
 			unsigned long long sectionStart = sections[i].virtualAddress + imageBase;
-			unsigned long long sectionEnd = sections[i].virtualAddress + sections[i].size + imageBase - 1;
+			unsigned long long sectionEnd = sections[i].virtualAddress + sections[i].size + imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
 				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
