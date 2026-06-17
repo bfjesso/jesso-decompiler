@@ -460,6 +460,29 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			break;
 		}
 
+		if (currentOperandCode != NO_OPERAND_CODE) 
+		{
+			if (currentOperand->type == NO_OPERAND) 
+			{
+				return 0;
+			}
+			else if (currentOperand->type == REGISTER && (currentOperand->reg < 0 || currentOperand->reg >= NUM_OF_REGISTERS))
+			{
+				return 0;
+			}
+			else if (currentOperand->type == SEGMENT && (currentOperand->segment < 0 || currentOperand->segment >= NUM_OF_SEGMENTS))
+			{
+				return 0;
+			}
+			else if (currentOperand->type == MEM_ADDRESS && 
+				(currentOperand->memoryAddress.reg < 0 || currentOperand->memoryAddress.reg >= NUM_OF_REGISTERS || 
+				currentOperand->memoryAddress.regDisplacement < 0 || currentOperand->memoryAddress.regDisplacement >= NUM_OF_REGISTERS || 
+				currentOperand->memoryAddress.segment < 0 || currentOperand->memoryAddress.segment >= NUM_OF_SEGMENTS))
+			{
+				return 0;
+			}
+		}
+
 		operandIndex++;
 	}
 

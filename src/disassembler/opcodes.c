@@ -338,8 +338,12 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 		params->bytes++;
 	}
 
-	handleAlternateMnemonics(params);
+	if (params->opcode.mnemonic == NO_MNEMONIC)
+	{
+		return 0;
+	}
 
+	handleAlternateMnemonics(params);
 	return 1;
 }
 

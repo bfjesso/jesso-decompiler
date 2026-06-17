@@ -41,6 +41,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	
 	if (!handleLegacyPrefixes(&params))
 	{
+		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 		return 0;
 	}
 
@@ -48,16 +49,19 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	{
 		if (!handleREXPrefix(&params))
 		{
+			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 			return 0;
 		}
 
 		if (!params.rexPrefix.isValidREX && !handleVEXPrefix(&params))
 		{
+			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 			return 0;
 		}
 
 		if (!params.rexPrefix.isValidREX && !params.vexPrefix.isValidVEX && !handleEVEXPrefix(&params))
 		{
+			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 			return 0;
 		}
 	}
@@ -65,11 +69,13 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	// if the opcode is an extended one then modRM will be retrieved
 	if (!handleOpcode(&params))
 	{
+		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 		return 0;
 	}
 
 	if (!handleOperands(&params, (struct Operand*)(&result->operands)))
 	{
+		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 		return 0;
 	}
 
@@ -78,7 +84,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
 
-	return 1;
+	return result->numOfBytes != 0;
 }
 
 unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize) // this will be in intel syntax
