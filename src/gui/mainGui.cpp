@@ -271,7 +271,8 @@ void MainGui::DisassembleFile()
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 	struct DisassembledInstruction instructionBuffer;
-	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options))
+	unsigned long long errorAddress = 0;
+	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
 	{
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
@@ -335,6 +336,12 @@ void MainGui::DisassembleFile()
 	statusStaticText->Update();
 
 	UpdateDisassemblyTextCtrl();
+
+	if (errorAddress != 0) 
+	{
+		int line = findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, errorAddress);
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, line, RED_INDICATOR, 1);
+	}
 
 	statusStaticText->SetLabelText("Status: idle");
 
@@ -438,7 +445,7 @@ void MainGui::ClearData()
 	}
 }
 
-unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
+unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)
 {
 	struct FileSection* currentSection = 0;
 	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
@@ -456,6 +463,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	{
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->size - 1, options, instructionBuffer))
 		{
+			if (errorAddress) { *errorAddress = currentVirtualAddress; }
 			return 0;
 		}
 
@@ -494,7 +502,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 
 					currentVirtualAddress = jmpDst;
 				}
-				else if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options))
+				else if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
 				{
 					return 0;
 				}
