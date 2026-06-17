@@ -1,4 +1,5 @@
 #include "operands.h"
+#include "prefixes.h"
 #include "mnemonics.h"
 #include "modRM.h"
 #include "registers.h"
@@ -342,7 +343,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
+			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
 			break;
 		case Ov:
@@ -351,7 +352,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : (enum Segment)params->legPrefixes.group2;
+			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
 			break;
 		case Rd:

@@ -56,6 +56,27 @@ unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params)
 	return 1;
 }
 
+enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
+{
+	switch (group2Prefix)
+	{
+	case CSO_BNT:
+		return CS;
+	case SSO:
+		return SS;
+	case DSO_BT:
+		return DS;
+	case ESO:
+		return ES;
+	case FSO:
+		return FS;
+	case GSO:
+		return GS;
+	}
+
+	return NO_SEGMENT;
+}
+
 unsigned char handleREXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return 0; }

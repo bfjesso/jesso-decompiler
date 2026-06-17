@@ -132,28 +132,7 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 	result->type = MEM_ADDRESS;
 	result->memoryAddress.scale = 1;
 	result->memoryAddress.ptrSize = operandSize;
-
-	switch (params->legPrefixes.group2) 
-	{
-	case CSO_BNT:
-		result->memoryAddress.segment = CS;
-		break;
-	case SSO:
-		result->memoryAddress.segment = SS;
-		break;
-	case DSO_BT:
-		result->memoryAddress.segment = DS;
-		break;
-	case ESO:
-		result->memoryAddress.segment = ES;
-		break;
-	case FSO:
-		result->memoryAddress.segment = FS;
-		break;
-	case GSO:
-		result->memoryAddress.segment = GS;
-		break;
-	}
+	result->memoryAddress.segment = segmentOverrideToSegment(params->legPrefixes.group2);
 
 	unsigned char usedSIB = 0;
 
