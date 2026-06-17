@@ -1,7 +1,10 @@
 #pragma once
 
-#define NUM_OF_SEGMENTS 6
-#define NUM_OF_REGISTERS 179
+// this includes NO_SEGMENT
+#define NUM_OF_SEGMENTS 7
+
+// this includes NO_REG
+#define NUM_OF_REGISTERS 180
 
 enum Segment
 {
