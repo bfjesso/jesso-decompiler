@@ -1136,6 +1136,8 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 	ClearTextCtrlIndicators();
 	int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 
+	unsigned char isAlreadyHighlighted = 0;
+
 	if (currentDecompiledFunc != -1 && showAssociatedInstructions && 
 		instructionIndex >= functions[currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[currentDecompiledFunc].lastInstructionIndex)
 	{
@@ -1153,16 +1155,19 @@ void MainGui::OnDisassemblyUpdateUI(wxStyledTextEvent& e)
 		}
 
 		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 0);
-	}
-	else if (highlightSelectedInstructions)
-	{
-		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, YELLOW_INDICATOR, 0);
+		isAlreadyHighlighted = 1;
 	}
 
 	if (dataViewerMenu->IsShown() && showBytesInDataViewer)
 	{
-		dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex + 1].address - disassembledInstructions[instructionIndex].address);
-		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 1);
+		dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex].numOfBytes);
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, PURPLE_INDICATOR, 0);
+		isAlreadyHighlighted = 1;
+	}
+
+	if (highlightSelectedInstructions && !isAlreadyHighlighted)
+	{
+		HighlightLineStyledTextCtrl(disassemblyTextCtrl, instructionIndex, YELLOW_INDICATOR, 0);
 	}
 }
 
