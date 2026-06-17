@@ -462,6 +462,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 
 		if (currentOperandCode != NO_OPERAND_CODE) 
 		{
+			currentOperand = &(result[operandIndex]); // operandIndex may have been decremented
 			if (currentOperand->type == NO_OPERAND) 
 			{
 				return 0;
