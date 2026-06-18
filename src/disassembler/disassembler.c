@@ -7,28 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static const char* group1PrefixStrs[] =
-{
-	"NONE",
-	
-	"LOCK",
-	"REPNZ", // BND if the instruction is a near call/ret/jmp/jcc or short jcc. also BND if some other flags are set
-	"REP"
-};
-
-static const char* ptrSizeStrs[] =
-{
-	"BYTE PTR",
-	"WORD PTR",
-	"DWORD PTR",
-	"FWORD PTR",
-	"QWORD PTR",
-	"TBYTE PTR",
-	"XMMWORD PTR",
-	"YMMWORD PTR",
-	"ZMMWORD PTR"
-};
-
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	struct DisassemblyParameters params = { 0 };
@@ -204,9 +182,31 @@ static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer
 	return strlen(buffer) < bufferSize;
 }
 
-const char* getPtrSizeStr(int ptrSize) 
+const char* getPtrSizeStr(int ptrSize)
 {
-	return ptrSizeStrs[ptrSize <= 10 ? ptrSize / 2 : ptrSize == 16 ? 6 : ptrSize == 32 ? 7 : ptrSize == 64 ? 8 : 0];
+	switch (ptrSize) 
+	{
+	case 1:
+		return "BYTE PTR";
+	case 2:
+		return "WORD PTR";
+	case 4:
+		return "DWORD PTR";
+	case 6:
+		return "FWORD PTR";
+	case 8:
+		return "QWORD PTR";
+	case 10:
+		return "TBYTE PTR";
+	case 16:
+		return "XMMWORD PTR";
+	case 32:
+		return "YMMWORD PTR";
+	case 64:
+		return "ZMMWORD PTR";
+	}
+	
+	return "";
 }
 
 const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
@@ -216,13 +216,18 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 	{
 		return "BND";
 	}
-	
-	if (instruction->group1Prefix < 0 || instruction->group1Prefix > REPZ)
-	{
-		return "ERORR";
-	}
 
-	return group1PrefixStrs[instruction->group1Prefix];
+	switch (instruction->group1Prefix) 
+	{
+	case LOCK:
+		return "LOCK";
+	case REPNZ_BND:
+		return "REPNZ";
+	case REPZ:
+		return "REP";
+	}
+	
+	return "";
 }
 
 unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop)
