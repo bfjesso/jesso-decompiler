@@ -155,6 +155,9 @@ void MainGui::OpenFile()
 				int loadAnyway = wxMessageBox("Error determining file architecture. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
 				if (loadAnyway == wxYES)
 				{
+					int ask64Bit = wxMessageBox("Do you want to disassemble in 64 bit mode?", "Specify architecture", wxYES_NO, this);
+					is64Bit = ask64Bit == wxYES;
+
 					imageBase = 0;
 					entryPoint = wxGetNumberFromUser("Specify the entry point as a file offset (image base will be zero):", "Entry point:", "Specify the entry point", 0, 0, numOfFileBytes - 1, this);
 				
