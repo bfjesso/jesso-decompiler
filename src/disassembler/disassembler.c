@@ -4,9 +4,6 @@
 #include "opcodes.h"
 #include "operands.h"
 
-#include <stdio.h>
-#include <string.h>
-
 unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	struct DisassemblyParameters params = { 0 };
@@ -65,15 +62,17 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 	return result->numOfBytes != 0;
 }
 
-unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize) // this will be in intel syntax
+unsigned char instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result) // this will be in intel syntax
 {
+	strcpyJdc(result, "");
+
 	if (instruction->group1Prefix != NO_PREFIX) 
 	{
-		strcpy(buffer, getGroup1PrefixStr(instruction));
-		strcat(buffer, " ");
+		strcatJdc(result, getGroup1PrefixStr(instruction));
+		strcatJdc(result, " ");
 	}
 
-	strcat(buffer, mnemonicStrs[instruction->opcode]);
+	strcatJdc(result, mnemonicStrs[instruction->opcode]);
 
 	for (int i = 0; i < 4; i++) 
 	{
@@ -81,105 +80,90 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, char
 
 		if (i != 0) 
 		{
-			strcat(buffer, ", ");
+			strcatJdc(result, ", ");
 		}
 		else 
 		{
-			strcat(buffer, " ");
+			strcatJdc(result, " ");
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
-
-		char immediateBuffer[20] = { 0 };
 		switch (currentOperand->type)
 		{
 		case SEGMENT:
-			strcat(buffer, segmentStrs[currentOperand->segment]);
+			strcatJdc(result, segmentStrs[currentOperand->segment]);
 			break;
 		case REGISTER:
-			strcat(buffer , registerStrs[currentOperand->reg]);
+			strcatJdc(result, registerStrs[currentOperand->reg]);
 			break;
 		case MEM_ADDRESS:
-			if (!memAddressToStr(&currentOperand->memoryAddress, buffer, bufferSize)) { return 0; }
+			if (!memAddressToStr(&currentOperand->memoryAddress, result)) { return 0; }
 			break;
 		case IMMEDIATE:
-			sprintf(immediateBuffer, "0x%llX", currentOperand->immediate.value);
-			strcat(buffer, immediateBuffer);
+			sprintfJdc(result, 1, "0x%llX", currentOperand->immediate.value);
 			break;
 		}
 	}
 
-	return strlen(buffer) < bufferSize;
+	return 1;
 }
 
-static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize)
+static unsigned char memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result)
 {
 	if (memAddr->ptrSize != 0)
 	{
-		strcat(buffer, getPtrSizeStr(memAddr->ptrSize));
-		strcat(buffer, " ");
+		strcatJdc(result, getPtrSizeStr(memAddr->ptrSize));
+		strcatJdc(result, " ");
 	}
 	
 	if (memAddr->segment != NO_SEGMENT) 
 	{
-		strcat(buffer, segmentStrs[memAddr->segment]);
-		strcat(buffer, ":");
+		strcatJdc(result, segmentStrs[memAddr->segment]);
+		strcatJdc(result, ":");
 	}
 	else if (memAddr->constSegment != 0) 
 	{
-		char hexSeg[20] = { 0 };
-		sprintf(hexSeg, "0x%X", memAddr->constSegment);
-
-		strcat(buffer, hexSeg);
-		strcat(buffer, ":");
+		sprintfJdc(result, 1, "0x%X", memAddr->constSegment);
+		strcatJdc(result, ":");
 	}
 
-	strcat(buffer, "[");
+	strcatJdc(result, "[");
 
 	if (memAddr->reg != NO_REG) 
 	{
-		strcat(buffer, registerStrs[memAddr->reg]);
+		strcatJdc(result, registerStrs[memAddr->reg]);
 	}
 
 	if (memAddr->scale > 1) 
 	{
-		strcat(buffer, "*");
-
-		char hexScale[20] = { 0 };
-		sprintf(hexScale, "0x%X", memAddr->scale);
-
-		strcat(buffer, hexScale);
+		sprintfJdc(result, 1, "*0x%X", memAddr->scale);
 	}
 
 	if (memAddr->regDisplacement != NO_REG)
 	{
-		strcat(buffer, "+");
-		strcat(buffer, registerStrs[memAddr->regDisplacement]);
+		strcatJdc(result, "+");
+		strcatJdc(result, registerStrs[memAddr->regDisplacement]);
 	}
 
-	if (memAddr->constDisplacement != 0 || memAddr->reg == NO_REG)
+	if (memAddr->reg != NO_REG)
 	{
-		char constDisp[20] = { 0 };
-		if (memAddr->constDisplacement < 0) 
+		if (memAddr->constDisplacement > 0)
 		{
-			sprintf(constDisp, "-0x%llX", -memAddr->constDisplacement);
+			sprintfJdc(result, 1, "+0x%llX", memAddr->constDisplacement);
 		}
-		else 
+		else if (memAddr->constDisplacement < 0)
 		{
-			sprintf(constDisp, "0x%llX", memAddr->constDisplacement);
+			sprintfJdc(result, 1, "-0x%llX", -memAddr->constDisplacement);
 		}
-
-		if (buffer[strlen(buffer) - 1] != '[' && memAddr->constDisplacement >= 0)
-		{
-			strcat(buffer, "+");
-		}
-
-		strcat(buffer, constDisp);
+	}
+	else
+	{
+		sprintfJdc(result, 1, "0x%llX", memAddr->constDisplacement);
 	}
 
-	strcat(buffer, "]");
+	strcatJdc(result, "]");
 
-	return strlen(buffer) < bufferSize;
+	return 1;
 }
 
 const char* getPtrSizeStr(int ptrSize)

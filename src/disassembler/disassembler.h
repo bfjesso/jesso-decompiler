@@ -1,5 +1,6 @@
 #pragma once
 #include "disassemblyStructs.h"
+#include "../jdc-str/jdcStr.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -8,7 +9,7 @@ extern "C"
 
 	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 	
-	unsigned char instructionToStr(struct DisassembledInstruction* instruction, char* buffer, unsigned char bufferSize);
+	unsigned char instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result);
 
 	const char* getPtrSizeStr(int ptrSize);
 
@@ -24,4 +25,4 @@ extern "C"
 }
 #endif
 
-static unsigned char memAddressToStr(struct MemoryAddress* memAddr, char* buffer, unsigned char bufferSize);
+static unsigned char memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result);

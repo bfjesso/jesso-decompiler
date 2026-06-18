@@ -65,22 +65,24 @@ void BytesDisassembler::DisassembleBytes(wxCommandEvent& e)
 	struct DisassembledInstruction result;
 	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result))
 	{
-		char buffer[255] = { 0 };
-		if (instructionToStr(&result, buffer, 255))
+		struct JdcStr instructionStrBuffer = initializeJdcStr();
+		if (instructionToStr(&result, &instructionStrBuffer))
 		{
 			if (result.isInvalid)
 			{
-				disassemblyStaticText->SetLabel(wxString(buffer) + wxString(" ; invalid opcode"));
+				disassemblyStaticText->SetLabel(wxString(instructionStrBuffer.buffer) + wxString(" ; invalid opcode"));
 			}
 			else 
 			{
-				disassemblyStaticText->SetLabel(buffer);
+				disassemblyStaticText->SetLabel(instructionStrBuffer.buffer);
 			}
 		}
 		else
 		{
 			disassemblyStaticText->SetLabel("Error converting disassembled instruction to string");
 		}
+
+		freeJdcStr(&instructionStrBuffer);
 	}
 	else
 	{

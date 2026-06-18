@@ -726,6 +726,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	wxString disassemblyText = "";
 	disassemblyText.reserve(numOfInstructions * 50);
 
+	struct JdcStr instructionStrBuffer = initializeJdcStr();
 	int entryPointIndex = 0;
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
@@ -742,11 +743,10 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
 		wxString addressInfoStr = wxString(addressStr) + wxString(sections[sectionIndex].name.buffer) + "\t";
 
-		char buffer[255] = { 0 };
 		wxString asmStr = "";
-		if (instructionToStr(&disassembledInstructions[i], buffer, 255))
+		if (instructionToStr(&disassembledInstructions[i], &instructionStrBuffer))
 		{
-			asmStr = wxString(buffer);
+			asmStr = wxString(instructionStrBuffer.buffer);
 		}
 
 		if (disassembledInstructions[i].isInvalid)
@@ -773,6 +773,8 @@ void MainGui::UpdateDisassemblyTextCtrl()
 
 		disassemblyText += addressInfoStr + asmStr + "\n";
 	}
+
+	freeJdcStr(&instructionStrBuffer);
 
 	disassemblyTextCtrl->SetText(disassemblyText);
 	ApplyAsmHighlighting();
