@@ -330,7 +330,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	{
 		// check if register argument
 		struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, targetReg);
-		if (regArg)
+		if (regArg && instructionIndex != -1) // instructionIndex may be -1 if it started at 0
 		{
 			expressions[expressionIndex] = initializeJdcStr();
 
