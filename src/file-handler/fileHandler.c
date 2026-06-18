@@ -347,14 +347,20 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr*
 
 unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)
 {
+	unsigned long long maybeResult = 0;
 	for (int i = 0; i < numOfSections; i++)
 	{
-		if (rva >= sections[i].virtualAddress && rva <= sections[i].virtualAddress + sections[i].size) // if it is equal to virtualAddress + size it isn't actually in the section, but the resulting file offset is used as a max offset
+		if (rva >= sections[i].virtualAddress && rva < sections[i].virtualAddress + sections[i].size)
 		{
 			if (section) { *section = &sections[i]; }
 			return (rva - sections[i].virtualAddress) + sections[i].fileOffset;
 		}
+		else if (rva == sections[i].virtualAddress + sections[i].size) 
+		{
+			if (section) { *section = 0; }
+			maybeResult = (rva - sections[i].virtualAddress) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
+		}
 	}
 
-	return 0;
+	return maybeResult;
 }
