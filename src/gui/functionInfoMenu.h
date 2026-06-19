@@ -2,7 +2,7 @@
 #include <wx/grid.h>
 #include "../decompiler/decompilationStructs.h"
 
-class FunctionInfoMenu : public wxFrame, public Utils
+class FunctionInfoMenu : public wxFrame
 {
 public:
 	FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function);

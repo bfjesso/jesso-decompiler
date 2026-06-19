@@ -2,7 +2,7 @@
 #include "guiUtils.h"
 #include <wx/clrpicker.h>
 
-class ColorsMenu : public wxFrame, public Utils
+class ColorsMenu : public wxFrame
 {
 public:
 	ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl, wxStyledTextCtrl* dataCtrl);

@@ -1,6 +1,6 @@
 #include "guiUtils.h"
 
-void Utils::CopyToClipboard(const char* txt)
+void CopyToClipboard(const char* txt)
 {
 	if (wxTheClipboard->Open())
 	{
@@ -9,7 +9,7 @@ void Utils::CopyToClipboard(const char* txt)
 	}
 }
 
-void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
+void SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 {
 	ctrl->SetReadOnly(true);
 	ctrl->SetMarginWidth(1, 0);
@@ -42,20 +42,20 @@ void Utils::SetUpStyledTextCtrl(wxStyledTextCtrl* ctrl)
 	ctrl->IndicatorSetAlpha(RED_INDICATOR, 40);
 }
 
-void Utils::ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
+void ClearStyledTextCtrl(wxStyledTextCtrl* ctrl)
 {
 	ctrl->SetReadOnly(false);
 	ctrl->SetText("");
 	ctrl->SetReadOnly(true);
 }
 
-void Utils::CenterLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line)
+void CenterLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line)
 {
 	ctrl->GotoLine(line);
 	ctrl->LineScroll(0, line - ctrl->GetFirstVisibleLine() - (ctrl->LinesOnScreen() / 2)); // this centers it
 }
 
-void Utils::HighlightLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line, enum IndicatorColor color, unsigned char gotoLine)
+void HighlightLineStyledTextCtrl(wxStyledTextCtrl* ctrl, int line, enum IndicatorColor color, unsigned char gotoLine)
 {
 	if(gotoLine)
 	{

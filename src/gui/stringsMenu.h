@@ -3,7 +3,7 @@
 #include "../fileStructs.h"
 #include <wx/grid.h>
 
-class StringsMenu : public wxFrame, public Utils
+class StringsMenu : public wxFrame
 {
 public:
 	StringsMenu();

@@ -1,7 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 
-class CalculatorMenu : public wxFrame, public Utils
+class CalculatorMenu : public wxFrame
 {
 public:
 	CalculatorMenu(wxWindow* parent, wxPoint position);

@@ -1,7 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 
-class FileHeadersMenu : public wxFrame, public Utils
+class FileHeadersMenu : public wxFrame
 {
 public:
 	FileHeadersMenu(wxWindow* parent, wxPoint position, wxString filePath);

@@ -16,7 +16,7 @@
 
 class FunctionPropertiesMenu;
 
-class MainGui : public wxFrame, public Utils
+class MainGui : public wxFrame
 {
 public:
 	MainGui();
@@ -148,7 +148,7 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-class FunctionPropertiesMenu : public wxFrame, public Utils
+class FunctionPropertiesMenu : public wxFrame
 {
 public:
 	FunctionPropertiesMenu(wxWindow* parent, wxPoint position, MainGui* main, int funcIndex);

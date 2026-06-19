@@ -3,7 +3,7 @@
 #include <wx/grid.h>
 #include "../fileStructs.h"
 
-class SectionsViewer : public wxFrame, public Utils
+class SectionsViewer : public wxFrame
 {
 public:
 	SectionsViewer(wxWindow* parent, wxPoint position, FileSection* sections, int numOfSections);

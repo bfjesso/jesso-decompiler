@@ -3,7 +3,7 @@
 #include <wx/grid.h>
 #include "../fileStructs.h"
 
-class ImportsViewer : public wxFrame, public Utils
+class ImportsViewer : public wxFrame
 {
 public:
 	ImportsViewer(wxWindow* parent, wxPoint position, ImportedFunction* imports, int numOfImports);

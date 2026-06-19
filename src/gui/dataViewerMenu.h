@@ -2,7 +2,7 @@
 #include "guiUtils.h"
 #include "../file-handler/fileHandler.h"
 
-class DataViewer : public wxFrame, public Utils
+class DataViewer : public wxFrame
 {
 public:
 	DataViewer();

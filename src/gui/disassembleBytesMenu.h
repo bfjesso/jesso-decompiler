@@ -1,7 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 
-class BytesDisassembler : public wxFrame, public Utils
+class BytesDisassembler : public wxFrame
 {
 public:
 	BytesDisassembler(wxWindow* parent, wxPoint position);
