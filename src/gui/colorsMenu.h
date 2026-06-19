@@ -1,5 +1,6 @@
 #pragma once
 #include "guiUtils.h"
+#include <wx/stc/stc.h>
 #include <wx/clrpicker.h>
 
 class ColorsMenu : public wxFrame

@@ -1,5 +1,6 @@
 #pragma once
 #include "guiUtils.h"
+#include "jdcTextCtrl.h"
 #include "../file-handler/fileHandler.h"
 
 class DataViewer : public wxFrame
@@ -10,7 +11,7 @@ public:
 	wxChoice* dataTypeChoice = nullptr;
 	wxChoice* sectionChoice = nullptr;
 	wxCheckBox* hexCheckBox = nullptr;
-	wxStyledTextCtrl* dataTextCtrl = nullptr;
+	JdcTextCtrl* dataTextCtrl = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
@@ -56,8 +57,6 @@ public:
 	void UpdateDataList(wxCommandEvent& e);
 
 	void LoadData();
-
-	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
 
 	void HighlightInstruction(unsigned long long address, int numOfBytes);
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "guiUtils.h"
+#include "jdcTextCtrl.h"
 #include <wx/grid.h>
 #include <wx/splitter.h>
-#include <wx/fdrepdlg.h>
 #include "disassembleBytesMenu.h"
 #include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
@@ -28,8 +28,8 @@ public:
 
 	wxStaticText* statusStaticText = nullptr;
 
-	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
-	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
+	JdcTextCtrl* disassemblyTextCtrl = nullptr;
+	JdcTextCtrl* decompilationTextCtrl = nullptr;
 
 	wxGrid* functionsGrid = nullptr;
 
@@ -58,16 +58,6 @@ public:
 	int currentDecompiledFunc = -1;
 
 	DecompilationParameters decompParams = { 0 };
-
-	wxFindReplaceData findData;
-	wxFindReplaceDialog* findDialog = nullptr;
-	wxStyledTextCtrl* findCtrl = nullptr;
-	wxString lastFindText = "";
-	int totalFindResults = 0;
-
-	unsigned char showAssociatedInstructions = 1;
-	unsigned char showBytesInDataViewer = 1;
-	unsigned char highlightSelectedInstructions = 1;
 	
 	enum ids 
 	{
@@ -113,37 +103,7 @@ public:
 
 	void GridRightClickOptions(wxGridEvent& e);
 
-	void StyledTextCtrlRightClickOptions(wxContextMenuEvent& e);
-
-	void OnStyledTextCtrlKeyDown(wxKeyEvent& e);
-
-	void ShowFindDialog(wxStyledTextCtrl* ctrl);
-
-	void ShowGoToAddrDialog();
-
-	void OnDisassemblyUpdateUI(wxStyledTextEvent& e);
-
-	void OnDecompilationUpdateUI(wxStyledTextEvent& e);
-
-	void ClearTextCtrlIndicators();
-
-	void OnFindDialog(wxFindDialogEvent& e);
-
-	int FindInRange(wxStyledTextCtrl* ctrl, const wxString& text, int start, int end, int flags, unsigned char forward);
-
-	int CountNumOfResults(wxStyledTextCtrl* ctrl, const wxString& text, int end, int flags);
-
-	void OnFindDialogClose(wxFindDialogEvent& e);
-
 	void CloseApp(wxCloseEvent& e);
-
-	char IsCharDigit(char c);
-
-	void ApplySyntaxHighlighting(Function* function);
-
-	void ApplyAsmHighlighting();
-
-	void ColorAllStrs(wxString text, const char* string, ColorsMenu::DecompilationColor color, unsigned char forceColor);
 
 	wxDECLARE_EVENT_TABLE();
 };
