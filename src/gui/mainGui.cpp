@@ -443,6 +443,20 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	unsigned long long currentVirtualAddress = startVA;
 	while (currentFileOffset < currentSection->fileOffset + currentSection->size)
 	{
+		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress) != -1)
+		{
+			return 1;
+		}
+
+		// this checks if it is in between two existing instructions
+		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress);
+		if (instructionIndex > 0 && instructionIndex < disassembledInstructions.size() &&
+			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
+			currentVirtualAddress < disassembledInstructions[instructionIndex].address)
+		{
+			return 0;
+		}
+
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->size - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
@@ -450,16 +464,11 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 		}
 
 		instructionBuffer->address = currentVirtualAddress;
-		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, instructionBuffer->address) != -1)
-		{
-			return 1;
-		}
 
 		currentFileOffset += instructionBuffer->numOfBytes;
 		currentVirtualAddress += instructionBuffer->numOfBytes;
 
 		// this needs to be sorted here because the jump handling may need to determine a reg's value
-		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, instructionBuffer->address);
 		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
 
 		unsigned long long jmpDst = 0;
