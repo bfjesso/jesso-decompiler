@@ -1,4 +1,5 @@
 #include "guiUtils.h"
+#include <wx/clipbrd.h>
 
 void CopyToClipboard(const char* txt)
 {

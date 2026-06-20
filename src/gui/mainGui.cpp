@@ -55,7 +55,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar = new wxMenuBar();
 	dataViewerMenu = new DataViewer();
 	stringsMenu = new StringsMenu();
-	colorsMenu = new ColorsMenu(disassemblyTextCtrl, decompilationTextCtrl, dataViewerMenu->dataTextCtrl);
+	colorsMenu = new ColorsMenu();
 
 	wxMenu* fileMenu = new wxMenu();
 	AddMenuItem(fileMenu, OpenFileID, "Open file", [&](wxCommandEvent& ce) -> void { OpenFile(); });
@@ -82,6 +82,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyTextCtrl->AddAssociatedTextCtrl(decompilationTextCtrl);
 	disassemblyTextCtrl->AddAssociatedTextCtrl(dataViewerMenu->dataTextCtrl);
 	decompilationTextCtrl->AddAssociatedTextCtrl(disassemblyTextCtrl);
+
+	colorsMenu->AddTextCtrl(decompilationTextCtrl);
+	colorsMenu->AddTextCtrl(dataViewerMenu->dataTextCtrl);
+	colorsMenu->AddTextCtrl(disassemblyTextCtrl);
+	colorsMenu->ApplyColors();
 
 	topSplitter->SplitVertically(disassemblyTextCtrl, decompilationTextCtrl, 0);
 	topSplitter->SetSashGravity(0.5);

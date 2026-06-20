@@ -1,6 +1,5 @@
 #pragma once
 #include "guiUtils.h"
-#include "colorsMenu.h"
 #include <wx/stc/stc.h>
 #include <wx/fdrepdlg.h>
 
@@ -79,5 +78,5 @@ public:
 
 	void ApplyAsmHighlighting();
 
-	void ColorAllStrs(wxString text, const char* str, ColorsMenu::DecompilationColor color, unsigned char forceColor);
+	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
 };

@@ -4,13 +4,9 @@ wxBEGIN_EVENT_TABLE(ColorsMenu, wxFrame)
 EVT_CLOSE(ColorsMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-ColorsMenu::ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl, wxStyledTextCtrl* dataCtrl) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
+ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
 {
 	SetOwnBackgroundColour(backgroundColor);
-
-	disassemblyTextCtrl = disassemblyCtrl;
-	decompilationTextCtrl = decompilationCtrl;
-	dataTextCtrl = dataCtrl;
 
 	disassemblySizer = new wxBoxSizer(wxVERTICAL);
 	decompilationSizer = new wxBoxSizer(wxVERTICAL);
@@ -75,21 +71,31 @@ ColorsMenu::ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* deco
 	vSizer->Add(applyButton, 0, wxCENTER | wxALL, 10);
 
 	SetSizerAndFit(vSizer);
+}
 
-	ApplyColors();
+void ColorsMenu::AddTextCtrl(JdcTextCtrl* ctrl) 
+{
+	textCtrls.push_back(ctrl);
 }
 
 void ColorsMenu::ApplyColors()
 {
-	for (int i = 0; i < numberOfDisassemblyColors; i++) 
+	for (int i = 0; i < textCtrls.size(); i++)
 	{
-		disassemblyTextCtrl->StyleSetForeground(i, disassemblyColorPickerCtrls[i]->GetColour());
-		dataTextCtrl->StyleSetForeground(i, disassemblyColorPickerCtrls[i]->GetColour());
-	}
-
-	for (int i = 0; i < numberOfDecompColors; i++)
-	{
-		decompilationTextCtrl->StyleSetForeground(i, decompilationColorPickerCtrls[i]->GetColour());
+		if (textCtrls[i]->ctrlType == DISASSEMBLY_CTRL_TYPE || textCtrls[i]->ctrlType == DATA_CTRL_TYPE) 
+		{
+			for (int j = 0; j < numberOfDisassemblyColors; j++) 
+			{
+				textCtrls[i]->StyleSetForeground(j, disassemblyColorPickerCtrls[j]->GetColour());
+			}
+		}
+		else if (textCtrls[i]->ctrlType == DECOMPILATION_CTRL_TYPE) 
+		{
+			for (int j = 0; j < numberOfDecompColors; j++)
+			{
+				textCtrls[i]->StyleSetForeground(j, decompilationColorPickerCtrls[j]->GetColour());
+			}
+		}
 	}
 }
 

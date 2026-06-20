@@ -171,7 +171,7 @@ void DataViewer::LoadData()
 	dataTextCtrl->SetText(dataText);
 
 	dataTextCtrl->StartStyling(0);
-	dataTextCtrl->SetStyling(dataText.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
+	dataTextCtrl->SetStyling(dataText.length(), DisassemblyColor::ADDRESS_COLOR);
 
 	int start = 0;
 	while (start < dataText.length())
@@ -181,7 +181,7 @@ void DataViewer::LoadData()
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			dataTextCtrl->StartStyling(pos);
-			dataTextCtrl->SetStyling(end - pos + 1, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+			dataTextCtrl->SetStyling(end - pos + 1, DisassemblyColor::CONSTANT_COLOR);
 
 			start = end + 1;
 		}

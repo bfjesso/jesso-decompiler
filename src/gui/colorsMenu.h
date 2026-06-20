@@ -1,16 +1,13 @@
 #pragma once
-#include "guiUtils.h"
-#include <wx/stc/stc.h>
+#include "jdcTextCtrl.h"
 #include <wx/clrpicker.h>
 
 class ColorsMenu : public wxFrame
 {
 public:
-	ColorsMenu(wxStyledTextCtrl* disassemblyCtrl, wxStyledTextCtrl* decompilationCtrl, wxStyledTextCtrl* dataCtrl);
+	ColorsMenu();
 
-	wxStyledTextCtrl* disassemblyTextCtrl = nullptr;
-	wxStyledTextCtrl* decompilationTextCtrl = nullptr;
-	wxStyledTextCtrl* dataTextCtrl = nullptr;
+	std::vector<JdcTextCtrl*> textCtrls;
 
 	wxStaticText* disassemblyLabel;
 	wxStaticText* decompilationLabel;
@@ -28,17 +25,6 @@ public:
 	wxScrolledWindow* disassemblyScrollWindow = nullptr;
 	wxScrolledWindow* decompilationScrollWindow = nullptr;
 
-	enum DisassemblyColor
-	{
-		PUNCTUATION_COLOR,
-		ADDRESS_COLOR,
-		OPCODE_COLOR,
-		REGISTER_COLOR,
-		SEGMENT_COLOR,
-		PTR_SIZE_COLOR,
-		COMMENT_DIS_COLOR,
-		CONSTANT_COLOR
-	};
 	const char* disassemblyColorNames[8] =
 	{
 		"Punctuation",
@@ -63,22 +49,6 @@ public:
 	};
 	const int numberOfDisassemblyColors = 8;
 
-	enum DecompilationColor
-	{
-		OPERATOR_COLOR,
-		LOCAL_VAR_COLOR,
-		ARGUMENT_COLOR,
-		FUNCTION_COLOR,
-		IMPORT_COLOR,
-		INTRINSIC_COLOR,
-		PRIMITIVE_COLOR,
-		KEYWORD_COLOR,
-		STRING_COLOR,
-		NUMBER_COLOR,
-		COMMENT_DECOMP_COLOR,
-		LABEL_COLOR,
-		ERROR_COLOR,
-	};
 	const char* decompColorNames[13] = 
 	{ 
 		"Operators",
@@ -118,6 +88,8 @@ public:
 		MainWindowID,
 		ApplyButtonID
 	};
+
+	void AddTextCtrl(JdcTextCtrl* ctrl);
 
 	void ApplyColors();
 

@@ -289,7 +289,7 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		int numColor = ctrlType == DISASSEMBLY_CTRL_TYPE ? ColorsMenu::DisassemblyColor::CONSTANT_COLOR : ColorsMenu::DecompilationColor::NUMBER_COLOR;
+		int numColor = ctrlType == DISASSEMBLY_CTRL_TYPE ? DisassemblyColor::CONSTANT_COLOR : DecompilationColor::NUMBER_COLOR;
 		if (GetStyleAt(start) == numColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
@@ -574,79 +574,79 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 	wxString text = GetValue();
 
 	StartStyling(0);
-	SetStyling(text.length(), ColorsMenu::DecompilationColor::OPERATOR_COLOR);
+	SetStyling(text.length(), DecompilationColor::OPERATOR_COLOR);
 
 	// stack vars
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		ColorAllStrs(text, function->stackVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->stackVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// reg vars
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
-		ColorAllStrs(text, function->regVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->regVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// returned vars
 	for (int i = 0; i < function->numOfReturnedVars; i++)
 	{
-		ColorAllStrs(text, function->returnedVars[i].name.buffer, ColorsMenu::DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, function->returnedVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->stackArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
 	for (int i = 0; i < function->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name.buffer, ColorsMenu::DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, function->regArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
 	for (int i = 0; i < functionsRef->size(); i++)
 	{
-		ColorAllStrs(text, functionsRef->data()[i].name.buffer, ColorsMenu::DecompilationColor::FUNCTION_COLOR, 0);
+		ColorAllStrs(text, functionsRef->data()[i].name.buffer, DecompilationColor::FUNCTION_COLOR, 0);
 	}
 
 	// imports
 	for (int i = 0; i < numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name.buffer, ColorsMenu::DecompilationColor::IMPORT_COLOR, 0);
+		ColorAllStrs(text, imports[i].name.buffer, DecompilationColor::IMPORT_COLOR, 0);
 	}
 
 	// intrinsic functions
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		ColorAllStrs(text, returningIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
+		ColorAllStrs(text, returningIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
 	}
 	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		ColorAllStrs(text, voidIntrinsicFuncs[i].name, ColorsMenu::DecompilationColor::INTRINSIC_COLOR, 0);
+		ColorAllStrs(text, voidIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
 	}
 
 	// calling conventions
 	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
+		ColorAllStrs(text, callingConventionStrs[i], DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
 
 	// primitive data types
 	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
+		ColorAllStrs(text, primitiveTypeStrs[i], DecompilationColor::PRIMITIVE_COLOR, 0);
 	}
-	ColorAllStrs(text, "unsigned", ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
-	ColorAllStrs(text, "sizeof", ColorsMenu::DecompilationColor::PRIMITIVE_COLOR, 0);
+	ColorAllStrs(text, "unsigned", DecompilationColor::PRIMITIVE_COLOR, 0);
+	ColorAllStrs(text, "sizeof", DecompilationColor::PRIMITIVE_COLOR, 0);
 
 	// keywords
 	const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
 	for (int i = 0; i < 11; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], ColorsMenu::DecompilationColor::KEYWORD_COLOR, 0);
+		ColorAllStrs(text, keywordStrs[i], DecompilationColor::KEYWORD_COLOR, 0);
 	}
 
 	// strings
@@ -658,7 +658,7 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			StartStyling(pos);
-			SetStyling(end - pos + 1, ColorsMenu::DecompilationColor::STRING_COLOR);
+			SetStyling(end - pos + 1, DecompilationColor::STRING_COLOR);
 
 			start = end + 1;
 		}
@@ -677,7 +677,7 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			StartStyling(pos);
-			SetStyling(end - pos + 1, ColorsMenu::DecompilationColor::COMMENT_DECOMP_COLOR);
+			SetStyling(end - pos + 1, DecompilationColor::COMMENT_DECOMP_COLOR);
 
 			start = end + 1;
 		}
@@ -697,7 +697,7 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			StartStyling(pos);
-			SetStyling(end - pos - 1, ColorsMenu::DecompilationColor::LABEL_COLOR);
+			SetStyling(end - pos - 1, DecompilationColor::LABEL_COLOR);
 
 			start = end + 1;
 		}
@@ -710,24 +710,24 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 	// regs/segs that arent variables/arguments
 	for (int i = 0; i < NUM_OF_REGISTERS; i++)
 	{
-		ColorAllStrs(text, registerStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
+		ColorAllStrs(text, registerStrs[i], DecompilationColor::ERROR_COLOR, 0);
 	}
 	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
 	{
-		ColorAllStrs(text, segmentStrs[i], ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
+		ColorAllStrs(text, segmentStrs[i], DecompilationColor::ERROR_COLOR, 0);
 	}
-	ColorAllStrs(text, "ERROR", ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
-	ColorAllStrs(text, "jumpTo", ColorsMenu::DecompilationColor::ERROR_COLOR, 0);
+	ColorAllStrs(text, "ERROR", DecompilationColor::ERROR_COLOR, 0);
+	ColorAllStrs(text, "jumpTo", DecompilationColor::ERROR_COLOR, 0);
 
 	// numbers
 	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
 	for (int i = 0; i < 17; i++)
 	{
-		ColorAllStrs(text, numberChars[i], ColorsMenu::DecompilationColor::NUMBER_COLOR, 0);
+		ColorAllStrs(text, numberChars[i], DecompilationColor::NUMBER_COLOR, 0);
 	}
 
 	// this is for when :: is part of a function name
-	ColorAllStrs(text, ":", ColorsMenu::DecompilationColor::OPERATOR_COLOR, 1);
+	ColorAllStrs(text, ":", DecompilationColor::OPERATOR_COLOR, 1);
 }
 
 void JdcTextCtrl::ApplyAsmHighlighting()
@@ -744,12 +744,12 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 		wxString asmStr = disassemblyText.substr(tabPos + 1, disassemblyText.find('\n', tabPos) - (tabPos + 1));
 
 		StartStyling(pos);
-		SetStyling(addressInfoStr.length(), ColorsMenu::DisassemblyColor::ADDRESS_COLOR);
+		SetStyling(addressInfoStr.length(), DisassemblyColor::ADDRESS_COLOR);
 
 		pos += addressInfoStr.length() + 1;
 
 		StartStyling(pos);
-		SetStyling(asmStr.length(), ColorsMenu::DisassemblyColor::PUNCTUATION_COLOR);
+		SetStyling(asmStr.length(), DisassemblyColor::PUNCTUATION_COLOR);
 
 		StartStyling(pos);
 
@@ -758,7 +758,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 		{
 			opcodeLen += strlen(getGroup1PrefixStr(instruction)) + 1;
 		}
-		SetStyling(opcodeLen, ColorsMenu::DisassemblyColor::OPCODE_COLOR);
+		SetStyling(opcodeLen, DisassemblyColor::OPCODE_COLOR);
 
 		// operands
 		int regStart = 0;
@@ -771,7 +771,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 				wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
 				int loc = asmStr.find(regStr, regStart);
 				StartStyling(pos + loc);
-				SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+				SetStyling(regStr.length(), DisassemblyColor::REGISTER_COLOR);
 				regStart = loc + regStr.length();
 			}
 			else if (instruction->operands[i].type == MEM_ADDRESS)
@@ -781,7 +781,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
 					int loc = asmStr.find(regStr, regStart);
 					StartStyling(pos + loc);
-					SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+					SetStyling(regStr.length(), DisassemblyColor::REGISTER_COLOR);
 					regStart = loc + regStr.length();
 				}
 
@@ -790,7 +790,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
 					int loc = asmStr.find(regStr, regStart);
 					StartStyling(pos + loc);
-					SetStyling(regStr.length(), ColorsMenu::DisassemblyColor::REGISTER_COLOR);
+					SetStyling(regStr.length(), DisassemblyColor::REGISTER_COLOR);
 					regStart = loc + regStr.length();
 				}
 
@@ -799,7 +799,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
 					int loc = asmStr.find(segStr, segStart);
 					StartStyling(pos + loc);
-					SetStyling(segStr.length() - 1, ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+					SetStyling(segStr.length() - 1, DisassemblyColor::SEGMENT_COLOR);
 					segStart = loc + segStr.length();
 				}
 
@@ -809,7 +809,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 					wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
 					int loc = asmStr.find(sizeStr, ptrSizeStart);
 					StartStyling(pos + loc);
-					SetStyling(sizeStr.length(), ColorsMenu::DisassemblyColor::PTR_SIZE_COLOR);
+					SetStyling(sizeStr.length(), DisassemblyColor::PTR_SIZE_COLOR);
 					ptrSizeStart = loc + sizeStr.length();
 				}
 			}
@@ -818,7 +818,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 				wxString segStr = wxString(segmentStrs[instruction->operands[i].segment]);
 				int loc = asmStr.find(segStr, segStart);
 				StartStyling(pos + loc);
-				SetStyling(segStr.length(), ColorsMenu::DisassemblyColor::SEGMENT_COLOR);
+				SetStyling(segStr.length(), DisassemblyColor::SEGMENT_COLOR);
 				segStart = loc + segStr.length();
 			}
 		}
@@ -841,7 +841,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 				}
 
 				StartStyling(pos + num);
-				SetStyling(end - num, ColorsMenu::DisassemblyColor::CONSTANT_COLOR);
+				SetStyling(end - num, DisassemblyColor::CONSTANT_COLOR);
 
 				start = end + 1;
 			}
@@ -856,14 +856,14 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 		if (commentStart != wxNOT_FOUND)
 		{
 			StartStyling(pos + commentStart);
-			SetStyling(asmStr.length() - commentStart, ColorsMenu::DisassemblyColor::COMMENT_DIS_COLOR);
+			SetStyling(asmStr.length() - commentStart, DisassemblyColor::COMMENT_DIS_COLOR);
 		}
 
 		pos += asmStr.size();
 	}
 }
 
-void JdcTextCtrl::ColorAllStrs(wxString text, const char* str, ColorsMenu::DecompilationColor color, unsigned char forceColor)
+void JdcTextCtrl::ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor)
 {
 	if (!str || !strcmp(str, ""))
 	{
@@ -881,7 +881,7 @@ void JdcTextCtrl::ColorAllStrs(wxString text, const char* str, ColorsMenu::Decom
 
 			if (forceColor ||
 				GetStyleAt(pos) == color || // incase there are two strs that are equal except for one having more text at the end
-				GetStyleAt(pos) == ColorsMenu::DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
+				GetStyleAt(pos) == DecompilationColor::OPERATOR_COLOR) // only apply color if it hasn't been colored yet
 			{
 				StartStyling(pos);
 				SetStyling(strlen(str), color);
