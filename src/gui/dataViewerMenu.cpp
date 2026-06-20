@@ -165,7 +165,7 @@ void DataViewer::LoadData()
 		}
 
 		dataText += lineBuffer;
-		dataText += '\n';
+		dataText[dataText.length() - 1] = '\n';
 	}
 
 	dataTextCtrl->SetText(dataText);

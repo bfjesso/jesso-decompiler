@@ -130,10 +130,7 @@ void JdcTextCtrl::ShowGoToAddrDialog()
 				unsigned long long sectionStart = section->virtualAddress + dataViewer->imageBase;
 				if (address >= sectionStart && address < sectionStart + section->size)
 				{
-					int row = (address - sectionStart) / dataViewer->bytesPerLine;
-					GotoLine(row);
-					int pos = PositionFromLine(row);
-					SetSelection(pos, pos + GetLineLength(row) - 1);
+					CenterLine((address - sectionStart) / dataViewer->bytesPerLine);
 				}
 				else
 				{
