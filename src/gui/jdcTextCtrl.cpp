@@ -3,14 +3,10 @@
 
 #include "../decompiler/intrinsics.h"
 #include "../disassembler/disassembler.h"
-#include "../decompiler/decompilationUtils.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlType type, std::vector<DisassembledInstruction>* instructions, std::vector<Function>* functions, int* currentFunc) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlType type) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
 {
 	ctrlType = type;
-	instructionsRef = instructions;
-	functionsRef = functions;
-	currentDecompiledFuncRef = currentFunc;
 
 	Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { RightClickOptions(e); });
 	Bind(wxEVT_CHAR_HOOK, &JdcTextCtrl::OnKeyDown, this);
@@ -95,54 +91,6 @@ void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned ch
 void JdcTextCtrl::ClearIndicators()
 {
 	IndicatorClearRange(0, GetTextLength());
-}
-
-void JdcTextCtrl::AddAssociatedTextCtrl(JdcTextCtrl* textCtrl) 
-{
-	associatedTextCtrls.push_back(textCtrl);
-}
-
-void JdcTextCtrl::ShowGoToAddrDialog()
-{
-	wxTextEntryDialog dlg(this, "", "Go to address");
-	if (dlg.ShowModal() == wxID_OK)
-	{
-		wxString txt = dlg.GetValue();
-		unsigned long long address = 0;
-		if (txt.ToULongLong(&address, 16))
-		{
-			if (ctrlType == DISASSEMBLY_CTRL_TYPE) 
-			{
-				int index = findInstructionByAddress(instructionsRef->data(), 0, instructionsRef->size() - 1, address);
-				if (index == -1)
-				{
-					wxMessageBox("Address not found", "Failed to find address");
-				}
-				else
-				{
-					CenterLine(index);
-				}
-			}
-			else if (ctrlType == DATA_CTRL_TYPE) 
-			{
-				DataViewer* dataViewer = (DataViewer*)(GetParent());
-				FileSection* section = &dataViewer->sections[dataViewer->sectionChoice->GetSelection()];
-				unsigned long long sectionStart = section->virtualAddress + dataViewer->imageBase;
-				if (address >= sectionStart && address < sectionStart + section->size)
-				{
-					CenterLine((address - sectionStart) / dataViewer->bytesPerLine);
-				}
-				else
-				{
-					wxMessageBox("Address not in currently selected section", "Failed to find address");
-				}
-			}
-		}
-		else
-		{
-			wxMessageBox("Not valid hex number", "Failed to find address");
-		}
-	}
 }
 
 void JdcTextCtrl::ShowFindDialog()
@@ -263,6 +211,12 @@ char JdcTextCtrl::IsCharDigit(char c)
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
 }
 
+void JdcTextCtrl::AddRightClickOption(wxString name, char commandKey, unsigned char* check, const std::function<void(wxCommandEvent&)>& function)
+{
+	struct RightClickOption option = { name, commandKey, check, function };
+	additionalRightClickOptions.push_back(option);
+}
+
 void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
@@ -359,31 +313,6 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 		ShowFindDialog();
 		}, ID_FIND);
 
-	if (ctrlType != DECOMPILATION_CTRL_TYPE) 
-	{
-		menu.Append(ID_GO_TO_ADDR, "Go to address");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			ShowGoToAddrDialog();
-			}, ID_GO_TO_ADDR);
-	}
-
-	if (ctrlType == DISASSEMBLY_CTRL_TYPE)
-	{
-		for (int i = 0; i < associatedTextCtrls.size(); i++) 
-		{
-			if (associatedTextCtrls[i]->ctrlType == DATA_CTRL_TYPE && associatedTextCtrls[i]->IsShown()) 
-			{
-				menu.AppendCheckItem(ID_SHOW_BYTES, "Show bytes in data viewer");
-				menu.Check(ID_SHOW_BYTES, showBytesInDataViewer);
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
-					showBytesInDataViewer = e.IsChecked();
-					ClearIndicators();
-					associatedTextCtrls[i]->ClearIndicators();
-					}, ID_SHOW_BYTES);
-			}
-		}
-	}
-
 	menu.AppendCheckItem(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, "Highlight selected lines");
 	menu.Check(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, highlightSelectedLines);
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
@@ -391,40 +320,50 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 		ClearIndicators();
 		}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
 
-	if (ctrlType == DISASSEMBLY_CTRL_TYPE)
+	for (int i = 0; i < additionalRightClickOptions.size() && i < 100; i++)
 	{
-		menu.AppendCheckItem(ID_SHOW_ASSOCIATED, "Show associated decompilation lines");
+		if (additionalRightClickOptions[i].check != 0)
+		{
+			menu.AppendCheckItem(i, additionalRightClickOptions[i].name);
+			menu.Check(i, *additionalRightClickOptions[i].check);
+			menu.Bind(wxEVT_MENU, additionalRightClickOptions[i].function, i);
+		}
+		else
+		{
+			menu.Append(i, additionalRightClickOptions[i].name);
+			menu.Bind(wxEVT_MENU, additionalRightClickOptions[i].function, i);
+		}
 	}
-	else
-	{
-		menu.AppendCheckItem(ID_SHOW_ASSOCIATED, "Show associated instructions");
-	}
-
-	menu.Check(ID_SHOW_ASSOCIATED, showAssociatedInstructions);
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
-		showAssociatedInstructions = e.IsChecked();
-		ClearIndicators();
-		}, ID_SHOW_ASSOCIATED);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
 void JdcTextCtrl::OnKeyDown(wxKeyEvent& e)
 {
-	if ((e.GetModifiers() & wxMOD_CONTROL) != 0)
+	int key = e.GetKeyCode();
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
 	{
-		int key = e.GetKeyCode();
-		if (key == 'F' || key == 'f')
+		if (key == 'F')
 		{
 			ShowFindDialog();
 		}
-		if ((key == 'G' || key == 'g') && ctrlType != DECOMPILATION_CTRL_TYPE)
+
+		for (int i = 0; i < additionalRightClickOptions.size(); i++)
 		{
-			ShowGoToAddrDialog();
+			if (key == additionalRightClickOptions[i].commandKey) 
+			{
+				wxCommandEvent tmp;
+				additionalRightClickOptions[i].function(tmp);
+			}
 		}
 	}
 
 	e.Skip();
+}
+
+void JdcTextCtrl::SetAdditionalOnUpdateUI(const std::function<void()>& function)
+{
+	additionalOnUpdateUI = function;
 }
 
 void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
@@ -435,7 +374,12 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	}
 
 	ClearIndicators();
-	int selectedLine = GetCurrentLine();
+	SetIndicatorCurrent(YELLOW_INDICATOR); // used later to check if the line is already highlighted
+
+	if (additionalOnUpdateUI) 
+	{
+		additionalOnUpdateUI();
+	}
 
 	// brace highlighting
 	int pos = GetCurrentPos();
@@ -464,9 +408,14 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	{
 		BraceHighlight(-1, -1);
 	}
+	
+	if (highlightSelectedLines && GetIndicatorCurrent() == YELLOW_INDICATOR)
+	{
+		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
+	}
 
 	// highlighting other instances of selected text
-	if (ctrlType == DECOMPILATION_CTRL_TYPE) 
+	if (ctrlType == DECOMPILATION_CTRL_TYPE)
 	{
 		wxString selection = GetSelectedText();
 		if (selection != "")
@@ -488,88 +437,14 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 			}
 		}
 	}
-	
-	// associated highlighting
-	unsigned char isAlreadyHighlighted = 0;
-	for (int i = 0; i < associatedTextCtrls.size(); i++)
-	{
-		if (!associatedTextCtrls[i]) { continue; }
-		associatedTextCtrls[i]->ClearIndicators();
-
-		if (ctrlType == DISASSEMBLY_CTRL_TYPE)
-		{
-			if (showAssociatedInstructions && associatedTextCtrls[i]->ctrlType == DECOMPILATION_CTRL_TYPE)
-			{
-				if (associatedTextCtrls[i]->currentDecompiledFuncRef && *associatedTextCtrls[i]->currentDecompiledFuncRef != -1)
-				{
-					struct Function* function = &functionsRef->data()[*associatedTextCtrls[i]->currentDecompiledFuncRef];
-					if (selectedLine >= function->firstInstructionIndex && selectedLine <= function->lastInstructionIndex)
-					{
-						for (int j = 0; j < function->numOfLines; j++)
-						{
-							struct AssociatedInstructions* a = &function->associatedInstructions[j];
-							for (int k = 0; k < a->numOfIndexes; k++)
-							{
-								if (a->indexes[k] == selectedLine)
-								{
-									associatedTextCtrls[i]->HighlightLine(j, PURPLE_INDICATOR, 1);
-									break;
-								}
-							}
-						}
-
-						HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
-						isAlreadyHighlighted = 1;
-					}
-				}
-			}
-			else if (showBytesInDataViewer && associatedTextCtrls[i]->ctrlType == DATA_CTRL_TYPE)
-			{
-				DataViewer* dataViewer = (DataViewer*)(associatedTextCtrls[i]->GetParent());
-				if (dataViewer && dataViewer->IsShown()) 
-				{
-					dataViewer->HighlightInstruction(instructionsRef->data()[selectedLine].address, instructionsRef->data()[selectedLine].numOfBytes);
-					HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
-					isAlreadyHighlighted = 1;
-				}
-			}
-		}
-		else if (ctrlType == DECOMPILATION_CTRL_TYPE) 
-		{
-			if (showAssociatedInstructions && currentDecompiledFuncRef && *currentDecompiledFuncRef != -1) 
-			{
-				struct Function* function = &functionsRef->data()[*currentDecompiledFuncRef];
-				if (selectedLine < function->associatedInstructionsBufferLen) 
-				{
-					struct AssociatedInstructions* a = &function->associatedInstructions[selectedLine];
-
-					for (int j = 0; j < a->numOfIndexes; j++)
-					{
-						associatedTextCtrls[i]->HighlightLine(a->indexes[j], PURPLE_INDICATOR, 1);
-					}
-
-					HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
-					isAlreadyHighlighted = 1;
-				}
-			}
-		}
-	}
-
-	// highlighting selected line
-	if (highlightSelectedLines && !isAlreadyHighlighted)
-	{
-		HighlightLine(selectedLine, YELLOW_INDICATOR, 0);
-	}
 }
 
-void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfImports)
+void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params)
 {
-	if (!currentDecompiledFuncRef || *currentDecompiledFuncRef == -1) 
+	if (!params || !params->currentFunc)
 	{
 		return;
 	}
-	
-	struct Function* function = &functionsRef->data()[*currentDecompiledFuncRef];
 	
 	wxString text = GetValue();
 
@@ -577,45 +452,45 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 	SetStyling(text.length(), DecompilationColor::OPERATOR_COLOR);
 
 	// stack vars
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
-		ColorAllStrs(text, function->stackVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// reg vars
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		ColorAllStrs(text, function->regVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// returned vars
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 	{
-		ColorAllStrs(text, function->returnedVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
 	}
 
 	// stack args
-	for (int i = 0; i < function->numOfStackArgs; i++)
+	for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, function->stackArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// reg args
-	for (int i = 0; i < function->numOfRegArgs; i++)
+	for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, function->regArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+		ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
 	}
 
 	// functions
-	for (int i = 0; i < functionsRef->size(); i++)
+	for (int i = 0; i < params->numOfFunctions; i++)
 	{
-		ColorAllStrs(text, functionsRef->data()[i].name.buffer, DecompilationColor::FUNCTION_COLOR, 0);
+		ColorAllStrs(text, params->functions[i].name.buffer, DecompilationColor::FUNCTION_COLOR, 0);
 	}
 
 	// imports
-	for (int i = 0; i < numOfImports; i++)
+	for (int i = 0; i < params->numOfImports; i++)
 	{
-		ColorAllStrs(text, imports[i].name.buffer, DecompilationColor::IMPORT_COLOR, 0);
+		ColorAllStrs(text, params->imports[i].name.buffer, DecompilationColor::IMPORT_COLOR, 0);
 	}
 
 	// intrinsic functions
@@ -730,14 +605,13 @@ void JdcTextCtrl::ApplySyntaxHighlighting(ImportedFunction* imports, int numOfIm
 	ColorAllStrs(text, ":", DecompilationColor::OPERATOR_COLOR, 1);
 }
 
-void JdcTextCtrl::ApplyAsmHighlighting()
+void JdcTextCtrl::ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions)
 {
-	int numOfInstructions = instructionsRef->size();
 	int pos = 0;
 	wxString disassemblyText = GetValue();
 	for (int i = 0; i < numOfInstructions; i++)
 	{
-		struct DisassembledInstruction* instruction = &(instructionsRef->data()[i]);
+		struct DisassembledInstruction* instruction = &(instructions[i]);
 
 		int tabPos = disassemblyText.find('\t', pos);
 		wxString addressInfoStr = disassemblyText.substr(pos, tabPos - pos);

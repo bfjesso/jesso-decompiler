@@ -82,7 +82,7 @@ void ColorsMenu::ApplyColors()
 {
 	for (int i = 0; i < textCtrls.size(); i++)
 	{
-		if (textCtrls[i]->ctrlType == DISASSEMBLY_CTRL_TYPE || textCtrls[i]->ctrlType == DATA_CTRL_TYPE) 
+		if (textCtrls[i]->ctrlType == DISASSEMBLY_CTRL_TYPE) 
 		{
 			for (int j = 0; j < numberOfDisassemblyColors; j++) 
 			{

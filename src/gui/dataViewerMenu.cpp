@@ -26,7 +26,30 @@ DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint
 	hexCheckBox->SetOwnForegroundColour(textColor);
 	hexCheckBox->SetValue(true);
 
-	dataTextCtrl = new JdcTextCtrl(this, wxSize(500, 250), DATA_CTRL_TYPE, 0, 0, 0);
+	dataTextCtrl = new JdcTextCtrl(this, wxSize(500, 250), DISASSEMBLY_CTRL_TYPE);
+	dataTextCtrl->AddRightClickOption("Go to address", 'G', 0, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Go to address");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			unsigned long long address = 0;
+			if (txt.ToULongLong(&address, 16))
+			{
+				FileSection* section = &sections[sectionChoice->GetSelection()];
+				unsigned long long sectionStart = section->virtualAddress + imageBase;
+				if (address >= sectionStart && address < sectionStart + section->size)
+				{
+					dataTextCtrl->CenterLine((address - sectionStart) / bytesPerLine);
+					return;
+				}
+
+				wxMessageBox("Address not in currently selected section", "Failed to find address");
+				return;
+			}
+
+			wxMessageBox("Not valid hex number", "Failed to find address");
+		}
+	});
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);

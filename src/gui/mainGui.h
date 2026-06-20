@@ -31,6 +31,10 @@ public:
 	JdcTextCtrl* disassemblyTextCtrl = nullptr;
 	JdcTextCtrl* decompilationTextCtrl = nullptr;
 
+	unsigned char showAssociatedDecompiledLines = 1;
+	unsigned char showAssociatedInstructions = 1;
+	unsigned char showBytesInDataViewer = 1;
+
 	wxGrid* functionsGrid = nullptr;
 
 	wxSplitterWindow* mainSplitter = nullptr;
