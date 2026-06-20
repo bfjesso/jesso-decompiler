@@ -228,6 +228,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		return sprintfJdc(result, 0, "0x%llX", params->instructions[instructionIndex + 1].address);
 	}
 
+	int ogInstructionIndex = instructionIndex;
+
 	struct RegisterVariable* regVar = getRegVarByReg(params->currentFunc, targetReg);
 	if (regVar)
 	{
@@ -330,11 +332,11 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	{
 		// check if register argument
 		struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, targetReg);
-		if (regArg && instructionIndex != -1) // instructionIndex may be -1 if it started at 0
+		if (regArg)
 		{
 			expressions[expressionIndex] = initializeJdcStr();
 
-			struct DataType targetType = getRegisterDataType(params->instructions[instructionIndex].opcode, targetReg);
+			struct DataType targetType = getRegisterDataType(params->instructions[ogInstructionIndex].opcode, targetReg);
 			if (!compareDataTypes(targetType, regArg->dataType))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
