@@ -82,6 +82,11 @@ void DataViewer::LoadData()
 			{
 				break;
 			}
+			else if (i + j + typeSize > sections[sectionSelection].size)
+			{
+				typeSelection = 0;
+				typeSize = 1;
+			}
 			
 			switch (typeSelection)
 			{
