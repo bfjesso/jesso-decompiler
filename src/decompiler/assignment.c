@@ -11,7 +11,7 @@ unsigned char checkForAssignment(struct DecompilationParameters* params, int ins
 		return 0;
 	}
 
-	if (currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0))
+	if (currentInstruction->numOfOperands > 0 && currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0))
 	{
 		return 1;
 	}
@@ -31,7 +31,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 {
 	struct DisassembledInstruction* currentInstruction = &(params->instructions[instructionIndex]);
 
-	for (int i = 0; i < 4; i++) 
+	for (int i = 0; i < currentInstruction->numOfOperands; i++)
 	{
 		if (currentInstruction->operands[i].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, i, 0))
 		{

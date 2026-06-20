@@ -119,7 +119,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 	}
 	
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == MEM_ADDRESS)
@@ -255,7 +255,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 			return 1;
 		}
 
-		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
+		if (instruction->opcode == IMUL && instruction->numOfOperands == 1)
 		{
 			if (specificReg)
 			{
@@ -285,7 +285,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 	else if (compareRegisters(reg, DX))
 	{
-		if (instruction->opcode == IMUL && instruction->operands[1].type == NO_OPERAND)
+		if (instruction->opcode == IMUL && instruction->numOfOperands == 1)
 		{
 			if (specificReg) 
 			{ 
@@ -324,7 +324,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		}
 	}
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))

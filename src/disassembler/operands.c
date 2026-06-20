@@ -4,30 +4,35 @@
 #include "modRM.h"
 #include "registers.h"
 
-unsigned char handleOperands(struct DisassemblyParameters* params, struct Operand* result)
+#include <stdlib.h>
+
+unsigned char handleOperands(struct DisassemblyParameters* params, struct DisassembledInstruction* result)
 {
-	int operandIndex = 0; // see Hps ?
+	struct Operand operands[4] = { 0 };
+
+	unsigned char is64BitOperandSize = 0;
+	if (params->is64BitMode && params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) { is64BitOperandSize = 1; }
+	else if (params->is64BitMode && params->opcode.opcodeSuperscript == f64) { is64BitOperandSize = 1; }
+	else if (params->rexPrefix.W) { is64BitOperandSize = 1; }
+
+	unsigned char vectorLength = 16;
+	if (params->evexPrefix.LL == 0b10) { vectorLength = 64; }
+	else if (params->opcode.opcodeSuperscript == f256 || params->vexPrefix.L || params->evexPrefix.LL == 0b01) { vectorLength = 32; }
+	
+	int operandIndex = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		enum OperandCode currentOperandCode = params->opcode.operands[i];
-		struct Operand* currentOperand = &(result[operandIndex]);
+		struct Operand* currentOperand = &(operands[operandIndex]);
 
-		if (params->opcode.mnemonic == NO_MNEMONIC) { break; }
-
-		unsigned char is64BitOperandSize = 0;
-		if (params->is64BitMode && params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) { is64BitOperandSize = 1; }
-		else if (params->is64BitMode && params->opcode.opcodeSuperscript == f64) { is64BitOperandSize = 1; }
-		else if (params->rexPrefix.W) { is64BitOperandSize = 1; }
-
-		unsigned char vectorLength = 16;
-		if (params->evexPrefix.LL == 0b10) { vectorLength = 64; }
-		else if (params->opcode.opcodeSuperscript == f256 || params->vexPrefix.L || params->evexPrefix.LL == 0b01) { vectorLength = 32; }
+		if (currentOperandCode == NO_OPERAND_CODE) 
+		{
+			break;
+		}
 
 		unsigned char operandSize;
 		switch (currentOperandCode)
 		{
-		case NO_OPERAND_CODE:
-			break;
 		case ONE:
 			currentOperand->type = IMMEDIATE;
 			currentOperand->immediate.value = 1;
@@ -463,7 +468,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 
 		if (currentOperandCode != NO_OPERAND_CODE) 
 		{
-			currentOperand = &(result[operandIndex]); // operandIndex may have been decremented
+			currentOperand = &(operands[operandIndex]); // operandIndex may have been decremented
 			if (currentOperand->type == NO_OPERAND) 
 			{
 				return 0;
@@ -488,6 +493,21 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Operan
 		operandIndex++;
 	}
 
+	if (operandIndex > 0) 
+	{
+		result->operands = (struct Operand*)calloc(operandIndex, sizeof(struct Operand));
+		if (!result->operands)
+		{
+			return 0;
+		}
+
+		for (int i = 0; i < operandIndex; i++)
+		{
+			result->operands[i] = operands[i];
+		}
+	}
+	
+	result->numOfOperands = operandIndex;
 	return 1;
 }
 

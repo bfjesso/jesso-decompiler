@@ -392,6 +392,12 @@ void MainGui::ClearData()
 	disassemblyTextCtrl->ClearText();
 	decompilationTextCtrl->ClearText();
 
+	int numOfInstructions = disassembledInstructions.size();
+	for (int i = 0; i < numOfInstructions; i++)
+	{
+		free(disassembledInstructions[i].operands);
+	}
+
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
 
@@ -540,8 +546,6 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 
 			memset(instructionBuffer, 0, sizeof(struct DisassembledInstruction));
 			instructionBuffer->opcode = DATA;
-			instructionBuffer->operands[0].type = IMMEDIATE;
-			instructionBuffer->operands[0].immediate.size = 1;
 			instructionBuffer->numOfBytes = 1;
 
 			for (int i = 0; i < numOfBytes; i++) 
@@ -552,7 +556,11 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 				}
 				
 				instructionBuffer->address = currentVirtualAddress;
+				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
 				instructionBuffer->operands[0].immediate.value = fileBytes[currentFileOffset];
+				instructionBuffer->operands[0].type = IMMEDIATE;
+				instructionBuffer->operands[0].immediate.size = 1;
+				instructionBuffer->numOfOperands = 1;
 				
 				currentFileOffset++;
 				currentVirtualAddress++;

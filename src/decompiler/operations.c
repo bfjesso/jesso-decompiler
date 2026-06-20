@@ -324,12 +324,14 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 
 static unsigned char decompileIMUL(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
 {
-	struct Operand* firstOperand = &params->instructions[instructionIndex].operands[0];
-	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	struct Operand* thirdOperand = &params->instructions[instructionIndex].operands[2];
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	struct Operand* firstOperand = &instruction->operands[0];
 	
-	if (thirdOperand->type != NO_OPERAND)
+	if (instruction->numOfOperands == 3)
 	{
+		struct Operand* secondOperand = &instruction->operands[1];
+		struct Operand* thirdOperand = &instruction->operands[2];
+		
 		struct JdcStr decompiledThirdOperand = initializeJdcStr();
 		if (!decompileOperand(params, instructionIndex, thirdOperand, 1, &decompiledThirdOperand))
 		{
@@ -391,7 +393,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		freeJdcStr(&decompiledThirdOperand);
 		return 1;
 	}
-	else if (secondOperand->type != NO_OPERAND) 
+	else if (instruction->numOfOperands == 2) 
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " * ", " *= ", result);
 	}

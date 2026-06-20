@@ -767,7 +767,7 @@ void JdcTextCtrl::ApplyAsmHighlighting()
 		int regStart = 0;
 		int segStart = 0;
 		int ptrSizeStart = 0;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < instruction->numOfOperands; i++)
 		{
 			if (instruction->operands[i].type == REGISTER)
 			{

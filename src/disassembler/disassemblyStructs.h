@@ -216,7 +216,10 @@ struct DisassemblyParameters
 struct DisassembledInstruction
 {
 	enum Mnemonic opcode;
-	struct Operand operands[4];
+
+	struct Operand* operands;
+	unsigned char numOfOperands;
+
 	enum LegacyPrefix group1Prefix;
 
 	unsigned long long address;

@@ -12,7 +12,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 	{
 		if (params->currentFunc->lastInstructionIndex == 0) // this is for when this function is called in findNextFunction
 		{
-			if (instruction->opcode == RET_NEAR && instruction->operands[0].type != NO_OPERAND) // this isn't checked in findNextFunction because this function can return 1 if there is a jmp to a return instruction
+			if (instruction->opcode == RET_NEAR && instruction->numOfOperands == 1) // this isn't checked in findNextFunction because this function can return 1 if there is a jmp to a return instruction
 			{
 				params->currentFunc->callingConvention = __STDCALL;
 			}
@@ -65,7 +65,7 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = startInstructionIndex; i <= lastInstruction; i++)
 	{
-		if ((params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0)) ||
+		if ((params->instructions[i].numOfOperands > 0 && params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0)) ||
 			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode) | isOpcodeJmp(params->instructions[i].opcode))
 		{
 			return 0;

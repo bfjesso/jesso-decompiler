@@ -128,7 +128,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 		if (instruction->opcode == IMUL)
 		{
-			if (instruction->operands[2].type != NO_OPERAND) 
+			if (instruction->numOfOperands == 3) 
 			{
 				if (overwrites != 0)
 				{
@@ -136,7 +136,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 				}
 				return 1;
 			}
-			else if (instruction->operands[1].type == NO_OPERAND) 
+			else if (instruction->numOfOperands == 1) 
 			{
 				return 0;
 			}

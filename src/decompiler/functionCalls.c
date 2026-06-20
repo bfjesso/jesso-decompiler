@@ -101,7 +101,8 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			stackArgsFound++;
 			addAssociatedInstruction(params->currentFunc, i);
 		}
-		else if (currentInstruction->operands[0].type == MEM_ADDRESS && (compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
+		else if (currentInstruction->numOfOperands > 0 && currentInstruction->operands[0].type == MEM_ADDRESS && 
+			(compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
 		{
 			struct JdcStr argStr = initializeJdcStr();
 			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &argStr)) // this should just get the stack var or arg

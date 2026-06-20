@@ -234,7 +234,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 		// checking for stack arguments and stack vars
 		long long stackFrameSize = getStackFrameSizeAtInstruction(params, i);
 		unsigned char overwrites = 0;
-		for (int j = 3; j >= 0; j--)
+		for (int j = currentInstruction->numOfOperands - 1; j >= 0; j--)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 			if (isOperandStackArg(currentOperand, stackFrameSize))
@@ -458,8 +458,8 @@ void freeFunction(struct Function* function)
 }
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction) 
-{
-	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)) 
+{	
+	if (instruction->numOfOperands == 0 || (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)))
 	{
 		return 0;
 	}

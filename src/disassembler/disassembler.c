@@ -48,7 +48,7 @@ unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxByt
 		return 0;
 	}
 
-	if (!handleOperands(&params, (struct Operand*)(&result->operands)))
+	if (!handleOperands(&params, result))
 	{
 		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
 		return 0;
@@ -74,10 +74,8 @@ unsigned char instructionToStr(struct DisassembledInstruction* instruction, stru
 
 	strcatJdc(result, mnemonicStrs[instruction->opcode]);
 
-	for (int i = 0; i < 4; i++) 
+	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (instruction->operands[i].type == NO_OPERAND) { continue; }
-
 		if (i != 0) 
 		{
 			strcatJdc(result, ", ");

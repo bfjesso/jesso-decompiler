@@ -73,7 +73,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 		}
 	}
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
@@ -156,7 +156,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		}
 	}
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (intrinsicFunc->operandsToDecompile[i])
 		{
