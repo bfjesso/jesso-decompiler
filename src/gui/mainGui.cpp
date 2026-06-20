@@ -454,11 +454,11 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			return 1;
 		}
 
-		// this checks if it is in between two existing instructions
+		// this checks if the address overlaps with an existing instruction
 		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress);
 		if (instructionIndex > 0 && instructionIndex < disassembledInstructions.size() &&
 			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
-			currentVirtualAddress < disassembledInstructions[instructionIndex].address)
+			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
 		{
 			return 0;
 		}
