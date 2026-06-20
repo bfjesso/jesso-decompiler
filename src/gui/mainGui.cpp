@@ -8,7 +8,6 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
-EVT_GRID_CELL_RIGHT_CLICK(MainGui::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
@@ -23,6 +22,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	disassemblyTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DISASSEMBLY_CTRL_TYPE);
 	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DECOMPILATION_CTRL_TYPE);
+	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150), DECOMPILATION_CTRL_TYPE);
+	functionsTextCtrl->SetExtraAscent(5);
+	functionsTextCtrl->SetExtraDescent(5);
 
 	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
 		decompilationTextCtrl->ClearIndicators();
@@ -110,30 +112,29 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		decompilationTextCtrl->ClearIndicators();
 	});
 
-	functionsGrid = new wxGrid(mainSplitter, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
-	functionsGrid->SetLabelBackgroundColour(foregroundColor);
-	functionsGrid->SetLabelTextColour(textColor);
-	functionsGrid->SetDefaultCellBackgroundColour(gridColor);
-	functionsGrid->SetDefaultCellTextColour(textColor);
-	functionsGrid->CreateGrid(0, 4);
-	functionsGrid->EnableGridLines(false);
-	functionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	functionsGrid->SetScrollRate(0, 10);
-	functionsGrid->SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
-	functionsGrid->SetCellHighlightPenWidth(0);
-	functionsGrid->SetCellHighlightROPenWidth(0);
-	functionsGrid->DisableDragRowSize();
-	functionsGrid->EnableEditing(false);
-	functionsGrid->SetColLabelValue(0, "Address");
-	functionsGrid->SetColLabelValue(1, "Calling convention");
-	functionsGrid->SetColLabelValue(2, "Name");
-	functionsGrid->SetColLabelValue(3, "Number of instructions");
-	functionsGrid->HideRowLabels();
-	functionsGrid->SetColSize(0, 200);
-	functionsGrid->SetColSize(1, 200);
-	functionsGrid->SetColSize(2, 200);
-	functionsGrid->SetColSize(3, 9999);
-	functionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+	functionsTextCtrl->AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsTextCtrl->GetCurrentLine();
+		if (selectedLine >= 0 && selectedLine < functions.size()) 
+		{
+			DecompileFunction(selectedLine);
+		}
+	});
+
+	functionsTextCtrl->AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsTextCtrl->GetCurrentLine();
+		if (selectedLine >= 0 && selectedLine < functions.size())
+		{
+			new FunctionInfoMenu(this, GetPosition(), disassembledInstructions.data(), &functions[selectedLine]);
+		}
+	});
+
+	functionsTextCtrl->AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsTextCtrl->GetCurrentLine();
+		if (selectedLine >= 0 && selectedLine < functions.size())
+		{
+			new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
+		}
+	});
 
 	menuBar = new wxMenuBar();
 	dataViewerMenu = new DataViewer();
@@ -165,13 +166,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu->AddTextCtrl(decompilationTextCtrl);
 	colorsMenu->AddTextCtrl(dataViewerMenu->dataTextCtrl);
 	colorsMenu->AddTextCtrl(disassemblyTextCtrl);
+	colorsMenu->AddTextCtrl(functionsTextCtrl);
 	colorsMenu->ApplyColors();
 
 	topSplitter->SplitVertically(disassemblyTextCtrl, decompilationTextCtrl, 0);
 	topSplitter->SetSashGravity(0.5);
 	topSplitter->SetMinimumPaneSize(100);
 
-	mainSplitter->SplitHorizontally(topSplitter, functionsGrid, 150);
+	mainSplitter->SplitHorizontally(topSplitter, functionsTextCtrl, 150);
 	mainSplitter->SetSashGravity(1);
 	mainSplitter->SetMinimumPaneSize(100);
 
@@ -442,21 +444,13 @@ void MainGui::AnalyzeFile()
 
 	FindAllFunctions();
 
+	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
+	
 	statusStaticText->SetLabelText("Status: updating functions grid...");
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	UpdateFunctionsGrid();
-
-	int answer = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
-	if (answer == wxYES)
-	{
-		statusStaticText->SetLabelText("Status: looking for function name symbols...");
-		statusStaticText->Refresh();
-		statusStaticText->Update();
-		
-		GetFunctionSymbols();
-	}
+	UpdateFunctionsTextCtrl(getSymbols == wxYES);
 
 	statusStaticText->SetLabelText("Status: idle");
 }
@@ -475,6 +469,7 @@ void MainGui::ClearData()
 	
 	disassemblyTextCtrl->ClearText();
 	decompilationTextCtrl->ClearText();
+	functionsTextCtrl->ClearText();
 
 	int numOfInstructions = disassembledInstructions.size();
 	for (int i = 0; i < numOfInstructions; i++)
@@ -510,11 +505,6 @@ void MainGui::ClearData()
 
 	functions.clear();
 	functions.shrink_to_fit();
-	int rows = functionsGrid->GetNumberRows();
-	if (rows > 0)
-	{
-		functionsGrid->DeleteRows(0, functionsGrid->GetNumberRows());
-	}
 }
 
 unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)
@@ -794,6 +784,8 @@ void MainGui::FindAllFunctions()
 		getAllFunctionConditionsAndArguments(&decompParams);
 		fixAllFunctionArgs(&decompParams);
 	}
+
+	decompParams.currentFunc = 0;
 }
 
 void MainGui::UpdateDisassemblyTextCtrl()
@@ -866,145 +858,37 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	disassemblyTextCtrl->HighlightLine(entryPointIndex, YELLOW_INDICATOR, 1);
 }
 
-void MainGui::UpdateFunctionsGrid()
+void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 {
-	functionsGrid->Freeze();
+	functionsTextCtrl->SetReadOnly(false);
+	functionsTextCtrl->Freeze();
 
+	wxString functionsStr = "";
+
+	struct JdcStr functionHeaderBuffer = initializeJdcStr();
 	int numOfFunctions = functions.size();
 	for (int i = 0; i < numOfFunctions; i++) 
 	{
-		functionsGrid->AppendRows(1);
+		struct Function* function = &functions[i];
+		if (getSymbols)
+		{
+			getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[function->firstInstructionIndex].address, &function->name);
+		}
+		
+		if (!generateFunctionHeader(function, &functionHeaderBuffer)) 
+		{
+			return;
+		}
 
-		char addressStr[10];
-		sprintf(addressStr, "%llX", disassembledInstructions[functions[i].firstInstructionIndex].address);
-		functionsGrid->SetCellValue(i, 0, wxString(addressStr));
-
-		functionsGrid->SetCellValue(i, 1, wxString(callingConventionStrs[functions[i].callingConvention]));
-
-		functionsGrid->SetCellValue(i, 2, wxString(functions[i].name.buffer));
-		functionsGrid->SetCellValue(i, 3, std::to_string(functions[i].lastInstructionIndex - functions[i].firstInstructionIndex + 1));
+		sprintfJdc(&functionHeaderBuffer, 1, "; // address: %llX; num of instructions: %d\n", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+		functionsStr += wxString(functionHeaderBuffer.buffer);
 	}
 
-	functionsGrid->Thaw();
-}
+	functionsTextCtrl->SetText(functionsStr);
+	functionsTextCtrl->ApplySyntaxHighlighting(&decompParams);
 
-void MainGui::GetFunctionSymbols() 
-{
-	functionsGrid->Freeze();
-
-	int numOfFunctions = functions.size();
-	for (int i = 0; i < numOfFunctions; i++)
-	{
-		if (getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[functions[i].firstInstructionIndex].address, &functions[i].name))
-		{
-			functionsGrid->SetCellValue(i, 2, functions[i].name.buffer);
-		}
-	}
-
-	functionsGrid->Thaw();
-}
-
-void MainGui::GridRightClickOptions(wxGridEvent& e)
-{
-	wxGrid* grid = (wxGrid*)(e.GetEventObject());
-	if(grid != functionsGrid)
-	{
-		return;
-	}
-
-	wxMenu menu;
-
-	int row = e.GetRow(); // row right-clicked on
-
-	const int ID_DECOMPILE = 100;
-	const int ID_VIEW_INFO = 101;
-	const int ID_EDIT_PROPERTIES = 102;
-	const int ID_COPY_ADDRESS = 103;
-	const int ID_COPY_NAME = 104;
-	const int ID_FIND_BY_ADDR = 105;
-	const int ID_FIND_BY_NAME = 106;
-
-	menu.Append(ID_DECOMPILE, "Decompile");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { DecompileFunction(row); }, ID_DECOMPILE);
-
-	menu.Append(ID_VIEW_INFO, "View info");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionInfoMenu(this, GetPosition(), &disassembledInstructions[0], &functions[row]); }, ID_VIEW_INFO);
-
-	menu.Append(ID_EDIT_PROPERTIES, "Edit properties");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { new FunctionPropertiesMenu(this, GetPosition(), this, row); }, ID_EDIT_PROPERTIES);
-
-	menu.Append(ID_COPY_ADDRESS, "Copy address");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
-
-	menu.Append(ID_COPY_NAME, "Copy name");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(functionsGrid->GetCellValue(row, 2)); }, ID_COPY_NAME);
-
-	menu.Append(ID_FIND_BY_ADDR, "Find function by address");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { 
-		wxTextEntryDialog dlg(this, "", "Address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16)) 
-			{
-				unsigned char foundFunction = 0;
-				int numOfFunctions = functions.size();
-				for (int i = 0; i < numOfFunctions; i++) 
-				{
-					if (address >= disassembledInstructions[functions[i].firstInstructionIndex].address && address <= disassembledInstructions[functions[i].lastInstructionIndex].address) 
-					{
-						functionsGrid->GoToCell(i, 0);
-						functionsGrid->SelectRow(i);
-						foundFunction = 1;
-						break;
-					}
-				}
-
-				if (!foundFunction)
-				{
-					wxMessageBox("No function with that address", "Failed to find function");
-				}
-			}
-			else 
-			{
-				wxMessageBox("Not valid hex number", "Failed to find function");
-			}
-		}
-	}, ID_FIND_BY_ADDR);
-
-	menu.Append(ID_FIND_BY_NAME, "Find function by name");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
-		wxTextEntryDialog dlg(this, "", "Name");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			unsigned char funcFound = 0;
-			wxString txt = dlg.GetValue();
-			if (!txt.IsEmpty())
-			{
-				int numOfFunctions = functions.size();
-				for (int i = 0; i < numOfFunctions; i++) 
-				{
-					wxString funcName = wxString(functions[i].name.buffer);
-					if (funcName.Contains(txt))
-					{
-						functionsGrid->GoToCell(i, 0);
-						functionsGrid->SelectRow(i);
-						funcFound = 1;
-						break;
-					}
-				}
-			}
-
-			if (!funcFound) 
-			{
-				wxMessageBox("No function with that name", "Failed to find function");
-			}
-		}
-		}, ID_FIND_BY_NAME);
-
-	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
-	e.Skip();
+	functionsTextCtrl->Thaw();
+	functionsTextCtrl->SetReadOnly(true);
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)
@@ -1155,7 +1039,7 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 	}
 
 	// update name in function grid
-	mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
+	//mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
 
 	// redecompile if it is currently in the decompilation box. this is to refresh it
 	if (mainGui->currentDecompiledFunc == functionIndex)

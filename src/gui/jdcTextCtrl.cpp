@@ -441,7 +441,7 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 
 void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params)
 {
-	if (!params || !params->currentFunc)
+	if (!params)
 	{
 		return;
 	}
@@ -451,56 +451,137 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	StartStyling(0);
 	SetStyling(text.length(), DecompilationColor::OPERATOR_COLOR);
 
-	// stack vars
-	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+	if (params->currentFunc)
 	{
-		ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
-	}
+		// stack vars
+		for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+		{
+			ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		}
 
-	// reg vars
-	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
-	{
-		ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
-	}
+		// reg vars
+		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+		{
+			ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		}
 
-	// returned vars
-	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
-	{
-		ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
-	}
+		// returned vars
+		for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+		{
+			ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, DecompilationColor::LOCAL_VAR_COLOR, 1);
+		}
 
-	// stack args
-	for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
-	{
-		ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
-	}
+		// stack args
+		for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
+		{
+			ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+		}
 
-	// reg args
-	for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
-	{
-		ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+		// reg args
+		for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
+		{
+			ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+		}
+
+		// imports
+		for (int i = 0; i < params->numOfImports; i++)
+		{
+			ColorAllStrs(text, params->imports[i].name.buffer, DecompilationColor::IMPORT_COLOR, 0);
+		}
+
+		// intrinsic functions
+		for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+		{
+			ColorAllStrs(text, returningIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
+		}
+		for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+		{
+			ColorAllStrs(text, voidIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
+		}
+
+		// keywords
+		const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
+		for (int i = 0; i < 11; i++)
+		{
+			ColorAllStrs(text, keywordStrs[i], DecompilationColor::KEYWORD_COLOR, 0);
+		}
+
+		// strings
+		int start = 0;
+		while (start < text.length())
+		{
+			int pos = text.find("\"", start);
+			int end = text.find("\"", pos + 1);
+			if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+			{
+				StartStyling(pos);
+				SetStyling(end - pos + 1, DecompilationColor::STRING_COLOR);
+
+				start = end + 1;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		// labels
+		start = 0;
+		while (start < text.length())
+		{
+			int pos = text.find("label_", start);
+			int end = text.find("\n", pos + 1);
+
+			if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+			{
+				StartStyling(pos);
+				SetStyling(end - pos - 1, DecompilationColor::LABEL_COLOR);
+
+				start = end + 1;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		// regs/segs that arent variables/arguments
+		for (int i = 0; i < NUM_OF_REGISTERS; i++)
+		{
+			ColorAllStrs(text, registerStrs[i], DecompilationColor::ERROR_COLOR, 0);
+		}
+		for (int i = 0; i < NUM_OF_SEGMENTS; i++)
+		{
+			ColorAllStrs(text, segmentStrs[i], DecompilationColor::ERROR_COLOR, 0);
+		}
+		ColorAllStrs(text, "ERROR", DecompilationColor::ERROR_COLOR, 0);
+		ColorAllStrs(text, "jumpTo", DecompilationColor::ERROR_COLOR, 0);
+
+		// numbers
+		const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+		for (int i = 0; i < 17; i++)
+		{
+			ColorAllStrs(text, numberChars[i], DecompilationColor::NUMBER_COLOR, 0);
+		}
 	}
 
 	// functions
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
 		ColorAllStrs(text, params->functions[i].name.buffer, DecompilationColor::FUNCTION_COLOR, 0);
-	}
 
-	// imports
-	for (int i = 0; i < params->numOfImports; i++)
-	{
-		ColorAllStrs(text, params->imports[i].name.buffer, DecompilationColor::IMPORT_COLOR, 0);
-	}
+		if (!params->currentFunc) // functions text ctrl
+		{
+			for (int j = 0; j < params->functions[i].numOfStackArgs; j++)
+			{
+				ColorAllStrs(text, params->functions[i].stackArgs[j].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+			}
 
-	// intrinsic functions
-	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
-	{
-		ColorAllStrs(text, returningIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
-	}
-	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
-	{
-		ColorAllStrs(text, voidIntrinsicFuncs[i].name, DecompilationColor::INTRINSIC_COLOR, 0);
+			for (int j = 0; j < params->functions[i].numOfRegArgs; j++)
+			{
+				ColorAllStrs(text, params->functions[i].regArgs[j].name.buffer, DecompilationColor::ARGUMENT_COLOR, 1);
+			}
+		}
 	}
 
 	// calling conventions
@@ -517,34 +598,11 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	ColorAllStrs(text, "unsigned", DecompilationColor::PRIMITIVE_COLOR, 0);
 	ColorAllStrs(text, "sizeof", DecompilationColor::PRIMITIVE_COLOR, 0);
 
-	// keywords
-	const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
-	for (int i = 0; i < 11; i++)
-	{
-		ColorAllStrs(text, keywordStrs[i], DecompilationColor::KEYWORD_COLOR, 0);
-	}
-
-	// strings
-	int start = 0;
-	while (start < text.length())
-	{
-		int pos = text.find("\"", start);
-		int end = text.find("\"", pos + 1);
-		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-		{
-			StartStyling(pos);
-			SetStyling(end - pos + 1, DecompilationColor::STRING_COLOR);
-
-			start = end + 1;
-		}
-		else
-		{
-			break;
-		}
-	}
+	// this is for when :: is part of a function name
+	ColorAllStrs(text, ":", DecompilationColor::OPERATOR_COLOR, 1);
 
 	// comments
-	start = 0;
+	int start = 0;
 	while (start < text.length())
 	{
 		int pos = text.find("//", start);
@@ -561,48 +619,6 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 			break;
 		}
 	}
-
-	// labels
-	start = 0;
-	while (start < text.length())
-	{
-		int pos = text.find("label_", start);
-		int end = text.find("\n", pos + 1);
-
-		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-		{
-			StartStyling(pos);
-			SetStyling(end - pos - 1, DecompilationColor::LABEL_COLOR);
-
-			start = end + 1;
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	// regs/segs that arent variables/arguments
-	for (int i = 0; i < NUM_OF_REGISTERS; i++)
-	{
-		ColorAllStrs(text, registerStrs[i], DecompilationColor::ERROR_COLOR, 0);
-	}
-	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
-	{
-		ColorAllStrs(text, segmentStrs[i], DecompilationColor::ERROR_COLOR, 0);
-	}
-	ColorAllStrs(text, "ERROR", DecompilationColor::ERROR_COLOR, 0);
-	ColorAllStrs(text, "jumpTo", DecompilationColor::ERROR_COLOR, 0);
-
-	// numbers
-	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
-	for (int i = 0; i < 17; i++)
-	{
-		ColorAllStrs(text, numberChars[i], DecompilationColor::NUMBER_COLOR, 0);
-	}
-
-	// this is for when :: is part of a function name
-	ColorAllStrs(text, ":", DecompilationColor::OPERATOR_COLOR, 1);
 }
 
 void JdcTextCtrl::ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions)

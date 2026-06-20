@@ -30,12 +30,11 @@ public:
 
 	JdcTextCtrl* disassemblyTextCtrl = nullptr;
 	JdcTextCtrl* decompilationTextCtrl = nullptr;
+	JdcTextCtrl* functionsTextCtrl = nullptr;
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedInstructions = 1;
 	unsigned char showBytesInDataViewer = 1;
-
-	wxGrid* functionsGrid = nullptr;
 
 	wxSplitterWindow* mainSplitter = nullptr;
 	wxSplitterWindow* topSplitter = nullptr;
@@ -101,11 +100,7 @@ public:
 
 	void UpdateDisassemblyTextCtrl();
 
-	void UpdateFunctionsGrid();
-
-	void GetFunctionSymbols();
-
-	void GridRightClickOptions(wxGridEvent& e);
+	void UpdateFunctionsTextCtrl(unsigned char getSymbols);
 
 	void CloseApp(wxCloseEvent& e);
 

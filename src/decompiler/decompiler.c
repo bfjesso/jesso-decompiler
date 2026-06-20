@@ -49,7 +49,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
-	strcatJdc(result, "{\n");
+	strcatJdc(result, "\n{\n");
 	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
 	params->currentFunc->numOfLines++;
 
@@ -456,7 +456,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 	return 1;
 }
 
-static unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
+unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 
@@ -494,7 +494,7 @@ static unsigned char generateFunctionHeader(struct Function* function, struct Jd
 	addAssociatedInstruction(function, function->firstInstructionIndex);
 	function->numOfLines++;
 	freeJdcStr(&typeStr);
-	return strcatJdc(result, ")\n");
+	return strcatJdc(result, ")");
 }
 
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
