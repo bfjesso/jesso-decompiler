@@ -487,7 +487,7 @@ void MainGui::AnalyzeFile()
 
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	
-	statusStaticText->SetLabelText("Status: updating functions grid...");
+	statusStaticText->SetLabelText("Status: finished finding functions, updating GUI...");
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
