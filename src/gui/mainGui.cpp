@@ -23,8 +23,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DISASSEMBLY_CTRL_TYPE);
 	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DECOMPILATION_CTRL_TYPE);
 	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150), DECOMPILATION_CTRL_TYPE);
-	functionsTextCtrl->SetExtraAscent(5);
-	functionsTextCtrl->SetExtraDescent(5);
 
 	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
 		decompilationTextCtrl->ClearIndicators();
