@@ -878,8 +878,13 @@ void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 			return;
 		}
 
-		sprintfJdc(&functionHeaderBuffer, 1, "; // address: %llX; num of instructions: %d\n", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+		sprintfJdc(&functionHeaderBuffer, 1, "; // address: %llX; num of instructions: %d", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
 		functionsStr += wxString(functionHeaderBuffer.buffer);
+
+		if (i != numOfFunctions - 1) 
+		{
+			functionsStr += "\n";
+		}
 	}
 
 	functionsTextCtrl->SetText(functionsStr);
