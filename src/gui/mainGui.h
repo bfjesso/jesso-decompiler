@@ -34,6 +34,7 @@ public:
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedInstructions = 1;
+	unsigned char showAssociatedFunctions = 1;
 	unsigned char showBytesInDataViewer = 1;
 
 	wxSplitterWindow* mainSplitter = nullptr;

@@ -46,6 +46,17 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 			disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 
+		if (showAssociatedFunctions && instructionIndex < disassembledInstructions.size())
+		{
+			functionsTextCtrl->ClearIndicators();
+			int funcIndex = findFunctionByAddressInclusive(&decompParams, 0, functions.size() - 1, disassembledInstructions[instructionIndex].address);
+			if (funcIndex != -1) 
+			{
+				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
+				disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			}
+		}
+
 		if (dataViewerMenu->IsShown() && showBytesInDataViewer)
 		{
 			dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex].numOfBytes);
@@ -102,6 +113,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		showBytesInDataViewer = e.IsChecked();
 		disassemblyTextCtrl->ClearIndicators();
 		dataViewerMenu->dataTextCtrl->ClearIndicators();
+	});
+
+	disassemblyTextCtrl->AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
+		showAssociatedFunctions = e.IsChecked();
+		disassemblyTextCtrl->ClearIndicators();
+		functionsTextCtrl->ClearIndicators();
 	});
 
 	decompilationTextCtrl->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
