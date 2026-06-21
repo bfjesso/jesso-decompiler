@@ -50,8 +50,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	strcatJdc(result, "\n{\n");
-	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
-	params->currentFunc->numOfLines++;
 
 	if (params->currentFunc->numOfStackVars > 0 || params->currentFunc->numOfReturnedVars > 0 || params->currentFunc->numOfRegVars > 0)
 	{
@@ -60,6 +58,16 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			strcpyJdc(statusMessage, "Error declaring local variables.");
 			if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
 			return 0;
+		}
+	}
+
+	int len = (int)strlen(result->buffer);
+	for (int i = 0; i < len; i++) 
+	{
+		if (result->buffer[i] == '\n')
+		{
+			addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
+			params->currentFunc->numOfLines++;
 		}
 	}
 
@@ -491,8 +499,6 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 		}
 	}
 
-	addAssociatedInstruction(function, function->firstInstructionIndex);
-	function->numOfLines++;
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, ")");
 }
@@ -506,7 +512,6 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		dataTypeToStr(params->currentFunc->stackVars[i].dataType, &typeStr);
 		addIndents(result, 1);
 		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
-		params->currentFunc->numOfLines++;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
@@ -531,8 +536,6 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		{
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
 		}
-
-		params->currentFunc->numOfLines++;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
@@ -552,11 +555,9 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
 			addIndents(result, 1);
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
-			params->currentFunc->numOfLines++;
 		}
 	}
 
-	params->currentFunc->numOfLines++;
 	freeJdcStr(&typeStr);
 	return strcatJdc(result, "\n");
 }
