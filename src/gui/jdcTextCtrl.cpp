@@ -247,60 +247,67 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_COPY, "Copy");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
-		int numColor = ctrlType == DISASSEMBLY_CTRL_TYPE ? DisassemblyColor::CONSTANT_COLOR : DecompilationColor::NUMBER_COLOR;
-		if (GetStyleAt(start) == numColor && !IsCharDigit(text[start - 1]) && !IsCharDigit(text[end]))
+		int numColor = GetStyleAt(start);
+		if ((start == 0 || !IsCharDigit(text[start - 1])) && !IsCharDigit(text[end]))
 		{
 			long long num = 0;
 			unsigned long long unum = 0;
-			if (selection.ToLongLong(&num, 10))
+
+			if ((end - start) > 2 && text[start] == '0' && text[start + 1] == 'x') 
 			{
-				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					SetReadOnly(false);
-					char numStr[50] = { 0 };
-					sprintf(numStr, "0x%llX", num);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
+				if (selection.ToLongLong(&num, 16))
+				{
+					menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						SetReadOnly(false);
+						wxString numStr = std::to_string(num);
+						Replace(start, end, numStr);
+						StartStyling(start);
+						SetStyling(strlen(numStr), numColor);
+						SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
+				}
+				else if (selection.ToULongLong(&unum, 16))
+				{
+					menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						SetReadOnly(false);
+						wxString numStr = std::to_string(unum);
+						Replace(start, end, numStr);
+						StartStyling(start);
+						SetStyling(strlen(numStr), numColor);
+						SetReadOnly(true);
+					}, ID_CONVERT_NUMBER);
+				}
 			}
-			else if (selection.ToLongLong(&num, 16))
+			else if(start < 2 || (text[start - 2] != '0' && text[start - 1] != 'x'))
 			{
-				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					SetReadOnly(false);
-					wxString numStr = std::to_string(num);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
+				if (selection.ToLongLong(&num, 10))
+				{
+					menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						SetReadOnly(false);
+						char numStr[50] = { 0 };
+						sprintf(numStr, "0x%llX", num);
+						Replace(start, end, numStr);
+						StartStyling(start);
+						SetStyling(strlen(numStr), numColor);
+						SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
-			}
-			else if (selection.ToULongLong(&unum, 10))
-			{
-				menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					SetReadOnly(false);
-					char numStr[50] = { 0 };
-					sprintf(numStr, "0x%llX", unum);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
+				}
+				else if (selection.ToULongLong(&unum, 10))
+				{
+					menu.Append(ID_CONVERT_NUMBER, "Convert to hexadecimal");
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						SetReadOnly(false);
+						char numStr[50] = { 0 };
+						sprintf(numStr, "0x%llX", unum);
+						Replace(start, end, numStr);
+						StartStyling(start);
+						SetStyling(strlen(numStr), numColor);
+						SetReadOnly(true);
 					}, ID_CONVERT_NUMBER);
-			}
-			else if (selection.ToULongLong(&unum, 16))
-			{
-				menu.Append(ID_CONVERT_NUMBER, "Convert to decimal");
-				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					SetReadOnly(false);
-					wxString numStr = std::to_string(unum);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
-					}, ID_CONVERT_NUMBER);
+				}
 			}
 		}
 	}
