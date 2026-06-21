@@ -21,6 +21,8 @@ extern "C"
 
 	int findFunctionByAddress(struct DecompilationParameters* params, int low, int high, unsigned long long address);
 
+	int findFunctionByAddressInclusive(struct DecompilationParameters* params, int low, int high, unsigned long long address);
+
 #ifdef __cplusplus
 }
 #endif

@@ -526,6 +526,24 @@ int findFunctionByAddress(struct DecompilationParameters* params, int low, int h
 	return -1;
 }
 
+int findFunctionByAddressInclusive(struct DecompilationParameters* params, int low, int high, unsigned long long address)
+{
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		unsigned long long firstAddress = params->instructions[params->functions[mid].firstInstructionIndex].address;
+		unsigned long long lastAddress = params->instructions[params->functions[mid].lastInstructionIndex].address;
+
+		if (address >= firstAddress && address <= lastAddress) { return mid; }
+
+		if (address > lastAddress) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
 struct StackVariable* getStackArgByOffset(struct Function* function, long long stackOffset)
 {
 	for (int i = 0; i < function->numOfStackArgs; i++)

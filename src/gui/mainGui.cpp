@@ -110,6 +110,29 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		decompilationTextCtrl->ClearIndicators();
 	});
 
+	functionsTextCtrl->AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Find address");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			unsigned long long address = 0;
+			if (txt.ToULongLong(&address, 16))
+			{
+				int index = findFunctionByAddressInclusive(&decompParams, 0, functions.size() - 1, address);
+				if (index == -1)
+				{
+					wxMessageBox("Address not found", "Failed to find address");
+					return;
+				}
+
+				functionsTextCtrl->CenterLine(index);
+				return;
+			}
+
+			wxMessageBox("Not valid hex number", "Failed to find address");
+		}
+	});
+
 	functionsTextCtrl->AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
 		int selectedLine = functionsTextCtrl->GetCurrentLine();
 		if (selectedLine >= 0 && selectedLine < functions.size()) 
