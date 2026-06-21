@@ -737,7 +737,7 @@ void MainGui::DecompileFunction(int functionIndex)
 	decompilationTextCtrl->SetReadOnly(false);
 	decompilationTextCtrl->SetValue(decompilationResult.buffer);
 	freeJdcStr(&decompilationResult);
-	decompilationTextCtrl->ApplySyntaxHighlighting(&decompParams, colorsMenu->decompColors);
+	decompilationTextCtrl->ApplyDecompilationHighlighting(&decompParams, colorsMenu->decompColors);
 	decompilationTextCtrl->SetReadOnly(true);
 }
 
@@ -931,8 +931,7 @@ void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 	}
 
 	functionsTextCtrl->SetText(functionsStr);
-	functionsTextCtrl->ApplySyntaxHighlighting(&decompParams, colorsMenu->decompColors);
-
+	functionsTextCtrl->ApplyFunctionsHighlighting(colorsMenu->decompColors);
 	functionsTextCtrl->Thaw();
 	functionsTextCtrl->SetReadOnly(true);
 }

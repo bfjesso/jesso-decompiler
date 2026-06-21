@@ -79,7 +79,9 @@ public:
 
 	void OnUpdateUI(wxStyledTextEvent& e);
 
-	void ApplySyntaxHighlighting(struct DecompilationParameters* params, wxColour* decompColors);
+	void ApplyDecompilationHighlighting(struct DecompilationParameters* params, wxColour* decompColors);
+
+	void ApplyFunctionsHighlighting(wxColour* decompColors);
 
 	void ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions, wxColour* disassemblyColors);
 

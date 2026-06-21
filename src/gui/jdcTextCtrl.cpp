@@ -478,9 +478,9 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	}
 }
 
-void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params, wxColour* decompColors)
+void JdcTextCtrl::ApplyDecompilationHighlighting(struct DecompilationParameters* params, wxColour* decompColors)
 {
-	if (!params)
+	if (!params || !params->currentFunc)
 	{
 		return;
 	}
@@ -496,137 +496,121 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	StartStyling(0);
 	SetStyling(text.length(), OPERATOR_DECOMP_COLOR);
 
-	if (params->currentFunc)
+	// stack vars
+	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
-		// stack vars
-		for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
-		{
-			ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
-		}
+		ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+	}
 
-		// reg vars
-		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
-		{
-			ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
-		}
+	// reg vars
+	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+	{
+		ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+	}
 
-		// returned vars
-		for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
-		{
-			ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
-		}
+	// returned vars
+	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+	{
+		ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+	}
 
-		// stack args
-		for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
-		{
-			ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
-		}
+	// stack args
+	for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
+	{
+		ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
+	}
 
-		// reg args
-		for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
-		{
-			ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
-		}
+	// reg args
+	for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
+	{
+		ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
+	}
 
-		// imports
-		for (int i = 0; i < params->numOfImports; i++)
-		{
-			ColorAllStrs(text, params->imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
-		}
+	// imports
+	for (int i = 0; i < params->numOfImports; i++)
+	{
+		ColorAllStrs(text, params->imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
+	}
 
-		// intrinsic functions
-		for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
-		{
-			ColorAllStrs(text, returningIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
-		}
-		for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
-		{
-			ColorAllStrs(text, voidIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
-		}
+	// intrinsic functions
+	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+	{
+		ColorAllStrs(text, returningIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+	}
+	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+	{
+		ColorAllStrs(text, voidIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+	}
 
-		// keywords
-		const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
-		for (int i = 0; i < 11; i++)
+	// keywords
+	const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
+	for (int i = 0; i < 11; i++)
+	{
+		ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, 0);
+	}
+
+	// strings
+	int start = 0;
+	while (start < text.length())
+	{
+		int pos = text.find("\"", start);
+		int end = text.find("\"", pos + 1);
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
-			ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, 0);
-		}
+			StartStyling(pos);
+			SetStyling(end - pos + 1, STRING_DECOMP_COLOR);
 
-		// strings
-		int start = 0;
-		while (start < text.length())
+			start = end + 1;
+		}
+		else
 		{
-			int pos = text.find("\"", start);
-			int end = text.find("\"", pos + 1);
-			if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-			{
-				StartStyling(pos);
-				SetStyling(end - pos + 1, STRING_DECOMP_COLOR);
-
-				start = end + 1;
-			}
-			else
-			{
-				break;
-			}
+			break;
 		}
+	}
 
-		// labels
-		start = 0;
-		while (start < text.length())
+	// labels
+	start = 0;
+	while (start < text.length())
+	{
+		int pos = text.find("label_", start);
+		int end = text.find("\n", pos + 1);
+
+		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
-			int pos = text.find("label_", start);
-			int end = text.find("\n", pos + 1);
+			StartStyling(pos);
+			SetStyling(end - pos - 1, LABEL_DECOMP_COLOR);
 
-			if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-			{
-				StartStyling(pos);
-				SetStyling(end - pos - 1, LABEL_DECOMP_COLOR);
-
-				start = end + 1;
-			}
-			else
-			{
-				break;
-			}
+			start = end + 1;
 		}
-
-		// regs/segs that arent variables/arguments
-		for (int i = 0; i < NUM_OF_REGISTERS; i++)
+		else
 		{
-			ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
+			break;
 		}
-		for (int i = 0; i < NUM_OF_SEGMENTS; i++)
-		{
-			ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
-		}
-		ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, 0);
-		ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, 0);
+	}
 
-		// numbers
-		const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
-		for (int i = 0; i < 17; i++)
-		{
-			ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
-		}
+	// regs/segs that arent variables/arguments
+	for (int i = 0; i < NUM_OF_REGISTERS; i++)
+	{
+		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
+	}
+	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
+	{
+		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
+	}
+	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, 0);
+	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, 0);
+
+	// numbers
+	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+	for (int i = 0; i < 17; i++)
+	{
+		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
 	}
 
 	// functions
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
 		ColorAllStrs(text, params->functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
-
-		if (!params->currentFunc) // functions text ctrl
-		{
-			for (int j = 0; j < params->functions[i].numOfStackArgs; j++)
-			{
-				ColorAllStrs(text, params->functions[i].stackArgs[j].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
-			}
-
-			for (int j = 0; j < params->functions[i].numOfRegArgs; j++)
-			{
-				ColorAllStrs(text, params->functions[i].regArgs[j].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
-			}
-		}
 	}
 
 	// calling conventions
@@ -647,7 +631,7 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	ColorAllStrs(text, ":", OPERATOR_DECOMP_COLOR, 1);
 
 	// comments
-	int start = 0;
+	start = 0;
 	while (start < text.length())
 	{
 		int pos = text.find("//", start);
@@ -663,6 +647,79 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 			SetStyling(end - pos + 1, COMMENT_DECOMP_COLOR);
 
 			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
+{
+	highlightingType = DECOMPILATION_HIGHLIGHTING;
+	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		StyleSetForeground(i, decompColors[i]);
+	}
+
+	wxString text = GetValue();
+
+	StartStyling(0);
+	SetStyling(text.length(), OPERATOR_DECOMP_COLOR);
+
+	int lineStart = 0;
+	while (lineStart < text.length())
+	{
+		int argsStartPos = text.find("(", lineStart);
+		int functionNamePos = text.rfind(" ", argsStartPos);
+		int argsEndPos = text.find(")", lineStart);
+
+		if (argsStartPos != wxNOT_FOUND && functionNamePos != wxNOT_FOUND && argsEndPos != wxNOT_FOUND)
+		{
+			StartStyling(lineStart);
+			SetStyling(functionNamePos - lineStart, PRIMITIVE_DECOMP_COLOR);
+
+			StartStyling(functionNamePos);
+			SetStyling(argsStartPos - functionNamePos, FUNCTION_DECOMP_COLOR);
+
+			if (argsStartPos + 1 != argsEndPos) 
+			{
+				int argTypePos = argsStartPos + 1;
+				int argEndPos = text.find(",", argsStartPos);
+				while (argEndPos != wxNOT_FOUND && argEndPos < argsEndPos)
+				{
+					int argNamePos = text.rfind(" ", argEndPos);
+
+					StartStyling(argTypePos);
+					SetStyling(argNamePos - argTypePos, PRIMITIVE_DECOMP_COLOR);
+
+					StartStyling(argNamePos);
+					SetStyling(argEndPos - argNamePos, ARGUMENT_DECOMP_COLOR);
+
+					argTypePos = argEndPos + 2;
+					argEndPos = text.find(",", argTypePos);
+				}
+
+				// last argument does not end with a comma
+				int lastArgNamePos = text.rfind(" ", argsEndPos);
+				StartStyling(lastArgNamePos);
+				SetStyling(argsEndPos - lastArgNamePos, ARGUMENT_DECOMP_COLOR);
+				StartStyling(argTypePos);
+				SetStyling(lastArgNamePos - argTypePos, PRIMITIVE_DECOMP_COLOR);
+			}
+			
+			int commentStartPos = text.find(";", lineStart) + 1;
+			StartStyling(commentStartPos);
+
+			lineStart = text.find("\n", commentStartPos);
+			if (lineStart == wxNOT_FOUND) 
+			{
+				SetStyling(text.length() - commentStartPos, COMMENT_DECOMP_COLOR);
+				break;
+			}
+
+			SetStyling(lineStart - commentStartPos + 1, COMMENT_DECOMP_COLOR);
 		}
 		else
 		{
