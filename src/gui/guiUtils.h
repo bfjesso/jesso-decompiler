@@ -8,6 +8,9 @@ const wxColour textColor = wxColour(220, 220, 220);
 const wxColour darkerTextColor = wxColour(154, 154, 154);
 const wxFont codeFont = wxFontInfo(10).FaceName("Cascadia Mono").Bold();
 
+#define NUM_OF_DISASSEMBLY_COLORS 8
+#define NUM_OF_DECOMP_COLORS 13
+
 enum DisassemblyColor
 {
 	PUNCTUATION_COLOR,

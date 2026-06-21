@@ -25,18 +25,7 @@ public:
 	wxScrolledWindow* disassemblyScrollWindow = nullptr;
 	wxScrolledWindow* decompilationScrollWindow = nullptr;
 
-	const char* disassemblyColorNames[8] =
-	{
-		"Punctuation",
-		"Addresses",
-		"Opcodes",
-		"Registers",
-		"Segments",
-		"Pointer sizes",
-		"Comments",
-		"Constants"
-	};
-	wxColour defaultDisassemblyColors[8] =
+	wxColour disassemblyColors[NUM_OF_DISASSEMBLY_COLORS] =
 	{
 		wxColour(180, 180, 180),
 		wxColour(154, 154, 154),
@@ -47,25 +36,20 @@ public:
 		wxColour(87, 166, 74),
 		wxColour(181, 206, 168)
 	};
-	const int numberOfDisassemblyColors = 8;
 
-	const char* decompColorNames[13] = 
-	{ 
-		"Operators",
-		"Local variables",
-		"Arguments",
-		"Functions",
-		"Imports",
-		"Intrinsic Functions",
-		"Primitive types",
-		"Keywords",
-		"Strings",
-		"Numbers",
+	const char* disassemblyColorNames[NUM_OF_DISASSEMBLY_COLORS] =
+	{
+		"Punctuation",
+		"Addresses",
+		"Opcodes",
+		"Registers",
+		"Segments",
+		"Pointer sizes",
 		"Comments",
-		"Labels",
-		"Errors"
+		"Constants"
 	};
-	wxColour defaultDecompColors[13] = 
+
+	wxColour decompColors[NUM_OF_DECOMP_COLORS] =
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
@@ -81,7 +65,23 @@ public:
 		wxColour(200, 200, 200),
 		wxColour(250, 50, 50)
 	};
-	const int numberOfDecompColors = 13;
+
+	const char* decompColorNames[NUM_OF_DECOMP_COLORS] =
+	{ 
+		"Operators",
+		"Local variables",
+		"Arguments",
+		"Functions",
+		"Imports",
+		"Intrinsic Functions",
+		"Primitive types",
+		"Keywords",
+		"Strings",
+		"Numbers",
+		"Comments",
+		"Labels",
+		"Errors"
+	};
 	
 	enum ids
 	{

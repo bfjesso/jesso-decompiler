@@ -6,12 +6,6 @@
 #include "../disassembler/disassemblyStructs.h"
 #include "../decompiler/decompilationStructs.h"
 
-enum JdcTextCtrlType 
-{
-	DISASSEMBLY_CTRL_TYPE,
-	DECOMPILATION_CTRL_TYPE
-};
-
 enum IndicatorColor
 {
 	PURPLE_INDICATOR,
@@ -34,9 +28,8 @@ private:
 	char IsCharDigit(char c);
 
 public:
-	JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlType type);
+	JdcTextCtrl(wxWindow* parent, const wxSize& size);
 
-	enum JdcTextCtrlType ctrlType;
 	std::function<void()> additionalOnUpdateUI;
 	std::vector<struct RightClickOption> additionalRightClickOptions;
 
@@ -46,6 +39,11 @@ public:
 	int totalFindResults = 0;
 
 	unsigned char highlightSelectedLines = 1;
+
+	unsigned char hasAsmHighlighting = 0;
+	unsigned char hasSyntaxHighlighting = 0;
+
+	void EnableLineNumbers();
 
 	void ClearText();
 
@@ -75,9 +73,9 @@ public:
 
 	void OnUpdateUI(wxStyledTextEvent& e);
 
-	void ApplySyntaxHighlighting(struct DecompilationParameters* params);
+	void ApplySyntaxHighlighting(struct DecompilationParameters* params, wxColour* decompColors);
 
-	void ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions);
+	void ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions, wxColour* disassemblyColors);
 
 	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
 };

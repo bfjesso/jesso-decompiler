@@ -29,11 +29,11 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	decompilationLabel->SetOwnForegroundColour(textColor);
 	decompilationSizer->Add(decompilationLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 
-	for (int i = 0; i < numberOfDisassemblyColors; i++)
+	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		wxStaticText* label = new wxStaticText(disassemblyScrollWindow, wxID_ANY, disassemblyColorNames[i]);
 		label->SetOwnForegroundColour(textColor);
-		wxColourPickerCtrl* ctrl = new wxColourPickerCtrl(disassemblyScrollWindow, wxID_ANY, defaultDisassemblyColors[i], wxPoint(0, 0), wxSize(250, 25));
+		wxColourPickerCtrl* ctrl = new wxColourPickerCtrl(disassemblyScrollWindow, wxID_ANY, disassemblyColors[i], wxPoint(0, 0), wxSize(250, 25));
 
 		disassemblySizer->Add(label, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 		disassemblySizer->Add(ctrl, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
@@ -41,11 +41,11 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		disassemblyColorPickerCtrls.push_back(ctrl);
 	}
 
-	for (int i = 0; i < numberOfDecompColors; i++) 
+	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++) 
 	{
 		wxStaticText* label = new wxStaticText(decompilationScrollWindow, wxID_ANY, decompColorNames[i]);
 		label->SetOwnForegroundColour(textColor);
-		wxColourPickerCtrl* ctrl = new wxColourPickerCtrl(decompilationScrollWindow, wxID_ANY, defaultDecompColors[i], wxPoint(0, 0), wxSize(250, 25));
+		wxColourPickerCtrl* ctrl = new wxColourPickerCtrl(decompilationScrollWindow, wxID_ANY, decompColors[i], wxPoint(0, 0), wxSize(250, 25));
 
 		decompilationSizer->Add(label, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 		decompilationSizer->Add(ctrl, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
@@ -82,18 +82,20 @@ void ColorsMenu::ApplyColors()
 {
 	for (int i = 0; i < textCtrls.size(); i++)
 	{
-		if (textCtrls[i]->ctrlType == DISASSEMBLY_CTRL_TYPE) 
+		if (textCtrls[i]->hasAsmHighlighting)
 		{
-			for (int j = 0; j < numberOfDisassemblyColors; j++) 
+			for (int j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++) 
 			{
-				textCtrls[i]->StyleSetForeground(j, disassemblyColorPickerCtrls[j]->GetColour());
+				disassemblyColors[i] = disassemblyColorPickerCtrls[j]->GetColour();
+				textCtrls[i]->StyleSetForeground(j, disassemblyColors[i]);
 			}
 		}
-		else if (textCtrls[i]->ctrlType == DECOMPILATION_CTRL_TYPE) 
+		else if (textCtrls[i]->hasSyntaxHighlighting)
 		{
-			for (int j = 0; j < numberOfDecompColors; j++)
+			for (int j = 0; j < NUM_OF_DECOMP_COLORS; j++)
 			{
-				textCtrls[i]->StyleSetForeground(j, decompilationColorPickerCtrls[j]->GetColour());
+				decompColors[i] = decompilationColorPickerCtrls[j]->GetColour();
+				textCtrls[i]->StyleSetForeground(j, decompColors[i]);
 			}
 		}
 	}

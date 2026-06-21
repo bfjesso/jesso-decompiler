@@ -1,13 +1,10 @@
 #include "jdcTextCtrl.h"
-#include "dataViewerMenu.h"
 
 #include "../decompiler/intrinsics.h"
 #include "../disassembler/disassembler.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlType type) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
 {
-	ctrlType = type;
-
 	Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { RightClickOptions(e); });
 	Bind(wxEVT_CHAR_HOOK, &JdcTextCtrl::OnKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &JdcTextCtrl::OnUpdateUI, this);
@@ -46,24 +43,26 @@ JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlT
 	IndicatorSetForeground(RED_INDICATOR, wxColour(255, 0, 0));
 	IndicatorSetAlpha(RED_INDICATOR, 40);
 
-	if (ctrlType == DECOMPILATION_CTRL_TYPE) 
-	{
-		SetMarginType(0, wxSTC_MARGIN_NUMBER);
-		SetMarginWidth(0, TextWidth(wxSTC_STYLE_LINENUMBER, "99999"));
-		StyleSetForeground(wxSTC_STYLE_LINENUMBER, darkerTextColor);
-		StyleSetBackground(wxSTC_STYLE_LINENUMBER, gridColor);
-		SetMarginBackground(1, backgroundColor);
-		SetIndentationGuides(wxSTC_IV_LOOKBOTH);
-		StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, darkerTextColor);
-		SetEdgeMode(wxSTC_EDGE_LINE);
-		SetEdgeColumn(0);
-		SetEdgeColour(darkerTextColor);
-		SetTabWidth(4);
-		SetIndent(4);
-		StyleSetForeground(wxSTC_STYLE_BRACELIGHT, textColor);
-		StyleSetBackground(wxSTC_STYLE_BRACELIGHT, foregroundColor);
-		StyleSetForeground(wxSTC_STYLE_BRACEBAD, wxColour(200, 80, 80));
-	}
+	StyleSetForeground(wxSTC_STYLE_BRACELIGHT, textColor);
+	StyleSetBackground(wxSTC_STYLE_BRACELIGHT, foregroundColor);
+	StyleSetForeground(wxSTC_STYLE_BRACEBAD, wxColour(200, 80, 80));
+
+	SetTabWidth(4);
+	SetIndent(4);
+}
+
+void JdcTextCtrl::EnableLineNumbers()
+{
+	SetMarginType(0, wxSTC_MARGIN_NUMBER);
+	SetMarginWidth(0, TextWidth(wxSTC_STYLE_LINENUMBER, "99999"));
+	StyleSetForeground(wxSTC_STYLE_LINENUMBER, darkerTextColor);
+	StyleSetBackground(wxSTC_STYLE_LINENUMBER, gridColor);
+	SetMarginBackground(1, backgroundColor);
+	SetIndentationGuides(wxSTC_IV_LOOKBOTH);
+	StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, darkerTextColor);
+	SetEdgeMode(wxSTC_EDGE_LINE);
+	SetEdgeColumn(0);
+	SetEdgeColour(darkerTextColor);
 }
 
 void JdcTextCtrl::ClearText()
@@ -455,37 +454,45 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	}
 
 	// highlighting other instances of selected text
-	if (ctrlType == DECOMPILATION_CTRL_TYPE)
+	wxString selection = GetSelectedText();
+	if (selection != "")
 	{
-		wxString selection = GetSelectedText();
-		if (selection != "")
+		SetIndicatorCurrent(GRAY_INDICATOR);
+
+		int selectionLen = selection.Length();
+
+		int firstLine = GetFirstVisibleLine();
+		int minPos = PositionFromLine(firstLine);
+		int maxPos = PositionFromLine(firstLine + LinesOnScreen());
+		while (1)
 		{
-			SetIndicatorCurrent(GRAY_INDICATOR);
-
-			int selectionLen = selection.Length();
-			int minPos = 0;
-			while (1)
+			int index = FindText(minPos, maxPos, selection);
+			if (index == -1)
 			{
-				int index = FindText(minPos, GetTextLength(), selection);
-				if (index == -1)
-				{
-					break;
-				}
-
-				IndicatorFillRange(index, selectionLen);
-				minPos = index + selectionLen;
+				break;
 			}
+
+			IndicatorFillRange(index, selectionLen);
+			minPos = index + selectionLen;
 		}
 	}
 }
 
-void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params)
+void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params, wxColour* decompColors)
 {
 	if (!params)
 	{
 		return;
 	}
-	
+
+	hasAsmHighlighting = 0;
+	hasSyntaxHighlighting = 1;
+
+	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		StyleSetForeground(i, decompColors[i]);
+	}
+
 	wxString text = GetValue();
 
 	StartStyling(0);
@@ -666,8 +673,16 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	}
 }
 
-void JdcTextCtrl::ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions)
+void JdcTextCtrl::ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions, wxColour* disassemblyColors)
 {
+	hasAsmHighlighting = 1;
+	hasSyntaxHighlighting = 0;
+
+	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	{
+		StyleSetForeground(i, disassemblyColors[i]);
+	}
+	
 	int pos = 0;
 	wxString disassemblyText = GetValue();
 	for (int i = 0; i < numOfInstructions; i++)

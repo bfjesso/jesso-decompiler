@@ -20,9 +20,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
-	disassemblyTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DISASSEMBLY_CTRL_TYPE);
-	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), DECOMPILATION_CTRL_TYPE);
-	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150), DECOMPILATION_CTRL_TYPE);
+	disassemblyTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400));
+
+	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400));
+	decompilationTextCtrl->EnableLineNumbers();
+
+	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150));
+	functionsTextCtrl->EnableLineNumbers();
 
 	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
 		decompilationTextCtrl->ClearIndicators();
@@ -734,7 +738,7 @@ void MainGui::DecompileFunction(int functionIndex)
 	decompilationTextCtrl->SetReadOnly(false);
 	decompilationTextCtrl->SetValue(decompilationResult.buffer);
 	freeJdcStr(&decompilationResult);
-	decompilationTextCtrl->ApplySyntaxHighlighting(&decompParams);
+	decompilationTextCtrl->ApplySyntaxHighlighting(&decompParams, colorsMenu->decompColors);
 	decompilationTextCtrl->SetReadOnly(true);
 }
 
@@ -888,7 +892,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 	freeJdcStr(&instructionStrBuffer);
 
 	disassemblyTextCtrl->SetText(disassemblyText);
-	disassemblyTextCtrl->ApplyAsmHighlighting(disassembledInstructions.data(), disassembledInstructions.size());
+	disassemblyTextCtrl->ApplyAsmHighlighting(disassembledInstructions.data(), disassembledInstructions.size(), colorsMenu->disassemblyColors);
 
 	disassemblyTextCtrl->Thaw();
 	disassemblyTextCtrl->SetReadOnly(true);
@@ -928,7 +932,7 @@ void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 	}
 
 	functionsTextCtrl->SetText(functionsStr);
-	functionsTextCtrl->ApplySyntaxHighlighting(&decompParams);
+	functionsTextCtrl->ApplySyntaxHighlighting(&decompParams, colorsMenu->decompColors);
 
 	functionsTextCtrl->Thaw();
 	functionsTextCtrl->SetReadOnly(true);
