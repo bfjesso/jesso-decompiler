@@ -9,8 +9,10 @@ EVT_CHOICE(SectionChoiceID, DataViewer::UpdateDataList)
 EVT_CHECKBOX(HexCheckBoxID, DataViewer::UpdateDataList)
 wxEND_EVENT_TABLE()
 
-DataViewer::DataViewer() : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(500, 250))
+DataViewer::DataViewer(ColorsMenu* colorMenu) : wxFrame(nullptr, MainWindowID, "Data Viewer", wxPoint(50, 50), wxSize(500, 250))
 {
+	colorsMenu = colorMenu;
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	dataTypeChoice = new wxChoice(this, DataTypeChoiceID, wxPoint(0, 0), wxSize(120, 50), wxArrayString(numOfDataTypes, dataTypeStrs));
@@ -192,28 +194,7 @@ void DataViewer::LoadData()
 	}
 
 	dataTextCtrl->SetText(dataText);
-
-	dataTextCtrl->StartStyling(0);
-	dataTextCtrl->SetStyling(dataText.length(), DisassemblyColor::ADDRESS_COLOR);
-
-	int start = 0;
-	while (start < dataText.length())
-	{
-		int pos = dataText.find("\t", start);
-		int end = dataText.find("\n", pos);
-		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-		{
-			dataTextCtrl->StartStyling(pos);
-			dataTextCtrl->SetStyling(end - pos + 1, DisassemblyColor::CONSTANT_COLOR);
-
-			start = end + 1;
-		}
-		else
-		{
-			break;
-		}
-	}
-
+	dataTextCtrl->ApplyDataHighlighting(colorsMenu->dataColors);
 	dataTextCtrl->Thaw();
 	dataTextCtrl->SetReadOnly(true);
 }

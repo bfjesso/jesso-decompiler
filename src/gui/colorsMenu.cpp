@@ -10,6 +10,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 
 	disassemblySizer = new wxBoxSizer(wxVERTICAL);
 	decompilationSizer = new wxBoxSizer(wxVERTICAL);
+	dataSizer = new wxBoxSizer(wxVERTICAL);
 	hSizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -21,6 +22,10 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	decompilationScrollWindow->SetOwnBackgroundColour(gridColor);
 	decompilationScrollWindow->SetScrollRate(0, 10);
 
+	dataScrollWindow = new wxScrolledWindow(this, wxID_ANY, wxPoint(0, 0), wxSize(350, 500), wxVSCROLL | wxFULL_REPAINT_ON_RESIZE);
+	dataScrollWindow->SetOwnBackgroundColour(gridColor);
+	dataScrollWindow->SetScrollRate(0, 10);
+
 	disassemblyLabel = new wxStaticText(disassemblyScrollWindow, wxID_ANY, "Disassembly colors");
 	disassemblyLabel->SetOwnForegroundColour(textColor);
 	disassemblySizer->Add(disassemblyLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
@@ -28,6 +33,10 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	decompilationLabel = new wxStaticText(decompilationScrollWindow, wxID_ANY, "Decompilation colors");
 	decompilationLabel->SetOwnForegroundColour(textColor);
 	decompilationSizer->Add(decompilationLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
+
+	dataLabel = new wxStaticText(dataScrollWindow, wxID_ANY, "Data colors");
+	dataLabel->SetOwnForegroundColour(textColor);
+	dataSizer->Add(dataLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 
 	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
@@ -53,13 +62,28 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		decompilationColorPickerCtrls.push_back(ctrl);
 	}
 
+	for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
+	{
+		wxStaticText* label = new wxStaticText(dataScrollWindow, wxID_ANY, dataColorNames[i]);
+		label->SetOwnForegroundColour(textColor);
+		wxColourPickerCtrl* ctrl = new wxColourPickerCtrl(dataScrollWindow, wxID_ANY, dataColors[i], wxPoint(0, 0), wxSize(250, 25));
+
+		dataSizer->Add(label, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
+		dataSizer->Add(ctrl, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
+
+		dataColorPickerCtrls.push_back(ctrl);
+	}
+
 	disassemblyScrollWindow->SetSizer(disassemblySizer);
 	decompilationScrollWindow->SetSizer(decompilationSizer);
+	dataScrollWindow->SetSizer(dataSizer);
 	disassemblyScrollWindow->FitInside();
 	decompilationScrollWindow->FitInside();
+	dataScrollWindow->FitInside();
 
 	hSizer->Add(disassemblyScrollWindow, 1, wxEXPAND | wxALL, 5);
 	hSizer->Add(decompilationScrollWindow, 1, wxEXPAND | wxALL, 5);
+	hSizer->Add(dataScrollWindow, 1, wxEXPAND | wxALL, 5);
 
 	vSizer->Add(hSizer, 1, wxEXPAND);
 
@@ -82,20 +106,28 @@ void ColorsMenu::ApplyColors()
 {
 	for (int i = 0; i < textCtrls.size(); i++)
 	{
-		if (textCtrls[i]->hasAsmHighlighting)
+		if (textCtrls[i]->highlightingType == DISASSEMBLY_HIGHLIGHTING)
 		{
 			for (int j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++) 
 			{
-				disassemblyColors[i] = disassemblyColorPickerCtrls[j]->GetColour();
-				textCtrls[i]->StyleSetForeground(j, disassemblyColors[i]);
+				disassemblyColors[j] = disassemblyColorPickerCtrls[j]->GetColour();
+				textCtrls[i]->StyleSetForeground(j, disassemblyColors[j]);
 			}
 		}
-		else if (textCtrls[i]->hasSyntaxHighlighting)
+		else if (textCtrls[i]->highlightingType == DECOMPILATION_HIGHLIGHTING)
 		{
 			for (int j = 0; j < NUM_OF_DECOMP_COLORS; j++)
 			{
-				decompColors[i] = decompilationColorPickerCtrls[j]->GetColour();
-				textCtrls[i]->StyleSetForeground(j, decompColors[i]);
+				decompColors[j] = decompilationColorPickerCtrls[j]->GetColour();
+				textCtrls[i]->StyleSetForeground(j, decompColors[j]);
+			}
+		}
+		else if (textCtrls[i]->highlightingType == DATA_HIGHLIGHTING)
+		{
+			for (int j = 0; j < NUM_OF_DATA_COLORS; j++)
+			{
+				dataColors[j] = dataColorPickerCtrls[j]->GetColour();
+				textCtrls[i]->StyleSetForeground(j, dataColors[j]);
 			}
 		}
 	}

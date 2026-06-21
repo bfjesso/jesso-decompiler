@@ -11,19 +11,23 @@ public:
 
 	wxStaticText* disassemblyLabel;
 	wxStaticText* decompilationLabel;
+	wxStaticText* dataLabel;
 
 	std::vector<wxColourPickerCtrl*> disassemblyColorPickerCtrls;
 	std::vector<wxColourPickerCtrl*> decompilationColorPickerCtrls;
+	std::vector<wxColourPickerCtrl*> dataColorPickerCtrls;
 
 	wxButton* applyButton;
 
 	wxBoxSizer* disassemblySizer = nullptr;
 	wxBoxSizer* decompilationSizer = nullptr;
+	wxBoxSizer* dataSizer = nullptr;
 	wxBoxSizer* hSizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	wxScrolledWindow* disassemblyScrollWindow = nullptr;
 	wxScrolledWindow* decompilationScrollWindow = nullptr;
+	wxScrolledWindow* dataScrollWindow = nullptr;
 
 	wxColour disassemblyColors[NUM_OF_DISASSEMBLY_COLORS] =
 	{
@@ -39,14 +43,14 @@ public:
 
 	const char* disassemblyColorNames[NUM_OF_DISASSEMBLY_COLORS] =
 	{
-		"Punctuation",
+		"Operators",
 		"Addresses",
 		"Opcodes",
 		"Registers",
 		"Segments",
 		"Pointer sizes",
 		"Comments",
-		"Constants"
+		"Numbers"
 	};
 
 	wxColour decompColors[NUM_OF_DECOMP_COLORS] =
@@ -81,6 +85,18 @@ public:
 		"Comments",
 		"Labels",
 		"Errors"
+	};
+
+	wxColour dataColors[NUM_OF_DATA_COLORS] =
+	{
+		wxColour(154, 154, 154),
+		wxColour(181, 206, 168)
+	};
+
+	const char* dataColorNames[NUM_OF_DATA_COLORS] =
+	{
+		"Addresses",
+		"Values"
 	};
 	
 	enum ids

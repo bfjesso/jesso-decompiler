@@ -6,6 +6,13 @@
 #include "../disassembler/disassemblyStructs.h"
 #include "../decompiler/decompilationStructs.h"
 
+enum SyntaxHighlightingType
+{
+	DISASSEMBLY_HIGHLIGHTING,
+	DECOMPILATION_HIGHLIGHTING,
+	DATA_HIGHLIGHTING
+};
+
 enum IndicatorColor
 {
 	PURPLE_INDICATOR,
@@ -40,8 +47,7 @@ public:
 
 	unsigned char highlightSelectedLines = 1;
 
-	unsigned char hasAsmHighlighting = 0;
-	unsigned char hasSyntaxHighlighting = 0;
+	enum SyntaxHighlightingType highlightingType;
 
 	void EnableLineNumbers();
 
@@ -76,6 +82,8 @@ public:
 	void ApplySyntaxHighlighting(struct DecompilationParameters* params, wxColour* decompColors);
 
 	void ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions, wxColour* disassemblyColors);
+
+	void ApplyDataHighlighting(wxColour* dataColors);
 
 	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
 };

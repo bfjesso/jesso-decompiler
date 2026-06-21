@@ -1,12 +1,15 @@
 #pragma once
 #include "guiUtils.h"
 #include "jdcTextCtrl.h"
+#include "colorsMenu.h"
 #include "../file-handler/fileHandler.h"
 
 class DataViewer : public wxFrame
 {
 public:
-	DataViewer();
+	DataViewer(ColorsMenu* colorMenu);
+
+	ColorsMenu* colorsMenu = nullptr;
 
 	wxChoice* dataTypeChoice = nullptr;
 	wxChoice* sectionChoice = nullptr;
