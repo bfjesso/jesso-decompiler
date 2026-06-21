@@ -611,8 +611,13 @@ void JdcTextCtrl::ApplySyntaxHighlighting(struct DecompilationParameters* params
 	{
 		int pos = text.find("//", start);
 		int end = text.find("\n", pos + 1);
-		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
+		if (pos != wxNOT_FOUND)
 		{
+			if (end == wxNOT_FOUND) 
+			{
+				end = text.length() - 1;
+			}
+
 			StartStyling(pos);
 			SetStyling(end - pos + 1, DecompilationColor::COMMENT_DECOMP_COLOR);
 
