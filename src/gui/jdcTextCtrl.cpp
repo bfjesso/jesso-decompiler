@@ -26,6 +26,10 @@ JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, enum JdcTextCtrlT
 	SetScrollWidth(1);
 	SetViewWhiteSpace(wxSTC_WS_INVISIBLE);
 
+	Bind(wxEVT_SET_CURSOR, [](wxSetCursorEvent& e) {
+		e.SetCursor(wxCursor(wxCURSOR_ARROW));
+	});
+
 	IndicatorSetStyle(PURPLE_INDICATOR, wxSTC_INDIC_ROUNDBOX);
 	IndicatorSetForeground(PURPLE_INDICATOR, wxColour(255, 0, 255));
 	IndicatorSetAlpha(PURPLE_INDICATOR, 40);
