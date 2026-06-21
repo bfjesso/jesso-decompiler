@@ -97,7 +97,7 @@ void DataViewer::LoadData()
 	for (unsigned int i = 0; i < sections[sectionSelection].size; i += bytesPerLine)
 	{
 		unsigned long long address = imageBase + sections[sectionSelection].virtualAddress + i;
-		sprintf(lineBuffer, "%llX%s\t", address, sections[sectionSelection].name.buffer);
+		sprintf(lineBuffer, "0x%llX%s\t", address, sections[sectionSelection].name.buffer);
 
 		for (unsigned int j = 0; j < bytesPerLine; j += typeSize)
 		{

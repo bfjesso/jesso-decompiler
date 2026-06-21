@@ -851,7 +851,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		}
 		
 		char addressStr[20] = { 0 };
-		sprintf(addressStr, "%llX", disassembledInstructions[i].address);
+		sprintf(addressStr, "0x%llX", disassembledInstructions[i].address);
 		wxString addressInfoStr = wxString(addressStr) + wxString(sections[sectionIndex].name.buffer) + "\t";
 
 		wxString asmStr = "";
@@ -878,7 +878,7 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		if (dst != 0)
 		{
 			char dstStr[20] = { 0 };
-			sprintf(dstStr, "%llX", dst);
+			sprintf(dstStr, "0x%llX", dst);
 			asmStr += " ; dst: " + wxString(dstStr);
 		}
 
@@ -918,7 +918,7 @@ void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 			return;
 		}
 
-		sprintfJdc(&functionHeaderBuffer, 1, "; // address: %llX; num of instructions: %d", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
 		functionsStr += wxString(functionHeaderBuffer.buffer);
 
 		if (i != numOfFunctions - 1) 
