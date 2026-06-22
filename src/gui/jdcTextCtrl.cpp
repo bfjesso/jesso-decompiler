@@ -730,15 +730,35 @@ void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
 
 void JdcTextCtrl::ApplyAsmHighlighting(struct DisassembledInstruction* instructions, int numOfInstructions, wxColour* disassemblyColors)
 {
+	if (!instructions || numOfInstructions == 0 || !disassemblyColors)
+	{
+		return;
+	}
+	
 	highlightingType = DISASSEMBLY_HIGHLIGHTING;
 	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		StyleSetForeground(i, disassemblyColors[i]);
 	}
-	
-	int pos = 0;
+
+	int firstLine = GetFirstVisibleLine();
+	int lastLine = firstLine + LinesOnScreen();
+
+	firstLine -= 99;
+	if (firstLine < 0)
+	{
+		firstLine = 0;
+	}
+
+	lastLine += 99;
+	if (lastLine > numOfInstructions)
+	{
+		lastLine = numOfInstructions;
+	}
+
+	int pos = PositionFromLine(firstLine) + 1;
 	wxString disassemblyText = GetValue();
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int i = firstLine; i < lastLine; i++)
 	{
 		struct DisassembledInstruction* instruction = &(instructions[i]);
 

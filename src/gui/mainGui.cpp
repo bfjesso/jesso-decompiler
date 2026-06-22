@@ -29,6 +29,8 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsTextCtrl->EnableLineNumbers();
 
 	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
+		UpdateDisassemblyTextCtrl();
+		
 		decompilationTextCtrl->ClearIndicators();
 		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
 		if (currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
@@ -366,7 +368,7 @@ void MainGui::DisassembleFile()
 		wxMessageBox("No file opened", "Can't disassemble");
 		return;
 	}
-	if (disassembledInstructions.size() > 0) 
+	if (disassembledInstructions.size() > 0)
 	{
 		wxMessageBox("File already disassembled", "Can't disassemble");
 		return;
@@ -401,7 +403,7 @@ void MainGui::DisassembleFile()
 					wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 				}
 			}
-			else 
+			else
 			{
 				if (sectionStart < firstAddress && sectionEnd > firstAddress)
 				{
@@ -444,12 +446,39 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	UpdateDisassemblyTextCtrl();
+	numOfInstructions = disassembledInstructions.size();
+	wxString newLines = "";
+	for (int i = 0; i < numOfInstructions; i++) 
+	{
+		newLines += "\n";
+	}
+
+	disassemblyTextCtrl->SetReadOnly(false);
+	disassemblyTextCtrl->SetText(newLines);
+	disassemblyTextCtrl->SetReadOnly(true);
+
+	int entryPointIndex = findInstructionByAddress(disassembledInstructions.data(), 0, disassembledInstructions.size() - 1, entryPoint + imageBase);
+	int errorIndex = -1;
 
 	if (errorAddress != 0) 
 	{
-		int line = findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, errorAddress);
-		disassemblyTextCtrl->HighlightLine(line, RED_INDICATOR, 1);
+		errorIndex = findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, errorAddress);
+		disassemblyTextCtrl->CenterLine(errorIndex);
+	}
+	else 
+	{
+		disassemblyTextCtrl->CenterLine(entryPointIndex);
+	}
+
+	UpdateDisassemblyTextCtrl();
+
+	if (errorIndex != -1)
+	{
+		disassemblyTextCtrl->HighlightLine(errorIndex, RED_INDICATOR, 1);
+	}
+	else
+	{
+		disassemblyTextCtrl->HighlightLine(entryPointIndex, YELLOW_INDICATOR, 1);
 	}
 
 	statusStaticText->SetLabelText("Status: idle");
@@ -831,18 +860,33 @@ void MainGui::FindAllFunctions()
 
 void MainGui::UpdateDisassemblyTextCtrl()
 {
+	int firstLine = disassemblyTextCtrl->GetFirstVisibleLine();
+	int lastLine = firstLine + disassemblyTextCtrl->LinesOnScreen();
+	if (disassemblyTextCtrl->GetLineLength(firstLine) != 0 && disassemblyTextCtrl->GetLineLength(lastLine) != 0)
+	{
+		return;
+	}
+
+	int numOfInstructions = disassembledInstructions.size();
+
+	firstLine -= 100;
+	if (firstLine < 0)
+	{
+		firstLine = 0;
+	}
+
+	lastLine += 100;
+	if (lastLine > numOfInstructions)
+	{
+		lastLine = numOfInstructions;
+	}
+
 	disassemblyTextCtrl->SetReadOnly(false);
 	disassemblyTextCtrl->Freeze();
 
-	int numOfInstructions = disassembledInstructions.size();
 	int sectionIndex = -1;
-
-	wxString disassemblyText = "";
-	disassemblyText.reserve(numOfInstructions * 50);
-
 	struct JdcStr instructionStrBuffer = initializeJdcStr();
-	int entryPointIndex = 0;
-	for (int i = 0; i < numOfInstructions; i++) 
+	for (int i = firstLine; i < lastLine; i++)
 	{
 		for (int j = sectionIndex + 1; j < numOfSections; j++)
 		{
@@ -874,7 +918,6 @@ void MainGui::UpdateDisassemblyTextCtrl()
 		else if (disassembledInstructions[i].address == entryPoint + imageBase) 
 		{
 			asmStr += " ; entry point";
-			entryPointIndex = i;
 		}
 
 		unsigned long long dst = getJmpDst(&disassembledInstructions[0], i, i - 0x1000);
@@ -885,18 +928,17 @@ void MainGui::UpdateDisassemblyTextCtrl()
 			asmStr += " ; dst: " + wxString(dstStr);
 		}
 
-		disassemblyText += addressInfoStr + asmStr + "\n";
+		int startPos = disassemblyTextCtrl->PositionFromLine(i);
+		int endPos = disassemblyTextCtrl->GetLineEndPosition(i);
+		disassemblyTextCtrl->Replace(startPos, endPos + 1, addressInfoStr + asmStr + "\n");
 	}
 
 	freeJdcStr(&instructionStrBuffer);
 
-	disassemblyTextCtrl->SetText(disassemblyText);
 	disassemblyTextCtrl->ApplyAsmHighlighting(disassembledInstructions.data(), disassembledInstructions.size(), colorsMenu->disassemblyColors);
 
 	disassemblyTextCtrl->Thaw();
 	disassemblyTextCtrl->SetReadOnly(true);
-
-	disassemblyTextCtrl->HighlightLine(entryPointIndex, YELLOW_INDICATOR, 1);
 }
 
 void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
