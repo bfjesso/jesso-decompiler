@@ -271,6 +271,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	}
 
 	// checking for ELSE conditions that are associated with a conditional goto, which need to be removed
+	int numRemoved = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* gotoCond = &params->currentFunc->conditions[i];
@@ -281,10 +282,23 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				struct Condition* elseCond = &params->currentFunc->conditions[j];
 				if (elseCond->conditionType == ELSE_CT && gotoCond->dstIndex == elseCond->startIndex)
 				{
-					memset(elseCond, 0, sizeof(struct Condition));
+					numRemoved++;
 				}
 			}
 		}
+	}
+
+	if(numRemoved > 0)
+	{
+		params->currentFunc->numOfConditions -= numRemoved;
+		struct Condition* newConditions = (struct Condition*)realloc(params->currentFunc->conditions, params->currentFunc->numOfConditions * sizeof(struct Condition));
+		if (!newConditions)
+		{
+			return 0;
+
+		}
+
+		params->currentFunc->conditions = newConditions;
 	}
 
 	return 1;
