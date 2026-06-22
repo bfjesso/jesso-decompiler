@@ -267,8 +267,23 @@ void MainGui::OpenFile()
 					is64Bit = ask64Bit == wxYES;
 
 					imageBase = 0;
-					entryPoint = wxGetNumberFromUser("Specify the entry point as a file offset (image base will be zero):", "Entry point:", "Specify the entry point", 0, 0, numOfFileBytes - 1, this);
-				
+
+					while (1)
+					{
+						wxTextEntryDialog dlg(this, "", "Specify the entry point as a file offset (image base will be zero):");
+						if (dlg.ShowModal() == wxID_OK)
+						{
+							wxString txt = dlg.GetValue();
+							if (txt.ToULongLong(&entryPoint, 16))
+							{
+								break;
+							}
+
+							wxMessageBox("Not valid hex number", "Failed to find address");
+						}
+					}
+					
+
 					fileBytes = new unsigned char[numOfFileBytes];
 					if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
 					{
