@@ -691,8 +691,14 @@ void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
 				{
 					int argNamePos = text.rfind(" ", argEndPos);
 
+					int numOfPtrs = 0;
+					while (text[argNamePos - numOfPtrs - 1] == '*') 
+					{
+						numOfPtrs++;
+					}
+
 					StartStyling(argTypePos);
-					SetStyling(argNamePos - argTypePos, PRIMITIVE_DECOMP_COLOR);
+					SetStyling(argNamePos - argTypePos - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
 
 					StartStyling(argNamePos);
 					SetStyling(argEndPos - argNamePos, ARGUMENT_DECOMP_COLOR);
