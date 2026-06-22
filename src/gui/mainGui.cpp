@@ -269,8 +269,8 @@ void MainGui::OpenFile()
 					// this is just for formatting in the gui
 					if (numOfFileBytes < 0x10) { imageBase = 0x10; }
 					else if (numOfFileBytes < 0x1000) { imageBase = 0x1000; }
-					else if (numOfFileBytes < 0x100000) { imageBase = 0x10000; }
-					else if (numOfFileBytes < 0x10000000) { imageBase = 0x1000000; }
+					else if (numOfFileBytes < 0x100000) { imageBase = 0x100000; }
+					else if (numOfFileBytes < 0x10000000) { imageBase = 0x10000000; }
 					else if (numOfFileBytes < 0x1000000000) { imageBase = 0x1000000000; }
 					else if (numOfFileBytes < 0x100000000000) { imageBase = 0x100000000000; }
 					else if (numOfFileBytes < 0x10000000000000) { imageBase = 0x10000000000000; }
@@ -282,12 +282,18 @@ void MainGui::OpenFile()
 						if (dlg.ShowModal() == wxID_OK)
 						{
 							wxString txt = dlg.GetValue();
-							if (txt.ToULongLong(&entryPoint, 16))
+							if (!txt.ToULongLong(&entryPoint, 16))
+							{
+								wxMessageBox("Not a valid hex number", "Failed to set entry point");
+							}
+							else if(entryPoint >= numOfFileBytes) 
+							{
+								wxMessageBox("File offset is larger than the file", "Failed to set entry point");
+							}
+							else 
 							{
 								break;
 							}
-
-							wxMessageBox("Not valid hex number", "Failed to find address");
 						}
 					}
 					
