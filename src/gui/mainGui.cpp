@@ -266,11 +266,19 @@ void MainGui::OpenFile()
 					int ask64Bit = wxMessageBox("Do you want to disassemble in 64 bit mode?", "Specify architecture", wxYES_NO, this);
 					is64Bit = ask64Bit == wxYES;
 
-					imageBase = 0;
+					// this is just for formatting in the gui
+					if (numOfFileBytes < 0x10) { imageBase = 0x10; }
+					else if (numOfFileBytes < 0x1000) { imageBase = 0x1000; }
+					else if (numOfFileBytes < 0x100000) { imageBase = 0x10000; }
+					else if (numOfFileBytes < 0x10000000) { imageBase = 0x1000000; }
+					else if (numOfFileBytes < 0x1000000000) { imageBase = 0x1000000000; }
+					else if (numOfFileBytes < 0x100000000000) { imageBase = 0x100000000000; }
+					else if (numOfFileBytes < 0x10000000000000) { imageBase = 0x10000000000000; }
+					else { imageBase = 0x1000000000000000; }
 
 					while (1)
 					{
-						wxTextEntryDialog dlg(this, "", "Specify the entry point as a file offset (image base will be zero):");
+						wxTextEntryDialog dlg(this, "", "Specify the entry point as a file offset");
 						if (dlg.ShowModal() == wxID_OK)
 						{
 							wxString txt = dlg.GetValue();
