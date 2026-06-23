@@ -295,6 +295,12 @@ void MainGui::OpenFile()
 								break;
 							}
 						}
+						else
+						{
+							this->SetTitle("Jesso Decompiler x64");
+							currentFilePath = "";
+							return;
+						}
 					}
 					
 
