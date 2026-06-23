@@ -14,13 +14,17 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 {
 	SetOwnBackgroundColour(backgroundColor);
 
+	colorsMenu = new ColorsMenu();
+	dataViewerMenu = new DataViewer(colorsMenu);
+	stringsMenu = new StringsMenu();
+
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
 	
 	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
-	disassemblyTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400));
+	disassemblyWindow = new DisassemblyWindow(topSplitter, wxSize(150, 400), colorsMenu);
 
 	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400));
 	decompilationTextCtrl->EnableLineNumbers();
@@ -28,11 +32,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150));
 	functionsTextCtrl->EnableLineNumbers();
 
-	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
-		UpdateDisassemblyTextCtrl();
-		
+	disassemblyWindow->SetAdditionalOnUpdateUI([&]() {
 		decompilationTextCtrl->ClearIndicators();
-		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
+		int instructionIndex = disassemblyWindow->GetCurrentLine();
 		if (currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
 			instructionIndex >= functions[currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[currentDecompiledFunc].lastInstructionIndex)
 		{
@@ -49,7 +51,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 				}
 			}
 
-			disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			disassemblyWindow->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 
 		if (showAssociatedFunctions && instructionIndex < disassembledInstructions.size())
@@ -59,19 +61,19 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 			if (funcIndex != -1) 
 			{
 				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
-				disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+				disassemblyWindow->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 			}
 		}
 
 		if (dataViewerMenu->IsShown() && showBytesInDataViewer)
 		{
 			dataViewerMenu->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex].numOfBytes);
-			disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			disassemblyWindow->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 	});
 
 	decompilationTextCtrl->SetAdditionalOnUpdateUI([&]() {
-		disassemblyTextCtrl->ClearIndicators();
+		disassemblyWindow->ClearIndicators();
 		int selectedLine = decompilationTextCtrl->GetCurrentLine();
 		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 		{
@@ -79,57 +81,34 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 			for (int i = 0; i < a->numOfIndexes; i++)
 			{
-				disassemblyTextCtrl->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
+				disassemblyWindow->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
 			}
 
 			decompilationTextCtrl->HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
 		}
 	});
 
-	disassemblyTextCtrl->AddRightClickOption("Go to address", 'G', 0, [&](wxCommandEvent&) { 
-		wxTextEntryDialog dlg(this, "", "Go to address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16))
-			{
-				int index = findInstructionByAddress(disassembledInstructions.data(), 0, disassembledInstructions.size() - 1, address);
-				if (index == -1)
-				{
-					wxMessageBox("Address not found", "Failed to find address");
-					return;
-				}
-
-				disassemblyTextCtrl->CenterLine(index);
-				return;
-			}
-
-			wxMessageBox("Not valid hex number", "Failed to find address");
-		}
-	});
-
-	disassemblyTextCtrl->AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
+	disassemblyWindow->AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
 		showAssociatedDecompiledLines = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
+		disassemblyWindow->ClearIndicators();
 		decompilationTextCtrl->ClearIndicators();
 	});
 
-	disassemblyTextCtrl->AddRightClickOption("Show bytes in data viewer", 0, &showBytesInDataViewer, [&](wxCommandEvent& e) {
+	disassemblyWindow->AddRightClickOption("Show bytes in data viewer", 0, &showBytesInDataViewer, [&](wxCommandEvent& e) {
 		showBytesInDataViewer = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
+		disassemblyWindow->ClearIndicators();
 		dataViewerMenu->dataTextCtrl->ClearIndicators();
 	});
 
-	disassemblyTextCtrl->AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
+	disassemblyWindow->AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
 		showAssociatedFunctions = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
+		disassemblyWindow->ClearIndicators();
 		functionsTextCtrl->ClearIndicators();
 	});
 
 	decompilationTextCtrl->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
 		showAssociatedInstructions = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
+		disassemblyWindow->ClearIndicators();
 		decompilationTextCtrl->ClearIndicators();
 	});
 
@@ -181,9 +160,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	});
 
 	menuBar = new wxMenuBar();
-	colorsMenu = new ColorsMenu();
-	dataViewerMenu = new DataViewer(colorsMenu);
-	stringsMenu = new StringsMenu();
 
 	wxMenu* fileMenu = new wxMenu();
 	AddMenuItem(fileMenu, OpenFileID, "Open file", [&](wxCommandEvent& ce) -> void { OpenFile(); });
@@ -209,10 +185,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	colorsMenu->AddTextCtrl(decompilationTextCtrl);
 	colorsMenu->AddTextCtrl(dataViewerMenu->dataTextCtrl);
-	colorsMenu->AddTextCtrl(disassemblyTextCtrl);
+	colorsMenu->AddTextCtrl(disassemblyWindow);
 	colorsMenu->AddTextCtrl(functionsTextCtrl);
 
-	topSplitter->SplitVertically(disassemblyTextCtrl, decompilationTextCtrl, 0);
+	topSplitter->SplitVertically(disassemblyWindow, decompilationTextCtrl, 0);
 	topSplitter->SetSashGravity(0.5);
 	topSplitter->SetMinimumPaneSize(100);
 
@@ -475,40 +451,7 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	numOfInstructions = disassembledInstructions.size();
-	wxString newLines = "";
-	for (int i = 0; i < numOfInstructions; i++) 
-	{
-		newLines += "\n";
-	}
-
-	disassemblyTextCtrl->SetReadOnly(false);
-	disassemblyTextCtrl->SetText(newLines);
-	disassemblyTextCtrl->SetReadOnly(true);
-
-	int entryPointIndex = findInstructionByAddress(disassembledInstructions.data(), 0, disassembledInstructions.size() - 1, entryPoint + imageBase);
-	int errorIndex = -1;
-
-	if (errorAddress != 0) 
-	{
-		errorIndex = findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, errorAddress);
-		disassemblyTextCtrl->CenterLine(errorIndex);
-	}
-	else 
-	{
-		disassemblyTextCtrl->CenterLine(entryPointIndex);
-	}
-
-	UpdateDisassemblyTextCtrl();
-
-	if (errorIndex != -1)
-	{
-		disassemblyTextCtrl->HighlightLine(errorIndex, RED_INDICATOR, 1);
-	}
-	else
-	{
-		disassemblyTextCtrl->HighlightLine(entryPointIndex, YELLOW_INDICATOR, 1);
-	}
+	disassemblyWindow->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), sections, numOfSections, imageBase, entryPoint, errorAddress);
 
 	statusStaticText->SetLabelText("Status: idle");
 
@@ -566,7 +509,7 @@ void MainGui::ClearData()
 	dataViewerMenu->ClearData();
 	stringsMenu->ClearData();
 	
-	disassemblyTextCtrl->ClearText();
+	disassemblyWindow->ClearData();
 	decompilationTextCtrl->ClearText();
 	functionsTextCtrl->ClearText();
 
@@ -763,7 +706,7 @@ void MainGui::DecompileFunction(int functionIndex)
 
 	decompilationTextCtrl->ClearText();
 	decompilationTextCtrl->ClearIndicators();
-	disassemblyTextCtrl->ClearIndicators();
+	disassemblyWindow->ClearIndicators();
 
 	decompParams.currentFunc = &functions[functionIndex];
 
@@ -778,7 +721,7 @@ void MainGui::DecompileFunction(int functionIndex)
 	int errorInstructionIndex = 0;
 	if (!decompileFunction(&decompParams, &decompilationResult, &statusMessage, &errorInstructionIndex))
 	{
-		disassemblyTextCtrl->HighlightLine(errorInstructionIndex, RED_INDICATOR, 1);
+		disassemblyWindow->HighlightLine(errorInstructionIndex, RED_INDICATOR, 1);
 
 		wxMessageBox(statusMessage.buffer, "Can't decompile");
 		freeJdcStr(&statusMessage);
@@ -885,89 +828,6 @@ void MainGui::FindAllFunctions()
 	}
 
 	decompParams.currentFunc = 0;
-}
-
-void MainGui::UpdateDisassemblyTextCtrl()
-{
-	int firstLine = disassemblyTextCtrl->GetFirstVisibleLine();
-	int lastLine = firstLine + disassemblyTextCtrl->LinesOnScreen();
-	if (disassemblyTextCtrl->GetLineLength(firstLine) != 0 && disassemblyTextCtrl->GetLineLength(lastLine) != 0)
-	{
-		return;
-	}
-
-	int numOfInstructions = disassembledInstructions.size();
-
-	firstLine -= 100;
-	if (firstLine < 0)
-	{
-		firstLine = 0;
-	}
-
-	lastLine += 100;
-	if (lastLine > numOfInstructions)
-	{
-		lastLine = numOfInstructions;
-	}
-
-	disassemblyTextCtrl->SetReadOnly(false);
-	disassemblyTextCtrl->Freeze();
-
-	int sectionIndex = -1;
-	struct JdcStr instructionStrBuffer = initializeJdcStr();
-	for (int i = firstLine; i < lastLine; i++)
-	{
-		for (int j = sectionIndex + 1; j < numOfSections; j++)
-		{
-			if (sections[j].type == CODE_FST && disassembledInstructions[i].address >= sections[j].virtualAddress + imageBase)
-			{
-				sectionIndex = j;
-				break;
-			}
-		}
-		
-		char addressStr[20] = { 0 };
-		sprintf(addressStr, "0x%llX", disassembledInstructions[i].address);
-		wxString addressInfoStr = wxString(addressStr) + wxString(sections[sectionIndex].name.buffer) + "\t";
-
-		wxString asmStr = "";
-		if (instructionToStr(&disassembledInstructions[i], &instructionStrBuffer))
-		{
-			asmStr = wxString(instructionStrBuffer.buffer);
-		}
-
-		if (disassembledInstructions[i].isInvalid)
-		{
-			asmStr += " ; invalid instruction";
-		}
-		else if (disassembledInstructions[i].opcode == NO_MNEMONIC)
-		{
-			asmStr += " ; unrecognized opcode";
-		}
-		else if (disassembledInstructions[i].address == entryPoint + imageBase) 
-		{
-			asmStr += " ; entry point";
-		}
-
-		unsigned long long dst = getJmpDst(&disassembledInstructions[0], i, i - 0x1000);
-		if (dst != 0)
-		{
-			char dstStr[20] = { 0 };
-			sprintf(dstStr, "0x%llX", dst);
-			asmStr += " ; dst: " + wxString(dstStr);
-		}
-
-		int startPos = disassemblyTextCtrl->PositionFromLine(i);
-		int endPos = disassemblyTextCtrl->GetLineEndPosition(i);
-		disassemblyTextCtrl->Replace(startPos, endPos + 1, addressInfoStr + asmStr + "\n");
-	}
-
-	freeJdcStr(&instructionStrBuffer);
-
-	disassemblyTextCtrl->ApplyAsmHighlighting(disassembledInstructions.data(), disassembledInstructions.size(), colorsMenu->disassemblyColors);
-
-	disassemblyTextCtrl->Thaw();
-	disassemblyTextCtrl->SetReadOnly(true);
 }
 
 void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)

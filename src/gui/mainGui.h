@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include "jdcTextCtrl.h"
+#include "disassemblyWindow.h"
 #include <wx/grid.h>
 #include <wx/splitter.h>
 #include "disassembleBytesMenu.h"
@@ -28,7 +29,7 @@ public:
 
 	wxStaticText* statusStaticText = nullptr;
 
-	JdcTextCtrl* disassemblyTextCtrl = nullptr;
+	DisassemblyWindow* disassemblyWindow = nullptr;
 	JdcTextCtrl* decompilationTextCtrl = nullptr;
 	JdcTextCtrl* functionsTextCtrl = nullptr;
 
