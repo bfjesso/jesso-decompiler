@@ -24,12 +24,12 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
-	disassemblyWindow = new DisassemblyWindow(topSplitter, wxSize(150, 400), colorsMenu);
+	disassemblyWindow = new DisassemblyWindow(topSplitter, wxSize(150, 400), colorsMenu, statusStaticText);
 
-	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400));
+	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), statusStaticText);
 	decompilationTextCtrl->EnableLineNumbers();
 
-	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150));
+	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150), statusStaticText);
 	functionsTextCtrl->EnableLineNumbers();
 
 	disassemblyWindow->SetAdditionalOnUpdateUI([&]() {

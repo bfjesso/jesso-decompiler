@@ -35,7 +35,9 @@ private:
 	char IsCharDigit(char c);
 
 public:
-	JdcTextCtrl(wxWindow* parent, const wxSize& size);
+	JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* statusText);
+
+	wxStaticText* statusStaticText = nullptr;
 
 	std::function<void()> additionalOnUpdateUI;
 	std::vector<struct RightClickOption> additionalRightClickOptions;

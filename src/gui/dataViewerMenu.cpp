@@ -28,7 +28,7 @@ DataViewer::DataViewer(ColorsMenu* colorMenu) : wxFrame(nullptr, MainWindowID, "
 	hexCheckBox->SetOwnForegroundColour(textColor);
 	hexCheckBox->SetValue(true);
 
-	dataTextCtrl = new JdcTextCtrl(this, wxSize(500, 250));
+	dataTextCtrl = new JdcTextCtrl(this, wxSize(500, 250), 0);
 	dataTextCtrl->AddRightClickOption("Go to address", 'G', 0, [&](wxCommandEvent&) {
 		wxTextEntryDialog dlg(this, "", "Go to address");
 		if (dlg.ShowModal() == wxID_OK)

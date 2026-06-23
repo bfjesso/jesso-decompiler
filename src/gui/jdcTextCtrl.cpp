@@ -2,8 +2,10 @@
 
 #include "../decompiler/intrinsics.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* statusText) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
 {
+	statusStaticText = statusText;
+	
 	Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { RightClickOptions(e); });
 	Bind(wxEVT_CHAR_HOOK, &JdcTextCtrl::OnKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &JdcTextCtrl::OnUpdateUI, this);
@@ -160,7 +162,11 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 
 	GotoPos(pos);
 	SetSelection(pos, pos + text.size());
-	// statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(findCtrl, text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
+
+	if (statusStaticText) 
+	{
+		statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
+	}
 }
 
 int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags, unsigned char forward)
@@ -205,7 +211,10 @@ void JdcTextCtrl::OnFindDialogClose(wxFindDialogEvent& e)
 		findDialog = nullptr;
 	}
 
-	// statusStaticText->SetLabelText("Status: idle");
+	if (statusStaticText) 
+	{
+		statusStaticText->SetLabelText("Status: idle");
+	}
 }
 
 char JdcTextCtrl::IsCharDigit(char c)

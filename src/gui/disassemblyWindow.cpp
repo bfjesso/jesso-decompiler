@@ -3,7 +3,7 @@
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyWindow::DisassemblyWindow(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu) : JdcTextCtrl(parent, size)
+DisassemblyWindow::DisassemblyWindow(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
 {
 	colorsMenu = colorMenu;
 

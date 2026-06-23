@@ -5,7 +5,7 @@
 class DisassemblyWindow : public JdcTextCtrl
 {
 public:
-	DisassemblyWindow(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu);
+	DisassemblyWindow(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText);
 
 	ColorsMenu* colorsMenu = nullptr;
 	
