@@ -12,6 +12,8 @@ wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
+	this->SetMinSize(wxSize(800, 600));
+	
 	SetOwnBackgroundColour(backgroundColor);
 
 	colorsMenu = new ColorsMenu();
@@ -202,7 +204,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.Caption("Disassembly")
 		.Center()
 		.BestSize(300, 400)
-		.MinSize(100, 100)
+		.MinSize(200, 200)
 		.CloseButton(false));
 
 	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
@@ -210,7 +212,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.Caption("Decompilation")
 		.Right()
 		.BestSize(300, 400)
-		.MinSize(100, 100)
+		.MinSize(200, 200)
 		.CloseButton(false));
 
 	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
@@ -218,7 +220,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.Caption("Functions")
 		.Bottom()
 		.BestSize(800, 150)
-		.MinSize(100, 50)
+		.MinSize(200, 200)
 		.CloseButton(false));
 
 	auiManager.Update();
