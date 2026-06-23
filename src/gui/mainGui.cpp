@@ -20,16 +20,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
-	
-	mainSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
-	topSplitter = new wxSplitterWindow(mainSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
-	disassemblyWindow = new DisassemblyWindow(topSplitter, wxSize(150, 400), colorsMenu, statusStaticText);
+	disassemblyWindow = new DisassemblyWindow(this, wxSize(150, 400), colorsMenu, statusStaticText);
 
-	decompilationTextCtrl = new JdcTextCtrl(topSplitter, wxSize(150, 400), statusStaticText);
+	decompilationTextCtrl = new JdcTextCtrl(this, wxSize(150, 400), statusStaticText);
 	decompilationTextCtrl->EnableLineNumbers();
 
-	functionsTextCtrl = new JdcTextCtrl(mainSplitter, wxSize(800, 150), statusStaticText);
+	functionsTextCtrl = new JdcTextCtrl(this, wxSize(800, 150), statusStaticText);
 	functionsTextCtrl->EnableLineNumbers();
 
 	disassemblyWindow->SetAdditionalOnUpdateUI([&]() {
@@ -188,19 +185,43 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu->AddTextCtrl(disassemblyWindow);
 	colorsMenu->AddTextCtrl(functionsTextCtrl);
 
-	topSplitter->SplitVertically(disassemblyWindow, decompilationTextCtrl, 0);
-	topSplitter->SetSashGravity(0.5);
-	topSplitter->SetMinimumPaneSize(100);
+	auiManager.SetManagedWindow(this);
+	auiManager.AddPane(statusStaticText, wxAuiPaneInfo()
+		.Name("status")
+		.Top()
+		.DockFixed(true)
+		.PaneBorder(false)
+		.Floatable(false)
+		.Movable(false)
+		.Gripper(false)
+		.CaptionVisible(false)
+		.CloseButton(false));
 
-	mainSplitter->SplitHorizontally(topSplitter, functionsTextCtrl, 150);
-	mainSplitter->SetSashGravity(1);
-	mainSplitter->SetMinimumPaneSize(100);
+	auiManager.AddPane(disassemblyWindow, wxAuiPaneInfo()
+		.Name("disassembly")
+		.Caption("Disassembly")
+		.Center()
+		.BestSize(300, 400)
+		.MinSize(100, 100)
+		.CloseButton(false));
 
-	vSizer = new wxBoxSizer(wxVERTICAL);
-	vSizer->Add(statusStaticText, 0, wxTOP | wxLEFT, 10);
-	vSizer->Add(mainSplitter, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
+		.Name("decompilation")
+		.Caption("Decompilation")
+		.Right()
+		.BestSize(300, 400)
+		.MinSize(100, 100)
+		.CloseButton(false));
 
-	SetSizerAndFit(vSizer);
+	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
+		.Name("functions")
+		.Caption("Functions")
+		.Bottom()
+		.BestSize(800, 150)
+		.MinSize(100, 50)
+		.CloseButton(false));
+
+	auiManager.Update();
 }
 
 void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function)
@@ -869,6 +890,7 @@ void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	auiManager.UnInit();
 	dataViewerMenu->Destroy();
 	stringsMenu->Destroy();
 	colorsMenu->Destroy();

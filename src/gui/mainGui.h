@@ -1,5 +1,6 @@
 #pragma once
 #include "guiUtils.h"
+#include <wx/aui/aui.h>
 #include "jdcTextCtrl.h"
 #include "disassemblyWindow.h"
 #include <wx/grid.h>
@@ -38,9 +39,7 @@ public:
 	unsigned char showAssociatedFunctions = 1;
 	unsigned char showBytesInDataViewer = 1;
 
-	wxSplitterWindow* mainSplitter = nullptr;
-	wxSplitterWindow* topSplitter = nullptr;
-	wxBoxSizer* vSizer = nullptr;
+	wxAuiManager auiManager;
 
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
