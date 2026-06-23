@@ -681,12 +681,22 @@ void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
 	{
 		int argsStartPos = text.find("(", lineStart);
 		int functionNamePos = text.rfind(" ", argsStartPos);
+		int callingConventionPos = text.rfind(" ", functionNamePos - 1);
 		int argsEndPos = text.find(")", lineStart);
 
 		if (argsStartPos != wxNOT_FOUND && functionNamePos != wxNOT_FOUND && argsEndPos != wxNOT_FOUND)
 		{
+			int numOfPtrs = 0;
+			while (text[callingConventionPos - numOfPtrs - 1] == '*')
+			{
+				numOfPtrs++;
+			}
+
 			StartStyling(lineStart);
-			SetStyling(functionNamePos - lineStart, PRIMITIVE_DECOMP_COLOR);
+			SetStyling(callingConventionPos - lineStart - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
+
+			StartStyling(callingConventionPos);
+			SetStyling(functionNamePos - callingConventionPos, PRIMITIVE_DECOMP_COLOR);
 
 			StartStyling(functionNamePos);
 			SetStyling(argsStartPos - functionNamePos, FUNCTION_DECOMP_COLOR);
@@ -699,7 +709,7 @@ void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
 				{
 					int argNamePos = text.rfind(" ", argEndPos);
 
-					int numOfPtrs = 0;
+					numOfPtrs = 0;
 					while (text[argNamePos - numOfPtrs - 1] == '*') 
 					{
 						numOfPtrs++;
@@ -719,8 +729,15 @@ void JdcTextCtrl::ApplyFunctionsHighlighting(wxColour* decompColors)
 				int lastArgNamePos = text.rfind(" ", argsEndPos);
 				StartStyling(lastArgNamePos);
 				SetStyling(argsEndPos - lastArgNamePos, ARGUMENT_DECOMP_COLOR);
+
+				numOfPtrs = 0;
+				while (text[lastArgNamePos - numOfPtrs - 1] == '*')
+				{
+					numOfPtrs++;
+				}
+
 				StartStyling(argTypePos);
-				SetStyling(lastArgNamePos - argTypePos, PRIMITIVE_DECOMP_COLOR);
+				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
 			}
 			
 			int commentStartPos = text.find(";", lineStart) + 1;
