@@ -127,6 +127,12 @@ void DisassemblyWindow::UpdateTextCtrl()
 	struct JdcStr instructionStrBuffer = initializeJdcStr();
 	for (int i = firstLine; i < lastLine; i++)
 	{
+		int lineLen = GetLineLength(i);
+		if (lineLen != 0)
+		{
+			continue;
+		}
+		
 		for (int j = sectionIndex + 1; j < numOfSections; j++)
 		{
 			if (sections[j].type == CODE_FST && instructions[i].address >= sections[j].virtualAddress + imageBase)
