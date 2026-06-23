@@ -188,6 +188,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu->AddTextCtrl(functionsTextCtrl);
 
 	auiManager.SetManagedWindow(this);
+	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
 	auiManager.AddPane(statusStaticText, wxAuiPaneInfo()
 		.Name("status")
 		.Top()
