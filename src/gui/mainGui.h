@@ -10,7 +10,7 @@
 #include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
 #include "stringsMenu.h"
-#include "importsViewerMenu.h"
+#include "importsWindow.h"
 #include "colorsMenu.h"
 #include "functionInfoMenu.h"
 #include "../file-handler/fileHandler.h"
@@ -79,6 +79,8 @@ public:
 		DisassembleFileButtonID,
 		AnalyzeFileButtonID
 	};
+
+	void AddFloatingPane(wxWindow* window, wxString caption, wxSize size);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
