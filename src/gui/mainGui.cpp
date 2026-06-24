@@ -214,7 +214,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
 		.Name("decompilation")
 		.Caption("Decompilation")
-		.Right()
+		.Center()
 		.BestSize(300, 400)
 		.MinSize(100, 100)
 		.CloseButton(false));
