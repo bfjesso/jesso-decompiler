@@ -193,7 +193,7 @@
     </ClCompile>
     <ClCompile Include="src\file-handler\fileHandler.c" />
     <ClCompile Include="src\gui\colorsMenu.cpp" />
-    <ClCompile Include="src\gui\dataViewerMenu.cpp" />
+    <ClCompile Include="src\gui\dataTextCtrl.cpp" />
     <ClCompile Include="src\gui\decompilationTextCtrl.cpp" />
     <ClCompile Include="src\gui\bytesDisassemblerWindow.cpp" />
     <ClCompile Include="src\gui\disassemblyTextCtrl.cpp" />
@@ -246,7 +246,7 @@
     </ClInclude>
     <ClInclude Include="src\file-handler\fileHandler.h" />
     <ClInclude Include="src\gui\colorsMenu.h" />
-    <ClInclude Include="src\gui\dataViewerMenu.h" />
+    <ClInclude Include="src\gui\dataTextCtrl.h" />
     <ClInclude Include="src\gui\decompilationTextCtrl.h" />
     <ClInclude Include="src\gui\bytesDisassemblerWindow.h" />
     <ClInclude Include="src\gui\disassemblyTextCtrl.h" />

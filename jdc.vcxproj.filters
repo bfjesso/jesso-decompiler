@@ -36,7 +36,7 @@
     <ClCompile Include="src\elf-handler\elfHandler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\dataViewerMenu.cpp">
+    <ClCompile Include="src\gui\dataTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\bytesDisassemblerWindow.cpp">
@@ -170,7 +170,7 @@
     <ClInclude Include="src\elf-handler\elfHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\dataViewerMenu.h">
+    <ClInclude Include="src\gui\dataTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\bytesDisassemblerWindow.h">

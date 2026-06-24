@@ -484,38 +484,6 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	}
 }
 
-void JdcTextCtrl::ApplyDataHighlighting(wxColour* dataColors)
-{
-	highlightingType = DATA_HIGHLIGHTING;
-	for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
-	{
-		StyleSetForeground(i, dataColors[i]);
-	}
-
-	StartStyling(0);
-
-	wxString dataText = GetValue();
-	SetStyling(dataText.length(), ADDRESS_DATA_COLOR);
-
-	int start = 0;
-	while (start < dataText.length())
-	{
-		int pos = dataText.find("\t", start);
-		int end = dataText.find("\n", pos);
-		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
-		{
-			StartStyling(pos);
-			SetStyling(end - pos + 1, VALUE_DATA_COLOR);
-
-			start = end + 1;
-		}
-		else
-		{
-			break;
-		}
-	}
-}
-
 void JdcTextCtrl::ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor)
 {
 	if (!str || !strcmp(str, ""))

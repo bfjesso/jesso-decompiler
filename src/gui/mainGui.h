@@ -4,7 +4,7 @@
 #include "disassemblyTextCtrl.h"
 #include "decompilationTextCtrl.h"
 #include "functionsTextCtrl.h"
-#include "dataViewerMenu.h"
+#include "dataTextCtrl.h"
 #include "stringsMenu.h"
 #include "colorsMenu.h"
 #include "../file-handler/fileHandler.h"
@@ -19,7 +19,6 @@ public:
 	MainGui();
 
 	wxMenuBar* menuBar = nullptr;
-	DataViewer* dataViewerMenu = nullptr;
 	StringsMenu* stringsMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
@@ -28,6 +27,7 @@ public:
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
+	DataTextCtrl* dataTextCtrl = nullptr;
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedInstructions = 1;
