@@ -3,8 +3,8 @@
 #include <wx/aui/aui.h>
 #include "jdcTextCtrl.h"
 #include "disassemblyWindow.h"
+#include "decompilationWindow.h"
 #include <wx/grid.h>
-#include <wx/splitter.h>
 #include "disassembleBytesMenu.h"
 #include "sectionsViewerMenu.h"
 #include "dataViewerMenu.h"
@@ -31,7 +31,7 @@ public:
 	wxStaticText* statusStaticText = nullptr;
 
 	DisassemblyWindow* disassemblyWindow = nullptr;
-	JdcTextCtrl* decompilationTextCtrl = nullptr;
+	DecompilationWindow* decompilationWindow = nullptr;
 	JdcTextCtrl* functionsTextCtrl = nullptr;
 
 	unsigned char showAssociatedDecompiledLines = 1;
@@ -58,8 +58,6 @@ public:
 	std::vector<DisassembledInstruction> disassembledInstructions;
 
 	std::vector<Function> functions;
-
-	int currentDecompiledFunc = -1;
 
 	DecompilationParameters decompParams = { 0 };
 	
@@ -95,11 +93,7 @@ public:
 
 	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
-	void DecompileFunction(int functionIndex);
-
 	void FindAllFunctions();
-
-	void UpdateDisassemblyTextCtrl();
 
 	void UpdateFunctionsTextCtrl(unsigned char getSymbols);
 

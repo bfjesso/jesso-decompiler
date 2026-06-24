@@ -25,26 +25,27 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	disassemblyWindow = new DisassemblyWindow(this, wxSize(150, 400), colorsMenu, statusStaticText);
 
-	decompilationTextCtrl = new JdcTextCtrl(this, wxSize(150, 400), statusStaticText);
-	decompilationTextCtrl->EnableLineNumbers();
+	decompilationWindow = new DecompilationWindow(this, wxSize(150, 400), colorsMenu, statusStaticText);
+	decompilationWindow->EnableLineNumbers();
+	decompilationWindow->SetAssociatedDisassemblyWindow(disassemblyWindow);
 
 	functionsTextCtrl = new JdcTextCtrl(this, wxSize(800, 150), statusStaticText);
 	functionsTextCtrl->EnableLineNumbers();
 
 	disassemblyWindow->SetAdditionalOnUpdateUI([&]() {
-		decompilationTextCtrl->ClearIndicators();
+		decompilationWindow->ClearIndicators();
 		int instructionIndex = disassemblyWindow->GetCurrentLine();
-		if (currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
-			instructionIndex >= functions[currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[currentDecompiledFunc].lastInstructionIndex)
+		if (decompilationWindow->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
+			instructionIndex >= functions[decompilationWindow->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[decompilationWindow->currentDecompiledFunc].lastInstructionIndex)
 		{
-			for (int i = 0; i < functions[currentDecompiledFunc].numOfLines; i++)
+			for (int i = 0; i < functions[decompilationWindow->currentDecompiledFunc].numOfLines; i++)
 			{
-				struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[i];
+				struct AssociatedInstructions* a = &functions[decompilationWindow->currentDecompiledFunc].associatedInstructions[i];
 				for (int j = 0; j < a->numOfIndexes; j++)
 				{
 					if (a->indexes[j] == instructionIndex)
 					{
-						decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
+						decompilationWindow->HighlightLine(i, PURPLE_INDICATOR, 1);
 						break;
 					}
 				}
@@ -71,26 +72,26 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		}
 	});
 
-	decompilationTextCtrl->SetAdditionalOnUpdateUI([&]() {
+	decompilationWindow->SetAdditionalOnUpdateUI([&]() {
 		disassemblyWindow->ClearIndicators();
-		int selectedLine = decompilationTextCtrl->GetCurrentLine();
-		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[currentDecompiledFunc].associatedInstructionsBufferLen)
+		int selectedLine = decompilationWindow->GetCurrentLine();
+		if (decompilationWindow->currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[decompilationWindow->currentDecompiledFunc].associatedInstructionsBufferLen)
 		{
-			struct AssociatedInstructions* a = &functions[currentDecompiledFunc].associatedInstructions[selectedLine];
+			struct AssociatedInstructions* a = &functions[decompilationWindow->currentDecompiledFunc].associatedInstructions[selectedLine];
 
 			for (int i = 0; i < a->numOfIndexes; i++)
 			{
 				disassemblyWindow->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
 			}
 
-			decompilationTextCtrl->HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
+			decompilationWindow->HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
 		}
 	});
 
 	disassemblyWindow->AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
 		showAssociatedDecompiledLines = e.IsChecked();
 		disassemblyWindow->ClearIndicators();
-		decompilationTextCtrl->ClearIndicators();
+		decompilationWindow->ClearIndicators();
 	});
 
 	disassemblyWindow->AddRightClickOption("Show bytes in data viewer", 0, &showBytesInDataViewer, [&](wxCommandEvent& e) {
@@ -105,10 +106,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		functionsTextCtrl->ClearIndicators();
 	});
 
-	decompilationTextCtrl->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
+	decompilationWindow->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
 		showAssociatedInstructions = e.IsChecked();
 		disassemblyWindow->ClearIndicators();
-		decompilationTextCtrl->ClearIndicators();
+		decompilationWindow->ClearIndicators();
 	});
 
 	functionsTextCtrl->AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
@@ -138,7 +139,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		int selectedLine = functionsTextCtrl->GetCurrentLine();
 		if (selectedLine >= 0 && selectedLine < functions.size()) 
 		{
-			DecompileFunction(selectedLine);
+			decompilationWindow->DecompileFunction(&decompParams, selectedLine);
 		}
 	});
 
@@ -182,7 +183,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
-	colorsMenu->AddTextCtrl(decompilationTextCtrl);
+	colorsMenu->AddTextCtrl(decompilationWindow);
 	colorsMenu->AddTextCtrl(dataViewerMenu->dataTextCtrl);
 	colorsMenu->AddTextCtrl(disassemblyWindow);
 	colorsMenu->AddTextCtrl(functionsTextCtrl);
@@ -203,17 +204,17 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	auiManager.AddPane(disassemblyWindow, wxAuiPaneInfo()
 		.Name("disassembly")
 		.Caption("Disassembly")
-		.Center()
+		.Left()
 		.BestSize(300, 400)
-		.MinSize(200, 200)
+		.MinSize(100, 100)
 		.CloseButton(false));
 
-	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
+	auiManager.AddPane(decompilationWindow, wxAuiPaneInfo()
 		.Name("decompilation")
 		.Caption("Decompilation")
 		.Right()
 		.BestSize(300, 400)
-		.MinSize(200, 200)
+		.MinSize(100, 100)
 		.CloseButton(false));
 
 	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
@@ -221,7 +222,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.Caption("Functions")
 		.Bottom()
 		.BestSize(800, 150)
-		.MinSize(200, 200)
+		.MinSize(100, 100)
 		.CloseButton(false));
 
 	auiManager.Update();
@@ -540,7 +541,7 @@ void MainGui::ClearData()
 	stringsMenu->ClearData();
 	
 	disassemblyWindow->ClearData();
-	decompilationTextCtrl->ClearText();
+	decompilationWindow->ClearText();
 	functionsTextCtrl->ClearText();
 
 	int numOfInstructions = disassembledInstructions.size();
@@ -724,52 +725,6 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	}
 
 	return 1;
-}
-
-void MainGui::DecompileFunction(int functionIndex)
-{
-	if (currentFilePath == "")
-	{
-		wxMessageBox("No file opened", "Can't decompile");
-		return;
-	}
-
-	decompilationTextCtrl->ClearText();
-	decompilationTextCtrl->ClearIndicators();
-	disassemblyWindow->ClearIndicators();
-
-	decompParams.currentFunc = &functions[functionIndex];
-
-	struct JdcStr decompilationResult = initializeJdcStr();
-	if (decompilationResult.bufferSize == 0)
-	{
-		wxMessageBox("Error allocating memory for function decompilation", "Can't decompile");
-		return;
-	}
-
-	struct JdcStr statusMessage = initializeJdcStr();
-	int errorInstructionIndex = 0;
-	if (!decompileFunction(&decompParams, &decompilationResult, &statusMessage, &errorInstructionIndex))
-	{
-		disassemblyWindow->HighlightLine(errorInstructionIndex, RED_INDICATOR, 1);
-
-		wxMessageBox(statusMessage.buffer, "Can't decompile");
-		freeJdcStr(&statusMessage);
-
-		int showOutput = wxMessageBox("Do you still want to see the mangled output?", "Show output", wxYES_NO, this);
-		if (showOutput == wxNO)
-		{
-			freeJdcStr(&decompilationResult);
-			return;
-		}
-	}
-
-	currentDecompiledFunc = functionIndex;
-	decompilationTextCtrl->SetReadOnly(false);
-	decompilationTextCtrl->SetValue(decompilationResult.buffer);
-	freeJdcStr(&decompilationResult);
-	decompilationTextCtrl->ApplyDecompilationHighlighting(&decompParams, colorsMenu->decompColors);
-	decompilationTextCtrl->SetReadOnly(true);
 }
 
 void MainGui::FindAllFunctions() 
@@ -1049,10 +1004,10 @@ void FunctionPropertiesMenu::CloseMenu(wxCloseEvent& e)
 	//mainGui->functionsGrid->SetCellValue(functionIndex, 2, currentFunction->name.buffer);
 
 	// redecompile if it is currently in the decompilation box. this is to refresh it
-	if (mainGui->currentDecompiledFunc == functionIndex)
-	{
-		mainGui->DecompileFunction(functionIndex);
-	}
+	//if (mainGui->decompilationWindow->currentDecompiledFunc == functionIndex)
+	//{
+	//	mainGui->DecompileFunction(functionIndex);
+	//}
 
 	Destroy();
 }
