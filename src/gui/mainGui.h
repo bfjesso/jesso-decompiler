@@ -4,6 +4,7 @@
 #include "jdcTextCtrl.h"
 #include "disassemblyWindow.h"
 #include "decompilationWindow.h"
+#include "functionsWindow.h"
 #include <wx/grid.h>
 #include "disassembleBytesMenu.h"
 #include "sectionsViewerMenu.h"
@@ -32,7 +33,7 @@ public:
 
 	DisassemblyWindow* disassemblyWindow = nullptr;
 	DecompilationWindow* decompilationWindow = nullptr;
-	JdcTextCtrl* functionsTextCtrl = nullptr;
+	FunctionsWindow* functionsWindow = nullptr;
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedInstructions = 1;
@@ -93,9 +94,7 @@ public:
 
 	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
-	void FindAllFunctions();
-
-	void UpdateFunctionsTextCtrl(unsigned char getSymbols);
+	void FindAllFunctions(unsigned char getSymbols);
 
 	void CloseApp(wxCloseEvent& e);
 

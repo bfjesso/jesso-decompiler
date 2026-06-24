@@ -199,6 +199,7 @@
     <ClCompile Include="src\gui\disassemblyWindow.cpp" />
     <ClCompile Include="src\gui\fileHeadersMenu.cpp" />
     <ClCompile Include="src\gui\functionInfoMenu.cpp" />
+    <ClCompile Include="src\gui\functionsWindow.cpp" />
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\calculatorMenu.cpp" />
     <ClCompile Include="src\gui\importsViewerMenu.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="src\gui\disassemblyWindow.h" />
     <ClInclude Include="src\gui\fileHeadersMenu.h" />
     <ClInclude Include="src\gui\functionInfoMenu.h" />
+    <ClInclude Include="src\gui\functionsWindow.h" />
     <ClInclude Include="src\gui\guiUtils.h" />
     <ClInclude Include="src\gui\calculatorMenu.h" />
     <ClInclude Include="src\gui\importsViewerMenu.h" />

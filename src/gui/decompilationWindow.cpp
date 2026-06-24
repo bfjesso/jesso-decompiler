@@ -6,6 +6,7 @@
 DecompilationWindow::DecompilationWindow(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
 {
 	colorsMenu = colorMenu;
+	EnableLineNumbers();
 }
 
 void DecompilationWindow::SetAssociatedDisassemblyWindow(DisassemblyWindow* window)

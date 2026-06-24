@@ -26,11 +26,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyWindow = new DisassemblyWindow(this, wxSize(150, 400), colorsMenu, statusStaticText);
 
 	decompilationWindow = new DecompilationWindow(this, wxSize(150, 400), colorsMenu, statusStaticText);
-	decompilationWindow->EnableLineNumbers();
 	decompilationWindow->SetAssociatedDisassemblyWindow(disassemblyWindow);
 
-	functionsTextCtrl = new JdcTextCtrl(this, wxSize(800, 150), statusStaticText);
-	functionsTextCtrl->EnableLineNumbers();
+	functionsWindow = new FunctionsWindow(this, wxSize(800, 150), colorsMenu, statusStaticText);
 
 	disassemblyWindow->SetAdditionalOnUpdateUI([&]() {
 		decompilationWindow->ClearIndicators();
@@ -56,11 +54,11 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 		if (showAssociatedFunctions && instructionIndex < disassembledInstructions.size())
 		{
-			functionsTextCtrl->ClearIndicators();
+			functionsWindow->ClearIndicators();
 			int funcIndex = findFunctionByAddressInclusive(&decompParams, 0, functions.size() - 1, disassembledInstructions[instructionIndex].address);
 			if (funcIndex != -1) 
 			{
-				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
+				functionsWindow->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
 				disassemblyWindow->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 			}
 		}
@@ -103,7 +101,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	disassemblyWindow->AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
 		showAssociatedFunctions = e.IsChecked();
 		disassemblyWindow->ClearIndicators();
-		functionsTextCtrl->ClearIndicators();
+		functionsWindow->ClearIndicators();
 	});
 
 	decompilationWindow->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
@@ -112,7 +110,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		decompilationWindow->ClearIndicators();
 	});
 
-	functionsTextCtrl->AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
+	functionsWindow->AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
 		wxTextEntryDialog dlg(this, "", "Find address");
 		if (dlg.ShowModal() == wxID_OK)
 		{
@@ -127,7 +125,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 					return;
 				}
 
-				functionsTextCtrl->CenterLine(index);
+				functionsWindow->CenterLine(index);
 				return;
 			}
 
@@ -135,24 +133,24 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		}
 	});
 
-	functionsTextCtrl->AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
+	functionsWindow->AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsWindow->GetCurrentLine();
 		if (selectedLine >= 0 && selectedLine < functions.size()) 
 		{
 			decompilationWindow->DecompileFunction(&decompParams, selectedLine);
 		}
 	});
 
-	functionsTextCtrl->AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
+	functionsWindow->AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsWindow->GetCurrentLine();
 		if (selectedLine >= 0 && selectedLine < functions.size())
 		{
 			new FunctionInfoMenu(this, GetPosition(), disassembledInstructions.data(), &functions[selectedLine]);
 		}
 	});
 
-	functionsTextCtrl->AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
+	functionsWindow->AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = functionsWindow->GetCurrentLine();
 		if (selectedLine >= 0 && selectedLine < functions.size())
 		{
 			new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
@@ -186,7 +184,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu->AddTextCtrl(decompilationWindow);
 	colorsMenu->AddTextCtrl(dataViewerMenu->dataTextCtrl);
 	colorsMenu->AddTextCtrl(disassemblyWindow);
-	colorsMenu->AddTextCtrl(functionsTextCtrl);
+	colorsMenu->AddTextCtrl(functionsWindow);
 
 	auiManager.SetManagedWindow(this);
 	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
@@ -217,7 +215,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.MinSize(100, 100)
 		.CloseButton(false));
 
-	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
+	auiManager.AddPane(functionsWindow, wxAuiPaneInfo()
 		.Name("functions")
 		.Caption("Functions")
 		.Bottom()
@@ -515,15 +513,14 @@ void MainGui::AnalyzeFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	FindAllFunctions();
-
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
+	FindAllFunctions(getSymbols == wxYES);
 	
 	statusStaticText->SetLabelText("Status: finished finding functions, updating GUI...");
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	UpdateFunctionsTextCtrl(getSymbols == wxYES);
+	functionsWindow->ShowAllFunctions(&decompParams);
 
 	statusStaticText->SetLabelText("Status: idle");
 }
@@ -542,7 +539,7 @@ void MainGui::ClearData()
 	
 	disassemblyWindow->ClearData();
 	decompilationWindow->ClearText();
-	functionsTextCtrl->ClearText();
+	functionsWindow->ClearText();
 
 	int numOfInstructions = disassembledInstructions.size();
 	for (int i = 0; i < numOfInstructions; i++)
@@ -727,7 +724,7 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	return 1;
 }
 
-void MainGui::FindAllFunctions() 
+void MainGui::FindAllFunctions(unsigned char getSymbols) 
 {
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
@@ -795,7 +792,10 @@ void MainGui::FindAllFunctions()
 		}
 
 		currentFunction.name = initializeJdcStr();
-		sprintfJdc(&currentFunction.name, 0, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
+		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
+		{
+			sprintfJdc(&currentFunction.name, 0, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
+		}
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
@@ -813,43 +813,6 @@ void MainGui::FindAllFunctions()
 	}
 
 	decompParams.currentFunc = 0;
-}
-
-void MainGui::UpdateFunctionsTextCtrl(unsigned char getSymbols)
-{
-	functionsTextCtrl->SetReadOnly(false);
-	functionsTextCtrl->Freeze();
-
-	wxString functionsStr = "";
-
-	struct JdcStr functionHeaderBuffer = initializeJdcStr();
-	int numOfFunctions = functions.size();
-	for (int i = 0; i < numOfFunctions; i++) 
-	{
-		struct Function* function = &functions[i];
-		if (getSymbols)
-		{
-			getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[function->firstInstructionIndex].address, &function->name);
-		}
-		
-		if (!generateFunctionHeader(function, &functionHeaderBuffer)) 
-		{
-			return;
-		}
-
-		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", disassembledInstructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
-		functionsStr += wxString(functionHeaderBuffer.buffer);
-
-		if (i != numOfFunctions - 1) 
-		{
-			functionsStr += "\n";
-		}
-	}
-
-	functionsTextCtrl->SetText(functionsStr);
-	functionsTextCtrl->ApplyFunctionsHighlighting(colorsMenu->decompColors);
-	functionsTextCtrl->Thaw();
-	functionsTextCtrl->SetReadOnly(true);
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)
