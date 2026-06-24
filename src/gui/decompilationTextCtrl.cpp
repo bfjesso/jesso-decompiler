@@ -23,8 +23,6 @@ void DecompilationTextCtrl::DecompileFunction(struct DecompilationParameters* pa
 	}
 
 	ClearText();
-
-	ClearText();
 	ClearIndicators();
 
 	if (disassemblyTextCtrl)
