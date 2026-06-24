@@ -1,7 +1,5 @@
 #include "jdcTextCtrl.h"
 
-#include "../decompiler/intrinsics.h"
-
 JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* statusText) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
 {
 	statusStaticText = statusText;

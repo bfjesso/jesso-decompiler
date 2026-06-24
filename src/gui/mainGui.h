@@ -1,21 +1,15 @@
 #pragma once
 #include "guiUtils.h"
 #include <wx/aui/aui.h>
-#include "jdcTextCtrl.h"
-#include "disassemblyWindow.h"
-#include "decompilationWindow.h"
-#include "functionsWindow.h"
-#include <wx/grid.h>
-#include "disassembleBytesMenu.h"
-#include "sectionsViewerMenu.h"
+#include "disassemblyTextCtrl.h"
+#include "decompilationTextCtrl.h"
+#include "functionsTextCtrl.h"
 #include "dataViewerMenu.h"
 #include "stringsMenu.h"
-#include "importsWindow.h"
 #include "colorsMenu.h"
-#include "functionInfoMenu.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
-#include "../decompiler/decompiler.h"
+#include "../decompiler/decompilationStructs.h"
 
 class FunctionPropertiesMenu;
 
@@ -31,9 +25,9 @@ public:
 
 	wxStaticText* statusStaticText = nullptr;
 
-	DisassemblyWindow* disassemblyWindow = nullptr;
-	DecompilationWindow* decompilationWindow = nullptr;
-	FunctionsWindow* functionsWindow = nullptr;
+	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
+	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
+	FunctionsTextCtrl* functionsTextCtrl = nullptr;
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedInstructions = 1;

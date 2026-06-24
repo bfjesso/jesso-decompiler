@@ -39,7 +39,7 @@
     <ClCompile Include="src\gui\dataViewerMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\disassembleBytesMenu.cpp">
+    <ClCompile Include="src\gui\bytesDisassemblerWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\guiUtils.cpp">
@@ -93,7 +93,7 @@
     <ClCompile Include="src\disassembler\modRM.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\importsWindow.cpp">
+    <ClCompile Include="src\gui\importsGrid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decompiler\decompilationUtils.c">
@@ -111,13 +111,13 @@
     <ClCompile Include="src\decompiler\operations.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\sectionsViewerMenu.cpp">
+    <ClCompile Include="src\gui\sectionsGrid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\fileHeadersMenu.cpp">
+    <ClCompile Include="src\gui\fileHeadersWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\calculatorMenu.cpp">
+    <ClCompile Include="src\gui\calculatorWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\disassembler\disassemblyUtils.c">
@@ -129,13 +129,13 @@
     <ClCompile Include="src\gui\jdcTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\disassemblyWindow.cpp">
+    <ClCompile Include="src\gui\disassemblyTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\decompilationWindow.cpp">
+    <ClCompile Include="src\gui\decompilationTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\functionsWindow.cpp">
+    <ClCompile Include="src\gui\functionsTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -173,7 +173,7 @@
     <ClInclude Include="src\gui\dataViewerMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\disassembleBytesMenu.h">
+    <ClInclude Include="src\gui\bytesDisassemblerWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\guiUtils.h">
@@ -236,7 +236,7 @@
     <ClInclude Include="src\decompiler\decompilationStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\importsWindow.h">
+    <ClInclude Include="src\gui\importsGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\decompilationUtils.h">
@@ -254,13 +254,13 @@
     <ClInclude Include="src\decompiler\operations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\sectionsViewerMenu.h">
+    <ClInclude Include="src\gui\sectionsGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\fileHeadersMenu.h">
+    <ClInclude Include="src\gui\fileHeadersWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\calculatorMenu.h">
+    <ClInclude Include="src\gui\calculatorWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\disassembler\disassemblyUtils.h">
@@ -272,13 +272,13 @@
     <ClInclude Include="src\gui\jdcTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\disassemblyWindow.h">
+    <ClInclude Include="src\gui\disassemblyTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\decompilationWindow.h">
+    <ClInclude Include="src\gui\decompilationTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\functionsWindow.h">
+    <ClInclude Include="src\gui\functionsTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
