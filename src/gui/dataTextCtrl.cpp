@@ -51,7 +51,11 @@ void DataTextCtrl::Initialize(unsigned long long baseOfImage, struct FileSection
 	fileBytes = bytes;
 	numOfFileBytes = numOfBytes;
 
-	numOfLines = (numOfFileBytes / bytesPerLine) + 1;
+	numOfLines = numOfFileBytes / bytesPerLine;
+	if (numOfFileBytes % bytesPerLine != 0) 
+	{
+		numOfLines++;
+	}
 
 	ResetTextCtrl();
 }
