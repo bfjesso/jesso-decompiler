@@ -62,10 +62,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
-	colorsMenu->AddTextCtrl(decompilationTextCtrl);
-	colorsMenu->AddTextCtrl(dataTextCtrl);
-	colorsMenu->AddTextCtrl(disassemblyTextCtrl);
-	colorsMenu->AddTextCtrl(functionsTextCtrl);
+	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
+	colorsMenu->AddDataTextCtrl(dataTextCtrl);
+	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
+	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
 
 	auiManager.SetManagedWindow(this);
 	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);

@@ -264,7 +264,6 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 
 void DisassemblyTextCtrl::ApplyAsmHighlighting()
 {
-	highlightingType = DISASSEMBLY_HIGHLIGHTING;
 	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		StyleSetForeground(i, colorsMenu->disassemblyColors[i]);

@@ -108,7 +108,6 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		return;
 	}
 
-	highlightingType = DECOMPILATION_HIGHLIGHTING;
 	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
 		StyleSetForeground(i, colorsMenu->decompColors[i]);

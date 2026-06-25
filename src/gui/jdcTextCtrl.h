@@ -3,16 +3,6 @@
 #include <wx/stc/stc.h>
 #include <wx/fdrepdlg.h>
 
-#include "../disassembler/disassemblyStructs.h"
-#include "../decompiler/decompilationStructs.h"
-
-enum SyntaxHighlightingType
-{
-	DISASSEMBLY_HIGHLIGHTING,
-	DECOMPILATION_HIGHLIGHTING,
-	DATA_HIGHLIGHTING
-};
-
 #define NUM_OF_INDICATORS 4
 
 enum IndicatorColor
@@ -49,8 +39,6 @@ public:
 	int totalFindResults = 0;
 
 	unsigned char highlightSelectedLines = 1;
-
-	enum SyntaxHighlightingType highlightingType;
 
 	void EnableLineNumbers();
 

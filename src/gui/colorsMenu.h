@@ -7,7 +7,9 @@ class ColorsMenu : public wxFrame
 public:
 	ColorsMenu();
 
-	std::vector<JdcTextCtrl*> textCtrls;
+	std::vector<JdcTextCtrl*> disassemblyTextCtrls;
+	std::vector<JdcTextCtrl*> decompilationTextCtrls;
+	std::vector<JdcTextCtrl*> dataTextCtrls;
 
 	wxStaticText* disassemblyLabel;
 	wxStaticText* decompilationLabel;
@@ -105,7 +107,11 @@ public:
 		ApplyButtonID
 	};
 
-	void AddTextCtrl(JdcTextCtrl* ctrl);
+	void AddDisassemblyTextCtrl(JdcTextCtrl* ctrl);
+
+	void AddDecompilationTextCtrl(JdcTextCtrl* ctrl);
+
+	void AddDataTextCtrl(JdcTextCtrl* ctrl);
 
 	void ApplyColors();
 

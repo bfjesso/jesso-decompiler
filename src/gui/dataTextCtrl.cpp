@@ -255,7 +255,6 @@ void DataTextCtrl::UpdateTextCtrl()
 
 void DataTextCtrl::ApplyDataHighlighting()
 {
-	highlightingType = DATA_HIGHLIGHTING;
 	for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
 	{
 		StyleSetForeground(i, colorsMenu->dataColors[i]);

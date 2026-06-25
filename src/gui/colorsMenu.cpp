@@ -97,38 +97,47 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	SetSizerAndFit(vSizer);
 }
 
-void ColorsMenu::AddTextCtrl(JdcTextCtrl* ctrl) 
+void ColorsMenu::AddDisassemblyTextCtrl(JdcTextCtrl* ctrl) 
 {
-	textCtrls.push_back(ctrl);
+	disassemblyTextCtrls.push_back(ctrl);
+}
+
+void ColorsMenu::AddDecompilationTextCtrl(JdcTextCtrl* ctrl)
+{
+	decompilationTextCtrls.push_back(ctrl);
+}
+
+void ColorsMenu::AddDataTextCtrl(JdcTextCtrl* ctrl)
+{
+	dataTextCtrls.push_back(ctrl);
 }
 
 void ColorsMenu::ApplyColors()
 {
-	for (int i = 0; i < textCtrls.size(); i++)
+	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		if (textCtrls[i]->highlightingType == DISASSEMBLY_HIGHLIGHTING)
+		for (int j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++)
 		{
-			for (int j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++) 
-			{
-				disassemblyColors[j] = disassemblyColorPickerCtrls[j]->GetColour();
-				textCtrls[i]->StyleSetForeground(j, disassemblyColors[j]);
-			}
+			disassemblyColors[j] = disassemblyColorPickerCtrls[j]->GetColour();
+			disassemblyTextCtrls[i]->StyleSetForeground(j, disassemblyColors[j]);
 		}
-		else if (textCtrls[i]->highlightingType == DECOMPILATION_HIGHLIGHTING)
+	}
+
+	for (int i = 0; i < decompilationTextCtrls.size(); i++)
+	{
+		for (int j = 0; j < NUM_OF_DECOMP_COLORS; j++)
 		{
-			for (int j = 0; j < NUM_OF_DECOMP_COLORS; j++)
-			{
-				decompColors[j] = decompilationColorPickerCtrls[j]->GetColour();
-				textCtrls[i]->StyleSetForeground(j, decompColors[j]);
-			}
+			decompColors[j] = decompilationColorPickerCtrls[j]->GetColour();
+			decompilationTextCtrls[i]->StyleSetForeground(j, decompColors[j]);
 		}
-		else if (textCtrls[i]->highlightingType == DATA_HIGHLIGHTING)
+	}
+
+	for (int i = 0; i < dataTextCtrls.size(); i++)
+	{
+		for (int j = 0; j < NUM_OF_DATA_COLORS; j++)
 		{
-			for (int j = 0; j < NUM_OF_DATA_COLORS; j++)
-			{
-				dataColors[j] = dataColorPickerCtrls[j]->GetColour();
-				textCtrls[i]->StyleSetForeground(j, dataColors[j]);
-			}
+			dataColors[j] = dataColorPickerCtrls[j]->GetColour();
+			dataTextCtrls[i]->StyleSetForeground(j, dataColors[j]);
 		}
 	}
 }
