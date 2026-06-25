@@ -13,6 +13,8 @@ enum SyntaxHighlightingType
 	DATA_HIGHLIGHTING
 };
 
+#define NUM_OF_INDICATORS 4
+
 enum IndicatorColor
 {
 	PURPLE_INDICATOR,

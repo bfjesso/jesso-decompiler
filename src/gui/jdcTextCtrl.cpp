@@ -92,7 +92,11 @@ void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned ch
 
 void JdcTextCtrl::ClearIndicators()
 {	
-	IndicatorClearRange(0, GetTextLength());
+	for (int i = 0; i < NUM_OF_INDICATORS; i++) 
+	{
+		SetIndicatorCurrent(i);
+		IndicatorClearRange(0, GetTextLength());
+	}
 }
 
 void JdcTextCtrl::ShowFindDialog()
