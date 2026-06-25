@@ -4,14 +4,22 @@
 
 #include "../decompiler/decompilationStructs.h"
 
+class DecompilationTextCtrl;
+
 class FunctionsTextCtrl : public JdcTextCtrl
 {
 public:
-	FunctionsTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText);
+	FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, wxStaticText* statusText);
 
 	ColorsMenu* colorsMenu = nullptr;
 
-	void ShowAllFunctions(struct DecompilationParameters* params);
+	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
+
+	struct DecompilationParameters* params = nullptr;
+
+	void SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window);
+
+	void ShowAllFunctions();
 
 	void ApplyFunctionsHighlighting();
 };

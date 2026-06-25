@@ -5,7 +5,6 @@
 #include "importsGrid.h"
 #include "fileHeadersWindow.h"
 #include "calculatorWindow.h"
-#include "functionInfoMenu.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../disassembler/mnemonics.h"
 #include "../decompiler/functions.h"
@@ -26,141 +25,18 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
 
-	disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), colorsMenu, statusStaticText);
-
-	decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), colorsMenu, statusStaticText);
-	decompilationTextCtrl->SetAssociatedDisassemblyTextCtrl(disassemblyTextCtrl);
-
-	functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), colorsMenu, statusStaticText);
-
+	disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, statusStaticText);
 	dataTextCtrl = new DataTextCtrl(this, wxSize(500, 250), colorsMenu, statusStaticText);
 
-	disassemblyTextCtrl->SetAdditionalOnUpdateUI([&]() {
-		decompilationTextCtrl->ClearIndicators();
-		int instructionIndex = disassemblyTextCtrl->GetCurrentLine();
-		if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
-			instructionIndex >= functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
-		{
-			for (int i = 0; i < functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
-			{
-				struct AssociatedInstructions* a = &functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
-				for (int j = 0; j < a->numOfIndexes; j++)
-				{
-					if (a->indexes[j] == instructionIndex)
-					{
-						decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
-						break;
-					}
-				}
-			}
+	disassemblyTextCtrl->SetAssociatedDecompilationTextCtrl(decompilationTextCtrl);
+	disassemblyTextCtrl->SetAssociatedFunctionsTextCtrl(functionsTextCtrl);
+	disassemblyTextCtrl->SetAssociatedDataTextCtrl(dataTextCtrl);
 
-			disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-		}
+	decompilationTextCtrl->SetAssociatedDisassemblyTextCtrl(disassemblyTextCtrl);
 
-		if (showAssociatedFunctions && instructionIndex < disassembledInstructions.size())
-		{
-			functionsTextCtrl->ClearIndicators();
-			int funcIndex = findFunctionByAddressInclusive(&decompParams, 0, functions.size() - 1, disassembledInstructions[instructionIndex].address);
-			if (funcIndex != -1) 
-			{
-				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
-				disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			}
-		}
-
-		if (dataTextCtrl->IsShown() && showBytesInDataViewer && disassembledInstructions.size() > 0)
-		{
-			dataTextCtrl->HighlightInstruction(disassembledInstructions[instructionIndex].address, disassembledInstructions[instructionIndex].numOfBytes);
-			disassemblyTextCtrl->HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-		}
-	});
-
-	decompilationTextCtrl->SetAdditionalOnUpdateUI([&]() {
-		disassemblyTextCtrl->ClearIndicators();
-		int selectedLine = decompilationTextCtrl->GetCurrentLine();
-		if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructionsBufferLen)
-		{
-			struct AssociatedInstructions* a = &functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[selectedLine];
-
-			for (int i = 0; i < a->numOfIndexes; i++)
-			{
-				disassemblyTextCtrl->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
-			}
-
-			decompilationTextCtrl->HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
-		}
-	});
-
-	disassemblyTextCtrl->AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
-		showAssociatedDecompiledLines = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
-		decompilationTextCtrl->ClearIndicators();
-	});
-
-	disassemblyTextCtrl->AddRightClickOption("Show bytes in data viewer", 0, &showBytesInDataViewer, [&](wxCommandEvent& e) {
-		showBytesInDataViewer = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
-		dataTextCtrl->ClearIndicators();
-	});
-
-	disassemblyTextCtrl->AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
-		showAssociatedFunctions = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
-		functionsTextCtrl->ClearIndicators();
-	});
-
-	decompilationTextCtrl->AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
-		showAssociatedInstructions = e.IsChecked();
-		disassemblyTextCtrl->ClearIndicators();
-		decompilationTextCtrl->ClearIndicators();
-	});
-
-	functionsTextCtrl->AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
-		wxTextEntryDialog dlg(this, "", "Find address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16))
-			{
-				int index = findFunctionByAddressInclusive(&decompParams, 0, functions.size() - 1, address);
-				if (index == -1)
-				{
-					wxMessageBox("Address not found", "Failed to find address");
-					return;
-				}
-
-				functionsTextCtrl->CenterLine(index);
-				return;
-			}
-
-			wxMessageBox("Not valid hex number", "Failed to find address");
-		}
-	});
-
-	functionsTextCtrl->AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < functions.size()) 
-		{
-			decompilationTextCtrl->DecompileFunction(&decompParams, selectedLine);
-		}
-	});
-
-	functionsTextCtrl->AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < functions.size())
-		{
-			new FunctionInfoMenu(this, GetPosition(), disassembledInstructions.data(), &functions[selectedLine]);
-		}
-	});
-
-	functionsTextCtrl->AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = functionsTextCtrl->GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < functions.size())
-		{
-			new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
-		}
-	});
+	functionsTextCtrl->SetAssociatedDecompilationTextCtrl(decompilationTextCtrl);
 
 	menuBar = new wxMenuBar();
 
@@ -505,7 +381,22 @@ void MainGui::DisassembleFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	disassemblyTextCtrl->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), sections, numOfSections, imageBase, entryPoint, errorAddress);
+	decompParams.imports = imports;
+	decompParams.numOfImports = numOfImports;
+
+	decompParams.instructions = disassembledInstructions.data();
+	decompParams.numOfInstructions = disassembledInstructions.size();
+
+	decompParams.imageBase = imageBase;
+	decompParams.sections = sections;
+	decompParams.numOfSections = numOfSections;
+
+	decompParams.fileBytes = fileBytes;
+	decompParams.numOfFileBytes = numOfFileBytes;
+
+	decompParams.is64Bit = is64Bit;
+
+	disassemblyTextCtrl->Initialize(entryPoint, errorAddress);
 
 	statusStaticText->SetLabelText("Status: idle");
 
@@ -545,7 +436,7 @@ void MainGui::AnalyzeFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	functionsTextCtrl->ShowAllFunctions(&decompParams);
+	functionsTextCtrl->ShowAllFunctions();
 
 	statusStaticText->SetLabelText("Status: idle");
 }
@@ -751,21 +642,6 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 
 void MainGui::FindAllFunctions(unsigned char getSymbols) 
 {
-	decompParams.imports = imports;
-	decompParams.numOfImports = numOfImports;
-
-	decompParams.instructions = disassembledInstructions.data();
-	decompParams.numOfInstructions = disassembledInstructions.size();
-
-	decompParams.imageBase = imageBase;
-	decompParams.sections = sections;
-	decompParams.numOfSections = numOfSections;
-
-	decompParams.fileBytes = fileBytes;
-	decompParams.numOfFileBytes = numOfFileBytes;
-
-	decompParams.is64Bit = is64Bit;
-	
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 

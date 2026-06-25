@@ -1,14 +1,70 @@
 #include "functionsTextCtrl.h"
+#include "decompilationTextCtrl.h"
+#include "functionInfoMenu.h"
 
+#include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
+FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
 {
+	params = decompParams;
 	colorsMenu = colorMenu;
 	EnableLineNumbers();
+
+	AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
+		wxTextEntryDialog dlg(this, "", "Find address");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			unsigned long long address = 0;
+			if (txt.ToULongLong(&address, 16))
+			{
+				int index = findFunctionByAddressInclusive(params, 0, params->numOfFunctions - 1, address);
+				if (index == -1)
+				{
+					wxMessageBox("Address not found", "Failed to find address");
+					return;
+				}
+
+				CenterLine(index);
+				return;
+			}
+
+			wxMessageBox("Not valid hex number", "Failed to find address");
+		}
+	});
+
+	AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = GetCurrentLine();
+		if (decompilationTextCtrl && selectedLine >= 0 && selectedLine < params->numOfFunctions)
+		{
+			decompilationTextCtrl->DecompileFunction(selectedLine);
+		}
+	});
+
+	AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
+		int selectedLine = GetCurrentLine();
+		if (selectedLine >= 0 && selectedLine < params->numOfFunctions)
+		{
+			new FunctionInfoMenu(this, GetPosition(), params->instructions, &params->functions[selectedLine]);
+		}
+	});
+
+	//AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
+	//	int selectedLine = GetCurrentLine();
+	//	if (selectedLine >= 0 && selectedLine < functions.size())
+	//	{
+	//		new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
+	//	}
+	//});
 }
 
-void FunctionsTextCtrl::ShowAllFunctions(struct DecompilationParameters* params)
+void FunctionsTextCtrl::SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window)
+{
+	decompilationTextCtrl = window;
+}
+
+void FunctionsTextCtrl::ShowAllFunctions()
 {
 	ClearText();
 	SetReadOnly(false);

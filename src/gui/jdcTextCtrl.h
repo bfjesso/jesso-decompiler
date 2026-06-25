@@ -39,7 +39,6 @@ public:
 
 	wxStaticText* statusStaticText = nullptr;
 
-	std::function<void()> additionalOnUpdateUI;
 	std::vector<struct RightClickOption> additionalRightClickOptions;
 
 	wxFindReplaceData findData;
@@ -76,8 +75,6 @@ public:
 	void RightClickOptions(wxContextMenuEvent& e);
 
 	void OnKeyDown(wxKeyEvent& e);
-
-	void SetAdditionalOnUpdateUI(const std::function<void()>& function);
 
 	void OnUpdateUI(wxStyledTextEvent& e);
 

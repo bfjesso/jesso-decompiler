@@ -2,21 +2,35 @@
 #include "jdcTextCtrl.h"
 #include "colorsMenu.h"
 
+class DecompilationTextCtrl;
+class FunctionsTextCtrl;
+class DataTextCtrl;
+
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText);
+	DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, wxStaticText* statusText);
 
 	ColorsMenu* colorsMenu = nullptr;
+
+	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
+	FunctionsTextCtrl* functionsTextCtrl = nullptr;
+	DataTextCtrl* dataTextCtrl = nullptr;
 	
-	struct DisassembledInstruction* instructions = nullptr;
-	int numOfInstructions = 0;
-	struct FileSection* sections = nullptr;
-	int numOfSections = 0;
-	unsigned long long imageBase = 0;
+	struct DecompilationParameters* params = nullptr;
 	unsigned long long entryPoint = 0;
 
-	void Initialize(struct DisassembledInstruction* instructions, int numOfInstructions, struct FileSection* sections, int numOfSections, unsigned long long imageBase, unsigned long long entryPoint, unsigned long long errorAddress);
+	unsigned char showAssociatedDecompiledLines = 1;
+	unsigned char showAssociatedFunctions = 1;
+	unsigned char showBytesInDataViewer = 1;
+
+	void SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window);
+
+	void SetAssociatedFunctionsTextCtrl(FunctionsTextCtrl* window);
+
+	void SetAssociatedDataTextCtrl(DataTextCtrl* window);
+
+	void Initialize(unsigned long long entryPoint, unsigned long long errorAddress);
 
 	void ClearData();
 

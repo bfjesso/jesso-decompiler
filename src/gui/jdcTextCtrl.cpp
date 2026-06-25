@@ -91,7 +91,7 @@ void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned ch
 }
 
 void JdcTextCtrl::ClearIndicators()
-{
+{	
 	IndicatorClearRange(0, GetTextLength());
 }
 
@@ -406,11 +406,6 @@ void JdcTextCtrl::OnKeyDown(wxKeyEvent& e)
 	e.Skip();
 }
 
-void JdcTextCtrl::SetAdditionalOnUpdateUI(const std::function<void()>& function)
-{
-	additionalOnUpdateUI = function;
-}
-
 void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 {
 	if (!HasFocus())
@@ -419,12 +414,6 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	}
 
 	ClearIndicators();
-	SetIndicatorCurrent(YELLOW_INDICATOR); // used later to check if the line is already highlighted
-
-	if (additionalOnUpdateUI) 
-	{
-		additionalOnUpdateUI();
-	}
 
 	// brace highlighting
 	int pos = GetCurrentPos();
@@ -454,7 +443,7 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		BraceHighlight(-1, -1);
 	}
 	
-	if (highlightSelectedLines && GetIndicatorCurrent() == YELLOW_INDICATOR)
+	if (highlightSelectedLines && !IndicatorAllOnFor(pos))
 	{
 		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
 	}

@@ -1,12 +1,24 @@
 #include "decompilationTextCtrl.h"
+#include "disassemblyTextCtrl.h"
 
 #include "../decompiler/decompiler.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
+DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, wxStaticText* statusText) : JdcTextCtrl(parent, size, statusText)
 {
+	params = decompParams;
 	colorsMenu = colorMenu;
 	EnableLineNumbers();
+
+	AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
+		showAssociatedInstructions = e.IsChecked();
+		if (disassemblyTextCtrl) 
+		{
+			disassemblyTextCtrl->ClearIndicators();
+		}
+		
+		ClearIndicators();
+	});
 }
 
 void DecompilationTextCtrl::SetAssociatedDisassemblyTextCtrl(DisassemblyTextCtrl* window)
@@ -14,9 +26,31 @@ void DecompilationTextCtrl::SetAssociatedDisassemblyTextCtrl(DisassemblyTextCtrl
 	disassemblyTextCtrl = window;
 }
 
-void DecompilationTextCtrl::DecompileFunction(struct DecompilationParameters* params, int functionIndex)
+void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 {
-	if (params->numOfFileBytes == 0)
+	if (params && disassemblyTextCtrl && HasFocus())
+	{
+		disassemblyTextCtrl->ClearIndicators();
+		int selectedLine = GetCurrentLine();
+		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < params->functions[currentDecompiledFunc].associatedInstructionsBufferLen)
+		{
+			struct AssociatedInstructions* a = &params->functions[currentDecompiledFunc].associatedInstructions[selectedLine];
+
+			for (int i = 0; i < a->numOfIndexes; i++)
+			{
+				disassemblyTextCtrl->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
+			}
+
+			HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
+		}
+	}
+	
+	OnUpdateUI(e);
+}
+
+void DecompilationTextCtrl::DecompileFunction(int functionIndex)
+{
+	if (!params || params->numOfFileBytes == 0)
 	{
 		wxMessageBox("No file opened", "Can't decompile");
 		return;
@@ -63,11 +97,11 @@ void DecompilationTextCtrl::DecompileFunction(struct DecompilationParameters* pa
 	SetReadOnly(false);
 	SetValue(decompilationResult.buffer);
 	freeJdcStr(&decompilationResult);
-	ApplyDecompilationHighlighting(params);
+	ApplyDecompilationHighlighting();
 	SetReadOnly(true);
 }
 
-void DecompilationTextCtrl::ApplyDecompilationHighlighting(struct DecompilationParameters* params)
+void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 {
 	if (!params || !params->currentFunc)
 	{
