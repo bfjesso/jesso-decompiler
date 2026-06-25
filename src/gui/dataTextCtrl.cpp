@@ -62,6 +62,8 @@ void DataTextCtrl::Initialize(unsigned long long baseOfImage, struct FileSection
 
 void DataTextCtrl::ResetTextCtrl()
 {
+	int ogLine = GetCurrentLine();
+	
 	ClearText();
 
 	wxString newLines = "";
@@ -73,6 +75,8 @@ void DataTextCtrl::ResetTextCtrl()
 	SetReadOnly(false);
 	SetText(newLines);
 	SetReadOnly(true);
+
+	CenterLine(ogLine);
 
 	UpdateTextCtrl();
 }
