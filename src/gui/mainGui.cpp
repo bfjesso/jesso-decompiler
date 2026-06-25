@@ -11,6 +11,7 @@
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
+EVT_AUI_PANE_CLOSE(MainGui::OnPaneClose)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
@@ -19,24 +20,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	
 	SetOwnBackgroundColour(backgroundColor);
 
+	auiManager.SetManagedWindow(this);
+	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
+
 	colorsMenu = new ColorsMenu();
 	stringsMenu = new StringsMenu();
 
 	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
 	statusStaticText->SetOwnForegroundColour(textColor);
-
-	disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
-	decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
-	functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, statusStaticText);
-	dataTextCtrl = new DataTextCtrl(this, wxSize(500, 250), colorsMenu, statusStaticText);
-
-	disassemblyTextCtrl->SetAssociatedDecompilationTextCtrl(decompilationTextCtrl);
-	disassemblyTextCtrl->SetAssociatedFunctionsTextCtrl(functionsTextCtrl);
-	disassemblyTextCtrl->SetAssociatedDataTextCtrl(dataTextCtrl);
-
-	decompilationTextCtrl->SetAssociatedDisassemblyTextCtrl(disassemblyTextCtrl);
-
-	functionsTextCtrl->SetAssociatedDecompilationTextCtrl(decompilationTextCtrl);
 
 	menuBar = new wxMenuBar();
 
@@ -46,13 +37,16 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	AddMenuItem(fileMenu, AnalyzeFileID, "Analyze file", [&](wxCommandEvent& ce) -> void { AnalyzeFile(); });
 
 	wxMenu* toolMenu = new wxMenu();
-	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler", wxSize(400, 175)); });
+	AddMenuItem(toolMenu, OpenDisassemblyID, "Disassembly", [&](wxCommandEvent& ce) -> void { AddDisassemblyTextCtrl(); });
+	AddMenuItem(toolMenu, OpenDecompilationID, "Decompilation", [&](wxCommandEvent& ce) -> void { AddDecompilationTextCtrl(); });
+	AddMenuItem(toolMenu, OpenFunctionsID, "Functions", [&](wxCommandEvent& ce) -> void { AddFunctionsTextCtrl(); });
+	AddMenuItem(toolMenu, OpenDataID, "Data", [&](wxCommandEvent& ce) -> void { AddDataTextCtrl(); });
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections", wxSize(600, 300)); });
-	// AddMenuItem(toolMenu, OpenDataViewerID, "Data viewer", [&](wxCommandEvent& ce) -> void { dataTextCtrl->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); });
 	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports", wxSize(600, 300)); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers", wxSize(800, 500)); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator", wxSize(380, 150)); });
+	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler", wxSize(400, 175)); });
 
 	wxMenu* optionsMenu = new wxMenu();
 	AddMenuItem(optionsMenu, OpenColorsMenuID, "Colors", [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); });
@@ -62,13 +56,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
-	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
-	colorsMenu->AddDataTextCtrl(dataTextCtrl);
-	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
-	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
-
-	auiManager.SetManagedWindow(this);
-	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
 	auiManager.AddPane(statusStaticText, wxAuiPaneInfo()
 		.Name("status")
 		.Top()
@@ -80,42 +67,13 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.CaptionVisible(false)
 		.CloseButton(false));
 
-	auiManager.AddPane(disassemblyTextCtrl, wxAuiPaneInfo()
-		.Name("disassembly")
-		.Caption("Disassembly")
-		.Left()
-		.BestSize(300, 400)
-		.MinSize(100, 100)
-		.CloseButton(false));
-
-	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
-		.Name("decompilation")
-		.Caption("Decompilation")
-		.Center()
-		.BestSize(300, 400)
-		.MinSize(100, 100)
-		.CloseButton(false));
-
-	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
-		.Name("functions")
-		.Caption("Functions")
-		.Bottom()
-		.BestSize(800, 150)
-		.MinSize(100, 100)
-		.CloseButton(false));
-
-	auiManager.AddPane(dataTextCtrl, wxAuiPaneInfo()
-		.Name("data")
-		.Caption("Data")
-		.Float()
-		.BestSize(500, 250)
-		.MinSize(100, 100)
-		.CloseButton(false));
-
+	AddDisassemblyTextCtrl();
+	AddDecompilationTextCtrl().Center().CloseButton(false);
+	AddFunctionsTextCtrl();
 	auiManager.Update();
 }
 
-void MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSize size) 
+wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSize size)
 {
 	auiManager.AddPane(window, wxAuiPaneInfo()
 		.Name(caption.Lower())
@@ -123,8 +81,120 @@ void MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSize size)
 		.Float()
 		.BestSize(size)
 		.MinSize(100, 100));
-
 	auiManager.Update();
+	return auiManager.GetPane(window);
+}
+
+wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
+{
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	disassemblyTextCtrl->Initialize(entryPoint, 0);
+	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
+	
+	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
+	
+	int num = disassemblyTextCtrls.size();
+	auiManager.AddPane(disassemblyTextCtrl, wxAuiPaneInfo()
+		.Name("disassembly " + std::to_string(num))
+		.Caption("Disassembly " + std::to_string(num))
+		.Left()
+		.BestSize(150, 400)
+		.MinSize(100, 100));
+	auiManager.Update();
+	return auiManager.GetPane(disassemblyTextCtrls[num - 1]);
+}
+
+wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
+{
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	decompilationTextCtrls.push_back(decompilationTextCtrl);
+
+	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
+
+	int num = decompilationTextCtrls.size();
+	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
+		.Name("decompilation " + std::to_string(num))
+		.Caption("Decompilation " + std::to_string(num))
+		.Right()
+		.BestSize(150, 400)
+		.MinSize(100, 100));
+	auiManager.Update();
+	return auiManager.GetPane(decompilationTextCtrls[num - 1]);
+}
+
+wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
+{
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, statusStaticText);
+	functionsTextCtrl->ShowAllFunctions();
+	functionsTextCtrls.push_back(functionsTextCtrl);
+
+	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
+
+	int num = functionsTextCtrls.size();
+	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
+		.Name("functions " + std::to_string(num))
+		.Caption("Functions " + std::to_string(num))
+		.Bottom()
+		.BestSize(800, 150)
+		.MinSize(100, 100));
+	auiManager.Update();
+	return auiManager.GetPane(functionsTextCtrls[num - 1]);
+}
+
+wxAuiPaneInfo& MainGui::AddDataTextCtrl()
+{
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, wxSize(500, 250), colorsMenu, statusStaticText);
+	dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+	dataTextCtrls.push_back(dataTextCtrl);
+
+	colorsMenu->AddDataTextCtrl(dataTextCtrl);
+
+	int num = dataTextCtrls.size();
+	auiManager.AddPane(dataTextCtrl, wxAuiPaneInfo()
+		.Name("data " + std::to_string(num))
+		.Caption("Data " + std::to_string(num))
+		.Float()
+		.BestSize(500, 250)
+		.MinSize(100, 100));
+	auiManager.Update();
+	return auiManager.GetPane(dataTextCtrls[num - 1]);
+}
+
+void MainGui::OnPaneClose(wxAuiManagerEvent& e)
+{
+	wxWindow* window = e.GetPane()->window;
+	for (int i = 0; i < disassemblyTextCtrls.size(); i++) 
+	{
+		if (disassemblyTextCtrls[i] == window) 
+		{
+			disassemblyTextCtrls.erase(disassemblyTextCtrls.begin() + i);
+			return;
+		}
+	}
+	for (int i = 0; i < decompilationTextCtrls.size(); i++)
+	{
+		if (decompilationTextCtrls[i] == window)
+		{
+			decompilationTextCtrls.erase(decompilationTextCtrls.begin() + i);
+			return;
+		}
+	}
+	for (int i = 0; i < functionsTextCtrls.size(); i++)
+	{
+		if (functionsTextCtrls[i] == window)
+		{
+			functionsTextCtrls.erase(functionsTextCtrls.begin() + i);
+			return;
+		}
+	}
+	for (int i = 0; i < dataTextCtrls.size(); i++)
+	{
+		if (dataTextCtrls[i] == window)
+		{
+			dataTextCtrls.erase(dataTextCtrls.begin() + i);
+			return;
+		}
+	}
 }
 
 void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function)
@@ -225,7 +295,10 @@ void MainGui::OpenFile()
 					numOfImports = 0;
 
 					this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
-					dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+					for (int i = 0; i < dataTextCtrls.size(); i++) 
+					{
+						dataTextCtrls[i]->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+					}
 					DisassembleFile();
 					openFileDialog.Close(true);
 					return;
@@ -272,7 +345,10 @@ void MainGui::OpenFile()
 			}
 			
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
-			dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+			for (int i = 0; i < dataTextCtrls.size(); i++)
+			{
+				dataTextCtrls[i]->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+			}
 			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
 			if (disassembleAnswer == wxYES)
 			{
@@ -396,7 +472,10 @@ void MainGui::DisassembleFile()
 
 	decompParams.is64Bit = is64Bit;
 
-	disassemblyTextCtrl->Initialize(entryPoint, errorAddress);
+	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
+	{
+		disassemblyTextCtrls[i]->Initialize(entryPoint, errorAddress);
+	}
 
 	statusStaticText->SetLabelText("Status: idle");
 
@@ -436,7 +515,10 @@ void MainGui::AnalyzeFile()
 	statusStaticText->Refresh();
 	statusStaticText->Update();
 
-	functionsTextCtrl->ShowAllFunctions();
+	for (int i = 0; i < functionsTextCtrls.size(); i++)
+	{
+		functionsTextCtrls[i]->ShowAllFunctions();
+	}
 
 	statusStaticText->SetLabelText("Status: idle");
 }
@@ -450,12 +532,24 @@ void MainGui::ClearData()
 
 	memset(&decompParams, 0, sizeof(decompParams));
 
-	dataTextCtrl->ClearData();
+	for (int i = 0; i < dataTextCtrls.size(); i++) 
+	{
+		dataTextCtrls[i]->ClearData();
+	}
+	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
+	{
+		disassemblyTextCtrls[i]->ClearData();
+	}
+	for (int i = 0; i < decompilationTextCtrls.size(); i++)
+	{
+		decompilationTextCtrls[i]->ClearText();
+	}
+	for (int i = 0; i < functionsTextCtrls.size(); i++)
+	{
+		functionsTextCtrls[i]->ClearText();
+	}
+
 	stringsMenu->ClearData();
-	
-	disassemblyTextCtrl->ClearData();
-	decompilationTextCtrl->ClearText();
-	functionsTextCtrl->ClearText();
 
 	int numOfInstructions = disassembledInstructions.size();
 	for (int i = 0; i < numOfInstructions; i++)
@@ -719,7 +813,6 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 void MainGui::CloseApp(wxCloseEvent& e)
 {
 	auiManager.UnInit();
-	dataTextCtrl->Destroy();
 	stringsMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();

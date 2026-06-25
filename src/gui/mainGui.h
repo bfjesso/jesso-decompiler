@@ -24,10 +24,10 @@ public:
 
 	wxStaticText* statusStaticText = nullptr;
 
-	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
-	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
-	FunctionsTextCtrl* functionsTextCtrl = nullptr;
-	DataTextCtrl* dataTextCtrl = nullptr;
+	std::vector<DisassemblyTextCtrl*> disassemblyTextCtrls;
+	std::vector<DecompilationTextCtrl*> decompilationTextCtrls;
+	std::vector<FunctionsTextCtrl*> functionsTextCtrls;
+	std::vector<DataTextCtrl*> dataTextCtrls;
 
 	wxAuiManager auiManager;
 
@@ -54,13 +54,16 @@ public:
 	enum ids 
 	{
 		MainWindowID,
-		OpenBytesDisassemblerID,
+		OpenDisassemblyID,
+		OpenDecompilationID,
+		OpenFunctionsID,
+		OpenDataID,
 		OpenSectionsViewerID,
-		OpenDataViewerID,
 		OpenStringsMenuID,
 		OpenImportsViewerID,
 		OpenFileHeadersMenuID,
 		OpenCalculatorMenuID,
+		OpenBytesDisassemblerID,
 		OpenColorsMenuID,
 		OpenFileID,
 		DisassembleFileID,
@@ -69,7 +72,17 @@ public:
 		AnalyzeFileButtonID
 	};
 
-	void AddFloatingPane(wxWindow* window, wxString caption, wxSize size);
+	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption, wxSize size);
+
+	wxAuiPaneInfo& AddDisassemblyTextCtrl();
+
+	wxAuiPaneInfo& AddDecompilationTextCtrl();
+
+	wxAuiPaneInfo& AddFunctionsTextCtrl();
+
+	wxAuiPaneInfo& AddDataTextCtrl();
+
+	void OnPaneClose(wxAuiManagerEvent& e);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
