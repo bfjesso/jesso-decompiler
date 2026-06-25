@@ -121,7 +121,7 @@ void DataTextCtrl::UpdateTextCtrl()
 	int typeSize = typeSizes[selectedType];
 
 	char lineBuffer[512] = { 0 };
-	for (unsigned int i = firstLine * bytesPerLine; i < lastLine * bytesPerLine; i += bytesPerLine)
+	for (unsigned long long i = firstLine * bytesPerLine; i < lastLine * bytesPerLine; i += bytesPerLine)
 	{
 		int lineLen = GetLineLength(i / bytesPerLine);
 		if (lineLen != 0)
@@ -129,7 +129,7 @@ void DataTextCtrl::UpdateTextCtrl()
 			continue;
 		}
 		
-		unsigned address = imageBase + i;
+		unsigned long long address = imageBase + i;
 		struct FileSection* section = 0;
 		for (int j = 0; j < numOfSections; j++) 
 		{
