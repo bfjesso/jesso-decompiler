@@ -15,13 +15,18 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* col
 			unsigned long long address = 0;
 			if (txt.ToULongLong(&address, 16))
 			{
-				if (address >= imageBase && address < imageBase + numOfFileBytes)
+				if (address < imageBase) 
 				{
-					CenterLine((address - imageBase) / bytesPerLine);
+					wxMessageBox("Address is smaller than the image base", "Failed to find address");
 					return;
 				}
-
-				wxMessageBox("Address not in currently selected section", "Failed to find address");
+				else if(address >= imageBase + numOfFileBytes)
+				{
+					wxMessageBox("Address is larger than the max address", "Failed to find address");
+					return;
+				}
+				
+				CenterLine((address - imageBase) / bytesPerLine);
 				return;
 			}
 
