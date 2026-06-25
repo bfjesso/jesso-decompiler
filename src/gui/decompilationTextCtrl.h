@@ -9,7 +9,7 @@ class DisassemblyTextCtrl;
 class DecompilationTextCtrl : public JdcTextCtrl
 {
 public:
-	DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, wxStaticText* statusText);
+	DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
 
 	ColorsMenu* colorsMenu = nullptr;
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;

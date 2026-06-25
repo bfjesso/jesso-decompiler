@@ -27,9 +27,7 @@ private:
 	char IsCharDigit(char c);
 
 public:
-	JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* statusText);
-
-	wxStaticText* statusStaticText = nullptr;
+	JdcTextCtrl(wxWindow* parent, const wxSize& size);
 
 	std::vector<struct RightClickOption> additionalRightClickOptions;
 
@@ -43,6 +41,8 @@ public:
 	void EnableLineNumbers();
 
 	void ClearText();
+
+	void AddLine(wxString txt);
 
 	void CenterLine(int line);
 

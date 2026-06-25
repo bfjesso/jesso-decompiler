@@ -8,7 +8,7 @@
 class DataTextCtrl : public JdcTextCtrl
 {
 public:
-	DataTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu, wxStaticText* statusText);
+	DataTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu);
 
 	ColorsMenu* colorsMenu = nullptr;
 

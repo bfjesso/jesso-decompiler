@@ -1,9 +1,7 @@
 #include "jdcTextCtrl.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* statusText) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
 {
-	statusStaticText = statusText;
-	
 	Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { RightClickOptions(e); });
 	Bind(wxEVT_CHAR_HOOK, &JdcTextCtrl::OnKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &JdcTextCtrl::OnUpdateUI, this);
@@ -11,6 +9,7 @@ JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size, wxStaticText* sta
 	SetReadOnly(true);
 	SetMarginWidth(1, 0);
 	StyleSetFont(wxSTC_STYLE_DEFAULT, codeFont);
+	StyleSetForeground(wxSTC_STYLE_DEFAULT, darkerTextColor);
 	StyleSetBackground(wxSTC_STYLE_DEFAULT, gridColor);
 	StyleClearAll();
 	SetSelBackground(true, wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
@@ -71,6 +70,13 @@ void JdcTextCtrl::ClearText()
 	SetReadOnly(true);
 }
 
+void JdcTextCtrl::AddLine(wxString txt)
+{
+	SetReadOnly(false);
+	AppendText(txt + "\n");
+	SetReadOnly(true);
+}
+
 void JdcTextCtrl::CenterLine(int line)
 {
 	GotoLine(line);
@@ -114,7 +120,6 @@ void JdcTextCtrl::ShowFindDialog()
 	findDialog->Show();
 	findDialog->Raise();
 }
-
 
 void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 {
@@ -165,10 +170,10 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 	GotoPos(pos);
 	SetSelection(pos, pos + text.size());
 
-	if (statusStaticText) 
-	{
-		statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
-	}
+	//if (statusStaticText) 
+	//{
+	//	statusStaticText->SetLabelText("Status: Finding '" + text + "' (" + std::to_string(CountNumOfResults(text, pos, flags) + 1) + "/" + std::to_string(totalFindResults) + ")");
+	//}
 }
 
 int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags, unsigned char forward)
@@ -213,10 +218,10 @@ void JdcTextCtrl::OnFindDialogClose(wxFindDialogEvent& e)
 		findDialog = nullptr;
 	}
 
-	if (statusStaticText) 
-	{
-		statusStaticText->SetLabelText("Status: idle");
-	}
+	//if (statusStaticText) 
+	//{
+	//	statusStaticText->SetLabelText("Status: idle");
+	//}
 }
 
 char JdcTextCtrl::IsCharDigit(char c)
@@ -368,7 +373,7 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 		highlightSelectedLines = e.IsChecked();
 		ClearIndicators();
 		}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
-
+	
 	for (int i = 0; i < additionalRightClickOptions.size() && i < 100; i++)
 	{
 		if (additionalRightClickOptions[i].check != 0)

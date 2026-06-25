@@ -26,8 +26,9 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	colorsMenu = new ColorsMenu();
 	stringsMenu = new StringsMenu();
 
-	statusStaticText = new wxStaticText(this, wxID_ANY, "Status: idle");
-	statusStaticText->SetOwnForegroundColour(textColor);
+	logTextCtrl = new JdcTextCtrl(this, wxSize(800, 150));
+	logTextCtrl->AddLine("JDC started");
+	logTextCtrl->highlightSelectedLines = 0;
 
 	menuBar = new wxMenuBar();
 
@@ -56,19 +57,14 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
-	auiManager.AddPane(statusStaticText, wxAuiPaneInfo()
-		.Name("status")
-		.Top()
-		.DockFixed(true)
-		.PaneBorder(false)
-		.Floatable(false)
-		.Movable(false)
-		.Gripper(false)
-		.CaptionVisible(false)
+	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
+		.Name("log")
+		.Caption("Log")
+		.Center()
 		.CloseButton(false));
 
 	AddDisassemblyTextCtrl();
-	AddDecompilationTextCtrl().Center().CloseButton(false);
+	AddDecompilationTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
 }
@@ -87,7 +83,7 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSi
 
 wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 {
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu);
 	disassemblyTextCtrl->Initialize(entryPoint, 0);
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
@@ -106,7 +102,7 @@ wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 
 wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 {
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, statusStaticText);
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu);
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
@@ -124,7 +120,7 @@ wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 
 wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, statusStaticText);
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu);
 	functionsTextCtrl->ShowAllFunctions();
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
@@ -143,7 +139,7 @@ wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 
 wxAuiPaneInfo& MainGui::AddDataTextCtrl()
 {
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, wxSize(500, 250), colorsMenu, statusStaticText);
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, wxSize(500, 250), colorsMenu);
 	dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
 	dataTextCtrls.push_back(dataTextCtrl);
 
@@ -385,9 +381,7 @@ void MainGui::DisassembleFile()
 		return;
 	}
 
-	statusStaticText->SetLabelText("Status: disassembling...");
-	statusStaticText->Refresh();
-	statusStaticText->Update();
+	logTextCtrl->AddLine("disassembling...");
 
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
@@ -453,9 +447,7 @@ void MainGui::DisassembleFile()
 
 	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
 
-	statusStaticText->SetLabelText("Status: finished disassembling, updating GUI...");
-	statusStaticText->Refresh();
-	statusStaticText->Update();
+	logTextCtrl->AddLine("finished disassembling, updating GUI...");
 
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
@@ -477,7 +469,7 @@ void MainGui::DisassembleFile()
 		disassemblyTextCtrls[i]->Initialize(entryPoint, errorAddress);
 	}
 
-	statusStaticText->SetLabelText("Status: idle");
+	logTextCtrl->AddLine("finished disassembling");
 
 	int answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
 	if (answer == wxYES)
@@ -504,23 +496,19 @@ void MainGui::AnalyzeFile()
 		return;
 	}
 
-	statusStaticText->SetLabelText("Status: finding all functions...");
-	statusStaticText->Refresh();
-	statusStaticText->Update();
+	logTextCtrl->AddLine("finding all functions...");
 
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	FindAllFunctions(getSymbols == wxYES);
 	
-	statusStaticText->SetLabelText("Status: finished finding functions, updating GUI...");
-	statusStaticText->Refresh();
-	statusStaticText->Update();
+	logTextCtrl->AddLine("finished finding functions, updating GUI...");
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
 		functionsTextCtrls[i]->ShowAllFunctions();
 	}
 
-	statusStaticText->SetLabelText("Status: idle");
+	logTextCtrl->AddLine("finished analyzing file");
 }
 
 void MainGui::ClearData() 

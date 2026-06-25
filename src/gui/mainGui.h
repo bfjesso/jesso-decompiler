@@ -22,7 +22,7 @@ public:
 	StringsMenu* stringsMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
-	wxStaticText* statusStaticText = nullptr;
+	JdcTextCtrl* logTextCtrl = nullptr;
 
 	std::vector<DisassemblyTextCtrl*> disassemblyTextCtrls;
 	std::vector<DecompilationTextCtrl*> decompilationTextCtrls;
