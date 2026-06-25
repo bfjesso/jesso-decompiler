@@ -16,7 +16,8 @@ wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
-	this->SetMinSize(wxSize(800, 600));
+	SetMinSize(wxSize(800, 600));
+	Maximize();
 	
 	SetOwnBackgroundColour(backgroundColor);
 
