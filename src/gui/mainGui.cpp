@@ -64,7 +64,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 		.CloseButton(false));
 
 	AddDisassemblyTextCtrl();
-	AddDecompilationTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
 }
@@ -93,7 +92,7 @@ wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 	auiManager.AddPane(disassemblyTextCtrl, wxAuiPaneInfo()
 		.Name("disassembly " + std::to_string(num))
 		.Caption("Disassembly " + std::to_string(num))
-		.Left()
+		.Top()
 		.BestSize(150, 400)
 		.MinSize(100, 100));
 	auiManager.Update();
@@ -130,7 +129,7 @@ wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
 		.Name("functions " + std::to_string(num))
 		.Caption("Functions " + std::to_string(num))
-		.Bottom()
+		.Left()
 		.BestSize(800, 150)
 		.MinSize(100, 100));
 	auiManager.Update();
