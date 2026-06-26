@@ -141,7 +141,32 @@ wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 
 wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu);
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, [&]() -> DecompilationTextCtrl* {
+		if (decompilationTextCtrls.size() == 0) 
+		{
+			AddDecompilationTextCtrl();
+			return decompilationTextCtrls[0];
+		}
+		else if (decompilationTextCtrls.size() == 1) 
+		{
+			return decompilationTextCtrls[0];
+		}
+		else 
+		{
+			wxArrayString decompWindowCaptions;
+			for (int i = 0; i < decompilationTextCtrls.size(); i++) 
+			{
+				decompWindowCaptions.push_back(auiManager.GetPane(decompilationTextCtrls[i]).caption);
+			}
+			wxSingleChoiceDialog decompChoiceDialog(this, "", "Choose a window", decompWindowCaptions);
+			if (decompChoiceDialog.ShowModal() != wxID_CANCEL)
+			{
+				return decompilationTextCtrls[decompChoiceDialog.GetSelection()];
+			}
+
+			return 0;
+		}
+	});
 	functionsTextCtrl->ShowAllFunctions();
 	functionsTextCtrls.push_back(functionsTextCtrl);
 

@@ -5,10 +5,11 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, size)
+FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl) : JdcTextCtrl(parent, size)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;
+	getDecompilationTextCtrl = getDecompTextCtrl;
 	EnableLineNumbers();
 
 	AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
@@ -36,9 +37,13 @@ FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struc
 
 	AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
 		int selectedLine = GetCurrentLine();
-		if (decompilationTextCtrl && selectedLine >= 0 && selectedLine < params->numOfFunctions)
+		if (selectedLine >= 0 && selectedLine < params->numOfFunctions)
 		{
-			decompilationTextCtrl->DecompileFunction(selectedLine);
+			DecompilationTextCtrl* textCtrl = getDecompilationTextCtrl();
+			if (textCtrl) 
+			{
+				textCtrl->DecompileFunction(selectedLine);
+			}
 		}
 	});
 
@@ -57,11 +62,6 @@ FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struc
 	//		new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
 	//	}
 	//});
-}
-
-void FunctionsTextCtrl::SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window)
-{
-	decompilationTextCtrl = window;
 }
 
 void FunctionsTextCtrl::ShowAllFunctions()
