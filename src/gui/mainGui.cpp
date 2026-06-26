@@ -50,14 +50,35 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator", wxSize(380, 150)); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler", wxSize(400, 175)); });
 
+	wxMenu* windowMenu = new wxMenu();
+	AddMenuItem(windowMenu, ResetWindowLayoutID, "Reset window layout", [&](wxCommandEvent& ce) -> void { ResetWindowLayout(); });
+
 	wxMenu* optionsMenu = new wxMenu();
 	AddMenuItem(optionsMenu, OpenColorsMenuID, "Colors", [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); });
 
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
+	menuBar->Append(windowMenu, "Window");
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
+	ResetWindowLayout();
+}
+
+void MainGui::ResetWindowLayout()
+{
+	wxAuiPaneInfoArray& panes = auiManager.GetAllPanes();
+	for (int i = 0; i < panes.size(); i++) 
+	{
+		auiManager.ClosePane(panes.Item(i));
+		auiManager.Update();
+	}
+
+	disassemblyTextCtrls.clear();
+	decompilationTextCtrls.clear();
+	functionsTextCtrls.clear();
+	dataTextCtrls.clear();
+	
 	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
 		.Name("log")
 		.Caption("Log")
