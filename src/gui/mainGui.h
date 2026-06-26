@@ -30,7 +30,7 @@ public:
 	std::vector<DataTextCtrl*> dataTextCtrls;
 
 	wxAuiManager auiManager;
-	wxAuiNotebook* auiNoteBook;
+	wxAuiNotebook* auiNotebook;
 
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
@@ -54,7 +54,7 @@ public:
 	
 	enum ids 
 	{
-		MainWindowID,
+		NotebookID,
 		OpenDisassemblyID,
 		OpenDecompilationID,
 		OpenFunctionsID,
@@ -95,6 +95,10 @@ public:
 	DataTextCtrl* GetDataTextCtrl();
 
 	void OnPaneClose(wxAuiManagerEvent& e);
+
+	void OnPageClose(wxAuiNotebookEvent& e);
+
+	void RemoveTextCtrl(wxWindow* window);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 

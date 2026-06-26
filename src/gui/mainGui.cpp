@@ -12,9 +12,10 @@
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
 EVT_AUI_PANE_CLOSE(MainGui::OnPaneClose)
+EVT_AUINOTEBOOK_PAGE_CLOSE(NotebookID, MainGui::OnPageClose)
 wxEND_EVENT_TABLE()
 
-MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
+MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
 {
 	SetMinSize(wxSize(800, 600));
 	Maximize();
@@ -61,7 +62,7 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 
 	auiManager.SetManagedWindow(this);
 	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
-	auiNoteBook = new wxAuiNotebook(this, wxID_ANY);
+	auiNotebook = new wxAuiNotebook(this, NotebookID);
 
 	ResetWindowLayout();
 }
@@ -80,7 +81,7 @@ void MainGui::ResetWindowLayout()
 	functionsTextCtrls.clear();
 	dataTextCtrls.clear();
 
-	auiManager.AddPane(auiNoteBook, wxAuiPaneInfo()
+	auiManager.AddPane(auiNotebook, wxAuiPaneInfo()
 		.Name("notebook")
 		.Center()
 		.CloseButton(false)
@@ -119,7 +120,7 @@ void MainGui::AddDisassemblyTextCtrl()
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
 	
 	int num = disassemblyTextCtrls.size();
-	auiNoteBook->AddPage(disassemblyTextCtrl, "Disassembly " + std::to_string(num));
+	auiNotebook->AddPage(disassemblyTextCtrl, "Disassembly " + std::to_string(num));
 }
 
 DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
@@ -158,7 +159,7 @@ void MainGui::AddDecompilationTextCtrl()
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
 
 	int num = decompilationTextCtrls.size();
-	auiNoteBook->AddPage(decompilationTextCtrl, "Decompilation " + std::to_string(num));
+	auiNotebook->AddPage(decompilationTextCtrl, "Decompilation " + std::to_string(num));
 }
 
 DecompilationTextCtrl* MainGui::GetDecompilationTextCtrl()
@@ -285,10 +286,19 @@ DataTextCtrl* MainGui::GetDataTextCtrl()
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 {
-	wxWindow* window = e.GetPane()->window;
-	for (int i = 0; i < disassemblyTextCtrls.size(); i++) 
+	RemoveTextCtrl(e.GetPane()->window);
+}
+
+void MainGui::OnPageClose(wxAuiNotebookEvent& e)
+{
+	RemoveTextCtrl(auiNotebook->GetPage(e.GetSelection()));
+}
+
+void MainGui::RemoveTextCtrl(wxWindow* window)
+{
+	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		if (disassemblyTextCtrls[i] == window) 
+		if (disassemblyTextCtrls[i] == window)
 		{
 			disassemblyTextCtrls.erase(disassemblyTextCtrls.begin() + i);
 			return;
