@@ -21,9 +21,6 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	
 	SetOwnBackgroundColour(backgroundColor);
 
-	auiManager.SetManagedWindow(this);
-	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
-
 	colorsMenu = new ColorsMenu();
 	stringsMenu = new StringsMenu();
 
@@ -62,6 +59,10 @@ MainGui::MainGui() : wxFrame(nullptr, MainWindowID, "Jesso Decompiler x64", wxPo
 	menuBar->Append(optionsMenu, "Options");
 	this->SetMenuBar(menuBar);
 
+	auiManager.SetManagedWindow(this);
+	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
+	auiNoteBook = new wxAuiNotebook(this, wxID_ANY);
+
 	ResetWindowLayout();
 }
 
@@ -78,6 +79,13 @@ void MainGui::ResetWindowLayout()
 	decompilationTextCtrls.clear();
 	functionsTextCtrls.clear();
 	dataTextCtrls.clear();
+
+	auiManager.AddPane(auiNoteBook, wxAuiPaneInfo()
+		.Name("notebook")
+		.Center()
+		.CloseButton(false)
+		.CaptionVisible(false)
+		.MinSize(100, 100));
 	
 	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
 		.Name("log")
@@ -85,7 +93,7 @@ void MainGui::ResetWindowLayout()
 		.Left()
 		.MinSize(100, 100));
 
-	AddDisassemblyTextCtrl().Center().CloseButton(false).Caption("Disassembly [main window]");
+	AddDisassemblyTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
 }
@@ -102,7 +110,7 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSi
 	return auiManager.GetPane(window);
 }
 
-wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
+void MainGui::AddDisassemblyTextCtrl()
 {
 	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, [&]() -> DecompilationTextCtrl* { return GetDecompilationTextCtrl(); }, [&]() -> FunctionsTextCtrl* { return  GetFunctionsTextCtrl(); }, [&]() -> DataTextCtrl* { return GetDataTextCtrl(); });
 	disassemblyTextCtrl->Initialize(entryPoint, 0);
@@ -111,14 +119,7 @@ wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
 	
 	int num = disassemblyTextCtrls.size();
-	auiManager.AddPane(disassemblyTextCtrl, wxAuiPaneInfo()
-		.Name("disassembly " + std::to_string(num))
-		.Caption("Disassembly " + std::to_string(num))
-		.Right()
-		.BestSize(150, 400)
-		.MinSize(100, 100));
-	auiManager.Update();
-	return auiManager.GetPane(disassemblyTextCtrls[num - 1]);
+	auiNoteBook->AddPage(disassemblyTextCtrl, "Disassembly " + std::to_string(num));
 }
 
 DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
@@ -137,7 +138,7 @@ DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
 		wxArrayString windowCaptions;
 		for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back(auiManager.GetPane(disassemblyTextCtrls[i]).caption);
+			windowCaptions.push_back("Disassembly " + std::to_string(i));
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
@@ -149,7 +150,7 @@ DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
 	}
 }
 
-wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
+void MainGui::AddDecompilationTextCtrl()
 {
 	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, [&]() -> DisassemblyTextCtrl* { return GetDisassemblyTextCtrl(); });
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
@@ -157,14 +158,7 @@ wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
 
 	int num = decompilationTextCtrls.size();
-	auiManager.AddPane(decompilationTextCtrl, wxAuiPaneInfo()
-		.Name("decompilation " + std::to_string(num))
-		.Caption("Decompilation " + std::to_string(num))
-		.Right()
-		.BestSize(150, 400)
-		.MinSize(100, 100));
-	auiManager.Update();
-	return auiManager.GetPane(decompilationTextCtrls[num - 1]);
+	auiNoteBook->AddPage(decompilationTextCtrl, "Decompilation " + std::to_string(num));
 }
 
 DecompilationTextCtrl* MainGui::GetDecompilationTextCtrl()
@@ -183,7 +177,7 @@ DecompilationTextCtrl* MainGui::GetDecompilationTextCtrl()
 		wxArrayString windowCaptions;
 		for (int i = 0; i < decompilationTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back(auiManager.GetPane(decompilationTextCtrls[i]).caption);
+			windowCaptions.push_back("Decompilation " + std::to_string(i));
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
@@ -230,7 +224,7 @@ FunctionsTextCtrl* MainGui::GetFunctionsTextCtrl()
 		wxArrayString windowCaptions;
 		for (int i = 0; i < functionsTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back(auiManager.GetPane(functionsTextCtrls[i]).caption);
+			windowCaptions.push_back("Functions " + std::to_string(i));
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
@@ -277,7 +271,7 @@ DataTextCtrl* MainGui::GetDataTextCtrl()
 		wxArrayString windowCaptions;
 		for (int i = 0; i < dataTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back(auiManager.GetPane(dataTextCtrls[i]).caption);
+			windowCaptions.push_back("Data " + std::to_string(i));
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)

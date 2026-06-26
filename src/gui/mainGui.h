@@ -30,6 +30,7 @@ public:
 	std::vector<DataTextCtrl*> dataTextCtrls;
 
 	wxAuiManager auiManager;
+	wxAuiNotebook* auiNoteBook;
 
 	wxString currentFilePath = "";
 	unsigned char is64Bit = 0;
@@ -77,11 +78,11 @@ public:
 
 	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption, wxSize size);
 
-	wxAuiPaneInfo& AddDisassemblyTextCtrl();
+	void AddDisassemblyTextCtrl();
 
 	DisassemblyTextCtrl* GetDisassemblyTextCtrl();
 
-	wxAuiPaneInfo& AddDecompilationTextCtrl();
+	void AddDecompilationTextCtrl();
 
 	DecompilationTextCtrl* GetDecompilationTextCtrl();
 
