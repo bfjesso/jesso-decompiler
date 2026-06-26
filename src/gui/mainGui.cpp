@@ -13,6 +13,7 @@ wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
 EVT_AUI_PANE_CLOSE(MainGui::OnPaneClose)
 EVT_AUINOTEBOOK_PAGE_CLOSE(NotebookID, MainGui::OnPageClose)
+EVT_AUINOTEBOOK_TAB_RIGHT_DOWN(NotebookID, MainGui::OnTabRightClick)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
@@ -292,6 +293,25 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 {
 	RemoveTextCtrl(auiNotebook->GetPage(e.GetSelection()));
+}
+
+void MainGui::OnTabRightClick(wxAuiNotebookEvent& e)
+{
+	if (auiNotebook->GetPageCount() > 1) 
+	{
+		wxMenu menu;
+		const int ID_POP_OUT = 100;
+
+		menu.Append(ID_POP_OUT, "Pop out");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			wxWindow* window = auiNotebook->GetPage(e.GetSelection());
+			wxString caption = auiNotebook->GetPageText(e.GetSelection());
+			auiNotebook->RemovePage(e.GetSelection());
+			AddFloatingPane(window, caption, wxSize(100, 100));
+		}, ID_POP_OUT);
+
+		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+	}
 }
 
 void MainGui::RemoveTextCtrl(wxWindow* window)

@@ -98,6 +98,8 @@ public:
 
 	void OnPageClose(wxAuiNotebookEvent& e);
 
+	void OnTabRightClick(wxAuiNotebookEvent& e);
+
 	void RemoveTextCtrl(wxWindow* window);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
