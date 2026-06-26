@@ -104,7 +104,7 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption, wxSi
 
 wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 {
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu);
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, [&]() -> DecompilationTextCtrl* { return GetDecompilationTextCtrl(); }, [&]() -> FunctionsTextCtrl* { return  GetFunctionsTextCtrl(); }, [&]() -> DataTextCtrl* { return GetDataTextCtrl(); });
 	disassemblyTextCtrl->Initialize(entryPoint, 0);
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
@@ -121,9 +121,37 @@ wxAuiPaneInfo& MainGui::AddDisassemblyTextCtrl()
 	return auiManager.GetPane(disassemblyTextCtrls[num - 1]);
 }
 
+DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
+{
+	if (disassemblyTextCtrls.size() == 0)
+	{
+		AddDisassemblyTextCtrl();
+		return disassemblyTextCtrls[0];
+	}
+	else if (disassemblyTextCtrls.size() == 1)
+	{
+		return disassemblyTextCtrls[0];
+	}
+	else
+	{
+		wxArrayString windowCaptions;
+		for (int i = 0; i < disassemblyTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(auiManager.GetPane(disassemblyTextCtrls[i]).caption);
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			return disassemblyTextCtrls[choiceDialog.GetSelection()];
+		}
+
+		return 0;
+	}
+}
+
 wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 {
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu);
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, wxSize(150, 400), &decompParams, colorsMenu, [&]() -> DisassemblyTextCtrl* { return GetDisassemblyTextCtrl(); });
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
@@ -139,34 +167,37 @@ wxAuiPaneInfo& MainGui::AddDecompilationTextCtrl()
 	return auiManager.GetPane(decompilationTextCtrls[num - 1]);
 }
 
+DecompilationTextCtrl* MainGui::GetDecompilationTextCtrl()
+{
+	if (decompilationTextCtrls.size() == 0)
+	{
+		AddDecompilationTextCtrl();
+		return decompilationTextCtrls[0];
+	}
+	else if (decompilationTextCtrls.size() == 1)
+	{
+		return decompilationTextCtrls[0];
+	}
+	else
+	{
+		wxArrayString windowCaptions;
+		for (int i = 0; i < decompilationTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(auiManager.GetPane(decompilationTextCtrls[i]).caption);
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			return decompilationTextCtrls[choiceDialog.GetSelection()];
+		}
+
+		return 0;
+	}
+}
+
 wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, [&]() -> DecompilationTextCtrl* {
-		if (decompilationTextCtrls.size() == 0) 
-		{
-			AddDecompilationTextCtrl();
-			return decompilationTextCtrls[0];
-		}
-		else if (decompilationTextCtrls.size() == 1) 
-		{
-			return decompilationTextCtrls[0];
-		}
-		else 
-		{
-			wxArrayString decompWindowCaptions;
-			for (int i = 0; i < decompilationTextCtrls.size(); i++) 
-			{
-				decompWindowCaptions.push_back(auiManager.GetPane(decompilationTextCtrls[i]).caption);
-			}
-			wxSingleChoiceDialog decompChoiceDialog(this, "", "Choose a window", decompWindowCaptions);
-			if (decompChoiceDialog.ShowModal() != wxID_CANCEL)
-			{
-				return decompilationTextCtrls[decompChoiceDialog.GetSelection()];
-			}
-
-			return 0;
-		}
-	});
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, wxSize(800, 150), &decompParams, colorsMenu, [&]() -> DecompilationTextCtrl* { return GetDecompilationTextCtrl(); });
 	functionsTextCtrl->ShowAllFunctions();
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
@@ -181,6 +212,34 @@ wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 		.MinSize(100, 100));
 	auiManager.Update();
 	return auiManager.GetPane(functionsTextCtrls[num - 1]);
+}
+
+FunctionsTextCtrl* MainGui::GetFunctionsTextCtrl()
+{
+	if (functionsTextCtrls.size() == 0)
+	{
+		AddFunctionsTextCtrl();
+		return functionsTextCtrls[0];
+	}
+	else if (functionsTextCtrls.size() == 1)
+	{
+		return functionsTextCtrls[0];
+	}
+	else
+	{
+		wxArrayString windowCaptions;
+		for (int i = 0; i < functionsTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(auiManager.GetPane(functionsTextCtrls[i]).caption);
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			return functionsTextCtrls[choiceDialog.GetSelection()];
+		}
+
+		return 0;
+	}
 }
 
 wxAuiPaneInfo& MainGui::AddDataTextCtrl()
@@ -200,6 +259,34 @@ wxAuiPaneInfo& MainGui::AddDataTextCtrl()
 		.MinSize(100, 100));
 	auiManager.Update();
 	return auiManager.GetPane(dataTextCtrls[num - 1]);
+}
+
+DataTextCtrl* MainGui::GetDataTextCtrl()
+{
+	if (dataTextCtrls.size() == 0)
+	{
+		AddFunctionsTextCtrl();
+		return dataTextCtrls[0];
+	}
+	else if (dataTextCtrls.size() == 1)
+	{
+		return dataTextCtrls[0];
+	}
+	else
+	{
+		wxArrayString windowCaptions;
+		for (int i = 0; i < dataTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(auiManager.GetPane(dataTextCtrls[i]).caption);
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			return dataTextCtrls[choiceDialog.GetSelection()];
+		}
+
+		return 0;
+	}
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)

@@ -9,17 +9,17 @@ class DisassemblyTextCtrl;
 class DecompilationTextCtrl : public JdcTextCtrl
 {
 public:
-	DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
+	DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DisassemblyTextCtrl* ()>& getDisasmTextCtrl);
 
 	ColorsMenu* colorsMenu = nullptr;
+
+	std::function<DisassemblyTextCtrl* ()> getDisassemblyTextCtrl;
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 
 	struct DecompilationParameters* params = nullptr;
 	int currentDecompiledFunc = -1;
 
 	unsigned char showAssociatedInstructions = 1;
-
-	void SetAssociatedDisassemblyTextCtrl(DisassemblyTextCtrl* window);
 
 	void OnUpdateDecompilationUI(wxStyledTextEvent& e);
 

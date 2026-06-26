@@ -79,11 +79,19 @@ public:
 
 	wxAuiPaneInfo& AddDisassemblyTextCtrl();
 
+	DisassemblyTextCtrl* GetDisassemblyTextCtrl();
+
 	wxAuiPaneInfo& AddDecompilationTextCtrl();
+
+	DecompilationTextCtrl* GetDecompilationTextCtrl();
 
 	wxAuiPaneInfo& AddFunctionsTextCtrl();
 
+	FunctionsTextCtrl* GetFunctionsTextCtrl();
+
 	wxAuiPaneInfo& AddDataTextCtrl();
+
+	DataTextCtrl* GetDataTextCtrl();
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

@@ -7,10 +7,13 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, size)
+DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl) : JdcTextCtrl(parent, size)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;
+	getDecompilationTextCtrl = getDecompTextCtrl;
+	getFunctionsTextCtrl = getFuncsTextCtrl;
+	getDataTextCtrl = getDatTextCtrl;
 
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
 
@@ -43,6 +46,30 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, s
 		}
 	});
 
+	AddRightClickOption("Set associated decompilation", 0, 0, [&](wxCommandEvent& e) {
+		DecompilationTextCtrl* newDecompilationTextCtrl = getDecompilationTextCtrl();
+		if (newDecompilationTextCtrl)
+		{
+			decompilationTextCtrl = newDecompilationTextCtrl;
+		}
+	});
+
+	AddRightClickOption("Set associated functions list", 0, 0, [&](wxCommandEvent& e) {
+		FunctionsTextCtrl* newFunctionsTextCtrl = getFunctionsTextCtrl();
+		if (newFunctionsTextCtrl)
+		{
+			functionsTextCtrl = newFunctionsTextCtrl;
+		}
+	});
+
+	AddRightClickOption("Set associated data window", 0, 0, [&](wxCommandEvent& e) {
+		DataTextCtrl* newDataTextCtrl = getDataTextCtrl();
+		if (newDataTextCtrl)
+		{
+			dataTextCtrl = newDataTextCtrl;
+		}
+	});
+
 	AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
 		showAssociatedDecompiledLines = e.IsChecked();
 		ClearIndicators();
@@ -69,21 +96,6 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, s
 			functionsTextCtrl->ClearIndicators();
 		}
 	});
-}
-
-void DisassemblyTextCtrl::SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window)
-{
-	decompilationTextCtrl = window;
-}
-
-void DisassemblyTextCtrl::SetAssociatedFunctionsTextCtrl(FunctionsTextCtrl* window)
-{
-	functionsTextCtrl = window;
-}
-
-void DisassemblyTextCtrl::SetAssociatedDataTextCtrl(DataTextCtrl* window)
-{
-	dataTextCtrl = window;
 }
 
 void DisassemblyTextCtrl::Initialize(unsigned long long pointOfEntry, unsigned long long errorAddress)

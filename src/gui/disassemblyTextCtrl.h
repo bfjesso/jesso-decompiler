@@ -9,9 +9,13 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
+	DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl);
 
 	ColorsMenu* colorsMenu = nullptr;
+
+	std::function<DecompilationTextCtrl* ()> getDecompilationTextCtrl;
+	std::function<FunctionsTextCtrl* ()> getFunctionsTextCtrl;
+	std::function<DataTextCtrl* ()> getDataTextCtrl;
 
 	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
@@ -23,12 +27,6 @@ public:
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedFunctions = 1;
 	unsigned char showBytesInDataViewer = 1;
-
-	void SetAssociatedDecompilationTextCtrl(DecompilationTextCtrl* window);
-
-	void SetAssociatedFunctionsTextCtrl(FunctionsTextCtrl* window);
-
-	void SetAssociatedDataTextCtrl(DataTextCtrl* window);
 
 	void Initialize(unsigned long long entryPoint, unsigned long long errorAddress);
 

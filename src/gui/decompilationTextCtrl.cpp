@@ -4,11 +4,22 @@
 #include "../decompiler/decompiler.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, size)
+DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DisassemblyTextCtrl* ()>& getDisasmTextCtrl) : JdcTextCtrl(parent, size)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;
+	getDisassemblyTextCtrl = getDisasmTextCtrl;
 	EnableLineNumbers();
+
+	Bind(wxEVT_STC_UPDATEUI, &DecompilationTextCtrl::OnUpdateDecompilationUI, this);
+
+	AddRightClickOption("Set associated disassembly", 0, 0, [&](wxCommandEvent& e) {
+		DisassemblyTextCtrl* newDisassemblyTextCtrl = getDisassemblyTextCtrl();
+		if (newDisassemblyTextCtrl) 
+		{
+			disassemblyTextCtrl = newDisassemblyTextCtrl;
+		}
+	});
 
 	AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
 		showAssociatedInstructions = e.IsChecked();
@@ -19,11 +30,6 @@ DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& siz
 		
 		ClearIndicators();
 	});
-}
-
-void DecompilationTextCtrl::SetAssociatedDisassemblyTextCtrl(DisassemblyTextCtrl* window)
-{
-	disassemblyTextCtrl = window;
 }
 
 void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
