@@ -100,6 +100,8 @@ public:
 
 	void OnTabRightClick(wxAuiNotebookEvent& e);
 
+	void OnMouseRightClick(wxMouseEvent& e);
+
 	void RemoveTextCtrl(wxWindow* window);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);

@@ -14,6 +14,7 @@ EVT_CLOSE(MainGui::CloseApp)
 EVT_AUI_PANE_CLOSE(MainGui::OnPaneClose)
 EVT_AUINOTEBOOK_PAGE_CLOSE(NotebookID, MainGui::OnPageClose)
 EVT_AUINOTEBOOK_TAB_RIGHT_DOWN(NotebookID, MainGui::OnTabRightClick)
+EVT_RIGHT_DOWN(MainGui::OnMouseRightClick)
 wxEND_EVENT_TABLE()
 
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64", wxPoint(50, 50), wxSize(800, 600))
@@ -311,6 +312,38 @@ void MainGui::OnTabRightClick(wxAuiNotebookEvent& e)
 		}, ID_POP_OUT);
 
 		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+	}
+}
+
+void MainGui::OnMouseRightClick(wxMouseEvent& e)
+{
+	int captionSize = auiManager.GetArtProvider()->GetMetric(wxAUI_DOCKART_CAPTION_SIZE);
+	wxPoint mousePos = e.GetPosition();
+
+	wxAuiPaneInfoArray& panes = auiManager.GetAllPanes();
+	for (int i = 0; i < panes.size(); i++)
+	{
+		wxAuiPaneInfo& pane = panes.Item(i);
+		if (mousePos.x > pane.rect.x &&
+			mousePos.y > pane.rect.y - captionSize &&
+			mousePos.x < pane.rect.x + pane.rect.width &&
+			mousePos.y < pane.rect.y)
+		{
+			wxMenu menu;
+			const int ID_MAKE_TAB = 100;
+
+			menu.Append(ID_MAKE_TAB, "Make tab");
+			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				wxWindow* window = pane.window;
+				wxString caption = pane.caption;
+				auiManager.DetachPane(window);
+				auiManager.Update();
+				auiNotebook->AddPage(window, caption);
+			}, ID_MAKE_TAB);
+
+			PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
+			break;
+		}
 	}
 }
 
