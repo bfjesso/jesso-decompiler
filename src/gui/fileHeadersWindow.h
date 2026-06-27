@@ -1,7 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 
-class FileHeadersWindow : public wxWindow
+class FileHeadersWindow : public wxScrolledWindow
 {
 public:
 	FileHeadersWindow(wxWindow* parent, wxString filePath);
