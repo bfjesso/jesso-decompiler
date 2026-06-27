@@ -36,9 +36,9 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent) : wxWindow(pa
 
 	row3Sizer->Add(disassemblyStaticText, 1, wxLEFT | wxBOTTOM | wxRIGHT | wxCENTER, 10);
 
-	vSizer->Add(row1Sizer, 1, wxCENTER);
-	vSizer->Add(row2Sizer, 1, wxCENTER);
-	vSizer->Add(row3Sizer, 1, wxCENTER);
+	vSizer->Add(row1Sizer, 0, wxCENTER);
+	vSizer->Add(row2Sizer, 0, wxCENTER);
+	vSizer->Add(row3Sizer, 0, wxCENTER);
 
 	SetSizerAndFit(vSizer);
 }
