@@ -27,7 +27,7 @@ private:
 	char IsCharDigit(char c);
 
 public:
-	JdcTextCtrl(wxWindow* parent, const wxSize& size);
+	JdcTextCtrl(wxWindow* parent);
 
 	std::vector<struct RightClickOption> additionalRightClickOptions;
 

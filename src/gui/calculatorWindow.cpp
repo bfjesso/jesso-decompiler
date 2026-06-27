@@ -10,8 +10,9 @@ EVT_BUTTON(CopyHexResultID, CalculatorWindow::CopyHexResult)
 EVT_BUTTON(CopyDecResultID, CalculatorWindow::CopyDecResult)
 wxEND_EVENT_TABLE()
 
-CalculatorWindow::CalculatorWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY, wxPoint(0, 0), wxSize(380, 150))
+CalculatorWindow::CalculatorWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
 {
+	SetMinSize(wxSize(200, 100));
 	SetOwnBackgroundColour(backgroundColor);
 
 	firstHexCheckBox = new wxCheckBox(this, FirstHexCheckBoxID, "Hex");

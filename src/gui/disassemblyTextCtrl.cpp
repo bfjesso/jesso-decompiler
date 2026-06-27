@@ -7,7 +7,7 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl) : JdcTextCtrl(parent, size)
+DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl) : JdcTextCtrl(parent)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;

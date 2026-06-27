@@ -5,8 +5,9 @@ wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)
 EVT_BUTTON(DisassembleButtonID, BytesDisassemblerWindow::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
-BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY, wxPoint(0, 0), wxSize(400, 175))
+BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
 {
+	SetMinSize(wxSize(150, 100));
 	SetOwnBackgroundColour(backgroundColor);
 	
 	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(400, 25));

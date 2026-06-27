@@ -4,8 +4,9 @@ wxBEGIN_EVENT_TABLE(SectionsGrid, wxGrid)
 EVT_GRID_CELL_RIGHT_CLICK(SectionsGrid::RightClickOptions)
 wxEND_EVENT_TABLE()
 
-SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSections) : wxGrid(parent, wxID_ANY, wxPoint(0, 0), wxSize(600, 300))
+SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSections) : wxGrid(parent, wxID_ANY)
 {
+	SetMinSize(wxSize(100, 100));
 	SetOwnBackgroundColour(backgroundColor);
 
 	SetLabelBackgroundColour(foregroundColor);
@@ -14,8 +15,7 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 	SetDefaultCellTextColour(textColor);
 	CreateGrid(0, 6);
 	EnableGridLines(false);
-	ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	SetScrollRate(0, 10);
+	SetScrollRate(10, 10);
 	SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
 	SetCellHighlightPenWidth(0);
 	SetCellHighlightROPenWidth(0);
@@ -33,7 +33,7 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 	SetColSize(2, 100);
 	SetColSize(3, 100);
 	SetColSize(4, 100);
-	SetColSize(5, 9999);
+	SetColSize(5, 100);
 	SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	if (sections)

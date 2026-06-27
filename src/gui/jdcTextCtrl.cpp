@@ -1,7 +1,9 @@
 #include "jdcTextCtrl.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, const wxSize& size) : wxStyledTextCtrl(parent, wxID_ANY, wxPoint(0, 0), size)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent) : wxStyledTextCtrl(parent, wxID_ANY)
 {
+	SetMinSize(wxSize(100, 100));
+
 	Bind(wxEVT_CONTEXT_MENU, [&](wxContextMenuEvent& e) -> void { RightClickOptions(e); });
 	Bind(wxEVT_CHAR_HOOK, &JdcTextCtrl::OnKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &JdcTextCtrl::OnUpdateUI, this);

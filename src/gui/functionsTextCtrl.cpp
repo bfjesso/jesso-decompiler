@@ -5,7 +5,7 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl) : JdcTextCtrl(parent, size)
+FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl) : JdcTextCtrl(parent)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;

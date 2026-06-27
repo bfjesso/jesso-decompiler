@@ -4,7 +4,7 @@
 #include "../decompiler/decompiler.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, const wxSize& size, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DisassemblyTextCtrl* ()>& getDisasmTextCtrl) : JdcTextCtrl(parent, size)
+DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DisassemblyTextCtrl* ()>& getDisasmTextCtrl) : JdcTextCtrl(parent)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;

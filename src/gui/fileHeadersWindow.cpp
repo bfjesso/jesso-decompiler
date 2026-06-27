@@ -2,10 +2,10 @@
 #include <wx/grid.h>
 #include "../file-handler/fileHandler.h"
 
-FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxScrolledWindow(parent, wxID_ANY, wxPoint(0, 0), wxSize(800, 500), wxVSCROLL)
+FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxScrolledWindow(parent, wxID_ANY)
 {
 	SetOwnBackgroundColour(backgroundColor);
-	SetScrollRate(0, 10);
+	SetScrollRate(10, 10);
 
 	if (filePath == "")
 	{
@@ -91,4 +91,5 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxSc
 	}
 
 	SetSizerAndFit(vSizer);
+	SetMinSize(wxSize(200, 200));
 }

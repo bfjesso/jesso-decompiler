@@ -76,7 +76,7 @@ public:
 
 	void ResetWindowLayout();
 
-	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption, wxSize size);
+	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption);
 
 	void AddDisassemblyTextCtrl();
 

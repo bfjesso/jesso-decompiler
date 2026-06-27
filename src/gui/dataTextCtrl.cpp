@@ -1,7 +1,7 @@
 #include "dataTextCtrl.h"
 #include <string>
 
-DataTextCtrl::DataTextCtrl(wxWindow* parent, const wxSize& size, ColorsMenu* colorMenu) : JdcTextCtrl(parent, size)
+DataTextCtrl::DataTextCtrl(wxWindow* parent, ColorsMenu* colorMenu) : JdcTextCtrl(parent)
 {
 	colorsMenu = colorMenu;
 

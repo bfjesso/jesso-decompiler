@@ -4,8 +4,9 @@ wxBEGIN_EVENT_TABLE(ImportsGrid, wxGrid)
 EVT_GRID_CELL_RIGHT_CLICK(ImportsGrid::RightClickOptions)
 wxEND_EVENT_TABLE()
 
-ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfImports) : wxGrid(parent, wxID_ANY, wxPoint(0, 0), wxSize(600, 300))
+ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfImports) : wxGrid(parent, wxID_ANY)
 {
+	SetMinSize(wxSize(100, 100));
 	SetOwnBackgroundColour(backgroundColor);
 
 	SetLabelBackgroundColour(foregroundColor);
@@ -14,8 +15,7 @@ ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfI
 	SetDefaultCellTextColour(textColor);
 	CreateGrid(0, 2);
 	EnableGridLines(false);
-	ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	SetScrollRate(0, 10);
+	SetScrollRate(10, 10);
 	SetSelectionMode(wxGrid::wxGridSelectionModes::wxGridSelectRows);
 	SetCellHighlightPenWidth(0);
 	SetCellHighlightROPenWidth(0);
@@ -25,7 +25,7 @@ ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfI
 	SetColLabelValue(1, "Name");
 	HideRowLabels();
 	SetColSize(0, 100);
-	SetColSize(1, 9999);
+	SetColSize(1, 300);
 	SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	if (imports ) 
