@@ -5,7 +5,6 @@
 #include "decompilationTextCtrl.h"
 #include "functionsTextCtrl.h"
 #include "dataTextCtrl.h"
-#include "stringsMenu.h"
 #include "colorsMenu.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
@@ -19,7 +18,6 @@ public:
 	MainGui();
 
 	wxMenuBar* menuBar = nullptr;
-	StringsMenu* stringsMenu = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
 	JdcTextCtrl* logTextCtrl = nullptr;
@@ -124,6 +122,8 @@ public:
 
 	wxDECLARE_EVENT_TABLE();
 };
+
+#include <wx/grid.h>
 
 class FunctionPropertiesMenu : public wxFrame
 {

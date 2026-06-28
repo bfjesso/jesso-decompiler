@@ -2,6 +2,7 @@
 #include <wx/numdlg.h>
 #include "bytesDisassemblerWindow.h"
 #include "sectionsGrid.h"
+#include "stringsTextCtrl.h"
 #include "importsGrid.h"
 #include "fileHeadersWindow.h"
 #include "calculatorWindow.h"
@@ -25,7 +26,6 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	SetOwnBackgroundColour(backgroundColor);
 
 	colorsMenu = new ColorsMenu();
-	stringsMenu = new StringsMenu();
 
 	logTextCtrl = new JdcTextCtrl(this);
 	logTextCtrl->AddLine("JDC started");
@@ -44,7 +44,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFunctionsID, "Functions", [&](wxCommandEvent& ce) -> void { AddFunctionsTextCtrl(); });
 	AddMenuItem(toolMenu, OpenDataID, "Data", [&](wxCommandEvent& ce) -> void { AddDataTextCtrl(); });
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections"); });
-	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { stringsMenu->OpenMenu(GetPosition(), imageBase, sections, numOfSections, fileBytes); });
+	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, &decompParams, colorsMenu), "Strings"); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
@@ -724,8 +724,6 @@ void MainGui::ClearData()
 		functionsTextCtrls[i]->ClearText();
 	}
 
-	stringsMenu->ClearData();
-
 	int numOfInstructions = disassembledInstructions.size();
 	for (int i = 0; i < numOfInstructions; i++)
 	{
@@ -988,7 +986,6 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 void MainGui::CloseApp(wxCloseEvent& e)
 {
 	auiManager.UnInit();
-	stringsMenu->Destroy();
 	colorsMenu->Destroy();
 	Destroy();
 }

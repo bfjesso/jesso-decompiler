@@ -10,7 +10,7 @@ const wxFont codeFont = wxFontInfo(10).FaceName("Cascadia Mono").Bold();
 
 #define NUM_OF_DISASSEMBLY_COLORS 8
 #define NUM_OF_DECOMP_COLORS 13
-#define NUM_OF_DATA_COLORS 2
+#define NUM_OF_DATA_COLORS 3
 
 enum DisassemblyColor
 {
@@ -44,7 +44,8 @@ enum DecompilationColor
 enum DataColor
 {
 	ADDRESS_DATA_COLOR,
-	VALUE_DATA_COLOR
+	VALUE_DATA_COLOR,
+	STRING_DATA_COLOR
 };
 
 void CopyToClipboard(const char* txt);

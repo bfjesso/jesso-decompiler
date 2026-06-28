@@ -123,7 +123,7 @@
     <ClCompile Include="src\disassembler\disassemblyUtils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\stringsMenu.cpp">
+    <ClCompile Include="src\gui\stringsTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\jdcTextCtrl.cpp">
@@ -266,7 +266,7 @@
     <ClInclude Include="src\disassembler\disassemblyUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\stringsMenu.h">
+    <ClInclude Include="src\gui\stringsTextCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\jdcTextCtrl.h">

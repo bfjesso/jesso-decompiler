@@ -92,13 +92,15 @@ public:
 	wxColour dataColors[NUM_OF_DATA_COLORS] =
 	{
 		wxColour(154, 154, 154),
-		wxColour(181, 206, 168)
+		wxColour(181, 206, 168),
+		wxColour(232, 201, 187)
 	};
 
 	const char* dataColorNames[NUM_OF_DATA_COLORS] =
 	{
 		"Addresses",
-		"Values"
+		"Values",
+		"Strings"
 	};
 	
 	enum ids
