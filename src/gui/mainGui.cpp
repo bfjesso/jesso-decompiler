@@ -122,6 +122,7 @@ void MainGui::AddDisassemblyTextCtrl()
 	
 	int num = disassemblyTextCtrls.size();
 	auiNotebook->AddPage(disassemblyTextCtrl, "Disassembly " + std::to_string(num));
+	auiNotebook->SetSelection(auiNotebook->GetPageIndex(disassemblyTextCtrl));
 }
 
 DisassemblyTextCtrl* MainGui::GetDisassemblyTextCtrl()
@@ -161,6 +162,7 @@ void MainGui::AddDecompilationTextCtrl()
 
 	int num = decompilationTextCtrls.size();
 	auiNotebook->AddPage(decompilationTextCtrl, "Decompilation " + std::to_string(num));
+	auiNotebook->SetSelection(auiNotebook->GetPageIndex(decompilationTextCtrl));
 }
 
 DecompilationTextCtrl* MainGui::GetDecompilationTextCtrl()
