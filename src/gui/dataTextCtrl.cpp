@@ -34,13 +34,14 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, ColorsMenu* colorMenu) : JdcTextCtr
 		}
 	});
 
-	for (int i = 0; i < NUM_OF_DATA_TEXT_CTRL_TYPES; i++) 
-	{
-		AddRightClickOption("Set display type to " + wxString(dataTypeStrs[i]), 0, 0, [&](wxCommandEvent&) {
-			selectedType = (enum DataTextCtrlTypes)i;
+	AddRightClickOption("Change display type", 0, 0, [&](wxCommandEvent&) {
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a type", wxArrayString(NUM_OF_DATA_TEXT_CTRL_TYPES, dataTypeStrs));
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			selectedType = (enum DataTextCtrlTypes)(choiceDialog.GetSelection());
 			ResetTextCtrl();
-		});
-	}
+		}
+	});
 
 	AddRightClickOption("Toggle hex display", 0, 0, [&](wxCommandEvent&) {
 		isHex = !isHex;
