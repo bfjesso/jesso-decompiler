@@ -41,8 +41,7 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxSc
 		grid->SetDefaultCellTextColour(textColor);
 		grid->CreateGrid(0, 4);
 		grid->EnableGridLines(false);
-		grid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-		grid->SetScrollRate(0, 10);
+		grid->SetScrollRate(10, 10);
 		grid->SetCellHighlightPenWidth(0);
 		grid->SetCellHighlightROPenWidth(0);
 		grid->DisableDragRowSize();
@@ -55,7 +54,7 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxSc
 		grid->SetColSize(0, 50);
 		grid->SetColSize(1, 200);
 		grid->SetColSize(2, 200);
-		grid->SetColSize(3, 9999);
+		grid->SetColSize(3, 400);
 		grid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 		vSizer->Add(grid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
