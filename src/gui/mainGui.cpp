@@ -28,7 +28,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	colorsMenu = new ColorsMenu();
 
 	logTextCtrl = new JdcTextCtrl(this);
-	logTextCtrl->AddLine("JDC started");
+	Log("JDC started");
 	logTextCtrl->highlightSelectedLines = 0;
 
 	menuBar = new wxMenuBar();
@@ -389,6 +389,16 @@ void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::fun
 	menu->Bind(wxEVT_MENU, function, id);
 }
 
+void MainGui::Log(wxString text)
+{
+	if (!logTextCtrl) 
+	{
+		return;
+	}
+
+	logTextCtrl->AddLine(wxDateTime::Now().Format(wxT("%X")) + ": " + text);
+}
+
 void MainGui::OpenFile()
 {
 	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
@@ -568,7 +578,7 @@ void MainGui::DisassembleFile()
 		return;
 	}
 
-	logTextCtrl->AddLine("disassembling...");
+	Log("disassembling...");
 
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
@@ -634,7 +644,7 @@ void MainGui::DisassembleFile()
 
 	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
 
-	logTextCtrl->AddLine("finished disassembling, updating GUI...");
+	Log("finished disassembling, updating GUI...");
 
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
@@ -656,7 +666,7 @@ void MainGui::DisassembleFile()
 		disassemblyTextCtrls[i]->Initialize(entryPoint, errorAddress);
 	}
 
-	logTextCtrl->AddLine("finished disassembling");
+	Log("finished disassembling");
 
 	int answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
 	if (answer == wxYES)
@@ -683,19 +693,19 @@ void MainGui::AnalyzeFile()
 		return;
 	}
 
-	logTextCtrl->AddLine("finding all functions...");
+	Log("finding all functions...");
 
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	FindAllFunctions(getSymbols == wxYES);
 	
-	logTextCtrl->AddLine("finished finding functions, updating GUI...");
+	Log("finished finding functions, updating GUI...");
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
 		functionsTextCtrls[i]->ShowAllFunctions();
 	}
 
-	logTextCtrl->AddLine("finished analyzing file");
+	Log("finished analyzing file");
 }
 
 void MainGui::ClearData() 

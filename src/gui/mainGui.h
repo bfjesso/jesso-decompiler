@@ -104,6 +104,8 @@ public:
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
+	void Log(wxString text);
+
 	void OpenFile();
 
 	void DisassembleFile();
