@@ -481,36 +481,3 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		}
 	}
 }
-
-void JdcTextCtrl::ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor)
-{
-	if (!str || !strcmp(str, ""))
-	{
-		return;
-	}
-
-	int start = 0;
-	int pos = 0;
-	while (start < text.length())
-	{
-		pos = text.find(str, start);
-		if (pos != wxNOT_FOUND)
-		{
-			int end = pos + strlen(str);
-
-			if (forceColor ||
-				GetStyleAt(pos) == color || // incase there are two strs that are equal except for one having more text at the end
-				GetStyleAt(pos) == OPERATOR_DECOMP_COLOR) // only apply color if it hasn't been colored yet
-			{
-				StartStyling(pos);
-				SetStyling(strlen(str), color);
-			}
-
-			start = end;
-		}
-		else
-		{
-			break;
-		}
-	}
-}

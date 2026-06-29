@@ -22,4 +22,6 @@ public:
 	void DecompileFunction(int functionIndex);
 
 	void ApplyDecompilationHighlighting();
+
+	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
 };

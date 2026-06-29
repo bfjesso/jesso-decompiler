@@ -67,6 +67,4 @@ public:
 	void OnKeyDown(wxKeyEvent& e);
 
 	void OnUpdateUI(wxStyledTextEvent& e);
-
-	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
 };
