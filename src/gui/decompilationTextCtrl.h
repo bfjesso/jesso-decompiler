@@ -15,7 +15,7 @@ public:
 
 	int currentDecompiledFunc = -1;
 
-	unsigned char showAssociatedInstructions = 1;
+	void DecompilationRightClickOptions(wxContextMenuEvent& e);
 
 	void OnUpdateDecompilationUI(wxStyledTextEvent& e);
 

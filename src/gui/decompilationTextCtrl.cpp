@@ -9,9 +9,21 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : J
 	mainGui = parent;
 	EnableLineNumbers();
 
+	Bind(wxEVT_CONTEXT_MENU, &DecompilationTextCtrl::DecompilationRightClickOptions, this);
 	Bind(wxEVT_STC_UPDATEUI, &DecompilationTextCtrl::OnUpdateDecompilationUI, this);
+}
 
-	AddRightClickOption("Set associated disassembly", 0, 0, [&](wxCommandEvent& e) {
+void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	AddDefaultRightClickOptions(&menu);
+
+	const int ID_SET_ASSOCIATED_DISASSEMBLY = 100;
+	const int ID_UNASSOCIATE_DISASSEMBLY = 101;
+
+	menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		wxArrayString windowCaptions;
 		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
 		{
@@ -22,17 +34,18 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : J
 		{
 			disassemblyTextCtrl = mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
 		}
-	});
+	}, ID_SET_ASSOCIATED_DISASSEMBLY);
 
-	AddRightClickOption("Show associated instructions", 0, &showAssociatedInstructions, [&](wxCommandEvent& e) {
-		showAssociatedInstructions = e.IsChecked();
-		if (disassemblyTextCtrl) 
-		{
+	if (disassemblyTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DISASSEMBLY, "Unassociate " + disassemblyTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			disassemblyTextCtrl->ClearIndicators();
-		}
-		
-		ClearIndicators();
-	});
+			disassemblyTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DISASSEMBLY);
+	}
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
 void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
@@ -43,7 +56,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 	{
 		disassemblyTextCtrl->ClearIndicators();
 		int selectedLine = GetCurrentLine();
-		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructionsBufferLen)
+		if (currentDecompiledFunc != -1 && selectedLine < mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 		{
 			struct AssociatedInstructions* a = &mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
