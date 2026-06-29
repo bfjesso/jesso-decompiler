@@ -232,12 +232,6 @@ char JdcTextCtrl::IsCharDigit(char c)
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');
 }
 
-void JdcTextCtrl::AddRightClickOption(wxString name, char commandKey, unsigned char* check, const std::function<void(wxCommandEvent&)>& function)
-{
-	struct RightClickOption option = { name, commandKey, check, function };
-	additionalRightClickOptions.push_back(option);
-}
-
 void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 {
 	const int ID_COPY = 0;
@@ -376,24 +370,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
-
 	AddDefaultRightClickOptions(&menu);
-	
-	for (int i = 0; i < additionalRightClickOptions.size() && i < 100; i++)
-	{
-		if (additionalRightClickOptions[i].check != 0)
-		{
-			menu.AppendCheckItem(i, additionalRightClickOptions[i].name);
-			menu.Check(i, *additionalRightClickOptions[i].check);
-			menu.Bind(wxEVT_MENU, additionalRightClickOptions[i].function, i);
-		}
-		else
-		{
-			menu.Append(i, additionalRightClickOptions[i].name);
-			menu.Bind(wxEVT_MENU, additionalRightClickOptions[i].function, i);
-		}
-	}
-
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
@@ -405,15 +382,6 @@ void JdcTextCtrl::OnKeyDown(wxKeyEvent& e)
 		if (key == 'F')
 		{
 			ShowFindDialog();
-		}
-
-		for (int i = 0; i < additionalRightClickOptions.size(); i++)
-		{
-			if (key == additionalRightClickOptions[i].commandKey) 
-			{
-				wxCommandEvent tmp;
-				additionalRightClickOptions[i].function(tmp);
-			}
 		}
 	}
 

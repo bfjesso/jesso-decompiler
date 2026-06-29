@@ -13,14 +13,6 @@ enum IndicatorColor
 	RED_INDICATOR
 };
 
-struct RightClickOption 
-{
-	wxString name;
-	char commandKey;
-	unsigned char* check;
-	std::function<void(wxCommandEvent&)> function;
-};
-
 class JdcTextCtrl : public wxStyledTextCtrl 
 {
 private:
@@ -28,8 +20,6 @@ private:
 
 public:
 	JdcTextCtrl(wxWindow* parent, wxString name);
-
-	std::vector<struct RightClickOption> additionalRightClickOptions;
 
 	wxFindReplaceData findData;
 	wxFindReplaceDialog* findDialog = nullptr;
@@ -59,8 +49,6 @@ public:
 	int CountNumOfResults(const wxString& text, int end, int flags);
 
 	void OnFindDialogClose(wxFindDialogEvent& e);
-
-	void AddRightClickOption(wxString name, char commandKey, unsigned char* check, const std::function<void(wxCommandEvent&)>& function);
 
 	void AddDefaultRightClickOptions(wxMenu* menu);
 

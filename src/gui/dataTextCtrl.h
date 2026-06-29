@@ -61,6 +61,12 @@ public:
 
 	void ClearData();
 
+	void ShowGoToAddressDialog();
+
+	void DataRightClickOptions(wxContextMenuEvent& e);
+
+	void OnDataKeyDown(wxKeyEvent& e);
+
 	void OnUpdateDataUI(wxStyledTextEvent& e);
 
 	void UpdateTextCtrl();

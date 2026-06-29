@@ -5,48 +5,9 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, wxString name, ColorsMenu* colorMen
 {
 	colorsMenu = colorMenu;
 
+	Bind(wxEVT_CONTEXT_MENU, &DataTextCtrl::DataRightClickOptions, this);
+	Bind(wxEVT_CHAR_HOOK, &DataTextCtrl::OnDataKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DataTextCtrl::OnUpdateDataUI, this);
-
-	AddRightClickOption("Go to address", 'G', 0, [&](wxCommandEvent&) {
-		wxTextEntryDialog dlg(this, "", "Go to address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16))
-			{
-				if (address < imageBase) 
-				{
-					wxMessageBox("Address is smaller than the image base", "Failed to find address");
-					return;
-				}
-				else if(address >= imageBase + numOfFileBytes)
-				{
-					wxMessageBox("Address is larger than the max address", "Failed to find address");
-					return;
-				}
-				
-				CenterLine((address - imageBase) / bytesPerLine);
-				return;
-			}
-
-			wxMessageBox("Not valid hex number", "Failed to find address");
-		}
-	});
-
-	AddRightClickOption("Change display type", 0, 0, [&](wxCommandEvent&) {
-		wxSingleChoiceDialog choiceDialog(this, "", "Choose a type", wxArrayString(NUM_OF_DATA_TEXT_CTRL_TYPES, dataTypeStrs));
-		if (choiceDialog.ShowModal() != wxID_CANCEL)
-		{
-			selectedType = (enum DataTextCtrlTypes)(choiceDialog.GetSelection());
-			ResetTextCtrl();
-		}
-	});
-
-	AddRightClickOption("Toggle hex display", 0, 0, [&](wxCommandEvent&) {
-		isHex = !isHex;
-		ResetTextCtrl();
-	});
 }
 
 void DataTextCtrl::Initialize(unsigned long long baseOfImage, struct FileSection* fileSections, int amountOfSections, unsigned char* bytes, unsigned long long numOfBytes)
@@ -95,6 +56,77 @@ void DataTextCtrl::ClearData()
 	sections = nullptr;
 	numOfSections = 0;
 	imageBase = 0;
+}
+
+void DataTextCtrl::ShowGoToAddressDialog()
+{
+	wxTextEntryDialog dlg(this, "", "Go to address");
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		unsigned long long address = 0;
+		if (txt.ToULongLong(&address, 16))
+		{
+			if (address < imageBase)
+			{
+				wxMessageBox("Address is smaller than the image base", "Failed to find address");
+				return;
+			}
+			else if (address >= imageBase + numOfFileBytes)
+			{
+				wxMessageBox("Address is larger than the max address", "Failed to find address");
+				return;
+			}
+
+			CenterLine((address - imageBase) / bytesPerLine);
+			return;
+		}
+
+		wxMessageBox("Not valid hex number", "Failed to find address");
+	}
+}
+
+void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	const int ID_CHANGE_DISPLAY_TYPE = 100;
+	const int ID_TOGGLE_HEX = 101;
+
+	menu.Append(ID_CHANGE_DISPLAY_TYPE, "Change display type");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a type", wxArrayString(NUM_OF_DATA_TEXT_CTRL_TYPES, dataTypeStrs));
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			selectedType = (enum DataTextCtrlTypes)(choiceDialog.GetSelection());
+			ResetTextCtrl();
+		}
+	}, ID_CHANGE_DISPLAY_TYPE);
+
+	menu.Append(ID_TOGGLE_HEX, "Toggle hex display");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		isHex = !isHex;
+		ResetTextCtrl();
+	}, ID_TOGGLE_HEX);
+
+	AddDefaultRightClickOptions(&menu);
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void DataTextCtrl::OnDataKeyDown(wxKeyEvent& e)
+{
+	int key = e.GetKeyCode();
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
+	{
+		if (key == 'G')
+		{
+			ShowGoToAddressDialog();
+		}
+	}
+
+	OnKeyDown(e);
+	e.Skip();
 }
 
 void DataTextCtrl::OnUpdateDataUI(wxStyledTextEvent& e)
