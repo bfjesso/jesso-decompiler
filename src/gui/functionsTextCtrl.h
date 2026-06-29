@@ -11,6 +11,12 @@ public:
 
 	MainGui* mainGui = nullptr;
 
+	void ShowFindAddressDialog();
+
+	void FunctionsRightClickOptions(wxContextMenuEvent& e);
+
+	void OnFunctionsKeyDown(wxKeyEvent& e);
+
 	void ShowAllFunctions();
 
 	void ApplyFunctionsHighlighting();

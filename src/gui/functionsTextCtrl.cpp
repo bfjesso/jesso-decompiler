@@ -10,33 +10,47 @@ FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCt
 	mainGui = parent;
 	EnableLineNumbers();
 
-	AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
-		wxTextEntryDialog dlg(this, "", "Find address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16))
-			{
-				int index = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, address);
-				if (index == -1)
-				{
-					wxMessageBox("Address not found", "Failed to find address");
-					return;
-				}
+	Bind(wxEVT_CONTEXT_MENU, &FunctionsTextCtrl::FunctionsRightClickOptions, this);
+	Bind(wxEVT_CHAR_HOOK, &FunctionsTextCtrl::OnFunctionsKeyDown, this);
+}
 
-				CenterLine(index);
+void FunctionsTextCtrl::ShowFindAddressDialog()
+{
+	wxTextEntryDialog dlg(this, "", "Find address");
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		unsigned long long address = 0;
+		if (txt.ToULongLong(&address, 16))
+		{
+			int index = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, address);
+			if (index == -1)
+			{
+				wxMessageBox("Address not found", "Failed to find address");
 				return;
 			}
 
-			wxMessageBox("Not valid hex number", "Failed to find address");
+			CenterLine(index);
+			return;
 		}
-	});
 
-	AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions)
-		{
+		wxMessageBox("Not valid hex number", "Failed to find address");
+	}
+}
+
+void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	const int ID_DECOMPILE = 100;
+	const int ID_VIEW_INFO = 101;
+	const int ID_FIND_ADDRESS = 102;
+
+	int selectedLine = GetCurrentLine();
+	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions) 
+	{
+		menu.Append(ID_DECOMPILE, "Decompile");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			if (mainGui->decompilationTextCtrls.size() == 0)
 			{
 				mainGui->AddDecompilationTextCtrl();
@@ -59,24 +73,37 @@ FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCt
 					mainGui->decompilationTextCtrls[choiceDialog.GetSelection()]->DecompileFunction(selectedLine);
 				}
 			}
-		}
-	});
+		}, ID_DECOMPILE);
 
-	AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
-		int selectedLine = GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions)
-		{
+		menu.Append(ID_VIEW_INFO, "View info");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			new FunctionInfoMenu(this, GetPosition(), mainGui->decompParams.instructions, &mainGui->decompParams.functions[selectedLine]);
-		}
-	});
+		}, ID_VIEW_INFO);
+	}
 
-	//AddRightClickOption("Edit properties", 0, 0, [&](wxCommandEvent& e) {
-	//	int selectedLine = GetCurrentLine();
-	//	if (selectedLine >= 0 && selectedLine < functions.size())
-	//	{
-	//		new FunctionPropertiesMenu(this, GetPosition(), this, selectedLine);
-	//	}
-	//});
+	menu.Append(ID_FIND_ADDRESS, "Find function by address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ShowFindAddressDialog();
+	}, ID_FIND_ADDRESS);
+
+	AddDefaultRightClickOptions(&menu);
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
+{
+	int key = e.GetKeyCode();
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
+	{
+		if (key == 'G')
+		{
+			ShowFindAddressDialog();
+		}
+	}
+
+	OnKeyDown(e);
+	e.Skip();
 }
 
 void FunctionsTextCtrl::ShowAllFunctions()
