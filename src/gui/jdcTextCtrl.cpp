@@ -249,10 +249,7 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 	const int ID_CONVERT_TO_UNSIGNED_HEX = 104;
 	const int ID_CONVERT_TO_SIGNED_HEX = 105;
 	const int ID_FIND = 106;
-	const int ID_GO_TO_ADDR = 107;
-	const int ID_SHOW_ASSOCIATED = 108;
-	const int ID_SHOW_BYTES = 109;
-	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 110;
+	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 107;
 
 	long start;
 	long end;
