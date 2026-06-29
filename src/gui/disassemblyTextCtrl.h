@@ -17,11 +17,13 @@ public:
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
 	DataTextCtrl* dataTextCtrl = nullptr;
 
-	unsigned char showAssociatedDecompiledLines = 1;
-	unsigned char showAssociatedFunctions = 1;
-	unsigned char showBytesInDataViewer = 1;
-
 	void Initialize(unsigned long long errorAddress);
+
+	void ShowGoToAddressDialog();
+
+	void DisassemblyRightClickOptions(wxContextMenuEvent& e);
+
+	void OnDisassemblyKeyDown(wxKeyEvent& e);
 
 	void OnUpdateDisassemblyUI(wxStyledTextEvent& e);
 

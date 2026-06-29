@@ -62,6 +62,8 @@ public:
 
 	void AddRightClickOption(wxString name, char commandKey, unsigned char* check, const std::function<void(wxCommandEvent&)>& function);
 
+	void AddDefaultRightClickOptions(wxMenu* menu);
+
 	void RightClickOptions(wxContextMenuEvent& e);
 
 	void OnKeyDown(wxKeyEvent& e);

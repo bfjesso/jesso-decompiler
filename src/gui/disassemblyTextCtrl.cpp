@@ -9,102 +9,9 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent, wxString name) : JdcTe
 {
 	mainGui = parent;
 
+	Bind(wxEVT_CONTEXT_MENU, &DisassemblyTextCtrl::DisassemblyRightClickOptions, this);
+	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
-
-	AddRightClickOption("Go to address", 'G', 0, [&](wxCommandEvent&) {
-		wxTextEntryDialog dlg(this, "", "Go to address");
-		if (dlg.ShowModal() == wxID_OK)
-		{
-			if (mainGui->decompParams.numOfInstructions == 0) 
-			{
-				wxMessageBox("No instructions loaded", "Failed to find address");
-				return;
-			}
-			
-			wxString txt = dlg.GetValue();
-			unsigned long long address = 0;
-			if (txt.ToULongLong(&address, 16))
-			{
-				int index = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, address);
-				if (index == -1)
-				{
-					wxMessageBox("Address not found", "Failed to find address");
-					return;
-				}
-
-				CenterLine(index);
-				return;
-			}
-
-			wxMessageBox("Not valid hex number", "Failed to find address");
-		}
-	});
-
-	AddRightClickOption("Set associated decompilation", 0, 0, [&](wxCommandEvent& e) {
-		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
-		{
-			windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
-		}
-		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-		if (choiceDialog.ShowModal() != wxID_CANCEL)
-		{
-			decompilationTextCtrl = mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
-		}
-	});
-
-	AddRightClickOption("Set associated functions list", 0, 0, [&](wxCommandEvent& e) {
-		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
-		{
-			windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
-		}
-		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-		if (choiceDialog.ShowModal() != wxID_CANCEL)
-		{
-			functionsTextCtrl = mainGui->functionsTextCtrls[choiceDialog.GetSelection()];
-		}
-	});
-
-	AddRightClickOption("Set associated data window", 0, 0, [&](wxCommandEvent& e) {
-		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
-		{
-			windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
-		}
-		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-		if (choiceDialog.ShowModal() != wxID_CANCEL)
-		{
-			dataTextCtrl = mainGui->dataTextCtrls[choiceDialog.GetSelection()];
-		}
-	});
-
-	AddRightClickOption("Show associated decompiled lines", 0, &showAssociatedDecompiledLines, [&](wxCommandEvent& e) {
-		showAssociatedDecompiledLines = e.IsChecked();
-		ClearIndicators();
-		if (decompilationTextCtrl) 
-		{
-			decompilationTextCtrl->ClearIndicators();
-		}
-	});
-
-	AddRightClickOption("Show bytes in data viewer", 0, &showBytesInDataViewer, [&](wxCommandEvent& e) {
-		showBytesInDataViewer = e.IsChecked();
-		ClearIndicators();
-		if (dataTextCtrl) 
-		{
-			dataTextCtrl->ClearIndicators();
-		}
-	});
-
-	AddRightClickOption("Show associated function", 0, &showAssociatedFunctions, [&](wxCommandEvent& e) {
-		showAssociatedFunctions = e.IsChecked();
-		ClearIndicators();
-		if (functionsTextCtrl) 
-		{
-			functionsTextCtrl->ClearIndicators();
-		}
-	});
 }
 
 void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
@@ -137,6 +44,142 @@ void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
 	}
 }
 
+void DisassemblyTextCtrl::ShowGoToAddressDialog() 
+{
+	wxTextEntryDialog dlg(this, "", "Go to address");
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		if (mainGui->decompParams.numOfInstructions == 0)
+		{
+			wxMessageBox("No instructions loaded", "Failed to find address");
+			return;
+		}
+
+		wxString txt = dlg.GetValue();
+		unsigned long long address = 0;
+		if (txt.ToULongLong(&address, 16))
+		{
+			int index = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, address);
+			if (index == -1)
+			{
+				wxMessageBox("Address not found", "Failed to find address");
+				return;
+			}
+
+			CenterLine(index);
+			return;
+		}
+
+		wxMessageBox("Not valid hex number", "Failed to find address");
+	}
+}
+
+void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	AddDefaultRightClickOptions(&menu);
+
+	const int ID_GO_TO_ADDRESS = 100;
+	const int ID_SET_ASSOCIATED_DECOMPILATION = 101;
+	const int ID_UNASSOCIATE_DECOMPILATION = 102;
+	const int ID_SET_ASSOCIATED_FUNCTIONS = 103;
+	const int ID_UNASSOCIATE_FUNCTIONS = 104;
+	const int ID_SET_ASSOCIATED_DATA = 105;
+	const int ID_UNASSOCIATE_DATA = 106;
+
+	menu.Append(ID_GO_TO_ADDRESS, "Go to address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ShowGoToAddressDialog();
+	}, ID_GO_TO_ADDRESS);
+
+	menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			decompilationTextCtrl = mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
+		}
+	}, ID_SET_ASSOCIATED_DECOMPILATION);
+
+	if (decompilationTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DECOMPILATION, "Unassociate " + decompilationTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			decompilationTextCtrl->ClearIndicators();
+			decompilationTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DECOMPILATION);
+	}
+
+	menu.Append(ID_SET_ASSOCIATED_FUNCTIONS, "Set associated functions");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			functionsTextCtrl = mainGui->functionsTextCtrls[choiceDialog.GetSelection()];
+		}
+	}, ID_SET_ASSOCIATED_FUNCTIONS);
+
+	if (functionsTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_FUNCTIONS, "Unassociate " + functionsTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			functionsTextCtrl->ClearIndicators();
+			functionsTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_FUNCTIONS);
+	}
+
+	menu.Append(ID_SET_ASSOCIATED_DATA, "Set associated data");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
+		{
+			windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			dataTextCtrl = mainGui->dataTextCtrls[choiceDialog.GetSelection()];
+		}
+	}, ID_SET_ASSOCIATED_DATA);
+
+	if (dataTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DATA, "Unassociate " + dataTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			dataTextCtrl->ClearIndicators();
+			dataTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DATA);
+	}
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void DisassemblyTextCtrl::OnDisassemblyKeyDown(wxKeyEvent& e)
+{
+	int key = e.GetKeyCode();
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
+	{
+		if (key == 'G')
+		{
+			ShowGoToAddressDialog();
+		}
+	}
+
+	OnKeyDown(e);
+	e.Skip();
+}
+
 void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 {
 	UpdateTextCtrl();
@@ -149,7 +192,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 		if (decompilationTextCtrl) 
 		{
 			decompilationTextCtrl->ClearIndicators();
-			if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
+			if (decompilationTextCtrl->currentDecompiledFunc != -1 &&
 				instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
 			{
 				for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
@@ -170,7 +213,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			}
 		}
 		
-		if (showAssociatedFunctions && functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
+		if (functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
 		{
 			functionsTextCtrl->ClearIndicators();
 			int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, mainGui->decompParams.instructions[instructionIndex].address);
@@ -182,7 +225,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			}
 		}
 
-		if (dataTextCtrl && dataTextCtrl->IsShown() && showBytesInDataViewer && mainGui->decompParams.numOfInstructions > 0)
+		if (dataTextCtrl && mainGui->decompParams.numOfInstructions > 0)
 		{
 			dataTextCtrl->HighlightInstruction(mainGui->decompParams.instructions[instructionIndex].address, mainGui->decompParams.instructions[instructionIndex].numOfBytes);
 			ClearIndicators();
