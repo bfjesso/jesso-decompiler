@@ -63,6 +63,7 @@ public:
 		OpenFileHeadersMenuID,
 		OpenCalculatorMenuID,
 		OpenBytesDisassemblerID,
+		OpenLogID,
 		ResetWindowLayoutID,
 		OpenColorsMenuID,
 		OpenFileID,
@@ -75,6 +76,8 @@ public:
 	void ResetWindowLayout();
 
 	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption);
+
+	void OpenLog();
 
 	void AddDisassemblyTextCtrl();
 

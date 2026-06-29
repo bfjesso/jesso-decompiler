@@ -49,6 +49,8 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
+	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
+	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(); });
 
 	wxMenu* windowMenu = new wxMenu();
 	AddMenuItem(windowMenu, ResetWindowLayoutID, "Reset window layout", [&](wxCommandEvent& ce) -> void { ResetWindowLayout(); });
@@ -89,13 +91,8 @@ void MainGui::ResetWindowLayout()
 		.CloseButton(false)
 		.CaptionVisible(false)
 		.MinSize(100, 100));
-	
-	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
-		.Name("log")
-		.Caption("Log")
-		.Left()
-		.MinSize(logTextCtrl->GetMinSize()));
 
+	OpenLog();
 	AddDisassemblyTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
@@ -110,6 +107,17 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 		.MinSize(window->GetMinSize()));
 	auiManager.Update();
 	return auiManager.GetPane(window);
+}
+
+void MainGui::OpenLog()
+{
+	logTextCtrl->Show();
+	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
+		.Name("log")
+		.Caption("Log")
+		.Left()
+		.MinSize(logTextCtrl->GetMinSize()));
+	auiManager.Update();
 }
 
 void MainGui::AddDisassemblyTextCtrl()
@@ -171,12 +179,29 @@ wxAuiPaneInfo& MainGui::AddDataTextCtrl()
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 {
-	RemoveTextCtrl(e.GetPane()->window);
+	wxWindow* window = e.GetPane()->window;
+	if (window == logTextCtrl)
+	{
+		auiManager.DetachPane(window);
+		auiManager.Update();
+		logTextCtrl->Hide();
+		return;
+	}
+
+	RemoveTextCtrl(window);
 }
 
 void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 {
-	RemoveTextCtrl(auiNotebook->GetPage(e.GetSelection()));
+	wxWindow* window = auiNotebook->GetPage(e.GetSelection());
+	if (window == logTextCtrl) 
+	{
+		auiNotebook->RemovePage(e.GetSelection());
+		logTextCtrl->Hide();
+		return;
+	}
+	
+	RemoveTextCtrl(window);
 }
 
 void MainGui::OnTabRightClick(wxAuiNotebookEvent& e)
