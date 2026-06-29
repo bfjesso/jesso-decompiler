@@ -77,7 +77,7 @@ public:
 
 	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption);
 
-	void OpenLog();
+	void OpenLog(int direction);
 
 	void AddDisassemblyTextCtrl();
 

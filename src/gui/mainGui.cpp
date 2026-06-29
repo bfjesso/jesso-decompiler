@@ -27,10 +27,6 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	colorsMenu = new ColorsMenu();
 
-	logTextCtrl = new JdcTextCtrl(this, "Log");
-	Log("JDC started");
-	logTextCtrl->highlightSelectedLines = 0;
-
 	menuBar = new wxMenuBar();
 
 	wxMenu* fileMenu = new wxMenu();
@@ -49,7 +45,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
-	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(); });
+	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(wxAUI_DOCK_NONE); });
 
 	wxMenu* windowMenu = new wxMenu();
 	AddMenuItem(windowMenu, ResetWindowLayoutID, "Reset window layout", [&](wxCommandEvent& ce) -> void { ResetWindowLayout(); });
@@ -66,6 +62,11 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	auiManager.SetManagedWindow(this);
 	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
 	auiNotebook = new wxAuiNotebook(this, NotebookID);
+
+	logTextCtrl = new JdcTextCtrl(this, "Log");
+	logTextCtrl->highlightSelectedLines = 0;
+	logTextCtrl->Hide();
+	Log("JDC started");
 
 	ResetWindowLayout();
 }
@@ -91,7 +92,7 @@ void MainGui::ResetWindowLayout()
 		.CaptionVisible(false)
 		.MinSize(100, 100));
 
-	OpenLog();
+	OpenLog(wxAUI_DOCK_LEFT);
 	AddDisassemblyTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
@@ -108,15 +109,24 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 	return auiManager.GetPane(window);
 }
 
-void MainGui::OpenLog()
+void MainGui::OpenLog(int direction)
 {
-	logTextCtrl->Show();
-	auiManager.AddPane(logTextCtrl, wxAuiPaneInfo()
-		.Name("log")
-		.Caption("Log")
-		.Left()
-		.MinSize(logTextCtrl->GetMinSize()));
-	auiManager.Update();
+	if (!logTextCtrl->IsShown())
+	{
+		wxAuiPaneInfo pane = wxAuiPaneInfo().Name(logTextCtrl->GetName().Lower()).Caption(logTextCtrl->GetName()).MinSize(logTextCtrl->GetMinSize());
+		if (direction == wxAUI_DOCK_NONE) 
+		{
+			pane.Float();
+		}
+		else 
+		{
+			pane.Direction(direction);
+		}
+		
+		auiManager.AddPane(logTextCtrl, pane);
+		auiManager.Update();
+		logTextCtrl->Show();
+	}
 }
 
 void MainGui::AddDisassemblyTextCtrl()
@@ -188,12 +198,14 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 	}
 
 	RemoveTextCtrl(window);
+	auiManager.DetachPane(window);
+	window->Destroy();
 }
 
 void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 {
 	wxWindow* window = auiNotebook->GetPage(e.GetSelection());
-	if (window == logTextCtrl) 
+	if (window == logTextCtrl)
 	{
 		auiNotebook->RemovePage(e.GetSelection());
 		logTextCtrl->Hide();
