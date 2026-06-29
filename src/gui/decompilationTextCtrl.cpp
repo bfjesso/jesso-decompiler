@@ -20,7 +20,7 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : J
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			return mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
+			disassemblyTextCtrl = mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
@@ -37,6 +37,8 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : J
 
 void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 {
+	OnUpdateUI(e);
+	
 	if (disassemblyTextCtrl && HasFocus())
 	{
 		disassemblyTextCtrl->ClearIndicators();
@@ -50,11 +52,10 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 				disassemblyTextCtrl->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
 			}
 
+			ClearIndicators();
 			HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
 		}
 	}
-	
-	OnUpdateUI(e);
 }
 
 void DecompilationTextCtrl::DecompileFunction(int functionIndex)

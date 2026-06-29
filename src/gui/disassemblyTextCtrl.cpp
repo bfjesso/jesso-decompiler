@@ -49,7 +49,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent, wxString name) : JdcTe
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			decompilationTextCtrl =  mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
+			decompilationTextCtrl = mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
@@ -140,30 +140,36 @@ void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
 void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 {
 	UpdateTextCtrl();
+	OnUpdateUI(e);
 
-	if (decompilationTextCtrl && HasFocus())
+	if (HasFocus())
 	{
-		decompilationTextCtrl->ClearIndicators();
 		int instructionIndex = GetCurrentLine();
-		if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
-			instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
+
+		if (decompilationTextCtrl) 
 		{
-			for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
+			decompilationTextCtrl->ClearIndicators();
+			if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
+				instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
 			{
-				struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
-				for (int j = 0; j < a->numOfIndexes; j++)
+				for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
 				{
-					if (a->indexes[j] == instructionIndex)
+					struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
+					for (int j = 0; j < a->numOfIndexes; j++)
 					{
-						decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
-						break;
+						if (a->indexes[j] == instructionIndex)
+						{
+							decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
+							break;
+						}
 					}
 				}
+
+				ClearIndicators();
+				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 			}
-
-			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
-
+		
 		if (showAssociatedFunctions && functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
 		{
 			functionsTextCtrl->ClearIndicators();
@@ -171,6 +177,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			if (funcIndex != -1)
 			{
 				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
+				ClearIndicators();
 				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 			}
 		}
@@ -178,11 +185,10 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 		if (dataTextCtrl && dataTextCtrl->IsShown() && showBytesInDataViewer && mainGui->decompParams.numOfInstructions > 0)
 		{
 			dataTextCtrl->HighlightInstruction(mainGui->decompParams.instructions[instructionIndex].address, mainGui->decompParams.instructions[instructionIndex].numOfBytes);
+			ClearIndicators();
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 	}
-
-	OnUpdateUI(e);
 }
 
 void DisassemblyTextCtrl::UpdateTextCtrl()

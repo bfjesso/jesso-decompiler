@@ -452,7 +452,7 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		BraceHighlight(-1, -1);
 	}
 	
-	if (highlightSelectedLines && !IndicatorAllOnFor(pos))
+	if (highlightSelectedLines)
 	{
 		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
 	}
