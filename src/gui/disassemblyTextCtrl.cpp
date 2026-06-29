@@ -1,19 +1,13 @@
 #include "disassemblyTextCtrl.h"
-#include "decompilationTextCtrl.h"
-#include "functionsTextCtrl.h"
-#include "dataTextCtrl.h"
+#include "mainGui.h"
 
 #include "../disassembler/disassembler.h"
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl) : JdcTextCtrl(parent)
+DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 {
-	params = decompParams;
-	colorsMenu = colorMenu;
-	getDecompilationTextCtrl = getDecompTextCtrl;
-	getFunctionsTextCtrl = getFuncsTextCtrl;
-	getDataTextCtrl = getDatTextCtrl;
+	mainGui = parent;
 
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
 
@@ -21,7 +15,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationP
 		wxTextEntryDialog dlg(this, "", "Go to address");
 		if (dlg.ShowModal() == wxID_OK)
 		{
-			if (!params || params->numOfInstructions == 0) 
+			if (mainGui->decompParams.numOfInstructions == 0) 
 			{
 				wxMessageBox("No instructions loaded", "Failed to find address");
 				return;
@@ -31,7 +25,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationP
 			unsigned long long address = 0;
 			if (txt.ToULongLong(&address, 16))
 			{
-				int index = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, address);
+				int index = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, address);
 				if (index == -1)
 				{
 					wxMessageBox("Address not found", "Failed to find address");
@@ -47,26 +41,41 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationP
 	});
 
 	AddRightClickOption("Set associated decompilation", 0, 0, [&](wxCommandEvent& e) {
-		DecompilationTextCtrl* newDecompilationTextCtrl = getDecompilationTextCtrl();
-		if (newDecompilationTextCtrl)
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 		{
-			decompilationTextCtrl = newDecompilationTextCtrl;
+			windowCaptions.push_back("Decompilation " + std::to_string(i));
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			decompilationTextCtrl =  mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
 	AddRightClickOption("Set associated functions list", 0, 0, [&](wxCommandEvent& e) {
-		FunctionsTextCtrl* newFunctionsTextCtrl = getFunctionsTextCtrl();
-		if (newFunctionsTextCtrl)
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
 		{
-			functionsTextCtrl = newFunctionsTextCtrl;
+			windowCaptions.push_back("Functions " + std::to_string(i));
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			functionsTextCtrl = mainGui->functionsTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
 	AddRightClickOption("Set associated data window", 0, 0, [&](wxCommandEvent& e) {
-		DataTextCtrl* newDataTextCtrl = getDataTextCtrl();
-		if (newDataTextCtrl)
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
 		{
-			dataTextCtrl = newDataTextCtrl;
+			windowCaptions.push_back("Data " + std::to_string(i));
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			dataTextCtrl = mainGui->dataTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
@@ -98,14 +107,12 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, struct DecompilationP
 	});
 }
 
-void DisassemblyTextCtrl::Initialize(unsigned long long pointOfEntry, unsigned long long errorAddress)
+void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
 {
-	entryPoint = pointOfEntry;
-
 	ClearText();
 
 	wxString newLines = "";
-	for (int i = 0; i < params->numOfInstructions; i++)
+	for (int i = 0; i < mainGui->decompParams.numOfInstructions; i++)
 	{
 		newLines += "\n";
 	}
@@ -116,40 +123,34 @@ void DisassemblyTextCtrl::Initialize(unsigned long long pointOfEntry, unsigned l
 
 	if (errorAddress != 0)
 	{
-		int errorIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, errorAddress);
+		int errorIndex = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, errorAddress);
 		CenterLine(errorIndex);
 		UpdateTextCtrl();
 		HighlightLine(errorIndex, RED_INDICATOR, 0);
 	}
 	else
 	{
-		int entryPointIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, entryPoint + params->imageBase);
+		int entryPointIndex = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, mainGui->entryPoint + mainGui->decompParams.imageBase);
 		CenterLine(entryPointIndex);
 		UpdateTextCtrl();
 		HighlightLine(entryPointIndex, YELLOW_INDICATOR, 0);
 	}
 }
 
-void DisassemblyTextCtrl::ClearData()
-{
-	entryPoint = 0;
-	ClearText();
-}
-
 void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 {
 	UpdateTextCtrl();
 
-	if (params && decompilationTextCtrl && HasFocus())
+	if (decompilationTextCtrl && HasFocus())
 	{
 		decompilationTextCtrl->ClearIndicators();
 		int instructionIndex = GetCurrentLine();
 		if (decompilationTextCtrl->currentDecompiledFunc != -1 && showAssociatedDecompiledLines &&
-			instructionIndex >= params->functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= params->functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
+			instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
 		{
-			for (int i = 0; i < params->functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
+			for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
 			{
-				struct AssociatedInstructions* a = &params->functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
+				struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
 				for (int j = 0; j < a->numOfIndexes; j++)
 				{
 					if (a->indexes[j] == instructionIndex)
@@ -163,10 +164,10 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 
-		if (showAssociatedFunctions && functionsTextCtrl && instructionIndex < params->numOfInstructions)
+		if (showAssociatedFunctions && functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
 		{
 			functionsTextCtrl->ClearIndicators();
-			int funcIndex = findFunctionByAddressInclusive(params, 0, params->numOfFunctions - 1, params->instructions[instructionIndex].address);
+			int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, mainGui->decompParams.instructions[instructionIndex].address);
 			if (funcIndex != -1)
 			{
 				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
@@ -174,9 +175,9 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			}
 		}
 
-		if (dataTextCtrl && dataTextCtrl->IsShown() && showBytesInDataViewer && params->numOfInstructions > 0)
+		if (dataTextCtrl && dataTextCtrl->IsShown() && showBytesInDataViewer && mainGui->decompParams.numOfInstructions > 0)
 		{
-			dataTextCtrl->HighlightInstruction(params->instructions[instructionIndex].address, params->instructions[instructionIndex].numOfBytes);
+			dataTextCtrl->HighlightInstruction(mainGui->decompParams.instructions[instructionIndex].address, mainGui->decompParams.instructions[instructionIndex].numOfBytes);
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
 		}
 	}
@@ -186,7 +187,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 
 void DisassemblyTextCtrl::UpdateTextCtrl()
 {
-	if (!params || params->numOfInstructions == 0)
+	if (mainGui->decompParams.numOfInstructions == 0)
 	{
 		return;
 	}
@@ -205,9 +206,9 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 	}
 
 	lastLine += 100;
-	if (lastLine > params->numOfInstructions)
+	if (lastLine > mainGui->decompParams.numOfInstructions)
 	{
-		lastLine = params->numOfInstructions;
+		lastLine = mainGui->decompParams.numOfInstructions;
 	}
 
 	SetReadOnly(false);
@@ -223,9 +224,9 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			continue;
 		}
 		
-		for (int j = sectionIndex + 1; j < params->numOfSections; j++)
+		for (int j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
 		{
-			if (params->sections[j].type == CODE_FST && params->instructions[i].address >= params->sections[j].virtualAddress + params->imageBase)
+			if (mainGui->decompParams.sections[j].type == CODE_FST && mainGui->decompParams.instructions[i].address >= mainGui->decompParams.sections[j].virtualAddress + mainGui->decompParams.imageBase)
 			{
 				sectionIndex = j;
 				break;
@@ -233,29 +234,29 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		}
 
 		char addressStr[20] = { 0 };
-		sprintf(addressStr, "0x%llX", params->instructions[i].address);
-		wxString addressInfoStr = wxString(addressStr) + wxString(params->sections[sectionIndex].name.buffer) + "\t";
+		sprintf(addressStr, "0x%llX", mainGui->decompParams.instructions[i].address);
+		wxString addressInfoStr = wxString(addressStr) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
 
 		wxString asmStr = "";
-		if (instructionToStr(&params->instructions[i], &instructionStrBuffer))
+		if (instructionToStr(&mainGui->decompParams.instructions[i], &instructionStrBuffer))
 		{
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}
 
-		if (params->instructions[i].isInvalid)
+		if (mainGui->decompParams.instructions[i].isInvalid)
 		{
 			asmStr += " ; invalid instruction";
 		}
-		else if (params->instructions[i].opcode == NO_MNEMONIC)
+		else if (mainGui->decompParams.instructions[i].opcode == NO_MNEMONIC)
 		{
 			asmStr += " ; unrecognized opcode";
 		}
-		else if (params->instructions[i].address == entryPoint + params->imageBase)
+		else if (mainGui->decompParams.instructions[i].address == mainGui->entryPoint + mainGui->decompParams.imageBase)
 		{
 			asmStr += " ; entry point";
 		}
 
-		unsigned long long dst = getJmpDst(&params->instructions[0], i, i - 0x1000);
+		unsigned long long dst = getJmpDst(&mainGui->decompParams.instructions[0], i, i - 0x1000);
 		if (dst != 0)
 		{
 			char dstStr[20] = { 0 };
@@ -278,7 +279,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 {
 	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
-		StyleSetForeground(i, colorsMenu->disassemblyColors[i]);
+		StyleSetForeground(i, mainGui->colorsMenu->disassemblyColors[i]);
 	}
 
 	int firstLine = GetFirstVisibleLine();
@@ -291,16 +292,16 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 	}
 
 	lastLine += 99;
-	if (lastLine > params->numOfInstructions)
+	if (lastLine > mainGui->decompParams.numOfInstructions)
 	{
-		lastLine = params->numOfInstructions;
+		lastLine = mainGui->decompParams.numOfInstructions;
 	}
 
 	int pos = PositionFromLine(firstLine) + 1;
 	wxString disassemblyText = GetValue();
 	for (int i = firstLine; i < lastLine; i++)
 	{
-		struct DisassembledInstruction* instruction = &(params->instructions[i]);
+		struct DisassembledInstruction* instruction = &(mainGui->decompParams.instructions[i]);
 
 		int tabPos = disassemblyText.find('\t', pos);
 		wxString addressInfoStr = disassemblyText.substr(pos, tabPos - pos);

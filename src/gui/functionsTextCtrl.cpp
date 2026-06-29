@@ -1,15 +1,13 @@
 #include "functionsTextCtrl.h"
-#include "decompilationTextCtrl.h"
+#include "mainGui.h"
 #include "functionInfoMenu.h"
 
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl) : JdcTextCtrl(parent)
+FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 {
-	params = decompParams;
-	colorsMenu = colorMenu;
-	getDecompilationTextCtrl = getDecompTextCtrl;
+	mainGui = parent;
 	EnableLineNumbers();
 
 	AddRightClickOption("Find function by address", 'G', 0, [&](wxCommandEvent&) {
@@ -20,7 +18,7 @@ FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, struct DecompilationParam
 			unsigned long long address = 0;
 			if (txt.ToULongLong(&address, 16))
 			{
-				int index = findFunctionByAddressInclusive(params, 0, params->numOfFunctions - 1, address);
+				int index = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, address);
 				if (index == -1)
 				{
 					wxMessageBox("Address not found", "Failed to find address");
@@ -37,21 +35,38 @@ FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, struct DecompilationParam
 
 	AddRightClickOption("Decompile", 0, 0, [&](wxCommandEvent& e) {
 		int selectedLine = GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < params->numOfFunctions)
+		if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions)
 		{
-			DecompilationTextCtrl* textCtrl = getDecompilationTextCtrl();
-			if (textCtrl) 
+			if (mainGui->decompilationTextCtrls.size() == 0)
 			{
-				textCtrl->DecompileFunction(selectedLine);
+				mainGui->AddDecompilationTextCtrl();
+				mainGui->decompilationTextCtrls[0]->DecompileFunction(selectedLine);
+			}
+			else if (mainGui->decompilationTextCtrls.size() == 1)
+			{
+				mainGui->decompilationTextCtrls[0]->DecompileFunction(selectedLine);
+			}
+			else
+			{
+				wxArrayString windowCaptions;
+				for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
+				{
+					windowCaptions.push_back("Decompilation " + std::to_string(i));
+				}
+				wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+				if (choiceDialog.ShowModal() != wxID_CANCEL)
+				{
+					mainGui->decompilationTextCtrls[choiceDialog.GetSelection()]->DecompileFunction(selectedLine);
+				}
 			}
 		}
 	});
 
 	AddRightClickOption("View info", 0, 0, [&](wxCommandEvent& e) {
 		int selectedLine = GetCurrentLine();
-		if (selectedLine >= 0 && selectedLine < params->numOfFunctions)
+		if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions)
 		{
-			new FunctionInfoMenu(this, GetPosition(), params->instructions, &params->functions[selectedLine]);
+			new FunctionInfoMenu(this, GetPosition(), mainGui->decompParams.instructions, &mainGui->decompParams.functions[selectedLine]);
 		}
 	});
 
@@ -73,18 +88,18 @@ void FunctionsTextCtrl::ShowAllFunctions()
 	wxString functionsStr = "";
 
 	struct JdcStr functionHeaderBuffer = initializeJdcStr();
-	for (int i = 0; i < params->numOfFunctions; i++)
+	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
-		struct Function* function = &params->functions[i];
+		struct Function* function = &mainGui->decompParams.functions[i];
 		if (!generateFunctionHeader(function, &functionHeaderBuffer))
 		{
 			return;
 		}
 
-		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", params->instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
 		functionsStr += wxString(functionHeaderBuffer.buffer);
 
-		if (i != params->numOfFunctions - 1)
+		if (i != mainGui->decompParams.numOfFunctions - 1)
 		{
 			functionsStr += "\n";
 		}
@@ -100,7 +115,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting()
 {
 	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
-		StyleSetForeground(i, colorsMenu->decompColors[i]);
+		StyleSetForeground(i, mainGui->colorsMenu->decompColors[i]);
 	}
 
 	wxString text = GetValue();

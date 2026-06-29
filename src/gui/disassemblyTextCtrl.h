@@ -1,7 +1,7 @@
 #pragma once
 #include "jdcTextCtrl.h"
-#include "colorsMenu.h"
 
+class MainGui;
 class DecompilationTextCtrl;
 class FunctionsTextCtrl;
 class DataTextCtrl;
@@ -9,28 +9,19 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DecompilationTextCtrl* ()>& getDecompTextCtrl, const std::function<FunctionsTextCtrl* ()>& getFuncsTextCtrl, const std::function<DataTextCtrl* ()>& getDatTextCtrl);
+	DisassemblyTextCtrl(MainGui* parent);
 
-	ColorsMenu* colorsMenu = nullptr;
-
-	std::function<DecompilationTextCtrl* ()> getDecompilationTextCtrl;
-	std::function<FunctionsTextCtrl* ()> getFunctionsTextCtrl;
-	std::function<DataTextCtrl* ()> getDataTextCtrl;
+	MainGui* mainGui = nullptr;
 
 	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
 	DataTextCtrl* dataTextCtrl = nullptr;
-	
-	struct DecompilationParameters* params = nullptr;
-	unsigned long long entryPoint = 0;
 
 	unsigned char showAssociatedDecompiledLines = 1;
 	unsigned char showAssociatedFunctions = 1;
 	unsigned char showBytesInDataViewer = 1;
 
-	void Initialize(unsigned long long entryPoint, unsigned long long errorAddress);
-
-	void ClearData();
+	void Initialize(unsigned long long errorAddress);
 
 	void OnUpdateDisassemblyUI(wxStyledTextEvent& e);
 

@@ -1,23 +1,26 @@
 #include "decompilationTextCtrl.h"
-#include "disassemblyTextCtrl.h"
+#include "mainGui.h"
 
 #include "../decompiler/decompiler.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu, const std::function<DisassemblyTextCtrl* ()>& getDisasmTextCtrl) : JdcTextCtrl(parent)
+DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 {
-	params = decompParams;
-	colorsMenu = colorMenu;
-	getDisassemblyTextCtrl = getDisasmTextCtrl;
+	mainGui = parent;
 	EnableLineNumbers();
 
 	Bind(wxEVT_STC_UPDATEUI, &DecompilationTextCtrl::OnUpdateDecompilationUI, this);
 
 	AddRightClickOption("Set associated disassembly", 0, 0, [&](wxCommandEvent& e) {
-		DisassemblyTextCtrl* newDisassemblyTextCtrl = getDisassemblyTextCtrl();
-		if (newDisassemblyTextCtrl) 
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
 		{
-			disassemblyTextCtrl = newDisassemblyTextCtrl;
+			windowCaptions.push_back("Disassembly " + std::to_string(i));
+		}
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			return mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
 		}
 	});
 
@@ -34,13 +37,13 @@ DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, struct Decompilat
 
 void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 {
-	if (params && disassemblyTextCtrl && HasFocus())
+	if (disassemblyTextCtrl && HasFocus())
 	{
 		disassemblyTextCtrl->ClearIndicators();
 		int selectedLine = GetCurrentLine();
-		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < params->functions[currentDecompiledFunc].associatedInstructionsBufferLen)
+		if (currentDecompiledFunc != -1 && showAssociatedInstructions && selectedLine < mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 		{
-			struct AssociatedInstructions* a = &params->functions[currentDecompiledFunc].associatedInstructions[selectedLine];
+			struct AssociatedInstructions* a = &mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
 			for (int i = 0; i < a->numOfIndexes; i++)
 			{
@@ -56,7 +59,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 
 void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 {
-	if (!params || params->numOfFileBytes == 0)
+	if (mainGui->decompParams.numOfFileBytes == 0)
 	{
 		wxMessageBox("No file opened", "Can't decompile");
 		return;
@@ -70,7 +73,7 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 		disassemblyTextCtrl->ClearIndicators();
 	}
 
-	params->currentFunc = &params->functions[functionIndex];
+	mainGui->decompParams.currentFunc = &mainGui->decompParams.functions[functionIndex];
 
 	struct JdcStr decompilationResult = initializeJdcStr();
 	if (decompilationResult.bufferSize == 0)
@@ -81,7 +84,7 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 
 	struct JdcStr statusMessage = initializeJdcStr();
 	int errorInstructionIndex = 0;
-	if (!decompileFunction(params, &decompilationResult, &statusMessage, &errorInstructionIndex))
+	if (!decompileFunction(&mainGui->decompParams, &decompilationResult, &statusMessage, &errorInstructionIndex))
 	{
 		if (disassemblyTextCtrl)
 		{
@@ -109,14 +112,14 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 
 void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 {
-	if (!params || !params->currentFunc)
+	if (!mainGui->decompParams.currentFunc)
 	{
 		return;
 	}
 
 	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
-		StyleSetForeground(i, colorsMenu->decompColors[i]);
+		StyleSetForeground(i, mainGui->colorsMenu->decompColors[i]);
 	}
 
 	wxString text = GetValue();
@@ -125,39 +128,39 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	SetStyling(text.length(), OPERATOR_DECOMP_COLOR);
 
 	// stack vars
-	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfStackVars; i++)
 	{
-		ColorAllStrs(text, params->currentFunc->stackVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->stackVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// reg vars
-	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfRegVars; i++)
 	{
-		ColorAllStrs(text, params->currentFunc->regVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->regVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// returned vars
-	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfReturnedVars; i++)
 	{
-		ColorAllStrs(text, params->currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// stack args
-	for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
+	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfStackArgs; i++)
 	{
-		ColorAllStrs(text, params->currentFunc->stackArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->stackArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
 	}
 
 	// reg args
-	for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
+	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfRegArgs; i++)
 	{
-		ColorAllStrs(text, params->currentFunc->regArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->regArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
 	}
 
 	// imports
-	for (int i = 0; i < params->numOfImports; i++)
+	for (int i = 0; i < mainGui->decompParams.numOfImports; i++)
 	{
-		ColorAllStrs(text, params->imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
+		ColorAllStrs(text, mainGui->decompParams.imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
 	}
 
 	// intrinsic functions
@@ -236,9 +239,9 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// functions
-	for (int i = 0; i < params->numOfFunctions; i++)
+	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
-		ColorAllStrs(text, params->functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
+		ColorAllStrs(text, mainGui->decompParams.functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
 	}
 
 	// calling conventions
