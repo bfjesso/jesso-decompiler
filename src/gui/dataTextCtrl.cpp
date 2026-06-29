@@ -91,7 +91,7 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 	wxMenu menu;
 
 	const int ID_CHANGE_DISPLAY_TYPE = 100;
-	const int ID_TOGGLE_HEX = 101;
+	const int ID_HEX = 101;
 
 	menu.Append(ID_CHANGE_DISPLAY_TYPE, "Change display type");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -103,11 +103,15 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 		}
 	}, ID_CHANGE_DISPLAY_TYPE);
 
-	menu.Append(ID_TOGGLE_HEX, "Toggle hex display");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		isHex = !isHex;
-		ResetTextCtrl();
-	}, ID_TOGGLE_HEX);
+	if (selectedType >= ONE_BYTE_INT_TYPE && selectedType <= EIGHT_BYTE_INT_TYPE) 
+	{
+		menu.AppendCheckItem(ID_HEX, "Hex");
+		menu.Check(ID_HEX, isHex);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+			isHex = e.IsChecked();
+			ResetTextCtrl();
+		}, ID_HEX);
+	}
 
 	AddDefaultRightClickOptions(&menu);
 
