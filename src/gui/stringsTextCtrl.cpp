@@ -1,6 +1,6 @@
 #include "stringsTextCtrl.h"
 
-StringsTextCtrl::StringsTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent)
+StringsTextCtrl::StringsTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, name)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;

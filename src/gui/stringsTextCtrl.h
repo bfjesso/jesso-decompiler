@@ -7,7 +7,7 @@
 class StringsTextCtrl : public JdcTextCtrl
 {
 public:
-	StringsTextCtrl(wxWindow* parent, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
+	StringsTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
 
 	ColorsMenu* colorsMenu = nullptr;
 

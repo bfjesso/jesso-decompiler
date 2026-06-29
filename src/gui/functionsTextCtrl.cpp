@@ -5,7 +5,7 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
+FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
 {
 	mainGui = parent;
 	EnableLineNumbers();
@@ -51,7 +51,7 @@ FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 				wxArrayString windowCaptions;
 				for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 				{
-					windowCaptions.push_back("Decompilation " + std::to_string(i));
+					windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 				}
 				wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 				if (choiceDialog.ShowModal() != wxID_CANCEL)

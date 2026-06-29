@@ -7,7 +7,7 @@ class DecompilationTextCtrl;
 class FunctionsTextCtrl : public JdcTextCtrl
 {
 public:
-	FunctionsTextCtrl(MainGui* parent);
+	FunctionsTextCtrl(MainGui* parent, wxString name);
 
 	MainGui* mainGui = nullptr;
 

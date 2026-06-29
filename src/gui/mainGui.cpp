@@ -27,7 +27,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	colorsMenu = new ColorsMenu();
 
-	logTextCtrl = new JdcTextCtrl(this);
+	logTextCtrl = new JdcTextCtrl(this, "Log");
 	Log("JDC started");
 	logTextCtrl->highlightSelectedLines = 0;
 
@@ -44,7 +44,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFunctionsID, "Functions", [&](wxCommandEvent& ce) -> void { AddFunctionsTextCtrl(); });
 	AddMenuItem(toolMenu, OpenDataID, "Data", [&](wxCommandEvent& ce) -> void { AddDataTextCtrl(); });
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections"); });
-	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, &decompParams, colorsMenu), "Strings"); });
+	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, "Strings", &decompParams, colorsMenu), "Strings"); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
@@ -114,63 +114,59 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 
 void MainGui::AddDisassemblyTextCtrl()
 {
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this);
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1));
 	disassemblyTextCtrl->Initialize(0);
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
 	
-	int num = disassemblyTextCtrls.size();
-	auiNotebook->AddPage(disassemblyTextCtrl, "Disassembly " + std::to_string(num));
+	auiNotebook->AddPage(disassemblyTextCtrl, disassemblyTextCtrl->GetName());
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(disassemblyTextCtrl));
 }
 
 void MainGui::AddDecompilationTextCtrl()
 {
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this);
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, "Decompilation " + std::to_string(decompilationTextCtrls.size() + 1));
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
 
-	int num = decompilationTextCtrls.size();
-	auiNotebook->AddPage(decompilationTextCtrl, "Decompilation " + std::to_string(num));
+	auiNotebook->AddPage(decompilationTextCtrl, decompilationTextCtrl->GetName());
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(decompilationTextCtrl));
 }
 
 wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this);
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
 	functionsTextCtrl->ShowAllFunctions();
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
 
-	int num = functionsTextCtrls.size();
 	auiManager.AddPane(functionsTextCtrl, wxAuiPaneInfo()
-		.Name("functions " + std::to_string(num))
-		.Caption("Functions " + std::to_string(num))
+		.Name(functionsTextCtrl->GetName().Lower())
+		.Caption(functionsTextCtrl->GetName())
 		.Bottom()
 		.MinSize(functionsTextCtrl->GetMinSize()));
 	auiManager.Update();
-	return auiManager.GetPane(functionsTextCtrls[num - 1]);
+	return auiManager.GetPane(functionsTextCtrls[functionsTextCtrls.size() - 1]);
 }
 
 wxAuiPaneInfo& MainGui::AddDataTextCtrl()
 {
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, colorsMenu);
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), colorsMenu);
 	dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);
 
-	int num = dataTextCtrls.size();
 	auiManager.AddPane(dataTextCtrl, wxAuiPaneInfo()
-		.Name("data " + std::to_string(num))
-		.Caption("Data " + std::to_string(num))
+		.Name(dataTextCtrl->GetName().Lower())
+		.Caption(dataTextCtrl->GetName())
 		.Float()
 		.MinSize(dataTextCtrl->GetMinSize()));
 	auiManager.Update();
-	return auiManager.GetPane(dataTextCtrls[num - 1]);
+	return auiManager.GetPane(dataTextCtrls[dataTextCtrls.size() - 1]);
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)

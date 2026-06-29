@@ -5,7 +5,7 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
+DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
 {
 	mainGui = parent;
 
@@ -44,7 +44,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 		wxArrayString windowCaptions;
 		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back("Decompilation " + std::to_string(i));
+			windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
@@ -57,7 +57,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 		wxArrayString windowCaptions;
 		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back("Functions " + std::to_string(i));
+			windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
@@ -70,7 +70,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
 		wxArrayString windowCaptions;
 		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back("Data " + std::to_string(i));
+			windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)

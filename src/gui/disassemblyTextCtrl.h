@@ -9,7 +9,7 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(MainGui* parent);
+	DisassemblyTextCtrl(MainGui* parent, wxString name);
 
 	MainGui* mainGui = nullptr;
 

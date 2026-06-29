@@ -4,7 +4,7 @@
 #include "../decompiler/decompiler.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent) : JdcTextCtrl(parent)
+DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
 {
 	mainGui = parent;
 	EnableLineNumbers();
@@ -15,7 +15,7 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent) : JdcTextCtrl(pare
 		wxArrayString windowCaptions;
 		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
 		{
-			windowCaptions.push_back("Disassembly " + std::to_string(i));
+			windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
 		}
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)

@@ -7,7 +7,7 @@ class DisassemblyTextCtrl;
 class DecompilationTextCtrl : public JdcTextCtrl
 {
 public:
-	DecompilationTextCtrl(MainGui* parent);
+	DecompilationTextCtrl(MainGui* parent, wxString name);
 
 	MainGui* mainGui = nullptr;
 
