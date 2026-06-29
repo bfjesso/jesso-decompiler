@@ -75,7 +75,7 @@ public:
 
 	void ResetWindowLayout();
 
-	wxAuiPaneInfo& AddFloatingPane(wxWindow* window, wxString caption);
+	void AddFloatingPane(wxWindow* window, wxString caption);
 
 	void OpenLog(int direction);
 
@@ -83,9 +83,9 @@ public:
 
 	void AddDecompilationTextCtrl();
 
-	wxAuiPaneInfo& AddFunctionsTextCtrl();
+	void AddFunctionsTextCtrl();
 
-	wxAuiPaneInfo& AddDataTextCtrl();
+	void AddDataTextCtrl();
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

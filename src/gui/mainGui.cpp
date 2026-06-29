@@ -98,7 +98,7 @@ void MainGui::ResetWindowLayout()
 	auiManager.Update();
 }
 
-wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption)
+void MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 {
 	auiManager.AddPane(window, wxAuiPaneInfo()
 		.Name(caption.Lower())
@@ -106,7 +106,6 @@ wxAuiPaneInfo& MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 		.Float()
 		.MinSize(window->GetMinSize()));
 	auiManager.Update();
-	return auiManager.GetPane(window);
 }
 
 void MainGui::OpenLog(int direction)
@@ -152,7 +151,7 @@ void MainGui::AddDecompilationTextCtrl()
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(decompilationTextCtrl));
 }
 
-wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
+void MainGui::AddFunctionsTextCtrl()
 {
 	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
 	functionsTextCtrl->ShowAllFunctions();
@@ -166,10 +165,9 @@ wxAuiPaneInfo& MainGui::AddFunctionsTextCtrl()
 		.Bottom()
 		.MinSize(functionsTextCtrl->GetMinSize()));
 	auiManager.Update();
-	return auiManager.GetPane(functionsTextCtrls[functionsTextCtrls.size() - 1]);
 }
 
-wxAuiPaneInfo& MainGui::AddDataTextCtrl()
+void MainGui::AddDataTextCtrl()
 {
 	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), colorsMenu);
 	dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
@@ -183,7 +181,6 @@ wxAuiPaneInfo& MainGui::AddDataTextCtrl()
 		.Float()
 		.MinSize(dataTextCtrl->GetMinSize()));
 	auiManager.Update();
-	return auiManager.GetPane(dataTextCtrls[dataTextCtrls.size() - 1]);
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)
