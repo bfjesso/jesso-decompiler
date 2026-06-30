@@ -335,10 +335,9 @@ unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection
 				}
 
 				buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
-				
-				buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
+				buffer[bufferIndex].rva = sectionHeader.sh_addr;
 				buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-				buffer[bufferIndex].size = sectionHeader.sh_size;
+				buffer[bufferIndex].physicalSize = sectionHeader.sh_size;
 				bufferIndex++;
 			}
 
@@ -401,10 +400,9 @@ unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection
 				}
 
 				buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
-
-				buffer[bufferIndex].virtualAddress = sectionHeader.sh_addr;
+				buffer[bufferIndex].rva = sectionHeader.sh_addr;
 				buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-				buffer[bufferIndex].size = sectionHeader.sh_size;
+				buffer[bufferIndex].physicalSize = sectionHeader.sh_size;
 				bufferIndex++;
 			}
 

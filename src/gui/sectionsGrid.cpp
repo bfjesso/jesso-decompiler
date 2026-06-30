@@ -24,14 +24,14 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 	SetColLabelValue(0, "Name");
 	SetColLabelValue(1, "Type");
 	SetColLabelValue(2, "Is readonly");
-	SetColLabelValue(3, "Virtual address");
+	SetColLabelValue(3, "Relative virtual address");
 	SetColLabelValue(4, "File offset");
-	SetColLabelValue(5, "Size");
+	SetColLabelValue(5, "Physical size");
 	HideRowLabels();
 	SetColSize(0, 100);
 	SetColSize(1, 100);
 	SetColSize(2, 100);
-	SetColSize(3, 100);
+	SetColSize(3, 150);
 	SetColSize(4, 100);
 	SetColSize(5, 100);
 	SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
@@ -55,13 +55,13 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 			}
 
 			char hexNumStr[10];
-			sprintf(hexNumStr, "%llX", sections[i].virtualAddress);
+			sprintf(hexNumStr, "%llX", sections[i].rva);
 			SetCellValue(i, 3, wxString(hexNumStr));
 
 			sprintf(hexNumStr, "%llX", sections[i].fileOffset);
 			SetCellValue(i, 4, wxString(hexNumStr));
 
-			sprintf(hexNumStr, "%X", sections[i].size);
+			sprintf(hexNumStr, "%X", sections[i].physicalSize);
 			SetCellValue(i, 5, wxString(hexNumStr));
 		}
 	}

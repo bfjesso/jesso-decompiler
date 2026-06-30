@@ -350,15 +350,15 @@ unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSectio
 	unsigned long long maybeResult = 0;
 	for (int i = 0; i < numOfSections; i++)
 	{
-		if (rva >= sections[i].virtualAddress && rva < sections[i].virtualAddress + sections[i].size)
+		if (rva >= sections[i].rva && rva < sections[i].rva + sections[i].physicalSize)
 		{
 			if (section) { *section = &sections[i]; }
-			return (rva - sections[i].virtualAddress) + sections[i].fileOffset;
+			return (rva - sections[i].rva) + sections[i].fileOffset;
 		}
-		else if (rva == sections[i].virtualAddress + sections[i].size) 
+		else if (rva == sections[i].rva + sections[i].physicalSize)
 		{
 			if (section) { *section = 0; }
-			maybeResult = (rva - sections[i].virtualAddress) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
+			maybeResult = (rva - sections[i].rva) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
 		}
 	}
 

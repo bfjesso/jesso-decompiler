@@ -25,7 +25,7 @@ void StringsTextCtrl::LoadStrings()
     for (int i = 0; i < params->numOfSections; i++)
     {
         unsigned char foundStr = 0;
-        for (unsigned int j = 0; j < params->sections[i].size; j++)
+        for (unsigned int j = 0; j < params->sections[i].physicalSize; j++)
         {
             char c = *(char*)(params->fileBytes + params->sections[i].fileOffset + j);
             if (c > 31 && c < 127)
@@ -42,7 +42,7 @@ void StringsTextCtrl::LoadStrings()
             {
                 if (foundStr && c == 0 && currentStr.length() > 1)
                 {
-                    unsigned long long address = params->imageBase + params->sections[i].virtualAddress + j;
+                    unsigned long long address = params->imageBase + params->sections[i].rva + j;
                     char addressStr[50] = { 0 };
                     sprintf(addressStr, "%llX", address);
 

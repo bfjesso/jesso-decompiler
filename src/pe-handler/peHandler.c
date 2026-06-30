@@ -161,10 +161,9 @@ unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, 
 		}
 
 		buffer[i].isReadOnly = !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE);
-
-		buffer[i].virtualAddress = sectionHeader.VirtualAddress;
+		buffer[i].rva = sectionHeader.VirtualAddress;
 		buffer[i].fileOffset = sectionHeader.PointerToRawData;
-		buffer[i].size = sectionHeader.SizeOfRawData;
+		buffer[i].physicalSize = sectionHeader.SizeOfRawData;
 	}
 	
 	return 1;
@@ -215,10 +214,9 @@ unsigned char getAllPESectionHeaders64(HANDLE file, struct FileSection* buffer, 
 		}
 
 		buffer[i].isReadOnly = !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE);
-
-		buffer[i].virtualAddress = sectionHeader.VirtualAddress;
+		buffer[i].rva = sectionHeader.VirtualAddress;
 		buffer[i].fileOffset = sectionHeader.PointerToRawData;
-		buffer[i].size = sectionHeader.SizeOfRawData;
+		buffer[i].physicalSize = sectionHeader.SizeOfRawData;
 	}
 
 	return 1;

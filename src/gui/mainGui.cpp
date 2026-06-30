@@ -402,9 +402,9 @@ void MainGui::OpenFile()
 					sections[0].name = initializeJdcStrWithVal(wxString("." + fileName).c_str());
 					sections[0].type = CODE_FST;
 					sections[0].isReadOnly = 1;
-					sections[0].virtualAddress = 0;
+					sections[0].rva = 0;
 					sections[0].fileOffset = 0;
-					sections[0].size = numOfFileBytes;
+					sections[0].physicalSize = numOfFileBytes;
 
 					numOfImports = 0;
 
@@ -517,8 +517,8 @@ void MainGui::DisassembleFile()
 	{
 		if (sections[i].type == CODE_FST)
 		{
-			unsigned long long sectionStart = sections[i].virtualAddress + imageBase;
-			unsigned long long sectionEnd = sections[i].virtualAddress + sections[i].size + imageBase;
+			unsigned long long sectionStart = sections[i].rva + imageBase;
+			unsigned long long sectionEnd = sections[i].rva + sections[i].physicalSize + imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
 				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
@@ -699,13 +699,13 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	{
 		return 1;
 	}
-	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->size > numOfFileBytes)
+	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
 	{
 		return 0;
 	}
 
 	unsigned long long currentVirtualAddress = startVA;
-	while (currentFileOffset < currentSection->fileOffset + currentSection->size)
+	while (currentFileOffset < currentSection->fileOffset + currentSection->physicalSize)
 	{
 		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress) != -1)
 		{
@@ -721,7 +721,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			return 0;
 		}
 
-		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->size - 1, options, instructionBuffer))
+		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
 			return 0;
@@ -852,7 +852,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 			break;
 		}
 	}
-	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].virtualAddress + sections[codeSectionIndex].size - 1;
+	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].rva + sections[codeSectionIndex].physicalSize - 1;
 
 	std::vector<unsigned long long> calledAddresses;
 	for (int i = 0; i < numOfInstructions; i++) 
@@ -886,7 +886,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 
 			if (foundNextCodeSection)
 			{
-				currentSectionEndAddress = imageBase + sections[codeSectionIndex].virtualAddress + sections[codeSectionIndex].size - 1;
+				currentSectionEndAddress = imageBase + sections[codeSectionIndex].rva + sections[codeSectionIndex].physicalSize - 1;
 			}
 		}
 

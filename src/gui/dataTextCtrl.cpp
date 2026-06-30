@@ -181,7 +181,7 @@ void DataTextCtrl::UpdateTextCtrl()
 		struct FileSection* section = 0;
 		for (int j = 0; j < numOfSections; j++) 
 		{
-			if (address >= sections[j].virtualAddress + imageBase && address < sections[j].virtualAddress + sections[j].size + imageBase) 
+			if (address >= sections[j].rva + imageBase && address < sections[j].rva + sections[j].physicalSize + imageBase) 
 			{
 				section = &sections[j];
 				break;

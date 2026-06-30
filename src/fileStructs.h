@@ -28,7 +28,7 @@ struct FileSection
 	struct JdcStr name;
 	enum FileSectionType type;
 	unsigned char isReadOnly;
-	unsigned long long virtualAddress;
+	unsigned long long rva;
 	unsigned long long fileOffset;
-	unsigned int size;
+	unsigned int physicalSize;
 };

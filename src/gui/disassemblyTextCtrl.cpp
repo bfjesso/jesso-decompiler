@@ -284,7 +284,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		
 		for (int j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
 		{
-			if (mainGui->decompParams.sections[j].type == CODE_FST && mainGui->decompParams.instructions[i].address >= mainGui->decompParams.sections[j].virtualAddress + mainGui->decompParams.imageBase)
+			if (mainGui->decompParams.sections[j].type == CODE_FST && mainGui->decompParams.instructions[i].address >= mainGui->decompParams.sections[j].rva + mainGui->decompParams.imageBase)
 			{
 				sectionIndex = j;
 				break;
