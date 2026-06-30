@@ -179,11 +179,11 @@ void DataTextCtrl::UpdateTextCtrl()
 
 		if (section) 
 		{
-			sprintf(lineBuffer, "0x%llX%s\t", params->imageBase + section->rva + (i - section->fileOffset), section->name.buffer);
+			sprintf(lineBuffer, "0x%llX%s (0x%llX)\t", params->imageBase + section->rva + (i - section->fileOffset), section->name.buffer, i);
 		}
 		else 
 		{
-			sprintf(lineBuffer, "0x%llX file offset\t", i);
+			sprintf(lineBuffer, "no section (0x%llX)\t", i);
 		}
 
 		for (unsigned int j = 0; j < bytesPerLine; j += typeSize)
