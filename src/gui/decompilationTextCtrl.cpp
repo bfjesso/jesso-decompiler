@@ -22,27 +22,30 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 	const int ID_SET_ASSOCIATED_DISASSEMBLY = 100;
 	const int ID_UNASSOCIATE_DISASSEMBLY = 101;
 
-	menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
-		{
-			windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
-		}
-		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-		if (choiceDialog.ShowModal() != wxID_CANCEL)
-		{
-			disassemblyTextCtrl = mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
-		}
-	}, ID_SET_ASSOCIATED_DISASSEMBLY);
-
-	if (disassemblyTextCtrl)
+	if (mainGui->disassemblyTextCtrls.size() > 0) 
 	{
-		menu.Append(ID_UNASSOCIATE_DISASSEMBLY, "Unassociate " + disassemblyTextCtrl->GetName());
+		menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			disassemblyTextCtrl->ClearIndicators();
-			disassemblyTextCtrl = nullptr;
-		}, ID_UNASSOCIATE_DISASSEMBLY);
+			wxArrayString windowCaptions;
+			for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
+			{
+				windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
+			}
+			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+			if (choiceDialog.ShowModal() != wxID_CANCEL)
+			{
+				disassemblyTextCtrl = mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
+			}
+		}, ID_SET_ASSOCIATED_DISASSEMBLY);
+
+		if (disassemblyTextCtrl)
+		{
+			menu.Append(ID_UNASSOCIATE_DISASSEMBLY, "Unassociate " + disassemblyTextCtrl->GetName());
+			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				disassemblyTextCtrl->ClearIndicators();
+				disassemblyTextCtrl = nullptr;
+			}, ID_UNASSOCIATE_DISASSEMBLY);
+		}
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
