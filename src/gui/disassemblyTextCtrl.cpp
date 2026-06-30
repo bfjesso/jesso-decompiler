@@ -236,9 +236,15 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 
 		if (dataTextCtrl && mainGui->decompParams.numOfInstructions > 0)
 		{
-			dataTextCtrl->HighlightInstruction(mainGui->decompParams.instructions[instructionIndex].address, mainGui->decompParams.instructions[instructionIndex].numOfBytes);
-			ClearIndicators();
-			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			unsigned long long address = mainGui->decompParams.instructions[instructionIndex].address;
+			FileSection* section = 0;
+			unsigned long long fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+			if (section)
+			{
+				dataTextCtrl->HighlightBytes(fileOffset, mainGui->decompParams.instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
+				ClearIndicators();
+				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			}
 		}
 	}
 }

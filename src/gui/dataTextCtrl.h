@@ -1,25 +1,22 @@
 #pragma once
 #include "jdcTextCtrl.h"
 #include "colorsMenu.h"
-#include "../file-handler/fileHandler.h"
+
+#include "../decompiler/decompilationStructs.h"
 
 #define NUM_OF_DATA_TEXT_CTRL_TYPES 7
 
 class DataTextCtrl : public JdcTextCtrl
 {
 public:
-	DataTextCtrl(wxWindow* parent, wxString name, ColorsMenu* colorMenu);
+	DataTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
 
 	ColorsMenu* colorsMenu = nullptr;
 
 	const unsigned int bytesPerLine = 8;
 	int numOfLines = 0;
 
-	unsigned char* fileBytes = nullptr;
-	unsigned long long numOfFileBytes = 0;
-	unsigned long long imageBase = 0;
-	struct FileSection* sections = nullptr;
-	int numOfSections = 0;
+	struct DecompilationParameters* params = nullptr;
 
 	const char* dataTypeStrs[NUM_OF_DATA_TEXT_CTRL_TYPES] =
 	{
@@ -55,11 +52,9 @@ public:
 	enum DataTextCtrlTypes selectedType = ONE_BYTE_INT_TYPE;
 	unsigned char isHex = 1;
 
-	void Initialize(unsigned long long baseOfImage, struct FileSection* fileSections, int amountOfSections, unsigned char* bytes, unsigned long long numOfBytes);
+	void Initialize();
 
 	void ResetTextCtrl();
-
-	void ClearData();
 
 	void ShowGoToAddressDialog();
 
@@ -73,5 +68,5 @@ public:
 
 	void ApplyDataHighlighting();
 
-	void HighlightInstruction(unsigned long long address, int numOfBytes);
+	void HighlightBytes(unsigned long long address, int numOfBytes, enum IndicatorColor color);
 };

@@ -171,8 +171,8 @@ void MainGui::AddFunctionsTextCtrl()
 
 void MainGui::AddDataTextCtrl()
 {
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), colorsMenu);
-	dataTextCtrl->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), &decompParams, colorsMenu);
+	dataTextCtrl->Initialize();
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);
@@ -411,7 +411,7 @@ void MainGui::OpenFile()
 					this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 					for (int i = 0; i < dataTextCtrls.size(); i++) 
 					{
-						dataTextCtrls[i]->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+						dataTextCtrls[i]->Initialize();
 					}
 					DisassembleFile();
 					openFileDialog.Close(true);
@@ -461,7 +461,7 @@ void MainGui::OpenFile()
 			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 			for (int i = 0; i < dataTextCtrls.size(); i++)
 			{
-				dataTextCtrls[i]->Initialize(imageBase, sections, numOfSections, fileBytes, numOfFileBytes);
+				dataTextCtrls[i]->Initialize();
 			}
 			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
 			if (disassembleAnswer == wxYES)
@@ -640,7 +640,7 @@ void MainGui::ClearData()
 
 	for (int i = 0; i < dataTextCtrls.size(); i++) 
 	{
-		dataTextCtrls[i]->ClearData();
+		dataTextCtrls[i]->ClearText();
 	}
 	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{

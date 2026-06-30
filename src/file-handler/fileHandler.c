@@ -347,6 +347,8 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr*
 
 unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)
 {
+	if (section) { *section = 0; }
+	
 	unsigned long long maybeResult = 0;
 	for (int i = 0; i < numOfSections; i++)
 	{
@@ -357,7 +359,6 @@ unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSectio
 		}
 		else if (rva == sections[i].rva + sections[i].physicalSize)
 		{
-			if (section) { *section = 0; }
 			maybeResult = (rva - sections[i].rva) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
 		}
 	}

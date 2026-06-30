@@ -1,8 +1,11 @@
 #include "dataTextCtrl.h"
+#include "../file-handler/fileHandler.h"
+
 #include <string>
 
-DataTextCtrl::DataTextCtrl(wxWindow* parent, wxString name, ColorsMenu* colorMenu) : JdcTextCtrl(parent, name)
+DataTextCtrl::DataTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, name)
 {
+	params = decompParams;
 	colorsMenu = colorMenu;
 
 	Bind(wxEVT_CONTEXT_MENU, &DataTextCtrl::DataRightClickOptions, this);
@@ -10,16 +13,10 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, wxString name, ColorsMenu* colorMen
 	Bind(wxEVT_STC_UPDATEUI, &DataTextCtrl::OnUpdateDataUI, this);
 }
 
-void DataTextCtrl::Initialize(unsigned long long baseOfImage, struct FileSection* fileSections, int amountOfSections, unsigned char* bytes, unsigned long long numOfBytes)
+void DataTextCtrl::Initialize()
 {
-	imageBase = baseOfImage;
-	sections = fileSections;
-	numOfSections = amountOfSections;
-	fileBytes = bytes;
-	numOfFileBytes = numOfBytes;
-
-	numOfLines = numOfFileBytes / bytesPerLine;
-	if (numOfFileBytes % bytesPerLine != 0) 
+	numOfLines = params->numOfFileBytes / bytesPerLine;
+	if (params->numOfFileBytes % bytesPerLine != 0) 
 	{
 		numOfLines++;
 	}
@@ -46,16 +43,6 @@ void DataTextCtrl::ResetTextCtrl()
 	UpdateTextCtrl();
 }
 
-void DataTextCtrl::ClearData()
-{
-	ClearText();
-
-	fileBytes = nullptr;
-	sections = nullptr;
-	numOfSections = 0;
-	imageBase = 0;
-}
-
 void DataTextCtrl::ShowGoToAddressDialog()
 {
 	wxTextEntryDialog dlg(this, "", "Go to address");
@@ -65,18 +52,21 @@ void DataTextCtrl::ShowGoToAddressDialog()
 		unsigned long long address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			if (address < imageBase)
+			if (address < params->imageBase)
 			{
 				wxMessageBox("Address is smaller than the image base", "Failed to find address");
 				return;
 			}
-			else if (address >= imageBase + numOfFileBytes)
+
+			FileSection* section = 0;
+			unsigned long long fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+			if (!section) 
 			{
-				wxMessageBox("Address is larger than the max address", "Failed to find address");
+				wxMessageBox("Address is not within a section", "Failed to find address");
 				return;
 			}
 
-			CenterLine((address - imageBase) / bytesPerLine);
+			HighlightBytes(fileOffset, 1, YELLOW_INDICATOR);
 			return;
 		}
 
@@ -139,7 +129,7 @@ void DataTextCtrl::OnUpdateDataUI(wxStyledTextEvent& e)
 
 void DataTextCtrl::UpdateTextCtrl()
 {
-	if (!fileBytes || numOfFileBytes == 0)
+	if (params->numOfFileBytes == 0)
 	{
 		return;
 	}
@@ -177,33 +167,32 @@ void DataTextCtrl::UpdateTextCtrl()
 			continue;
 		}
 		
-		unsigned long long address = imageBase + i;
 		struct FileSection* section = 0;
-		for (int j = 0; j < numOfSections; j++) 
+		for (int j = 0; j < params->numOfSections; j++)
 		{
-			if (address >= sections[j].rva + imageBase && address < sections[j].rva + sections[j].physicalSize + imageBase) 
+			if (i >= params->sections[j].fileOffset && i < params->sections[j].fileOffset + params->sections[j].physicalSize)
 			{
-				section = &sections[j];
+				section = &params->sections[j];
 				break;
 			}
 		}
 
 		if (section) 
 		{
-			sprintf(lineBuffer, "0x%llX%s\t", address, section->name.buffer);
+			sprintf(lineBuffer, "0x%llX%s\t", params->imageBase + section->rva + (i - section->fileOffset), section->name.buffer);
 		}
 		else 
 		{
-			sprintf(lineBuffer, "0x%llX\t", address);
+			sprintf(lineBuffer, "0x%llX file offset\t", i);
 		}
 
 		for (unsigned int j = 0; j < bytesPerLine; j += typeSize)
 		{
-			if (i + j >= numOfFileBytes) 
+			if (i + j >= params->numOfFileBytes)
 			{
 				break;
 			}
-			else if (i + j + typeSize > numOfFileBytes)
+			else if (i + j + typeSize > params->numOfFileBytes)
 			{
 				selectedType = ONE_BYTE_INT_TYPE;
 				typeSize = 1;
@@ -220,11 +209,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", fileBytes[i + j]);
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", params->fileBytes[i + j]);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", fileBytes[i + j]);
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", params->fileBytes[i + j]);
 				}
 				break;
 			}
@@ -232,11 +221,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(params->fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned short*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned short*)(params->fileBytes + i + j));
 				}
 				break;
 			}
@@ -244,11 +233,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(params->fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned int*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned int*)(params->fileBytes + i + j));
 				}
 				break;
 			}
@@ -256,34 +245,34 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(params->fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(unsigned long long*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(unsigned long long*)(params->fileBytes + i + j));
 				}
 				break;
 			}
 			case FLOAT_TYPE:
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g", *(float*)(fileBytes + i + j));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g", *(float*)(params->fileBytes + i + j));
 				break;
 			}
 			case DOUBLE_TYPE:
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g", *(double*)(fileBytes + i + j));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g", *(double*)(params->fileBytes + i + j));
 				break;
 			}
 			case ASCII_CHAR_TYPE:
 			{
-				char c = *(char*)(fileBytes + i + j);
+				char c = *(char*)(params->fileBytes + i + j);
 				if(c > 31 && c < 127)
 				{
 					sprintf(lineBuffer + strlen(lineBuffer), "'%c'", c);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", fileBytes[i + j]);			
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", params->fileBytes[i + j]);
 				}
 				break;
 			}
@@ -341,20 +330,20 @@ void DataTextCtrl::ApplyDataHighlighting()
 	}
 }
 
-void DataTextCtrl::HighlightInstruction(unsigned long long address, int numOfBytes)
+void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, int numOfBytes, enum IndicatorColor color)
 {
-	IndicatorClearRange(0, GetTextLength());
-	SetIndicatorCurrent(0);
+	ClearIndicators();
+	SetIndicatorCurrent(color);
 
-	if (address >= imageBase && address < imageBase + numOfFileBytes)
+	if (fileOffset < params->numOfFileBytes)
 	{
-		int row = (address - imageBase) / bytesPerLine;
+		int row = fileOffset / bytesPerLine;
 		int rowStart = PositionFromLine(row);
 		int dataStart = FindText(rowStart, rowStart + 50, "\t") + 1;
 
-		if (selectedType == ONE_BYTE_INT_TYPE)
+		if (selectedType == ONE_BYTE_INT_TYPE && isHex)
 		{
-			int remainder = (address - imageBase) % bytesPerLine;
+			int remainder = fileOffset % bytesPerLine;
 			int start = dataStart + (remainder * 5);
 			if (numOfBytes + remainder > bytesPerLine) 
 			{
@@ -372,9 +361,9 @@ void DataTextCtrl::HighlightInstruction(unsigned long long address, int numOfByt
 		else 
 		{
 			int dataEnd = FindText(rowStart, rowStart + 50, "\n");
-			IndicatorFillRange(rowStart, dataEnd - rowStart - 1);
+			IndicatorFillRange(rowStart, dataEnd - rowStart);
 		}
 
-		GotoLine(row);
+		CenterLine(row);
 	}
 }
