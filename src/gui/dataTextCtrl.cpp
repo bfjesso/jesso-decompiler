@@ -208,6 +208,11 @@ void DataTextCtrl::UpdateTextCtrl()
 				selectedType = ONE_BYTE_INT_TYPE;
 				typeSize = 1;
 			}
+
+			if (j != 0)
+			{
+				strcat(lineBuffer, " ");
+			}
 			
 			switch (selectedType)
 			{
@@ -215,11 +220,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j]);
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", fileBytes[i + j]);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", fileBytes[i + j]);
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", fileBytes[i + j]);
 				}
 				break;
 			}
@@ -227,11 +232,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X ", *(unsigned short*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned short*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned short*)(fileBytes + i + j));
 				}
 				break;
 			}
@@ -239,11 +244,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X ", *(unsigned int*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d ", *(unsigned int*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned int*)(fileBytes + i + j));
 				}
 				break;
 			}
@@ -251,22 +256,22 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX ", *(unsigned long long*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(fileBytes + i + j));
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%lld ", *(unsigned long long*)(fileBytes + i + j));
+					sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(unsigned long long*)(fileBytes + i + j));
 				}
 				break;
 			}
 			case FLOAT_TYPE:
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g ", *(float*)(fileBytes + i + j));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.8g", *(float*)(fileBytes + i + j));
 				break;
 			}
 			case DOUBLE_TYPE:
 			{
-				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g ", *(double*)(fileBytes + i + j));
+				sprintf(lineBuffer + strlen(lineBuffer), "%0.16g", *(double*)(fileBytes + i + j));
 				break;
 			}
 			case ASCII_CHAR_TYPE:
@@ -274,11 +279,11 @@ void DataTextCtrl::UpdateTextCtrl()
 				char c = *(char*)(fileBytes + i + j);
 				if(c > 31 && c < 127)
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "'%c' ", c);
+					sprintf(lineBuffer + strlen(lineBuffer), "'%c'", c);
 				}
 				else
 				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X ", fileBytes[i + j]);			
+					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", fileBytes[i + j]);			
 				}
 				break;
 			}
