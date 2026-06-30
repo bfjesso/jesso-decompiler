@@ -80,6 +80,8 @@ void MainGui::ResetWindowLayout()
 		auiManager.Update();
 	}
 
+	auiNotebook->DeleteAllPages();
+
 	disassemblyTextCtrls.clear();
 	decompilationTextCtrls.clear();
 	functionsTextCtrls.clear();
