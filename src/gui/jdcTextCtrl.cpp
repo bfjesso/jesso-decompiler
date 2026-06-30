@@ -437,10 +437,21 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		SetIndicatorCurrent(GRAY_INDICATOR);
 
 		int selectionLen = selection.Length();
+		int firstVisibleLine = GetFirstVisibleLine();
+		int numOfVisibleLines = LinesOnScreen();
 
-		int firstLine = GetFirstVisibleLine() - 1;
-		int minPos = PositionFromLine(firstLine);
-		int maxPos = PositionFromLine(firstLine + LinesOnScreen() + 2);
+		int minPos = 0;
+		if(firstVisibleLine > 0)
+		{
+			minPos = PositionFromLine(firstVisibleLine - 1);
+		}
+		
+		int maxPos = GetTextLength();
+		if (firstVisibleLine + numOfVisibleLines < GetNumberOfLines() + 1)
+		{
+			maxPos = PositionFromLine(firstVisibleLine + numOfVisibleLines + 1);
+		}
+
 		while (1)
 		{
 			int index = FindText(minPos, maxPos, selection);
