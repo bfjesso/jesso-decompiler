@@ -30,8 +30,6 @@ void DataTextCtrl::Initialize(unsigned long long baseOfImage, struct FileSection
 void DataTextCtrl::ResetTextCtrl()
 {
 	int ogLine = GetCurrentLine();
-	
-	ClearText();
 
 	wxString newLines = "";
 	for (int i = 0; i < numOfLines; i++)
