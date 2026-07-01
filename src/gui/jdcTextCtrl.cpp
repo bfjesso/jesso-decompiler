@@ -438,7 +438,7 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 
 		int selectionLen = selection.Length();
 		int firstVisibleLine = GetFirstVisibleLine();
-		int numOfVisibleLines = LinesOnScreen();
+		int lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
 
 		int minPos = 0;
 		if(firstVisibleLine > 0)
@@ -447,9 +447,9 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		}
 		
 		int maxPos = GetTextLength();
-		if (firstVisibleLine + numOfVisibleLines < GetNumberOfLines() + 1)
+		if (lastVisibleLine < GetNumberOfLines())
 		{
-			maxPos = PositionFromLine(firstVisibleLine + numOfVisibleLines + 1);
+			maxPos = PositionFromLine(lastVisibleLine);
 		}
 
 		while (1)
