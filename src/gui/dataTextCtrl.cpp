@@ -103,8 +103,9 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 
 	const int ID_CHANGE_DISPLAY_TYPE = 100;
 	const int ID_HEX = 101;
-	const int ID_GO_TO_VIRTUAL_ADDRESS = 102;
-	const int ID_GO_TO_FILE_OFFSET = 103;
+	const int ID_SIGNED = 102;
+	const int ID_GO_TO_VIRTUAL_ADDRESS = 103;
+	const int ID_GO_TO_FILE_OFFSET = 104;
 
 	menu.Append(ID_CHANGE_DISPLAY_TYPE, "Change display type");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -124,6 +125,16 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 			isHex = e.IsChecked();
 			ResetTextCtrl();
 		}, ID_HEX);
+
+		if(!isHex)
+		{
+			menu.AppendCheckItem(ID_SIGNED, "Signed");
+			menu.Check(ID_SIGNED, isSigned);
+			menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+				isSigned = e.IsChecked();
+				ResetTextCtrl();
+			}, ID_SIGNED);
+		}
 	}
 
 	menu.Append(ID_GO_TO_VIRTUAL_ADDRESS, "Go to virtual address");
@@ -217,7 +228,7 @@ void DataTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		if (section) 
+		if (section)
 		{
 			sprintf(lineBuffer, "0x%llX%s (0x%llX)\t", params->imageBase + section->rva + (i - section->fileOffset), section->name.buffer, i);
 		}
@@ -247,50 +258,30 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 			case ONE_BYTE_INT_TYPE:
 			{
-				if (isHex)
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", params->fileBytes[i + j]);
-				}
-				else
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", params->fileBytes[i + j]);
-				}
+				if (isHex) { sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", params->fileBytes[i + j]); }
+				else if (isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", (char)params->fileBytes[i + j]); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", params->fileBytes[i + j]); }
 				break;
 			}
 			case TWO_BYTE_INT_TYPE:
 			{
-				if (isHex)
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(params->fileBytes + i + j));
-				}
-				else
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned short*)(params->fileBytes + i + j));
-				}
+				if (isHex) { sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(params->fileBytes + i + j)); }
+				else if (isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(short*)(params->fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(unsigned short*)(params->fileBytes + i + j)); }
 				break;
 			}
 			case FOUR_BYTE_INT_TYPE:
 			{
-				if (isHex)
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(params->fileBytes + i + j));
-				}
-				else
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%d", *(unsigned int*)(params->fileBytes + i + j));
-				}
+				if (isHex) { sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(params->fileBytes + i + j)); }
+				else if (isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(int*)(params->fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(unsigned int*)(params->fileBytes + i + j)); }
 				break;
 			}
 			case EIGHT_BYTE_INT_TYPE:
 			{
-				if (isHex)
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(params->fileBytes + i + j));
-				}
-				else
-				{
-					sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(unsigned long long*)(params->fileBytes + i + j));
-				}
+				if (isHex) { sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(params->fileBytes + i + j)); }
+				else if (isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(long long*)(params->fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%llu", *(unsigned long long*)(params->fileBytes + i + j)); }
 				break;
 			}
 			case FLOAT_TYPE:
