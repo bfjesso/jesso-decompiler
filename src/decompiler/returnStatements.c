@@ -110,13 +110,17 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 
 	if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 
-	addIndents(result, params->numOfIndents);
-	
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
-		return strcatJdc(result, "return;\n");
+		if (instructionIndex != params->currentFunc->lastInstructionIndex || isOpcodeReturn(params->instructions[instructionIndex].opcode))
+		{
+			addIndents(result, params->numOfIndents);
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+			return strcatJdc(result, "return;\n");
+		}
+		
+		return 1;
 	}
 
 	if (checkForKnownFunctionCall(params, instructionIndex, 0) || checkForUnknownFunctionCall(params, instructionIndex))
@@ -131,6 +135,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 		return 0;
 	}
 
+	addIndents(result, params->numOfIndents);
 	addAssociatedInstruction(params->currentFunc, instructionIndex);
 	params->currentFunc->numOfLines++;
 	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
