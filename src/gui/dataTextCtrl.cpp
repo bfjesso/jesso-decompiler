@@ -43,9 +43,9 @@ void DataTextCtrl::ResetTextCtrl()
 	UpdateTextCtrl();
 }
 
-void DataTextCtrl::ShowGoToAddressDialog()
+void DataTextCtrl::ShowGoToVirtualAddressDialog()
 {
-	wxTextEntryDialog dlg(this, "", "Go to address");
+	wxTextEntryDialog dlg(this, "", "Go to virtual address");
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
@@ -74,12 +74,37 @@ void DataTextCtrl::ShowGoToAddressDialog()
 	}
 }
 
+void DataTextCtrl::ShowGoToFileOffsetDialog()
+{
+	wxTextEntryDialog dlg(this, "", "Go to file offset");
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		unsigned long long fileOffset = 0;
+		if (txt.ToULongLong(&fileOffset, 16))
+		{
+			if (fileOffset >= params->numOfFileBytes)
+			{
+				wxMessageBox("File offset is larger than the file", "Failed to find file offset");
+				return;
+			}
+
+			HighlightBytes(fileOffset, 1, YELLOW_INDICATOR);
+			return;
+		}
+
+		wxMessageBox("Not valid hex number", "Failed to find file offset");
+	}
+}
+
 void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
 
 	const int ID_CHANGE_DISPLAY_TYPE = 100;
 	const int ID_HEX = 101;
+	const int ID_GO_TO_VIRTUAL_ADDRESS = 102;
+	const int ID_GO_TO_FILE_OFFSET = 103;
 
 	menu.Append(ID_CHANGE_DISPLAY_TYPE, "Change display type");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -101,6 +126,16 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 		}, ID_HEX);
 	}
 
+	menu.Append(ID_GO_TO_VIRTUAL_ADDRESS, "Go to virtual address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+		ShowGoToVirtualAddressDialog();
+	}, ID_GO_TO_VIRTUAL_ADDRESS);
+
+	menu.Append(ID_GO_TO_FILE_OFFSET, "Go to file offset");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+		ShowGoToFileOffsetDialog();
+	}, ID_GO_TO_FILE_OFFSET);
+
 	AddDefaultRightClickOptions(&menu);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
@@ -109,13 +144,18 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 void DataTextCtrl::OnDataKeyDown(wxKeyEvent& e)
 {
 	int key = e.GetKeyCode();
-	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
+	if (key == 'G')
 	{
-		if (key == 'G')
+		if ((e.GetModifiers() & wxMOD_CONTROL) != 0)
 		{
-			ShowGoToAddressDialog();
+			ShowGoToVirtualAddressDialog();
+		}
+		else 
+		{
+			ShowGoToFileOffsetDialog();
 		}
 	}
+	
 
 	OnKeyDown(e);
 	e.Skip();

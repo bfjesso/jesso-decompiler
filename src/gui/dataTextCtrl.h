@@ -56,7 +56,9 @@ public:
 
 	void ResetTextCtrl();
 
-	void ShowGoToAddressDialog();
+	void ShowGoToVirtualAddressDialog();
+
+	void ShowGoToFileOffsetDialog();
 
 	void DataRightClickOptions(wxContextMenuEvent& e);
 
