@@ -1,6 +1,5 @@
 #include "operands.h"
 #include "prefixes.h"
-#include "mnemonics.h"
 #include "modRM.h"
 #include "registers.h"
 
@@ -53,6 +52,30 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 		case DX_CODE:
 			currentOperand->type = REGISTER;
 			currentOperand->reg = DX;
+			break;
+		case ES_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = ES;
+			break;
+		case CS_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = CS;
+			break;
+		case SS_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = SS;
+			break;
+		case DS_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = DS;
+			break;
+		case FS_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = FS;
+			break;
+		case GS_CODE:
+			currentOperand->type = SEGMENT;
+			currentOperand->segment = GS;
 			break;
 		case rAX:
 			currentOperand->type = REGISTER;

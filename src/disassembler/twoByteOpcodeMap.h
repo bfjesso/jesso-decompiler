@@ -457,16 +457,16 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{ SETNL, -1, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                        // 0x9D
 	{ SETLE, -1, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                        // 0x9E
 	{ SETG, -1, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                         // 0x9F
-	{ PUSH_FS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                    // 0xA0
-	{ POP_FS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                     // 0xA1
+	{ PUSH, -1, FS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                               // 0xA0
+	{ POP, -1, FS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                                // 0xA1
 	{ CPUID, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },           // 0xA2
 	{ BT, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                        // 0xA3
 	{ SHLD, -1, Ev, Gv, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                                   // 0xA4
 	{ SHLD, -1, Ev, Gv, CL_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                              // 0xA5
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0xA6; not defined
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0xA7; not defined
-	{ PUSH_GS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                    // 0xA8
-	{ POP_GS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                     // 0xA9
+	{ PUSH, -1, GS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                               // 0xA8
+	{ POP, -1, GS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                                // 0xA9
 	{ RSM, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },             // 0xAA
 	{ BTS, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0xAB
 	{ SHRD, -1, Ev, Gv, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                                   // 0xAC

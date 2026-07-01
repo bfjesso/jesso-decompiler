@@ -13,15 +13,15 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ ADD, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x03
 	{ ADD, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0x04
 	{ ADD, -1, rAX, Iz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0x05
-	{ PUSH_ES, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                   // 0x06
-	{ POP_ES, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                    // 0x07
+	{ PUSH, -1, ES_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                              // 0x06
+	{ POP, -1, ES_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                               // 0x07
 	{ OR, -1, Eb, Gb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x08
 	{ OR, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x09
 	{ OR, -1, Gb, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x0A
 	{ OR, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x0B
 	{ OR, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                  // 0x0C
 	{ OR, -1, rAX, Iz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x0D
-	{ PUSH_CS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                   // 0x0E
+	{ PUSH, -1, CS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                              // 0x0E
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },    // 0x0F; not an opcode: 2-byte escape
 	{ ADC, -1, Eb, Gb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x10
 	{ ADC, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x11
@@ -29,16 +29,16 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ ADC, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x13
 	{ ADC, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0x14
 	{ ADC, -1, rAX, Iz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0x15
-	{ PUSH_SS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                   // 0x16
-	{ POP_SS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                    // 0x17
+	{ PUSH, -1, SS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                              // 0x16
+	{ POP, -1, SS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                               // 0x17
 	{ SBB, -1, Eb, Gb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x18
 	{ SBB, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x19
 	{ SBB, -1, Gb, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x1A
 	{ SBB, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x1B
 	{ SBB, -1, AL_CODE, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0x1C
 	{ SBB, -1, rAX, Iz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0x1D
-	{ PUSH_DS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                   // 0x1E
-	{ POP_DS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                    // 0x1F
+	{ PUSH, -1, DS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                              // 0x1E
+	{ POP, -1, DS_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                               // 0x1F
 	{ AND, -1, Eb, Gb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x20
 	{ AND, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x21
 	{ AND, -1, Gb, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x22
