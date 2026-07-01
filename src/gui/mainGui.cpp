@@ -326,6 +326,9 @@ void MainGui::OpenFile()
 
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
+		wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
+		Log("opened " + fileName);
+		
 		ClearData();
 
 		wxString filePath = openFileDialog.GetPath();
@@ -339,8 +342,6 @@ void MainGui::OpenFile()
 				wxMessageBox("Error getting number of bytes in file", "Can't load data");
 				return;
 			}
-
-			wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
 
 			if (!isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
 			{
