@@ -416,20 +416,3 @@ unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
 
 	return 0;
 }
-
-unsigned char doesOpcodeGenerateInterruptOrException(enum Mnemonic opcode) 
-{
-	switch (opcode)
-	{
-	case INT3:
-	case _INT:
-	case HLT:
-	case UD0:
-	case UD1:
-	case UD2:
-	case DATA:
-		return 1;
-	}
-
-	return 0;
-}

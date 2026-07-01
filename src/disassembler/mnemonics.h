@@ -272,5 +272,3 @@ unsigned char isOpcodeAES(enum Mnemonic opcode);
 unsigned char isOpcodeShuf(enum Mnemonic opcode);
 
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);
-
-unsigned char doesOpcodeGenerateInterruptOrException(enum Mnemonic opcode);

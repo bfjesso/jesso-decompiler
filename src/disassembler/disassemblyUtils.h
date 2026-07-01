@@ -22,4 +22,6 @@ unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instructio
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
 
+unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction);
+
 unsigned char isImmediateAllOnes(struct Immediate* immediate);

@@ -226,6 +226,23 @@ unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instructi
 	return 0;
 }
 
+unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction)
+{
+	switch (instruction->opcode)
+	{
+	case INT3:
+	case _INT:
+	case HLT:
+	case UD0:
+	case UD1:
+	case UD2:
+	case DATA:
+		return 1;
+	}
+
+	return instruction->isInvalid;
+}
+
 unsigned char isImmediateAllOnes(struct Immediate* immediate) 
 {
 	switch (immediate->size)
