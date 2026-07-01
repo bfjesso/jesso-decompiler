@@ -24,6 +24,7 @@ struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
 	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
 	{ UD2, { 0, 0, 0, 0 }, "__ud2" },
 	{ HLT, { 0, 0, 0, 0 }, "__halt" },
+	{ DATA, { 1, 0, 0, 0 }, "DATA" },
 	{ MOVS, { 1, 1, 0, 0 }, "__movs" }, // REPZ prefix must be used
 	{ XCHG, { 1, 1, 0, 0 }, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };

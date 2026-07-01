@@ -187,7 +187,14 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		ColorAllStrs(text, voidIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+		if (voidIntrinsicFuncs[i].opcode == DATA) 
+		{
+			ColorAllStrs(text, voidIntrinsicFuncs[i].name, ERROR_DECOMP_COLOR, 0);
+		}
+		else 
+		{
+			ColorAllStrs(text, voidIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+		}
 	}
 
 	// keywords

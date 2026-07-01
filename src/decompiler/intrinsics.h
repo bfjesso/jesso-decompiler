@@ -2,7 +2,7 @@
 #include "decompilationStructs.h"
 
 #define NUM_OF_RETURNING_INTRINSICS 11
-#define NUM_OF_VOID_INTRINSICS 6
+#define NUM_OF_VOID_INTRINSICS 7
 
 struct IntrinsicFunc 
 {
