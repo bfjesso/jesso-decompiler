@@ -272,17 +272,39 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (disassemblyTextCtrls[i] == window)
 		{
 			disassemblyTextCtrls.erase(disassemblyTextCtrls.begin() + i);
-			return;
+			break;
+		}
+		else if (disassemblyTextCtrls[i]->decompilationTextCtrl == window) 
+		{
+			disassemblyTextCtrls[i]->decompilationTextCtrl = nullptr;
+			break;
+		}
+		else if (disassemblyTextCtrls[i]->functionsTextCtrl == window)
+		{
+			disassemblyTextCtrls[i]->functionsTextCtrl = nullptr;
+			break;
+		}
+		else if (disassemblyTextCtrls[i]->dataTextCtrl == window)
+		{
+			disassemblyTextCtrls[i]->dataTextCtrl = nullptr;
+			break;
 		}
 	}
+
 	for (int i = 0; i < decompilationTextCtrls.size(); i++)
 	{
 		if (decompilationTextCtrls[i] == window)
 		{
 			decompilationTextCtrls.erase(decompilationTextCtrls.begin() + i);
-			return;
+			break;
+		}
+		else if (decompilationTextCtrls[i]->disassemblyTextCtrl == window)
+		{
+			decompilationTextCtrls[i]->disassemblyTextCtrl = nullptr;
+			break;
 		}
 	}
+
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
 		if (functionsTextCtrls[i] == window)
@@ -291,6 +313,7 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 			return;
 		}
 	}
+
 	for (int i = 0; i < dataTextCtrls.size(); i++)
 	{
 		if (dataTextCtrls[i] == window)
