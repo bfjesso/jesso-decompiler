@@ -19,7 +19,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 		return 0;
 	}
 
-	int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jmpAddress);
+	int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpAddress);
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
@@ -36,8 +36,10 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 	return jmpAddress;
 }
 
-int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address)
+int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
 {
+	int low = 0;
+	int high = numOfInstructions - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
@@ -51,8 +53,10 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int l
 	return -1;
 }
 
-int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address)
+int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
 {
+	int low = 0;
+	int high = numOfInstructions - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
@@ -66,8 +70,10 @@ int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int
 	return 0;
 }
 
-int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address)
+int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address)
 {
+	int low = 0;
+	int high = numOfAddresses - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
@@ -81,8 +87,10 @@ int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned 
 	return -1;
 }
 
-unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress)
+unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress)
 {
+	int low = 0;
+	int high = numOfAddresses - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;

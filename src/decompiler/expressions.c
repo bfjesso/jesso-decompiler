@@ -26,7 +26,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 			return sprintfJdc(result, 0, "-0x%llX", -operand->immediate.value);
 		}
 
-		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, (unsigned long long)(operand->immediate.value));
+		int calleeIndex = findFunctionByAddress(params, (unsigned long long)(operand->immediate.value));
 		if (calleeIndex != -1)
 		{
 			return strcpyJdc(result, params->functions[calleeIndex].name.buffer);
@@ -170,7 +170,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	{
 		unsigned long long totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
 
-		int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, totalDisplacement);
+		int calleeIndex = findFunctionByAddress(params, totalDisplacement);
 		if (calleeIndex != -1)
 		{
 			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);

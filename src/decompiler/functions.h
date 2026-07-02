@@ -19,9 +19,9 @@ extern "C"
 
 	void freeFunction(struct Function* function);
 
-	int findFunctionByAddress(struct DecompilationParameters* params, int low, int high, unsigned long long address);
+	int findFunctionByAddress(struct DecompilationParameters* params, unsigned long long address);
 
-	int findFunctionByAddressInclusive(struct DecompilationParameters* params, int low, int high, unsigned long long address);
+	int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsigned long long address);
 
 #ifdef __cplusplus
 }

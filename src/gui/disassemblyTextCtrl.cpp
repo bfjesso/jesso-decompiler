@@ -32,14 +32,14 @@ void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
 
 	if (errorAddress != 0)
 	{
-		int errorIndex = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, errorAddress);
+		int errorIndex = findInstructionByAddress(mainGui->decompParams.instructions, mainGui->decompParams.numOfInstructions, errorAddress);
 		CenterLine(errorIndex);
 		UpdateTextCtrl();
 		HighlightLine(errorIndex, RED_INDICATOR, 0);
 	}
 	else
 	{
-		int entryPointIndex = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, mainGui->entryPoint + mainGui->decompParams.imageBase);
+		int entryPointIndex = findInstructionByAddress(mainGui->decompParams.instructions, mainGui->decompParams.numOfInstructions, mainGui->entryPoint + mainGui->decompParams.imageBase);
 		CenterLine(entryPointIndex);
 		UpdateTextCtrl();
 		HighlightLine(entryPointIndex, YELLOW_INDICATOR, 0);
@@ -61,7 +61,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 		unsigned long long address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findInstructionByAddress(mainGui->decompParams.instructions, 0, mainGui->decompParams.numOfInstructions - 1, address);
+			int index = findInstructionByAddress(mainGui->decompParams.instructions, mainGui->decompParams.numOfInstructions, address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -227,7 +227,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 		if (functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
 		{
 			functionsTextCtrl->ClearIndicators();
-			int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, mainGui->decompParams.instructions[instructionIndex].address);
+			int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, mainGui->decompParams.instructions[instructionIndex].address);
 			if (funcIndex != -1)
 			{
 				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);

@@ -6,11 +6,11 @@ extern "C"
 {
 #endif
 
-	int findAddressInArr(unsigned long long* addresses, int low, int high, unsigned long long address);
+	int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address);
 
-	int findInstructionByAddress(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
+	int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
-	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int low, int high, unsigned long long address);
+	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
 
@@ -20,7 +20,7 @@ extern "C"
 
 void addIndents(struct JdcStr* result, int numOfIndents);
 
-unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int low, int high, unsigned long long minAddress, unsigned long long maxAddress);
+unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 
 unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataTypeRef); // this will return 0 if the instruction only writes to the reg without reading its value
 

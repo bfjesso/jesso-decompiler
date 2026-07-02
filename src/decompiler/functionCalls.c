@@ -23,7 +23,7 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 		return 0;
 	}
 
-	int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
+	int calleeIndex = findFunctionByAddress(params, calleeAddress);
 	if (calleeIndex == -1)
 	{
 		return 0;
@@ -209,7 +209,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params, i);
-			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, calleeAddress);
+			int calleeIndex = findFunctionByAddress(params, calleeAddress);
 			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || params->functions[calleeIndex].numOfStackArgs > 0))
 			{
 				break;

@@ -33,7 +33,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 	if (isOpcodeJmp(instruction->opcode))
 	{
 		unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
-		int jmpDstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions, jmpDstAddr);
+		int jmpDstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpDstAddr);
 
 		if (jmpDstIndex == -1)
 		{

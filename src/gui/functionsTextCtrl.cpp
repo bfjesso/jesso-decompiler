@@ -25,7 +25,7 @@ void FunctionsTextCtrl::ShowFindAddressDialog()
 		unsigned long long address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findFunctionByAddressInclusive(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, address);
+			int index = findFunctionByAddressInclusive(&mainGui->decompParams, address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -114,7 +114,7 @@ void FunctionsTextCtrl::ShowAllFunctions()
 	SetReadOnly(false);
 	Freeze();
 
-	int entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, mainGui->entryPoint + mainGui->imageBase);
+	int entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, mainGui->entryPoint + mainGui->imageBase);
 	wxString functionsStr = "";
 	struct JdcStr functionHeaderBuffer = initializeJdcStr();
 	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)

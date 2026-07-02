@@ -33,10 +33,10 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
 			unsigned long long jumpAddr = resolveJmpChain(params, i);
-			int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, jumpAddr);
+			int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpAddr);
 			if (instructionIndex > indexToJumpTo && instructionIndex > i && jumpAddr <= currentSectionEndAddress)
 			{
-				if (!checkForAddressInArrInRange(calledAddresses, 0, numOfCalledAddresses - 1, currentInstruction->address, jumpAddr))
+				if (!checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, jumpAddr))
 				{
 					indexToJumpTo = instructionIndex;
 				}
@@ -55,7 +55,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->lastInstructionIndex = i;
 			return 1;
 		}
-		else if (findAddressInArr(calledAddresses, 0, numOfCalledAddresses - 1, params->instructions[i + 1].address) != -1)
+		else if (findAddressInArr(calledAddresses, numOfCalledAddresses, params->instructions[i + 1].address) != -1)
 		{
 			result->returningFunctionAddress = params->instructions[i + 1].address;
 			result->lastInstructionIndex = i;
@@ -88,7 +88,7 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			// this will take every jump
 			if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 			{
-				int instructionIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, j));
+				int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, j));
 				if (instructionIndex > j && instructionIndex <= params->currentFunc->lastInstructionIndex)
 				{
 					j = instructionIndex - 1;
@@ -136,7 +136,7 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 		params->currentFunc = &params->functions[i];
 		if (params->functions[i].returningFunctionAddress != 0)
 		{
-			int returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[i].returningFunctionAddress);
+			int returningFunctionIndex = findFunctionByAddress(params, params->functions[i].returningFunctionAddress);
 			if (returningFunctionIndex == -1) 
 			{
 				params->functions[i].returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
@@ -147,7 +147,7 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 			int count = 0; // to avoid an infinite loop
 			while (params->functions[returningFunctionIndex].returningFunctionAddress != 0 && count < 10)
 			{
-				returningFunctionIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, params->functions[returningFunctionIndex].returningFunctionAddress);
+				returningFunctionIndex = findFunctionByAddress(params, params->functions[returningFunctionIndex].returningFunctionAddress);
 				count++;
 			}
 
@@ -195,7 +195,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 		if (isOpcodeCall(currentInstruction->opcode) && params->currentFunc->firstCalledFunc == 0)
 		{
-			int calleeIndex = findFunctionByAddress(params, 0, params->numOfFunctions - 1, resolveJmpChain(params, i));
+			int calleeIndex = findFunctionByAddress(params, resolveJmpChain(params, i));
 			if (calleeIndex != -1 && &params->functions[calleeIndex] != params->currentFunc)
 			{
 				params->currentFunc->firstCalledFunc = &params->functions[calleeIndex];
@@ -495,7 +495,7 @@ long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params,
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (isOpcodeJcc(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 		{
-			int dstIndex = findInstructionByAddress(params->instructions, 0, params->numOfInstructions - 1, resolveJmpChain(params, i));
+			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 			if (dstIndex > i && dstIndex <= instructionIndex && !doesInstructionLeadStraightToReturn(params, dstIndex))
 			{
 				i = dstIndex - 1;
@@ -511,8 +511,10 @@ long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params,
 }
 
 // returns index of function, -1 if not found
-int findFunctionByAddress(struct DecompilationParameters* params, int low, int high, unsigned long long address)
+int findFunctionByAddress(struct DecompilationParameters* params, unsigned long long address)
 {
+	int low = 0;
+	int high = params->numOfFunctions - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;
@@ -526,8 +528,10 @@ int findFunctionByAddress(struct DecompilationParameters* params, int low, int h
 	return -1;
 }
 
-int findFunctionByAddressInclusive(struct DecompilationParameters* params, int low, int high, unsigned long long address)
+int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsigned long long address)
 {
+	int low = 0;
+	int high = params->numOfFunctions - 1;
 	while (low <= high)
 	{
 		int mid = low + (high - low) / 2;

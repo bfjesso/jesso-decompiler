@@ -728,13 +728,13 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	unsigned long long currentVirtualAddress = startVA;
 	while (currentFileOffset < currentSection->fileOffset + currentSection->physicalSize)
 	{
-		if (findInstructionByAddress(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress) != -1)
+		if (findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress) != -1)
 		{
 			return 1;
 		}
 
 		// this checks if the address overlaps with an existing instruction
-		int instructionIndex = findInstructionInsertPoint(&disassembledInstructions[0], 0, disassembledInstructions.size() - 1, currentVirtualAddress);
+		int instructionIndex = findInstructionInsertPoint(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress);
 		if (instructionIndex > 0 && instructionIndex < disassembledInstructions.size() &&
 			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
 			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
@@ -881,7 +881,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		if (disassembledInstructions[i].opcode == CALL_NEAR) 
 		{
 			unsigned long long address = resolveJmpChain(&decompParams, i);
-			if (findAddressInArr(&calledAddresses[0], 0, calledAddresses.size() - 1, address) == -1)
+			if (findAddressInArr(calledAddresses.data(), calledAddresses.size(), address) == -1)
 			{
 				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
 			}
