@@ -112,8 +112,8 @@ void FunctionsTextCtrl::ShowAllFunctions()
 	SetReadOnly(false);
 	Freeze();
 
+	int entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, 0, mainGui->decompParams.numOfFunctions - 1, mainGui->entryPoint + mainGui->imageBase);
 	wxString functionsStr = "";
-
 	struct JdcStr functionHeaderBuffer = initializeJdcStr();
 	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
@@ -126,6 +126,11 @@ void FunctionsTextCtrl::ShowAllFunctions()
 		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
 		functionsStr += wxString(functionHeaderBuffer.buffer);
 
+		if (i == entryFunctionIndex) 
+		{
+			functionsStr += "; entry point";
+		}
+
 		if (i != mainGui->decompParams.numOfFunctions - 1)
 		{
 			functionsStr += "\n";
@@ -136,6 +141,8 @@ void FunctionsTextCtrl::ShowAllFunctions()
 	ApplyFunctionsHighlighting();
 	Thaw();
 	SetReadOnly(true);
+
+	HighlightLine(entryFunctionIndex, YELLOW_INDICATOR, 1);
 }
 
 void FunctionsTextCtrl::ApplyFunctionsHighlighting()
