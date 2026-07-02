@@ -133,7 +133,6 @@ void MainGui::OpenLog(int direction)
 void MainGui::AddDisassemblyTextCtrl()
 {
 	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1));
-	disassemblyTextCtrl->Initialize(0);
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
@@ -156,7 +155,6 @@ void MainGui::AddDecompilationTextCtrl()
 void MainGui::AddFunctionsTextCtrl()
 {
 	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
-	functionsTextCtrl->ShowAllFunctions();
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
@@ -172,7 +170,6 @@ void MainGui::AddFunctionsTextCtrl()
 void MainGui::AddDataTextCtrl()
 {
 	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), &decompParams, colorsMenu);
-	dataTextCtrl->Initialize();
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);

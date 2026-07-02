@@ -11,6 +11,8 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, wxString name, struct Decompilation
 	Bind(wxEVT_CONTEXT_MENU, &DataTextCtrl::DataRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &DataTextCtrl::OnDataKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DataTextCtrl::OnUpdateDataUI, this);
+
+	Initialize();
 }
 
 void DataTextCtrl::Initialize()

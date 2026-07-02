@@ -12,6 +12,8 @@ FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCt
 
 	Bind(wxEVT_CONTEXT_MENU, &FunctionsTextCtrl::FunctionsRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &FunctionsTextCtrl::OnFunctionsKeyDown, this);
+
+	ShowAllFunctions();
 }
 
 void FunctionsTextCtrl::ShowFindAddressDialog()

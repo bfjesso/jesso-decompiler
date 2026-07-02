@@ -12,6 +12,8 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(MainGui* parent, wxString name) : JdcTe
 	Bind(wxEVT_CONTEXT_MENU, &DisassemblyTextCtrl::DisassemblyRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
+
+	Initialize(0);
 }
 
 void DisassemblyTextCtrl::Initialize(unsigned long long errorAddress)
