@@ -393,6 +393,14 @@ void MainGui::OpenFile()
 			currentFilePath = filePath;
 			SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
+			char hexStr[20] = { 0 };
+			sprintf(hexStr, "0x%llX", numOfFileBytes);
+			Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes");
+			sprintf(hexStr, "0x%llX", imageBase);
+			Log("image base: " + wxString(hexStr));
+			sprintf(hexStr, "0x%llX", entryPoint + imageBase);
+			Log("entry point: " + wxString(hexStr));
+
 			for (int i = 0; i < dataTextCtrls.size(); i++)
 			{
 				dataTextCtrls[i]->Initialize();
