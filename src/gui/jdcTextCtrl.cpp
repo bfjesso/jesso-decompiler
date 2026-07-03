@@ -73,13 +73,6 @@ void JdcTextCtrl::ClearText()
 	SetReadOnly(true);
 }
 
-void JdcTextCtrl::AddLine(wxString txt)
-{
-	SetReadOnly(false);
-	AppendText(txt + "\n");
-	SetReadOnly(true);
-}
-
 void JdcTextCtrl::CenterLine(int line)
 {
 	GotoLine(line);

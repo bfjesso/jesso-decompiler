@@ -66,7 +66,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	logTextCtrl = new JdcTextCtrl(this, "Log");
 	logTextCtrl->highlightSelectedLines = 0;
 	logTextCtrl->Hide();
-	Log("JDC started");
+	Log("JDC started", 0);
 
 	ResetWindowLayout();
 }
@@ -330,14 +330,35 @@ void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::fun
 	menu->Bind(wxEVT_MENU, function, id);
 }
 
-void MainGui::Log(wxString text)
+void MainGui::Log(wxString text, unsigned char isError)
 {
-	if (!logTextCtrl) 
+	if (logTextCtrl) 
 	{
-		return;
-	}
+		logTextCtrl->SetReadOnly(false);
+		logTextCtrl->AppendText(wxDateTime::Now().Format(wxT("%X")) + ": ");
 
-	logTextCtrl->AddLine(wxDateTime::Now().Format(wxT("%X")) + ": " + text);
+		int textStart = logTextCtrl->GetLength();
+		logTextCtrl->AppendText(text + "\n");
+
+		if (isError) 
+		{
+			logTextCtrl->SetIndicatorCurrent(RED_INDICATOR);
+			logTextCtrl->IndicatorFillRange(textStart, logTextCtrl->GetLength() - textStart);
+		}
+
+		logTextCtrl->SetReadOnly(true);
+	}
+}
+
+void MainGui::LogHexNum(wxString label, unsigned long long num, unsigned char isError)
+{
+	if (logTextCtrl)
+	{
+		char numStr[20] = { 0 };
+		sprintf(numStr, "0x%llX", num);
+		
+		Log(label + ": " + wxString(numStr), isError);
+	}
 }
 
 void MainGui::OpenFile()
@@ -363,11 +384,11 @@ void MainGui::OpenFile()
 
 			if (isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
 			{
-				Log("opened " + fileName);
+				Log("opened " + fileName, 0);
 				if (!LoadKnownFile(filePath))
 				{
 					ClearData();
-					Log("closed " + fileName);
+					Log("closed " + fileName, 0);
 					return;
 				}
 			}
@@ -376,11 +397,11 @@ void MainGui::OpenFile()
 				int loadAnyway = wxMessageBox("Error determining file architecture. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
 				if (loadAnyway == wxYES)
 				{
-					Log("opened " + fileName);
+					Log("opened " + fileName, 0);
 					if (!LoadUnknownFile(filePath))
 					{
 						ClearData();
-						Log("closed " + fileName);
+						Log("closed " + fileName, 0);
 						return;
 					}
 				}
@@ -395,11 +416,9 @@ void MainGui::OpenFile()
 
 			char hexStr[20] = { 0 };
 			sprintf(hexStr, "0x%llX", numOfFileBytes);
-			Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes");
-			sprintf(hexStr, "0x%llX", imageBase);
-			Log("image base: " + wxString(hexStr));
-			sprintf(hexStr, "0x%llX", entryPoint + imageBase);
-			Log("entry point: " + wxString(hexStr));
+			Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
+			LogHexNum("image base", imageBase, 0);
+			LogHexNum("entry point", entryPoint + imageBase, 0);
 
 			for (int i = 0; i < dataTextCtrls.size(); i++)
 			{
@@ -533,16 +552,17 @@ void MainGui::DisassembleFile()
 		return;
 	}
 
-	Log("disassembling...");
+	Log("disassembling...", 0);
 
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 	struct DisassembledInstruction instructionBuffer;
 	unsigned long long errorAddress = 0;
+	unsigned char didErrorOccur = 0;
 	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
 	{
-		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+		didErrorOccur = 1;
 	}
 
 	unsigned long long firstAddress = disassembledInstructions[0].address;
@@ -557,7 +577,7 @@ void MainGui::DisassembleFile()
 			{
 				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
 				{
-					wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+					didErrorOccur = 1;
 				}
 			}
 			else
@@ -566,7 +586,7 @@ void MainGui::DisassembleFile()
 				{
 					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
 					{
-						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+						didErrorOccur = 1;
 					}
 				}
 
@@ -574,7 +594,7 @@ void MainGui::DisassembleFile()
 				{
 					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
 					{
-						wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+						didErrorOccur = 1;
 					}
 				}
 			}
@@ -592,14 +612,19 @@ void MainGui::DisassembleFile()
 		{
 			if (!DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
 			{
-				wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+				didErrorOccur = 1;
 			}
 		}
 	}
 
 	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
 
-	Log("finished disassembling, updating GUI...");
+	if (didErrorOccur) 
+	{
+		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+	}
+
+	Log("finished disassembling, updating GUI...", 0);
 
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
@@ -621,7 +646,7 @@ void MainGui::DisassembleFile()
 		disassemblyTextCtrls[i]->Initialize(errorAddress);
 	}
 
-	Log("finished disassembling");
+	Log("finished disassembling", 0);
 
 	int answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
 	if (answer == wxYES)
@@ -648,19 +673,19 @@ void MainGui::AnalyzeFile()
 		return;
 	}
 
-	Log("finding all functions...");
+	Log("finding all functions...", 0);
 
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	FindAllFunctions(getSymbols == wxYES);
 	
-	Log("finished finding functions, updating GUI...");
+	Log("finished finding functions, updating GUI...", 0);
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
 		functionsTextCtrls[i]->ShowAllFunctions();
 	}
 
-	Log("finished analyzing file");
+	Log("finished analyzing file", 0);
 }
 
 void MainGui::ClearData()
@@ -740,6 +765,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	}
 	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
 	{
+		LogHexNum("instruction jumps outside file", instructionBuffer->address, 1);
 		return 0;
 	}
 
@@ -753,18 +779,19 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			return 1;
 		}
 
-		// this checks if the address overlaps with an existing instruction
 		int instructionIndex = findInstructionInsertPoint(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress);
 		if (instructionIndex > 0 && instructionIndex < disassembledInstructions.size() &&
 			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
 			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
 		{
+			LogHexNum("instruction overlaps with existing instruction", currentVirtualAddress, 1);
 			return 0;
 		}
 
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
+			LogHexNum("bad instruction at", currentVirtualAddress, 1);
 			return 0;
 		}
 

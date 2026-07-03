@@ -32,8 +32,6 @@ public:
 
 	void ClearText();
 
-	void AddLine(wxString txt);
-
 	void CenterLine(int line);
 
 	void HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine);

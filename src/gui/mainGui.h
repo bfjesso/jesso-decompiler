@@ -99,7 +99,9 @@ public:
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
-	void Log(wxString text);
+	void Log(wxString text, unsigned char isError);
+
+	void LogHexNum(wxString label, unsigned long long num, unsigned char isError);
 
 	void OpenFile();
 
