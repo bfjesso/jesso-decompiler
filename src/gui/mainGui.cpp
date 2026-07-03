@@ -347,15 +347,13 @@ void MainGui::OpenFile()
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
 		wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
-		Log("opened " + fileName);
 		
 		ClearData();
+		SetTitle("Jesso Decompiler x64");
 
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
 		{
-			currentFilePath = filePath;
-
 			numOfFileBytes = getNumOfFileBytes(filePath.c_str().AsWChar());
 			if (numOfFileBytes == 0)
 			{
@@ -363,127 +361,43 @@ void MainGui::OpenFile()
 				return;
 			}
 
-			if (!isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
+			if (isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
+			{
+				Log("opened " + fileName);
+				if (!LoadKnownFile(filePath))
+				{
+					ClearData();
+					Log("closed " + fileName);
+					return;
+				}
+			}
+			else 
 			{
 				int loadAnyway = wxMessageBox("Error determining file architecture. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
 				if (loadAnyway == wxYES)
 				{
-					int ask64Bit = wxMessageBox("Do you want to disassemble in 64 bit mode?", "Specify architecture", wxYES_NO, this);
-					is64Bit = ask64Bit == wxYES;
-
-					// this is just for formatting in the gui
-					if (numOfFileBytes < 0x10) { imageBase = 0x10; }
-					else if (numOfFileBytes < 0x1000) { imageBase = 0x1000; }
-					else if (numOfFileBytes < 0x100000) { imageBase = 0x100000; }
-					else if (numOfFileBytes < 0x10000000) { imageBase = 0x10000000; }
-					else if (numOfFileBytes < 0x1000000000) { imageBase = 0x1000000000; }
-					else if (numOfFileBytes < 0x100000000000) { imageBase = 0x100000000000; }
-					else if (numOfFileBytes < 0x10000000000000) { imageBase = 0x10000000000000; }
-					else { imageBase = 0x1000000000000000; }
-
-					while (1)
+					Log("opened " + fileName);
+					if (!LoadUnknownFile(filePath))
 					{
-						wxTextEntryDialog dlg(this, "", "Specify the entry point as a file offset");
-						if (dlg.ShowModal() == wxID_OK)
-						{
-							wxString txt = dlg.GetValue();
-							if (!txt.ToULongLong(&entryPoint, 16))
-							{
-								wxMessageBox("Not a valid hex number", "Failed to set entry point");
-							}
-							else if(entryPoint >= numOfFileBytes) 
-							{
-								wxMessageBox("File offset is larger than the file", "Failed to set entry point");
-							}
-							else 
-							{
-								break;
-							}
-						}
-						else
-						{
-							this->SetTitle("Jesso Decompiler x64");
-							currentFilePath = "";
-							return;
-						}
-					}
-					
-
-					fileBytes = new unsigned char[numOfFileBytes];
-					if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
-					{
-						wxMessageBox("Error reading bytes from file", "Can't load data");
-						currentFilePath = "";
-						delete[] fileBytes;
+						ClearData();
+						Log("closed " + fileName);
 						return;
 					}
-
-					numOfSections = 1;
-					sections = new FileSection[1];
-					sections[0].name = initializeJdcStrWithVal(wxString("." + fileName).c_str());
-					sections[0].type = CODE_FST;
-					sections[0].isReadOnly = 1;
-					sections[0].rva = 0;
-					sections[0].fileOffset = 0;
-					sections[0].physicalSize = numOfFileBytes;
-
-					numOfImports = 0;
-
-					this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
-					for (int i = 0; i < dataTextCtrls.size(); i++) 
-					{
-						dataTextCtrls[i]->Initialize();
-					}
-					DisassembleFile();
-					openFileDialog.Close(true);
+				}
+				else
+				{
 					return;
 				}
-				
-				this->SetTitle("Jesso Decompiler x64");
-				currentFilePath = "";
-				return;
 			}
 
-			imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
-			entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
+			currentFilePath = filePath;
+			SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
-			fileBytes = new unsigned char[numOfFileBytes];
-			if (!readFileBytes(currentFilePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
-			{
-				wxMessageBox("Error reading bytes from file", "Can't load data");
-				currentFilePath = "";
-				delete[] fileBytes;
-				return;
-			}
-
-			numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
-			sections = new FileSection[numOfSections];
-			if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), is64Bit, sections, numOfSections))
-			{
-				wxMessageBox("Error getting all file sections", "Failed to open file");
-				currentFilePath = "";
-				delete[] fileBytes;
-				delete[] sections;
-				return;
-			}
-
-			numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
-			imports = new ImportedFunction[numOfImports];
-			if (getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, numOfImports) != numOfImports)
-			{
-				wxMessageBox("Error getting all imports", "Failed to open file");
-				currentFilePath = "";
-				delete[] fileBytes;
-				delete[] sections;
-				delete[] imports;
-				return;
-			}
-			
-			this->SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 			for (int i = 0; i < dataTextCtrls.size(); i++)
 			{
 				dataTextCtrls[i]->Initialize();
 			}
+
 			int disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
 			if (disassembleAnswer == wxYES)
 			{
@@ -492,14 +406,105 @@ void MainGui::OpenFile()
 		}
 		else
 		{
-			this->SetTitle("Jesso Decompiler x64");
 			wxMessageBox("Error opening the file", "Failed to open file");
-			currentFilePath = "";
 			return;
 		}
 	}
 
 	openFileDialog.Close(true);
+}
+
+unsigned char MainGui::LoadKnownFile(wxString filePath)
+{
+	fileBytes = new unsigned char[numOfFileBytes];
+	if (!readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+	{
+		wxMessageBox("Error reading bytes from file", "Can't load data");
+		return 0;
+	}
+	
+	imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
+	entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
+
+	numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
+	sections = new FileSection[numOfSections];
+	if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), is64Bit, sections, numOfSections))
+	{
+		wxMessageBox("Error getting all file sections", "Failed to open file");
+		return 0;
+	}
+
+	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
+	imports = new ImportedFunction[numOfImports];
+	if (getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, numOfImports) != numOfImports)
+	{
+		wxMessageBox("Error getting all imports", "Failed to open file");
+		return 0;
+	}
+
+	return 1;
+}
+
+unsigned char MainGui::LoadUnknownFile(wxString filePath)
+{
+	fileBytes = new unsigned char[numOfFileBytes];
+	if (!readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+	{
+		wxMessageBox("Error reading bytes from file", "Can't load data");
+		return 0;
+	}
+
+	entryPoint = 0;
+	while (1)
+	{
+		wxTextEntryDialog dlg(this, "", "Specify the entry point as a file offset");
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxString txt = dlg.GetValue();
+			if (!txt.ToULongLong(&entryPoint, 16))
+			{
+				wxMessageBox("Not a valid hex number", "Failed to set entry point");
+			}
+			else if (entryPoint >= numOfFileBytes)
+			{
+				wxMessageBox("File offset is larger than the file", "Failed to set entry point");
+			}
+			else
+			{
+				break;
+			}
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	
+	int ask64Bit = wxMessageBox("Do you want to disassemble in 64 bit mode?", "Specify architecture", wxYES_NO, this);
+	is64Bit = ask64Bit == wxYES;
+
+	// this is just for formatting in the gui
+	if (numOfFileBytes < 0x10) { imageBase = 0x10; }
+	else if (numOfFileBytes < 0x1000) { imageBase = 0x1000; }
+	else if (numOfFileBytes < 0x100000) { imageBase = 0x100000; }
+	else if (numOfFileBytes < 0x10000000) { imageBase = 0x10000000; }
+	else if (numOfFileBytes < 0x1000000000) { imageBase = 0x1000000000; }
+	else if (numOfFileBytes < 0x100000000000) { imageBase = 0x100000000000; }
+	else if (numOfFileBytes < 0x10000000000000) { imageBase = 0x10000000000000; }
+	else { imageBase = 0x1000000000000000; }
+
+	numOfSections = 1;
+	sections = new FileSection[1];
+	sections[0].name = initializeJdcStrWithVal(".dummyText");
+	sections[0].type = CODE_FST;
+	sections[0].isReadOnly = 1;
+	sections[0].rva = 0;
+	sections[0].fileOffset = 0;
+	sections[0].physicalSize = numOfFileBytes;
+
+	numOfImports = 0;
+
+	return 1;
 }
 
 unsigned char CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
@@ -650,11 +655,12 @@ void MainGui::AnalyzeFile()
 	Log("finished analyzing file");
 }
 
-void MainGui::ClearData() 
+void MainGui::ClearData()
 {
 	if (fileBytes)
 	{
 		delete[] fileBytes;
+		fileBytes = 0;
 	}
 
 	memset(&decompParams, 0, sizeof(decompParams));
@@ -692,6 +698,7 @@ void MainGui::ClearData()
 	if (sections)
 	{
 		delete[] sections;
+		sections = 0;
 	}
 
 	for (int i = 0; i < numOfImports; i++) 
@@ -701,6 +708,7 @@ void MainGui::ClearData()
 	if (imports)
 	{
 		delete[] imports;
+		imports = 0;
 	}
 	
 	for (int i = 0; i < functions.size(); i++)
@@ -710,6 +718,8 @@ void MainGui::ClearData()
 
 	functions.clear();
 	functions.shrink_to_fit();
+
+	currentFilePath = "";
 }
 
 unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)

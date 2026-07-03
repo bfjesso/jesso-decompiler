@@ -103,6 +103,10 @@ public:
 
 	void OpenFile();
 
+	unsigned char LoadKnownFile(wxString filePath);
+
+	unsigned char LoadUnknownFile(wxString filePath);
+
 	void DisassembleFile();
 
 	void AnalyzeFile();
