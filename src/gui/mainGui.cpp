@@ -725,6 +725,8 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 		return 0;
 	}
 
+	unsigned char storeInstruction = 1;
+
 	unsigned long long currentVirtualAddress = startVA;
 	while (currentFileOffset < currentSection->fileOffset + currentSection->physicalSize)
 	{
@@ -753,14 +755,18 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 		currentFileOffset += instructionBuffer->numOfBytes;
 		currentVirtualAddress += instructionBuffer->numOfBytes;
 
-		// this needs to be sorted here because the jump handling may need to determine a reg's value
-		disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
+		if (storeInstruction) // only the instructions that are jumped to are stored because inserting into the vector takes too much time
+		{
+			// this needs to be sorted here because the find instruction functions use a binary search
+			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
+			storeInstruction = 0;
+		}
 
 		unsigned long long jmpDst = 0;
 		unsigned char stop = 0;
-		if (checkForControlFlowJump(&disassembledInstructions[0], instructionIndex, &jmpDst, &stop))
+		if (checkForControlFlowJump(instructionBuffer, &jmpDst, &stop))
 		{
-			if (jmpDst == 0) 
+			if (jmpDst == 0)
 			{
 				continue;
 			}
@@ -777,6 +783,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 					}
 
 					currentVirtualAddress = jmpDst;
+					storeInstruction = 1;
 				}
 				else if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
 				{
@@ -815,7 +822,8 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	unsigned long long currentVirtualAddress = startVA;
 	while (currentFileOffset < endFileOffset)
 	{
-		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + endFileOffset - 1, options, instructionBuffer))
+		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + endFileOffset - 1, options, instructionBuffer) || 
+			currentFileOffset + instructionBuffer->numOfBytes > endFileOffset)
 		{
 			int numOfBytes = instructionBuffer->numOfBytes;
 			if (numOfBytes == 0) 
@@ -836,6 +844,11 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 				
 				instructionBuffer->address = currentVirtualAddress;
 				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
+				if (!instructionBuffer->operands) 
+				{
+					return 0;
+				}
+
 				instructionBuffer->operands[0].immediate.value = fileBytes[currentFileOffset];
 				instructionBuffer->operands[0].type = IMMEDIATE;
 				instructionBuffer->operands[0].immediate.size = 1;

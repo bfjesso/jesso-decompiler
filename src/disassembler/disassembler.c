@@ -212,28 +212,28 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 	return "";
 }
 
-unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructions, int instructionIndex, unsigned long long* jmpDst, unsigned char* stop)
+unsigned char checkForControlFlowJump(struct DisassembledInstruction* instruction, unsigned long long* jmpDst, unsigned char* stop)
 {
-	if (!instructions || !jmpDst || !stop)
+	if (!instruction || !jmpDst || !stop)
 	{
 		return 0;
 	}
 	
-	if (isOpcodeReturn(instructions[instructionIndex].opcode))
+	if (isOpcodeReturn(instruction->opcode))
 	{
-		*jmpDst = instructions[instructionIndex].address;
+		*jmpDst = instruction->address;
 		*stop = 1;
 		return 1;
 	}
-	else if (isOpcodeJmp(instructions[instructionIndex].opcode))
+	else if (isOpcodeJmp(instruction->opcode))
 	{
-		*jmpDst = getJmpDst(instructions, instructionIndex, instructionIndex - 0x1000);
+		*jmpDst = getJmpDst(instruction, 0, -1);
 		*stop = 1;
 		return 1;
 	}
-	else if (isOpcodeJcc(instructions[instructionIndex].opcode) || isOpcodeCall(instructions[instructionIndex].opcode))
+	else if (isOpcodeJcc(instruction->opcode) || isOpcodeCall(instruction->opcode))
 	{
-		*jmpDst = getJmpDst(instructions, instructionIndex, instructionIndex - 0x1000);
+		*jmpDst = getJmpDst(instruction, 0, -1);
 		*stop = 0;
 		return 1;
 	}

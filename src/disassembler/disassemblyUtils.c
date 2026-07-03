@@ -10,7 +10,7 @@ unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int s
 	}
 
 	unsigned long long dst = 0;
-	if (!operandToValue(instructions, startInstructionIndex, startInstructionIndex - 0x1000, &instruction->operands[0], &dst))
+	if (!operandToValue(instructions, startInstructionIndex, minInstructionIndex, &instruction->operands[0], &dst))
 	{
 		return 0;
 	}
