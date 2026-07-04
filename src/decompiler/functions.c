@@ -127,9 +127,11 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			}
 		}
 	}
+
+	fixAllFunctionReturnTypes(params);
 }
 
-unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) // resolves if a function's return type depends on another function
+static void fixAllFunctionReturnTypes(struct DecompilationParameters* params) // resolves if a function's return type depends on another function
 {
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
@@ -158,8 +160,6 @@ unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params) 
 			}
 		}
 	}
-
-	return 1;
 }
 
 unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params)
@@ -179,7 +179,7 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 		}
 	}
 
-	return 1;
+	return fixAllFunctionArgs(params);
 }
 
 static unsigned char getFunctionArguments(struct DecompilationParameters* params)
@@ -327,7 +327,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 	return 0;
 }
 
-unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
+static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
 	int numFixed = 0;
 	for (int i = 0; i < params->numOfFunctions; i++) 

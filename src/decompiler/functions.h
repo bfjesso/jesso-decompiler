@@ -11,11 +11,7 @@ extern "C"
 	
 	void getAllFunctionReturnTypes(struct DecompilationParameters* params);
 
-	unsigned char fixAllFunctionReturnTypes(struct DecompilationParameters* params);
-
 	unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params);
-
-	unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
 	void freeFunction(struct Function* function);
 
@@ -27,9 +23,13 @@ extern "C"
 }
 #endif
 
+static void fixAllFunctionReturnTypes(struct DecompilationParameters* params);
+
 static unsigned char getFunctionArguments(struct DecompilationParameters* params);
 
 static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg);
+
+static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
