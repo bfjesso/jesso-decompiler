@@ -108,6 +108,7 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 			disassemblyTextCtrl->HighlightLine(errorInstructionIndex, RED_INDICATOR, 1);
 		}
 
+		mainGui->logTextCtrl->Log(statusMessage.buffer, 1);
 		wxMessageBox(statusMessage.buffer, "Can't decompile");
 		freeJdcStr(&statusMessage);
 
