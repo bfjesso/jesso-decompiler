@@ -55,4 +55,8 @@ public:
 	void OnKeyDown(wxKeyEvent& e);
 
 	void OnUpdateUI(wxStyledTextEvent& e);
+
+	void HighlightSelectedBraces();
+
+	void HighlightSelectionInstances();
 };

@@ -204,6 +204,7 @@
     <ClCompile Include="src\gui\calculatorWindow.cpp" />
     <ClCompile Include="src\gui\importsGrid.cpp" />
     <ClCompile Include="src\gui\jdcTextCtrl.cpp" />
+    <ClCompile Include="src\gui\logTextCtrl.cpp" />
     <ClCompile Include="src\gui\main.cpp" />
     <ClCompile Include="src\gui\mainGui.cpp" />
     <ClCompile Include="src\gui\sectionsGrid.cpp" />
@@ -257,6 +258,7 @@
     <ClInclude Include="src\gui\calculatorWindow.h" />
     <ClInclude Include="src\gui\importsGrid.h" />
     <ClInclude Include="src\gui\jdcTextCtrl.h" />
+    <ClInclude Include="src\gui\logTextCtrl.h" />
     <ClInclude Include="src\gui\main.h" />
     <ClInclude Include="src\gui\mainGui.h" />
     <ClInclude Include="src\fileStructs.h" />

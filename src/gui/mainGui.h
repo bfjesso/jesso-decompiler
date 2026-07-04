@@ -6,6 +6,7 @@
 #include "functionsTextCtrl.h"
 #include "dataTextCtrl.h"
 #include "colorsMenu.h"
+#include "logTextCtrl.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationStructs.h"
@@ -20,7 +21,7 @@ public:
 	wxMenuBar* menuBar = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
-	JdcTextCtrl* logTextCtrl = nullptr;
+	LogTextCtrl* logTextCtrl = nullptr;
 
 	std::vector<DisassemblyTextCtrl*> disassemblyTextCtrls;
 	std::vector<DecompilationTextCtrl*> decompilationTextCtrls;
@@ -98,10 +99,6 @@ public:
 	void RemoveTextCtrl(wxWindow* window);
 
 	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
-
-	void Log(wxString text, unsigned char isError);
-
-	void LogHexNum(wxString label, unsigned long long num, unsigned char isError);
 
 	void OpenFile();
 

@@ -390,7 +390,17 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 
 	ClearIndicators();
 
-	// brace highlighting
+	if (highlightSelectedLines)
+	{
+		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
+	}
+
+	HighlightSelectedBraces();
+	HighlightSelectionInstances();
+}
+
+void JdcTextCtrl::HighlightSelectedBraces()
+{
 	int pos = GetCurrentPos();
 	int bracePos1 = -1;
 	int bracePos2 = -1;
@@ -417,13 +427,10 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 	{
 		BraceHighlight(-1, -1);
 	}
-	
-	if (highlightSelectedLines)
-	{
-		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
-	}
+}
 
-	// highlighting other instances of selected text
+void JdcTextCtrl::HighlightSelectionInstances()
+{
 	wxString selection = GetSelectedText();
 	if (selection != "")
 	{
@@ -434,11 +441,11 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 		int lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
 
 		int minPos = 0;
-		if(firstVisibleLine > 0)
+		if (firstVisibleLine > 0)
 		{
 			minPos = PositionFromLine(firstVisibleLine - 1);
 		}
-		
+
 		int maxPos = GetTextLength();
 		if (lastVisibleLine < GetNumberOfLines())
 		{
