@@ -13,7 +13,7 @@ FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCt
 	Bind(wxEVT_CONTEXT_MENU, &FunctionsTextCtrl::FunctionsRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &FunctionsTextCtrl::OnFunctionsKeyDown, this);
 
-	ShowAllFunctions();
+	ShowAllFunctions(-1);
 }
 
 void FunctionsTextCtrl::ShowFindAddressDialog()
@@ -108,7 +108,7 @@ void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 	e.Skip();
 }
 
-void FunctionsTextCtrl::ShowAllFunctions()
+void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
 {
 	ClearText();
 	SetReadOnly(false);
@@ -144,7 +144,14 @@ void FunctionsTextCtrl::ShowAllFunctions()
 	Thaw();
 	SetReadOnly(true);
 
-	HighlightLine(entryFunctionIndex, YELLOW_INDICATOR, 1);
+	if (highlightIndex != -1) 
+	{
+		HighlightLine(highlightIndex, YELLOW_INDICATOR, 1);
+	}
+	else 
+	{
+		HighlightLine(entryFunctionIndex, YELLOW_INDICATOR, 1);
+	}
 }
 
 void FunctionsTextCtrl::ApplyFunctionsHighlighting()

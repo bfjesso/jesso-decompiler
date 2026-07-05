@@ -17,7 +17,7 @@ public:
 
 	void OnFunctionsKeyDown(wxKeyEvent& e);
 
-	void ShowAllFunctions();
+	void ShowAllFunctions(int highlightIndex);
 
 	void ApplyFunctionsHighlighting();
 };

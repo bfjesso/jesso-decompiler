@@ -15,6 +15,8 @@ public:
 
 	int currentDecompiledFunc = -1;
 
+	void ShowRenameDialog(struct JdcStr* currentName);
+
 	void DecompilationRightClickOptions(wxContextMenuEvent& e);
 
 	void OnUpdateDecompilationUI(wxStyledTextEvent& e);

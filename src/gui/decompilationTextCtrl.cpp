@@ -2,6 +2,7 @@
 #include "mainGui.h"
 
 #include "../decompiler/decompiler.h"
+#include "../decompiler/decompilationUtils.h"
 #include "../decompiler/intrinsics.h"
 
 DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
@@ -13,13 +14,33 @@ DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : J
 	Bind(wxEVT_STC_UPDATEUI, &DecompilationTextCtrl::OnUpdateDecompilationUI, this);
 }
 
+void DecompilationTextCtrl::ShowRenameDialog(struct JdcStr* currentName)
+{
+	wxTextEntryDialog dlg(this, "", "Rename " + wxString(currentName->buffer));
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		mainGui->decompParams.currentFunc = &mainGui->functions[currentDecompiledFunc];
+		if (validateName(&mainGui->decompParams, txt.c_str())) 
+		{
+			strcpyJdc(currentName, txt.c_str());
+			mainGui->RefreshVarNames();
+		}
+		else 
+		{
+			wxMessageBox("Name is invalid or already in use", "Can't rename");
+		}
+	}
+}
+
 void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
 
 	const int ID_DECOMPILE = 100;
-	const int ID_SET_ASSOCIATED_DISASSEMBLY = 101;
-	const int ID_UNASSOCIATE_DISASSEMBLY = 102;
+	const int ID_RENAME = 101;
+	const int ID_SET_ASSOCIATED_DISASSEMBLY = 102;
+	const int ID_UNASSOCIATE_DISASSEMBLY = 103;
 
 	int pos = GetCurrentPos();
 	int start = WordStartPosition(pos, true);
@@ -30,12 +51,21 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		int numOfFunctions = mainGui->functions.size();
 		for (int i = 0; i < numOfFunctions; i++)
 		{
-			if(i != currentDecompiledFunc && strcmp(mainGui->functions[i].name.buffer, word.c_str()) == 0)
+			if(strcmp(mainGui->functions[i].name.buffer, word.c_str()) == 0)
 			{
-				menu.Append(ID_DECOMPILE, "Decompile");
+				if (i != currentDecompiledFunc) 
+				{
+					menu.Append(ID_DECOMPILE, "Decompile");
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						mainGui->AddDecompilationTextCtrl()->DecompileFunction(i);
+					}, ID_DECOMPILE);
+				}
+
+				menu.Append(ID_RENAME, "Rename " + wxString(mainGui->functions[i].name.buffer));
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					mainGui->AddDecompilationTextCtrl()->DecompileFunction(i);
-				}, ID_DECOMPILE);
+					ShowRenameDialog(&mainGui->functions[i].name);
+				}, ID_RENAME);
+				
 				break;
 			}
 		}
@@ -220,8 +250,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// keywords
-	const char* keywordStrs[11] = { "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "goto", "return" };
-	for (int i = 0; i < 11; i++)
+	for (int i = 0; i < NUM_OF_KEYWORDS; i++)
 	{
 		ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, 0);
 	}

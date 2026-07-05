@@ -320,6 +320,22 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 	}
 }
 
+void MainGui::RefreshVarNames()
+{
+	for (int i = 0; i < decompilationTextCtrls.size(); i++) 
+	{
+		if (decompilationTextCtrls[i]->currentDecompiledFunc != -1) 
+		{
+			decompilationTextCtrls[i]->DecompileFunction(decompilationTextCtrls[i]->currentDecompiledFunc);
+		}
+	}
+
+	for (int i = 0; i < functionsTextCtrls.size(); i++)
+	{
+		functionsTextCtrls[i]->ShowAllFunctions(functionsTextCtrls[i]->GetCurrentLine());
+	}
+}
+
 void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function)
 {
 	wxMenuItem* menuItem = new wxMenuItem(0, id, name);
@@ -650,7 +666,7 @@ void MainGui::AnalyzeFile()
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
-		functionsTextCtrls[i]->ShowAllFunctions();
+		functionsTextCtrls[i]->ShowAllFunctions(-1);
 	}
 
 	logTextCtrl->Log("finished analyzing file", 0);

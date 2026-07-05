@@ -1,10 +1,14 @@
 #pragma once
 #include "decompilationStructs.h"
 
+#define NUM_OF_KEYWORDS 11
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+	extern const char* keywordStrs[];
 
 	int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address);
 
@@ -13,6 +17,8 @@ extern "C"
 	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
+
+	unsigned char validateName(struct DecompilationParameters* params, const char* name);
 
 #ifdef __cplusplus
 }

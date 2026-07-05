@@ -3,6 +3,22 @@
 #include "functionCalls.h"
 #include "../disassembler/disassemblyUtils.h"
 
+// this is used for name validation and syntax highlighting
+extern const char* keywordStrs[NUM_OF_KEYWORDS] = 
+{ 
+	"if", 
+	"else", 
+	"for", 
+	"while", 
+	"do", 
+	"break", 
+	"continue", 
+	"switch", 
+	"case", 
+	"goto", 
+	"return" 
+};
+
 void addIndents(struct JdcStr* result, int numOfIndents)
 {
 	for (int i = 0; i < numOfIndents; i++)
@@ -347,4 +363,106 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 
 	return 0;
+}
+
+unsigned char validateName(struct DecompilationParameters* params, const char* name) 
+{
+	int nameLen = (int)strlen(name);
+	if (nameLen == 0) 
+	{
+		return 0;
+	}
+
+	if (name[0] != '_' && (name[0] < 'a' || name[0] > 'z') && (name[0] < 'A' || name[0] > 'Z')) // first character cannot be a number
+	{
+		return 0;
+	}
+
+	for (int i = 1; i < nameLen; i++) 
+	{
+		if (name[i] != '_' && 
+			(name[i] < 'a' || name[i] > 'z') && 
+			(name[i] < 'A' || name[i] > 'Z') &&
+			(name[i] < '0' || name[i] > '9'))
+		{
+			return 0;
+		}
+	}
+	
+	for (int i = 0; i < NUM_OF_KEYWORDS; i++) 
+	{
+		if (strcmp(keywordStrs[i], name) == 0)
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
+	{
+		if (strcmp(primitiveTypeStrs[i], name) == 0)
+		{
+			return 0;
+		}
+	}
+	
+	for (int i = 0; i < params->numOfFunctions; i++) 
+	{
+		if (strcmp(params->functions[i].name.buffer, name) == 0) 
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < params->numOfImports; i++)
+	{
+		if (strcmp(params->imports[i].name.buffer, name) == 0)
+		{
+			return 0;
+		}
+	}
+
+	if (params->currentFunc) 
+	{
+		for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
+		{
+			if (strcmp(params->currentFunc->regArgs[i].name.buffer, name) == 0)
+			{
+				return 0;
+			}
+		}
+
+		for (int i = 0; i < params->currentFunc->numOfStackArgs; i++)
+		{
+			if (strcmp(params->currentFunc->stackArgs[i].name.buffer, name) == 0)
+			{
+				return 0;
+			}
+		}
+
+		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+		{
+			if (strcmp(params->currentFunc->regVars[i].name.buffer, name) == 0)
+			{
+				return 0;
+			}
+		}
+
+		for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+		{
+			if (strcmp(params->currentFunc->stackVars[i].name.buffer, name) == 0)
+			{
+				return 0;
+			}
+		}
+
+		for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+		{
+			if (strcmp(params->currentFunc->returnedVars[i].name.buffer, name) == 0)
+			{
+				return 0;
+			}
+		}
+	}
+
+	return 1;
 }
