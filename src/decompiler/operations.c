@@ -252,7 +252,15 @@ static unsigned char decompileOr(struct DecompilationParameters* params, int ins
 	{
 		if (getAssignment)
 		{
-			sprintfJdc(result, 0, "%s = 0x%llX", secondOperand->immediate.value);
+			struct JdcStr decompiledFirstOperand = initializeJdcStr();
+			if (!decompileOperand(params, instructionIndex, &params->instructions[instructionIndex].operands[0], 1, &decompiledFirstOperand))
+			{
+				freeJdcStr(&decompiledFirstOperand);
+				return 0;
+			}
+			
+			sprintfJdc(result, 0, "%s = 0x%llX", decompiledFirstOperand.buffer, secondOperand->immediate.value);
+			freeJdcStr(&decompiledFirstOperand);
 			return 1;
 		}
 
