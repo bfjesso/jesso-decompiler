@@ -227,14 +227,14 @@ char JdcTextCtrl::IsCharDigit(char c)
 
 void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 {
-	const int ID_COPY = 0;
-	const int ID_SELECT_ALL = 1;
-	const int ID_CONVERT_TO_UNSIGNED_DEC = 2;
-	const int ID_CONVERT_TO_SIGNED_DEC = 3;
-	const int ID_CONVERT_TO_UNSIGNED_HEX = 4;
-	const int ID_CONVERT_TO_SIGNED_HEX = 5;
-	const int ID_FIND = 6;
-	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 7;
+	const int ID_COPY = 1000;
+	const int ID_SELECT_ALL = 1001;
+	const int ID_CONVERT_TO_UNSIGNED_DEC = 1002;
+	const int ID_CONVERT_TO_SIGNED_DEC = 1003;
+	const int ID_CONVERT_TO_UNSIGNED_HEX = 1004;
+	const int ID_CONVERT_TO_SIGNED_HEX = 1005;
+	const int ID_FIND = 1006;
+	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 1007;
 
 	long start;
 	long end;
@@ -247,7 +247,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 		selection = text.substr(start, end - start);
 
 		menu->Append(ID_COPY, "Copy");
-		menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
+		menu->Bind(wxEVT_MENU, [selection](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 
 		int numColor = GetStyleAt(start);
 		if ((start == 0 || (!IsCharDigit(text[start - 1]) && text[start - 1] != '-')) && !IsCharDigit(text[end]))
@@ -279,7 +279,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			if (isHex || (!isUnsigned && isDec))
 			{
 				menu->Append(ID_CONVERT_TO_UNSIGNED_DEC, "Convert to unsigned decimal");
-				menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 					SetReadOnly(false);
 					wxString numStr = std::to_string((unsigned long long)num);
 					Replace(start, end, numStr);
@@ -292,7 +292,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			if (isHex || (!isSigned && isDec))
 			{
 				menu->Append(ID_CONVERT_TO_SIGNED_DEC, "Convert to signed decimal");
-				menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 					SetReadOnly(false);
 					wxString numStr = std::to_string(num);
 					Replace(start, end, numStr);
@@ -305,7 +305,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			if (isDec || (!isUnsigned && isHex))
 			{
 				menu->Append(ID_CONVERT_TO_UNSIGNED_HEX, "Convert to unsigned hexadecimal");
-				menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 					SetReadOnly(false);
 					char numStr[50] = { 0 };
 					sprintf(numStr, "0x%llX", (unsigned long long)num);
@@ -319,7 +319,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			if (isDec || (!isSigned && isHex))
 			{
 				menu->Append(ID_CONVERT_TO_SIGNED_HEX, "Convert to signed hexadecimal");
-				menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 					SetReadOnly(false);
 					char numStr[50] = { 0 };
 					if (num < 0)
@@ -342,19 +342,19 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 
 	menu->Append(ID_SELECT_ALL, "Select all");
-	menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+	menu->Bind(wxEVT_MENU, [this](wxCommandEvent&) {
 		SetSelection(0, GetLastPosition());
 		SetFocus();
 	}, ID_SELECT_ALL);
 
 	menu->Append(ID_FIND, "Find");
-	menu->Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+	menu->Bind(wxEVT_MENU, [this](wxCommandEvent&) {
 		ShowFindDialog();
 	}, ID_FIND);
 
 	menu->AppendCheckItem(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, "Highlight selected lines");
 	menu->Check(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, highlightSelectedLines);
-	menu->Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
+	menu->Bind(wxEVT_MENU, [this](wxCommandEvent& e) {
 		highlightSelectedLines = e.IsChecked();
 		ClearIndicators();
 	}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
