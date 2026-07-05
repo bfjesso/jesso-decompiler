@@ -166,7 +166,8 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			isOpcodeShl(instruction->opcode) ||
 			isOpcodeShr(instruction->opcode) ||
 			instruction->opcode == IMUL || instruction->opcode == IDIV ||
-			instruction->opcode == INC || instruction->opcode == DEC || instruction->opcode == NEG)
+			instruction->opcode == INC || instruction->opcode == DEC || 
+			instruction->opcode == NEG || instruction->opcode == NOT)
 		{
 			return 1;
 		}

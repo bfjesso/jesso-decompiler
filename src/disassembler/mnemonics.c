@@ -32,7 +32,7 @@ extern const char* mnemonicStrs[] =
 
 	"FLD",
 
-	"NEG", 
+	"NEG", "NOT",
 	"NOP",
 
 	"INC", "DEC",
@@ -86,7 +86,6 @@ extern const char* mnemonicStrs[] =
 	"JRCXZ", "JMPE",
 	"LAHF", "LAR", "VLDDQU", "LDDQU", "LDS", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
 	"MONITOR", "MUL", "MWAIT",
-	"NOT",
 	"OUT", "OUTS",
 	"POPAD", "POPF", "PREFETCHW", "PUSHAD", "POPCNT", "VPINSRW", "PINSRW", "VPEXTRW", "PEXTRW",
 	"RCL", "RCR", "RDMSR", "RDPMC", "RDTSC", "RSM", "VRCPPS", "RCPPS", "VRCPSS", "RCPSS",

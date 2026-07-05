@@ -252,8 +252,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		return strcpyJdc(result, regVar->name.buffer);
 	}
 	
-	struct JdcStr* expressions = (struct JdcStr*)calloc(5, sizeof(struct JdcStr));
-	if (!expressions) 
+	struct Expression* expressions = (struct Expression*)calloc(5, sizeof(struct Expression));
+	if (!expressions)
 	{
 		return 0;
 	}
@@ -287,12 +287,12 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 
 		if (doesInstructionModifyRegister(params, i, targetReg, 0, &finished))
 		{
-			expressions[expressionIndex] = initializeJdcStr();
-			if (!decompileOperation(params, i, targetReg, 0, &expressions[expressionIndex]))
+			expressions[expressionIndex].jdcStr = initializeJdcStr();
+			if (!decompileOperation(params, i, targetReg, 0, &expressions[expressionIndex].jdcStr, &expressions[expressionIndex].placeOperatorInfront))
 			{
 				for (int j = 0; j < expressionIndex; j++)
 				{
-					freeJdcStr(&expressions[j]);
+					freeJdcStr(&expressions[j].jdcStr);
 				}
 				free(expressions);
 				return 0;
@@ -314,7 +314,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			{
 				for (int j = 0; j < expressionIndex; j++)
 				{
-					freeJdcStr(&expressions[j]);
+					freeJdcStr(&expressions[j].jdcStr);
 				}
 				free(expressions);
 				return 0;
@@ -334,7 +334,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, targetReg);
 		if (regArg)
 		{
-			expressions[expressionIndex] = initializeJdcStr();
+			expressions[expressionIndex].jdcStr = initializeJdcStr();
 
 			struct DataType targetType = getRegisterDataType(params->instructions[ogInstructionIndex].opcode, targetReg);
 			if (!compareDataTypes(targetType, regArg->dataType))
@@ -359,7 +359,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		}
 		else if (defaultToReg) 
 		{
-			expressions[expressionIndex] = initializeJdcStr();
+			expressions[expressionIndex].jdcStr = initializeJdcStr();
 			strcpyJdc(&expressions[expressionIndex], registerStrs[targetReg]);
 			expressionIndex++;
 		}
@@ -367,7 +367,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		{
 			for (int i = 0; i < expressionIndex; i++)
 			{
-				freeJdcStr(&expressions[i]);
+				freeJdcStr(&expressions[i].jdcStr);
 			}
 			free(expressions);
 			return 0;
@@ -381,8 +381,16 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			wrapJdcStrInParentheses(result);
 		}
 
-		strcatJdc(result, expressions[i].buffer);
-		freeJdcStr(&expressions[i]);
+		if (expressions[i].placeOperatorInfront) 
+		{
+			strcatStartJdc(result, expressions[i].jdcStr.buffer);
+		}
+		else 
+		{
+			strcatJdc(result, expressions[i].jdcStr.buffer);
+		}
+
+		freeJdcStr(&expressions[i].jdcStr);
 	}
 
 	free(expressions);

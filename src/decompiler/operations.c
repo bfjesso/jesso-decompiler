@@ -4,8 +4,10 @@
 #include "../disassembler/operands.h"
 #include "expressions.h"
 
-unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
+unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
 {
+	if (placeOperatorInfront) { *placeOperatorInfront = 0; }
+	
 	addAssociatedInstruction(params->currentFunc, instructionIndex);
 	
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
@@ -76,7 +78,11 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 	else if (instruction->opcode == NEG)
 	{
-		return decompileNeg(params, instructionIndex, getAssignment, result);
+		return decompileNeg(params, instructionIndex, getAssignment, result, placeOperatorInfront);
+	}
+	else if (instruction->opcode == NOT)
+	{
+		return decompileNot(params, instructionIndex, getAssignment, result, placeOperatorInfront);
 	}
 	else if (isOpcodeXor(instruction->opcode))
 	{
@@ -197,7 +203,7 @@ static unsigned char decompileDec(struct DecompilationParameters* params, int in
 	return 1;
 }
 
-static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
 {
 	if (getAssignment)
 	{
@@ -213,7 +219,29 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 		return 1;
 	}
 
-	strcpyJdc(result, " * -1");
+	if (placeOperatorInfront) { *placeOperatorInfront = 1; }
+	strcpyJdc(result, "-");
+	return 1;
+}
+
+static unsigned char decompileNot(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
+{
+	if (getAssignment)
+	{
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, &params->instructions[instructionIndex].operands[0], 1, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+
+		sprintfJdc(result, 0, "%s = ~%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
+		freeJdcStr(&decompiledFirstOperand);
+		return 1;
+	}
+
+	if (placeOperatorInfront) { *placeOperatorInfront = 1; }
+	strcpyJdc(result, "~");
 	return 1;
 }
 

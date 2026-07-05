@@ -1,6 +1,12 @@
 #pragma once
 #include "decompilationStructs.h"
 
+struct Expression
+{
+	struct JdcStr jdcStr;
+	unsigned char placeOperatorInfront;
+};
+
 unsigned char decompileOperand(struct DecompilationParameters* params, int instructionIndex, struct Operand* operand, unsigned char defaultToReg, struct JdcStr* result);
 
 static unsigned char decompileMemoryAddress(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, struct JdcStr* result);

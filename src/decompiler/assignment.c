@@ -36,7 +36,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 		if (currentInstruction->operands[i].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, i, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, instructionIndex, NO_REG, 1, &operation))
+			if (!decompileOperation(params, instructionIndex, NO_REG, 1, &operation, 0))
 			{
 				freeJdcStr(&operation);
 				return 0;
@@ -55,7 +55,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 		if (doesInstructionModifyRegister(params, instructionIndex, params->currentFunc->regVars[i].reg, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, instructionIndex, params->currentFunc->regVars[i].reg, 1, &operation))
+			if (!decompileOperation(params, instructionIndex, params->currentFunc->regVars[i].reg, 1, &operation, 0))
 			{
 				freeJdcStr(&operation);
 				return 0;

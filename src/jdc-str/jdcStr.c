@@ -120,6 +120,41 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 	return 0;
 }
 
+unsigned char strcatStartJdc(struct JdcStr* jdcStr, const char* src)
+{
+	if (jdcStr && jdcStr->buffer && src)
+	{
+		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
+		int currentLen = (int)strlen(jdcStr->buffer);
+		int srcLen = (int)strlen(src);
+		if (currentLen + srcLen >= jdcStr->bufferSize)
+		{
+			if (resizeJdcStr(jdcStr, currentLen + srcLen + 1))
+			{
+				return strcatStartJdc(jdcStr, src);
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		char* tmp = (char*)calloc(currentLen + 1, 1);
+		if (tmp) 
+		{
+			strcpy(tmp, jdcStr->buffer);
+			strcpy(jdcStr->buffer, src);
+			strcat(jdcStr->buffer, tmp);
+			free(tmp);
+			return 1;
+		}
+
+		return 0;
+	}
+
+	return 0;
+}
+
 unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...)
 {
 	va_list args;
