@@ -17,10 +17,31 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 {
 	wxMenu menu;
 
-	AddDefaultRightClickOptions(&menu);
+	const int ID_DECOMPILE = 100;
+	const int ID_SET_ASSOCIATED_DISASSEMBLY = 101;
+	const int ID_UNASSOCIATE_DISASSEMBLY = 102;
 
-	const int ID_SET_ASSOCIATED_DISASSEMBLY = 100;
-	const int ID_UNASSOCIATE_DISASSEMBLY = 101;
+	int pos = GetCurrentPos();
+	int start = WordStartPosition(pos, true);
+	int end = WordEndPosition(pos, true);
+	wxString word = GetTextRange(start, end);
+	if (word != "") 
+	{
+		int numOfFunctions = mainGui->functions.size();
+		for (int i = 0; i < numOfFunctions; i++)
+		{
+			if(i != currentDecompiledFunc && strcmp(mainGui->functions[i].name.buffer, word.c_str()) == 0)
+			{
+				menu.Append(ID_DECOMPILE, "Decompile");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					mainGui->AddDecompilationTextCtrl()->DecompileFunction(i);
+				}, ID_DECOMPILE);
+				break;
+			}
+		}
+	}
+
+	AddDefaultRightClickOptions(&menu);
 
 	if (mainGui->disassemblyTextCtrls.size() > 0) 
 	{

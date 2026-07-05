@@ -138,7 +138,7 @@ void MainGui::AddDisassemblyTextCtrl()
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(disassemblyTextCtrl));
 }
 
-void MainGui::AddDecompilationTextCtrl()
+DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 {
 	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, "Decompilation " + std::to_string(decompilationTextCtrls.size() + 1));
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
@@ -147,6 +147,8 @@ void MainGui::AddDecompilationTextCtrl()
 
 	auiNotebook->AddPage(decompilationTextCtrl, decompilationTextCtrl->GetName());
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(decompilationTextCtrl));
+
+	return decompilationTextCtrls[decompilationTextCtrls.size() - 1];
 }
 
 void MainGui::AddFunctionsTextCtrl()

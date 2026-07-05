@@ -82,7 +82,7 @@ public:
 
 	void AddDisassemblyTextCtrl();
 
-	void AddDecompilationTextCtrl();
+	DecompilationTextCtrl* AddDecompilationTextCtrl();
 
 	void AddFunctionsTextCtrl();
 
