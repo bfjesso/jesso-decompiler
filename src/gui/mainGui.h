@@ -11,8 +11,6 @@
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationStructs.h"
 
-class FunctionPropertiesMenu;
-
 class MainGui : public wxFrame
 {
 public:
@@ -121,33 +119,6 @@ public:
 	void FindAllFunctions(unsigned char getSymbols);
 
 	void CloseApp(wxCloseEvent& e);
-
-	wxDECLARE_EVENT_TABLE();
-};
-
-#include <wx/grid.h>
-
-class FunctionPropertiesMenu : public wxFrame
-{
-public:
-	FunctionPropertiesMenu(wxWindow* parent, wxPoint position, MainGui* main, int funcIndex);
-
-	wxStaticText* functionNameLabel = nullptr;
-	wxTextCtrl* functionNameTextCtrl;
-
-	wxGrid* varsGrid = nullptr;
-
-	wxBoxSizer* vSizer = nullptr;
-
-	MainGui* mainGui = nullptr;
-	int functionIndex = -1;
-
-	enum ids
-	{
-		MainWindowID
-	};
-
-	void CloseMenu(wxCloseEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };
