@@ -333,10 +333,10 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 		params->currentFunc = &params->functions[i];
 		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
-			struct DisassembledInstruction* instruction = &params->instructions[j];
-			if (isOpcodeCall(instruction->opcode))
+			unsigned long long calleeAddress = resolveJmpChain(params, j);
+			if (calleeAddress != 0)
 			{
-				int funcIndex = findFunctionByAddress(params, resolveJmpChain(params, j));
+				int funcIndex = findFunctionByAddress(params, calleeAddress);
 				if (funcIndex == -1 || funcIndex == i)
 				{
 					continue;
