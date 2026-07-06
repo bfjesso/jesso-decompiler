@@ -21,13 +21,16 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		if (!foundFirstInstruction)
 		{
-			if (doesInstructionGenerateInterruptOrException(currentInstruction) || doesInstructionDoNothing(currentInstruction))
+			if (checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, currentInstruction->address) || 
+				(!doesInstructionGenerateInterruptOrException(currentInstruction) && !doesInstructionDoNothing(currentInstruction)))
+			{
+				result->firstInstructionIndex = i;
+				foundFirstInstruction = 1;
+			}
+			else 
 			{
 				continue;
 			}
-
-			result->firstInstructionIndex = i;
-			foundFirstInstruction = 1;
 		}
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
