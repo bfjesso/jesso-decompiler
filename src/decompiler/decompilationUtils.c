@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "functionCalls.h"
 #include "../disassembler/disassemblyUtils.h"
+#include "intrinsics.h"
 
 // this is used for name validation and syntax highlighting
 extern const char* keywordStrs[NUM_OF_KEYWORDS] = 
@@ -400,6 +401,30 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
 		if (strcmp(primitiveTypeStrs[i], name) == 0)
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+	{
+		if (strcmp(returningIntrinsicFuncs[i].name, name) == 0)
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+	{
+		if (strcmp(voidIntrinsicFuncs[i].name, name) == 0)
+		{
+			return 0;
+		}
+	}
+
+	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
+	{
+		if (strcmp(callingConventionStrs[i], name) == 0)
 		{
 			return 0;
 		}
