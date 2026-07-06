@@ -46,8 +46,10 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 	int start = WordStartPosition(pos, true);
 	int end = WordEndPosition(pos, true);
 	wxString word = GetTextRange(start, end);
-	if (word != "") 
+	if (word != "")
 	{
+		unsigned char foundName = 0;
+
 		int numOfFunctions = mainGui->functions.size();
 		for (int i = 0; i < numOfFunctions; i++)
 		{
@@ -66,7 +68,83 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					ShowRenameDialog(&mainGui->functions[i].name);
 				}, ID_RENAME);
 				
+				foundName = 1;
 				break;
+			}
+		}
+
+		if (currentDecompiledFunc != -1 && !foundName)
+		{
+			struct Function* func = &mainGui->decompParams.functions[currentDecompiledFunc];
+
+			for (int i = 0; i < func->numOfRegArgs; i++)
+			{
+				if (strcmp(func->regArgs[i].name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(func->regArgs[i].name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(&func->regArgs[i].name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+
+			for (int i = 0; i < func->numOfStackArgs && !foundName; i++)
+			{
+				if (strcmp(func->stackArgs[i].name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(func->stackArgs[i].name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(&func->stackArgs[i].name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+
+			for (int i = 0; i < func->numOfRegVars && !foundName; i++)
+			{
+				if (strcmp(func->regVars[i].name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(func->regVars[i].name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(&func->regVars[i].name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+
+			for (int i = 0; i < func->numOfStackVars && !foundName; i++)
+			{
+				if (strcmp(func->stackVars[i].name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(func->stackVars[i].name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(&func->stackVars[i].name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+
+			for (int i = 0; i < func->numOfReturnedVars && !foundName; i++)
+			{
+				if (strcmp(func->returnedVars[i].name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(func->returnedVars[i].name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(&func->returnedVars[i].name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
 			}
 		}
 	}
