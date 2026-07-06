@@ -196,16 +196,6 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			continue;
 		}
 
-		if (isOpcodeCall(currentInstruction->opcode) && params->currentFunc->firstCalledFunc == 0)
-		{
-			int calleeIndex = findFunctionByAddress(params, resolveJmpChain(params, i));
-			if (calleeIndex != -1 && &params->functions[calleeIndex] != params->currentFunc)
-			{
-				params->currentFunc->firstCalledFunc = &params->functions[calleeIndex];
-				params->currentFunc->firstFuncCallInstructionIndex = i;
-			}
-		}
-
 		// checking for reg args
 		for (int j = RAX; j < ST0; j++)
 		{
@@ -292,6 +282,11 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg)
 {
+	if (getRegArgByReg(params->currentFunc, reg))
+	{
+		return 1;
+	}
+	
 	for (int i = startInstructionIndex - 1; i >= minInstructionIndex; i--)
 	{
 		unsigned char overwrites = 0;
@@ -332,80 +327,39 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 
 static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
-	int numFixed = 0;
-	for (int i = 0; i < params->numOfFunctions; i++) 
+	unsigned char fixedAFunc = 0;
+	for (int i = 0; i < params->numOfFunctions; i++)
 	{
-		struct Function* currentFunc = &params->functions[i];
-		if (currentFunc->firstCalledFunc != 0)
+		params->currentFunc = &params->functions[i];
+		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
-			int numOfRegArgsInit = 0;
-			enum Register* initializedRegs = (enum Register*)calloc(currentFunc->firstCalledFunc->numOfRegArgs, sizeof(enum Register));
-			if (!initializedRegs)
+			struct DisassembledInstruction* instruction = &params->instructions[j];
+			if (isOpcodeCall(instruction->opcode))
 			{
-				return 0;
-			}
-
-			for (int j = currentFunc->firstFuncCallInstructionIndex - 1; j >= currentFunc->firstInstructionIndex; j--)
-			{
-				struct DisassembledInstruction* instruction = &params->instructions[j];
-
-				for (int k = 0; k < currentFunc->firstCalledFunc->numOfRegArgs; k++)
+				int funcIndex = findFunctionByAddress(params, resolveJmpChain(params, j));
+				if (funcIndex == -1 || funcIndex == i)
 				{
-					int alreadyFound = 0;
-					for (int l = 0; l < numOfRegArgsInit; l++)
-					{
-						if (initializedRegs[l] == currentFunc->firstCalledFunc->regArgs[k].reg)
-						{
-							alreadyFound = 1;
-							break;
-						}
-					}
-					if (alreadyFound) { continue; }
-
-					unsigned char overwrites = 0;
-					if (doesInstructionModifyRegister(params, j, currentFunc->firstCalledFunc->regArgs[k].reg, 0, &overwrites) && overwrites)
-					{
-						initializedRegs[numOfRegArgsInit] = currentFunc->firstCalledFunc->regArgs[k].reg;
-						numOfRegArgsInit++;
-						break;
-					}
+					continue;
 				}
-			}
 
-			if (numOfRegArgsInit != currentFunc->firstCalledFunc->numOfRegArgs)
-			{
-				for (int k = 0; k < currentFunc->firstCalledFunc->numOfRegArgs; k++)
+				struct Function* func = &params->functions[funcIndex];
+				for (int k = 0; k < func->numOfRegArgs; k++) 
 				{
-					int isInitialized = 0;
-					for (int l = 0; l < numOfRegArgsInit; l++)
+					if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg))
 					{
-						if (initializedRegs[l] == currentFunc->firstCalledFunc->regArgs[k].reg)
+						if (!addRegArg(params->currentFunc, func->regArgs[k].dataType, func->regArgs[k].reg))
 						{
-							isInitialized = 1;
-							break;
-						}
-					}
-
-					if (!isInitialized)
-					{
-						if (!addRegArg(currentFunc, currentFunc->firstCalledFunc->regArgs[k].dataType, currentFunc->firstCalledFunc->regArgs[k].reg))
-						{
-							free(initializedRegs);
 							return 0;
 						}
+
+						fixedAFunc = 1;
 					}
 				}
-
-				numFixed++;
 			}
-
-			free(initializedRegs);
-
-			currentFunc->firstCalledFunc = 0;
 		}
 	}
 
-	if (numFixed != 0) 
+	if (fixedAFunc)
 	{
 		return fixAllFunctionArgs(params);
 	}

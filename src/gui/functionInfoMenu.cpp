@@ -32,7 +32,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	infoGrid->SetColSize(0, 200);
 	infoGrid->SetColSize(1, 9999);
 	infoGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-	infoGrid->AppendRows(10);
+	infoGrid->AppendRows(9);
 
     struct JdcStr dataTypeStr = initializeJdcStr();
     dataTypeToStr(function->returnType, &dataTypeStr);
@@ -47,29 +47,25 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	infoGrid->SetCellValue(2, 0, "Returning function address");
 	infoGrid->SetCellValue(2, 1, hexNumStr);
 
-    sprintf(hexNumStr, "0x%llX", instructions[function->firstFuncCallInstructionIndex].address);
-	infoGrid->SetCellValue(3, 0, "First call instruction index");
-	infoGrid->SetCellValue(3, 1, wxString(std::to_string(function->firstFuncCallInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
+	infoGrid->SetCellValue(3, 0, "Calling convention");
+	infoGrid->SetCellValue(3, 1, callingConventionStrs[function->callingConvention]);
 
-	infoGrid->SetCellValue(4, 0, "Calling convention");
-	infoGrid->SetCellValue(4, 1, callingConventionStrs[function->callingConvention]);
+	infoGrid->SetCellValue(4, 0, "Function name");
+	infoGrid->SetCellValue(4, 1, function->name.buffer);
 
-	infoGrid->SetCellValue(5, 0, "Function name");
-	infoGrid->SetCellValue(5, 1, function->name.buffer);
-
-	infoGrid->SetCellValue(6, 0, "Number of instructions");
-	infoGrid->SetCellValue(6, 1, std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1));
+	infoGrid->SetCellValue(5, 0, "Number of instructions");
+	infoGrid->SetCellValue(5, 1, std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1));
 
 	sprintf(hexNumStr, "0x%llX", instructions[function->firstInstructionIndex].address);
-	infoGrid->SetCellValue(7, 0, "First instruction index");
-	infoGrid->SetCellValue(7, 1, wxString(std::to_string(function->firstInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
+	infoGrid->SetCellValue(6, 0, "First instruction index");
+	infoGrid->SetCellValue(6, 1, wxString(std::to_string(function->firstInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
 
 	sprintf(hexNumStr, "0x%llX", instructions[function->lastInstructionIndex].address);
-	infoGrid->SetCellValue(8, 0, "Last instruction index");
-	infoGrid->SetCellValue(8, 1, wxString(std::to_string(function->lastInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
+	infoGrid->SetCellValue(7, 0, "Last instruction index");
+	infoGrid->SetCellValue(7, 1, wxString(std::to_string(function->lastInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
 
-	infoGrid->SetCellValue(9, 0, "Number of lines");
-	infoGrid->SetCellValue(9, 1, std::to_string(function->numOfLines));
+	infoGrid->SetCellValue(8, 0, "Number of lines");
+	infoGrid->SetCellValue(8, 1, std::to_string(function->numOfLines));
 
 	row1Sizer->Add(infoGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
