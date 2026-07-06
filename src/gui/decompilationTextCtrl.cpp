@@ -151,39 +151,36 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 	AddDefaultRightClickOptions(&menu);
 
-	if (mainGui->disassemblyTextCtrls.size() > 0) 
-	{
-		menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			wxArrayString windowCaptions;
-			for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
-			{
-				windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
-			}
-			windowCaptions.push_back("New window");
-			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-			if (choiceDialog.ShowModal() != wxID_CANCEL)
-			{
-				int selection = choiceDialog.GetSelection();
-				if (selection == mainGui->disassemblyTextCtrls.size()) 
-				{
-					disassemblyTextCtrl = mainGui->AddDisassemblyTextCtrl();
-				}
-				else 
-				{
-					disassemblyTextCtrl = mainGui->disassemblyTextCtrls[selection];
-				}
-			}
-		}, ID_SET_ASSOCIATED_DISASSEMBLY);
-
-		if (disassemblyTextCtrl)
+	menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
 		{
-			menu.Append(ID_UNASSOCIATE_DISASSEMBLY, "Unassociate " + disassemblyTextCtrl->GetName());
-			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-				disassemblyTextCtrl->ClearIndicators();
-				disassemblyTextCtrl = nullptr;
-			}, ID_UNASSOCIATE_DISASSEMBLY);
+			windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
 		}
+		windowCaptions.push_back("New window");
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			int selection = choiceDialog.GetSelection();
+			if (selection == mainGui->disassemblyTextCtrls.size())
+			{
+				disassemblyTextCtrl = mainGui->AddDisassemblyTextCtrl();
+			}
+			else
+			{
+				disassemblyTextCtrl = mainGui->disassemblyTextCtrls[selection];
+			}
+		}
+	}, ID_SET_ASSOCIATED_DISASSEMBLY);
+
+	if (disassemblyTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DISASSEMBLY, "Unassociate " + disassemblyTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			disassemblyTextCtrl->ClearIndicators();
+			disassemblyTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DISASSEMBLY);
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));

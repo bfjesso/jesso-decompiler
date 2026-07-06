@@ -95,109 +95,100 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		ShowGoToAddressDialog();
 	}, ID_GO_TO_ADDRESS);
 
-	if (mainGui->decompilationTextCtrls.size() > 0) 
-	{
-		menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			wxArrayString windowCaptions;
-			for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
-			{
-				windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
-			}
-			windowCaptions.push_back("New window");
-			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-			if (choiceDialog.ShowModal() != wxID_CANCEL)
-			{
-				int selection = choiceDialog.GetSelection();
-				if (selection == mainGui->decompilationTextCtrls.size())
-				{
-					decompilationTextCtrl = mainGui->AddDecompilationTextCtrl();
-				}
-				else
-				{
-					decompilationTextCtrl = mainGui->decompilationTextCtrls[selection];
-				}
-			}
-		}, ID_SET_ASSOCIATED_DECOMPILATION);
-
-		if (decompilationTextCtrl)
+	menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 		{
-			menu.Append(ID_UNASSOCIATE_DECOMPILATION, "Unassociate " + decompilationTextCtrl->GetName());
-			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-				decompilationTextCtrl->ClearIndicators();
-				decompilationTextCtrl = nullptr;
-			}, ID_UNASSOCIATE_DECOMPILATION);
+			windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 		}
+		windowCaptions.push_back("New window");
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			int selection = choiceDialog.GetSelection();
+			if (selection == mainGui->decompilationTextCtrls.size())
+			{
+				decompilationTextCtrl = mainGui->AddDecompilationTextCtrl();
+			}
+			else
+			{
+				decompilationTextCtrl = mainGui->decompilationTextCtrls[selection];
+			}
+		}
+	}, ID_SET_ASSOCIATED_DECOMPILATION);
+
+	if (decompilationTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DECOMPILATION, "Unassociate " + decompilationTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			decompilationTextCtrl->ClearIndicators();
+			decompilationTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DECOMPILATION);
 	}
 
-	if (mainGui->functionsTextCtrls.size() > 0) 
-	{
-		menu.Append(ID_SET_ASSOCIATED_FUNCTIONS, "Set associated functions");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			wxArrayString windowCaptions;
-			for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
-			{
-				windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
-			}
-			windowCaptions.push_back("New window");
-			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-			if (choiceDialog.ShowModal() != wxID_CANCEL)
-			{
-				int selection = choiceDialog.GetSelection();
-				if (selection == mainGui->functionsTextCtrls.size())
-				{
-					functionsTextCtrl = mainGui->AddFunctionsTextCtrl();
-				}
-				else
-				{
-					functionsTextCtrl = mainGui->functionsTextCtrls[selection];
-				}
-			}
-		}, ID_SET_ASSOCIATED_FUNCTIONS);
-
-		if (functionsTextCtrl)
+	menu.Append(ID_SET_ASSOCIATED_FUNCTIONS, "Set associated functions");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
 		{
-			menu.Append(ID_UNASSOCIATE_FUNCTIONS, "Unassociate " + functionsTextCtrl->GetName());
-			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-				functionsTextCtrl->ClearIndicators();
-				functionsTextCtrl = nullptr;
-			}, ID_UNASSOCIATE_FUNCTIONS);
+			windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
 		}
+		windowCaptions.push_back("New window");
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			int selection = choiceDialog.GetSelection();
+			if (selection == mainGui->functionsTextCtrls.size())
+			{
+				functionsTextCtrl = mainGui->AddFunctionsTextCtrl();
+			}
+			else
+			{
+				functionsTextCtrl = mainGui->functionsTextCtrls[selection];
+			}
+		}
+	}, ID_SET_ASSOCIATED_FUNCTIONS);
+
+	if (functionsTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_FUNCTIONS, "Unassociate " + functionsTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			functionsTextCtrl->ClearIndicators();
+			functionsTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_FUNCTIONS);
 	}
 
-	if (mainGui->dataTextCtrls.size() > 0) 
-	{
-		menu.Append(ID_SET_ASSOCIATED_DATA, "Set associated data");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			wxArrayString windowCaptions;
-			for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
-			{
-				windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
-			}
-			windowCaptions.push_back("New window");
-			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
-			if (choiceDialog.ShowModal() != wxID_CANCEL)
-			{
-				int selection = choiceDialog.GetSelection();
-				if (selection == mainGui->dataTextCtrls.size())
-				{
-					dataTextCtrl = mainGui->AddDataTextCtrl();
-				}
-				else
-				{
-					dataTextCtrl = mainGui->dataTextCtrls[selection];
-				}
-			}
-		}, ID_SET_ASSOCIATED_DATA);
-
-		if (dataTextCtrl)
+	menu.Append(ID_SET_ASSOCIATED_DATA, "Set associated data");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxArrayString windowCaptions;
+		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
 		{
-			menu.Append(ID_UNASSOCIATE_DATA, "Unassociate " + dataTextCtrl->GetName());
-			menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-				dataTextCtrl->ClearIndicators();
-				dataTextCtrl = nullptr;
-			}, ID_UNASSOCIATE_DATA);
+			windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
 		}
+		windowCaptions.push_back("New window");
+		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
+		if (choiceDialog.ShowModal() != wxID_CANCEL)
+		{
+			int selection = choiceDialog.GetSelection();
+			if (selection == mainGui->dataTextCtrls.size())
+			{
+				dataTextCtrl = mainGui->AddDataTextCtrl();
+			}
+			else
+			{
+				dataTextCtrl = mainGui->dataTextCtrls[selection];
+			}
+		}
+	}, ID_SET_ASSOCIATED_DATA);
+
+	if (dataTextCtrl)
+	{
+		menu.Append(ID_UNASSOCIATE_DATA, "Unassociate " + dataTextCtrl->GetName());
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			dataTextCtrl->ClearIndicators();
+			dataTextCtrl = nullptr;
+		}, ID_UNASSOCIATE_DATA);
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
