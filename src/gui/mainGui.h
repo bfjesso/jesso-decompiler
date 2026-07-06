@@ -78,13 +78,13 @@ public:
 
 	void OpenLog(int direction);
 
-	void AddDisassemblyTextCtrl();
+	DisassemblyTextCtrl* AddDisassemblyTextCtrl();
 
 	DecompilationTextCtrl* AddDecompilationTextCtrl();
 
-	void AddFunctionsTextCtrl();
+	FunctionsTextCtrl* AddFunctionsTextCtrl();
 
-	void AddDataTextCtrl();
+	DataTextCtrl* AddDataTextCtrl();
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

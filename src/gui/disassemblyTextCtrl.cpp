@@ -104,10 +104,19 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 			{
 				windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 			}
+			windowCaptions.push_back("New window");
 			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 			if (choiceDialog.ShowModal() != wxID_CANCEL)
 			{
-				decompilationTextCtrl = mainGui->decompilationTextCtrls[choiceDialog.GetSelection()];
+				int selection = choiceDialog.GetSelection();
+				if (selection == mainGui->decompilationTextCtrls.size())
+				{
+					decompilationTextCtrl = mainGui->AddDecompilationTextCtrl();
+				}
+				else
+				{
+					decompilationTextCtrl = mainGui->decompilationTextCtrls[selection];
+				}
 			}
 		}, ID_SET_ASSOCIATED_DECOMPILATION);
 
@@ -130,10 +139,19 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 			{
 				windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
 			}
+			windowCaptions.push_back("New window");
 			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 			if (choiceDialog.ShowModal() != wxID_CANCEL)
 			{
-				functionsTextCtrl = mainGui->functionsTextCtrls[choiceDialog.GetSelection()];
+				int selection = choiceDialog.GetSelection();
+				if (selection == mainGui->functionsTextCtrls.size())
+				{
+					functionsTextCtrl = mainGui->AddFunctionsTextCtrl();
+				}
+				else
+				{
+					functionsTextCtrl = mainGui->functionsTextCtrls[selection];
+				}
 			}
 		}, ID_SET_ASSOCIATED_FUNCTIONS);
 
@@ -156,10 +174,19 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 			{
 				windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
 			}
+			windowCaptions.push_back("New window");
 			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 			if (choiceDialog.ShowModal() != wxID_CANCEL)
 			{
-				dataTextCtrl = mainGui->dataTextCtrls[choiceDialog.GetSelection()];
+				int selection = choiceDialog.GetSelection();
+				if (selection == mainGui->dataTextCtrls.size())
+				{
+					dataTextCtrl = mainGui->AddDataTextCtrl();
+				}
+				else
+				{
+					dataTextCtrl = mainGui->dataTextCtrls[selection];
+				}
 			}
 		}, ID_SET_ASSOCIATED_DATA);
 

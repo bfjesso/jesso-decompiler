@@ -127,7 +127,7 @@ void MainGui::OpenLog(int direction)
 	}
 }
 
-void MainGui::AddDisassemblyTextCtrl()
+DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 {
 	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1));
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
@@ -136,6 +136,8 @@ void MainGui::AddDisassemblyTextCtrl()
 	
 	auiNotebook->AddPage(disassemblyTextCtrl, disassemblyTextCtrl->GetName());
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(disassemblyTextCtrl));
+
+	return disassemblyTextCtrls[disassemblyTextCtrls.size() - 1];
 }
 
 DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
@@ -151,7 +153,7 @@ DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 	return decompilationTextCtrls[decompilationTextCtrls.size() - 1];
 }
 
-void MainGui::AddFunctionsTextCtrl()
+FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 {
 	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
 	functionsTextCtrls.push_back(functionsTextCtrl);
@@ -164,9 +166,11 @@ void MainGui::AddFunctionsTextCtrl()
 		.Bottom()
 		.MinSize(functionsTextCtrl->GetMinSize()));
 	auiManager.Update();
+
+	return functionsTextCtrls[functionsTextCtrls.size() - 1];
 }
 
-void MainGui::AddDataTextCtrl()
+DataTextCtrl* MainGui::AddDataTextCtrl()
 {
 	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), &decompParams, colorsMenu);
 	dataTextCtrls.push_back(dataTextCtrl);
@@ -179,6 +183,8 @@ void MainGui::AddDataTextCtrl()
 		.Float()
 		.MinSize(dataTextCtrl->GetMinSize()));
 	auiManager.Update();
+
+	return dataTextCtrls[dataTextCtrls.size() - 1];
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)

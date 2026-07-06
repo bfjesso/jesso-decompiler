@@ -160,10 +160,19 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 			{
 				windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
 			}
+			windowCaptions.push_back("New window");
 			wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 			if (choiceDialog.ShowModal() != wxID_CANCEL)
 			{
-				disassemblyTextCtrl = mainGui->disassemblyTextCtrls[choiceDialog.GetSelection()];
+				int selection = choiceDialog.GetSelection();
+				if (selection == mainGui->disassemblyTextCtrls.size()) 
+				{
+					disassemblyTextCtrl = mainGui->AddDisassemblyTextCtrl();
+				}
+				else 
+				{
+					disassemblyTextCtrl = mainGui->disassemblyTextCtrls[selection];
+				}
 			}
 		}, ID_SET_ASSOCIATED_DISASSEMBLY);
 
