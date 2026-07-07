@@ -236,110 +236,112 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 	const int ID_FIND = 1006;
 	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 1007;
 
-	long start;
-	long end;
-	GetSelection(&start, &end);
-	wxString selection = "";
-
-	if (start != end)
+	wxString selection = GetSelectedText();
+	if (selection != "")
 	{
-		wxString text = GetValue();
-		selection = text.substr(start, end - start);
-
 		menu->Append(ID_COPY, "Copy");
 		menu->Bind(wxEVT_MENU, [selection](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
-
-		int numColor = GetStyleAt(start);
-		if ((start == 0 || (!IsCharDigit(text[start - 1]) && text[start - 1] != '-')) && !IsCharDigit(text[end]))
-		{
-			long long num = 0;
-			unsigned char isHex = 0;
-			unsigned char isDec = 0;
-			unsigned char isSigned = 0; // its possible for both isSigned and isUnsigned to be 1
-			unsigned char isUnsigned = 0;
-
-			if (selection.substr(0, 2) == "0x" || selection.substr(0, 3) == "-0x")
-			{
-				isSigned = selection.ToLongLong(&num, 16);
-				isUnsigned = selection.ToULongLong((unsigned long long*)(&num), 16);
-				isHex = isSigned || isUnsigned;
-			}
-			else if (start < 2 || (text[start - 2] != '0' && text[start - 1] != 'x' && text[start - 1] != '-'))
-			{
-				isSigned = selection.ToLongLong(&num, 10);
-				isUnsigned = selection.ToULongLong((unsigned long long*)(&num), 10);
-				isDec = isSigned || isUnsigned;
-			}
-
-			if (text[start] == '-')
-			{
-				isUnsigned = 0;
-			}
-
-			if (isHex || (!isUnsigned && isDec))
-			{
-				menu->Append(ID_CONVERT_TO_UNSIGNED_DEC, "Convert to unsigned decimal");
-				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
-					SetReadOnly(false);
-					wxString numStr = std::to_string((unsigned long long)num);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
-				}, ID_CONVERT_TO_UNSIGNED_DEC);
-			}
-
-			if (isHex || (!isSigned && isDec))
-			{
-				menu->Append(ID_CONVERT_TO_SIGNED_DEC, "Convert to signed decimal");
-				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
-					SetReadOnly(false);
-					wxString numStr = std::to_string(num);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
-				}, ID_CONVERT_TO_SIGNED_DEC);
-			}
-
-			if (isDec || (!isUnsigned && isHex))
-			{
-				menu->Append(ID_CONVERT_TO_UNSIGNED_HEX, "Convert to unsigned hexadecimal");
-				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
-					SetReadOnly(false);
-					char numStr[50] = { 0 };
-					sprintf(numStr, "0x%llX", (unsigned long long)num);
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
-				}, ID_CONVERT_TO_UNSIGNED_HEX);
-			}
-
-			if (isDec || (!isSigned && isHex))
-			{
-				menu->Append(ID_CONVERT_TO_SIGNED_HEX, "Convert to signed hexadecimal");
-				menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
-					SetReadOnly(false);
-					char numStr[50] = { 0 };
-					if (num < 0)
-					{
-						sprintf(numStr, "-0x%llX", -num);
-					}
-					else
-					{
-						sprintf(numStr, "0x%llX", num);
-					}
-
-					Replace(start, end, numStr);
-					StartStyling(start);
-					SetStyling(strlen(numStr), numColor);
-					SetReadOnly(true);
-				}, ID_CONVERT_TO_SIGNED_HEX);
-			}
-		}
 	}
 
+	int pos = GetCurrentPos();
+	int start = WordStartPosition(pos, true);
+	int end = WordEndPosition(pos, true);
+	if (start != end)
+	{
+		if (start > 0 && GetText()[start - 1] == '-') 
+		{
+			start--;
+		}
+
+		wxString word = GetTextRange(start, end);
+
+		int numColor = GetStyleAt(start);
+		long long num = 0;
+		unsigned char isHex = 0;
+		unsigned char isDec = 0;
+		unsigned char isSigned = 0; // its possible for both isSigned and isUnsigned to be 1
+		unsigned char isUnsigned = 0;
+
+		if (word.substr(0, 2) == "0x" || word.substr(0, 3) == "-0x")
+		{
+			isSigned = word.ToLongLong(&num, 16);
+			isUnsigned = word.ToULongLong((unsigned long long*)(&num), 16);
+			isHex = isSigned || isUnsigned;
+		}
+		else
+		{
+			isSigned = word.ToLongLong(&num, 10);
+			isUnsigned = word.ToULongLong((unsigned long long*)(&num), 10);
+			isDec = isSigned || isUnsigned;
+		}
+
+		if (word[0] == '-')
+		{
+			isUnsigned = 0;
+		}
+
+		if (isHex || (!isUnsigned && isDec))
+		{
+			menu->Append(ID_CONVERT_TO_UNSIGNED_DEC, "Convert to unsigned decimal");
+			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
+				SetReadOnly(false);
+				wxString numStr = std::to_string((unsigned long long)num);
+				Replace(start, end, numStr);
+				StartStyling(start);
+				SetStyling(strlen(numStr), numColor);
+				SetReadOnly(true);
+			}, ID_CONVERT_TO_UNSIGNED_DEC);
+		}
+
+		if (isHex || (!isSigned && isDec))
+		{
+			menu->Append(ID_CONVERT_TO_SIGNED_DEC, "Convert to signed decimal");
+			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
+				SetReadOnly(false);
+				wxString numStr = std::to_string(num);
+				Replace(start, end, numStr);
+				StartStyling(start);
+				SetStyling(strlen(numStr), numColor);
+				SetReadOnly(true);
+			}, ID_CONVERT_TO_SIGNED_DEC);
+		}
+
+		if (isDec || (!isUnsigned && isHex))
+		{
+			menu->Append(ID_CONVERT_TO_UNSIGNED_HEX, "Convert to unsigned hexadecimal");
+			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
+				SetReadOnly(false);
+				char numStr[50] = { 0 };
+				sprintf(numStr, "0x%llX", (unsigned long long)num);
+				Replace(start, end, numStr);
+				StartStyling(start);
+				SetStyling(strlen(numStr), numColor);
+				SetReadOnly(true);
+			}, ID_CONVERT_TO_UNSIGNED_HEX);
+		}
+
+		if (isDec || (!isSigned && isHex))
+		{
+			menu->Append(ID_CONVERT_TO_SIGNED_HEX, "Convert to signed hexadecimal");
+			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
+				SetReadOnly(false);
+				char numStr[50] = { 0 };
+				if (num < 0)
+				{
+					sprintf(numStr, "-0x%llX", -num);
+				}
+				else
+				{
+					sprintf(numStr, "0x%llX", num);
+				}
+
+				Replace(start, end, numStr);
+				StartStyling(start);
+				SetStyling(strlen(numStr), numColor);
+				SetReadOnly(true);
+			}, ID_CONVERT_TO_SIGNED_HEX);
+		}
+	}
 
 	menu->Append(ID_SELECT_ALL, "Select all");
 	menu->Bind(wxEVT_MENU, [this](wxCommandEvent&) {
