@@ -59,7 +59,9 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_DECOMPILE, "Decompile");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						mainGui->AddDecompilationTextCtrl()->DecompileFunction(i);
+						DecompilationTextCtrl* newDecompTextCtrl = mainGui->AddDecompilationTextCtrl();
+						newDecompTextCtrl->DecompileFunction(i);
+						newDecompTextCtrl->disassemblyTextCtrl = disassemblyTextCtrl;
 					}, ID_DECOMPILE);
 				}
 
