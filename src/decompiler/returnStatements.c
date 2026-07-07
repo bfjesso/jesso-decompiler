@@ -24,6 +24,10 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 		
 		return 1;
 	}
+	else if (params->currentFunc->lastInstructionIndex != 0 && instructionIndex == params->currentFunc->lastInstructionIndex)
+	{
+		return 1;
+	}
 
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
@@ -74,10 +78,6 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 				{
 					return 0;
 				}
-				else if (i == params->currentFunc->lastInstructionIndex) 
-				{
-					return 1;
-				}
 			}
 			else
 			{
@@ -112,7 +112,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
-		if (instructionIndex != params->currentFunc->lastInstructionIndex)
+		if (isOpcodeReturn(params->instructions[instructionIndex].opcode) || isOpcodeJmp(params->instructions[instructionIndex].opcode))
 		{
 			addIndents(result, params->numOfIndents);
 			addAssociatedInstruction(params->currentFunc, instructionIndex);
