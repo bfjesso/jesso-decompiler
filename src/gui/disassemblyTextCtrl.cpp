@@ -212,61 +212,76 @@ void DisassemblyTextCtrl::OnDisassemblyKeyDown(wxKeyEvent& e)
 void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 {
 	UpdateTextCtrl();
-	OnUpdateUI(e);
 
-	if (HasFocus())
+	if (!HasFocus())
 	{
-		int instructionIndex = GetCurrentLine();
+		return;
+	}
 
-		if (decompilationTextCtrl) 
+	ClearIndicators();
+
+	int instructionIndex = GetCurrentLine();
+	unsigned char isLineHighlighted = 0;
+
+	if (decompilationTextCtrl)
+	{
+		decompilationTextCtrl->ClearIndicators();
+		if (decompilationTextCtrl->currentDecompiledFunc != -1 &&
+			instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
 		{
-			decompilationTextCtrl->ClearIndicators();
-			if (decompilationTextCtrl->currentDecompiledFunc != -1 &&
-				instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
+			for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
 			{
-				for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
+				struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
+				for (int j = 0; j < a->numOfIndexes; j++)
 				{
-					struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
-					for (int j = 0; j < a->numOfIndexes; j++)
+					if (a->indexes[j] == instructionIndex)
 					{
-						if (a->indexes[j] == instructionIndex)
-						{
-							decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
-							break;
-						}
+						decompilationTextCtrl->HighlightLine(i, PURPLE_INDICATOR, 1);
+						break;
 					}
 				}
+			}
 
-				ClearIndicators();
-				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			}
-		}
-		
-		if (functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
-		{
-			functionsTextCtrl->ClearIndicators();
-			int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, mainGui->decompParams.instructions[instructionIndex].address);
-			if (funcIndex != -1)
-			{
-				functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
-				ClearIndicators();
-				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			}
-		}
-
-		if (dataTextCtrl && mainGui->decompParams.numOfInstructions > 0)
-		{
-			unsigned long long address = mainGui->decompParams.instructions[instructionIndex].address;
-			FileSection* section = 0;
-			unsigned long long fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
-			if (section)
-			{
-				dataTextCtrl->HighlightBytes(fileOffset, mainGui->decompParams.instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
-				ClearIndicators();
-				HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			}
+			ClearIndicators();
+			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			isLineHighlighted = 1;
 		}
 	}
+
+	if (functionsTextCtrl && instructionIndex < mainGui->decompParams.numOfInstructions)
+	{
+		functionsTextCtrl->ClearIndicators();
+		int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, mainGui->decompParams.instructions[instructionIndex].address);
+		if (funcIndex != -1)
+		{
+			functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
+			ClearIndicators();
+			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			isLineHighlighted = 1;
+		}
+	}
+
+	if (dataTextCtrl && mainGui->decompParams.numOfInstructions > 0)
+	{
+		unsigned long long address = mainGui->decompParams.instructions[instructionIndex].address;
+		FileSection* section = 0;
+		unsigned long long fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+		if (section)
+		{
+			dataTextCtrl->HighlightBytes(fileOffset, mainGui->decompParams.instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
+			ClearIndicators();
+			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
+			isLineHighlighted = 1;
+		}
+	}
+
+	if (highlightSelectedLines && !isLineHighlighted)
+	{
+		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
+	}
+
+	HighlightSelectedBraces();
+	HighlightSelectionInstances();
 }
 
 void DisassemblyTextCtrl::UpdateTextCtrl()

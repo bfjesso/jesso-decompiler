@@ -188,8 +188,15 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 {
-	OnUpdateUI(e);
+	if (!HasFocus())
+	{
+		return;
+	}
+
+	ClearIndicators();
 	
+	unsigned char isLineHighlighted = 0;
+
 	if (disassemblyTextCtrl && HasFocus())
 	{
 		disassemblyTextCtrl->ClearIndicators();
@@ -205,8 +212,17 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 
 			ClearIndicators();
 			HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
+			isLineHighlighted = 1;
 		}
 	}
+
+	if (highlightSelectedLines && !isLineHighlighted)
+	{
+		HighlightLine(GetCurrentLine(), YELLOW_INDICATOR, 0);
+	}
+
+	HighlightSelectedBraces();
+	HighlightSelectionInstances();
 }
 
 void DecompilationTextCtrl::DecompileFunction(int functionIndex)
