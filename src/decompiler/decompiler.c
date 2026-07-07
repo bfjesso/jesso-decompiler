@@ -12,6 +12,8 @@
 
 unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int* errorInstructionIndex)
 {
+	params->currentFunc->numOfLines = 0;
+	
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
 		if (!getAllDirectJmps(params))
