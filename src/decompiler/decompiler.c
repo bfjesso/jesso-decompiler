@@ -337,6 +337,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 
 				if (checkForReturnStatement(params, j))
 				{
+					numOfRegs = 0; // no regs are accessed after the condition due to the return
 					break;
 				}
 
