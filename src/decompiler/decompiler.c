@@ -511,7 +511,14 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 	{
 		dataTypeToStr(params->currentFunc->stackVars[i].dataType, &typeStr);
 		addIndents(result, 1);
-		sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
+		sprintfJdc(result, 1, "%s %s", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
+
+		if (params->currentFunc->stackVars[i].dataType.arrayLen > 1) 
+		{
+			sprintfJdc(result, 1, "[%u]", params->currentFunc->stackVars[i].dataType.arrayLen);
+		}
+
+		strcatJdc(result, ";\n");
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)

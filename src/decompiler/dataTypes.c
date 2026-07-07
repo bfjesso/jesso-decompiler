@@ -40,6 +40,34 @@ unsigned char compareDataTypes(struct DataType t1, struct DataType t2)
 	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel;
 }
 
+unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit) 
+{
+	if (type.pointerLevel > 0 || type.arrayLen > 0)
+	{
+		return is64Bit ? 8 : 4;
+	}
+
+	switch (type.primitiveType) 
+	{
+	case CHAR_TYPE:
+		return 1;
+	case SHORT_TYPE:
+		return 2;
+	case INT_TYPE:
+	case FLOAT_TYPE:
+		return 4;
+	case LONG_LONG_TYPE:
+	case DOUBLE_TYPE:
+		return 8;
+	case INT_128_TPYE:
+		return 16;
+	case INT_256_TPYE:
+		return 32;
+	case INT_512_TPYE:
+		return 64;
+	}
+}
+
 struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg)
 {
 	struct Operand regOperand = { 0 };

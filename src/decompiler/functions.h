@@ -31,6 +31,8 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 
 static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
+static void setStackVarTypes(struct Function* function, unsigned char is64Bit);
+
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);

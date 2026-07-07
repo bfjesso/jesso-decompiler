@@ -180,6 +180,8 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 		{
 			return 0;
 		}
+
+		setStackVarTypes(params->currentFunc, params->is64Bit);
 	}
 
 	return fixAllFunctionArgs(params);
@@ -365,6 +367,37 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 	}
 
 	return 1;
+}
+
+static void setStackVarTypes(struct Function* function, unsigned char is64Bit)
+{
+	for (int i = 0; i < function->numOfStackVars - 1; i++) 
+	{
+		struct StackVariable* var1 = &function->stackVars[i];
+		struct StackVariable* var2 = &function->stackVars[i + 1];
+		long long size = var2->stackOffset - var1->stackOffset;
+
+		if (size % 8 == 0)
+		{
+			var1->dataType.primitiveType = LONG_LONG_TYPE;
+			var1->dataType.arrayLen = size / 8;
+		}
+		else if (size % 4 == 0)
+		{
+			var1->dataType.primitiveType = INT_TYPE;
+			var1->dataType.arrayLen = size / 4;
+		}
+		else if (size % 2 == 0)
+		{
+			var1->dataType.primitiveType = SHORT_TYPE;
+			var1->dataType.arrayLen = size / 2;
+		}
+		else 
+		{
+			var1->dataType.primitiveType = CHAR_TYPE;
+			var1->dataType.arrayLen = size;
+		}
+	}
 }
 
 void freeFunction(struct Function* function)
@@ -645,6 +678,24 @@ unsigned char addStackVar(struct Function* function, struct DataType dataType, l
 	}
 
 	function->numOfStackVars++;
+
+	// sorting from least to greatest stack offset
+	for (int i = 0; i < function->numOfStackVars - 1; i++)
+	{
+		char swapped = 0;
+		for (int j = 0; j < function->numOfStackVars - i - 1; j++)
+		{
+			if (function->stackVars[j].stackOffset > function->stackVars[j + 1].stackOffset)
+			{
+				struct StackVariable temp = function->stackVars[j];
+				function->stackVars[j] = function->stackVars[j + 1];
+				function->stackVars[j + 1] = temp;
+
+				swapped = 1;
+			}
+		}
+		if (!swapped) { break; }
+	}
 
 	return 1;
 }

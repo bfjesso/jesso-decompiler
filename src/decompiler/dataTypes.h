@@ -25,6 +25,7 @@ struct DataType
 {
 	unsigned char isUnsigned;
 	unsigned char pointerLevel;
+	unsigned short arrayLen;
 	enum PrimitiveType primitiveType;
 };
 
@@ -42,6 +43,8 @@ extern "C"
 #endif
 
 unsigned char compareDataTypes(struct DataType t1, struct DataType t2);
+
+unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit);
 
 struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg);
 
