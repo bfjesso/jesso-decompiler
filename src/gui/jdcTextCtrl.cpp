@@ -434,36 +434,47 @@ void JdcTextCtrl::HighlightSelectedBraces()
 void JdcTextCtrl::HighlightSelectionInstances()
 {
 	wxString selection = GetSelectedText();
-	if (selection != "")
+	if (selection == "") 
 	{
-		SetIndicatorCurrent(GRAY_INDICATOR);
-
-		int selectionLen = selection.Length();
-		int firstVisibleLine = GetFirstVisibleLine();
-		int lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
-
-		int minPos = 0;
-		if (firstVisibleLine > 0)
+		int pos = GetCurrentPos();
+		int start = WordStartPosition(pos, true);
+		int end = WordEndPosition(pos, true);
+		wxString word = GetTextRange(start, end);
+		if (word == "") 
 		{
-			minPos = PositionFromLine(firstVisibleLine - 1);
+			return;
 		}
 
-		int maxPos = GetTextLength();
-		if (lastVisibleLine < GetNumberOfLines())
+		selection = word;
+	}
+
+	SetIndicatorCurrent(GRAY_INDICATOR);
+
+	int selectionLen = selection.Length();
+	int firstVisibleLine = GetFirstVisibleLine();
+	int lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
+
+	int minPos = 0;
+	if (firstVisibleLine > 0)
+	{
+		minPos = PositionFromLine(firstVisibleLine - 1);
+	}
+
+	int maxPos = GetTextLength();
+	if (lastVisibleLine < GetNumberOfLines())
+	{
+		maxPos = PositionFromLine(lastVisibleLine);
+	}
+
+	while (1)
+	{
+		int index = FindText(minPos, maxPos, selection);
+		if (index == -1)
 		{
-			maxPos = PositionFromLine(lastVisibleLine);
+			break;
 		}
 
-		while (1)
-		{
-			int index = FindText(minPos, maxPos, selection);
-			if (index == -1)
-			{
-				break;
-			}
-
-			IndicatorFillRange(index, selectionLen);
-			minPos = index + selectionLen;
-		}
+		IndicatorFillRange(index, selectionLen);
+		minPos = index + selectionLen;
 	}
 }
