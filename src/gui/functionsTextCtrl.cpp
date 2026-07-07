@@ -55,12 +55,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			if (mainGui->decompilationTextCtrls.size() == 0)
 			{
-				mainGui->AddDecompilationTextCtrl();
-				mainGui->decompilationTextCtrls[0]->DecompileFunction(selectedLine);
-			}
-			else if (mainGui->decompilationTextCtrls.size() == 1)
-			{
-				mainGui->decompilationTextCtrls[0]->DecompileFunction(selectedLine);
+				mainGui->AddDecompilationTextCtrl()->DecompileFunction(selectedLine);
 			}
 			else
 			{
@@ -69,10 +64,19 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				{
 					windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 				}
+				windowCaptions.push_back("New window");
 				wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 				if (choiceDialog.ShowModal() != wxID_CANCEL)
 				{
-					mainGui->decompilationTextCtrls[choiceDialog.GetSelection()]->DecompileFunction(selectedLine);
+					int selection = choiceDialog.GetSelection();
+					if (selection == mainGui->decompilationTextCtrls.size())
+					{
+						mainGui->AddDecompilationTextCtrl()->DecompileFunction(selectedLine);
+					}
+					else
+					{
+						mainGui->decompilationTextCtrls[selection]->DecompileFunction(selectedLine);
+					}
 				}
 			}
 		}, ID_DECOMPILE);
