@@ -351,6 +351,20 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		}
 	}
 
+	// calling conventions
+	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
+	{
+		ColorAllStrs(text, callingConventionStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
+	}
+
+	// primitive data types
+	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
+	{
+		ColorAllStrs(text, primitiveTypeStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
+	}
+	ColorAllStrs(text, "unsigned", PRIMITIVE_DECOMP_COLOR, 0);
+	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, 0);
+
 	// keywords
 	for (int i = 0; i < NUM_OF_KEYWORDS; i++)
 	{
@@ -420,20 +434,6 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	{
 		ColorAllStrs(text, mainGui->decompParams.functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
 	}
-
-	// calling conventions
-	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
-	{
-		ColorAllStrs(text, callingConventionStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
-	}
-
-	// primitive data types
-	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
-	{
-		ColorAllStrs(text, primitiveTypeStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
-	}
-	ColorAllStrs(text, "unsigned", PRIMITIVE_DECOMP_COLOR, 0);
-	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, 0);
 
 	// this is for when :: is part of a function name
 	ColorAllStrs(text, ":", OPERATOR_DECOMP_COLOR, 1);
