@@ -270,7 +270,8 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 			enum Register returnReg = callee ? callee->returnReg : AX;
 
 			struct DataType returnType = { 0 }; // used if its an unknown function
-			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0))
+			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0) || 
+				checkForReturnStatement(params, i)) // this is if it is an unknown call that also returns
 			{
 				unsigned long long calleeAddress = resolveJmpChain(params, i);
 				struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
