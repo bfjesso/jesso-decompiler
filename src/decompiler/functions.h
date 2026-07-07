@@ -23,11 +23,9 @@ extern "C"
 }
 #endif
 
-static void fixAllFunctionReturnTypes(struct DecompilationParameters* params);
-
 static unsigned char getFunctionArguments(struct DecompilationParameters* params);
 
-static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg);
+static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
 static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 

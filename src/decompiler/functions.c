@@ -46,7 +46,8 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			}
 		}
 		
-		if (checkForReturnStatement(params, i) && i >= indexToJumpTo)
+		if ((checkForReturnStatement(params, i) && i >= indexToJumpTo) || 
+			findAddressInArr(calledAddresses, numOfCalledAddresses, params->instructions[i + 1].address) != -1)
 		{
 			result->lastInstructionIndex = i;
 			return 1;
@@ -58,12 +59,6 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 			result->lastInstructionIndex = i;
 			return 1;
 		}
-		else if (findAddressInArr(calledAddresses, numOfCalledAddresses, params->instructions[i + 1].address) != -1)
-		{
-			result->returningFunctionAddress = params->instructions[i + 1].address;
-			result->lastInstructionIndex = i;
-			return 1;
-		}
 	}
 
 	return 0;
@@ -71,98 +66,61 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 void getAllFunctionReturnTypes(struct DecompilationParameters* params) 
 {
-	for (int i = 0; i < params->numOfFunctions; i++)
+	unsigned char setAReturnType = 0;
+	do
 	{
-		params->currentFunc = &params->functions[i];
-		if (params->currentFunc->callingConvention == __UNKNOWNCALL) // __UNKNOWNCALL will only be set at this point if the function ends without a return instruction
+		setAReturnType = 0;
+		for (int i = 0; i < params->numOfFunctions; i++)
 		{
-			continue;
-		}
-
-		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
-		{
-			struct DisassembledInstruction* currentInstruction = &params->instructions[j];
-
-			if (doesInstructionDoNothing(currentInstruction))
+			params->currentFunc = &params->functions[i];
+			if (params->currentFunc->returnReg != NO_REG)
 			{
 				continue;
 			}
 
-			// this will take every jump
-			if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
+			unsigned char wasZero = setAReturnType == 0;
+			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
-				int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, j));
-				if (instructionIndex > j && instructionIndex <= params->currentFunc->lastInstructionIndex)
+				if (isOpcodeReturn(params->instructions[j].opcode))
 				{
-					j = instructionIndex - 1;
-					continue;
+					if (params->currentFunc->returnReg != NO_REG)
+					{
+						if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, params->currentFunc->returnReg, 0, 0))
+						{
+							params->currentFunc->returnType.primitiveType = VOID_TYPE;
+							params->currentFunc->returnReg = NO_REG;
+							if (wasZero) { setAReturnType = 0; }
+						}
+						else 
+						{
+							continue;
+						}
+					}
+					
+					enum Register specificReg = NO_REG;
+					struct DataType dataType = { 0 };
+					if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, AX, &specificReg, &dataType))
+					{
+						params->currentFunc->returnType = dataType;
+						params->currentFunc->returnReg = specificReg;
+						setAReturnType = 1;
+					}
+					else if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, XMM0, 0, &dataType))
+					{
+						params->currentFunc->returnType = dataType;
+						params->currentFunc->returnReg = XMM0;
+						setAReturnType = 1;
+					}
+					else if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, ST0, 0, 0))
+					{
+						params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
+						params->currentFunc->returnReg = ST0;
+						setAReturnType = 1;
+					}
 				}
 			}
-
-			enum Register specificReg = NO_REG;
-			if (doesInstructionModifyRegister(params, j, AX, &specificReg, 0))
-			{
-				params->currentFunc->returnType = getRegisterDataType(currentInstruction->opcode, specificReg);
-				params->currentFunc->returnReg = specificReg;
-				params->currentFunc->returningFunctionAddress = 0;
-			}
-			else if (doesInstructionModifyRegister(params, j, XMM0, 0, 0) && !compareRegisters(params->currentFunc->returnReg, AX)) // assuming AX is more likely to be the return register
-			{
-				params->currentFunc->returnType = getRegisterDataType(currentInstruction->opcode, XMM0);
-				params->currentFunc->returnReg = XMM0;
-				params->currentFunc->returningFunctionAddress = 0;
-			}
-			else if (doesInstructionModifyRegister(params, j, ST0, 0, 0))
-			{
-				params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
-				params->currentFunc->returnReg = ST0;
-				params->currentFunc->returningFunctionAddress = 0;
-			}
-			else if (isOpcodeCall(currentInstruction->opcode))
-			{
-				params->currentFunc->returnType.primitiveType = VOID_TYPE;
-				params->currentFunc->returnReg = NO_REG;
-				params->currentFunc->returningFunctionAddress = resolveJmpChain(params, j);
-			}
-			else if ((checkForReturnStatement(params, j)))
-			{
-				break;
-			}
 		}
-	}
-
-	fixAllFunctionReturnTypes(params);
-}
-
-static void fixAllFunctionReturnTypes(struct DecompilationParameters* params) // resolves if a function's return type depends on another function
-{
-	for (int i = 0; i < params->numOfFunctions; i++)
-	{
-		params->currentFunc = &params->functions[i];
-		if (params->functions[i].returningFunctionAddress != 0)
-		{
-			int returningFunctionIndex = findFunctionByAddress(params, params->functions[i].returningFunctionAddress);
-			if (returningFunctionIndex == -1) 
-			{
-				params->functions[i].returnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
-				params->functions[i].returnReg = params->is64Bit ? RAX : EAX;
-				continue;
-			}
-
-			int count = 0; // to avoid an infinite loop
-			while (params->functions[returningFunctionIndex].returningFunctionAddress != 0 && count < 10)
-			{
-				returningFunctionIndex = findFunctionByAddress(params, params->functions[returningFunctionIndex].returningFunctionAddress);
-				count++;
-			}
-
-			if (params->functions[returningFunctionIndex].returnType.primitiveType != VOID_TYPE)
-			{
-				params->functions[i].returnType = params->functions[returningFunctionIndex].returnType;
-				params->functions[i].returnReg = params->functions[returningFunctionIndex].returnReg;
-			}
-		}
-	}
+	} while (setAReturnType); // a function's return type may depend on another function
 }
 
 unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params)
@@ -216,7 +174,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			struct DataType regDataType = { 0 };
 			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType) && !getRegArgByReg(params->currentFunc, j))
 			{
-				if (!isRegInitialized(params, i, params->currentFunc->firstInstructionIndex, j))
+				if (!isRegInitialized(params, i, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{
 					if (!addRegArg(params->currentFunc, regDataType, specificReg))
 					{
@@ -282,18 +240,22 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 	return 1;
 }
 
-static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg)
+static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType)
 {
-	if (getRegArgByReg(params->currentFunc, reg))
+	struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, reg);
+	if (regArg)
 	{
+		if (specificReg) { *specificReg = regArg->reg; }
+		if (dataType) { *dataType = regArg->dataType; }
 		return 1;
 	}
 	
 	for (int i = startInstructionIndex - 1; i >= minInstructionIndex; i--)
 	{
 		unsigned char overwrites = 0;
-		if (doesInstructionModifyRegister(params, i, reg, 0, &overwrites) && overwrites)
+		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
 		{
+			if (dataType) { *dataType = getRegisterDataType(params->instructions[i].opcode, specificReg ? *specificReg : reg); }
 			return 1;
 		}
 
@@ -303,13 +265,13 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 			if (cond->conditionType == ELSE_CT)
 			{
-				if (isRegInitialized(params, cond->endIndex, cond->startIndex, reg))
+				if (isRegInitialized(params, cond->endIndex, cond->startIndex, reg, 0, 0))
 				{
 					int ifIndex = getConditionEnd(params, cond->startIndex);
 					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
 					{
 						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
-						if (isRegInitialized(params, ifCond->endIndex, ifCond->startIndex, reg)) 
+						if (isRegInitialized(params, ifCond->endIndex, ifCond->startIndex, reg, 0, 0)) 
 						{
 							return 1;
 						}
@@ -347,7 +309,7 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				struct Function* func = &params->functions[funcIndex];
 				for (int k = 0; k < func->numOfRegArgs; k++) 
 				{
-					if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg))
+					if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg, 0, 0))
 					{
 						if (!addRegArg(params->currentFunc, func->regArgs[k].dataType, func->regArgs[k].reg))
 						{

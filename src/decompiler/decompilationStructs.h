@@ -141,9 +141,6 @@ struct Function
 	struct DataType returnType;
 	enum Register returnReg;
 
-	// if this function's return value depends on another function's return value, this will be that function's address
-	unsigned long long returningFunctionAddress;
-
 	enum CallingConvention callingConvention;
 
 	struct JdcStr name;
