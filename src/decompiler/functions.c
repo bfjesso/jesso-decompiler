@@ -72,6 +72,11 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 		setAReturnType = 0;
 		for (int i = 0; i < params->numOfFunctions; i++)
 		{
+			if (i == 194) 
+			{
+				int ttt = 0;
+			}
+			
 			params->currentFunc = &params->functions[i];
 			if (params->currentFunc->returnReg != NO_REG)
 			{
@@ -81,7 +86,7 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 			unsigned char wasZero = setAReturnType == 0;
 			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
-				if (isOpcodeReturn(params->instructions[j].opcode))
+				if (checkForReturnStatement(params, j))
 				{
 					if (params->currentFunc->returnReg != NO_REG)
 					{
@@ -174,7 +179,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			struct DataType regDataType = { 0 };
 			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType) && !getRegArgByReg(params->currentFunc, j))
 			{
-				if (!isRegInitialized(params, i, params->currentFunc->firstInstructionIndex, j, 0, 0))
+				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{
 					if (!addRegArg(params->currentFunc, regDataType, specificReg))
 					{
@@ -250,7 +255,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 		return 1;
 	}
 	
-	for (int i = startInstructionIndex - 1; i >= minInstructionIndex; i--)
+	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
 	{
 		unsigned char overwrites = 0;
 		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
@@ -265,13 +270,13 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 			if (cond->conditionType == ELSE_CT)
 			{
-				if (isRegInitialized(params, cond->endIndex, cond->startIndex, reg, 0, 0))
+				if (isRegInitialized(params, cond->endIndex - 1, cond->startIndex, reg, 0, 0))
 				{
 					int ifIndex = getConditionEnd(params, cond->startIndex);
 					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
 					{
 						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
-						if (isRegInitialized(params, ifCond->endIndex, ifCond->startIndex, reg, 0, 0)) 
+						if (isRegInitialized(params, ifCond->endIndex - 1, ifCond->startIndex, reg, 0, 0)) 
 						{
 							return 1;
 						}
@@ -309,7 +314,7 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				struct Function* func = &params->functions[funcIndex];
 				for (int k = 0; k < func->numOfRegArgs; k++) 
 				{
-					if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg, 0, 0))
+					if (!isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg, 0, 0))
 					{
 						if (!addRegArg(params->currentFunc, func->regArgs[k].dataType, func->regArgs[k].reg))
 						{
