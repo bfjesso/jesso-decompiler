@@ -63,14 +63,9 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 
 static unsigned char decompileMemoryAddress(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, struct JdcStr* result)
 {
-	if (compareRegisters(memAddress->reg, BP) || compareRegisters(memAddress->reg, SP))
+	long long stackOffset = 0;
+	if (isMemAddressStackVar(params, instructionIndex, memAddress, &stackOffset)) 
 	{
-		long long stackOffset = memAddress->constDisplacement;
-		if (compareRegisters(memAddress->reg, SP))
-		{
-			stackOffset -= getStackFrameSizeAtInstruction(params, instructionIndex);
-		}
-
 		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
 		if (!localVar)
 		{

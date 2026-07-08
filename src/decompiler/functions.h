@@ -35,6 +35,8 @@ static long long getStackFrameChange(struct DisassembledInstruction* instruction
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
 
+unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* stackOffset);
+
 struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset);
 
 int getNumOfStackArgs(struct Function* function);

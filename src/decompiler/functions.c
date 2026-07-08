@@ -191,40 +191,18 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 
 		// checking for stack arguments and stack vars
 		long long stackFrameSize = getStackFrameSizeAtInstruction(params, i);
-		unsigned char overwrites = 0;
+	
 		for (int j = currentInstruction->numOfOperands - 1; j >= 0; j--)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
-			if (isOperandStackArg(currentOperand, stackFrameSize))
+			long long stackOffset = 0;
+			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &stackOffset)) 
 			{
-				long long stackOffset = currentOperand->memoryAddress.constDisplacement;
-				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
-				{
-					stackOffset -= stackFrameSize;
-				}
+				unsigned char isStackVarInitialized = 0;
+				doesInstructionModifyOperand(currentInstruction, j, &isStackVarInitialized);
 
-				doesInstructionModifyOperand(currentInstruction, j, &overwrites);
-				if (!overwrites)
-				{
-					if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 1, stackOffset))
-					{
-						return 0;
-					}
-				}
-				else if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 0, stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
-				{
-					return 0;
-				}
-			}
-			else if (isOperandStackVar(currentOperand, stackFrameSize))
-			{
-				long long stackOffset = currentOperand->memoryAddress.constDisplacement;
-				if (compareRegisters(currentOperand->memoryAddress.reg, SP))
-				{
-					stackOffset -= stackFrameSize;
-				}
-
-				if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 0, stackOffset))
+				unsigned char isArgument = stackOffset > 0 && !isStackVarInitialized;
+				if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), isArgument, stackOffset))
 				{
 					return 0;
 				}
@@ -493,6 +471,27 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 	}
 
 	return -1;
+}
+
+unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* stackOffset)
+{
+	if (!memAddress || memAddress->regDisplacement != NO_REG || memAddress->scale > 1)
+	{
+		return 0;
+	}
+
+	if (compareRegisters(memAddress->reg, BP))
+	{
+		if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
+		return 1;
+	}
+	else if (compareRegisters(memAddress->reg, SP))
+	{
+		if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
+		return 1;
+	}
+
+	return 0;
 }
 
 struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset)
