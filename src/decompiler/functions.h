@@ -23,7 +23,7 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params);
+static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
 
 static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 

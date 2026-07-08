@@ -139,7 +139,7 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 			return 0;
 		}
 
-		if (!getFunctionArguments(params))
+		if (!getFunctionRegArgsAndStackVars(params))
 		{
 			return 0;
 		}
@@ -150,7 +150,7 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 	return fixAllFunctionArgs(params);
 }
 
-static unsigned char getFunctionArguments(struct DecompilationParameters* params)
+static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
@@ -189,9 +189,7 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 			}
 		}
 
-		// checking for stack arguments and stack vars
-		long long stackFrameSize = getStackFrameSizeAtInstruction(params, i);
-	
+		// checking for stack vars
 		for (int j = currentInstruction->numOfOperands - 1; j >= 0; j--)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
