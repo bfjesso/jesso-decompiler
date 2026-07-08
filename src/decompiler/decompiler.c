@@ -475,33 +475,28 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 	for (int i = 0; i < function->numOfRegArgs; i++) 
 	{
 		dataTypeToStr(function->regArgs[i].dataType, &typeStr);
-		
-		if (i == function->numOfRegArgs - 1 && function->numOfStackArgs == 0) 
-		{
-			sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->regArgs[i].name.buffer);
-		}
-		else 
-		{
-			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer);
-		}
+		sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer);
 	}
 
 	for (int i = 0; i < function->numOfStackArgs; i++)
 	{
 		dataTypeToStr(function->stackArgs[i].dataType, &typeStr);
-		
-		if (i == function->numOfStackArgs - 1)
-		{
-			sprintfJdc(result, 1, "%s %s", typeStr.buffer, function->stackArgs[i].name.buffer);
-		}
-		else
-		{
-			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer);
-		}
+		sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer);
+	}
+
+	int len = (int)strlen(result->buffer);
+	if (result->buffer[len - 1] != '(')
+	{
+		result->buffer[len - 2] = ')';
+		result->buffer[len - 1] = 0;
+	}
+	else
+	{
+		strcatJdc(result, ")");
 	}
 
 	freeJdcStr(&typeStr);
-	return strcatJdc(result, ")");
+	return 1;
 }
 
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
