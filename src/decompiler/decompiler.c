@@ -478,10 +478,13 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 		sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer);
 	}
 
-	for (int i = 0; i < function->numOfStackArgs; i++)
+	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		dataTypeToStr(function->stackArgs[i].dataType, &typeStr);
-		sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackArgs[i].name.buffer);
+		if (function->stackVars[i].isArgument) 
+		{
+			dataTypeToStr(function->stackVars[i].dataType, &typeStr);
+			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackVars[i].name.buffer);
+		}
 	}
 
 	int len = (int)strlen(result->buffer);
@@ -506,17 +509,21 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 	
 	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
-		dataTypeToStr(params->currentFunc->stackVars[i].dataType, &typeStr);
-		addIndents(result, 1);
-		sprintfJdc(result, 1, "%s %s", typeStr.buffer, params->currentFunc->stackVars[i].name.buffer);
-
-		if (params->currentFunc->stackVars[i].dataType.arrayLen > 1) 
+		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
+		if (!stackVar->isArgument) 
 		{
-			sprintfJdc(result, 1, "[%u]", params->currentFunc->stackVars[i].dataType.arrayLen);
-		}
+			dataTypeToStr(stackVar->dataType, &typeStr);
+			addIndents(result, 1);
+			sprintfJdc(result, 1, "%s %s", typeStr.buffer, stackVar->name.buffer);
 
-		strcatJdc(result, ";\n");
-		declaredAVar = 1;
+			if (stackVar->dataType.arrayLen > 1)
+			{
+				sprintfJdc(result, 1, "[%u]", stackVar->dataType.arrayLen);
+			}
+
+			strcatJdc(result, ";\n");
+			declaredAVar = 1;
+		}
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)

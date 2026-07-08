@@ -171,24 +171,6 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 
 	row3Sizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
-	for (int i = 0; i < function->numOfStackArgs; i++)
-	{
-		struct StackVariable* stackArg = &function->stackArgs[i];
-		stackVarsGrid->AppendRows(1);
-		dataTypeToStr(stackArg->dataType, &dataTypeStr);
-		if (stackArg->stackOffset > 0)
-		{
-			sprintf(hexNumStr, "0x%llX", stackArg->stackOffset);
-		}
-		else
-		{
-			sprintf(hexNumStr, "-0x%llX", -stackArg->stackOffset);
-		}
-		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
-		stackVarsGrid->SetCellValue(i, 1, wxString(stackArg->name.buffer));
-		stackVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
-		stackVarsGrid->SetCellValue(i, 3, "Yes");
-	}
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &function->stackVars[i];
@@ -202,10 +184,10 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		{
 			sprintf(hexNumStr, "-0x%llX", -stackVar->stackOffset);
 		}
-		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 0, wxString(dataTypeStr.buffer));
-		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 1, wxString(stackVar->name.buffer));
-		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 2, wxString(hexNumStr));
-		stackVarsGrid->SetCellValue(i + function->numOfStackArgs, 3, "No");
+		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
+		stackVarsGrid->SetCellValue(i, 1, wxString(stackVar->name.buffer));
+		stackVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
+		stackVarsGrid->SetCellValue(i, 3, stackVar->isArgument ? "Yes" : "No");
 	}
 
 	freeJdcStr(&dataTypeStr);

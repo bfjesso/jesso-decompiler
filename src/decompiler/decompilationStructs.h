@@ -13,6 +13,7 @@ struct RegisterVariable
 struct StackVariable
 {
 	struct DataType dataType;
+	unsigned char isArgument;
 	long long stackOffset;
 	struct JdcStr name;
 };
@@ -147,15 +148,15 @@ struct Function
 
 	struct RegisterVariable* regArgs;
 	unsigned char numOfRegArgs;
-	struct StackVariable* stackArgs;
-	unsigned char numOfStackArgs;
+	struct RegisterVariable* regVars;
+	unsigned char numOfRegVars;
 
 	struct StackVariable* stackVars;
 	unsigned char numOfStackVars;
+
 	struct ReturnedVariable* returnedVars;
 	unsigned char numOfReturnedVars;
-	struct RegisterVariable* regVars;
-	unsigned char numOfRegVars;
+	
 
 	int firstInstructionIndex;
 	int lastInstructionIndex;

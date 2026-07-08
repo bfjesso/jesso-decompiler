@@ -72,24 +72,12 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		}
 
 		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
-		if (localVar)
+		if (!localVar)
 		{
-			strcpyJdc(result, localVar->name.buffer);
-		}
-		else
-		{
-			struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
-			if (stackArg)
-			{
-				strcpyJdc(result, stackArg->name.buffer);
-			}
-			else
-			{
-				return 0;
-			}
+			return 0;
 		}
 
-		return 1;
+		return strcpyJdc(result, localVar->name.buffer);
 	}
 
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);

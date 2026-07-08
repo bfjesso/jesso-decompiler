@@ -203,22 +203,17 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					stackOffset -= stackFrameSize;
 				}
 
-				struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
-				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
-				if (!stackArg && !stackVar)
+				doesInstructionModifyOperand(currentInstruction, j, &overwrites);
+				if (!overwrites)
 				{
-					doesInstructionModifyOperand(currentInstruction, j, &overwrites);
-					if (!overwrites)
-					{
-						if (!addStackArg(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
-						{
-							return 0;
-						}
-					}
-					else if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
+					if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 1, stackOffset))
 					{
 						return 0;
 					}
+				}
+				else if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 0, stackOffset)) // treating stack args that are overwritten before being accessed as stack vars
+				{
+					return 0;
 				}
 			}
 			else if (isOperandStackVar(currentOperand, stackFrameSize))
@@ -229,14 +224,9 @@ static unsigned char getFunctionArguments(struct DecompilationParameters* params
 					stackOffset -= stackFrameSize;
 				}
 
-				struct StackVariable* stackArg = getStackArgByOffset(params->currentFunc, stackOffset);
-				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
-				if (!stackArg && !stackVar)
+				if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), 0, stackOffset))
 				{
-					if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), stackOffset))
-					{
-						return 0;
-					}
+					return 0;
 				}
 			}
 		}
@@ -342,6 +332,11 @@ static void setStackVarTypes(struct Function* function, unsigned char is64Bit)
 	{
 		struct StackVariable* var1 = &function->stackVars[i];
 		struct StackVariable* var2 = &function->stackVars[i + 1];
+		if(var1->isArgument || var2->isArgument)
+		{
+			continue;
+		}
+
 		long long size = var2->stackOffset - var1->stackOffset;
 
 		if (size % 8 == 0)
@@ -380,10 +375,6 @@ void freeFunction(struct Function* function)
 		freeJdcStr(&function->regVars[i].name);
 	}
 
-	for (int i = 0; i < function->numOfStackArgs; i++)
-	{
-		freeJdcStr(&function->stackArgs[i].name);
-	}
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
 		freeJdcStr(&function->stackVars[i].name);
@@ -396,7 +387,6 @@ void freeFunction(struct Function* function)
 
 	free(function->regArgs);
 	free(function->regVars);
-	free(function->stackArgs);
 	free(function->stackVars);
 	free(function->returnedVars);
 
@@ -505,19 +495,6 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 	return -1;
 }
 
-struct StackVariable* getStackArgByOffset(struct Function* function, long long stackOffset)
-{
-	for (int i = 0; i < function->numOfStackArgs; i++)
-	{
-		if (function->stackArgs[i].stackOffset == stackOffset)
-		{
-			return &function->stackArgs[i];
-		}
-	}
-
-	return 0;
-}
-
 struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset)
 {
 	for (int i = 0; i < function->numOfStackVars; i++)
@@ -529,6 +506,20 @@ struct StackVariable* getStackVarByOffset(struct Function* function, long long s
 	}
 
 	return 0;
+}
+
+int getNumOfStackArgs(struct Function* function)
+{
+	int result = 0;
+	for (int i = 0; i < function->numOfStackVars; i++) 
+	{
+		if (function->stackVars[i].isArgument) 
+		{
+			result++;
+		}
+	}
+
+	return result;
 }
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg)
@@ -570,80 +561,25 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-unsigned char addStackArg(struct Function* function, struct DataType dataType, long long stackOffset)
-{
-	if (getStackArgByOffset(function, stackOffset)) 
-	{
-		return 1;
-	}
-	
-	struct StackVariable* newStackArgs = (struct StackVariable*)realloc(function->stackArgs, sizeof(struct StackVariable) * (function->numOfStackArgs + 1));
-	if (newStackArgs)
-	{
-		function->stackArgs = newStackArgs;
-	}
-	else
-	{
-		return 0;
-	}
-
-	function->stackArgs[function->numOfStackArgs].stackOffset = stackOffset;
-	function->stackArgs[function->numOfStackArgs].dataType = dataType;
-	function->stackArgs[function->numOfStackArgs].name = initializeJdcStr();
-	sprintfJdc(&(function->stackArgs[function->numOfStackArgs].name), 0, "arg%X", stackOffset);
-	function->numOfStackArgs++;
-
-	// sorting from least to greatest stack offset
-	for (int i = 0; i < function->numOfStackArgs - 1; i++)
-	{
-		char swapped = 0;
-		for (int j = 0; j < function->numOfStackArgs - i - 1; j++)
-		{
-			if (function->stackArgs[j].stackOffset > function->stackArgs[j + 1].stackOffset)
-			{
-				struct StackVariable temp = function->stackArgs[j];
-				function->stackArgs[j] = function->stackArgs[j + 1];
-				function->stackArgs[j + 1] = temp;
-
-				swapped = 1;
-			}
-		}
-		if (!swapped) { break; }
-	}
-
-	return 1;
-}
-
-unsigned char addStackVar(struct Function* function, struct DataType dataType, long long stackOffset)
+unsigned char addStackVar(struct Function* function, struct DataType dataType, unsigned char isArgument, long long stackOffset)
 {
 	if (getStackVarByOffset(function, stackOffset))
 	{
 		return 1;
 	}
 	
-	struct StackVariable* newLocalVars = (struct StackVariable*)realloc(function->stackVars, sizeof(struct StackVariable) * (function->numOfStackVars + 1));
-	if (newLocalVars)
-	{
-		function->stackVars = newLocalVars;
-	}
-	else
+	struct StackVariable* newStackVars = (struct StackVariable*)realloc(function->stackVars, sizeof(struct StackVariable) * (function->numOfStackVars + 1));
+	if (!newStackVars)
 	{
 		return 0;
 	}
 
+	function->stackVars = newStackVars;
 	function->stackVars[function->numOfStackVars].stackOffset = stackOffset;
 	function->stackVars[function->numOfStackVars].dataType = dataType;
+	function->stackVars[function->numOfStackVars].isArgument = isArgument;
 	function->stackVars[function->numOfStackVars].name = initializeJdcStr();
-
-	if (stackOffset > 0)
-	{
-		sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "var%X", stackOffset);
-	}
-	else
-	{
-		sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "var%X", -stackOffset);
-	}
-
+	sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "%s%X", isArgument ? "arg" : "var", stackOffset < 0 ? -stackOffset : stackOffset);
 	function->numOfStackVars++;
 
 	// sorting from least to greatest stack offset

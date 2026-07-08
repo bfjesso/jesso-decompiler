@@ -80,9 +80,10 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	}
 
 	int stackArgsFound = 0;
+	int numOfStackArgs = getNumOfStackArgs(callee);
 	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		if (stackArgsFound == callee->numOfStackArgs) { break; }
+		if (stackArgsFound == numOfStackArgs) { break; }
 
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
@@ -210,7 +211,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params, i);
 			int calleeIndex = findFunctionByAddress(params, calleeAddress);
-			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || params->functions[calleeIndex].numOfStackArgs > 0))
+			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || getNumOfStackArgs(&params->functions[calleeIndex]) > 0))
 			{
 				break;
 			}
