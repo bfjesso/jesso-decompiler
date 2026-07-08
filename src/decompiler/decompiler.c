@@ -53,14 +53,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 	strcatJdc(result, "\n{\n");
 
-	if (params->currentFunc->numOfStackVars > 0 || params->currentFunc->numOfReturnedVars > 0 || params->currentFunc->numOfRegVars > 0)
+	if (!declareAllLocalVariables(params, result))
 	{
-		if (!declareAllLocalVariables(params, result))
-		{
-			strcpyJdc(statusMessage, "Error declaring local variables.");
-			if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
-			return 0;
-		}
+		strcpyJdc(statusMessage, "Error declaring local variables.");
+		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
+		return 0;
 	}
 
 	int len = (int)strlen(result->buffer);
@@ -510,6 +507,7 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
+	unsigned char declaredAVar = 0;
 	
 	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
@@ -523,6 +521,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		}
 
 		strcatJdc(result, ";\n");
+		declaredAVar = 1;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
@@ -547,6 +546,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		{
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
 		}
+		declaredAVar = 1;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
@@ -566,9 +566,15 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
 			addIndents(result, 1);
 			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
+			declaredAVar = 1;
 		}
 	}
 
+	if (declaredAVar) 
+	{
+		strcatJdc(result, "\n");
+	}
+
 	freeJdcStr(&typeStr);
-	return strcatJdc(result, "\n");
+	return 1;
 }
