@@ -66,13 +66,13 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	long long stackOffset = 0;
 	if (isMemAddressStackVar(params, instructionIndex, memAddress, &stackOffset)) 
 	{
-		struct StackVariable* localVar = getStackVarByOffset(params->currentFunc, stackOffset);
-		if (!localVar)
+		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+		if (!stackVar)
 		{
 			return 0;
 		}
 
-		return strcpyJdc(result, localVar->name.buffer);
+		return strcpyJdc(result, stackVar->name.buffer);
 	}
 
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);

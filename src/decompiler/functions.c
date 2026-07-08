@@ -478,12 +478,51 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 		return 0;
 	}
 
+	enum Register reg = memAddress->reg;
 	if (compareRegisters(memAddress->reg, BP))
+	{
+		reg = BP;
+	}
+	else if (compareRegisters(memAddress->reg, SP))
+	{
+		reg = SP;
+	}
+	else 
+	{
+		// this is a simple check for other registers that are set to the BP or SP
+		for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--) 
+		{
+			struct DisassembledInstruction* instruction = &params->instructions[i];
+			if (instruction->opcode == MOV && instruction->numOfOperands == 2 &&
+				instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER) 
+			{
+				if (compareRegisters(instruction->operands[0].reg, reg)) 
+				{
+					if (compareRegisters(instruction->operands[1].reg, BP))
+					{
+						reg = BP;
+						break;
+					}
+					else if (compareRegisters(instruction->operands[1].reg, SP))
+					{
+						reg = SP;
+						break;
+					}
+					else 
+					{
+						return 0;
+					}
+				}
+			}
+		}
+	}
+
+	if (reg == BP)
 	{
 		if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
 		return 1;
 	}
-	else if (compareRegisters(memAddress->reg, SP))
+	else if (reg == SP)
 	{
 		if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
 		return 1;
