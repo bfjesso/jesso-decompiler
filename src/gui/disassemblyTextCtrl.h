@@ -9,15 +9,18 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(MainGui* parent, wxString name);
+	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions);
 
 	MainGui* mainGui = nullptr;
+
+	struct DisassembledInstruction* instructions;
+	int numOfInstructions;
 
 	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
 	DataTextCtrl* dataTextCtrl = nullptr;
 
-	void Initialize(unsigned long long errorAddress);
+	void Initialize(struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions, unsigned long long errorAddress);
 
 	void ShowGoToAddressDialog();
 

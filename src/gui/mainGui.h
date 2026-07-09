@@ -60,6 +60,7 @@ public:
 		OpenStringsMenuID,
 		OpenImportsViewerID,
 		OpenFileHeadersMenuID,
+		OpenCodeReferencesWindowID,
 		OpenCalculatorMenuID,
 		OpenBytesDisassemblerID,
 		OpenLogID,

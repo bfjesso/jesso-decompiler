@@ -192,6 +192,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\file-handler\fileHandler.c" />
+    <ClCompile Include="src\gui\codeReferencesWindow.cpp" />
     <ClCompile Include="src\gui\colorsMenu.cpp" />
     <ClCompile Include="src\gui\dataTextCtrl.cpp" />
     <ClCompile Include="src\gui\decompilationTextCtrl.cpp" />
@@ -246,6 +247,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="src\file-handler\fileHandler.h" />
+    <ClInclude Include="src\gui\codeReferencesWindow.h" />
     <ClInclude Include="src\gui\colorsMenu.h" />
     <ClInclude Include="src\gui\dataTextCtrl.h" />
     <ClInclude Include="src\gui\decompilationTextCtrl.h" />

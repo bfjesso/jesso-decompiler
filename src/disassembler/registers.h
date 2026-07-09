@@ -50,6 +50,8 @@ extern "C"
 
 	extern const char* registerStrs[];
 
+	unsigned char compareRegisters(enum Register reg1, enum Register reg2);
+
 #ifdef __cplusplus
 }
 #endif
@@ -63,8 +65,6 @@ extern const enum Register altPlatformRegArgs[];
 #ifdef linux
 #define NUM_PLATFORM_REG_ARGS 6
 #endif
-
-unsigned char compareRegisters(enum Register reg1, enum Register reg2);
 
 unsigned char isRegisterPointer(enum Register reg);
 

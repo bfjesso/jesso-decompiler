@@ -5,6 +5,7 @@
 #include "stringsTextCtrl.h"
 #include "importsGrid.h"
 #include "fileHeadersWindow.h"
+#include "codeReferencesWindow.h"
 #include "calculatorWindow.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../disassembler/mnemonics.h"
@@ -43,6 +44,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, "Strings", &decompParams, colorsMenu), "Strings"); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
+	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CodeReferencesWindow(this), "Find code references"); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
 	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(wxAUI_DOCK_NONE); });
@@ -129,7 +131,7 @@ void MainGui::OpenLog(int direction)
 
 DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 {
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1));
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1), disassembledInstructions.data(), disassembledInstructions.size());
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
@@ -633,7 +635,7 @@ void MainGui::DisassembleFile()
 
 	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		disassemblyTextCtrls[i]->Initialize(errorAddress);
+		disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), errorAddress);
 	}
 
 	logTextCtrl->Log("finished disassembling", 0);
