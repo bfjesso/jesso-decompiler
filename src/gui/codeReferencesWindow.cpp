@@ -89,10 +89,13 @@ void CodeReferencesWindow::FindCodeReferences(wxCommandEvent& e)
 		}
 	}
 
-	disassemblyTextCtrl->Initialize(foundInstructions.data(), foundInstructions.size(), 0);
-
 	if (foundInstructions.size() == 0)
 	{
 		wxMessageBox("No instructions found", "Failed to find code references");
+		disassemblyTextCtrl->ClearText();
+	}
+	else 
+	{
+		disassemblyTextCtrl->Initialize(foundInstructions.data(), foundInstructions.size(), 0);
 	}
 }
