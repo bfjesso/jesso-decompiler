@@ -24,25 +24,25 @@ void StringsTextCtrl::LoadStrings()
 
     for (int i = 0; i < params->numOfSections; i++)
     {
-        unsigned char foundStr = 0;
+        int startIndex = -1;
         for (unsigned int j = 0; j < params->sections[i].physicalSize; j++)
         {
             char c = *(char*)(params->fileBytes + params->sections[i].fileOffset + j);
             if (c > 31 && c < 127)
             {
-                if (!foundStr)
+                if (startIndex == -1)
                 {
                     currentStr = "";
-                    foundStr = 1;
+                    startIndex = j;
                 }
 
                 currentStr += c;
             }
             else
             {
-                if (foundStr && c == 0 && currentStr.length() > 1)
+                if (startIndex != -1 && c == 0 && currentStr.length() > 1)
                 {
-                    unsigned long long address = params->imageBase + params->sections[i].rva + j;
+                    unsigned long long address = params->imageBase + params->sections[i].rva + startIndex;
                     char addressStr[50] = { 0 };
                     sprintf(addressStr, "0x%llX", address);
 
@@ -50,7 +50,7 @@ void StringsTextCtrl::LoadStrings()
                     numOfStrings++;
                 }
 
-                foundStr = 0;
+                startIndex = -1;
             }
         }
     }
