@@ -696,7 +696,7 @@ void MainGui::ClearData()
 	}
 	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		disassemblyTextCtrls[i]->ClearText();
+		disassemblyTextCtrls[i]->ClearData();
 	}
 	for (int i = 0; i < decompilationTextCtrls.size(); i++)
 	{

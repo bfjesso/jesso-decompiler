@@ -16,6 +16,14 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, 
 	Initialize(disassembledInstructions, amountOfInstructions, 0);
 }
 
+void DisassemblyTextCtrl::ClearData()
+{
+	instructions = 0;
+	numOfInstructions = 0;
+
+	ClearText();
+}
+
 void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions, unsigned long long errorAddress)
 {
 	instructions = disassembledInstructions;

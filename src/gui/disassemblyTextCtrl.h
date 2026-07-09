@@ -20,6 +20,8 @@ public:
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
 	DataTextCtrl* dataTextCtrl = nullptr;
 
+	void ClearData();
+
 	void Initialize(struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions, unsigned long long errorAddress);
 
 	void ShowGoToAddressDialog();
