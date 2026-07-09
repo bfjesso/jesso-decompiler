@@ -691,7 +691,7 @@ static unsigned char decompileXCHG(struct DecompilationParameters* params, int i
 			return 0;
 		}
 		
-		if (firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg))
+		if ((firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg)) || firstOperand->type == MEM_ADDRESS)
 		{
 			sprintfJdc(result, 0, "%s = %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
