@@ -926,6 +926,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].rva + sections[codeSectionIndex].physicalSize - 1;
 
 	std::vector<unsigned long long> calledAddresses;
+	calledAddresses.push_back(imageBase + entryPoint);
 	for (int i = 0; i < numOfInstructions; i++) 
 	{
 		if (disassembledInstructions[i].opcode == CALL_NEAR) 
