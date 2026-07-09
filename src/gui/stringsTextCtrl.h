@@ -12,6 +12,13 @@ public:
 	ColorsMenu* colorsMenu = nullptr;
 
 	struct DecompilationParameters* params;
+	std::vector<unsigned long long> addresses;
+
+	void ShowFindAddressDialog();
+
+	void StringsRightClickOptions(wxContextMenuEvent& e);
+
+	void OnStringsKeyDown(wxKeyEvent& e);
 
 	void LoadStrings();
 

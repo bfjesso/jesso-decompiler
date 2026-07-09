@@ -1,10 +1,70 @@
 #include "stringsTextCtrl.h"
+#include "../decompiler/decompilationUtils.h"
 
 StringsTextCtrl::StringsTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, name)
 {
 	params = decompParams;
 	colorsMenu = colorMenu;
+
+    Bind(wxEVT_CONTEXT_MENU, &StringsTextCtrl::StringsRightClickOptions, this);
+    Bind(wxEVT_CHAR_HOOK, &StringsTextCtrl::OnStringsKeyDown, this);
+
 	LoadStrings();
+}
+
+void StringsTextCtrl::ShowFindAddressDialog()
+{
+	wxTextEntryDialog dlg(this, "", "Find address");
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		unsigned long long address = 0;
+		if (txt.ToULongLong(&address, 16))
+		{
+			int index = findAddressInArr(addresses.data(), addresses.size(), address);
+			if (index == -1)
+			{
+				wxMessageBox("Address not found", "Failed to find address");
+				return;
+			}
+
+			HighlightLine(index, YELLOW_INDICATOR, 1);
+			return;
+		}
+
+		wxMessageBox("Not valid hex number", "Failed to find address");
+	}
+}
+
+void StringsTextCtrl::StringsRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	const int ID_FIND_ADDRESS = 100;
+
+	menu.Append(ID_FIND_ADDRESS, "Find string by address");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ShowFindAddressDialog();
+	}, ID_FIND_ADDRESS);
+
+	AddDefaultRightClickOptions(&menu);
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+}
+
+void StringsTextCtrl::OnStringsKeyDown(wxKeyEvent& e)
+{
+	int key = e.GetKeyCode();
+	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
+	{
+		if (key == 'G')
+		{
+			ShowFindAddressDialog();
+		}
+	}
+
+	OnKeyDown(e);
+	e.Skip();
 }
 
 void StringsTextCtrl::LoadStrings()
@@ -14,6 +74,9 @@ void StringsTextCtrl::LoadStrings()
         wxMessageBox("No file bytes", "Can't load strings");
         return;
     }
+
+    addresses.clear();
+    addresses.shrink_to_fit();
 
     SetReadOnly(false);
     Freeze();
@@ -43,6 +106,8 @@ void StringsTextCtrl::LoadStrings()
                 if (startIndex != -1 && c == 0 && currentStr.length() > 1)
                 {
                     unsigned long long address = params->imageBase + params->sections[i].rva + startIndex;
+                    addresses.push_back(address);
+
                     char addressStr[50] = { 0 };
                     sprintf(addressStr, "0x%llX", address);
 
