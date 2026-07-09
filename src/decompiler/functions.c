@@ -72,13 +72,9 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 		setAReturnType = 0;
 		for (int i = 0; i < params->numOfFunctions; i++)
 		{
-			if (i == 194) 
-			{
-				int ttt = 0;
-			}
-			
 			params->currentFunc = &params->functions[i];
-			if (params->currentFunc->returnReg != NO_REG)
+			if (params->currentFunc->returnReg != NO_REG || 
+				params->currentFunc->callingConvention == __UNKNOWNCALL) // __UNKNOWNCALL will only be set at this point if the function ends without a return instruction
 			{
 				continue;
 			}
