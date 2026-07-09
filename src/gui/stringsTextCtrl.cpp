@@ -44,7 +44,7 @@ void StringsTextCtrl::LoadStrings()
                 {
                     unsigned long long address = params->imageBase + params->sections[i].rva + j;
                     char addressStr[50] = { 0 };
-                    sprintf(addressStr, "%llX", address);
+                    sprintf(addressStr, "0x%llX", address);
 
                     stringsText += wxString(addressStr) + wxString(params->sections[i].name.buffer) + "\t\"" + currentStr + "\"\n";
                     numOfStrings++;
