@@ -46,18 +46,19 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
 	{
-		unsigned char isReturnRegVar = 0;
+		unsigned char isReturnRegLocalVar = 0;
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 		{
-			if (compareRegisters(params->currentFunc->regVars[i].reg, callee->returnReg)) 
+			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
+			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg))
 			{
-				sprintfJdc(result, 1, "%s = ", params->currentFunc->regVars[i].name.buffer);
-				isReturnRegVar = 1;
+				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
+				isReturnRegLocalVar = 1;
 				break;
 			}
 		}
 		
-		if(!isReturnRegVar)
+		if(!isReturnRegLocalVar)
 		{
 			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 		}
@@ -65,18 +66,20 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 	sprintfJdc(result, 1, "%s(", callee->name.buffer);
 
-	for (int i = 0; i < callee->numOfRegArgs; i++)
+	for (int i = 0; i < callee->numOfRegVars; i++)
 	{
-		struct JdcStr argStr = initializeJdcStr();
-		enum Register reg = callee->regArgs[i].reg;
-		if (!decompileRegister(params, callInstructionIndex, reg, 1, &argStr, 0))
+		if (callee->regVars[i].isArgument) 
 		{
-			freeJdcStr(&argStr);
-			return 0;
-		}
+			struct JdcStr argStr = initializeJdcStr();
+			if (!decompileRegister(params, callInstructionIndex, callee->regVars[i].reg, 1, &argStr, 0))
+			{
+				freeJdcStr(&argStr);
+				return 0;
+			}
 
-		sprintfJdc(result, 1, "%s, ", argStr.buffer);
-		freeJdcStr(&argStr);
+			sprintfJdc(result, 1, "%s, ", argStr.buffer);
+			freeJdcStr(&argStr);
+		}
 	}
 
 	int stackArgsFound = 0;
@@ -169,18 +172,19 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
 	{
-		unsigned char isReturnRegVar = 0;
+		unsigned char isReturnRegLocalVar = 0;
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
-			if (compareRegisters(params->currentFunc->regVars[i].reg, AX))
+			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
+			if (!regVar->isArgument && compareRegisters(regVar->reg, AX))
 			{
-				sprintfJdc(result, 1, "%s = ", params->currentFunc->regVars[i].name.buffer);
-				isReturnRegVar = 1;
+				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
+				isReturnRegLocalVar = 1;
 				break;
 			}
 		}
 
-		if (!isReturnRegVar)
+		if (!isReturnRegLocalVar)
 		{
 			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
 		}
@@ -211,7 +215,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		{
 			unsigned long long calleeAddress = resolveJmpChain(params, i);
 			int calleeIndex = findFunctionByAddress(params, calleeAddress);
-			if (calleeIndex != -1 && (params->functions[calleeIndex].numOfRegArgs > 0 || getNumOfStackArgs(&params->functions[calleeIndex]) > 0))
+			if (calleeIndex != -1 && (getNumOfRegArgs(&params->functions[calleeIndex]) > 0 || getNumOfStackArgs(&params->functions[calleeIndex]) > 0))
 			{
 				break;
 			}

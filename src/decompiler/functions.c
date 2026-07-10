@@ -177,7 +177,7 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 			{
 				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{
-					if (!addRegArg(params->currentFunc, regDataType, specificReg))
+					if (!addRegVar(params->currentFunc, regDataType, 1, specificReg))
 					{
 						return 0;
 					}
@@ -274,11 +274,11 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				}
 
 				struct Function* func = &params->functions[funcIndex];
-				for (int k = 0; k < func->numOfRegArgs; k++) 
+				for (int k = 0; k < func->numOfRegVars; k++)
 				{
-					if (!isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regArgs[k].reg, 0, 0))
+					if (func->regVars[k].isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regVars[k].reg, 0, 0))
 					{
-						if (!addRegArg(params->currentFunc, func->regArgs[k].dataType, func->regArgs[k].reg))
+						if (!addRegVar(params->currentFunc, func->regVars[k].dataType, 1, func->regVars[k].reg))
 						{
 							return 0;
 						}
@@ -338,10 +338,6 @@ void freeFunction(struct Function* function)
 {
 	freeJdcStr(&function->name);
 
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		freeJdcStr(&function->regArgs[i].name);
-	}
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
 		freeJdcStr(&function->regVars[i].name);
@@ -357,7 +353,6 @@ void freeFunction(struct Function* function)
 		freeJdcStr(&function->returnedVars[i].name);
 	}
 
-	free(function->regArgs);
 	free(function->regVars);
 	free(function->stackVars);
 	free(function->returnedVars);
@@ -544,24 +539,38 @@ int getNumOfStackArgs(struct Function* function)
 	return result;
 }
 
+int getNumOfRegArgs(struct Function* function)
+{
+	int result = 0;
+	for (int i = 0; i < function->numOfRegVars; i++)
+	{
+		if (function->regVars[i].isArgument)
+		{
+			result++;
+		}
+	}
+
+	return result;
+}
+
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg)
 {
-	for (int i = 0; i < function->numOfRegArgs; i++)
+	for (int i = 0; i < function->numOfRegVars; i++)
 	{
-		if (compareRegisters(function->regArgs[i].reg, reg))
+		if (function->regVars[i].isArgument && compareRegisters(function->regVars[i].reg, reg))
 		{
-			return &function->regArgs[i];
+			return &function->regVars[i];
 		}
 	}
 
 	return 0;
 }
 
-struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register reg)
+struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Register reg)
 {
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
-		if (compareRegisters(function->regVars[i].reg, reg))
+		if (!function->regVars[i].isArgument && compareRegisters(function->regVars[i].reg, reg))
 		{
 			return &function->regVars[i];
 		}
@@ -625,92 +634,67 @@ unsigned char addStackVar(struct Function* function, struct DataType dataType, u
 	return 1;
 }
 
-unsigned char addRegArg(struct Function* function, struct DataType dataType, enum Register reg)
+unsigned char addRegVar(struct Function* function, struct DataType dataType, unsigned char isArgument, enum Register reg)
 {
-	if (getRegArgByReg(function, reg))
-	{
-		return 1;
-	}
-	
-	struct RegisterVariable* newRegArgs = (struct RegisterVariable*)realloc(function->regArgs, sizeof(struct RegisterVariable) * (function->numOfRegArgs + 1));
-	if (newRegArgs)
-	{
-		function->regArgs = newRegArgs;
-	}
-	else
-	{
-		return 0;
-	}
-
-	function->regArgs[function->numOfRegArgs].reg = reg;
-	function->regArgs[function->numOfRegArgs].dataType = dataType;
-	function->regArgs[function->numOfRegArgs].name = initializeJdcStr();
-	sprintfJdc(&(function->regArgs[function->numOfRegArgs].name), 0, "arg%s", registerStrs[reg]);
-	function->numOfRegArgs++;
-
-	// sorting
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
-		{
-			if ((compareRegisters(function->regArgs[i].reg, platformRegArgs[j]) || compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[j])) && function->numOfRegArgs > j)
-			{
-				struct RegisterVariable temp = function->regArgs[j];
-				function->regArgs[j] = function->regArgs[i];
-				function->regArgs[i] = temp;
-				break;
-			}
-		}
-	}
-
-	if (function->callingConvention != __UNKNOWNCALL) 
-	{
-		if (!isRegisterPlatformArg(reg))
-		{
-			function->callingConvention = __UNKNOWNCALL;
-		}
-		else if (function->numOfRegArgs == 1 && compareRegisters(reg, CX))
-		{
-			function->callingConvention = __THISCALL;
-		}
-		else
-		{
-			function->callingConvention = __FASTCALL;
-			for (int i = 0; i < function->numOfRegArgs && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
-			{
-				if (!compareRegisters(function->regArgs[i].reg, platformRegArgs[i]) && !compareRegisters(function->regArgs[i].reg, altPlatformRegArgs[i]))
-				{
-					function->callingConvention = __UNKNOWNCALL;
-				}
-			}
-		}
-	}
-	
-	return 1;
-}
-
-unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg)
-{
-	if (getRegVarByReg(function, reg))
+	if ((isArgument && getRegArgByReg(function, reg)) || (!isArgument && getLocalRegVarByReg(function, reg)))
 	{
 		return 1;
 	}
 	
 	struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(function->regVars, sizeof(struct RegisterVariable) * (function->numOfRegVars + 1));
-	if (newRegVars)
-	{
-		function->regVars = newRegVars;
-	}
-	else
+	if (!newRegVars)
 	{
 		return 0;
 	}
 
+	function->regVars = newRegVars;
 	function->regVars[function->numOfRegVars].reg = reg;
 	function->regVars[function->numOfRegVars].dataType = dataType;
+	function->regVars[function->numOfRegVars].isArgument = isArgument;
 	function->regVars[function->numOfRegVars].name = initializeJdcStr();
-	sprintfJdc(&(function->regVars[function->numOfRegVars].name), 0, "var%s", registerStrs[reg]);
+	sprintfJdc(&(function->regVars[function->numOfRegVars].name), 0, "%s%s", isArgument ? "arg" : "var", registerStrs[reg]);
 	function->numOfRegVars++;
+
+	if (isArgument) 
+	{
+		// sorting
+		for (int i = 0; i < function->numOfRegVars; i++) // all reg vars in the buffer should be args
+		{
+			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+			{
+				if ((compareRegisters(function->regVars[i].reg, platformRegArgs[j]) || compareRegisters(function->regVars[i].reg, altPlatformRegArgs[j])) && function->numOfRegVars > j)
+				{
+					struct RegisterVariable temp = function->regVars[j];
+					function->regVars[j] = function->regVars[i];
+					function->regVars[i] = temp;
+					break;
+				}
+			}
+		}
+
+		if (function->callingConvention != __UNKNOWNCALL)
+		{
+			if (!isRegisterPlatformArg(reg))
+			{
+				function->callingConvention = __UNKNOWNCALL;
+			}
+			else if (function->numOfRegVars == 1 && compareRegisters(reg, CX))
+			{
+				function->callingConvention = __THISCALL;
+			}
+			else
+			{
+				function->callingConvention = __FASTCALL;
+				for (int i = 0; i < function->numOfRegVars && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
+				{
+					if (!compareRegisters(function->regVars[i].reg, platformRegArgs[i]) && !compareRegisters(function->regVars[i].reg, altPlatformRegArgs[i]))
+					{
+						function->callingConvention = __UNKNOWNCALL;
+					}
+				}
+			}
+		}
+	}
 
 	return 1;
 }

@@ -117,15 +117,15 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 			}
 			else if (instruction->opcode == XCHG)
 			{
-				if (instruction->operands[0].type == MEM_ADDRESS && !getRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
 					continue;
 				}
-				else if (instruction->operands[1].type == MEM_ADDRESS && !getRegVarByReg(params->currentFunc, instruction->operands[0].reg))
+				else if (instruction->operands[1].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg))
 				{
 					continue;
 				}
-				else if (!getRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				else if (!getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
 					continue;
 				}

@@ -200,7 +200,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	return 1;
 }
 
-unsigned char decompileRegister(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char defaultToReg, struct JdcStr* result, struct RegisterVariable** regArgVarRef)
+unsigned char decompileRegister(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char defaultToReg, struct JdcStr* result, struct RegisterVariable** regVarRef)
 {
 	if (compareRegisters(targetReg, BP) || compareRegisters(targetReg, SP))
 	{
@@ -213,26 +213,26 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 
 	int ogInstructionIndex = instructionIndex;
 
-	struct RegisterVariable* regVar = getRegVarByReg(params->currentFunc, targetReg);
-	if (regVar)
+	struct RegisterVariable* localRegVar = getLocalRegVarByReg(params->currentFunc, targetReg);
+	if (localRegVar)
 	{
-		if (regArgVarRef)
+		if (regVarRef)
 		{
-			*regArgVarRef = regVar;
+			*regVarRef = localRegVar;
 		}
 
 		struct DataType targetType = getRegisterDataType(params->instructions[instructionIndex].opcode, targetReg);
-		if (!compareDataTypes(targetType, regVar->dataType)) 
+		if (!compareDataTypes(targetType, localRegVar->dataType))
 		{
 			struct JdcStr targetTypeStr = initializeJdcStr();
 			dataTypeToStr(targetType, &targetTypeStr);
 
-			sprintfJdc(result, 0, "(%s)%s", targetTypeStr.buffer, regVar->name.buffer);
+			sprintfJdc(result, 0, "(%s)%s", targetTypeStr.buffer, localRegVar->name.buffer);
 			freeJdcStr(&targetTypeStr);
 			return 1;
 		}
 		
-		return strcpyJdc(result, regVar->name.buffer);
+		return strcpyJdc(result, localRegVar->name.buffer);
 	}
 	
 	struct Expression* expressions = (struct Expression*)calloc(5, sizeof(struct Expression));
@@ -335,9 +335,9 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			
 			expressionIndex++;
 
-			if (regArgVarRef && expressionIndex == 1)
+			if (regVarRef && expressionIndex == 1)
 			{
-				*regArgVarRef = regArg;
+				*regVarRef = regArg;
 			}
 		}
 		else if (defaultToReg) 

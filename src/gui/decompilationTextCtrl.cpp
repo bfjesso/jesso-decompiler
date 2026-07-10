@@ -79,20 +79,6 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		{
 			struct Function* func = &mainGui->decompParams.functions[currentDecompiledFunc];
 
-			for (int i = 0; i < func->numOfRegArgs; i++)
-			{
-				if (strcmp(func->regArgs[i].name.buffer, word.c_str()) == 0)
-				{
-					menu.Append(ID_RENAME, "Rename " + wxString(func->regArgs[i].name.buffer));
-					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(&func->regArgs[i].name);
-					}, ID_RENAME);
-
-					foundName = 1;
-					break;
-				}
-			}
-
 			for (int i = 0; i < func->numOfRegVars && !foundName; i++)
 			{
 				if (strcmp(func->regVars[i].name.buffer, word.c_str()) == 0)
@@ -294,19 +280,14 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	// reg vars
 	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfRegVars; i++)
 	{
-		ColorAllStrs(text, mainGui->decompParams.currentFunc->regVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+		struct RegisterVariable* regVar = &mainGui->decompParams.currentFunc->regVars[i];
+		ColorAllStrs(text, regVar->name.buffer, regVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// returned vars
 	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfReturnedVars; i++)
 	{
 		ColorAllStrs(text, mainGui->decompParams.currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
-	}
-
-	// reg args
-	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfRegArgs; i++)
-	{
-		ColorAllStrs(text, mainGui->decompParams.currentFunc->regArgs[i].name.buffer, ARGUMENT_DECOMP_COLOR, 1);
 	}
 
 	// imports

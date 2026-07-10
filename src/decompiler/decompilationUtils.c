@@ -448,14 +448,6 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 
 	if (params->currentFunc) 
 	{
-		for (int i = 0; i < params->currentFunc->numOfRegArgs; i++)
-		{
-			if (strcmp(params->currentFunc->regArgs[i].name.buffer, name) == 0)
-			{
-				return 0;
-			}
-		}
-
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			if (strcmp(params->currentFunc->regVars[i].name.buffer, name) == 0)

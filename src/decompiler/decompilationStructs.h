@@ -7,6 +7,7 @@ struct RegisterVariable
 {
 	struct DataType dataType;
 	enum Register reg;
+	unsigned char isArgument;
 	struct JdcStr name;
 };
 
@@ -146,8 +147,6 @@ struct Function
 
 	struct JdcStr name;
 
-	struct RegisterVariable* regArgs;
-	unsigned char numOfRegArgs;
 	struct RegisterVariable* regVars;
 	unsigned char numOfRegVars;
 

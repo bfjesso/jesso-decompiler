@@ -22,9 +22,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 		
-		if (!getAllRegVars(params))
+		if (!getAllLocalRegVars(params))
 		{
-			strcpyJdc(statusMessage, "Error getting all reg vars.");
+			strcpyJdc(statusMessage, "Error getting all local reg vars.");
 			return 0;
 		}
 
@@ -305,7 +305,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 	return 1;
 }
 
-static unsigned char getAllRegVars(struct DecompilationParameters* params)
+static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
 	enum Register* modifiedRegs = (enum Register*)calloc(NUM_OF_REGISTERS, sizeof(enum Register));
@@ -368,7 +368,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 							break;
 						}
 					}
-					if (alreadyFound || getRegVarByReg(params->currentFunc, reg))
+					if (alreadyFound || getLocalRegVarByReg(params->currentFunc, reg))
 					{
 						continue;
 					}
@@ -387,7 +387,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
 					if (isRegisterAccessedBeforeInit(params, condition->startIndex, condition->endIndex - 1, modifiedRegs[j], 1, &regVarType, 0))
 					{
-						if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[j]))
+						if (!addRegVar(params->currentFunc, regVarType, 0, modifiedRegs[j]))
 						{
 							free(modifiedRegs);
 							return 0;
@@ -397,7 +397,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 				
 				if (isRegisterAccessedBeforeInit(params, condition->endIndex, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, &regVarType, 0))
 				{
-					if (!addRegVar(params->currentFunc, regVarType, modifiedRegs[j]))
+					if (!addRegVar(params->currentFunc, regVarType, 0, modifiedRegs[j]))
 					{
 						free(modifiedRegs);
 						return 0;
@@ -419,7 +419,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			!isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0))
 		{
 			enum Register reg = currentInstruction->operands[0].reg;
-			if (getRegVarByReg(params->currentFunc, reg)) 
+			if (getLocalRegVarByReg(params->currentFunc, reg)) 
 			{
 				continue;
 			}
@@ -427,14 +427,14 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 			struct RegisterVariable* regVar = 0;
 			if (currentInstruction->operands[1].type == REGISTER)
 			{
-				regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg);
+				regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg);
 			}
 			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
 			{
-				regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg);
+				regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg);
 				if (!regVar) 
 				{
-					regVar = getRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement);
+					regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement);
 				}
 			}
 
@@ -450,7 +450,7 @@ static unsigned char getAllRegVars(struct DecompilationParameters* params)
 					
 					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0) && currentInstruction->numOfOperands > 0)
 					{
-						if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), reg))
+						if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), 0, reg))
 						{
 							return 0;
 						}
@@ -472,10 +472,13 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 	dataTypeToStr(function->returnType, &typeStr);
 	sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
-	for (int i = 0; i < function->numOfRegArgs; i++) 
+	for (int i = 0; i < function->numOfRegVars; i++) 
 	{
-		dataTypeToStr(function->regArgs[i].dataType, &typeStr);
-		sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regArgs[i].name.buffer);
+		if (function->regVars[i].isArgument) 
+		{
+			dataTypeToStr(function->regVars[i].dataType, &typeStr);
+			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regVars[i].name.buffer);
+		}
 	}
 
 	for (int i = 0; i < function->numOfStackVars; i++)
@@ -529,26 +532,30 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
 		struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
-		dataTypeToStr(regVar->dataType, &typeStr);
+		if (!regVar->isArgument) 
+		{
+			dataTypeToStr(regVar->dataType, &typeStr);
 
-		addIndents(result, 1);
-		struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, regVar->reg);
-		if (regArg)
-		{
-			if (!compareDataTypes(regVar->dataType, regArg->dataType)) 
+			addIndents(result, 1);
+			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, regVar->reg);
+			if (regArg)
 			{
-				sprintfJdc(result, 1, "%s %s = (%s)%s;\n", typeStr.buffer, regVar->name.buffer, typeStr.buffer, regArg->name.buffer);
+				if (!compareDataTypes(regVar->dataType, regArg->dataType))
+				{
+					sprintfJdc(result, 1, "%s %s = (%s)%s;\n", typeStr.buffer, regVar->name.buffer, typeStr.buffer, regArg->name.buffer);
+				}
+				else
+				{
+					sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, regVar->name.buffer, regArg->name.buffer);
+				}
 			}
-			else 
+			else
 			{
-				sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, regVar->name.buffer, regArg->name.buffer);
+				sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
 			}
+
+			declaredAVar = 1;
 		}
-		else 
-		{
-			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
-		}
-		declaredAVar = 1;
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
@@ -556,7 +563,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		unsigned char isReturnRegVar = 0;
 		for (int j = 0; j < params->currentFunc->numOfRegVars; j++) 
 		{
-			if (compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg)) 
+			if (!params->currentFunc->regVars[j].isArgument && compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg))
 			{
 				isReturnRegVar = 1;
 				break;

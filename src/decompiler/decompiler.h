@@ -18,6 +18,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params);
 
-static unsigned char getAllRegVars(struct DecompilationParameters* params);
+static unsigned char getAllLocalRegVars(struct DecompilationParameters* params);
 
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result);

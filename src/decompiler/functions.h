@@ -41,17 +41,17 @@ struct StackVariable* getStackVarByOffset(struct Function* function, long long s
 
 int getNumOfStackArgs(struct Function* function);
 
+int getNumOfRegArgs(struct Function* function);
+
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg);
 
-struct RegisterVariable* getRegVarByReg(struct Function* function, enum Register reg);
+struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Register reg);
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
 unsigned char addStackVar(struct Function* function, struct DataType dataType, unsigned char isArgument, long long stackOffset);
 
-unsigned char addRegArg(struct Function* function, struct DataType dataType, enum Register reg);
-
-unsigned char addRegVar(struct Function* function, struct DataType dataType, enum Register reg);
+unsigned char addRegVar(struct Function* function, struct DataType dataType, unsigned char isArgument, enum Register reg);
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
 

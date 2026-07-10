@@ -127,25 +127,15 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 
 	row2Sizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
-	for (int i = 0; i < function->numOfRegArgs; i++)
-	{
-		struct RegisterVariable* regArg = &function->regArgs[i];
-		regVarsGrid->AppendRows(1);
-		dataTypeToStr(regArg->dataType, &dataTypeStr);
-		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
-		regVarsGrid->SetCellValue(i, 1, wxString(regArg->name.buffer));
-		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regArg->reg]));
-		regVarsGrid->SetCellValue(i, 3, "Yes");
-	}
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
 		struct RegisterVariable* regVar = &function->regVars[i];
 		regVarsGrid->AppendRows(1);
 		dataTypeToStr(regVar->dataType, &dataTypeStr);
-		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 0, wxString(dataTypeStr.buffer));
-		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 1, wxString(regVar->name.buffer));
-		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 2, wxString(registerStrs[regVar->reg]));
-		regVarsGrid->SetCellValue(i + function->numOfRegArgs, 3, "No");
+		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
+		regVarsGrid->SetCellValue(i, 1, wxString(regVar->name.buffer));
+		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regVar->reg]));
+		regVarsGrid->SetCellValue(i, 3, regVar->isArgument ? "Yes" : "No");
 	}
 
 	stackVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));

@@ -18,7 +18,8 @@ unsigned char checkForAssignment(struct DecompilationParameters* params, int ins
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
-		if (doesInstructionModifyRegister(params, instructionIndex, params->currentFunc->regVars[i].reg, 0, 0))
+		struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
+		if (!regVar->isArgument && doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, 0))
 		{
 			return 1;
 		}
@@ -52,10 +53,11 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		if (doesInstructionModifyRegister(params, instructionIndex, params->currentFunc->regVars[i].reg, 0, 0))
+		struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
+		if (!regVar->isArgument && doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, instructionIndex, params->currentFunc->regVars[i].reg, 1, &operation, 0))
+			if (!decompileOperation(params, instructionIndex, regVar->reg, 1, &operation, 0))
 			{
 				freeJdcStr(&operation);
 				return 0;
