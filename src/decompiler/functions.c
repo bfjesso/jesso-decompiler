@@ -172,12 +172,11 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 
 			unsigned char overwrites = 0;
 			enum Register specificReg = NO_REG;
-			struct DataType regDataType = { 0 };
-			if (doesInstructionAccessRegister(params, i, j, &specificReg, &regDataType) && !getRegArgByReg(params->currentFunc, j))
+			if (doesInstructionAccessRegister(params, i, j, &specificReg) && !getRegArgByReg(params->currentFunc, j))
 			{
 				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{
-					if (!addRegVar(params->currentFunc, regDataType, 1, specificReg))
+					if (!addRegVar(params, 1, specificReg))
 					{
 						return 0;
 					}
@@ -278,7 +277,7 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				{
 					if (func->regVars[k].isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regVars[k].reg, 0, 0))
 					{
-						if (!addRegVar(params->currentFunc, func->regVars[k].dataType, 1, func->regVars[k].reg))
+						if (!addRegVar(params, 1, func->regVars[k].reg))
 						{
 							return 0;
 						}
@@ -634,62 +633,65 @@ unsigned char addStackVar(struct Function* function, struct DataType dataType, u
 	return 1;
 }
 
-unsigned char addRegVar(struct Function* function, struct DataType dataType, unsigned char isArgument, enum Register reg)
+unsigned char addRegVar(struct DecompilationParameters* params, unsigned char isArgument, enum Register reg)
 {
-	if ((isArgument && getRegArgByReg(function, reg)) || (!isArgument && getLocalRegVarByReg(function, reg)))
+	if ((isArgument && getRegArgByReg(params->currentFunc, reg)) || (!isArgument && getLocalRegVarByReg(params->currentFunc, reg)))
 	{
 		return 1;
 	}
 	
-	struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(function->regVars, sizeof(struct RegisterVariable) * (function->numOfRegVars + 1));
+	struct RegisterVariable* newRegVars = (struct RegisterVariable*)realloc(params->currentFunc->regVars, sizeof(struct RegisterVariable) * (params->currentFunc->numOfRegVars + 1));
 	if (!newRegVars)
 	{
 		return 0;
 	}
 
-	function->regVars = newRegVars;
-	function->regVars[function->numOfRegVars].reg = reg;
-	function->regVars[function->numOfRegVars].dataType = dataType;
-	function->regVars[function->numOfRegVars].isArgument = isArgument;
-	function->regVars[function->numOfRegVars].name = initializeJdcStr();
-	sprintfJdc(&(function->regVars[function->numOfRegVars].name), 0, "%s%s", isArgument ? "arg" : "var", registerStrs[reg]);
-	function->numOfRegVars++;
+	params->currentFunc->regVars = newRegVars;
+	struct RegisterVariable* regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars];
+	params->currentFunc->numOfRegVars++;
+
+	regVar->reg = reg;
+	regVar->isArgument = isArgument;
+	setRegVarDataType(params, regVar);
+
+	regVar->name = initializeJdcStr();
+	sprintfJdc(&regVar->name, 0, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
 
 	if (isArgument) 
 	{
 		// sorting
-		for (int i = 0; i < function->numOfRegVars; i++) // all reg vars in the buffer should be args
+		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) // all reg vars in the buffer should be args
 		{
 			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
 			{
-				if ((compareRegisters(function->regVars[i].reg, platformRegArgs[j]) || compareRegisters(function->regVars[i].reg, altPlatformRegArgs[j])) && function->numOfRegVars > j)
+				if ((compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[j]) || compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[j])) && params->currentFunc->numOfRegVars > j)
 				{
-					struct RegisterVariable temp = function->regVars[j];
-					function->regVars[j] = function->regVars[i];
-					function->regVars[i] = temp;
+					struct RegisterVariable temp = params->currentFunc->regVars[j];
+					params->currentFunc->regVars[j] = params->currentFunc->regVars[i];
+					params->currentFunc->regVars[i] = temp;
 					break;
 				}
 			}
 		}
 
-		if (function->callingConvention != __UNKNOWNCALL)
+		if (params->currentFunc->callingConvention != __UNKNOWNCALL)
 		{
 			if (!isRegisterPlatformArg(reg))
 			{
-				function->callingConvention = __UNKNOWNCALL;
+				params->currentFunc->callingConvention = __UNKNOWNCALL;
 			}
-			else if (function->numOfRegVars == 1 && compareRegisters(reg, CX))
+			else if (params->currentFunc->numOfRegVars == 1 && compareRegisters(reg, CX))
 			{
-				function->callingConvention = __THISCALL;
+				params->currentFunc->callingConvention = __THISCALL;
 			}
 			else
 			{
-				function->callingConvention = __FASTCALL;
-				for (int i = 0; i < function->numOfRegVars && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
+				params->currentFunc->callingConvention = __FASTCALL;
+				for (int i = 0; i < params->currentFunc->numOfRegVars && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
 				{
-					if (!compareRegisters(function->regVars[i].reg, platformRegArgs[i]) && !compareRegisters(function->regVars[i].reg, altPlatformRegArgs[i]))
+					if (!compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[i]) && !compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[i]))
 					{
-						function->callingConvention = __UNKNOWNCALL;
+						params->currentFunc->callingConvention = __UNKNOWNCALL;
 					}
 				}
 			}
@@ -697,6 +699,53 @@ unsigned char addRegVar(struct Function* function, struct DataType dataType, uns
 	}
 
 	return 1;
+}
+
+static unsigned char setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
+{
+	memset(&regVar->dataType, 0, sizeof(struct DataType));
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	{
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		for (int j = 0; j < instruction->numOfOperands; j++) 
+		{
+			struct Operand* operand = &instruction->operands[j];
+			enum Register reg = NO_REG;
+			if (operand->type == REGISTER) 
+			{
+				reg = operand->reg;
+				
+			}
+			else if (operand->type == MEM_ADDRESS)
+			{
+				reg = operand->memoryAddress.reg;
+				if (reg == NO_REG) 
+				{
+					reg = operand->memoryAddress.regDisplacement;
+				}
+			}
+
+			if (compareRegisters(reg, regVar->reg))
+			{
+				struct DataType dataType = getRegisterDataType(instruction->opcode, reg);
+				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit)) // the type size is set to the largest version of the register used
+				{
+					regVar->dataType.primitiveType = dataType.primitiveType;
+					regVar->reg = reg;
+				}
+
+				if (operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
+				{
+					regVar->dataType.pointerLevel = 1;
+				}
+
+				if (dataType.isUnsigned)
+				{
+					regVar->dataType.isUnsigned = 1;
+				}
+			}
+		}
+	}
 }
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)

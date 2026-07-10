@@ -193,25 +193,23 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}");
 }
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, struct DataType* dataTypeRef, int callNum)
+static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, int callNum)
 {
 	// preventing recursive loop. this assumes it is accessed
 	if(callNum > 9)
 	{
-		if (dataTypeRef) { *dataTypeRef = getRegisterDataType(NO_MNEMONIC, reg); }
 		return 1;
 	}
 
 	// this happens if the last instruction of the function also initializes the return reg. the start instruction index is incremented before isRegisterAccessedBeforeInit is called, so the loop here wont run
 	if (startInstructionIndex > params->currentFunc->lastInstructionIndex && compareRegisters(params->currentFunc->returnReg, reg))
 	{
-		if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
 		return 1;
 	}
 	
 	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
-		if (doesInstructionAccessRegister(params, i, reg, 0, dataTypeRef))
+		if (doesInstructionAccessRegister(params, i, reg, 0))
 		{
 			return 1;
 		}
@@ -229,7 +227,6 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 		{
 			if (compareRegisters(params->currentFunc->returnReg, reg))
 			{
-				if (dataTypeRef) { *dataTypeRef = params->currentFunc->returnType; }
 				return 1;
 			}
 			return 0;
@@ -243,7 +240,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 			{
 				if (isOpcodeJcc(instruction->opcode))
 				{
-					if (isRegisterAccessedBeforeInit(params, i + 1, dstIndex - 1, reg, ignoreInitialization, dataTypeRef, callNum + 1))
+					if (isRegisterAccessedBeforeInit(params, i + 1, dstIndex - 1, reg, ignoreInitialization, callNum + 1))
 					{
 						return 1;
 					}
@@ -265,9 +262,7 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 		if ((checkForKnownFunctionCall(params, i, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params, i))
 		{
 			enum Register returnReg = callee ? callee->returnReg : AX;
-
-			struct DataType returnType = { 0 }; // used if its an unknown function
-			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, &returnType, 0) || 
+			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, 0) || 
 				checkForReturnStatement(params, i)) // this is if it is an unknown call that also returns
 			{
 				unsigned long long calleeAddress = resolveJmpChain(params, i);
@@ -282,17 +277,20 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 				}
 				else
 				{
+					struct DataType guessedReturnType = { 0 };
+					guessedReturnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
+
 					int importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
 					{
-						if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
+						if (!addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
 						{
 							return 0;
 						}
 					}
 					else
 					{
-						if (!addReturnedVar(params->currentFunc, returnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
+						if (!addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
 						{
 							return 0;
 						}
@@ -381,13 +379,12 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 			// checking if the modified regs are accessed before being overwritten after the condition
 			for (int j = 0; j < numOfRegs; j++)
 			{
-				struct DataType regVarType = { 0 };
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->startIndex, condition->endIndex - 1, modifiedRegs[j], 1, &regVarType, 0))
+					if (isRegisterAccessedBeforeInit(params, condition->startIndex, condition->endIndex - 1, modifiedRegs[j], 1, 0))
 					{
-						if (!addRegVar(params->currentFunc, regVarType, 0, modifiedRegs[j]))
+						if (!addRegVar(params, 0, modifiedRegs[j]))
 						{
 							free(modifiedRegs);
 							return 0;
@@ -395,9 +392,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					}
 				}
 				
-				if (isRegisterAccessedBeforeInit(params, condition->endIndex, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, &regVarType, 0))
+				if (isRegisterAccessedBeforeInit(params, condition->endIndex, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, 0))
 				{
-					if (!addRegVar(params->currentFunc, regVarType, 0, modifiedRegs[j]))
+					if (!addRegVar(params, 0, modifiedRegs[j]))
 					{
 						free(modifiedRegs);
 						return 0;
@@ -450,7 +447,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					
 					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0) && currentInstruction->numOfOperands > 0)
 					{
-						if (!addRegVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), 0, reg))
+						if (!addRegVar(params, 0, reg))
 						{
 							return 0;
 						}

@@ -121,7 +121,7 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int num
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataTypeRef)
+unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg)
 {
 	struct Function* callee;
 	if (checkForKnownFunctionCall(params, instructionIndex, &callee) && callee)
@@ -132,11 +132,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 			if (specificReg)
 			{
 				*specificReg = regArg->reg;
-			}
-
-			if (dataTypeRef) 
-			{ 
-				*dataTypeRef = regArg->dataType; 
 			}
 
 			return 1;
@@ -157,12 +152,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 					*specificReg = op->memoryAddress.reg;
 				}
 
-				if (dataTypeRef) 
-				{ 
-					*dataTypeRef = getOperandDataType(instruction->opcode, op);
-					dataTypeRef->pointerLevel = 1;
-				}
-
 				return 1;
 			}
 			else if (compareRegisters(op->memoryAddress.regDisplacement, reg))
@@ -170,12 +159,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 				if (specificReg)
 				{
 					*specificReg = op->memoryAddress.regDisplacement;
-				}
-
-				if (dataTypeRef)
-				{
-					*dataTypeRef = getOperandDataType(instruction->opcode, op);
-					dataTypeRef->pointerLevel = 1;
 				}
 
 				return 1;
@@ -186,11 +169,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 			if (specificReg)
 			{
 				*specificReg = op->reg;
-			}
-
-			if (dataTypeRef)
-			{
-				*dataTypeRef = getOperandDataType(instruction->opcode, op);
 			}
 
 			return 1;

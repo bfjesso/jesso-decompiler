@@ -66,6 +66,8 @@ unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit)
 	case INT_512_TPYE:
 		return 64;
 	}
+
+	return 0;
 }
 
 struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg)
