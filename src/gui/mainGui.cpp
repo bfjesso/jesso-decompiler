@@ -409,6 +409,7 @@ void MainGui::OpenFile()
 			char hexStr[20] = { 0 };
 			sprintf(hexStr, "0x%llX", numOfFileBytes);
 			logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
+			logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
 			logTextCtrl->LogHexNum("image base", imageBase, 0);
 			logTextCtrl->LogHexNum("entry point", entryPoint + imageBase, 0);
 
