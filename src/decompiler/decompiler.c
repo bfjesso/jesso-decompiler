@@ -384,7 +384,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
 					if (isRegisterAccessedBeforeInit(params, condition->startIndex, condition->endIndex - 1, modifiedRegs[j], 1, 0))
 					{
-						if (!addRegVar(params, 0, modifiedRegs[j]))
+						if (!addRegVar(params, 0, 0, modifiedRegs[j]))
 						{
 							free(modifiedRegs);
 							return 0;
@@ -394,7 +394,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 				
 				if (isRegisterAccessedBeforeInit(params, condition->endIndex, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, 0))
 				{
-					if (!addRegVar(params, 0, modifiedRegs[j]))
+					if (!addRegVar(params, 0, 0, modifiedRegs[j]))
 					{
 						free(modifiedRegs);
 						return 0;
@@ -447,7 +447,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					
 					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0) && currentInstruction->numOfOperands > 0)
 					{
-						if (!addRegVar(params, 0, reg))
+						if (!addRegVar(params, 0, 0, reg))
 						{
 							return 0;
 						}

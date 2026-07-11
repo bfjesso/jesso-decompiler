@@ -51,9 +51,9 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 
 unsigned char addStackVar(struct Function* function, struct DataType dataType, unsigned char isArgument, long long stackOffset);
 
-unsigned char addRegVar(struct DecompilationParameters* params, unsigned char isArgument, enum Register reg);
+unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
 
-static unsigned char setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
+static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
 

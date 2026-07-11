@@ -176,7 +176,7 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 			{
 				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{
-					if (!addRegVar(params, 1, specificReg))
+					if (!addRegVar(params, 0, 1, specificReg))
 					{
 						return 0;
 					}
@@ -277,7 +277,7 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				{
 					if (func->regVars[k].isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regVars[k].reg, 0, 0))
 					{
-						if (!addRegVar(params, 1, func->regVars[k].reg))
+						if (!addRegVar(params, &func->regVars[k].dataType, 1, func->regVars[k].reg))
 						{
 							return 0;
 						}
@@ -633,7 +633,7 @@ unsigned char addStackVar(struct Function* function, struct DataType dataType, u
 	return 1;
 }
 
-unsigned char addRegVar(struct DecompilationParameters* params, unsigned char isArgument, enum Register reg)
+unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg)
 {
 	if ((isArgument && getRegArgByReg(params->currentFunc, reg)) || (!isArgument && getLocalRegVarByReg(params->currentFunc, reg)))
 	{
@@ -652,7 +652,15 @@ unsigned char addRegVar(struct DecompilationParameters* params, unsigned char is
 
 	regVar->reg = reg;
 	regVar->isArgument = isArgument;
-	setRegVarDataType(params, regVar);
+
+	if (!dataTypeRef) 
+	{
+		setRegVarDataType(params, regVar);
+	}
+	else 
+	{
+		regVar->dataType = *dataTypeRef;
+	}
 
 	regVar->name = initializeJdcStr();
 	sprintfJdc(&regVar->name, 0, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
@@ -701,7 +709,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, unsigned char is
 	return 1;
 }
 
-static unsigned char setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
+static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
 	memset(&regVar->dataType, 0, sizeof(struct DataType));
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
