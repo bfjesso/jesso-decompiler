@@ -231,13 +231,13 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 			if (cond->conditionType == ELSE_CT)
 			{
-				if (isRegInitialized(params, cond->endIndex - 1, cond->startIndex, reg, 0, 0))
+				if (isRegInitialized(params, cond->endIndex - 1, cond->startIndex, reg, specificReg, dataType))
 				{
 					int ifIndex = getConditionEnd(params, cond->startIndex);
 					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
 					{
 						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
-						if (isRegInitialized(params, ifCond->endIndex - 1, ifCond->startIndex, reg, 0, 0)) 
+						if (isRegInitialized(params, ifCond->endIndex - 1, ifCond->startIndex, reg, specificReg, dataType))
 						{
 							return 1;
 						}
