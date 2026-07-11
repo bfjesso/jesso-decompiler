@@ -392,10 +392,13 @@ void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, int numOfBytes,
 	if (fileOffset < params->numOfFileBytes)
 	{
 		int row = fileOffset / bytesPerLine;
+		CenterLine(row);
+		UpdateTextCtrl();
+
 		int rowStart = PositionFromLine(row);
 		int dataStart = FindText(rowStart, rowStart + 50, "\t") + 1;
 
-		if (selectedType == ONE_BYTE_INT_TYPE && isHex)
+		if (selectedType == ONE_BYTE_INT_TYPE && isHex && !isSigned)
 		{
 			int remainder = fileOffset % bytesPerLine;
 			int start = dataStart + (remainder * 5);
@@ -417,7 +420,5 @@ void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, int numOfBytes,
 			int dataEnd = FindText(rowStart, rowStart + 50, "\n");
 			IndicatorFillRange(rowStart, dataEnd - rowStart);
 		}
-
-		CenterLine(row);
 	}
 }
