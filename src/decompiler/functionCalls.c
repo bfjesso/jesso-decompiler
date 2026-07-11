@@ -251,10 +251,16 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					decompiledRegArgs[j] = initializeJdcStr();
 					if (!decompileRegister(params, i + 1, specificReg, 1, &decompiledRegArgs[j], 0))
 					{
-						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
-						for (int j = 0; j < maxStackArgs; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-						for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&regArgTypeStrs[j]); }
-						for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+						for (int k = 0; k < maxStackArgs; k++)
+						{ 
+							freeJdcStr(&stackArgTypeStrs[k]);
+							freeJdcStr(&decompiledStackArgs[k]);
+						}
+						for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
+						{
+							freeJdcStr(&regArgTypeStrs[k]);
+							freeJdcStr(&decompiledRegArgs[k]);
+						}
 						return 0;
 					}
 
@@ -315,10 +321,16 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		struct JdcStr functionPointer = initializeJdcStr();
 		if (!decompileOperand(params, callInstructionIndex, &callInstruction->operands[0], 1, &functionPointer))
 		{
-			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&stackArgTypeStrs[j]); }
-			for (int j = 0; j < numOfStackArgs + 1; j++) { freeJdcStr(&decompiledStackArgs[j]); }
-			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&regArgTypeStrs[j]); }
-			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++) { freeJdcStr(&decompiledRegArgs[j]); }
+			for (int k = 0; k < maxStackArgs; k++)
+			{
+				freeJdcStr(&stackArgTypeStrs[k]);
+				freeJdcStr(&decompiledStackArgs[k]);
+			}
+			for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
+			{
+				freeJdcStr(&regArgTypeStrs[k]);
+				freeJdcStr(&decompiledRegArgs[k]);
+			}
 			return 0;
 		}
 
