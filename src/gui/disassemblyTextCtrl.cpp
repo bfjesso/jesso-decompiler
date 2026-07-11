@@ -101,6 +101,17 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 	}
 }
 
+void DisassemblyTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine)
+{
+	if (gotoLine) 
+	{
+		CenterLine(line);
+		UpdateTextCtrl();
+	}
+
+	return JdcTextCtrl::HighlightLine(line, color, 0);
+}
+
 void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;

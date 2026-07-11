@@ -26,6 +26,8 @@ public:
 
 	void ShowGoToAddressDialog();
 
+	void HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine);
+
 	void DisassemblyRightClickOptions(wxContextMenuEvent& e);
 
 	void OnDisassemblyKeyDown(wxKeyEvent& e);
