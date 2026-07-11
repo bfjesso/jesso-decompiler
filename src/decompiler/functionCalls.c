@@ -3,6 +3,7 @@
 #include "functions.h"
 #include "expressions.h"
 #include "dataTypes.h"
+#include "conditions.h"
 
 unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, int instructionIndex, struct Function** calleeRef)
 {
@@ -84,7 +85,18 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 	int stackArgsFound = 0;
 	int numOfStackArgs = getNumOfStackArgs(callee);
-	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+
+	int startInstructionIndex = callInstructionIndex;
+	int conditionIndex = getConditionEnd(params, startInstructionIndex);
+	if (conditionIndex != -1)
+	{
+		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
+	}
+	else
+	{
+		startInstructionIndex--;
+	}
+	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		if (stackArgsFound == numOfStackArgs) { break; }
 
@@ -120,6 +132,12 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 			stackArgsFound++;
 			addAssociatedInstruction(params->currentFunc, i);
+		}
+
+		conditionIndex = getConditionEnd(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 
@@ -198,41 +216,46 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
 	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
-	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	int startInstructionIndex = callInstructionIndex;
+	int conditionIndex = getConditionEnd(params, startInstructionIndex);
+	if (conditionIndex != -1)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-
-		if (doesInstructionDoNothing(currentInstruction)) 
+		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
+	}
+	else
+	{
+		startInstructionIndex--;
+	}
+	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
+	{
+		struct DisassembledInstruction* instruction = &(params->instructions[i]);
+		if (doesInstructionDoNothing(instruction)) 
 		{
 			continue;
 		}
 
-		if (isOpcodeJmp(currentInstruction->opcode) || isOpcodeJcc(currentInstruction->opcode) || checkForUnknownFunctionCall(params, i)) // stop looking for parameters if instruction is jmp or another call with unknown parameters
+		int calleeIndex = findFunctionByAddress(params, resolveJmpChain(params, i));
+		if (calleeIndex != -1 && (getNumOfRegArgs(&params->functions[calleeIndex]) > 0 || getNumOfStackArgs(&params->functions[calleeIndex]) > 0))
 		{
 			break;
 		}
-		else if(isOpcodeCall(currentInstruction->opcode)) // if call to function with known parameters check if it has any
+		else if (checkForUnknownFunctionCall(params, i))
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params, i);
-			int calleeIndex = findFunctionByAddress(params, calleeAddress);
-			if (calleeIndex != -1 && (getNumOfRegArgs(&params->functions[calleeIndex]) > 0 || getNumOfStackArgs(&params->functions[calleeIndex]) > 0))
-			{
-				break;
-			}
+			break;
 		}
 
-		if (numOfStackArgs < maxStackArgs && currentInstruction->opcode == PUSH)
+		if (numOfStackArgs < maxStackArgs && instruction->opcode == PUSH)
 		{
-			if (currentInstruction->operands[0].type == REGISTER && isRegisterPointer(currentInstruction->operands[0].reg)) 
+			if (instruction->operands[0].type == REGISTER && isRegisterPointer(instruction->operands[0].reg)) 
 			{
 				continue;
 			}
 
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-			if (decompileOperand(params, i, &currentInstruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
+			if (decompileOperand(params, i, &instruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
 			{
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-				dataTypeToStr(getOperandDataType(currentInstruction->opcode, &currentInstruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
+				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
 				addAssociatedInstruction(params->currentFunc, i);
 			}
@@ -246,7 +269,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				if(doesInstructionModifyRegister(params, i, platformRegArgs[j], &specificReg, 0))
 				{
 					regArgTypeStrs[j] = initializeJdcStr();
-					dataTypeToStr(getRegisterDataType(currentInstruction->opcode, specificReg), &regArgTypeStrs[j]);
+					dataTypeToStr(getRegisterDataType(instruction->opcode, specificReg), &regArgTypeStrs[j]);
 					
 					decompiledRegArgs[j] = initializeJdcStr();
 					if (!decompileRegister(params, i + 1, specificReg, 1, &decompiledRegArgs[j], 0))
@@ -268,6 +291,12 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				}
 			}
 		}
+
+		conditionIndex = getConditionEnd(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
+		}
 	}
 
 	int importIndex = getImportIndexByAddress(params, unknownFuncAddress);
@@ -275,7 +304,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	{
 		sprintfJdc(result, 1, "%s(", params->imports[importIndex].name.buffer);
 	}
-	else 
+	else // func ptr
 	{
 		strcatJdc(result, "((");
 
