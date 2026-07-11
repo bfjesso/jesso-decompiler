@@ -309,7 +309,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			}
 		}
 
-		int conditionIndex = getConditionEnd(params, i);
+		conditionIndex = getConditionEnd(params, i);
 		if (conditionIndex != -1)
 		{
 			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
