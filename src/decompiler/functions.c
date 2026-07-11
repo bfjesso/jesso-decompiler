@@ -711,7 +711,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
-	memset(&regVar->dataType, 0, sizeof(struct DataType));
+	regVar->dataType = getRegisterDataType(NO_MNEMONIC, regVar->reg);
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
