@@ -29,7 +29,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 
 static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
 
-static void setStackVarTypes(struct Function* function, unsigned char is64Bit);
+static unsigned char setStackVarTypes(struct DecompilationParameters* params);
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
@@ -49,7 +49,7 @@ struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Reg
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
-unsigned char addStackVar(struct Function* function, struct DataType dataType, unsigned char isArgument, long long stackOffset);
+static unsigned char addStackVar(struct Function* function, long long stackOffset);
 
 unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
 

@@ -47,7 +47,12 @@ unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit)
 		return is64Bit ? 8 : 4;
 	}
 
-	switch (type.primitiveType) 
+	return getPrimitiveTypeSize(type.primitiveType);
+}
+
+unsigned char getPrimitiveTypeSize(enum Primitive primitiveType)
+{
+	switch (primitiveType)
 	{
 	case CHAR_TYPE:
 		return 1;

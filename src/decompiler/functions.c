@@ -140,7 +140,10 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 			return 0;
 		}
 
-		setStackVarTypes(params->currentFunc, params->is64Bit);
+		if (!setStackVarTypes(params)) 
+		{
+			return 0;
+		}
 	}
 
 	return fixAllFunctionArgs(params);
@@ -191,11 +194,7 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 			long long stackOffset = 0;
 			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &stackOffset)) 
 			{
-				unsigned char isStackVarInitialized = 0;
-				doesInstructionModifyOperand(currentInstruction, j, &isStackVarInitialized);
-
-				unsigned char isArgument = stackOffset > 0 && !isStackVarInitialized;
-				if (!addStackVar(params->currentFunc, getOperandDataType(currentInstruction->opcode, currentOperand), isArgument, stackOffset))
+				if (!addStackVar(params->currentFunc, stackOffset))
 				{
 					return 0;
 				}
@@ -297,40 +296,51 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 	return 1;
 }
 
-static void setStackVarTypes(struct Function* function, unsigned char is64Bit)
+static unsigned char setStackVarTypes(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < function->numOfStackVars - 1; i++) 
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
-		struct StackVariable* var1 = &function->stackVars[i];
-		struct StackVariable* var2 = &function->stackVars[i + 1];
-		if(var1->isArgument || var2->isArgument)
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		for (int j = 0; j < instruction->numOfOperands; j++) 
 		{
-			continue;
-		}
+			struct Operand* operand = &instruction->operands[j];
+			long long stackOffset = 0;
+			if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &operand->memoryAddress, &stackOffset))
+			{
+				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+				if (!stackVar) 
+				{
+					return 0;
+				}
 
-		long long size = var2->stackOffset - var1->stackOffset;
+				if (operand->memoryAddress.ptrSize < getPrimitiveTypeSize(stackVar->dataType.primitiveType) || // the smallest ptr size is used incase this is an array
+					stackVar->dataType.primitiveType == VOID_TYPE)
+				{
+					stackVar->dataType.primitiveType = getOperandDataType(instruction->opcode, operand).primitiveType;
+				}
 
-		if (size % 8 == 0)
-		{
-			var1->dataType.primitiveType = LONG_LONG_TYPE;
-			var1->dataType.arrayLen = size / 8;
-		}
-		else if (size % 4 == 0)
-		{
-			var1->dataType.primitiveType = INT_TYPE;
-			var1->dataType.arrayLen = size / 4;
-		}
-		else if (size % 2 == 0)
-		{
-			var1->dataType.primitiveType = SHORT_TYPE;
-			var1->dataType.arrayLen = size / 2;
-		}
-		else 
-		{
-			var1->dataType.primitiveType = CHAR_TYPE;
-			var1->dataType.arrayLen = size;
+				if (doesInstructionModifyOperand(instruction, j, 0) && stackVar->isArgument)
+				{
+					stackVar->dataType.pointerLevel = 1; // all stack vars could be treated as pointers since they are memory addresses, but it is only necesary for arguments that are modified because they can be accessed outside the function 
+				}
+			}
 		}
 	}
+	
+	for (int i = 0; i < params->currentFunc->numOfStackVars - 1; i++) 
+	{
+		struct StackVariable* var1 = &params->currentFunc->stackVars[i];
+		struct StackVariable* var2 = &params->currentFunc->stackVars[i + 1];
+
+		var1->dataType.arrayLen = (var2->stackOffset - var1->stackOffset) / getPrimitiveTypeSize(var1->dataType.primitiveType);
+
+		if (var1->dataType.pointerLevel > 1 && var1->dataType.arrayLen > 1)
+		{
+			var1->dataType.pointerLevel = 0;
+		}
+	}
+
+	return 1;
 }
 
 void freeFunction(struct Function* function)
@@ -591,7 +601,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-unsigned char addStackVar(struct Function* function, struct DataType dataType, unsigned char isArgument, long long stackOffset)
+static unsigned char addStackVar(struct Function* function, long long stackOffset)
 {
 	if (getStackVarByOffset(function, stackOffset))
 	{
@@ -604,10 +614,12 @@ unsigned char addStackVar(struct Function* function, struct DataType dataType, u
 		return 0;
 	}
 
+	unsigned char isArgument = stackOffset > 0;
+
 	function->stackVars = newStackVars;
 	function->stackVars[function->numOfStackVars].stackOffset = stackOffset;
-	function->stackVars[function->numOfStackVars].dataType = dataType;
 	function->stackVars[function->numOfStackVars].isArgument = isArgument;
+	memset(&function->stackVars[function->numOfStackVars].dataType, 0, sizeof(struct DataType)); // data type is set later in setStackVarTypes
 	function->stackVars[function->numOfStackVars].name = initializeJdcStr();
 	sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "%s%X", isArgument ? "arg" : "var", stackOffset < 0 ? -stackOffset : stackOffset);
 	function->numOfStackVars++;

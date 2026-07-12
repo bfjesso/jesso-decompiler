@@ -72,7 +72,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 			return 0;
 		}
 
-		return strcpyJdc(result, stackVar->name.buffer);
+		return sprintfJdc(result, 0, "%s%s", stackVar->dataType.pointerLevel == 1 ? "*" : "", stackVar->name.buffer);
 	}
 
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
