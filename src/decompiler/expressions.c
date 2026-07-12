@@ -252,22 +252,27 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 		struct JdcStr newTypeStr = initializeJdcStr();
 		dataTypeToStr(memAddrType, &newTypeStr);
 
-		if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
-		{
-			sprintfJdc(result, 0, "*(%s*)", newTypeStr.buffer);
-		}
-		else
-		{
-			sprintfJdc(result, 0, "(%s)", newTypeStr.buffer);
-		}
-
 		if (memAddress->regDisplacement != NO_REG)
 		{
-			sprintfJdc(result, 1, "(%s + %s)", stackVar->name.buffer, displacementRegStr.buffer);
+			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
+			{
+				sprintfJdc(result, 1, "(%s*)(%s + %s)", newTypeStr.buffer, stackVar->name.buffer, displacementRegStr.buffer);
+			}
+			else
+			{
+				sprintfJdc(result, 1, "*(%s*)(&%s + %s)", newTypeStr.buffer, stackVar->name.buffer, displacementRegStr.buffer);
+			}
 		}
 		else
 		{
-			strcatJdc(result, stackVar->name.buffer);
+			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
+			{
+				sprintfJdc(result, 0, "(%s*)%s", newTypeStr.buffer, stackVar->name.buffer);
+			}
+			else
+			{
+				sprintfJdc(result, 0, "(%s)%s", newTypeStr.buffer, stackVar->name.buffer);
+			}
 		}
 
 		freeJdcStr(&newTypeStr);
