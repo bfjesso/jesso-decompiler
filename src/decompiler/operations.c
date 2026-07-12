@@ -28,7 +28,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileReturningIntrinsicFunc(params, instructionIndex, intrinsicFunc, getAssignment, result);
 	}
-	else if (isOpcodeMov(instruction->opcode)) 
+	else if (isOpcodeMov(instruction->opcode) || instruction->opcode == LEA) // LEA is handled when decompiling memory addresses 
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, "", " = ", result);
 	}
@@ -63,10 +63,6 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	else if (isOpcodeCvtToFlt(instruction->opcode))
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, "(float)", " = (float)", result);
-	}
-	else if (instruction->opcode == LEA)
-	{
-		return decompileLEA(params, instructionIndex, getAssignment, result);
 	}
 	else if (instruction->opcode == INC)
 	{
@@ -150,17 +146,6 @@ static unsigned char decompileBinaryOperation(struct DecompilationParameters* pa
 	sprintfJdc(result, 0, "%s%s", regularOperator, decompiledSecondOperand.buffer);
 	freeJdcStr(&decompiledSecondOperand);
 	return 1;
-}
-
-static unsigned char decompileLEA(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
-{
-	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == MEM_ADDRESS && !compareRegisters(secondOperand->memoryAddress.reg, BP) && !compareRegisters(secondOperand->memoryAddress.reg, SP))
-	{
-		return decompileBinaryOperation(params, instructionIndex, getAssignment, "", " = ", result);
-	}
-
-	return decompileBinaryOperation(params, instructionIndex, getAssignment, "&", " = &", result);
 }
 
 static unsigned char decompileInc(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)

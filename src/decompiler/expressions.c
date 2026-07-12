@@ -66,13 +66,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	long long stackOffset = 0;
 	if (isMemAddressStackVar(params, instructionIndex, memAddress, &stackOffset)) 
 	{
-		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
-		if (!stackVar)
-		{
-			return 0;
-		}
-
-		return sprintfJdc(result, 0, "%s%s", stackVar->dataType.pointerLevel == 1 ? "*" : "", stackVar->name.buffer);
+		return decompileStackVar(params, instructionIndex, memAddress, stackOffset, result);
 	}
 
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
@@ -202,6 +196,119 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	}
 	
 	freeJdcStr(&memAddrStr);
+	return 1;
+}
+
+static unsigned char decompileStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long stackOffset, struct JdcStr* result)
+{
+	struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+	if (!stackVar)
+	{
+		return 0;
+	}
+
+	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
+	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
+
+	struct JdcStr displacementRegStr = initializeJdcStr();
+	if (memAddress->regDisplacement != NO_REG &&
+		!decompileRegister(params, instructionIndex, memAddress->regDisplacement, 1, &displacementRegStr, 0))
+	{
+		freeJdcStr(&displacementRegStr);
+		return 0;
+	}
+
+	if (instruction->opcode == LEA) 
+	{
+		if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1) 
+		{
+			if (memAddress->regDisplacement != NO_REG)
+			{
+				sprintfJdc(result, 0, "(%s + %s)", stackVar->name.buffer, displacementRegStr.buffer);
+			}
+			else 
+			{
+				strcpyJdc(result, stackVar->name.buffer);
+			}
+		}
+		else 
+		{
+			if (memAddress->regDisplacement != NO_REG)
+			{
+				sprintfJdc(result, 0, "(&%s + %s)", stackVar->name.buffer, displacementRegStr.buffer);
+			}
+			else
+			{
+				sprintfJdc(result, 0, "&%s", stackVar->name.buffer);
+			}
+		}
+		
+		freeJdcStr(&displacementRegStr);
+		return 1;
+	}
+
+	if (memAddrType.primitiveType != stackVar->dataType.primitiveType)
+	{
+		struct JdcStr newTypeStr = initializeJdcStr();
+		dataTypeToStr(memAddrType, &newTypeStr);
+
+		if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
+		{
+			sprintfJdc(result, 0, "*(%s*)", newTypeStr.buffer);
+		}
+		else
+		{
+			sprintfJdc(result, 0, "(%s)", newTypeStr.buffer);
+		}
+
+		if (memAddress->regDisplacement != NO_REG)
+		{
+			sprintfJdc(result, 1, "(%s + %s)", stackVar->name.buffer, displacementRegStr.buffer);
+		}
+		else
+		{
+			strcatJdc(result, stackVar->name.buffer);
+		}
+
+		freeJdcStr(&newTypeStr);
+		freeJdcStr(&displacementRegStr);
+		return 1;
+	}
+
+	if (stackVar->dataType.arrayLen > 1)
+	{
+		strcpyJdc(result, stackVar->name.buffer);
+		if (memAddress->regDisplacement != NO_REG)
+		{
+			unsigned char typeSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
+			if (typeSize > 1)
+			{
+				sprintfJdc(result, 1, "[%s / %u]", displacementRegStr.buffer, typeSize);
+			}
+			else
+			{
+				sprintfJdc(result, 1, "[%s]", displacementRegStr.buffer);
+			}
+		}
+		else
+		{
+			strcatJdc(result, "[0]");
+		}
+
+		freeJdcStr(&displacementRegStr);
+		return 1;
+	}
+
+	if (stackVar->dataType.pointerLevel > 0)
+	{
+		sprintfJdc(result, 0, "*%s", stackVar->name.buffer);
+	}
+	else
+	{
+		strcpyJdc(result, stackVar->name.buffer);
+	}
+
+	freeJdcStr(&displacementRegStr);
 	return 1;
 }
 

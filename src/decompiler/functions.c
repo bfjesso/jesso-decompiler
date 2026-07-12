@@ -473,7 +473,7 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 
 unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* stackOffset)
 {
-	if (!memAddress || memAddress->regDisplacement != NO_REG || memAddress->scale > 1)
+	if (!memAddress)
 	{
 		return 0;
 	}
