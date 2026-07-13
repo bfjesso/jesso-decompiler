@@ -139,14 +139,19 @@ unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameter
 		{
 			return 0;
 		}
-
-		if (!setStackVarTypes(params)) 
-		{
-			return 0;
-		}
 	}
 
-	return fixAllFunctionArgs(params);
+	if (!fixAllFunctionArgs(params))
+	{
+		return 0;
+	}
+
+	if (!setAllStackVarTypes(params))
+	{
+		return 0;
+	}
+
+	return 1;
 }
 
 static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
@@ -188,13 +193,14 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 		}
 
 		// checking for stack vars
-		for (int j = currentInstruction->numOfOperands - 1; j >= 0; j--)
+		for (int j = 0; j < currentInstruction->numOfOperands; j++)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
 			long long stackOffset = 0;
 			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &stackOffset)) 
 			{
-				if (!addStackVar(params->currentFunc, stackOffset))
+				struct DataType dataType = getMemoryAddressDataType(currentInstruction->opcode, &currentOperand->memoryAddress);
+				if (!addStackVar(params->currentFunc, stackOffset, &dataType))
 				{
 					return 0;
 				}
@@ -265,18 +271,34 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 			unsigned long long calleeAddress = resolveJmpChain(params, j);
 			if (calleeAddress != 0)
 			{
-				int funcIndex = findFunctionByAddress(params, calleeAddress);
-				if (funcIndex == -1 || funcIndex == i)
+				int calleeIndex = findFunctionByAddress(params, calleeAddress);
+				if (calleeIndex == -1 || calleeIndex == i)
 				{
 					continue;
 				}
 
-				struct Function* func = &params->functions[funcIndex];
-				for (int k = 0; k < func->numOfRegVars; k++)
+				struct Function* callee = &params->functions[calleeIndex];
+				for (int k = 0; k < callee->numOfRegVars; k++)
 				{
-					if (func->regVars[k].isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, func->regVars[k].reg, 0, 0))
+					struct RegisterVariable* regArg = &callee->regVars[k];
+					if (regArg->isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, regArg->reg, 0, 0))
 					{
-						if (!addRegVar(params, &func->regVars[k].dataType, 1, func->regVars[k].reg))
+						if (!addRegVar(params, &regArg->dataType, 1, regArg->reg))
+						{
+							return 0;
+						}
+
+						fixedAFunc = 1;
+					}
+				}
+
+				for (int k = 0; k < callee->numOfStackVars; k++)
+				{
+					struct StackVariable* stackArg = &callee->stackVars[k];
+					long long stackFrameSize = 0;
+					if (stackArg->isArgument && !getStackArgInitializer(params, j, stackArg->stackOffset, 0, 0, &stackFrameSize))
+					{
+						if (!addStackVar(params->currentFunc, stackArg->stackOffset - stackFrameSize, &stackArg->dataType))
 						{
 							return 0;
 						}
@@ -296,47 +318,117 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 	return 1;
 }
 
-static unsigned char setStackVarTypes(struct DecompilationParameters* params)
+unsigned char getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef)
 {
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	if (stackVarRef) { *stackVarRef = 0; }
+	if (pushInstructionRef) { *pushInstructionRef = -1; }
+
+	long long initialStackFrameSize = getStackFrameSizeAtInstruction(params, callInstructionIndex);
+	if (params->instructions[callInstructionIndex].opcode == CALL_NEAR) 
 	{
-		struct DisassembledInstruction* instruction = &params->instructions[i];
-		for (int j = 0; j < instruction->numOfOperands; j++) 
+		initialStackFrameSize += params->is64Bit ? 8 : 4; // instruction ptr is pushed
+	}
+
+	if (stackFrameSizeRef) { *stackFrameSizeRef = initialStackFrameSize; }
+
+	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+	{
+		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
+		if (stackArgOffset - initialStackFrameSize == stackVar->stackOffset)
 		{
-			struct Operand* operand = &instruction->operands[j];
-			long long stackOffset = 0;
-			if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &operand->memoryAddress, &stackOffset))
+			if (stackVarRef) { *stackVarRef = stackVar; }
+			return 1;
+		}
+	}
+
+	long long currentStackFrameSize = initialStackFrameSize;
+	
+	int startInstructionIndex = callInstructionIndex;
+	int conditionIndex = getConditionEnd(params, startInstructionIndex);
+	if (conditionIndex != -1)
+	{
+		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
+	}
+	else
+	{
+		startInstructionIndex--;
+	}
+	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
+	{
+		struct DisassembledInstruction* instruction = &(params->instructions[i]);
+
+		currentStackFrameSize -= getStackFrameChange(instruction);
+
+		if (instruction->opcode == PUSH && initialStackFrameSize - currentStackFrameSize == stackArgOffset)
+		{
+			if (pushInstructionRef) { *pushInstructionRef = i; }
+			return 1;
+		}
+
+		conditionIndex = getConditionEnd(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
+		}
+	}
+
+	return 0;
+}
+
+static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
+{
+	for (int i = 0; i < params->numOfFunctions; i++) 
+	{
+		params->currentFunc = &params->functions[i];
+		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+		{
+			struct DisassembledInstruction* instruction = &params->instructions[j];
+			for (int k = 0; k < instruction->numOfOperands; k++)
 			{
-				struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
-				if (!stackVar) 
+				struct Operand* operand = &instruction->operands[k];
+				long long stackOffset = 0;
+				if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &operand->memoryAddress, &stackOffset))
 				{
-					return 0;
-				}
+					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+					if (!stackVar)
+					{
+						return 0;
+					}
 
-				if (operand->memoryAddress.ptrSize < getPrimitiveTypeSize(stackVar->dataType.primitiveType) || // the smallest ptr size is used incase this is an array
-					stackVar->dataType.primitiveType == VOID_TYPE)
-				{
-					stackVar->dataType.primitiveType = getOperandDataType(instruction->opcode, operand).primitiveType;
-				}
+					if (operand->memoryAddress.ptrSize < getPrimitiveTypeSize(stackVar->dataType.primitiveType)) // the smallest ptr size is used incase this is an array
+					{
+						stackVar->dataType.primitiveType = getOperandDataType(instruction->opcode, operand).primitiveType;
+					}
 
-				if (doesInstructionModifyOperand(instruction, j, 0) && stackVar->isArgument)
-				{
-					stackVar->dataType.pointerLevel = 1; // all stack vars could be treated as pointers since they are memory addresses, but it is only necesary for arguments that are modified because they can be accessed outside the function 
+					if (doesInstructionModifyOperand(instruction, k, 0) && stackVar->isArgument)
+					{
+						stackVar->dataType.pointerLevel = 1; // all stack vars could be treated as pointers since they are memory addresses, but it is only necesary for arguments that are modified because they can be accessed outside the function 
+					}
 				}
 			}
 		}
-	}
-	
-	for (int i = 0; i < params->currentFunc->numOfStackVars - 1; i++) 
-	{
-		struct StackVariable* var1 = &params->currentFunc->stackVars[i];
-		struct StackVariable* var2 = &params->currentFunc->stackVars[i + 1];
 
-		var1->dataType.arrayLen = (var2->stackOffset - var1->stackOffset) / getPrimitiveTypeSize(var1->dataType.primitiveType);
-
-		if (var1->dataType.pointerLevel > 1 && var1->dataType.arrayLen > 1)
+		for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
 		{
-			var1->dataType.pointerLevel = 0;
+			struct StackVariable* var1 = &params->currentFunc->stackVars[j];
+			struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
+
+			long long offsetDif = var2->stackOffset - var1->stackOffset;
+			unsigned char primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
+			if (offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
+			{
+				if (offsetDif % primitiveTypeSize == 0) 
+				{
+					var1->dataType.arrayLen = offsetDif / primitiveTypeSize;
+				}
+				else
+				{
+					var1->dataType.primitiveType = CHAR_TYPE;
+					var1->dataType.arrayLen = offsetDif;
+				}
+				
+				var1->dataType.pointerLevel = 0;
+			}
 		}
 	}
 
@@ -382,7 +474,7 @@ void freeFunction(struct Function* function)
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction) 
 {	
-	if (instruction->numOfOperands == 0 || (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, BP)))
+	if (instruction->numOfOperands == 0)
 	{
 		return 0;
 	}
@@ -478,19 +570,14 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 		return 0;
 	}
 
-	if (compareRegisters(memAddress->reg, BP))
-	{
-		if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
-		return 1;
-	}
-	else if (compareRegisters(memAddress->reg, SP))
+	if (compareRegisters(memAddress->reg, SP))
 	{
 		if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
 		return 1;
 	}
 	else 
 	{
-		// this is a simple check for other registers that are set to the BP or SP
+		// this is a simple check for other registers that are set to the SP, usually the BP
 		for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--) 
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[i];
@@ -499,17 +586,12 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 			{
 				if (compareRegisters(instruction->operands[0].reg, memAddress->reg))
 				{
-					if (compareRegisters(instruction->operands[1].reg, BP))
-					{
-						if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
-						return 1;
-					}
-					else if (compareRegisters(instruction->operands[1].reg, SP))
+					if (compareRegisters(instruction->operands[1].reg, SP))
 					{
 						if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
 						return 1;
 					}
-					else 
+					else
 					{
 						return 0;
 					}
@@ -601,7 +683,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-static unsigned char addStackVar(struct Function* function, long long stackOffset)
+static unsigned char addStackVar(struct Function* function, long long stackOffset, struct DataType* dataTypeRef)
 {
 	if (getStackVarByOffset(function, stackOffset))
 	{
@@ -617,12 +699,18 @@ static unsigned char addStackVar(struct Function* function, long long stackOffse
 	unsigned char isArgument = stackOffset > 0;
 
 	function->stackVars = newStackVars;
-	function->stackVars[function->numOfStackVars].stackOffset = stackOffset;
-	function->stackVars[function->numOfStackVars].isArgument = isArgument;
-	memset(&function->stackVars[function->numOfStackVars].dataType, 0, sizeof(struct DataType)); // data type is set later in setStackVarTypes
-	function->stackVars[function->numOfStackVars].name = initializeJdcStr();
-	sprintfJdc(&(function->stackVars[function->numOfStackVars].name), 0, "%s%X", isArgument ? "arg" : "var", stackOffset < 0 ? -stackOffset : stackOffset);
+	struct StackVariable* stackVar = &function->stackVars[function->numOfStackVars];
 	function->numOfStackVars++;
+
+	stackVar->stackOffset = stackOffset;
+	stackVar->isArgument = isArgument;
+	stackVar->name = initializeJdcStr();
+	sprintfJdc(&(stackVar->name), 0, "%s%X", isArgument ? "arg" : "var", stackOffset < 0 ? -stackOffset : stackOffset);
+
+	if (dataTypeRef)
+	{
+		stackVar->dataType = *dataTypeRef;
+	}
 
 	// sorting from least to greatest stack offset
 	for (int i = 0; i < function->numOfStackVars - 1; i++)

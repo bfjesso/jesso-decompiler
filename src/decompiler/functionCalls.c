@@ -83,61 +83,39 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		}
 	}
 
-	int stackArgsFound = 0;
-	int numOfStackArgs = getNumOfStackArgs(callee);
-
-	int startInstructionIndex = callInstructionIndex;
-	int conditionIndex = getConditionEnd(params, startInstructionIndex);
-	if (conditionIndex != -1)
+	for (int i = 0; i < callee->numOfStackVars; i++) 
 	{
-		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
-	}
-	else
-	{
-		startInstructionIndex--;
-	}
-	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
-	{
-		if (stackArgsFound == numOfStackArgs) { break; }
-
-		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-
-		if (currentInstruction->opcode == PUSH)
+		if (callee->stackVars[i].isArgument)
 		{
-			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &argStr))
+			struct StackVariable* stackArgContainer = 0;
+			int pushInstructionIndex = -1;
+			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].stackOffset, &stackArgContainer, &pushInstructionIndex, 0)) 
 			{
-				freeJdcStr(&argStr);
 				return 0;
 			}
 
-			sprintfJdc(result, 1, "%s, ", argStr.buffer);
-			freeJdcStr(&argStr);
-
-			stackArgsFound++;
-			addAssociatedInstruction(params->currentFunc, i);
-		}
-		else if (currentInstruction->numOfOperands > 0 && currentInstruction->operands[0].type == MEM_ADDRESS && 
-			(compareRegisters(currentInstruction->operands[0].memoryAddress.reg, BP) || compareRegisters(currentInstruction->operands[0].memoryAddress.reg, SP)))
-		{
-			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &argStr)) // this should just get the stack var or arg
+			if (stackArgContainer)
 			{
+				sprintfJdc(result, 1, "%s, ", stackArgContainer->name.buffer);
+			}
+			else if (pushInstructionIndex != -1)
+			{
+				addAssociatedInstruction(params->currentFunc, pushInstructionIndex);
+				
+				struct JdcStr argStr = initializeJdcStr();
+				if (!decompileOperand(params, pushInstructionIndex, &params->instructions[pushInstructionIndex].operands[0], 1, &argStr))
+				{
+					freeJdcStr(&argStr);
+					return 0;
+				}
+
+				sprintfJdc(result, 1, "%s, ", argStr.buffer);
 				freeJdcStr(&argStr);
+			}
+			else
+			{
 				return 0;
 			}
-
-			sprintfJdc(result, 1, "%s, ", argStr.buffer);
-			freeJdcStr(&argStr);
-
-			stackArgsFound++;
-			addAssociatedInstruction(params->currentFunc, i);
-		}
-
-		conditionIndex = getConditionEnd(params, i);
-		if (conditionIndex != -1)
-		{
-			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 
