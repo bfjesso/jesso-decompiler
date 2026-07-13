@@ -8,6 +8,8 @@ struct RegisterVariable
 	struct DataType dataType;
 	enum Register reg;
 	unsigned char isArgument;
+	int scopeStartIndex; // instruction that initialzes the reg
+	int scopeEndIndex;// instruction that overwrites the reg
 	struct JdcStr name;
 };
 

@@ -331,7 +331,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	int ogInstructionIndex = instructionIndex;
 
 	struct RegisterVariable* localRegVar = getLocalRegVarByReg(params->currentFunc, targetReg);
-	if (localRegVar)
+	if (localRegVar && instructionIndex >= localRegVar->scopeStartIndex && instructionIndex < localRegVar->scopeEndIndex)
 	{
 		if (regVarRef)
 		{

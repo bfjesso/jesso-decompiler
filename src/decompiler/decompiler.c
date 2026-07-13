@@ -366,7 +366,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 							break;
 						}
 					}
-					if (alreadyFound || getLocalRegVarByReg(params->currentFunc, reg))
+					if (alreadyFound)
 					{
 						continue;
 					}
@@ -379,6 +379,13 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 			// checking if the modified regs are accessed before being overwritten after the condition
 			for (int j = 0; j < numOfRegs; j++)
 			{
+				struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, modifiedRegs[j]);
+				if (regVar) 
+				{
+					getLocalRegVarScope(params, condition, regVar); // this is to update the scope if it needs to be larger
+					continue;
+				}
+				
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
@@ -389,6 +396,10 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 							free(modifiedRegs);
 							return 0;
 						}
+
+						regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+						getLocalRegVarScope(params, condition, regVar);
+						continue;
 					}
 				}
 				
@@ -399,6 +410,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 						free(modifiedRegs);
 						return 0;
 					}
+
+					regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+					getLocalRegVarScope(params, condition, regVar);
 				}
 			}
 		}
@@ -452,11 +466,68 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 							return 0;
 						}
 
+						params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1].scopeStartIndex = i;
+						params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1].scopeStartIndex = j;
 						break;
 					}
 				}
 			}
 		}
+	}
+
+	return 1;
+}
+
+static void getLocalRegVarScope(struct DecompilationParameters* params, struct Condition* condition, struct RegisterVariable* regVar)
+{
+	for (int i = condition->startIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--) 
+	{
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
+		{
+			if (i < regVar->scopeStartIndex || regVar->scopeStartIndex == -1)
+			{
+				regVar->scopeStartIndex = i;
+			}
+
+			break;
+		}
+
+		int conditionIndex = getConditionEnd(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
+		}
+	}
+
+	for (int i = condition->endIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	{
+		int conditionIndex = getConditionStart(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].endIndex - 1;
+		}
+		
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
+		{
+			if (i > regVar->scopeEndIndex || regVar->scopeEndIndex == -1)
+			{
+				regVar->scopeEndIndex = i;
+			}
+			
+			break;
+		}
+	}
+
+	if (regVar->scopeStartIndex == -1)
+	{
+		regVar->scopeStartIndex = params->currentFunc->firstInstructionIndex;
+	}
+
+	if (regVar->scopeEndIndex == -1)
+	{
+		regVar->scopeEndIndex = params->currentFunc->lastInstructionIndex;
 	}
 
 	return 1;

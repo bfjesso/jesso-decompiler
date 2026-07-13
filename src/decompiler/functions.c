@@ -762,6 +762,10 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 		regVar->dataType = *dataTypeRef;
 	}
 
+	// these are only used for local reg vars
+	regVar->scopeStartIndex = -1;
+	regVar->scopeEndIndex = -1;
+
 	regVar->name = initializeJdcStr();
 	sprintfJdc(&regVar->name, 0, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
 
