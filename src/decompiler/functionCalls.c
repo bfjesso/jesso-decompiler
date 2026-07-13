@@ -96,6 +96,11 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 
 			if (stackArgContainer)
 			{
+				if (callee->stackVars[i].dataType.pointerLevel > 0 && stackArgContainer->dataType.pointerLevel == 0) 
+				{
+					strcatJdc(result, "&");
+				}
+
 				sprintfJdc(result, 1, "%s, ", stackArgContainer->name.buffer);
 			}
 			else if (pushInstructionIndex != -1)
