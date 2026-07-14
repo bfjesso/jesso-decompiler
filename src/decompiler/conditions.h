@@ -9,7 +9,7 @@ static unsigned char handleConditionsResize(struct DecompilationParameters* para
 
 static unsigned char handleCombinedJccResize(struct Condition* condition);
 
-unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
+unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
 
 unsigned char decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
 
@@ -21,5 +21,3 @@ unsigned char isConditionRegular(struct Condition* condition);
 int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
 
 int getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
-
-unsigned char checkForConditionDst(struct DecompilationParameters* params, int instructionIndex);

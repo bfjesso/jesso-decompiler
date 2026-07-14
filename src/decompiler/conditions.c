@@ -19,32 +19,17 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
-			if (dstIndex == -1) 
-			{
-				continue;
-			}
+			unsigned long long dstAddress = instruction->address + instruction->numOfBytes + instruction->operands[0].immediate.value;
+			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
+
+			// the jmp chain result should only be used for conditional gotos and conditional returns
+			int dstJmpChainIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;
 			if (dstIndex > 0 && isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
 			{
-				// sometimes compiler puts multiple jmps next to each other at the end?
-				int firstJmpIndex = dstIndex - 1;
-				for (int j = dstIndex - 2; j > i; j--)
-				{
-					if (isOpcodeJmp(params->instructions[j].opcode))
-					{
-						firstJmpIndex = j;
-					}
-					else
-					{
-						break;
-					}
-				}
-
-				unsigned long long jmpDstAddr = resolveJmpChain(params, firstJmpIndex);
-				exitIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpDstAddr);
+				exitIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, dstIndex - 1));
 			}
 
 			struct Condition* lastCondition = 0;
@@ -118,7 +103,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						currentCondition->isFirstSwitchCase = 1;
 					}
 				}
-				else if (doesInstructionLeadStraightToReturn(params, dstIndex))
+				else if (doesInstructionLeadStraightToReturn(params, dstJmpChainIndex))
 				{
 					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
 				}
@@ -173,6 +158,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 				else 
 				{
+					currentCondition->dstIndex = dstJmpChainIndex;
 					firstBodyIndex = -1;
 					lastBodyIndex = -1;
 				}
@@ -202,23 +188,26 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	int ogNumOfConditions = params->currentFunc->numOfConditions;
 	for (int i = 0; i < ogNumOfConditions; i++) 
 	{
-		if ((params->currentFunc->conditions[i].conditionType == IF_CT || params->currentFunc->conditions[i].conditionType == ELSE_IF_CT) && 
-			params->currentFunc->conditions[i].exitIndex > params->currentFunc->conditions[i].dstIndex &&
+		struct Condition* cond = &params->currentFunc->conditions[i];
+		if ((cond->conditionType == IF_CT || cond->conditionType == ELSE_IF_CT) && 
+			cond->exitIndex > cond->dstIndex &&
 			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
 		{
-			if (!doesInstructionLeadStraightToReturn(params, params->currentFunc->conditions[i].exitIndex))
+			if (!doesInstructionLeadStraightToReturn(params, cond->exitIndex))
 			{
 				if (!handleConditionsResize(params))
 				{
 					return 0;
 				}
 
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[i].dstIndex - 1;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[i].exitIndex;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].firstBodyIndex = params->currentFunc->conditions[i].dstIndex;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].lastBodyIndex = params->currentFunc->conditions[i].exitIndex - 1;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
+				struct Condition* elseCond = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
 				params->currentFunc->numOfConditions++;
+
+				elseCond->conditionType = ELSE_CT;
+				elseCond->jccIndex = cond->dstIndex - 1;
+				elseCond->dstIndex = cond->exitIndex;
+				elseCond->firstBodyIndex = cond->dstIndex;
+				elseCond->lastBodyIndex = cond->exitIndex - 1;
 			}
 		}
 	}
@@ -250,7 +239,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
-		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == SWITCH_CASE_CT || cond1->conditionType == ELSE_CT)
+		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == SWITCH_CASE_CT || cond1->conditionType == ELSE_CT)
 		{
 			continue;
 		}
@@ -261,12 +250,14 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT) // this is arbitrary, but it looks better to preserve the loop
 			{
 				cond1->conditionType = CONDITIONAL_GOTO_CT;
+				cond1->dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, cond1->jccIndex));
 				cond1->firstBodyIndex = -1;
 				cond1->lastBodyIndex = -1;
 			}
 			else 
 			{
 				cond2->conditionType = CONDITIONAL_GOTO_CT;
+				cond2->dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, cond2->jccIndex));
 				cond2->firstBodyIndex = -1;
 				cond2->lastBodyIndex = -1;
 			}
@@ -367,7 +358,7 @@ static unsigned char handleCombinedJccResize(struct Condition* condition)
 	return 1;
 }
 
-unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
+unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
@@ -383,6 +374,8 @@ unsigned char decompileConditionEnds(struct DecompilationParameters* params, int
 			{
 				return 0;
 			}
+
+			if (isInUnreachableStateRef) { *isInUnreachableStateRef = 0; }
 
 			i = -1; // the loop needs to restart in order to recheck condition->indentLevel
 		}
@@ -772,17 +765,4 @@ int getConditionFromLastBodyInstruction(struct DecompilationParameters* params, 
 	}
 
 	return -1;
-}
-
-unsigned char checkForConditionDst(struct DecompilationParameters* params, int instructionIndex)
-{
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
-	{
-		if (instructionIndex == params->currentFunc->conditions[i].dstIndex)
-		{
-			return 1;
-		}
-	}
-
-	return 0;
 }

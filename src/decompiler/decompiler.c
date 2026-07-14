@@ -93,7 +93,8 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (isInUnreachableState)
 		{
-			if (getDirectJmpDst(params, i) != -1 || checkForConditionDst(params, i))
+			int condIndex = getConditionFromLastBodyInstruction(params, i);
+			if (checkForDirectJmpDst(params, i) || condIndex != -1)
 			{
 				if(numOfSkippedInstructions > 0)
 				{
@@ -109,6 +110,18 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 				isInUnreachableState = 0;
 				numOfSkippedInstructions = 0;
+
+				if (condIndex != -1)
+				{
+					if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
+					{
+						sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
+						if (errorInstructionIndex) { *errorInstructionIndex = i; }
+						return 0;
+					}
+
+					continue;
+				}
 			}
 			else 
 			{
@@ -180,7 +193,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			}
 		}
 
-		if (!decompileConditionEnds(params, i, result))
+		if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }

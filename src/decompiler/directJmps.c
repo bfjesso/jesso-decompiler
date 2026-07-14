@@ -179,15 +179,24 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 	return 1;
 }
 
-int getDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
+unsigned char checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
 		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex)
 		{
-			return i;
+			return 1;
 		}
 	}
 
-	return -1;
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
 }

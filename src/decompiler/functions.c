@@ -35,13 +35,19 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
-			unsigned long long jumpAddr = resolveJmpChain(params, i);
+			unsigned long long jumpAddr = getJmpDst(params->instructions, i, result->firstInstructionIndex);
 			int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpAddr);
 			if (instructionIndex > indexToJumpTo && instructionIndex > i && jumpAddr <= currentSectionEndAddress)
 			{
 				if (!checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, jumpAddr))
 				{
 					indexToJumpTo = instructionIndex;
+				}
+				else 
+				{
+					result->callingConvention = __UNKNOWNCALL;
+					result->lastInstructionIndex = i;
+					return 1;
 				}
 			}
 		}
