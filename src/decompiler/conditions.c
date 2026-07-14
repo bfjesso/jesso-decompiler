@@ -247,7 +247,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		struct Condition* cond2 = doesConditionOverlapWithAnother(params, cond1);
 		if (cond2)
 		{
-			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT) // this is arbitrary, but it looks better to preserve the loop
+			// the loops check is arbitrary, but it looks better to preserve them. an else can't be a conditional goto because it is not a jcc
+			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT || cond2->conditionType == ELSE_CT)
 			{
 				cond1->conditionType = CONDITIONAL_GOTO_CT;
 				cond1->dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, cond1->jccIndex));
