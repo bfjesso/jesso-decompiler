@@ -133,7 +133,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
 			addAssociatedInstruction(params->currentFunc, instructionIndex);
 			params->currentFunc->numOfLines++;
-			break;
+			return 1;
 		}
 		else if (instructionIndex == params->currentFunc->directJmps[i].jmpIndex)
 		{
@@ -159,7 +159,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 
 			addAssociatedInstruction(params->currentFunc, instructionIndex);
 			params->currentFunc->numOfLines++;
-			break;
+			return 1;
 		}
 	}
 
