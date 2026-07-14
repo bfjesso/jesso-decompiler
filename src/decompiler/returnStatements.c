@@ -24,10 +24,6 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 		
 		return 1;
 	}
-	else if (params->currentFunc->lastInstructionIndex != 0 && instructionIndex == params->currentFunc->lastInstructionIndex)
-	{
-		return 1;
-	}
 
 	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
 	if (isOpcodeJmp(instruction->opcode))
@@ -94,7 +90,7 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 unsigned char decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
