@@ -79,7 +79,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				lastCondition->combinedJccIndexes[combinationCount] = i;
 				lastCondition->combinedJccsLogicType = OR_LT;
 				lastCondition->dstIndex = dstIndex;
-				lastCondition->endIndex = dstIndex;
+				lastCondition->lastBodyIndex = dstIndex - 1;
 				lastCondition->exitIndex = exitIndex;
 				combinationCount++;
 
@@ -147,16 +147,16 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				currentCondition->dstIndex = dstIndex;
 				currentCondition->exitIndex = exitIndex;
 
-				int startIndex = i;
-				int endIndex = dstIndex;
+				int firstBodyIndex = i + 1;
+				int lastBodyIndex = dstIndex - 1;
 				if (currentCondition->conditionType == SWITCH_CASE_CT)
 				{
-					startIndex = dstIndex;
+					firstBodyIndex = dstIndex;
 
 					// only one of the switch cases needs an exit index set
 					if (currentCondition->isFirstSwitchCase)
 					{
-						endIndex = exitIndex;
+						lastBodyIndex = exitIndex;
 					}
 					else 
 					{
@@ -165,15 +165,20 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 				else if(currentCondition->conditionType != CONDITIONAL_RETURN_CT)
 				{
-					if (startIndex > endIndex)
+					if (firstBodyIndex > lastBodyIndex)
 					{
-						startIndex = dstIndex;
-						endIndex = i;
+						firstBodyIndex = dstIndex;
+						lastBodyIndex = i - 1;
 					}
 				}
+				else 
+				{
+					firstBodyIndex = -1;
+					lastBodyIndex = -1;
+				}
 
-				currentCondition->startIndex = startIndex;
-				currentCondition->endIndex = endIndex;
+				currentCondition->firstBodyIndex = firstBodyIndex;
+				currentCondition->lastBodyIndex = lastBodyIndex;
 
 				combinationCount = 0;
 				stopCombination = 0;
@@ -208,10 +213,10 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					return 0;
 				}
 
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[i].dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].jccIndex = params->currentFunc->conditions[i].dstIndex - 1;
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].dstIndex = params->currentFunc->conditions[i].exitIndex;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].startIndex = params->currentFunc->conditions[i].dstIndex;
-				params->currentFunc->conditions[params->currentFunc->numOfConditions].endIndex = params->currentFunc->conditions[i].exitIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].firstBodyIndex = params->currentFunc->conditions[i].dstIndex;
+				params->currentFunc->conditions[params->currentFunc->numOfConditions].lastBodyIndex = params->currentFunc->conditions[i].exitIndex - 1;
 				params->currentFunc->conditions[params->currentFunc->numOfConditions].conditionType = ELSE_CT;
 				params->currentFunc->numOfConditions++;
 			}
@@ -250,22 +255,20 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			continue;
 		}
 
-		for (int j = 0; j < params->currentFunc->numOfConditions; j++)
+		struct Condition* cond2 = doesConditionOverlapWithAnother(params, cond1);
+		if (cond2)
 		{
-			struct Condition* cond2 = &params->currentFunc->conditions[j];
-			if (i == j || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT || cond2->conditionType == SWITCH_CASE_CT)
-			{
-				continue;
-			}
-
-			if ((cond1->startIndex < cond2->startIndex && cond1->endIndex > cond2->startIndex && cond1->endIndex < cond2->endIndex) || 
-				(cond1->startIndex > cond2->startIndex && cond1->startIndex < cond2->endIndex && cond1->endIndex > cond2->endIndex) || 
-				(cond1->startIndex == cond2->startIndex && cond1->endIndex > cond2->endIndex)) // last check is for do while loops
+			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT) // this is arbitrary, but it looks better to preserve the loop
 			{
 				cond1->conditionType = CONDITIONAL_GOTO_CT;
-				cond1->startIndex = cond1->jccIndex;
-				cond1->endIndex = cond1->dstIndex;
-				break;
+				cond1->firstBodyIndex = -1;
+				cond1->lastBodyIndex = -1;
+			}
+			else 
+			{
+				cond2->conditionType = CONDITIONAL_GOTO_CT;
+				cond2->firstBodyIndex = -1;
+				cond2->lastBodyIndex = -1;
 			}
 		}
 	}
@@ -280,7 +283,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			for (int j = i + 1; j < params->currentFunc->numOfConditions; j++)
 			{
 				struct Condition* elseCond = &params->currentFunc->conditions[j];
-				if (elseCond->conditionType == ELSE_CT && gotoCond->dstIndex == elseCond->startIndex)
+				if (elseCond->conditionType == ELSE_CT && gotoCond->dstIndex == elseCond->firstBodyIndex)
 				{
 					if (j + 1 < params->currentFunc->numOfConditions) 
 					{
@@ -308,6 +311,26 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	}
 
 	return 1;
+}
+
+static struct Condition* doesConditionOverlapWithAnother(struct DecompilationParameters* params, struct Condition* cond1)
+{
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
+	{
+		struct Condition* cond2 = &params->currentFunc->conditions[i];
+		if (cond1 == cond2 || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT || cond2->conditionType == SWITCH_CASE_CT)
+		{
+			continue;
+		}
+
+		if ((cond1->firstBodyIndex < cond2->firstBodyIndex && cond1->lastBodyIndex > cond2->firstBodyIndex && cond1->lastBodyIndex < cond2->lastBodyIndex) ||
+			(cond1->firstBodyIndex > cond2->firstBodyIndex && cond1->firstBodyIndex < cond2->lastBodyIndex && cond1->lastBodyIndex > cond2->lastBodyIndex))
+		{
+			return cond2;
+		}
+	}
+	
+	return 0;
 }
 
 static unsigned char handleConditionsResize(struct DecompilationParameters* params)
@@ -344,9 +367,8 @@ static unsigned char handleCombinedJccResize(struct Condition* condition)
 	return 1;
 }
 
-unsigned char decompileConditions(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
+unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
 {
-	// handling the ends of conditions
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
@@ -355,7 +377,7 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 			continue;
 		}
 
-		if (instructionIndex == condition->endIndex)
+		if (instructionIndex == condition->lastBodyIndex)
 		{
 			if (!decompileCondition(params, i, 0, result))
 			{
@@ -366,21 +388,11 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 		}
 	}
 
-	// setting the labels for conditional gotos
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
-	{
-		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
-		{
-			addIndents(result, params->numOfIndents - 1);
-			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
-			break;
-		}
-	}
+	return 1;
+}
 
-	// handling the starts of conditions
+unsigned char decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
+{
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
@@ -389,7 +401,8 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 			continue;
 		}
 
-		if (instructionIndex == condition->startIndex)
+		if (instructionIndex == condition->firstBodyIndex || 
+			(instructionIndex == condition->jccIndex && (condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)))
 		{
 			if (!decompileCondition(params, i, 1, result))
 			{
@@ -397,7 +410,6 @@ unsigned char decompileConditions(struct DecompilationParameters* params, int in
 			}
 
 			condition->indentLevel = params->numOfIndents;
-			break;
 		}
 	}
 
@@ -408,36 +420,29 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
-	int instructionIndex = condition->endIndex;
 	if (decompileStart) 
 	{
-		instructionIndex = condition->startIndex;
-		
 		if (condition->conditionType == DO_WHILE_CT)
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "do\n");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->firstBodyIndex);
 			params->currentFunc->numOfLines++;
 
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "{\n");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->firstBodyIndex);
 			params->currentFunc->numOfLines++;
 
 			params->numOfIndents++;
 			return 1;
-		}
-		else if (condition->conditionType == LOOP_CT)
-		{
-			instructionIndex = condition->jccIndex;
 		}
 		else if (condition->conditionType == SWITCH_CASE_CT)
 		{
 			if (condition->isFirstSwitchCase)
 			{
 				struct JdcStr switchVar = initializeJdcStr();
-				if (!decompileOperand(params, condition->startIndex, &condition->cmpInstruction->operands[0], 1, &switchVar))
+				if (!decompileOperand(params, condition->firstBodyIndex, &condition->cmpInstruction->operands[0], 1, &switchVar))
 				{
 					freeJdcStr(&switchVar);
 					return 0;
@@ -445,12 +450,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 				addIndents(result, params->numOfIndents);
 				sprintfJdc(result, 1, "switch(%s)\n", switchVar.buffer);
-				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 				params->currentFunc->numOfLines++;
 
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "{\n");
-				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 				params->currentFunc->numOfLines++;
 
 				params->numOfIndents++;
@@ -461,12 +466,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			{
 				addIndents(result, params->numOfIndents);
 				strcatJdc(result, "break;\n");
-				addAssociatedInstruction(params->currentFunc, instructionIndex);
+				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 				params->currentFunc->numOfLines++;
 			}
 
 			struct JdcStr value = initializeJdcStr();
-			if (!decompileOperand(params, condition->startIndex, &condition->cmpInstruction->operands[1], 1, &value))
+			if (!decompileOperand(params, condition->firstBodyIndex, &condition->cmpInstruction->operands[1], 1, &value))
 			{
 				freeJdcStr(&value);
 				return 0;
@@ -474,7 +479,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addIndents(result, params->numOfIndents - 1);
 			sprintfJdc(result, 1, "case %s:\n", value.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 
 			freeJdcStr(&value);
@@ -484,12 +489,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "else\n");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "{\n");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 
 			params->numOfIndents++;
@@ -502,14 +507,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			strcatJdc(result, "break;\n");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 		}
 
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->lastBodyIndex);
 		params->currentFunc->numOfLines++;
 		return 1;
 	}
@@ -519,7 +524,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (condition->combinedJccsLogicType == OR_LT)
 	{
-		if (!decompileComparison(params, instructionIndex, invertCondition, &conditionExpression))
+		if (!decompileComparison(params, condition->jccIndex, invertCondition, &conditionExpression))
 		{
 			freeJdcStr(&conditionExpression);
 			return 0;
@@ -550,7 +555,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	}
 	else
 	{
-		if (!decompileComparison(params, instructionIndex, !invertCondition, &conditionExpression)) // this needs to run if combinedJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfCombinedJccs will be 0 
+		if (!decompileComparison(params, condition->jccIndex, !invertCondition, &conditionExpression)) // this needs to run if combinedJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfCombinedJccs will be 0 
 		{
 			freeJdcStr(&conditionExpression);
 			return 0;
@@ -639,7 +644,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addIndents(result, params->numOfIndents);
 			sprintfJdc(result, 1, "for (; %s; %s)\n", conditionExpression.buffer, assignmentExpression.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 
 			freeJdcStr(&assignmentExpression);
@@ -648,7 +653,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		{
 			addIndents(result, params->numOfIndents);
 			sprintfJdc(result, 1, "while (%s)\n", conditionExpression.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 			params->currentFunc->numOfLines++;
 		}
 	}
@@ -656,14 +661,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 	}
 	else if (condition->conditionType == CONDITIONAL_RETURN_CT)
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents);
@@ -672,7 +677,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		params->currentFunc->numOfLines++;
 		
 		params->numOfIndents++;
-		if (!decompileReturnStatement(params, instructionIndex, 0, result))
+		if (!decompileReturnStatement(params, condition->jccIndex, 0, result))
 		{
 			return 0;
 		}
@@ -689,22 +694,22 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "{\n");
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents + 1);
 		sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[condition->dstIndex].address - params->imageBase);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		return freeJdcStr(&conditionExpression);
@@ -713,7 +718,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "else if (%s)\n", conditionExpression.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 	}
 	else if (condition->conditionType == DO_WHILE_CT)
@@ -721,7 +726,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "} while (%s);\n", conditionExpression.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 		params->currentFunc->numOfLines++;
 
 		return freeJdcStr(&conditionExpression);
@@ -730,7 +735,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	
 	addIndents(result, params->numOfIndents);
 	strcatJdc(result, "{\n");
-	addAssociatedInstruction(params->currentFunc, instructionIndex + 1);
+	addAssociatedInstruction(params->currentFunc, condition->jccIndex);
 	params->currentFunc->numOfLines++;
 
 	params->numOfIndents++;
@@ -743,11 +748,11 @@ unsigned char isConditionRegular(struct Condition* condition)
 	return condition->conditionType != CONDITIONAL_GOTO_CT && condition->conditionType != CONDITIONAL_RETURN_CT && !condition->isCombinedByOther;
 }
 
-int getConditionStart(struct DecompilationParameters* params, int instructionIndex)
+int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (instructionIndex == params->currentFunc->conditions[i].startIndex)
+		if (instructionIndex == params->currentFunc->conditions[i].firstBodyIndex)
 		{
 			return i;
 		}
@@ -756,11 +761,11 @@ int getConditionStart(struct DecompilationParameters* params, int instructionInd
 	return -1;
 }
 
-int getConditionEnd(struct DecompilationParameters* params, int instructionIndex)
+int getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (instructionIndex == params->currentFunc->conditions[i].endIndex && isConditionRegular(&params->currentFunc->conditions[i]))
+		if (instructionIndex == params->currentFunc->conditions[i].lastBodyIndex)
 		{
 			return i;
 		}
@@ -781,4 +786,3 @@ unsigned char checkForConditionDst(struct DecompilationParameters* params, int i
 
 	return 0;
 }
-

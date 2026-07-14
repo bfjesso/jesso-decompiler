@@ -193,8 +193,8 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	conditionsGrid->DisableDragRowSize();
 	conditionsGrid->EnableEditing(false);
 	conditionsGrid->SetColLabelValue(0, "Condition type");
-	conditionsGrid->SetColLabelValue(1, "Start index");
-	conditionsGrid->SetColLabelValue(2, "End index");
+	conditionsGrid->SetColLabelValue(1, "First body index");
+	conditionsGrid->SetColLabelValue(2, "Last body index");
 	conditionsGrid->SetColLabelValue(3, "Jcc index");
 	conditionsGrid->SetColLabelValue(4, "Dst index");
 	conditionsGrid->SetColLabelValue(5, "Exit index");
@@ -219,10 +219,25 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		conditionsGrid->AppendRows(1);
 		conditionsGrid->SetCellValue(i, 0, wxString(conditionTypeStrs[condition->conditionType]));
 
-		sprintf(hexNumStr, "0x%llX", instructions[condition->startIndex].address);
-		conditionsGrid->SetCellValue(i, 1, wxString(std::to_string(condition->startIndex)) + " (" + wxString(hexNumStr) + ")");
-		sprintf(hexNumStr, "0x%llX", instructions[condition->endIndex].address);
-		conditionsGrid->SetCellValue(i, 2, wxString(std::to_string(condition->endIndex)) + " (" + wxString(hexNumStr) + ")");
+		if (condition->firstBodyIndex == -1)
+		{
+			strcpy(hexNumStr, "none");
+		}
+		else
+		{
+			sprintf(hexNumStr, "0x%llX", instructions[condition->firstBodyIndex].address);
+		}
+		conditionsGrid->SetCellValue(i, 1, wxString(std::to_string(condition->firstBodyIndex)) + " (" + wxString(hexNumStr) + ")");
+
+		if (condition->lastBodyIndex == -1)
+		{
+			strcpy(hexNumStr, "none");
+		}
+		else
+		{
+			sprintf(hexNumStr, "0x%llX", instructions[condition->lastBodyIndex].address);
+		}
+		conditionsGrid->SetCellValue(i, 2, wxString(std::to_string(condition->lastBodyIndex)) + " (" + wxString(hexNumStr) + ")");
 
 		sprintf(hexNumStr, "0x%llX", instructions[condition->jccIndex].address);
 		conditionsGrid->SetCellValue(i, 3, wxString(std::to_string(condition->jccIndex)) + " (" + wxString(hexNumStr) + ")");

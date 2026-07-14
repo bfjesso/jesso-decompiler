@@ -223,26 +223,19 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 	
 	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
 	{
-		unsigned char overwrites = 0;
-		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
-		{
-			if (dataType) { *dataType = getRegisterDataType(params->instructions[i].opcode, specificReg ? *specificReg : reg); }
-			return 1;
-		}
-
-		int conditionIndex = getConditionEnd(params, i);
-		if (conditionIndex != -1)
+		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
+		if (conditionIndex != -1 && i != startInstructionIndex)
 		{
 			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 			if (cond->conditionType == ELSE_CT)
 			{
-				if (isRegInitialized(params, cond->endIndex - 1, cond->startIndex, reg, specificReg, dataType))
+				if (isRegInitialized(params, cond->lastBodyIndex, cond->firstBodyIndex, reg, specificReg, dataType))
 				{
-					int ifIndex = getConditionEnd(params, cond->startIndex);
+					int ifIndex = getConditionFromLastBodyInstruction(params, cond->jccIndex);
 					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
 					{
 						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
-						if (isRegInitialized(params, ifCond->endIndex - 1, ifCond->startIndex, reg, specificReg, dataType))
+						if (isRegInitialized(params, ifCond->lastBodyIndex, ifCond->firstBodyIndex, reg, specificReg, dataType))
 						{
 							return 1;
 						}
@@ -250,10 +243,15 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 				}
 			}
 
-			if (cond->startIndex < i) 
-			{
-				i = cond->startIndex + 1;
-			}
+			i = cond->firstBodyIndex;
+			continue;
+		}
+
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
+		{
+			if (dataType) { *dataType = getRegisterDataType(params->instructions[i].opcode, specificReg ? *specificReg : reg); }
+			return 1;
 		}
 	}
 
@@ -342,19 +340,15 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 	}
 
 	long long currentStackFrameSize = initialStackFrameSize;
-	
-	int startInstructionIndex = callInstructionIndex;
-	int conditionIndex = getConditionEnd(params, startInstructionIndex);
-	if (conditionIndex != -1)
+	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
-	}
-	else
-	{
-		startInstructionIndex--;
-	}
-	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
-	{
+		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			continue;
+		}
+		
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 
 		currentStackFrameSize -= getStackFrameChange(instruction);
@@ -363,12 +357,6 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 		{
 			if (pushInstructionRef) { *pushInstructionRef = i; }
 			return 1;
-		}
-
-		conditionIndex = getConditionEnd(params, i);
-		if (conditionIndex != -1)
-		{
-			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 

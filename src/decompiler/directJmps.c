@@ -58,25 +58,27 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 			enum DirectJmpType directJmpType = GO_TO_DJT;
 			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
+				struct Condition* cond = &params->currentFunc->conditions[j];
+
 				// checking if the jmp is part of a condtion
-				if (i == params->currentFunc->conditions[j].jccIndex - 1 || (i == params->currentFunc->conditions[j].dstIndex - 1 && params->currentFunc->conditions[j].conditionType == LOOP_CT))
+				if (i == cond->jccIndex || (i == cond->dstIndex - 1 && cond->conditionType == LOOP_CT))
 				{
 					directJmpType = NONE_DJT;
 					break;
 				}
-				else if (params->currentFunc->conditions[j].conditionType == LOOP_CT || params->currentFunc->conditions[j].conditionType == DO_WHILE_CT)
+				else if (cond->conditionType == LOOP_CT || cond->conditionType == DO_WHILE_CT)
 				{
-					int loopStart = params->currentFunc->conditions[j].startIndex;
-					int loopEnd = params->currentFunc->conditions[j].endIndex;
+					int loopStart = cond->firstBodyIndex;
+					int loopEnd = cond->lastBodyIndex;
 					
-					if (i > loopStart && i < loopEnd) 
+					if (i >= loopStart && i <= loopEnd) 
 					{
 						if (dstIndex == loopStart)
 						{
 							directJmpType = CONTINUE_DJT;
 							break;
 						}
-						else if (dstIndex == loopEnd)
+						else if (dstIndex == loopEnd + 1)
 						{
 							directJmpType = BREAK_DJT;
 							break;
@@ -155,6 +157,19 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 				break;
 			}
 
+			addAssociatedInstruction(params->currentFunc, instructionIndex);
+			params->currentFunc->numOfLines++;
+			break;
+		}
+	}
+
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
+		{
+			addIndents(result, params->numOfIndents - 1);
+			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
 			addAssociatedInstruction(params->currentFunc, instructionIndex);
 			params->currentFunc->numOfLines++;
 			break;

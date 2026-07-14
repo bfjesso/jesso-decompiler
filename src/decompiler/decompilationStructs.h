@@ -89,10 +89,10 @@ static const char* logicalTypeStrs[] =
 struct Condition
 {
 	int jccIndex;
-	int dstIndex; // the index of the instruction jumped to by the jcc
+	int dstIndex;
 	int exitIndex; // if the instruction before dstIndex is a jmp, this is the index of the instruction jumped to by that jmp
-	int startIndex;
-	int endIndex;
+	int firstBodyIndex; // first instruction in the body of the condition
+	int lastBodyIndex;  // last instruction in the body of the condition
 	enum ConditionType conditionType;
 
 	int* combinedJccIndexes; // these will be either all connected by && or ||

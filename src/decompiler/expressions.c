@@ -362,22 +362,18 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	int expressionIndex = 0;
 
 	unsigned char finished = 0;
-
-	int conditionIndex = getConditionEnd(params, instructionIndex);
-	if (conditionIndex != -1)
-	{
-		instructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
-	}
-	else 
-	{
-		instructionIndex--;
-	}
-
-	for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		if (finished)
 		{
 			break;
+		}
+
+		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			continue;
 		}
 
 		if (doesInstructionDoNothing(&(params->instructions[i])))
@@ -419,12 +415,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				free(expressions);
 				return 0;
 			}
-		}
-
-		conditionIndex = getConditionEnd(params, i);
-		if (conditionIndex != -1)
-		{
-			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 

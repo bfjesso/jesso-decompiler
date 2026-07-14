@@ -199,18 +199,15 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
 	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
 
-	int startInstructionIndex = callInstructionIndex;
-	int conditionIndex = getConditionEnd(params, startInstructionIndex);
-	if (conditionIndex != -1)
+	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		startInstructionIndex = params->currentFunc->conditions[conditionIndex].startIndex;
-	}
-	else
-	{
-		startInstructionIndex--;
-	}
-	for (int i = startInstructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
-	{
+		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
+		if (conditionIndex != -1)
+		{
+			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			continue;
+		}
+		
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (doesInstructionDoNothing(instruction)) 
 		{
@@ -273,12 +270,6 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					addAssociatedInstruction(params->currentFunc, i);
 				}
 			}
-		}
-
-		conditionIndex = getConditionEnd(params, i);
-		if (conditionIndex != -1)
-		{
-			i = params->currentFunc->conditions[conditionIndex].startIndex + 1;
 		}
 	}
 
