@@ -21,9 +21,17 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		{
 			unsigned long long dstAddress = instruction->address + instruction->numOfBytes + instruction->operands[0].immediate.value;
 			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
+			if (dstIndex == -1)
+			{
+				continue;
+			}
 
 			// the jmp chain result should only be used for conditional gotos and conditional returns
 			int dstJmpChainIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
+			if (dstJmpChainIndex == -1)
+			{
+				dstJmpChainIndex = dstIndex;
+			}
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
 			int exitIndex = -1;
