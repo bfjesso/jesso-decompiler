@@ -13,25 +13,6 @@ DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, MainGui* mainGuiR
 	Bind(wxEVT_STC_UPDATEUI, &DecompilationTextCtrl::OnUpdateDecompilationUI, this);
 }
 
-void DecompilationTextCtrl::ShowRenameDialog(struct JdcStr* currentName)
-{
-	wxTextEntryDialog dlg(this, "", "Rename " + wxString(currentName->buffer));
-	if (dlg.ShowModal() == wxID_OK)
-	{
-		wxString txt = dlg.GetValue();
-		mainGui->decompParams.currentFunc = &mainGui->functions[currentDecompiledFunc];
-		if (validateName(&mainGui->decompParams, txt.c_str())) 
-		{
-			strcpyJdc(currentName, txt.c_str());
-			mainGui->RefreshVarNames();
-		}
-		else 
-		{
-			wxMessageBox("Name is invalid or already in use", "Can't rename");
-		}
-	}
-}
-
 void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
@@ -66,7 +47,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 				menu.Append(ID_RENAME, "Rename " + wxString(mainGui->functions[i].name.buffer));
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					ShowRenameDialog(&mainGui->functions[i].name);
+					ShowRenameDialog(&mainGui->functions[i], &mainGui->functions[i].name);
 				}, ID_RENAME);
 				
 				foundName = 1;
@@ -84,7 +65,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename " + wxString(func->regVars[i].name.buffer));
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(&func->regVars[i].name);
+						ShowRenameDialog(func, &func->regVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -98,7 +79,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename " + wxString(func->stackVars[i].name.buffer));
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(&func->stackVars[i].name);
+						ShowRenameDialog(func, &func->stackVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -112,7 +93,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename " + wxString(func->returnedVars[i].name.buffer));
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(&func->returnedVars[i].name);
+						ShowRenameDialog(func, &func->returnedVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;

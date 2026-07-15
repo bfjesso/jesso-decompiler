@@ -45,11 +45,14 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 
 	const int ID_DECOMPILE = 100;
 	const int ID_VIEW_INFO = 101;
-	const int ID_FIND_ADDRESS = 102;
+	const int ID_RENAME = 102;
+	const int ID_FIND_ADDRESS = 103;
 
 	int selectedLine = GetCurrentLine();
 	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions) 
 	{
+		struct Function* function = &mainGui->decompParams.functions[selectedLine];
+
 		menu.Append(ID_DECOMPILE, "Decompile");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			if (mainGui->decompilationTextCtrls.size() == 0)
@@ -82,8 +85,57 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 
 		menu.Append(ID_VIEW_INFO, "View info");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			new FunctionInfoMenu(this, GetPosition(), mainGui->decompParams.instructions, &mainGui->decompParams.functions[selectedLine]);
+			new FunctionInfoMenu(this, GetPosition(), mainGui->decompParams.instructions, function);
 		}, ID_VIEW_INFO);
+
+		int pos = GetCurrentPos();
+		int start = WordStartPosition(pos, true);
+		int end = WordEndPosition(pos, true);
+		wxString word = GetTextRange(start, end);
+		if (function && word != "")
+		{
+			unsigned char foundName = 0;
+
+			if (strcmp(function->name.buffer, word.c_str()) == 0)
+			{
+				menu.Append(ID_RENAME, "Rename");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					ShowRenameDialog(function, &function->name);
+				}, ID_RENAME);
+
+				foundName = 1;
+			}
+
+			for (int i = 0; i < function->numOfRegVars && !foundName; i++)
+			{
+				struct RegisterVariable* regVar = &function->regVars[i];
+				if (regVar->isArgument && strcmp(regVar->name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(regVar->name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(function, &regVar->name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+
+			for (int i = 0; i < function->numOfStackVars && !foundName; i++)
+			{
+				struct StackVariable* stackVar = &function->stackVars[i];
+				if (stackVar->isArgument && strcmp(stackVar->name.buffer, word.c_str()) == 0)
+				{
+					menu.Append(ID_RENAME, "Rename " + wxString(stackVar->name.buffer));
+					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+						ShowRenameDialog(function, &stackVar->name);
+					}, ID_RENAME);
+
+					foundName = 1;
+					break;
+				}
+			}
+		}
 	}
 
 	menu.Append(ID_FIND_ADDRESS, "Find function by address");

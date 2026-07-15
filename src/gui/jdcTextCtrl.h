@@ -42,6 +42,8 @@ public:
 
 	void ClearIndicators();
 
+	void ShowRenameDialog(struct Function* function, struct JdcStr* currentName);
+
 	void ShowFindDialog();
 
 	void OnFindDialog(wxFindDialogEvent& e);

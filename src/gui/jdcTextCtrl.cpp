@@ -1,6 +1,8 @@
 #include "jdcTextCtrl.h"
 #include "mainGui.h"
 
+#include "../decompiler/decompilationUtils.h"
+
 JdcTextCtrl::JdcTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) : wxStyledTextCtrl(parent)
 {
 	mainGui = mainGuiRef;
@@ -101,6 +103,25 @@ void JdcTextCtrl::ClearIndicators()
 	{
 		SetIndicatorCurrent(i);
 		IndicatorClearRange(0, GetTextLength());
+	}
+}
+
+void JdcTextCtrl::ShowRenameDialog(struct Function* function, struct JdcStr* currentName)
+{
+	wxTextEntryDialog dlg(this, "", "Rename " + wxString(currentName->buffer));
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		wxString txt = dlg.GetValue();
+		mainGui->decompParams.currentFunc = function;
+		if (validateName(&mainGui->decompParams, txt.c_str()))
+		{
+			strcpyJdc(currentName, txt.c_str());
+			mainGui->RefreshVarNames();
+		}
+		else
+		{
+			wxMessageBox("Name is invalid or already in use", "Can't rename");
+		}
 	}
 }
 
