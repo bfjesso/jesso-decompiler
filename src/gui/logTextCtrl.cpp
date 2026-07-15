@@ -34,6 +34,32 @@ void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, unsigned cha
 	Log(label + ": " + wxString(numStr), isError);
 }
 
+void LogTextCtrl::LogProgress(unsigned long long current, unsigned long long max)
+{
+	SetReadOnly(false);
+
+	char numStr[20] = { 0 };
+	if (max == 0) // update existing progress
+	{
+		sprintf(numStr, "0x%llX", current);
+
+		int endPos = GetText().find('/', progressPos);
+		Replace(progressPos, endPos, numStr);
+		Refresh();
+		Update();
+	}
+	else 
+	{
+		progressPos = GetLength() + 1;
+		sprintf(numStr, "0x%llX", current);
+		AppendText("\t" + wxString(numStr) + "/");
+		sprintf(numStr, "0x%llX", max);
+		AppendText(wxString(numStr) + "\n");
+	}
+
+	SetReadOnly(true);
+}
+
 void LogTextCtrl::OnUpdateLogUI(wxStyledTextEvent& e) 
 {
 	if (!HasFocus())

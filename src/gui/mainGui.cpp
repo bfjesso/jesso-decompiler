@@ -959,10 +959,15 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		}
 	}
 
+	unsigned long long maxAddress = disassembledInstructions[disassembledInstructions.size() - 1].address;
+	logTextCtrl->LogProgress(0, maxAddress);
+
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
 	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
+		logTextCtrl->LogProgress(disassembledInstructions[instructionIndex].address, 0);
+		
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{
 			unsigned foundNextCodeSection = 0;
@@ -991,6 +996,8 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
 	}
+
+	logTextCtrl->LogProgress(maxAddress, 0);
 
 	decompParams.functions = &functions[0];
 	decompParams.numOfFunctions = functions.size();
