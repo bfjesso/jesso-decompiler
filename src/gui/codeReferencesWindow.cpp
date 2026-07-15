@@ -57,12 +57,22 @@ void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 		}
 	}
 
-	FindCodeReferences(value, valueTextCtrl->GetValue(), hexCheckBox->IsChecked());
+	FindCodeReferences(value, hexCheckBox->IsChecked());
 }
 
-void CodeReferencesWindow::FindCodeReferences(long long value, wxString valueText, unsigned char isHex)
+void CodeReferencesWindow::FindCodeReferences(long long value, unsigned char isHex)
 {
-	valueTextCtrl->SetValue(valueText);
+	if (isHex)
+	{
+		char hexNumStr[10] = { 0 };
+		sprintf(hexNumStr, "0x%llX", value);
+		valueTextCtrl->SetValue(hexNumStr);
+	}
+	else
+	{
+		valueTextCtrl->SetValue(std::to_string(value));
+	}
+	
 	hexCheckBox->SetValue(isHex);
 	
 	foundInstructions.clear();

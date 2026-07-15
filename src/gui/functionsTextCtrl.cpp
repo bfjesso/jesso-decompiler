@@ -46,7 +46,8 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 	const int ID_DECOMPILE = 100;
 	const int ID_VIEW_INFO = 101;
 	const int ID_RENAME = 102;
-	const int ID_FIND_ADDRESS = 103;
+	const int ID_FIND_CODE_REFERENCES = 103;
+	const int ID_FIND_ADDRESS = 104;
 
 	int selectedLine = GetCurrentLine();
 	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions) 
@@ -104,6 +105,13 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				}, ID_RENAME);
 
 				foundName = 1;
+
+				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					ShowRenameDialog(selectedLine, &function->name);
+					unsigned long long functionAddress = mainGui->decompParams.instructions[function->firstInstructionIndex].address;
+					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
+				}, ID_FIND_CODE_REFERENCES);
 			}
 
 			for (int i = 0; i < function->numOfRegVars && !foundName; i++)

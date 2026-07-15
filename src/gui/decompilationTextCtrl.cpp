@@ -19,8 +19,9 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 	const int ID_DECOMPILE = 100;
 	const int ID_RENAME = 101;
-	const int ID_SET_ASSOCIATED_DISASSEMBLY = 102;
-	const int ID_UNASSOCIATE_DISASSEMBLY = 103;
+	const int ID_FIND_CODE_REFERENCES = 102;
+	const int ID_SET_ASSOCIATED_DISASSEMBLY = 103;
+	const int ID_UNASSOCIATE_DISASSEMBLY = 104;
 
 	int pos = GetCurrentPos();
 	int start = WordStartPosition(pos, true);
@@ -33,7 +34,8 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		int numOfFunctions = mainGui->functions.size();
 		for (int i = 0; i < numOfFunctions; i++)
 		{
-			if(strcmp(mainGui->functions[i].name.buffer, word.c_str()) == 0)
+			struct Function* func = &mainGui->decompParams.functions[i];
+			if(strcmp(func->name.buffer, word.c_str()) == 0)
 			{
 				if (i != currentDecompiledFunc) 
 				{
@@ -47,8 +49,14 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					ShowRenameDialog(i, &mainGui->functions[i].name);
+					ShowRenameDialog(i, &func->name);
 				}, ID_RENAME);
+
+				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
+				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+					unsigned long long functionAddress = mainGui->decompParams.instructions[func->firstInstructionIndex].address;
+					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
+				}, ID_FIND_CODE_REFERENCES);
 				
 				foundName = 1;
 				break;

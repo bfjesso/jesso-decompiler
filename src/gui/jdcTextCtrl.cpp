@@ -369,9 +369,9 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 		if (isHex || isDec) 
 		{
-			menu->Append(ID_FIND_CODE_REFERENCES, "Find code references");
-			menu->Bind(wxEVT_MENU, [this, num, word, isHex](wxCommandEvent&) {
-				mainGui->AddCodeReferencesWindow()->FindCodeReferences(num, word, isHex);
+			menu->Append(ID_FIND_CODE_REFERENCES, "Find code references to value");
+			menu->Bind(wxEVT_MENU, [this, num, isHex](wxCommandEvent&) {
+				mainGui->AddCodeReferencesWindow()->FindCodeReferences(num, isHex);
 			}, ID_FIND_CODE_REFERENCES);
 		}
 	}
