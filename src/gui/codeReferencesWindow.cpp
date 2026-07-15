@@ -62,25 +62,33 @@ void CodeReferencesWindow::FindCodeReferences(wxCommandEvent& e)
 	for (int i = 0; i < mainGui->decompParams.numOfInstructions; i++) 
 	{
 		struct DisassembledInstruction* instruction = &mainGui->decompParams.instructions[i];
-		for (int j = 0; j < instruction->numOfOperands; j++) 
+		
+		if (getJmpDst(mainGui->decompParams.instructions, i, i - 0x100) == value)
 		{
-			if (instruction->operands[j].type == IMMEDIATE)
+			foundInstructions.push_back(*instruction);
+			continue;
+		}
+
+		for (int j = 0; j < instruction->numOfOperands; j++)
+		{
+			struct Operand* operand = &instruction->operands[j];
+			if (operand->type == IMMEDIATE)
 			{
-				if (instruction->operands[j].immediate.value == value) 
+				if (operand->immediate.value == value) 
 				{
 					foundInstructions.push_back(*instruction);
 					break;
 				}
 			}
-			else if (instruction->operands[j].type == MEM_ADDRESS)
+			else if (operand->type == MEM_ADDRESS)
 			{
-				if (instruction->operands[j].memoryAddress.constDisplacement == value) 
+				if (operand->memoryAddress.constDisplacement == value) 
 				{
 					foundInstructions.push_back(*instruction);
 					break;
 				}
-				else if (compareRegisters(instruction->operands[j].memoryAddress.reg, IP) &&
-					instruction->address + instruction->numOfBytes + instruction->operands[j].memoryAddress.constDisplacement == value) 
+				else if (compareRegisters(operand->memoryAddress.reg, IP) &&
+					instruction->address + instruction->numOfBytes + operand->memoryAddress.constDisplacement == value) 
 				{
 					foundInstructions.push_back(*instruction);
 					break;
