@@ -111,7 +111,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				struct RegisterVariable* regVar = &function->regVars[i];
 				if (regVar->isArgument && strcmp(regVar->name.buffer, word.c_str()) == 0)
 				{
-					menu.Append(ID_RENAME, "Rename " + wxString(regVar->name.buffer));
+					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(function, &regVar->name);
 					}, ID_RENAME);
@@ -126,7 +126,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				struct StackVariable* stackVar = &function->stackVars[i];
 				if (stackVar->isArgument && strcmp(stackVar->name.buffer, word.c_str()) == 0)
 				{
-					menu.Append(ID_RENAME, "Rename " + wxString(stackVar->name.buffer));
+					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(function, &stackVar->name);
 					}, ID_RENAME);

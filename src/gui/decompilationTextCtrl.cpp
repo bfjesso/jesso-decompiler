@@ -45,7 +45,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					}, ID_DECOMPILE);
 				}
 
-				menu.Append(ID_RENAME, "Rename " + wxString(mainGui->functions[i].name.buffer));
+				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ShowRenameDialog(&mainGui->functions[i], &mainGui->functions[i].name);
 				}, ID_RENAME);
@@ -63,7 +63,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 			{
 				if (strcmp(func->regVars[i].name.buffer, word.c_str()) == 0)
 				{
-					menu.Append(ID_RENAME, "Rename " + wxString(func->regVars[i].name.buffer));
+					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(func, &func->regVars[i].name);
 					}, ID_RENAME);
@@ -77,7 +77,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 			{
 				if (strcmp(func->stackVars[i].name.buffer, word.c_str()) == 0)
 				{
-					menu.Append(ID_RENAME, "Rename " + wxString(func->stackVars[i].name.buffer));
+					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(func, &func->stackVars[i].name);
 					}, ID_RENAME);
@@ -91,7 +91,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 			{
 				if (strcmp(func->returnedVars[i].name.buffer, word.c_str()) == 0)
 				{
-					menu.Append(ID_RENAME, "Rename " + wxString(func->returnedVars[i].name.buffer));
+					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(func, &func->returnedVars[i].name);
 					}, ID_RENAME);
