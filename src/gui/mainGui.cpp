@@ -112,7 +112,12 @@ void MainGui::OpenLog(int direction)
 {
 	if (!logTextCtrl->IsShown())
 	{
-		wxAuiPaneInfo pane = wxAuiPaneInfo().Name(logTextCtrl->GetName().Lower()).Caption(logTextCtrl->GetName()).MinSize(logTextCtrl->GetMinSize());
+		wxAuiPaneInfo pane = wxAuiPaneInfo()
+			.Name(logTextCtrl->GetName()
+				.Lower())
+			.Caption(logTextCtrl->GetName())
+			.BestSize(500, -1)
+			.MinSize(logTextCtrl->GetMinSize());
 		if (direction == wxAUI_DOCK_NONE) 
 		{
 			pane.Float();
@@ -165,6 +170,7 @@ FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 		.Name(functionsTextCtrl->GetName().Lower())
 		.Caption(functionsTextCtrl->GetName())
 		.Bottom()
+		.BestSize(-1, 250)
 		.MinSize(functionsTextCtrl->GetMinSize()));
 	auiManager.Update();
 
