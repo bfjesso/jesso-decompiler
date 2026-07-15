@@ -5,9 +5,8 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
 
-FunctionsTextCtrl::FunctionsTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
+FunctionsTextCtrl::FunctionsTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) : JdcTextCtrl(parent, mainGuiRef, name)
 {
-	mainGui = parent;
 	EnableLineNumbers();
 
 	Bind(wxEVT_CONTEXT_MENU, &FunctionsTextCtrl::FunctionsRightClickOptions, this);

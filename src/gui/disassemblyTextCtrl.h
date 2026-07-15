@@ -1,7 +1,6 @@
 #pragma once
 #include "jdcTextCtrl.h"
 
-class MainGui;
 class DecompilationTextCtrl;
 class FunctionsTextCtrl;
 class DataTextCtrl;
@@ -10,8 +9,6 @@ class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
 	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions);
-
-	MainGui* mainGui = nullptr;
 
 	struct DisassembledInstruction* instructions;
 	int numOfInstructions;

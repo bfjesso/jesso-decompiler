@@ -13,13 +13,17 @@ enum IndicatorColor
 	RED_INDICATOR
 };
 
+class MainGui;
+
 class JdcTextCtrl : public wxStyledTextCtrl 
 {
 private:
 	char IsCharDigit(char c);
 
 public:
-	JdcTextCtrl(wxWindow* parent, wxString name);
+	JdcTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name);
+
+	MainGui* mainGui = nullptr;
 
 	wxFindReplaceData findData;
 	wxFindReplaceDialog* findDialog = nullptr;

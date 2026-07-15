@@ -1,18 +1,12 @@
 #pragma once
 #include "jdcTextCtrl.h"
-#include "colorsMenu.h"
-
-#include "../decompiler/decompilationStructs.h"
 
 class StringsTextCtrl : public JdcTextCtrl
 {
 public:
-	StringsTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
+	StringsTextCtrl(wxWindow* parent, MainGui* mainGuiRef);
 
-	ColorsMenu* colorsMenu = nullptr;
-
-	struct DecompilationParameters* params;
-	std::vector<unsigned long long> addresses;
+	std::vector<unsigned long long> foundAddresses;
 
 	void ShowFindAddressDialog();
 

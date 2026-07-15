@@ -2,7 +2,7 @@
 #include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(CodeReferencesWindow, wxWindow)
-EVT_BUTTON(FindReferencesID, CodeReferencesWindow::FindCodeReferences)
+EVT_BUTTON(FindReferencesID, CodeReferencesWindow::OnFindCodeReferencesButton)
 wxEND_EVENT_TABLE()
 
 CodeReferencesWindow::CodeReferencesWindow(MainGui* parent) : wxWindow(parent, wxID_ANY)
@@ -39,7 +39,7 @@ CodeReferencesWindow::CodeReferencesWindow(MainGui* parent) : wxWindow(parent, w
 	SetSizerAndFit(vSizer);
 }
 
-void CodeReferencesWindow::FindCodeReferences(wxCommandEvent& e)
+void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 {
 	long long value = 0;
 	if (hexCheckBox->IsChecked())
@@ -57,6 +57,14 @@ void CodeReferencesWindow::FindCodeReferences(wxCommandEvent& e)
 		}
 	}
 
+	FindCodeReferences(value, valueTextCtrl->GetValue(), hexCheckBox->IsChecked());
+}
+
+void CodeReferencesWindow::FindCodeReferences(long long value, wxString valueText, unsigned char isHex)
+{
+	valueTextCtrl->SetValue(valueText);
+	hexCheckBox->SetValue(isHex);
+	
 	foundInstructions.clear();
 	foundInstructions.shrink_to_fit();
 	for (int i = 0; i < mainGui->decompParams.numOfInstructions; i++) 

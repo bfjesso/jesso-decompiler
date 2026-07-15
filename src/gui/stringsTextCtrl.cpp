@@ -1,11 +1,9 @@
 #include "stringsTextCtrl.h"
+#include "mainGui.h"
 #include "../decompiler/decompilationUtils.h"
 
-StringsTextCtrl::StringsTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu) : JdcTextCtrl(parent, name)
+StringsTextCtrl::StringsTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(parent, mainGuiRef, "Strings")
 {
-	params = decompParams;
-	colorsMenu = colorMenu;
-
     Bind(wxEVT_CONTEXT_MENU, &StringsTextCtrl::StringsRightClickOptions, this);
     Bind(wxEVT_CHAR_HOOK, &StringsTextCtrl::OnStringsKeyDown, this);
 
@@ -21,7 +19,7 @@ void StringsTextCtrl::ShowFindAddressDialog()
 		unsigned long long address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findAddressInArr(addresses.data(), addresses.size(), address);
+			int index = findAddressInArr(foundAddresses.data(), foundAddresses.size(), address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -69,14 +67,14 @@ void StringsTextCtrl::OnStringsKeyDown(wxKeyEvent& e)
 
 void StringsTextCtrl::LoadStrings()
 {
-    if (!params || params->numOfFileBytes == 0)
+    if (mainGui->decompParams.numOfFileBytes == 0)
     {
         wxMessageBox("No file bytes", "Can't load strings");
         return;
     }
 
-    addresses.clear();
-    addresses.shrink_to_fit();
+    foundAddresses.clear();
+    foundAddresses.shrink_to_fit();
 
     SetReadOnly(false);
     Freeze();
@@ -85,12 +83,12 @@ void StringsTextCtrl::LoadStrings()
     wxString currentStr = "";
     int numOfStrings = 0;
 
-    for (int i = 0; i < params->numOfSections; i++)
+    for (int i = 0; i < mainGui->decompParams.numOfSections; i++)
     {
         int startIndex = -1;
-        for (unsigned int j = 0; j < params->sections[i].physicalSize; j++)
+        for (unsigned int j = 0; j < mainGui->decompParams.sections[i].physicalSize; j++)
         {
-            char c = *(char*)(params->fileBytes + params->sections[i].fileOffset + j);
+            char c = *(char*)(mainGui->decompParams.fileBytes + mainGui->decompParams.sections[i].fileOffset + j);
             if (c > 31 && c < 127)
             {
                 if (startIndex == -1)
@@ -105,13 +103,13 @@ void StringsTextCtrl::LoadStrings()
             {
                 if (startIndex != -1 && c == 0 && currentStr.length() > 1)
                 {
-                    unsigned long long address = params->imageBase + params->sections[i].rva + startIndex;
-                    addresses.push_back(address);
+                    unsigned long long address = mainGui->decompParams.imageBase + mainGui->decompParams.sections[i].rva + startIndex;
+                    foundAddresses.push_back(address);
 
                     char addressStr[50] = { 0 };
                     sprintf(addressStr, "0x%llX", address);
 
-                    stringsText += wxString(addressStr) + wxString(params->sections[i].name.buffer) + "\t\"" + currentStr + "\"\n";
+                    stringsText += wxString(addressStr) + wxString(mainGui->decompParams.sections[i].name.buffer) + "\t\"" + currentStr + "\"\n";
                     numOfStrings++;
                 }
 
@@ -130,7 +128,7 @@ void StringsTextCtrl::ApplyStringsHighlighting()
 {
     for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
     {
-        StyleSetForeground(i, colorsMenu->dataColors[i]);
+        StyleSetForeground(i, mainGui->colorsMenu->dataColors[i]);
     }
 
     int lineStart = 0;

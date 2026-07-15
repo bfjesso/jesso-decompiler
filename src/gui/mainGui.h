@@ -7,6 +7,7 @@
 #include "dataTextCtrl.h"
 #include "colorsMenu.h"
 #include "logTextCtrl.h"
+#include "codeReferencesWindow.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationStructs.h"
@@ -86,6 +87,8 @@ public:
 	FunctionsTextCtrl* AddFunctionsTextCtrl();
 
 	DataTextCtrl* AddDataTextCtrl();
+
+	CodeReferencesWindow* AddCodeReferencesWindow();
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

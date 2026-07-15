@@ -5,10 +5,8 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions) : JdcTextCtrl(parent, name)
+DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions) : JdcTextCtrl(parent, mainGuiRef, name)
 {
-	mainGui = mainGuiRef;
-
 	Bind(wxEVT_CONTEXT_MENU, &DisassemblyTextCtrl::DisassemblyRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);

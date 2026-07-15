@@ -1,15 +1,12 @@
 #pragma once
 #include "jdcTextCtrl.h"
 
-class MainGui;
 class DisassemblyTextCtrl;
 
 class DecompilationTextCtrl : public JdcTextCtrl
 {
 public:
-	DecompilationTextCtrl(MainGui* parent, wxString name);
-
-	MainGui* mainGui = nullptr;
+	DecompilationTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name);
 
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 

@@ -5,9 +5,8 @@
 #include "../decompiler/decompilationUtils.h"
 #include "../decompiler/intrinsics.h"
 
-DecompilationTextCtrl::DecompilationTextCtrl(MainGui* parent, wxString name) : JdcTextCtrl(parent, name)
+DecompilationTextCtrl::DecompilationTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) : JdcTextCtrl(parent, mainGuiRef, name)
 {
-	mainGui = parent;
 	EnableLineNumbers();
 
 	Bind(wxEVT_CONTEXT_MENU, &DecompilationTextCtrl::DecompilationRightClickOptions, this);

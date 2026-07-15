@@ -4,7 +4,7 @@
 class LogTextCtrl : public JdcTextCtrl
 {
 public:
-	LogTextCtrl(wxWindow* parent, wxString name);
+	LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef);
 
 	void Log(wxString text, unsigned char isError);
 

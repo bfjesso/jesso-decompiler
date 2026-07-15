@@ -5,7 +5,6 @@
 #include "stringsTextCtrl.h"
 #include "importsGrid.h"
 #include "fileHeadersWindow.h"
-#include "codeReferencesWindow.h"
 #include "calculatorWindow.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../disassembler/mnemonics.h"
@@ -41,10 +40,10 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFunctionsID, "Functions", [&](wxCommandEvent& ce) -> void { AddFunctionsTextCtrl(); });
 	AddMenuItem(toolMenu, OpenDataID, "Data", [&](wxCommandEvent& ce) -> void { AddDataTextCtrl(); });
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections"); });
-	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, "Strings", &decompParams, colorsMenu), "Strings"); });
+	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, this), "Strings"); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
-	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CodeReferencesWindow(this), "Find code references"); });
+	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddCodeReferencesWindow(); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
 	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(wxAUI_DOCK_NONE); });
@@ -65,7 +64,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
 	auiNotebook = new wxAuiNotebook(this, NotebookID);
 
-	logTextCtrl = new LogTextCtrl(this, "Log");
+	logTextCtrl = new LogTextCtrl(this, this);
 
 	ResetWindowLayout();
 }
@@ -144,7 +143,7 @@ DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 
 DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 {
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, "Decompilation " + std::to_string(decompilationTextCtrls.size() + 1));
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, this, "Decompilation " + std::to_string(decompilationTextCtrls.size() + 1));
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
@@ -157,7 +156,7 @@ DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 
 FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
@@ -174,7 +173,7 @@ FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 
 DataTextCtrl* MainGui::AddDataTextCtrl()
 {
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, "Data " + std::to_string(dataTextCtrls.size() + 1), &decompParams, colorsMenu);
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, this, "Data " + std::to_string(dataTextCtrls.size() + 1));
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);
@@ -187,6 +186,20 @@ DataTextCtrl* MainGui::AddDataTextCtrl()
 	auiManager.Update();
 
 	return dataTextCtrls[dataTextCtrls.size() - 1];
+}
+
+CodeReferencesWindow* MainGui::AddCodeReferencesWindow()
+{
+	CodeReferencesWindow* codeReferencesWindow = new CodeReferencesWindow(this);
+
+	auiManager.AddPane(codeReferencesWindow, wxAuiPaneInfo()
+		.Name("find code references")
+		.Caption("Find code references")
+		.Float()
+		.MinSize(codeReferencesWindow->GetMinSize()));
+	auiManager.Update();
+
+	return codeReferencesWindow;
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)

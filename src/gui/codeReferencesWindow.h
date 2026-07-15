@@ -26,7 +26,9 @@ public:
 		FindReferencesID
 	};
 
-	void FindCodeReferences(wxCommandEvent& e);
+	void OnFindCodeReferencesButton(wxCommandEvent& e);
+
+	void FindCodeReferences(long long value, wxString valueText, unsigned char isHex);
 
 	wxDECLARE_EVENT_TABLE();
 };

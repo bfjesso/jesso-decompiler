@@ -1,7 +1,10 @@
 #include "jdcTextCtrl.h"
+#include "mainGui.h"
 
-JdcTextCtrl::JdcTextCtrl(wxWindow* parent, wxString name) : wxStyledTextCtrl(parent, wxID_ANY)
+JdcTextCtrl::JdcTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) : wxStyledTextCtrl(parent)
 {
+	mainGui = mainGuiRef;
+	
 	SetName(name);
 	SetMinSize(wxSize(100, 100));
 
@@ -235,6 +238,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 	const int ID_CONVERT_TO_SIGNED_HEX = 1005;
 	const int ID_FIND = 1006;
 	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 1007;
+	const int ID_FIND_CODE_REFERENCES = 1008;
 
 	wxString selection = GetSelectedText();
 	if (selection != "")
@@ -340,6 +344,14 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 				SetStyling(strlen(numStr), numColor);
 				SetReadOnly(true);
 			}, ID_CONVERT_TO_SIGNED_HEX);
+		}
+
+		if (isHex || isDec) 
+		{
+			menu->Append(ID_FIND_CODE_REFERENCES, "Find code references");
+			menu->Bind(wxEVT_MENU, [this, num, word, isHex](wxCommandEvent&) {
+				mainGui->AddCodeReferencesWindow()->FindCodeReferences(num, word, isHex);
+			}, ID_FIND_CODE_REFERENCES);
 		}
 	}
 

@@ -1,22 +1,15 @@
 #pragma once
 #include "jdcTextCtrl.h"
-#include "colorsMenu.h"
-
-#include "../decompiler/decompilationStructs.h"
 
 #define NUM_OF_DATA_TEXT_CTRL_TYPES 7
 
 class DataTextCtrl : public JdcTextCtrl
 {
 public:
-	DataTextCtrl(wxWindow* parent, wxString name, struct DecompilationParameters* decompParams, ColorsMenu* colorMenu);
-
-	ColorsMenu* colorsMenu = nullptr;
+	DataTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name);
 
 	const unsigned int bytesPerLine = 8;
 	int numOfLines = 0;
-
-	struct DecompilationParameters* params = nullptr;
 
 	const char* dataTypeStrs[NUM_OF_DATA_TEXT_CTRL_TYPES] =
 	{

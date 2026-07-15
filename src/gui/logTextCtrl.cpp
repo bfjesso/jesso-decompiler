@@ -1,6 +1,6 @@
 #include "logTextCtrl.h"
 
-LogTextCtrl::LogTextCtrl(wxWindow* parent, wxString name) : JdcTextCtrl(parent, name)
+LogTextCtrl::LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(parent, mainGuiRef, "Log")
 {
 	Bind(wxEVT_STC_UPDATEUI, &LogTextCtrl::OnUpdateLogUI, this);
 
