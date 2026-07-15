@@ -106,17 +106,17 @@ void JdcTextCtrl::ClearIndicators()
 	}
 }
 
-void JdcTextCtrl::ShowRenameDialog(struct Function* function, struct JdcStr* currentName)
+void JdcTextCtrl::ShowRenameDialog(int functionIndex, struct JdcStr* currentName)
 {
 	wxTextEntryDialog dlg(this, "", "Rename " + wxString(currentName->buffer));
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
-		mainGui->decompParams.currentFunc = function;
+		mainGui->decompParams.currentFunc = &mainGui->functions[functionIndex];
 		if (validateName(&mainGui->decompParams, txt.c_str()))
 		{
 			strcpyJdc(currentName, txt.c_str());
-			mainGui->RefreshVarNames();
+			mainGui->RefreshVarNames(functionIndex);
 		}
 		else
 		{

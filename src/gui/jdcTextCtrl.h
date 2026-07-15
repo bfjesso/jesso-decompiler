@@ -42,7 +42,7 @@ public:
 
 	void ClearIndicators();
 
-	void ShowRenameDialog(struct Function* function, struct JdcStr* currentName);
+	void ShowRenameDialog(int functionIndex, struct JdcStr* currentName);
 
 	void ShowFindDialog();
 

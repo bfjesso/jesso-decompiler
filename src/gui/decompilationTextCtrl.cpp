@@ -47,7 +47,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					ShowRenameDialog(&mainGui->functions[i], &mainGui->functions[i].name);
+					ShowRenameDialog(i, &mainGui->functions[i].name);
 				}, ID_RENAME);
 				
 				foundName = 1;
@@ -65,7 +65,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(func, &func->regVars[i].name);
+						ShowRenameDialog(currentDecompiledFunc, &func->regVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -79,7 +79,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(func, &func->stackVars[i].name);
+						ShowRenameDialog(currentDecompiledFunc, &func->stackVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -93,7 +93,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				{
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(func, &func->returnedVars[i].name);
+						ShowRenameDialog(currentDecompiledFunc, &func->returnedVars[i].name);
 					}, ID_RENAME);
 
 					foundName = 1;

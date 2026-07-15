@@ -341,7 +341,7 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 	}
 }
 
-void MainGui::RefreshVarNames()
+void MainGui::RefreshVarNames(int functionIndex)
 {
 	for (int i = 0; i < decompilationTextCtrls.size(); i++) 
 	{
@@ -353,7 +353,7 @@ void MainGui::RefreshVarNames()
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
-		functionsTextCtrls[i]->ShowAllFunctions(functionsTextCtrls[i]->GetCurrentLine());
+		functionsTextCtrls[i]->UpdateFunctionHeader(functionIndex);
 	}
 }
 

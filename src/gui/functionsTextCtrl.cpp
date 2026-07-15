@@ -100,7 +100,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 			{
 				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					ShowRenameDialog(function, &function->name);
+					ShowRenameDialog(selectedLine, &function->name);
 				}, ID_RENAME);
 
 				foundName = 1;
@@ -113,7 +113,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				{
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(function, &regVar->name);
+						ShowRenameDialog(selectedLine, &regVar->name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -128,7 +128,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				{
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-						ShowRenameDialog(function, &stackVar->name);
+						ShowRenameDialog(selectedLine, &stackVar->name);
 					}, ID_RENAME);
 
 					foundName = 1;
@@ -163,39 +163,76 @@ void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 	e.Skip();
 }
 
+wxString FunctionsTextCtrl::GenerateFunctionDefinition(int functionIndex, struct JdcStr* functionHeaderBuffer)
+{
+	struct Function* function = &mainGui->decompParams.functions[functionIndex];
+	if (!generateFunctionHeader(function, functionHeaderBuffer))
+	{
+		return "";
+	}
+
+	sprintfJdc(functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+	
+	wxString result = wxString(functionHeaderBuffer->buffer);
+
+	if (functionIndex == entryFunctionIndex)
+	{
+		result += "; entry point";
+	}
+
+	return result + "\n";
+}
+
+void FunctionsTextCtrl::UpdateFunctionHeader(int functionIndex)
+{
+	if (functionIndex < 0 || functionIndex >= GetNumberOfLines()) 
+	{
+		return;
+	}
+
+	struct JdcStr functionHeaderBuffer = initializeJdcStr();
+	wxString functionDefinition = GenerateFunctionDefinition(functionIndex, &functionHeaderBuffer);
+	freeJdcStr(&functionHeaderBuffer);
+
+	if (functionDefinition == "") 
+	{
+		return;
+	}
+	
+	int lineStart = PositionFromLine(functionIndex);
+	int lineLen = GetLineLength(functionIndex);
+
+	SetReadOnly(false);
+	Replace(lineStart, lineStart + lineLen + 1, functionDefinition);
+	ApplyFunctionsHighlighting(lineStart, lineStart + functionDefinition.Length());
+	SetReadOnly(true);
+}
+
 void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
 {
 	ClearText();
 	SetReadOnly(false);
 	Freeze();
 
-	int entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, mainGui->entryPoint + mainGui->imageBase);
+	entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, mainGui->entryPoint + mainGui->imageBase);
 	wxString functionsStr = "";
 	struct JdcStr functionHeaderBuffer = initializeJdcStr();
 	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
-		struct Function* function = &mainGui->decompParams.functions[i];
-		if (!generateFunctionHeader(function, &functionHeaderBuffer))
+		wxString functionDefinition = GenerateFunctionDefinition(i, &functionHeaderBuffer);
+		if (functionDefinition == "") 
 		{
+			freeJdcStr(&functionHeaderBuffer);
 			return;
 		}
 
-		sprintfJdc(&functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
-		functionsStr += wxString(functionHeaderBuffer.buffer);
-
-		if (i == entryFunctionIndex) 
-		{
-			functionsStr += "; entry point";
-		}
-
-		if (i != mainGui->decompParams.numOfFunctions - 1)
-		{
-			functionsStr += "\n";
-		}
+		functionsStr += functionDefinition;
 	}
 
+	freeJdcStr(&functionHeaderBuffer);
+
 	SetText(functionsStr);
-	ApplyFunctionsHighlighting();
+	ApplyFunctionsHighlighting(0, GetTextLength());
 	Thaw();
 	SetReadOnly(true);
 
@@ -209,7 +246,7 @@ void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
 	}
 }
 
-void FunctionsTextCtrl::ApplyFunctionsHighlighting()
+void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
 {
 	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
@@ -218,11 +255,10 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting()
 
 	wxString text = GetValue();
 
-	StartStyling(0);
-	SetStyling(text.length(), OPERATOR_DECOMP_COLOR);
+	StartStyling(start);
 
-	int lineStart = 0;
-	while (lineStart < text.length())
+	int lineStart = start;
+	while (lineStart < end)
 	{
 		int argsStartPos = text.find("(", lineStart);
 		int functionNamePos = text.rfind(" ", argsStartPos);
