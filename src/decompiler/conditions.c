@@ -9,7 +9,6 @@
 unsigned char getAllConditions(struct DecompilationParameters* params)
 {
 	int combinationCount = 0;
-	int lastDstIndex = -1;
 	int firstDstSwitchCaseIndex = -1;
 	unsigned char stopCombination = 0;
 	struct DisassembledInstruction* lastCmpInstruction = 0;
@@ -62,7 +61,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 				lastCondition->numOfCombinedJccs = combinationCount;
 			}
-			else if (lastCondition && lastDstIndex - 1 == i && !stopCombination)
+			else if (lastCondition && lastCondition->dstIndex - 1 == i && !stopCombination)
 			{
 				if (!handleCombinedJccResize(lastCondition))
 				{
@@ -72,7 +71,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				lastCondition->combinedJccIndexes[combinationCount] = i;
 				lastCondition->combinedJccsLogicType = OR_LT;
 				lastCondition->dstIndex = dstIndex;
-				lastCondition->lastBodyIndex = dstIndex - 1;
 				lastCondition->exitIndex = exitIndex;
 				combinationCount++;
 
@@ -86,9 +84,25 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 
 				struct Condition* currentCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
+				currentCondition->jccIndex = i;
+				currentCondition->dstIndex = dstIndex;
+				currentCondition->exitIndex = exitIndex;
 
 				// setting the type
-				if (lastCondition && exitIndex != -1 && exitIndex == lastCondition->exitIndex &&
+				if (dstIndex < i)
+				{
+					currentCondition->conditionType = DO_WHILE_CT;
+					currentCondition->firstBodyIndex = dstIndex;
+					currentCondition->lastBodyIndex = i - 1;
+				}
+				else if (doesInstructionLeadStraightToReturn(params, dstJmpChainIndex))
+				{
+					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
+					currentCondition->dstIndex = dstJmpChainIndex;
+					currentCondition->firstBodyIndex = -1;
+					currentCondition->lastBodyIndex = -1;
+				}
+				else if (lastCondition && exitIndex != -1 && exitIndex == lastCondition->exitIndex &&
 					i == lastCondition->jccIndex + 2 && // the Jccs need to be right next to eachother with only comparisson instructions between them
 					instruction->opcode == JZ_SHORT && params->instructions[lastCondition->jccIndex].opcode == JZ_SHORT &&
 					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
@@ -110,18 +124,20 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 						params->currentFunc->conditions[firstDstSwitchCaseIndex].isFirstSwitchCase = 0;
 						currentCondition->isFirstSwitchCase = 1;
 					}
-				}
-				else if (doesInstructionLeadStraightToReturn(params, dstJmpChainIndex))
-				{
-					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
+
+					currentCondition->firstBodyIndex = dstIndex;
+
+					// only one of the switch cases needs an exit index set
+					if (currentCondition->isFirstSwitchCase)
+					{
+						currentCondition->lastBodyIndex = exitIndex;
+					}
 				}
 				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
 					currentCondition->conditionType = LOOP_CT;
-				}
-				else if (dstIndex < i)
-				{
-					currentCondition->conditionType = DO_WHILE_CT;
+					currentCondition->firstBodyIndex = i + 1;
+					currentCondition->lastBodyIndex = dstIndex - 1;
 				}
 				else if (lastCondition &&
 					(lastCondition->conditionType == IF_CT || lastCondition->conditionType == ELSE_IF_CT) &&
@@ -130,56 +146,20 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					dstIndex > lastCondition->dstIndex) // also have to check that its not nested
 				{
 					currentCondition->conditionType = ELSE_IF_CT;
+					currentCondition->firstBodyIndex = i + 1;
+					currentCondition->lastBodyIndex = dstIndex - 1;
 				}
 				else
 				{
 					currentCondition->conditionType = IF_CT;
+					currentCondition->firstBodyIndex = i + 1;
+					currentCondition->lastBodyIndex = dstIndex - 1;
 				}
-
-				currentCondition->jccIndex = i;
-				currentCondition->dstIndex = dstIndex;
-				currentCondition->exitIndex = exitIndex;
-
-				int firstBodyIndex = i + 1;
-				int lastBodyIndex = dstIndex - 1;
-				if (currentCondition->conditionType == SWITCH_CASE_CT)
-				{
-					firstBodyIndex = dstIndex;
-
-					// only one of the switch cases needs an exit index set
-					if (currentCondition->isFirstSwitchCase)
-					{
-						lastBodyIndex = exitIndex;
-					}
-					else 
-					{
-						exitIndex = 0;
-					}
-				}
-				else if(currentCondition->conditionType != CONDITIONAL_RETURN_CT)
-				{
-					if (firstBodyIndex > lastBodyIndex)
-					{
-						firstBodyIndex = dstIndex;
-						lastBodyIndex = i - 1;
-					}
-				}
-				else 
-				{
-					currentCondition->dstIndex = dstJmpChainIndex;
-					firstBodyIndex = -1;
-					lastBodyIndex = -1;
-				}
-
-				currentCondition->firstBodyIndex = firstBodyIndex;
-				currentCondition->lastBodyIndex = lastBodyIndex;
 
 				combinationCount = 0;
 				stopCombination = 0;
 				params->currentFunc->numOfConditions++;
 			}
-
-			lastDstIndex = dstIndex;
 		}
 		else if(params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
