@@ -266,7 +266,6 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 
 static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
-	unsigned char fixedAFunc = 0;
 	for (int i = 0; i < params->numOfFunctions; i++)
 	{
 		params->currentFunc = &params->functions[i];
@@ -291,8 +290,6 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 						{
 							return 0;
 						}
-
-						fixedAFunc = 1;
 					}
 				}
 
@@ -306,17 +303,10 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 						{
 							return 0;
 						}
-
-						fixedAFunc = 1;
 					}
 				}
 			}
 		}
-	}
-
-	if (fixedAFunc)
-	{
-		return fixAllFunctionArgs(params);
 	}
 
 	return 1;
