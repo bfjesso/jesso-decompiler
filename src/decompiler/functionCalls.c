@@ -72,7 +72,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		if (callee->regVars[i].isArgument) 
 		{
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileRegister(params, callInstructionIndex, callee->regVars[i].reg, 1, &argStr, 0))
+			if (!decompileRegister(params, callInstructionIndex, -1, callee->regVars[i].reg, 1, &argStr, 0))
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -252,7 +252,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 					dataTypeToStr(getRegisterDataType(instruction->opcode, specificReg), &regArgTypeStrs[j]);
 					
 					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileRegister(params, i + 1, specificReg, 1, &decompiledRegArgs[j], 0))
+					if (!decompileRegister(params, i + 1, -1, specificReg, 1, &decompiledRegArgs[j], 0))
 					{
 						for (int k = 0; k < maxStackArgs; k++)
 						{ 

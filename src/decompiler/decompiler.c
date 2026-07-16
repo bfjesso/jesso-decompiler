@@ -544,12 +544,12 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, struct C
 
 	if (regVar->scopeStartIndex == -1)
 	{
-		regVar->scopeStartIndex = params->currentFunc->firstInstructionIndex;
+		regVar->scopeStartIndex = params->currentFunc->firstInstructionIndex - 1;
 	}
 
 	if (regVar->scopeEndIndex == -1)
 	{
-		regVar->scopeEndIndex = params->currentFunc->lastInstructionIndex;
+		regVar->scopeEndIndex = params->currentFunc->lastInstructionIndex + 1;
 	}
 
 	return 1;

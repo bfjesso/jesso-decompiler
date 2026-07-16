@@ -181,7 +181,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	if (intrinsicFunc->opcode == _INT)
 	{
 		struct JdcStr code = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, CX, 1, &code, 0))
+		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &code, 0))
 		{
 			freeJdcStr(&code);
 			return 0;
@@ -193,7 +193,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	else if (intrinsicFunc->opcode == MOVS)
 	{
 		struct JdcStr count = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, CX, 1, &count, 0))
+		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &count, 0))
 		{
 			freeJdcStr(&count);
 			return 0;

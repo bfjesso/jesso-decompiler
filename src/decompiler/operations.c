@@ -293,7 +293,7 @@ static unsigned char decompileFLD(struct DecompilationParameters* params, int in
 	if (getAssignment) 
 	{ 
 		struct JdcStr decompiledST0 = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, ST0, 1, &decompiledST0, 0))
+		if (!decompileRegister(params, instructionIndex, -1, ST0, 1, &decompiledST0, 0))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledST0);
@@ -323,7 +323,7 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 	if (getAssignment)
 	{
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, AX, 1, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledAX);
@@ -429,7 +429,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 	if (getAssignment)
 	{
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, AX, 1, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledAX);
 			return 0;
@@ -445,7 +445,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		else if (compareRegisters(targetReg, DX))
 		{
 			struct JdcStr decompiledDX = initializeJdcStr();
-			if (!decompileRegister(params, instructionIndex, DX, 1, &decompiledDX, 0))
+			if (!decompileRegister(params, instructionIndex, -1, DX, 1, &decompiledDX, 0))
 			{
 				freeJdcStr(&decompiledFirstOperand);
 				freeJdcStr(&decompiledAX);
@@ -479,7 +479,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		}
 
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, AX, 1, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledAX);
 			return 0;
