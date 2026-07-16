@@ -200,16 +200,10 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT || cond2->conditionType == ELSE_CT)
 			{
 				cond1->conditionType = CONDITIONAL_GOTO_CT;
-				cond1->dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, cond1->jccIndex));
-				cond1->firstBodyIndex = -1;
-				cond1->lastBodyIndex = -1;
 			}
 			else 
 			{
 				cond2->conditionType = CONDITIONAL_GOTO_CT;
-				cond2->dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, cond2->jccIndex));
-				cond2->firstBodyIndex = -1;
-				cond2->lastBodyIndex = -1;
 			}
 		}
 	}
@@ -344,8 +338,7 @@ unsigned char decompileConditionStarts(struct DecompilationParameters* params, i
 			continue;
 		}
 
-		if (instructionIndex == condition->firstBodyIndex || 
-			(instructionIndex == condition->jccIndex && (condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)))
+		if (instructionIndex == condition->firstBodyIndex)
 		{
 			if (!decompileCondition(params, i, 1, result))
 			{
