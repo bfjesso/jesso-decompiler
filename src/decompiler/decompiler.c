@@ -621,27 +621,27 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
-		if (!regVar->isArgument) 
+		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
+		if (!localRegVar->isArgument)
 		{
-			dataTypeToStr(regVar->dataType, &typeStr);
+			dataTypeToStr(localRegVar->dataType, &typeStr);
 
 			addIndents(result, 1);
-			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, regVar->reg);
-			if (regArg)
+			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
+			if (regArg && localRegVar->scopeStartIndex <= params->currentFunc->firstInstructionIndex)
 			{
-				if (!compareDataTypes(regVar->dataType, regArg->dataType))
+				if (!compareDataTypes(localRegVar->dataType, regArg->dataType))
 				{
-					sprintfJdc(result, 1, "%s %s = (%s)%s;\n", typeStr.buffer, regVar->name.buffer, typeStr.buffer, regArg->name.buffer);
+					sprintfJdc(result, 1, "%s %s = (%s)%s;\n", typeStr.buffer, localRegVar->name.buffer, typeStr.buffer, regArg->name.buffer);
 				}
 				else
 				{
-					sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, regVar->name.buffer, regArg->name.buffer);
+					sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, localRegVar->name.buffer, regArg->name.buffer);
 				}
 			}
 			else
 			{
-				sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, regVar->name.buffer);
+				sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, localRegVar->name.buffer);
 			}
 
 			declaredAVar = 1;
