@@ -374,6 +374,24 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
 		params->currentFunc = &params->functions[i];
+
+		// sorting from least to greatest stack offset
+		unsigned char keepSorting = 1;
+		while (keepSorting)
+		{
+			keepSorting = 0;
+			for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
+			{
+				if (params->currentFunc->stackVars[j].stackOffset > params->currentFunc->stackVars[j + 1].stackOffset)
+				{
+					struct StackVariable temp = params->currentFunc->stackVars[j];
+					params->currentFunc->stackVars[j] = params->currentFunc->stackVars[j + 1];
+					params->currentFunc->stackVars[j + 1] = temp;
+					keepSorting = 1;
+				}
+			}
+		}
+
 		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[j];
@@ -704,24 +722,6 @@ static unsigned char addStackVar(struct Function* function, long long stackOffse
 	if (dataTypeRef)
 	{
 		stackVar->dataType = *dataTypeRef;
-	}
-
-	// sorting from least to greatest stack offset
-	for (int i = 0; i < function->numOfStackVars - 1; i++)
-	{
-		char swapped = 0;
-		for (int j = 0; j < function->numOfStackVars - i - 1; j++)
-		{
-			if (function->stackVars[j].stackOffset > function->stackVars[j + 1].stackOffset)
-			{
-				struct StackVariable temp = function->stackVars[j];
-				function->stackVars[j] = function->stackVars[j + 1];
-				function->stackVars[j + 1] = temp;
-
-				swapped = 1;
-			}
-		}
-		if (!swapped) { break; }
 	}
 
 	return 1;
