@@ -108,7 +108,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 				addAssociatedInstruction(params->currentFunc, pushInstructionIndex);
 				
 				struct JdcStr argStr = initializeJdcStr();
-				if (!decompileOperand(params, pushInstructionIndex, &params->instructions[pushInstructionIndex].operands[0], 1, &argStr))
+				if (!decompileOperand(params, pushInstructionIndex, 0, 1, &argStr))
 				{
 					freeJdcStr(&argStr);
 					return 0;
@@ -232,7 +232,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			}
 
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
-			if (decompileOperand(params, i, &instruction->operands[0], 0, &decompiledStackArgs[numOfStackArgs]))
+			if (decompileOperand(params, i, 0, 0, &decompiledStackArgs[numOfStackArgs]))
 			{
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
 				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
@@ -322,7 +322,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		strcatJdc(result, ")");
 
 		struct JdcStr functionPointer = initializeJdcStr();
-		if (!decompileOperand(params, callInstructionIndex, &callInstruction->operands[0], 1, &functionPointer))
+		if (!decompileOperand(params, callInstructionIndex, 0, 1, &functionPointer))
 		{
 			for (int k = 0; k < maxStackArgs; k++)
 			{

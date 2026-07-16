@@ -9,8 +9,15 @@
 #include "operations.h"
 #include "dataTypes.h"
 
-unsigned char decompileOperand(struct DecompilationParameters* params, int instructionIndex, struct Operand* operand, unsigned char defaultToReg, struct JdcStr* result)
+unsigned char decompileOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char defaultToReg, struct JdcStr* result)
 {
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	if (operandNum >= instruction->numOfOperands)
+	{
+		return 0;
+	}
+
+	struct Operand* operand = &instruction->operands[operandNum];
 	if (operand->type == IMMEDIATE)
 	{
 		if (operand->immediate.value > -10 && operand->immediate.value < 0)
@@ -565,7 +572,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &operand1Str))
+			if (!decompileOperand(params, i, 0, 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
@@ -588,7 +595,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[1], 1, &operand2Str))
+			if (!decompileOperand(params, i, 1, 1, &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
@@ -605,7 +612,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &operand1Str))
+			if (!decompileOperand(params, i, 0, 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;
@@ -621,7 +628,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			}
 
 			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[1], 1, &operand2Str))
+			if (!decompileOperand(params, i, 1, 1, &operand2Str))
 			{
 				freeJdcStr(&operand1Str);
 				freeJdcStr(&operand2Str);
@@ -638,7 +645,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, i, &currentInstruction->operands[0], 1, &operand1Str))
+			if (!decompileOperand(params, i, 0, 1, &operand1Str))
 			{
 				freeJdcStr(&operand1Str);
 				return 0;

@@ -50,7 +50,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
-		if (!decompileOperand(params, instructionIndex, &instruction->operands[0], 1, &decompiledFirstOperand))
+		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			return 0;
@@ -79,7 +79,7 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 		if (intrinsicFunc->operandsToDecompile[i]) 
 		{
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, instructionIndex, &instruction->operands[i], 1, &decompiledOperand))
+			if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
@@ -162,7 +162,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		if (intrinsicFunc->operandsToDecompile[i])
 		{
 			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, instructionIndex , &instruction->operands[i], 1, &decompiledOperand))
+			if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
