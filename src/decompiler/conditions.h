@@ -7,6 +7,8 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 
 static unsigned char handleConditionsResize(struct DecompilationParameters* params);
 
+static unsigned char removeCondition(struct DecompilationParameters* params, int conditionIndex);
+
 static unsigned char handleCombinedJccResize(struct Condition* condition);
 
 unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);

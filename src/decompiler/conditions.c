@@ -84,6 +84,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				currentCondition->jccIndex = i;
 				currentCondition->dstIndex = dstIndex;
 				currentCondition->exitIndex = exitIndex;
+				currentCondition->connectedConditionIndex = -1;
 
 				// setting the type
 				if (dstIndex < i)
@@ -105,16 +106,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					currentCondition->firstBodyIndex = i + 1;
 					currentCondition->lastBodyIndex = dstIndex - 1;
 				}
-				else if (lastCondition &&
-					(lastCondition->conditionType == IF_CT || lastCondition->conditionType == ELSE_IF_CT) &&
-					i == lastCondition->dstIndex + 1 && // assuming again that the previous Jcc jumps directly to this one's comparisson instruction
-					exitIndex != -1 && lastCondition->exitIndex == exitIndex && // check for else if
-					dstIndex > lastCondition->dstIndex) // also have to check that its not nested
-				{
-					currentCondition->conditionType = ELSE_IF_CT;
-					currentCondition->firstBodyIndex = i + 1;
-					currentCondition->lastBodyIndex = dstIndex - 1;
-				}
 				else
 				{
 					currentCondition->conditionType = IF_CT;
@@ -133,62 +124,65 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		}
 	}
 	
-	// addings ELSEs
+	// handling else ifs and elses
 	int ogNumOfConditions = params->currentFunc->numOfConditions;
 	for (int i = 0; i < ogNumOfConditions; i++) 
 	{
-		struct Condition* cond = &params->currentFunc->conditions[i];
-		if ((cond->conditionType == IF_CT || cond->conditionType == ELSE_IF_CT) && 
-			cond->exitIndex > cond->dstIndex &&
-			(i == ogNumOfConditions - 1 || params->currentFunc->conditions[i + 1].conditionType != ELSE_IF_CT))
+		struct Condition* cond1 = &params->currentFunc->conditions[i];
+		if (cond1->connectedConditionIndex != -1) 
 		{
-			if (!doesInstructionLeadStraightToReturn(params, cond->exitIndex))
+			continue;
+		}
+
+		if ((cond1->conditionType == IF_CT || cond1->conditionType == ELSE_IF_CT) && cond1->exitIndex > cond1->dstIndex)
+		{
+			unsigned char foundElseIf = 0;
+			for (int j = i + 1; j < ogNumOfConditions; j++)
 			{
-				if (!handleConditionsResize(params))
+				struct Condition* cond2 = &params->currentFunc->conditions[j];
+				if (cond2->conditionType == IF_CT &&
+					cond1->exitIndex == cond2->exitIndex &&
+					cond1->dstIndex + 1 == cond2->jccIndex)
 				{
-					return 0;
+					cond1->connectedConditionIndex = j;
+					cond2->conditionType = ELSE_IF_CT;
+					foundElseIf = 1;
+					break;
 				}
+			}
 
-				struct Condition* elseCond = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
-				params->currentFunc->numOfConditions++;
+			// adding else condition
+			if (!foundElseIf)
+			{
+				if (!doesInstructionLeadStraightToReturn(params, cond1->exitIndex))
+				{
+					if (!handleConditionsResize(params))
+					{
+						return 0;
+					}
 
-				elseCond->conditionType = ELSE_CT;
-				elseCond->jccIndex = cond->dstIndex - 1;
-				elseCond->dstIndex = cond->exitIndex;
-				elseCond->firstBodyIndex = cond->dstIndex;
-				elseCond->lastBodyIndex = cond->exitIndex - 1;
+					cond1 = &params->currentFunc->conditions[i]; // needs to be updated due to reallocation
+
+					struct Condition* elseCond = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
+					cond1->connectedConditionIndex = params->currentFunc->numOfConditions;
+					params->currentFunc->numOfConditions++;
+
+					elseCond->conditionType = ELSE_CT;
+					elseCond->jccIndex = cond1->dstIndex - 1;
+					elseCond->dstIndex = cond1->exitIndex;
+					elseCond->firstBodyIndex = cond1->dstIndex;
+					elseCond->lastBodyIndex = cond1->exitIndex - 1;
+					elseCond->connectedConditionIndex = -1;
+				}
 			}
 		}
 	}
-
-	//// combining conditions
-	//for (int i = 0; i < params->currentFunc->numOfConditions - 2; i++)
-	//{
-	//	if (conditions[i].dstIndex == conditions[i + 1].dstIndex)
-	//	{
-	//		conditions[i].dstIndex = conditions[i + 1].dstIndex;
-	//		conditions[i].exitIndex = conditions[i + 1].exitIndex;
-	//		conditions[i].combinedConditionIndex = i + 1;
-	//		conditions[i].combinationLogicType = AND_LT;
-	//		conditions[i + 1].isCombinedByOther = 1;
-	//		i++;
-	//	}
-	//	else if (conditions[i].dstIndex - 1 == conditions[i + 1].jccIndex)
-	//	{
-	//		conditions[i].dstIndex = conditions[i + 1].dstIndex;
-	//		conditions[i].exitIndex = conditions[i + 1].exitIndex;
-	//		conditions[i].combinedConditionIndex = i + 1;
-	//		conditions[i].combinationLogicType = OR_LT;
-	//		conditions[i + 1].isCombinedByOther = 1;
-	//		i++;
-	//	}
-	//}
 
 	// checking for overlapping conditions which need to be handled as go to
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
-		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == ELSE_CT)
+		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == ELSE_IF_CT || cond1->conditionType == ELSE_CT)
 		{
 			continue;
 		}
@@ -197,44 +191,21 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		if (cond2)
 		{
 			cond1->conditionType = CONDITIONAL_GOTO_CT;
-		}
-	}
-
-	// checking for ELSE conditions that are associated with a conditional goto, which need to be removed
-	unsigned char reallocate = 0;
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
-	{
-		struct Condition* gotoCond = &params->currentFunc->conditions[i];
-		if (gotoCond->conditionType == CONDITIONAL_GOTO_CT)
-		{
-			for (int j = i + 1; j < params->currentFunc->numOfConditions; j++)
+			if (cond1->connectedConditionIndex != -1) // connected else needs to be removed
 			{
-				struct Condition* elseCond = &params->currentFunc->conditions[j];
-				if (elseCond->conditionType == ELSE_CT && gotoCond->dstIndex == elseCond->firstBodyIndex)
+				struct Condition* connectedCond = &params->currentFunc->conditions[cond1->connectedConditionIndex];
+				if (connectedCond->conditionType == ELSE_CT) 
 				{
-					if (j + 1 < params->currentFunc->numOfConditions) 
-					{
-						struct Condition* nextCond = &params->currentFunc->conditions[j + 1];
-						memcpy(elseCond, nextCond, (params->currentFunc->numOfConditions - (j + 1)) * sizeof(struct Condition));
-					}
-					
-					params->currentFunc->numOfConditions--;
-					reallocate = 1;
-					break;
+					removeCondition(params, cond1->connectedConditionIndex);
 				}
+				else if (connectedCond->conditionType == ELSE_IF_CT) 
+				{
+					connectedCond->conditionType = IF_CT;
+				}
+
+				cond1->connectedConditionIndex = -1;
 			}
 		}
-	}
-
-	if (reallocate) 
-	{
-		struct Condition* newConditions = (struct Condition*)realloc(params->currentFunc->conditions, params->currentFunc->numOfConditions * sizeof(struct Condition));
-		if (!newConditions)
-		{
-			return 0;
-		}
-
-		params->currentFunc->conditions = newConditions;
 	}
 
 	return 1;
@@ -245,7 +216,7 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
-		if (cond1 == cond2 || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
+		if (cond1 == cond2 || cond1->connectedConditionIndex == i || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
 		{
 			continue;
 		}
@@ -255,12 +226,11 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 		{
 			return cond2;
 		}
-
-		//if ((cond1->firstBodyIndex < cond2->firstBodyIndex && cond1->lastBodyIndex > cond2->firstBodyIndex && cond1->lastBodyIndex < cond2->lastBodyIndex) ||
-		//	(cond1->firstBodyIndex > cond2->firstBodyIndex && cond1->firstBodyIndex < cond2->lastBodyIndex && cond1->lastBodyIndex > cond2->lastBodyIndex))
-		//{
-		//	return cond2;
-		//}
+		else if ((cond1->dstIndex < cond2->firstBodyIndex || cond1->dstIndex > cond2->lastBodyIndex) &&
+			cond1->jccIndex >= cond2->firstBodyIndex && cond1->jccIndex <= cond2->lastBodyIndex)
+		{
+			return cond2;
+		}
 	}
 	
 	return 0;
@@ -281,6 +251,45 @@ static unsigned char handleConditionsResize(struct DecompilationParameters* para
 		memset(params->currentFunc->conditions + params->currentFunc->numOfConditions, 0, sizeof(struct Condition) * 5);
 	}
 
+	return 1;
+}
+
+static unsigned char removeCondition(struct DecompilationParameters* params, int conditionIndex)
+{
+	if (conditionIndex < 0 || conditionIndex >= params->currentFunc->numOfConditions) 
+	{
+		return 0;
+	}
+
+	for(int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* cond = &params->currentFunc->conditions[i];
+		if (cond->connectedConditionIndex > conditionIndex) 
+		{
+			cond->connectedConditionIndex--;
+		}
+		else if (cond->connectedConditionIndex == conditionIndex) 
+		{
+			cond->connectedConditionIndex = -1;
+		}
+	}
+
+	if (conditionIndex + 1 < params->currentFunc->numOfConditions)
+	{
+		struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
+		struct Condition* nextCond = &params->currentFunc->conditions[conditionIndex + 1];
+		memcpy(cond, nextCond, (params->currentFunc->numOfConditions - (conditionIndex + 1)) * sizeof(struct Condition));
+	}
+
+	params->currentFunc->numOfConditions--;
+
+	struct Condition* newConditions = (struct Condition*)realloc(params->currentFunc->conditions, params->currentFunc->numOfConditions * sizeof(struct Condition));
+	if (!newConditions)
+	{
+		return 0;
+	}
+
+	params->currentFunc->conditions = newConditions;
 	return 1;
 }
 
@@ -331,11 +340,6 @@ unsigned char decompileConditionStarts(struct DecompilationParameters* params, i
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->isCombinedByOther)
-		{
-			continue;
-		}
-
 		if (condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)
 		{
 			if (instructionIndex == condition->jccIndex) 
@@ -469,46 +473,6 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		}
 	}
 
-	struct JdcStr combinedConditionExpression = initializeJdcStr();
-	if (condition->combinedConditionIndex)
-	{
-		if (decompileCondition(params, condition->combinedConditionIndex, 1, &combinedConditionExpression))
-		{
-			if (!wrapJdcStrInParentheses(&conditionExpression))
-			{
-				freeJdcStr(&conditionExpression);
-				freeJdcStr(&combinedConditionExpression);
-				return 0;
-			}
-
-			if (condition->combinationLogicType == AND_LT)
-			{
-				strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
-			}
-			else
-			{
-				strcatJdc(&conditionExpression, !invertCondition ? " || " : " && ");
-			}
-
-			strcatJdc(&conditionExpression, combinedConditionExpression.buffer);
-		}
-		else
-		{
-			freeJdcStr(&conditionExpression);
-			freeJdcStr(&combinedConditionExpression);
-			return 0;
-		}
-	}
-
-	freeJdcStr(&combinedConditionExpression);
-
-	if (condition->isCombinedByOther)
-	{
-		strcatJdc(result, conditionExpression.buffer);
-		freeJdcStr(&conditionExpression);
-		return 1;
-	}
-
 	if (condition->conditionType == LOOP_CT)
 	{
 		// check for for loop
@@ -635,7 +599,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 unsigned char isConditionRegular(struct Condition* condition) 
 {
-	return condition->conditionType != CONDITIONAL_GOTO_CT && condition->conditionType != CONDITIONAL_RETURN_CT && !condition->isCombinedByOther;
+	return condition->conditionType != CONDITIONAL_GOTO_CT && condition->conditionType != CONDITIONAL_RETURN_CT;
 }
 
 int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
