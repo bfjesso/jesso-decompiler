@@ -326,12 +326,11 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
-	enum Register* modifiedRegs = (enum Register*)calloc(NUM_OF_REGISTERS, sizeof(enum Register));
+	unsigned char modifiedRegs[NUM_OF_REGISTERS] = { 0 };
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		memset(modifiedRegs, 0, NUM_OF_REGISTERS * sizeof(enum Register));
-		int numOfRegs = 0;
-		
+		memset(modifiedRegs, 0, NUM_OF_REGISTERS);
+
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (isConditionRegular(condition))
 		{
@@ -353,92 +352,113 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 
 				if (checkForReturnStatement(params, j))
 				{
-					numOfRegs = 0; // no regs are accessed after the condition due to the return
+					memset(modifiedRegs, 0, NUM_OF_REGISTERS); // no regs are accessed after the condition due to the return
 					break;
 				}
 
-				struct DisassembledInstruction* currentInstruction = &(params->instructions[j]);
-
-				enum Register reg = NO_REG;
-
-				struct Function* callee;
-				if ((checkForKnownFunctionCall(params, j, &callee) && callee->returnType.primitiveType != VOID_TYPE))
+				for (int k = RAX; k < ST0; k++)
 				{
-					reg = callee->returnReg;
-				}
-				else if (checkForUnknownFunctionCall(params, j))
-				{
-					reg = params->is64Bit ? RAX : EAX;
-				}
-				else if (currentInstruction->numOfOperands > 0 && currentInstruction->operands[0].type == REGISTER && doesInstructionModifyOperand(currentInstruction, 0, 0))
-				{
-					reg = currentInstruction->operands[0].reg;
-				}
-
-				if (reg != NO_REG && !isRegisterPointer(reg))
-				{
-					int alreadyFound = 0;
-					for (int k = 0; k < numOfRegs; k++)
-					{
-						if (compareRegisters(reg, modifiedRegs[k]))
-						{
-							alreadyFound = 1;
-							break;
-						}
-					}
-					if (alreadyFound)
+					if (k == RBP || k == RSP || k == RIP)
 					{
 						continue;
 					}
 
-					modifiedRegs[numOfRegs] = reg;
-					numOfRegs++;
+					if (doesInstructionModifyRegister(params, j, k, 0, 0))
+					{
+						modifiedRegs[k] = 1;
+					}
 				}
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int j = 0; j < numOfRegs; j++)
+			for (int j = 0; j < NUM_OF_REGISTERS; j++)
 			{
-				struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, modifiedRegs[j]);
-				if (regVar) 
+				if (!modifiedRegs[j]) 
 				{
-					getLocalRegVarScope(params, condition, regVar); // this is to update the scope if it needs to be larger
 					continue;
 				}
-				
+
+				struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, j);
+				if (regVar)
+				{
+					getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar); // this is to update the scope if it needs to be larger
+					continue;
+				}
+
 				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, condition->lastBodyIndex, modifiedRegs[j], 1, 0))
+					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, condition->lastBodyIndex, j, 1, 0))
 					{
-						if (!addRegVar(params, 0, 0, modifiedRegs[j]))
+						if (!addRegVar(params, 0, 0, j))
 						{
-							free(modifiedRegs);
 							return 0;
 						}
 
 						regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-						getLocalRegVarScope(params, condition, regVar);
+						getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar);
 						continue;
 					}
 				}
-				
-				if (isRegisterAccessedBeforeInit(params, condition->lastBodyIndex + 1, params->currentFunc->lastInstructionIndex, modifiedRegs[j], 0, 0))
+
+				if (isRegisterAccessedBeforeInit(params, condition->lastBodyIndex + 1, params->currentFunc->lastInstructionIndex, j, 0, 0))
 				{
-					if (!addRegVar(params, 0, 0, modifiedRegs[j]))
+					if (!addRegVar(params, 0, 0, j))
 					{
-						free(modifiedRegs);
 						return 0;
 					}
 
 					regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-					getLocalRegVarScope(params, condition, regVar);
+					getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar);
 				}
 			}
 		}
 	}
 
-	free(modifiedRegs);
+	// checking between jmp destinations
+	int currentJmpDst = -1;
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	{
+		if (checkForDirectJmpDst(params, i)) 
+		{
+			if (currentJmpDst != -1)
+			{
+				for (int j = RAX; j < ST0; j++)
+				{
+					if (modifiedRegs[j]) 
+					{
+						if (!addRegVar(params, 0, 0, j))
+						{
+							return 0;
+						}
+
+						struct RegisterVariable* regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+						getLocalRegVarScope(params, currentJmpDst - 1, i + 1, regVar);
+					}
+					
+				}
+			}
+			
+			currentJmpDst = i;
+			memset(modifiedRegs, 0, NUM_OF_REGISTERS);
+		}
+
+		if (currentJmpDst != -1)
+		{
+			for (int j = RAX; j < ST0; j++)
+			{
+				if (j == RBP || j == RSP || j == RIP)
+				{
+					continue;
+				}
+
+				if (doesInstructionModifyRegister(params, i, j, 0, 0))
+				{
+					modifiedRegs[j] = 1;
+				}
+			}
+		}
+	}
 
 	// if a reg is set to a regVar, and then that regVar changes before the reg is accessed, the reg needs to also be a regVar
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
@@ -498,9 +518,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 	return 1;
 }
 
-static void getLocalRegVarScope(struct DecompilationParameters* params, struct Condition* condition, struct RegisterVariable* regVar)
+static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)
 {
-	for (int i = condition->firstBodyIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--) 
+	for (int i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
 		if (conditionIndex != -1)
@@ -521,7 +541,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, struct C
 		}
 	}
 
-	for (int i = condition->lastBodyIndex + 1; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int i = lowerStart; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		int conditionIndex = getConditionFromFirstBodyInstruction(params, i);
 		if (conditionIndex != -1)

@@ -196,15 +196,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		struct Condition* cond2 = doesConditionOverlapWithAnother(params, cond1);
 		if (cond2)
 		{
-			// the loops check is arbitrary, but it looks better to preserve them. an else can't be a conditional goto because it is not a jcc
-			if (cond2->conditionType == DO_WHILE_CT || cond2->conditionType == LOOP_CT || cond2->conditionType == ELSE_CT)
-			{
-				cond1->conditionType = CONDITIONAL_GOTO_CT;
-			}
-			else 
-			{
-				cond2->conditionType = CONDITIONAL_GOTO_CT;
-			}
+			cond1->conditionType = CONDITIONAL_GOTO_CT;
 		}
 	}
 
@@ -258,11 +250,17 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 			continue;
 		}
 
-		if ((cond1->firstBodyIndex < cond2->firstBodyIndex && cond1->lastBodyIndex > cond2->firstBodyIndex && cond1->lastBodyIndex < cond2->lastBodyIndex) ||
-			(cond1->firstBodyIndex > cond2->firstBodyIndex && cond1->firstBodyIndex < cond2->lastBodyIndex && cond1->lastBodyIndex > cond2->lastBodyIndex))
+		if ((cond1->jccIndex < cond2->firstBodyIndex || cond1->jccIndex > cond2->lastBodyIndex) &&
+			cond1->dstIndex >= cond2->firstBodyIndex && cond1->dstIndex <= cond2->lastBodyIndex) 
 		{
 			return cond2;
 		}
+
+		//if ((cond1->firstBodyIndex < cond2->firstBodyIndex && cond1->lastBodyIndex > cond2->firstBodyIndex && cond1->lastBodyIndex < cond2->lastBodyIndex) ||
+		//	(cond1->firstBodyIndex > cond2->firstBodyIndex && cond1->firstBodyIndex < cond2->lastBodyIndex && cond1->lastBodyIndex > cond2->lastBodyIndex))
+		//{
+		//	return cond2;
+		//}
 	}
 	
 	return 0;
@@ -338,7 +336,19 @@ unsigned char decompileConditionStarts(struct DecompilationParameters* params, i
 			continue;
 		}
 
-		if (instructionIndex == condition->firstBodyIndex)
+		if (condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)
+		{
+			if (instructionIndex == condition->jccIndex) 
+			{
+				if (!decompileCondition(params, i, 1, result))
+				{
+					return 0;
+				}
+
+				condition->indentLevel = params->numOfIndents;
+			}
+		}
+		else if (instructionIndex == condition->firstBodyIndex)
 		{
 			if (!decompileCondition(params, i, 1, result))
 			{

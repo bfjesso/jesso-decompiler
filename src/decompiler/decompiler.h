@@ -20,6 +20,6 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params);
 
 static unsigned char getAllLocalRegVars(struct DecompilationParameters* params);
 
-static void getLocalRegVarScope(struct DecompilationParameters* params, struct Condition* condition, struct RegisterVariable* regVar);
+static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar);
 
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result);
