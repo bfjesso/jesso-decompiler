@@ -964,9 +964,13 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
+	int numOfFunctions = 0;
 	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
-		logTextCtrl->LogProgress(disassembledInstructions[instructionIndex].address, 0);
+		if (numOfFunctions % 250 == 0)
+		{
+			logTextCtrl->LogProgress(disassembledInstructions[instructionIndex].address, 0);
+		}
 		
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{
@@ -995,13 +999,14 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));
+		numOfFunctions++;
 	}
 
 	logTextCtrl->LogProgress(maxAddress, 0);
 
-	decompParams.functions = &functions[0];
-	decompParams.numOfFunctions = functions.size();
-	if (functions.size() > 0) 
+	decompParams.functions = functions.data();
+	decompParams.numOfFunctions = numOfFunctions;
+	if (numOfFunctions > 0)
 	{
 		getAllFunctionReturnTypes(&decompParams);
 
