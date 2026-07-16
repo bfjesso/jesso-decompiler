@@ -95,15 +95,6 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 
 unsigned char decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
-	{
-		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->conditionType == SWITCH_CASE_CT && instructionIndex == condition->dstIndex - 1)
-		{
-			return 1;
-		}
-	}
-
 	if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)

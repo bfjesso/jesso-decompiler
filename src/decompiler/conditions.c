@@ -9,10 +9,7 @@
 unsigned char getAllConditions(struct DecompilationParameters* params)
 {
 	int combinationCount = 0;
-	int firstDstSwitchCaseIndex = -1;
 	unsigned char stopCombination = 0;
-	struct DisassembledInstruction* lastCmpInstruction = 0;
-	struct DisassembledInstruction* currentCmpInstruction = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
@@ -102,37 +99,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					currentCondition->firstBodyIndex = -1;
 					currentCondition->lastBodyIndex = -1;
 				}
-				else if (lastCondition && exitIndex != -1 && exitIndex == lastCondition->exitIndex &&
-					i == lastCondition->jccIndex + 2 && // the Jccs need to be right next to eachother with only comparisson instructions between them
-					instruction->opcode == JZ_SHORT && params->instructions[lastCondition->jccIndex].opcode == JZ_SHORT &&
-					lastCmpInstruction && currentCmpInstruction && compareOperands(&lastCmpInstruction->operands[0], &currentCmpInstruction->operands[0]) &&
-					combinationCount == 0 && lastCondition->numOfCombinedJccs == 0)
-				{
-					if (lastCondition->conditionType != SWITCH_CASE_CT) 
-					{
-						lastCondition->cmpInstruction = lastCmpInstruction;
-						lastCondition->conditionType = SWITCH_CASE_CT;
-						lastCondition->isFirstSwitchCase = 1;
-						firstDstSwitchCaseIndex = params->currentFunc->numOfConditions - 1;
-					}
-					
-					currentCondition->cmpInstruction = currentCmpInstruction;
-					currentCondition->conditionType = SWITCH_CASE_CT;
-
-					if (dstIndex < params->currentFunc->conditions[firstDstSwitchCaseIndex].dstIndex) 
-					{
-						params->currentFunc->conditions[firstDstSwitchCaseIndex].isFirstSwitchCase = 0;
-						currentCondition->isFirstSwitchCase = 1;
-					}
-
-					currentCondition->firstBodyIndex = dstIndex;
-
-					// only one of the switch cases needs an exit index set
-					if (currentCondition->isFirstSwitchCase)
-					{
-						currentCondition->lastBodyIndex = exitIndex;
-					}
-				}
 				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
 					currentCondition->conditionType = LOOP_CT;
@@ -164,11 +130,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		else if(params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
 			stopCombination = 1;
-		}
-		else if (isOpcodeCmp(instruction->opcode)) 
-		{
-			lastCmpInstruction = currentCmpInstruction;
-			currentCmpInstruction = instruction;
 		}
 	}
 	
@@ -227,7 +188,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
-		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == SWITCH_CASE_CT || cond1->conditionType == ELSE_CT)
+		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == ELSE_CT)
 		{
 			continue;
 		}
@@ -298,7 +259,7 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
-		if (cond1 == cond2 || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT || cond2->conditionType == SWITCH_CASE_CT)
+		if (cond1 == cond2 || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
 		{
 			continue;
 		}
@@ -419,54 +380,6 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 			params->numOfIndents++;
 			return 1;
 		}
-		else if (condition->conditionType == SWITCH_CASE_CT)
-		{
-			if (condition->isFirstSwitchCase)
-			{
-				struct JdcStr switchVar = initializeJdcStr();
-				if (!decompileOperand(params, condition->firstBodyIndex, &condition->cmpInstruction->operands[0], 1, &switchVar))
-				{
-					freeJdcStr(&switchVar);
-					return 0;
-				}
-
-				addIndents(result, params->numOfIndents);
-				sprintfJdc(result, 1, "switch(%s)\n", switchVar.buffer);
-				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-				params->currentFunc->numOfLines++;
-
-				addIndents(result, params->numOfIndents);
-				strcatJdc(result, "{\n");
-				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-				params->currentFunc->numOfLines++;
-
-				params->numOfIndents++;
-
-				freeJdcStr(&switchVar);
-			}
-			else
-			{
-				addIndents(result, params->numOfIndents);
-				strcatJdc(result, "break;\n");
-				addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-				params->currentFunc->numOfLines++;
-			}
-
-			struct JdcStr value = initializeJdcStr();
-			if (!decompileOperand(params, condition->firstBodyIndex, &condition->cmpInstruction->operands[1], 1, &value))
-			{
-				freeJdcStr(&value);
-				return 0;
-			}
-
-			addIndents(result, params->numOfIndents - 1);
-			sprintfJdc(result, 1, "case %s:\n", value.buffer);
-			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-			params->currentFunc->numOfLines++;
-
-			freeJdcStr(&value);
-			return 1;
-		}
 		else if (condition->conditionType == ELSE_CT)
 		{
 			addIndents(result, params->numOfIndents);
@@ -485,14 +398,6 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	}
 	else if (condition->conditionType != DO_WHILE_CT)
 	{
-		if (condition->isFirstSwitchCase)
-		{
-			addIndents(result, params->numOfIndents);
-			strcatJdc(result, "break;\n");
-			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-			params->currentFunc->numOfLines++;
-		}
-
 		params->numOfIndents--;
 		addIndents(result, params->numOfIndents);
 		strcatJdc(result, "}\n");

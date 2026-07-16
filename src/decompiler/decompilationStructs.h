@@ -56,8 +56,7 @@ enum ConditionType
 	CONDITIONAL_GOTO_CT,
 	CONDITIONAL_RETURN_CT,
 	LOOP_CT, // for or while loop
-	DO_WHILE_CT,
-	SWITCH_CASE_CT
+	DO_WHILE_CT
 };
 
 static const char* conditionTypeStrs[] =
@@ -68,8 +67,7 @@ static const char* conditionTypeStrs[] =
 	"CONDITIONAL_GOTO_CT",
 	"CONDITIONAL_RETURN_CT",
 	"LOOP_CT",
-	"DO_WHILE_CT",
-	"SWITCH_CASE_CT"
+	"DO_WHILE_CT"
 };
 
 enum LogicalType
@@ -102,9 +100,6 @@ struct Condition
 	int combinedConditionIndex; // this will be the index of the combined condition within the conditions buffer
 	enum LogicalType combinationLogicType;
 	unsigned char isCombinedByOther; // is this Condition referenced in another one by combinedConditionIndex
-
-	struct DisassembledInstruction* cmpInstruction;
-	unsigned char isFirstSwitchCase;
 
 	int indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
 };
