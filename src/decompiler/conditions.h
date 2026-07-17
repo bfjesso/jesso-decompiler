@@ -3,7 +3,7 @@
 
 unsigned char getAllConditions(struct DecompilationParameters* params);
 
-static struct Condition* doesConditionOverlapWithAnother(struct DecompilationParameters* params, struct Condition* cond1);
+static int getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1);
 
 static unsigned char handleConditionsResize(struct DecompilationParameters* params);
 

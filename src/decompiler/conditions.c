@@ -179,40 +179,54 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	}
 
 	// checking for overlapping conditions which need to be handled as go to
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	struct Condition* conditionToMakeGoTo = 0;
+	do
 	{
-		struct Condition* cond1 = &params->currentFunc->conditions[i];
-		if (cond1->conditionType == CONDITIONAL_RETURN_CT || cond1->conditionType == CONDITIONAL_GOTO_CT || cond1->conditionType == ELSE_IF_CT || cond1->conditionType == ELSE_CT)
+		// the conditions that overlap with the most conditions are set to gotos first because this minimizes the total amount of conditional gotos.
+		conditionToMakeGoTo = 0;
+		int maxNumOfOverlapping = 0;
+		for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 		{
-			continue;
+			struct Condition* cond = &params->currentFunc->conditions[i];
+			if (cond->conditionType == CONDITIONAL_RETURN_CT || cond->conditionType == CONDITIONAL_GOTO_CT || cond->conditionType == ELSE_IF_CT || cond->conditionType == ELSE_CT)
+			{
+				continue;
+			}
+
+			int numOfOverlappingConditions = getNumOfOverlappingConditions(params, cond); // this is how many conditions cond overlaps with
+			if (numOfOverlappingConditions > maxNumOfOverlapping)
+			{
+				maxNumOfOverlapping = numOfOverlappingConditions;
+				conditionToMakeGoTo = cond;
+			}
 		}
 
-		struct Condition* cond2 = doesConditionOverlapWithAnother(params, cond1);
-		if (cond2)
+		if (conditionToMakeGoTo)
 		{
-			cond1->conditionType = CONDITIONAL_GOTO_CT;
-			if (cond1->connectedConditionIndex != -1) // connected else needs to be removed
+			conditionToMakeGoTo->conditionType = CONDITIONAL_GOTO_CT;
+			if (conditionToMakeGoTo->connectedConditionIndex != -1) // connected else needs to be removed
 			{
-				struct Condition* connectedCond = &params->currentFunc->conditions[cond1->connectedConditionIndex];
-				if (connectedCond->conditionType == ELSE_CT) 
+				struct Condition* connectedCond = &params->currentFunc->conditions[conditionToMakeGoTo->connectedConditionIndex];
+				if (connectedCond->conditionType == ELSE_CT)
 				{
-					removeCondition(params, cond1->connectedConditionIndex);
+					removeCondition(params, conditionToMakeGoTo->connectedConditionIndex);
 				}
-				else if (connectedCond->conditionType == ELSE_IF_CT) 
+				else if (connectedCond->conditionType == ELSE_IF_CT)
 				{
 					connectedCond->conditionType = IF_CT;
 				}
 
-				cond1->connectedConditionIndex = -1;
+				conditionToMakeGoTo->connectedConditionIndex = -1;
 			}
 		}
-	}
-
+	} while (conditionToMakeGoTo);
+	
 	return 1;
 }
 
-static struct Condition* doesConditionOverlapWithAnother(struct DecompilationParameters* params, struct Condition* cond1)
+static int getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1)
 {
+	int result = 0;
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
@@ -224,16 +238,16 @@ static struct Condition* doesConditionOverlapWithAnother(struct DecompilationPar
 		if ((cond1->jccIndex < cond2->firstBodyIndex || cond1->jccIndex > cond2->lastBodyIndex) &&
 			cond1->dstIndex >= cond2->firstBodyIndex && cond1->dstIndex <= cond2->lastBodyIndex) 
 		{
-			return cond2;
+			result++;
 		}
 		else if ((cond1->dstIndex < cond2->firstBodyIndex || cond1->dstIndex > cond2->lastBodyIndex) &&
 			cond1->jccIndex >= cond2->firstBodyIndex && cond1->jccIndex <= cond2->lastBodyIndex)
 		{
-			return cond2;
+			result++;
 		}
 	}
 	
-	return 0;
+	return result;
 }
 
 static unsigned char handleConditionsResize(struct DecompilationParameters* params)
