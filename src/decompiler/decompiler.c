@@ -371,7 +371,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int j = 0; j < NUM_OF_REGISTERS; j++)
+			for (int j = RAX; j < ST0; j++)
 			{
 				if (!modifiedRegs[j]) 
 				{
