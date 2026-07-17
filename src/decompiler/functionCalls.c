@@ -191,14 +191,36 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		}
 	}
 
+	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
+	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
+	int numOfRegArgs = 0;
+	for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++) 
+	{
+		struct RegisterVariable* regVar = 0;
+		decompiledRegArgs[i] = initializeJdcStr();
+		if (!decompileRegister(params, callInstructionIndex, -1, platformRegArgs[i], 0, &decompiledRegArgs[i], &regVar))
+		{
+			freeJdcStr(&decompiledRegArgs[i]);
+			break;
+		}
+
+		regArgTypeStrs[i] = initializeJdcStr();
+		if (regVar) 
+		{
+			dataTypeToStr(regVar->dataType, &regArgTypeStrs[i]);
+		}
+		else 
+		{
+			dataTypeToStr(getRegisterDataType(NO_MNEMONIC, platformRegArgs[i]), &regArgTypeStrs[i]);
+		}
+
+		numOfRegArgs++;
+	}
+
 	const int maxStackArgs = 10;
 	struct JdcStr stackArgTypeStrs[10] = { 0 };
 	struct JdcStr decompiledStackArgs[10] = { 0 };
 	int numOfStackArgs = 0;
-
-	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
-	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
-
 	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
@@ -238,37 +260,6 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
 				addAssociatedInstruction(params->currentFunc, i);
-			}
-		}
-
-		for(int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
-		{
-			if (!decompiledRegArgs[j].buffer)
-			{
-				enum Register specificReg = NO_REG;
-				if(doesInstructionModifyRegister(params, i, platformRegArgs[j], &specificReg, 0))
-				{
-					regArgTypeStrs[j] = initializeJdcStr();
-					dataTypeToStr(getRegisterDataType(instruction->opcode, specificReg), &regArgTypeStrs[j]);
-					
-					decompiledRegArgs[j] = initializeJdcStr();
-					if (!decompileRegister(params, i + 1, -1, specificReg, 1, &decompiledRegArgs[j], 0))
-					{
-						for (int k = 0; k < maxStackArgs; k++)
-						{ 
-							freeJdcStr(&stackArgTypeStrs[k]);
-							freeJdcStr(&decompiledStackArgs[k]);
-						}
-						for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
-						{
-							freeJdcStr(&regArgTypeStrs[k]);
-							freeJdcStr(&decompiledRegArgs[k]);
-						}
-						return 0;
-					}
-
-					addAssociatedInstruction(params->currentFunc, i);
-				}
 			}
 		}
 	}
