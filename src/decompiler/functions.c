@@ -186,7 +186,7 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 
 			unsigned char overwrites = 0;
 			enum Register specificReg = NO_REG;
-			if (doesInstructionAccessRegister(params, i, j, &specificReg) && !getRegArgByReg(params->currentFunc, j))
+			if (doesInstructionAccessRegister(params, i, j, 0, &specificReg) && !getRegArgByReg(params->currentFunc, j))
 			{
 				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
 				{

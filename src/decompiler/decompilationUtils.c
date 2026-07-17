@@ -121,7 +121,7 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int num
 	return 0;
 }
 
-unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg)
+unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg)
 {
 	struct Function* callee;
 	if (checkForKnownFunctionCall(params, instructionIndex, &callee) && callee)
@@ -137,7 +137,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 			return 1;
 		}
 	}
-	else if (checkForUnknownFunctionCall(params, instructionIndex)) 
+	else if (checkUnknownCalls && checkForUnknownFunctionCall(params, instructionIndex))
 	{
 		for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++) 
 		{

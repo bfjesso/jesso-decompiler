@@ -229,7 +229,7 @@ static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters
 	
 	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
-		if (doesInstructionAccessRegister(params, i, reg, 0))
+		if (doesInstructionAccessRegister(params, i, reg, 1, 0))
 		{
 			return 1;
 		}
