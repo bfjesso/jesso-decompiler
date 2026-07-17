@@ -137,6 +137,21 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 			return 1;
 		}
 	}
+	else if (checkForUnknownFunctionCall(params, instructionIndex)) 
+	{
+		for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++) 
+		{
+			if (compareRegisters(reg, platformRegArgs[i])) 
+			{
+				if (specificReg)
+				{
+					*specificReg = reg;
+				}
+
+				return 1;
+			}
+		}
+	}
 	
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	for (int i = 0; i < instruction->numOfOperands; i++)
