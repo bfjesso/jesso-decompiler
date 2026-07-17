@@ -332,7 +332,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		memset(modifiedRegs, 0, NUM_OF_REGISTERS);
 
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (isConditionRegular(condition))
+		if (condition->conditionType != CONDITIONAL_RETURN_CT)
 		{
 			for (int j = condition->firstBodyIndex; j <= condition->lastBodyIndex; j++)
 			{
@@ -410,51 +410,6 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 
 					regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
 					getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar);
-				}
-			}
-		}
-	}
-
-	// checking between jmp destinations
-	int currentJmpDst = -1;
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
-	{
-		if (checkForDirectJmpDst(params, i)) 
-		{
-			if (currentJmpDst != -1)
-			{
-				for (int j = RAX; j < ST0; j++)
-				{
-					if (modifiedRegs[j]) 
-					{
-						if (!addRegVar(params, 0, 0, j))
-						{
-							return 0;
-						}
-
-						struct RegisterVariable* regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-						getLocalRegVarScope(params, currentJmpDst - 1, i + 1, regVar);
-					}
-					
-				}
-			}
-			
-			currentJmpDst = i;
-			memset(modifiedRegs, 0, NUM_OF_REGISTERS);
-		}
-
-		if (currentJmpDst != -1)
-		{
-			for (int j = RAX; j < ST0; j++)
-			{
-				if (j == RBP || j == RSP || j == RIP)
-				{
-					continue;
-				}
-
-				if (doesInstructionModifyRegister(params, i, j, 0, 0))
-				{
-					modifiedRegs[j] = 1;
 				}
 			}
 		}
