@@ -97,7 +97,8 @@ struct Condition
 	int numOfCombinedJccs;
 	enum LogicalType combinedJccsLogicType;
 
-	int connectedConditionIndex; // this would be an else if or else condition
+	int connectedUpperConditionIndex; // this would be an if or else if condition
+	int connectedLowerConditionIndex; // this would be an else if or else condition
 
 	int indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
 };

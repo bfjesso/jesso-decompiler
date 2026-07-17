@@ -84,7 +84,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				currentCondition->jccIndex = i;
 				currentCondition->dstIndex = dstIndex;
 				currentCondition->exitIndex = exitIndex;
-				currentCondition->connectedConditionIndex = -1;
+				currentCondition->connectedUpperConditionIndex = -1;
+				currentCondition->connectedLowerConditionIndex = -1;
 
 				// setting the type
 				if (dstIndex < i)
@@ -129,11 +130,6 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 	for (int i = 0; i < ogNumOfConditions; i++) 
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
-		if (cond1->connectedConditionIndex != -1) 
-		{
-			continue;
-		}
-
 		if ((cond1->conditionType == IF_CT || cond1->conditionType == ELSE_IF_CT) && cond1->exitIndex > cond1->dstIndex)
 		{
 			unsigned char foundElseIf = 0;
@@ -144,7 +140,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					cond1->exitIndex == cond2->exitIndex &&
 					cond1->dstIndex + 1 == cond2->jccIndex)
 				{
-					cond1->connectedConditionIndex = j;
+					cond1->connectedLowerConditionIndex = j;
+					cond2->connectedUpperConditionIndex = i;
 					cond2->conditionType = ELSE_IF_CT;
 					foundElseIf = 1;
 					break;
@@ -164,7 +161,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					cond1 = &params->currentFunc->conditions[i]; // needs to be updated due to reallocation
 
 					struct Condition* elseCond = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
-					cond1->connectedConditionIndex = params->currentFunc->numOfConditions;
+					cond1->connectedLowerConditionIndex = params->currentFunc->numOfConditions;
 					params->currentFunc->numOfConditions++;
 
 					elseCond->conditionType = ELSE_CT;
@@ -172,23 +169,24 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 					elseCond->dstIndex = cond1->exitIndex;
 					elseCond->firstBodyIndex = cond1->dstIndex;
 					elseCond->lastBodyIndex = cond1->exitIndex - 1;
-					elseCond->connectedConditionIndex = -1;
+					elseCond->connectedUpperConditionIndex = i;
+					elseCond->connectedLowerConditionIndex = -1;
 				}
 			}
 		}
 	}
 
 	// checking for overlapping conditions which need to be handled as go to
-	struct Condition* conditionToMakeGoTo = 0;
+	int conditionToMakeGoToIndex = -1;
 	do
 	{
 		// the conditions that overlap with the most conditions are set to gotos first because this minimizes the total amount of conditional gotos.
-		conditionToMakeGoTo = 0;
+		conditionToMakeGoToIndex = -1;
 		int maxNumOfOverlapping = 0;
 		for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 		{
 			struct Condition* cond = &params->currentFunc->conditions[i];
-			if (cond->conditionType == CONDITIONAL_RETURN_CT || cond->conditionType == CONDITIONAL_GOTO_CT || cond->conditionType == ELSE_IF_CT || cond->conditionType == ELSE_CT)
+			if (cond->conditionType == CONDITIONAL_RETURN_CT || cond->conditionType == CONDITIONAL_GOTO_CT)
 			{
 				continue;
 			}
@@ -197,29 +195,47 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			if (numOfOverlappingConditions > maxNumOfOverlapping)
 			{
 				maxNumOfOverlapping = numOfOverlappingConditions;
-				conditionToMakeGoTo = cond;
+				conditionToMakeGoToIndex = i;
 			}
 		}
 
-		if (conditionToMakeGoTo)
+		if (conditionToMakeGoToIndex != -1)
 		{
-			conditionToMakeGoTo->conditionType = CONDITIONAL_GOTO_CT;
-			if (conditionToMakeGoTo->connectedConditionIndex != -1) // connected else needs to be removed
+			struct Condition* conditionToMakeGoTo = &params->currentFunc->conditions[conditionToMakeGoToIndex];
+
+			if (conditionToMakeGoTo->connectedLowerConditionIndex != -1)
 			{
-				struct Condition* connectedCond = &params->currentFunc->conditions[conditionToMakeGoTo->connectedConditionIndex];
-				if (connectedCond->conditionType == ELSE_CT)
+				struct Condition* connectedLowerCond = &params->currentFunc->conditions[conditionToMakeGoTo->connectedLowerConditionIndex];
+				if (connectedLowerCond->conditionType == ELSE_CT)
 				{
-					removeCondition(params, conditionToMakeGoTo->connectedConditionIndex);
+					removeCondition(params, conditionToMakeGoTo->connectedLowerConditionIndex);
 				}
-				else if (connectedCond->conditionType == ELSE_IF_CT)
+				else if (connectedLowerCond->conditionType == ELSE_IF_CT)
 				{
-					connectedCond->conditionType = IF_CT;
+					connectedLowerCond->conditionType = IF_CT;
+					connectedLowerCond->connectedUpperConditionIndex = -1;
 				}
 
-				conditionToMakeGoTo->connectedConditionIndex = -1;
+				conditionToMakeGoTo->connectedLowerConditionIndex = -1;
+			}
+
+			if (conditionToMakeGoTo->connectedUpperConditionIndex != -1)
+			{
+				struct Condition* connectedUpperCond = &params->currentFunc->conditions[conditionToMakeGoTo->connectedUpperConditionIndex];
+				connectedUpperCond->connectedLowerConditionIndex = -1;
+				conditionToMakeGoTo->connectedUpperConditionIndex = -1;
+			}
+
+			if (conditionToMakeGoTo->conditionType == ELSE_CT) 
+			{
+				removeCondition(params, conditionToMakeGoToIndex); // the jmp will be handled as a direct jmp later
+			}
+			else
+			{
+				conditionToMakeGoTo->conditionType = CONDITIONAL_GOTO_CT;
 			}
 		}
-	} while (conditionToMakeGoTo);
+	} while (conditionToMakeGoToIndex != -1);
 	
 	return 1;
 }
@@ -230,7 +246,8 @@ static int getNumOfOverlappingConditions(struct DecompilationParameters* params,
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
-		if (cond1 == cond2 || cond1->connectedConditionIndex == i || cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
+		if (cond1 == cond2 || cond1->connectedUpperConditionIndex == i || cond1->connectedLowerConditionIndex == i ||
+			cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
 		{
 			continue;
 		}
@@ -278,13 +295,23 @@ static unsigned char removeCondition(struct DecompilationParameters* params, int
 	for(int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
-		if (cond->connectedConditionIndex > conditionIndex) 
+
+		if (cond->connectedUpperConditionIndex > conditionIndex)
 		{
-			cond->connectedConditionIndex--;
+			cond->connectedUpperConditionIndex--;
 		}
-		else if (cond->connectedConditionIndex == conditionIndex) 
+		else if (cond->connectedUpperConditionIndex == conditionIndex)
 		{
-			cond->connectedConditionIndex = -1;
+			cond->connectedUpperConditionIndex = -1;
+		}
+
+		if (cond->connectedLowerConditionIndex > conditionIndex) 
+		{
+			cond->connectedLowerConditionIndex--;
+		}
+		else if (cond->connectedLowerConditionIndex == conditionIndex)
+		{
+			cond->connectedLowerConditionIndex = -1;
 		}
 	}
 
