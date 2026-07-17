@@ -332,11 +332,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (compareRegisters(targetReg, BP) || compareRegisters(targetReg, SP))
-	{
-		return strcpyJdc(result, registerStrs[targetReg]);
-	}
-	else if (compareRegisters(targetReg, IP))
+	if (compareRegisters(targetReg, IP))
 	{
 		return sprintfJdc(result, 0, "0x%llX", instruction->address + instruction->numOfBytes);
 	}
