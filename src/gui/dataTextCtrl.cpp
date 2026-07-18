@@ -382,7 +382,7 @@ void DataTextCtrl::ApplyDataHighlighting()
 	}
 }
 
-void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, int numOfBytes, enum IndicatorColor color)
+void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, unsigned int numOfBytes, enum IndicatorColor color)
 {
 	ClearIndicators();
 	SetIndicatorCurrent(color);
@@ -398,7 +398,7 @@ void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, int numOfBytes,
 
 		if (selectedType == ONE_BYTE_INT_TYPE && isHex && !isSigned)
 		{
-			int remainder = fileOffset % bytesPerLine;
+			unsigned int remainder = fileOffset % bytesPerLine;
 			int start = dataStart + (remainder * 5);
 			if (numOfBytes + remainder > bytesPerLine) 
 			{

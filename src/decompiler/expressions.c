@@ -432,7 +432,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		{
 			expressionsBufferSize += 5;
 
-			struct JdcStr* newExpressions = (struct JdcStr*)realloc(expressions, expressionsBufferSize * sizeof(struct JdcStr));
+			struct Expression* newExpressions = (struct Expression*)realloc(expressions, expressionsBufferSize * sizeof(struct JdcStr));
 			if (newExpressions)
 			{
 				expressions = newExpressions;
@@ -463,12 +463,12 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				struct JdcStr targetTypeStr = initializeJdcStr();
 				dataTypeToStr(targetType, &targetTypeStr);
 
-				sprintfJdc(&expressions[expressionIndex], 0, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
+				sprintfJdc(&expressions[expressionIndex].jdcStr, 0, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
 				freeJdcStr(&targetTypeStr);
 			}
 			else 
 			{
-				strcpyJdc(&expressions[expressionIndex], regArg->name.buffer);
+				strcpyJdc(&expressions[expressionIndex].jdcStr, regArg->name.buffer);
 			}
 			
 			expressionIndex++;
@@ -481,7 +481,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		else if (defaultToReg) 
 		{
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
-			strcpyJdc(&expressions[expressionIndex], registerStrs[targetReg]);
+			strcpyJdc(&expressions[expressionIndex].jdcStr, registerStrs[targetReg]);
 			expressionIndex++;
 		}
 		else

@@ -46,7 +46,7 @@ unsigned char compareDataTypes(struct DataType t1, struct DataType t2);
 
 unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit);
 
-unsigned char getPrimitiveTypeSize(enum Primitive primitiveType);
+unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 
 struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg);
 

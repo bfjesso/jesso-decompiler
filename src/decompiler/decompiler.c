@@ -526,8 +526,6 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 	{
 		regVar->scopeEndIndex = params->currentFunc->lastInstructionIndex + 1;
 	}
-
-	return 1;
 }
 
 unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)

@@ -414,8 +414,12 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 		{
 			struct StackVariable* var1 = &params->currentFunc->stackVars[j];
 			struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
+			if (var2->offsetFromInitSP < var1->offsetFromInitSP) 
+			{
+				return 0; // they should be sorted at this point
+			}
 
-			long long offsetDif = var2->offsetFromInitSP - var1->offsetFromInitSP;
+			unsigned short offsetDif = (unsigned short)(var2->offsetFromInitSP - var1->offsetFromInitSP);
 			unsigned char primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
 			if (offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
 			{

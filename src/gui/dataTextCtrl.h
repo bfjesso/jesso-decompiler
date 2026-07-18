@@ -64,5 +64,5 @@ public:
 
 	void ApplyDataHighlighting();
 
-	void HighlightBytes(unsigned long long address, int numOfBytes, enum IndicatorColor color);
+	void HighlightBytes(unsigned long long address, unsigned int numOfBytes, enum IndicatorColor color);
 };
