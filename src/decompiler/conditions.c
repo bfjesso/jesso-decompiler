@@ -17,7 +17,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		{
 			unsigned long long dstAddress = instruction->address + instruction->numOfBytes + instruction->operands[0].immediate.value;
 			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
-			if (dstIndex == -1)
+			if (dstIndex == -1 || dstIndex == i || dstIndex == i + 1)
 			{
 				continue;
 			}
