@@ -37,12 +37,12 @@ void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 
 unsigned char compareDataTypes(struct DataType t1, struct DataType t2)
 {
-	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel;
+	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel && t1.arrayLen == t2.arrayLen;
 }
 
 unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit) 
 {
-	if (type.pointerLevel > 0 || type.arrayLen > 0)
+	if (type.pointerLevel > 0 || type.arrayLen > 1)
 	{
 		return is64Bit ? 8 : 4;
 	}
