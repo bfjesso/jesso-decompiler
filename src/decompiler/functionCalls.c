@@ -91,7 +91,21 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			int pushInstructionIndex = -1;
 			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].offsetFromInitSP, &stackArgContainer, &pushInstructionIndex, 0))
 			{
-				return 0;
+				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP] : registerStrs[ESP]);
+				struct JdcStr dataTypeStr = initializeJdcStr();
+				dataTypeToStr(callee->stackVars[i].dataType, &dataTypeStr);
+				if (callee->stackVars[i].dataType.pointerLevel > 0) 
+				{
+					sprintfJdc(result, 1, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+				}
+				else
+				{
+					sprintfJdc(result, 1, "*(%s*)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+				}
+
+				freeJdcStr(&spStr);
+				freeJdcStr(&dataTypeStr);
+				continue;
 			}
 
 			if (stackArgContainer)
