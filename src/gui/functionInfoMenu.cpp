@@ -150,7 +150,7 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	stackVarsGrid->EnableEditing(false);
 	stackVarsGrid->SetColLabelValue(0, "Stack var type");
 	stackVarsGrid->SetColLabelValue(1, "Name");
-	stackVarsGrid->SetColLabelValue(2, "BP offset");
+	stackVarsGrid->SetColLabelValue(2, "Initial SP offset");
 	stackVarsGrid->SetColLabelValue(3, "Is argument");
 	stackVarsGrid->HideRowLabels();
 	stackVarsGrid->SetColSize(0, 100);
@@ -166,13 +166,13 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
 		dataTypeToStr(stackVar->dataType, &dataTypeStr);
-		if (stackVar->stackOffset > 0)
+		if (stackVar->offsetFromInitSP > 0)
 		{
-			sprintf(hexNumStr, "0x%llX", stackVar->stackOffset);
+			sprintf(hexNumStr, "0x%llX", stackVar->offsetFromInitSP);
 		}
 		else
 		{
-			sprintf(hexNumStr, "-0x%llX", -stackVar->stackOffset);
+			sprintf(hexNumStr, "-0x%llX", -stackVar->offsetFromInitSP);
 		}
 		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i, 1, wxString(stackVar->name.buffer));

@@ -17,7 +17,7 @@ struct StackVariable
 {
 	struct DataType dataType;
 	unsigned char isArgument;
-	long long stackOffset;
+	long long offsetFromInitSP; // this is the offset from the initial value of the stack pointer, which may not be the same as the base pointer
 	struct JdcStr name;
 };
 

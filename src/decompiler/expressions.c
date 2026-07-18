@@ -73,10 +73,10 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
 	
-	long long stackOffset = 0;
-	if (isMemAddressStackVar(params, instructionIndex, memAddress, &stackOffset)) 
+	long long offsetFromInitSP = 0;
+	if (isMemAddressStackVar(params, instructionIndex, memAddress, &offsetFromInitSP))
 	{
-		return decompileStackVar(params, instructionIndex, operandNum, stackOffset, result);
+		return decompileStackVar(params, instructionIndex, operandNum, offsetFromInitSP, result);
 	}
 
 	
@@ -209,9 +209,9 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	return 1;
 }
 
-static unsigned char decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long stackOffset, struct JdcStr* result)
+static unsigned char decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long offsetFromInitSP, struct JdcStr* result)
 {
-	struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+	struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 	if (!stackVar)
 	{
 		return 0;

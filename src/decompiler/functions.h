@@ -37,9 +37,9 @@ static long long getStackFrameChange(struct DisassembledInstruction* instruction
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* stackOffset);
+unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP);
 
-struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset);
+struct StackVariable* getStackVarByOffset(struct Function* function, long long offsetFromInitSP);
 
 int getNumOfStackArgs(struct Function* function);
 
@@ -51,7 +51,7 @@ struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Reg
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
-static unsigned char addStackVar(struct Function* function, long long stackOffset, struct DataType* dataTypeRef);
+static unsigned char addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef);
 
 unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
 

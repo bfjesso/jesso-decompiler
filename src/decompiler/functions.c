@@ -202,11 +202,11 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 		for (int j = 0; j < currentInstruction->numOfOperands; j++)
 		{
 			struct Operand* currentOperand = &currentInstruction->operands[j];
-			long long stackOffset = 0;
-			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &stackOffset)) 
+			long long offsetFromInitSP = 0;
+			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &offsetFromInitSP))
 			{
 				struct DataType dataType = getMemoryAddressDataType(currentInstruction->opcode, &currentOperand->memoryAddress);
-				if (!addStackVar(params->currentFunc, stackOffset, &dataType))
+				if (!addStackVar(params->currentFunc, offsetFromInitSP, &dataType))
 				{
 					return 0;
 				}
@@ -297,9 +297,9 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				{
 					struct StackVariable* stackArg = &callee->stackVars[k];
 					long long stackFrameSize = 0;
-					if (stackArg->isArgument && !getStackArgInitializer(params, j, stackArg->stackOffset, 0, 0, &stackFrameSize))
+					if (stackArg->isArgument && !getStackArgInitializer(params, j, stackArg->offsetFromInitSP, 0, 0, &stackFrameSize))
 					{
-						if (!addStackVar(params->currentFunc, stackArg->stackOffset - stackFrameSize, &stackArg->dataType))
+						if (!addStackVar(params->currentFunc, stackArg->offsetFromInitSP - stackFrameSize, &stackArg->dataType))
 						{
 							return 0;
 						}
@@ -328,7 +328,7 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
-		if (stackArgOffset - initialStackFrameSize == stackVar->stackOffset)
+		if (stackArgOffset - initialStackFrameSize == stackVar->offsetFromInitSP)
 		{
 			if (stackVarRef) { *stackVarRef = stackVar; }
 			return 1;
@@ -372,7 +372,7 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 			keepSorting = 0;
 			for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
 			{
-				if (params->currentFunc->stackVars[j].stackOffset > params->currentFunc->stackVars[j + 1].stackOffset)
+				if (params->currentFunc->stackVars[j].offsetFromInitSP > params->currentFunc->stackVars[j + 1].offsetFromInitSP)
 				{
 					struct StackVariable temp = params->currentFunc->stackVars[j];
 					params->currentFunc->stackVars[j] = params->currentFunc->stackVars[j + 1];
@@ -388,10 +388,10 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 			for (int k = 0; k < instruction->numOfOperands; k++)
 			{
 				struct Operand* operand = &instruction->operands[k];
-				long long stackOffset = 0;
-				if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &operand->memoryAddress, &stackOffset))
+				long long offsetFromInitSP = 0;
+				if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &operand->memoryAddress, &offsetFromInitSP))
 				{
-					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, stackOffset);
+					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 					if (!stackVar)
 					{
 						return 0;
@@ -415,7 +415,7 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 			struct StackVariable* var1 = &params->currentFunc->stackVars[j];
 			struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
 
-			long long offsetDif = var2->stackOffset - var1->stackOffset;
+			long long offsetDif = var2->offsetFromInitSP - var1->offsetFromInitSP;
 			unsigned char primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
 			if (offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
 			{
@@ -565,7 +565,7 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 	return -1;
 }
 
-unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* stackOffset)
+unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP)
 {
 	if (!memAddress)
 	{
@@ -574,7 +574,7 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 
 	if (compareRegisters(memAddress->reg, SP))
 	{
-		if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
+		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
 		return 1;
 	}
 
@@ -589,7 +589,7 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 			{
 				if (compareRegisters(instruction->operands[1].reg, SP))
 				{
-					if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
+					if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
 					return 1;
 				}
 				else
@@ -603,18 +603,18 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 	if (compareRegisters(memAddress->reg, BP))
 	{
 		// if mov BP, SP is not found, the BP is assumed to be the initial SP value
-		if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
+		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement; }
 		return 1;
 	}
 
 	return 0;
 }
 
-struct StackVariable* getStackVarByOffset(struct Function* function, long long stackOffset)
+struct StackVariable* getStackVarByOffset(struct Function* function, long long offsetFromInitSP)
 {
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
-		if (function->stackVars[i].stackOffset == stackOffset)
+		if (function->stackVars[i].offsetFromInitSP == offsetFromInitSP)
 		{
 			return &function->stackVars[i];
 		}
@@ -690,9 +690,9 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-static unsigned char addStackVar(struct Function* function, long long stackOffset, struct DataType* dataTypeRef)
+static unsigned char addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef)
 {
-	if (getStackVarByOffset(function, stackOffset))
+	if (getStackVarByOffset(function, offsetFromInitSP))
 	{
 		return 1;
 	}
@@ -703,16 +703,16 @@ static unsigned char addStackVar(struct Function* function, long long stackOffse
 		return 0;
 	}
 
-	unsigned char isArgument = stackOffset > 0;
+	unsigned char isArgument = offsetFromInitSP > 0;
 
 	function->stackVars = newStackVars;
 	struct StackVariable* stackVar = &function->stackVars[function->numOfStackVars];
 	function->numOfStackVars++;
 
-	stackVar->stackOffset = stackOffset;
+	stackVar->offsetFromInitSP = offsetFromInitSP;
 	stackVar->isArgument = isArgument;
 	stackVar->name = initializeJdcStr();
-	sprintfJdc(&(stackVar->name), 0, "%s%X", isArgument ? "arg" : "var", stackOffset < 0 ? -stackOffset : stackOffset);
+	sprintfJdc(&(stackVar->name), 0, "%s%X", isArgument ? "arg" : "var", offsetFromInitSP < 0 ? -offsetFromInitSP : offsetFromInitSP);
 
 	if (dataTypeRef)
 	{

@@ -89,7 +89,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		{
 			struct StackVariable* stackArgContainer = 0;
 			int pushInstructionIndex = -1;
-			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].stackOffset, &stackArgContainer, &pushInstructionIndex, 0)) 
+			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].offsetFromInitSP, &stackArgContainer, &pushInstructionIndex, 0))
 			{
 				return 0;
 			}
