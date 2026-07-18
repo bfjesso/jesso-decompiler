@@ -577,29 +577,34 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 		if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
 		return 1;
 	}
-	else 
+
+	// this is a simple check for other registers that are set to the SP, usually the BP
+	for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		// this is a simple check for other registers that are set to the SP, usually the BP
-		for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--) 
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		if (instruction->opcode == MOV && instruction->numOfOperands == 2 &&
+			instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER)
 		{
-			struct DisassembledInstruction* instruction = &params->instructions[i];
-			if (instruction->opcode == MOV && instruction->numOfOperands == 2 &&
-				instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER) 
+			if (compareRegisters(instruction->operands[0].reg, memAddress->reg))
 			{
-				if (compareRegisters(instruction->operands[0].reg, memAddress->reg))
+				if (compareRegisters(instruction->operands[1].reg, SP))
 				{
-					if (compareRegisters(instruction->operands[1].reg, SP))
-					{
-						if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
-						return 1;
-					}
-					else
-					{
-						return 0;
-					}
+					if (stackOffset) { *stackOffset = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
+					return 1;
+				}
+				else
+				{
+					return 0;
 				}
 			}
 		}
+	}
+
+	if (compareRegisters(memAddress->reg, BP))
+	{
+		// if mov BP, SP is not found, the BP is assumed to be the initial SP value
+		if (stackOffset) { *stackOffset = memAddress->constDisplacement; }
+		return 1;
 	}
 
 	return 0;
