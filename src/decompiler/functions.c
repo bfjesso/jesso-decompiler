@@ -164,17 +164,12 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
-
-		if (doesInstructionDoNothing(currentInstruction))
-		{
-			continue;
-		}
+		struct DisassembledInstruction* instruction = &params->instructions[i];
 
 		// checking for reg args
 		for (int j = RAX; j < ST0; j++)
 		{
-			if (currentInstruction->opcode == PUSH && currentInstruction->operands[0].type == REGISTER)
+			if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
 			{
 				break;
 			}
@@ -199,13 +194,13 @@ static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParamete
 		}
 
 		// checking for stack vars
-		for (int j = 0; j < currentInstruction->numOfOperands; j++)
+		for (int j = 0; j < instruction->numOfOperands; j++)
 		{
-			struct Operand* currentOperand = &currentInstruction->operands[j];
+			struct Operand* currentOperand = &instruction->operands[j];
 			long long offsetFromInitSP = 0;
 			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &offsetFromInitSP))
 			{
-				struct DataType dataType = getMemoryAddressDataType(currentInstruction->opcode, &currentOperand->memoryAddress);
+				struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
 				if (!addStackVar(params->currentFunc, offsetFromInitSP, &dataType))
 				{
 					return 0;
