@@ -1006,14 +1006,9 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 
 	decompParams.functions = functions.data();
 	decompParams.numOfFunctions = numOfFunctions;
-	if (numOfFunctions > 0)
+	if (!analyzeAllFunctions(&decompParams))
 	{
-		getAllFunctionReturnTypes(&decompParams);
-
-		if (!getAllFunctionConditionsAndArguments(&decompParams)) 
-		{
-			wxMessageBox("Error getting function arguments", "Failed analyzing functions");
-		}
+		wxMessageBox("Error analyzing functions", "Failed to analyze functions");
 	}
 
 	decompParams.currentFunc = 0;

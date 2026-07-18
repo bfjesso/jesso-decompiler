@@ -70,15 +70,46 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 	return 0;
 }
 
-void getAllFunctionReturnTypes(struct DecompilationParameters* params) 
+unsigned char analyzeAllFunctions(struct DecompilationParameters* params)
+{
+	if (!getAllFunctionReturnTypesAndConditions(params)) 
+	{
+		return 0;
+	}
+
+	if (!getAllFunctionRegArgsAndStackVars(params))
+	{
+		return 0;
+	}
+
+	if (!fixAllFunctionArgs(params))
+	{
+		return 0;
+	}
+
+	if (!setAllStackVarTypes(params))
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
+static unsigned char getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params) 
 {
 	unsigned char setAReturnType = 0;
+	unsigned char getConditions = 1;
 	do
 	{
 		setAReturnType = 0;
 		for (int i = 0; i < params->numOfFunctions; i++)
 		{
 			params->currentFunc = &params->functions[i];
+			if (getConditions && !getAllConditions(params))
+			{
+				return 0;
+			}
+
 			if (params->currentFunc->returnReg != NO_REG || 
 				params->currentFunc->callingConvention == __UNKNOWNCALL) // __UNKNOWNCALL will only be set at this point if the function ends without a return instruction
 			{
@@ -127,83 +158,61 @@ void getAllFunctionReturnTypes(struct DecompilationParameters* params)
 				}
 			}
 		}
+
+		getConditions = 0;
 	} while (setAReturnType); // a function's return type may depend on another function
-}
-
-unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params)
-{
-	for (int i = 0; i < params->numOfFunctions; i++) 
-	{
-		params->currentFunc = &params->functions[i];
-
-		if (!getAllConditions(params))
-		{
-			return 0;
-		}
-
-		if (!getFunctionRegArgsAndStackVars(params))
-		{
-			return 0;
-		}
-	}
-
-	if (!fixAllFunctionArgs(params))
-	{
-		return 0;
-	}
-
-	if (!setAllStackVarTypes(params))
-	{
-		return 0;
-	}
 
 	return 1;
 }
 
-static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
+static unsigned char getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
 {
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
-		struct DisassembledInstruction* instruction = &params->instructions[i];
-
-		// checking for reg args
-		for (int j = RAX; j < ST0; j++)
+		params->currentFunc = &params->functions[i];
+		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
-			if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
-			{
-				break;
-			}
+			struct DisassembledInstruction* instruction = &params->instructions[j];
 
-			if (j == RBP || j == RSP || j == RIP)
+			// checking for reg args
+			for (int k = RAX; k < ST0; k++)
 			{
-				continue;
-			}
-
-			unsigned char overwrites = 0;
-			enum Register specificReg = NO_REG;
-			if (doesInstructionAccessRegister(params, i, j, 0, &specificReg) && !getRegArgByReg(params->currentFunc, j))
-			{
-				if (!isRegInitialized(params, i - 1, params->currentFunc->firstInstructionIndex, j, 0, 0))
+				if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
 				{
-					if (!addRegVar(params, 0, 1, specificReg))
+					break;
+				}
+
+				if (k == RBP || k == RSP || k == RIP)
+				{
+					continue;
+				}
+
+				unsigned char overwrites = 0;
+				enum Register specificReg = NO_REG;
+				if (doesInstructionAccessRegister(params, j, k, 0, &specificReg) && !getRegArgByReg(params->currentFunc, k))
+				{
+					if (!isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, k, 0, 0))
 					{
-						return 0;
+						if (!addRegVar(params, 0, 1, specificReg))
+						{
+							return 0;
+						}
 					}
 				}
 			}
-		}
 
-		// checking for stack vars
-		for (int j = 0; j < instruction->numOfOperands; j++)
-		{
-			struct Operand* currentOperand = &instruction->operands[j];
-			long long offsetFromInitSP = 0;
-			if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &offsetFromInitSP))
+			// checking for stack vars
+			for (int k = 0; k < instruction->numOfOperands; k++)
 			{
-				struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
-				if (!addStackVar(params->currentFunc, offsetFromInitSP, &dataType))
+				struct Operand* currentOperand = &instruction->operands[k];
+				long long offsetFromInitSP = 0;
+				if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &currentOperand->memoryAddress, &offsetFromInitSP))
 				{
-					return 0;
+					struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
+					if (!addStackVar(params->currentFunc, offsetFromInitSP, &dataType))
+					{
+						return 0;
+					}
 				}
 			}
 		}

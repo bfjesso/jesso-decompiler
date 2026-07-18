@@ -8,10 +8,8 @@ extern "C"
 #endif
 
 	unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex);
-	
-	void getAllFunctionReturnTypes(struct DecompilationParameters* params);
 
-	unsigned char getAllFunctionConditionsAndArguments(struct DecompilationParameters* params);
+	unsigned char analyzeAllFunctions(struct DecompilationParameters* params);
 
 	void freeFunction(struct Function* function);
 
@@ -23,7 +21,9 @@ extern "C"
 }
 #endif
 
-static unsigned char getFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
+static unsigned char getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params);
+
+static unsigned char getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
 
 static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
