@@ -147,11 +147,10 @@ struct Function
 	unsigned char numOfRegVars;
 
 	struct StackVariable* stackVars;
-	unsigned char numOfStackVars;
+	unsigned short numOfStackVars;
 
 	struct ReturnedVariable* returnedVars;
 	unsigned char numOfReturnedVars;
-	
 
 	int firstInstructionIndex;
 	int lastInstructionIndex;
