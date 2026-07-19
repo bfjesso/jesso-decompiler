@@ -812,6 +812,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
+	unsigned char foundFirstInstance = 0;
 	regVar->dataType = getRegisterDataType(NO_MNEMONIC, regVar->reg);
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
@@ -837,10 +838,11 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 			if (compareRegisters(reg, regVar->reg))
 			{
 				struct DataType dataType = getRegisterDataType(instruction->opcode, reg);
-				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit)) // the type size is set to the largest version of the register used
+				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
 					regVar->dataType.primitiveType = dataType.primitiveType;
 					regVar->reg = reg;
+					foundFirstInstance = 1;
 				}
 
 				if (operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
