@@ -143,50 +143,47 @@ struct Function
 
 	struct JdcStr name;
 
-	struct RegisterVariable* regVars;
-	unsigned char numOfRegVars;
-
 	struct StackVariable* stackVars;
-	unsigned short numOfStackVars;
-
 	struct ReturnedVariable* returnedVars;
-	unsigned char numOfReturnedVars;
+	struct RegisterVariable* regVars;
+	unsigned short numOfStackVars;
+	unsigned short numOfReturnedVars;
+	unsigned short numOfRegVars;
+
+	unsigned char hasDoneInitialAnalysis;
 
 	int firstInstructionIndex;
 	int lastInstructionIndex;
 
 	struct Condition* conditions;
-	int numOfConditions;
 	struct DirectJmp* directJmps;
+	int numOfConditions;
 	int numOfDirectJmps;
 
 	struct AssociatedInstructions* associatedInstructions; // these are a list of instructions indexes that correspond to each line of the decompilation
 	int numOfLines;
 	int associatedInstructionsBufferLen;
-
-	unsigned char hasDoneInitialAnalysis;
 };
 
 struct DecompilationParameters
 {
 	struct Function* functions;
-	int numOfFunctions;
-
 	struct ImportedFunction* imports;
+	int numOfFunctions;
 	int numOfImports;
 
 	struct Function* currentFunc; // function being decompiled
-	unsigned char numOfIndents;
 
 	struct DisassembledInstruction* instructions;
-	int numOfInstructions;
-
-	unsigned long long imageBase;
 	struct FileSection* sections;
+	int numOfInstructions;
 	int numOfSections;
 
+	unsigned long long imageBase;
+	
 	unsigned char* fileBytes;
 	unsigned long long numOfFileBytes;
 
+	unsigned char numOfIndents;
 	unsigned char is64Bit;
 };
