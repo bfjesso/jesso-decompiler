@@ -25,7 +25,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 		return 1;
 	}
 
-	// check if jump to a return. this will only count if the jump leads directly to a ret, meaning the jmp is effectivly a ret instruction
+	// check if jump to a return. this only counts if the jump goes to a location that leads directly to a return with nothing but stack clean up before
 	if (isOpcodeJmp(instruction->opcode))
 	{
 		unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
@@ -61,33 +61,19 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = startInstructionIndex; i <= lastInstruction; i++)
 	{
-		if ((params->instructions[i].numOfOperands > 0 && params->instructions[i].operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(&params->instructions[i], 0, 0)) ||
-			isOpcodeCall(params->instructions[i].opcode) || isOpcodeJcc(params->instructions[i].opcode) | isOpcodeJmp(params->instructions[i].opcode))
-		{
-			return 0;
-		}
-		else if (params->currentFunc)
-		{
-			if (params->currentFunc->lastInstructionIndex != 0)
-			{
-				if (doesInstructionModifyRegister(params, i, params->currentFunc->returnReg, 0, 0))
-				{
-					return 0;
-				}
-			}
-			else
-			{
-				if (doesInstructionModifyRegister(params, i, AX, 0, 0))
-				{
-					return 0;
-				}
-			}
-		}
-
 		if (checkForReturnStatement(params, i))
 		{
 			return 1;
 		}
+		
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE || 
+			(instruction->opcode == ADD && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP)))
+		{
+			continue;
+		}
+
+		return 0;
 	}
 
 	return 0;
