@@ -500,13 +500,13 @@ static long long getStackFrameChange(struct DisassembledInstruction* instruction
 			return -instruction->operands[1].immediate.value;
 		}
 	}
-	else if (instruction->opcode == PUSH) 
+	else if (instruction->opcode == PUSH)
 	{
-		return getSizeOfOperand(&instruction->operands[0]);
+		return instruction->operandSizeAttribute;
 	}
 	else if (instruction->opcode == POP)
 	{
-		return -getSizeOfOperand(&instruction->operands[0]);
+		return -instruction->operandSizeAttribute;
 	}
 
 	return 0;

@@ -10,9 +10,28 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 	struct Operand operands[4] = { 0 };
 
 	unsigned char is64BitOperandSize = 0;
-	if (params->is64BitMode && params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) { is64BitOperandSize = 1; }
-	else if (params->is64BitMode && params->opcode.opcodeSuperscript == f64) { is64BitOperandSize = 1; }
-	else if (params->rexPrefix.W) { is64BitOperandSize = 1; }
+	if (params->is64BitMode)
+	{
+		if ((params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) ||
+			params->opcode.opcodeSuperscript == f64 ||
+			params->rexPrefix.W) 
+		{
+			is64BitOperandSize = 1;
+		}
+	}
+
+	if (params->legPrefixes.group3 == OSO)
+	{
+		result->operandSizeAttribute = 2;
+	}
+	else if (!is64BitOperandSize)
+	{
+		result->operandSizeAttribute = 4;
+	}
+	else
+	{
+		result->operandSizeAttribute = 8;
+	}
 
 	unsigned char vectorLength = 16;
 	if (params->evexPrefix.LL == 0b10) { vectorLength = 64; }

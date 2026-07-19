@@ -220,6 +220,7 @@ struct DisassembledInstruction
 
 	struct Operand* operands;
 	unsigned char numOfOperands;
+	unsigned char operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
 
 	enum LegacyPrefix group1Prefix;
 
