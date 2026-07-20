@@ -829,7 +829,7 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 			else if (operand->type == MEM_ADDRESS)
 			{
 				reg = operand->memoryAddress.reg;
-				if (reg == NO_REG) 
+				if (!compareRegisters(reg, regVar->reg))
 				{
 					reg = operand->memoryAddress.regDisplacement;
 				}
@@ -837,17 +837,19 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 
 			if (compareRegisters(reg, regVar->reg))
 			{
+				if (operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
+				{
+					regVar->dataType = getMemoryAddressDataType(instruction->opcode, &operand->memoryAddress);
+					regVar->dataType.pointerLevel = 1;
+					return;
+				}
+				
 				struct DataType dataType = getRegisterDataType(instruction->opcode, reg);
 				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
 					regVar->dataType.primitiveType = dataType.primitiveType;
 					regVar->reg = reg;
 					foundFirstInstance = 1;
-				}
-
-				if (operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
-				{
-					regVar->dataType.pointerLevel = 1;
 				}
 
 				if (dataType.isUnsigned)
