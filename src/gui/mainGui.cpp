@@ -636,8 +636,6 @@ void MainGui::DisassembleFile()
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
 
-	logTextCtrl->Log("finished disassembling, updating GUI...", 0);
-
 	decompParams.imports = imports;
 	decompParams.numOfImports = numOfImports;
 
@@ -652,6 +650,8 @@ void MainGui::DisassembleFile()
 	decompParams.numOfFileBytes = numOfFileBytes;
 
 	decompParams.is64Bit = is64Bit;
+
+	logTextCtrl->Log("updating disassembly GUI...", 0);
 
 	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
@@ -689,8 +689,15 @@ void MainGui::AnalyzeFile()
 
 	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	FindAllFunctions(getSymbols == wxYES);
+
+	logTextCtrl->Log("analyzing functions...", 0);
+
+	if (!analyzeAllFunctions(&decompParams))
+	{
+		wxMessageBox("Error analyzing functions", "Failed to analyze functions");
+	}
 	
-	logTextCtrl->Log("finished finding functions, updating GUI...", 0);
+	logTextCtrl->Log("updating functions GUI...", 0);
 
 	for (int i = 0; i < functionsTextCtrls.size(); i++)
 	{
@@ -698,6 +705,8 @@ void MainGui::AnalyzeFile()
 	}
 
 	logTextCtrl->Log("finished analyzing file", 0);
+
+	decompParams.currentFunc = 0;
 }
 
 void MainGui::ClearData()
@@ -959,19 +968,11 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		}
 	}
 
-	unsigned long long maxAddress = disassembledInstructions[disassembledInstructions.size() - 1].address;
-	logTextCtrl->LogProgress(0, maxAddress);
-
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
 	int numOfFunctions = 0;
 	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
-		if (numOfFunctions % 250 == 0)
-		{
-			logTextCtrl->LogProgress(disassembledInstructions[instructionIndex].address, 0);
-		}
-		
 		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
 		{
 			unsigned foundNextCodeSection = 0;
@@ -1002,15 +1003,8 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		numOfFunctions++;
 	}
 
-	logTextCtrl->LogProgress(maxAddress, 0);
-
 	decompParams.functions = functions.data();
 	decompParams.numOfFunctions = numOfFunctions;
-	if (!analyzeAllFunctions(&decompParams))
-	{
-		wxMessageBox("Error analyzing functions", "Failed to analyze functions");
-	}
-
 	decompParams.currentFunc = 0;
 }
 

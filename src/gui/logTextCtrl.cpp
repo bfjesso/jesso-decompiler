@@ -24,6 +24,8 @@ void LogTextCtrl::Log(wxString text, unsigned char isError)
 	}
 
 	SetReadOnly(true);
+	Refresh();
+	Update();
 }
 
 void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, unsigned char isError)
