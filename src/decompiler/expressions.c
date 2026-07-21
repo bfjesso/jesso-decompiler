@@ -88,7 +88,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	unsigned long long baseRegVal = 0;
 	if (compareRegisters(memAddress->reg, IP)) 
 	{
-		baseRegVal = params->instructions[instructionIndex + 1].address * memAddress->scale;
+		baseRegVal = (instruction->address + instruction->numOfBytes) * memAddress->scale;
 	}
 	else if (memAddress->reg != NO_REG) 
 	{
@@ -129,7 +129,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	unsigned long long displacementRegVal = 0;
 	if (compareRegisters(memAddress->regDisplacement, IP))
 	{
-		displacementRegVal = params->instructions[instructionIndex + 1].address;
+		displacementRegVal = instruction->address + instruction->numOfBytes;
 	}
 	else if (memAddress->regDisplacement != NO_REG)
 	{
