@@ -61,12 +61,12 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 				struct Condition* cond = &params->currentFunc->conditions[j];
 
 				// checking if the jmp is part of a condtion
-				if (i == cond->jccIndex || (i == cond->dstIndex - 1 && cond->conditionType == LOOP_CT))
+				if (i == cond->jccIndex || (i == cond->dstIndex - 1 && cond->conditionType == WHILE_CT))
 				{
 					directJmpType = NONE_DJT;
 					break;
 				}
-				else if (cond->conditionType == LOOP_CT || cond->conditionType == DO_WHILE_CT)
+				else if (cond->conditionType == WHILE_CT || cond->conditionType == DO_WHILE_CT)
 				{
 					int loopStart = cond->firstBodyIndex;
 					int loopEnd = cond->lastBodyIndex;

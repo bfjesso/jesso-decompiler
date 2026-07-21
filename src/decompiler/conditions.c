@@ -106,7 +106,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				}
 				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
-					currentCondition->conditionType = LOOP_CT;
+					currentCondition->conditionType = WHILE_CT;
 					currentCondition->firstBodyIndex = i + 1;
 					currentCondition->lastBodyIndex = dstIndex - 1;
 				}
@@ -458,7 +458,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	}
 
 	// invert condition menas that if the jmp is taken, then the body is not executed. combinedJccsLogicType is set assuming that invertCondition is true
-	unsigned char invertCondition = condition->conditionType == IF_CT || condition->conditionType == ELSE_IF_CT || condition->conditionType == LOOP_CT;
+	unsigned char invertCondition = condition->conditionType == IF_CT || condition->conditionType == ELSE_IF_CT || condition->conditionType == WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (condition->combinedJccsLogicType == OR_LT)
@@ -518,43 +518,12 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		}
 	}
 
-	if (condition->conditionType == LOOP_CT)
+	if (condition->conditionType == WHILE_CT)
 	{
-		// check for for loop
-		if (params->instructions[condition->exitIndex - 1].opcode == JMP_SHORT)
-		{
-			struct JdcStr assignmentExpression = initializeJdcStr();
-			for (int i = condition->exitIndex; i < condition->jccIndex; i++)
-			{
-				if (checkForAssignment(params, i))
-				{
-					if (decompileAssignments(params, i, &assignmentExpression))
-					{
-						break;
-					}
-					else
-					{
-						freeJdcStr(&conditionExpression);
-						freeJdcStr(&assignmentExpression);
-						return 0;
-					}
-				}
-			}
-
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "for (; %s; %s)\n", conditionExpression.buffer, assignmentExpression.buffer);
-			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-			params->currentFunc->numOfLines++;
-
-			freeJdcStr(&assignmentExpression);
-		}
-		else
-		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "while (%s)\n", conditionExpression.buffer);
-			addAssociatedInstruction(params->currentFunc, condition->jccIndex);
-			params->currentFunc->numOfLines++;
-		}
+		addIndents(result, params->numOfIndents);
+		sprintfJdc(result, 1, "while (%s)\n", conditionExpression.buffer);
+		addAssociatedInstruction(params->currentFunc, condition->jccIndex);
+		params->currentFunc->numOfLines++;
 	}
 	else if (condition->conditionType == IF_CT)
 	{

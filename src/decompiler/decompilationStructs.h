@@ -55,7 +55,7 @@ enum ConditionType
 	ELSE_CT,
 	CONDITIONAL_GOTO_CT,
 	CONDITIONAL_RETURN_CT,
-	LOOP_CT, // for or while loop
+	WHILE_CT,
 	DO_WHILE_CT
 };
 
@@ -66,7 +66,7 @@ static const char* conditionTypeStrs[] =
 	"ELSE_CT",
 	"CONDITIONAL_GOTO_CT",
 	"CONDITIONAL_RETURN_CT",
-	"LOOP_CT",
+	"WHILE_CT",
 	"DO_WHILE_CT"
 };
 

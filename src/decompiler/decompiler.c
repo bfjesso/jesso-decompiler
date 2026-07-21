@@ -385,7 +385,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					continue;
 				}
 
-				if ((condition->conditionType == LOOP_CT || condition->conditionType == DO_WHILE_CT))
+				if ((condition->conditionType == WHILE_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
 					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, condition->lastBodyIndex, j, 1, 0))
