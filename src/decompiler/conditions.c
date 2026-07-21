@@ -45,6 +45,9 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 			// a series of Jcc instructions that have the same destination are combined with a logical AND
 			// if the series ends with a Jcc that does not have the same destination, then if the instruction immediatly before the destination of the previous Jcc is the this Jcc, they are all combined with a logical OR
 
+			// this is assuming that the condition is inverted, which means that if the jmp is taken then the body is not executed. this is how regular if statements are decompiled.
+			// if the condition is not inverted, then OR and AND are switched
+
 			if (lastCondition && dstIndex == lastCondition->dstIndex && !stopCombination)
 			{
 				if (!handleCombinedJccResize(lastCondition))
@@ -454,12 +457,13 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		return 1;
 	}
 
-	unsigned char invertCondition = condition->conditionType == CONDITIONAL_RETURN_CT || condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == DO_WHILE_CT;
+	// invert condition menas that if the jmp is taken, then the body is not executed. combinedJccsLogicType is set assuming that invertCondition is true
+	unsigned char invertCondition = condition->conditionType == IF_CT || condition->conditionType == ELSE_IF_CT || condition->conditionType == LOOP_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (condition->combinedJccsLogicType == OR_LT)
 	{
-		if (!decompileComparison(params, condition->jccIndex, invertCondition, &conditionExpression))
+		if (!decompileComparison(params, condition->jccIndex, !invertCondition, &conditionExpression))
 		{
 			freeJdcStr(&conditionExpression);
 			return 0;
@@ -468,7 +472,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			unsigned char invertOperator = i == (condition->numOfCombinedJccs - 1);
-			if (invertCondition)
+			if (!invertCondition)
 			{
 				invertOperator = !invertOperator;
 			}
@@ -483,14 +487,14 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addAssociatedInstruction(params->currentFunc, condition->combinedJccIndexes[i]);
 
-			strcatJdc(&conditionExpression, !invertCondition ? " || " : " && ");
+			strcatJdc(&conditionExpression, invertCondition ? " || " : " && ");
 			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
 			freeJdcStr(&currentConditionExpression);
 		}
 	}
 	else
 	{
-		if (!decompileComparison(params, condition->jccIndex, !invertCondition, &conditionExpression)) // this needs to run if combinedJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfCombinedJccs will be 0 
+		if (!decompileComparison(params, condition->jccIndex, invertCondition, &conditionExpression)) // this needs to run if combinedJccsLogicType is either AND_LT or NONE_LT. if it is NONE_LT, the loop wont run because numOfCombinedJccs will be 0 
 		{
 			freeJdcStr(&conditionExpression);
 			return 0;
@@ -499,7 +503,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			struct JdcStr currentConditionExpression = initializeJdcStr();
-			if (!decompileComparison(params, condition->combinedJccIndexes[i], !invertCondition, &currentConditionExpression))
+			if (!decompileComparison(params, condition->combinedJccIndexes[i], invertCondition, &currentConditionExpression))
 			{
 				freeJdcStr(&conditionExpression);
 				freeJdcStr(&currentConditionExpression);
@@ -508,7 +512,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 			addAssociatedInstruction(params->currentFunc, condition->combinedJccIndexes[i]);
 
-			strcatJdc(&conditionExpression, !invertCondition ? " && " : " || ");
+			strcatJdc(&conditionExpression, invertCondition ? " && " : " || ");
 			strcatJdc(&conditionExpression, currentConditionExpression.buffer);
 			freeJdcStr(&currentConditionExpression);
 		}
