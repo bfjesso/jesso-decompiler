@@ -85,15 +85,10 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
-		if (isOpcodeReturn(params->instructions[instructionIndex].opcode) || isOpcodeJmp(params->instructions[instructionIndex].opcode))
-		{
-			addIndents(result, params->numOfIndents);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
-			return strcatJdc(result, "return;\n");
-		}
-		
-		return 1;
+		addIndents(result, params->numOfIndents);
+		addAssociatedInstruction(params->currentFunc, instructionIndex);
+		params->currentFunc->numOfLines++;
+		return strcatJdc(result, "return;\n");
 	}
 
 	if (checkForKnownFunctionCall(params, instructionIndex, 0) || checkForUnknownFunctionCall(params, instructionIndex))
