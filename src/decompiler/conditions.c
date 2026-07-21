@@ -91,18 +91,18 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 				currentCondition->connectedLowerConditionIndex = -1;
 
 				// setting the type
-				if (dstIndex < i)
-				{
-					currentCondition->conditionType = DO_WHILE_CT;
-					currentCondition->firstBodyIndex = dstIndex;
-					currentCondition->lastBodyIndex = i - 1;
-				}
-				else if (doesInstructionLeadStraightToReturn(params, dstJmpChainIndex))
+				if (doesInstructionLeadStraightToReturn(params, dstJmpChainIndex))
 				{
 					currentCondition->conditionType = CONDITIONAL_RETURN_CT;
 					currentCondition->dstIndex = dstJmpChainIndex;
 					currentCondition->firstBodyIndex = -1;
 					currentCondition->lastBodyIndex = -1;
+				}
+				else if (dstIndex < i)
+				{
+					currentCondition->conditionType = DO_WHILE_CT;
+					currentCondition->firstBodyIndex = dstIndex;
+					currentCondition->lastBodyIndex = i - 1;
 				}
 				else if (exitIndex != -1 && exitIndex == i - 1) // checks if the exitIndex is to the instruction before the Jcc, which is assumed to be the comparisson instruction
 				{
