@@ -125,7 +125,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	auiManager.GetArtProvider()->SetColor(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR, textColor);
 	auiManager.GetArtProvider()->SetMetric(wxAUI_DOCKART_GRADIENT_TYPE, wxAUI_GRADIENT_NONE);
 
-	auiNotebook = new wxAuiNotebook(this, NotebookID);
+	auiNotebook = new wxAuiNotebook(this, NotebookID, wxDefaultPosition, wxDefaultSize, wxAUI_NB_CLOSE_ON_ALL_TABS);
 	auiNotebook->SetArtProvider(new ColoredTabArt());
 
 	logTextCtrl = new LogTextCtrl(this, this);
@@ -303,21 +303,18 @@ void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 
 void MainGui::OnTabRightClick(wxAuiNotebookEvent& e)
 {
-	if (auiNotebook->GetPageCount() > 1) 
-	{
-		wxMenu menu;
-		const int ID_POP_OUT = 100;
+	wxMenu menu;
+	const int ID_POP_OUT = 100;
 
-		menu.Append(ID_POP_OUT, "Pop out");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			wxWindow* window = auiNotebook->GetPage(e.GetSelection());
-			wxString caption = auiNotebook->GetPageText(e.GetSelection());
-			auiNotebook->RemovePage(e.GetSelection());
-			AddFloatingPane(window, caption);
+	menu.Append(ID_POP_OUT, "Pop out");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		wxWindow* window = auiNotebook->GetPage(e.GetSelection());
+		wxString caption = auiNotebook->GetPageText(e.GetSelection());
+		auiNotebook->RemovePage(e.GetSelection());
+		AddFloatingPane(window, caption);
 		}, ID_POP_OUT);
 
-		PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
-	}
+	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 }
 
 void MainGui::OnMouseRightClick(wxMouseEvent& e)
