@@ -237,10 +237,10 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	int numOfStackArgs = 0;
 	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
-		if (conditionIndex != -1)
+		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
+		if (condition)
 		{
-			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
 		}
 		

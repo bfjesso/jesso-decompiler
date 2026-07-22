@@ -400,10 +400,10 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			break;
 		}
 
-		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
-		if (conditionIndex != -1)
+		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
+		if (condition)
 		{
-			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
 		}
 

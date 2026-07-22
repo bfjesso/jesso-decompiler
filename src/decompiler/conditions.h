@@ -19,6 +19,10 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 
 unsigned char isConditionDirectJmp(struct Condition* condition);
 
-int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
+struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
 
-int getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
+struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex);
+
+int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition);
+
+int getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition);

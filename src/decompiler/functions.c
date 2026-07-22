@@ -233,18 +233,16 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 	
 	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
 	{
-		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
-		if (conditionIndex != -1 && i != startInstructionIndex)
+		struct Condition* cond = getConditionFromLastBodyInstruction(params, i);
+		if (cond && i != startInstructionIndex)
 		{
-			struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
 			if (cond->conditionType == ELSE_CT)
 			{
 				if (isRegInitialized(params, cond->lastBodyIndex, cond->firstBodyIndex, reg, specificReg, dataType))
 				{
-					int ifIndex = getConditionFromLastBodyInstruction(params, cond->jccIndex);
-					if (ifIndex != -1 && params->currentFunc->conditions[ifIndex].conditionType == IF_CT) // I will handle else ifs later
+					struct Condition* ifCond = getConditionFromLastBodyInstruction(params, cond->jccIndex);
+					if (ifCond && ifCond->conditionType == IF_CT) // I will handle else ifs later
 					{
-						struct Condition* ifCond = &params->currentFunc->conditions[ifIndex];
 						if (isRegInitialized(params, ifCond->lastBodyIndex, ifCond->firstBodyIndex, reg, specificReg, dataType))
 						{
 							return 1;
@@ -253,7 +251,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 				}
 			}
 
-			i = cond->firstBodyIndex;
+			i = getConditionChainFirstBodyInstruction(params, cond);
 			continue;
 		}
 
@@ -342,10 +340,10 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 	long long currentStackFrameSize = initialStackFrameSize;
 	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
-		if (conditionIndex != -1)
+		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
+		if (condition)
 		{
-			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
 		}
 		

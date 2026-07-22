@@ -93,8 +93,8 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (isInUnreachableState)
 		{
-			int condIndex = getConditionFromLastBodyInstruction(params, i);
-			if (checkForDirectJmpDst(params, i) || condIndex != -1)
+			struct Condition* cond = getConditionFromLastBodyInstruction(params, i);
+			if (checkForDirectJmpDst(params, i) || cond)
 			{
 				if(numOfSkippedInstructions > 0)
 				{
@@ -111,7 +111,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				isInUnreachableState = 0;
 				numOfSkippedInstructions = 0;
 
-				if (condIndex != -1)
+				if (cond)
 				{
 					if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
 					{
@@ -336,18 +336,12 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		{
 			for (int j = condition->firstBodyIndex; j <= condition->lastBodyIndex; j++)
 			{
-				int conditionIndex = getConditionFromFirstBodyInstruction(params, j);
-				if (conditionIndex != -1 && conditionIndex != i)
+				struct Condition* cond = getConditionFromFirstBodyInstruction(params, j);
+				if (cond && cond != condition && !isConditionDirectJmp(cond) &&
+					cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
 				{
-					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
-					if (!isConditionDirectJmp(cond))
-					{
-						if (cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
-						{
-							j = cond->lastBodyIndex;
-							continue;
-						}
-					}
+					j = getConditionChainLastBodyInstruction(params, cond);
+					continue;
 				}
 
 				if (checkForReturnStatement(params, j))
@@ -401,7 +395,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					}
 				}
 
-				if (isRegisterAccessedBeforeInit(params, condition->lastBodyIndex + 1, params->currentFunc->lastInstructionIndex, j, 0, 0))
+				int firstChainBodyIndex = getConditionChainFirstBodyInstruction(params, condition);
+				int lastChainBodyIndex = getConditionChainLastBodyInstruction(params, condition);
+				if (isRegisterAccessedBeforeInit(params, lastChainBodyIndex + 1, params->currentFunc->lastInstructionIndex, j, 0, 0))
 				{
 					if (!addRegVar(params, 0, 0, j))
 					{
@@ -409,7 +405,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					}
 
 					regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-					getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar);
+					getLocalRegVarScope(params, firstChainBodyIndex - 1, lastChainBodyIndex + 1, regVar);
 				}
 			}
 		}
@@ -477,10 +473,10 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 {
 	for (int i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
-		int conditionIndex = getConditionFromLastBodyInstruction(params, i);
-		if (conditionIndex != -1)
+		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
+		if (condition)
 		{
-			i = params->currentFunc->conditions[conditionIndex].firstBodyIndex;
+			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
 		}
 		
@@ -498,10 +494,10 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 
 	for (int i = lowerStart; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		int conditionIndex = getConditionFromFirstBodyInstruction(params, i);
-		if (conditionIndex != -1)
+		struct Condition* condition = getConditionFromFirstBodyInstruction(params, i);
+		if (condition)
 		{
-			i = params->currentFunc->conditions[conditionIndex].lastBodyIndex;
+			i = getConditionChainLastBodyInstruction(params, condition);
 			continue;
 		}
 		

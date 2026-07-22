@@ -590,28 +590,48 @@ unsigned char isConditionDirectJmp(struct Condition* condition)
 	return condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT;
 }
 
-int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
+struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (instructionIndex == params->currentFunc->conditions[i].firstBodyIndex)
 		{
-			return i;
+			return &params->currentFunc->conditions[i];
 		}
 	}
 
-	return -1;
+	return 0;
 }
 
-int getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
+struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (instructionIndex == params->currentFunc->conditions[i].lastBodyIndex)
 		{
-			return i;
+			return &params->currentFunc->conditions[i];
 		}
 	}
 
-	return -1;
+	return 0;
+}
+
+int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
+{
+	while (condition->connectedUpperConditionIndex != -1) 
+	{
+		condition = &params->currentFunc->conditions[condition->connectedUpperConditionIndex];
+	}
+	
+	return condition->firstBodyIndex;
+}
+
+int getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
+{
+	while (condition->connectedLowerConditionIndex != -1)
+	{
+		condition = &params->currentFunc->conditions[condition->connectedLowerConditionIndex];
+	}
+
+	return condition->lastBodyIndex;
 }
