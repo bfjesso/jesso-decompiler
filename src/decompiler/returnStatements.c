@@ -61,12 +61,12 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = startInstructionIndex; i <= lastInstruction; i++)
 	{
-		if (checkForReturnStatement(params, i))
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		if (isOpcodeReturn(instruction->opcode))
 		{
 			return 1;
 		}
 		
-		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE || 
 			(instruction->opcode == ADD && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP)))
 		{
