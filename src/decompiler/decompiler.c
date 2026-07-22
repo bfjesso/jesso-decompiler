@@ -340,7 +340,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 				if (conditionIndex != -1 && conditionIndex != i)
 				{
 					struct Condition* cond = &params->currentFunc->conditions[conditionIndex];
-					if (isConditionRegular(cond))
+					if (!isConditionDirectJmp(cond))
 					{
 						if (cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
 						{

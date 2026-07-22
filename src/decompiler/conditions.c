@@ -189,7 +189,7 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 		for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 		{
 			struct Condition* cond = &params->currentFunc->conditions[i];
-			if (cond->conditionType == CONDITIONAL_RETURN_CT || cond->conditionType == CONDITIONAL_GOTO_CT)
+			if (isConditionDirectJmp(cond))
 			{
 				continue;
 			}
@@ -249,8 +249,7 @@ static int getNumOfOverlappingConditions(struct DecompilationParameters* params,
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
-		if (cond1 == cond2 || cond1->connectedUpperConditionIndex == i || cond1->connectedLowerConditionIndex == i ||
-			cond2->conditionType == CONDITIONAL_RETURN_CT || cond2->conditionType == CONDITIONAL_GOTO_CT)
+		if (cond1 == cond2 || cond1->connectedUpperConditionIndex == i || cond1->connectedLowerConditionIndex == i || isConditionDirectJmp(cond2))
 		{
 			continue;
 		}
@@ -358,7 +357,7 @@ unsigned char decompileConditionEnds(struct DecompilationParameters* params, int
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (!isConditionRegular(condition) || condition->indentLevel != params->numOfIndents)
+		if (isConditionDirectJmp(condition) || condition->indentLevel != params->numOfIndents)
 		{
 			continue;
 		}
@@ -384,7 +383,7 @@ unsigned char decompileConditionStarts(struct DecompilationParameters* params, i
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
-		if (condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)
+		if (isConditionDirectJmp(condition))
 		{
 			if (instructionIndex == condition->jccIndex) 
 			{
@@ -518,7 +517,7 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 		}
 	}
 
-	if (condition->conditionType == IF_CT || condition->conditionType == CONDITIONAL_RETURN_CT || condition->conditionType == CONDITIONAL_GOTO_CT)
+	if (condition->conditionType == IF_CT || isConditionDirectJmp(condition))
 	{
 		addIndents(result, params->numOfIndents);
 		sprintfJdc(result, 1, "if (%s)\n", conditionExpression.buffer);
@@ -586,9 +585,9 @@ static unsigned char decompileCondition(struct DecompilationParameters* params, 
 	return freeJdcStr(&conditionExpression);
 }
 
-unsigned char isConditionRegular(struct Condition* condition) 
+unsigned char isConditionDirectJmp(struct Condition* condition)
 {
-	return condition->conditionType != CONDITIONAL_GOTO_CT && condition->conditionType != CONDITIONAL_RETURN_CT;
+	return condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT;
 }
 
 int getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
