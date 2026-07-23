@@ -286,7 +286,7 @@ static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params) 
 				for (int k = 0; k < callee->numOfRegVars; k++)
 				{
 					struct RegisterVariable* regArg = &callee->regVars[k];
-					if (regArg->isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, regArg->reg, 0, 0))
+					if (regArg->isArgument && isRegisterPlatformArg(regArg->reg) && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, regArg->reg, 0, 0))
 					{
 						if (!addRegVar(params, &regArg->dataType, 1, regArg->reg))
 						{
