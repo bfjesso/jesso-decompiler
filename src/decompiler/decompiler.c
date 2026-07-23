@@ -344,9 +344,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					continue;
 				}
 
-				if (checkForReturnStatement(params, j))
+				if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
 				{
-					memset(modifiedRegs, 0, NUM_OF_REGISTERS); // no regs are accessed after the condition due to the return
+					memset(modifiedRegs, 0, NUM_OF_REGISTERS); // no regs are accessed after the condition because execution doesnt continue
 					break;
 				}
 
