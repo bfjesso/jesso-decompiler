@@ -168,7 +168,8 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							canBeAX = 0;
 						}
 					}
-					else if (canBeXMM0)
+
+					if (canBeXMM0)
 					{
 						if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, XMM0, 0, &dataType))
 						{
@@ -181,7 +182,8 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							canBeXMM0 = 0;
 						}
 					}
-					else if (canBeST0)
+
+					if (canBeST0)
 					{
 						if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, ST0, 0, 0))
 						{
@@ -194,7 +196,8 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							canBeST0 = 0;
 						}
 					}
-					else 
+
+					if(!canBeAX && !canBeXMM0 && !canBeST0)
 					{
 						break;
 					}
