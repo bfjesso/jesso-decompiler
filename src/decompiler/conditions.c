@@ -635,3 +635,16 @@ int getConditionChainLastBodyInstruction(struct DecompilationParameters* params,
 
 	return condition->lastBodyIndex;
 }
+
+unsigned char checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex)
+{
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		if (instructionIndex == params->currentFunc->conditions[i].jccIndex && params->currentFunc->conditions[i].conditionType == CONDITIONAL_RETURN_CT)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}

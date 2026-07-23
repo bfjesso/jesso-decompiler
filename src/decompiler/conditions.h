@@ -26,3 +26,5 @@ struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParame
 int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition);
 
 int getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition);
+
+unsigned char checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex);

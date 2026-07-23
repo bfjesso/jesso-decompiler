@@ -119,7 +119,7 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 			unsigned char wasZero = setAReturnType == 0;
 			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
-				if (checkForReturnStatement(params, j))
+				if (checkForReturnStatement(params, j) || checkForConditionalReturn(params, j))
 				{
 					if (params->currentFunc->returnReg != NO_REG)
 					{
