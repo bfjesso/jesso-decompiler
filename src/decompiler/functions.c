@@ -116,6 +116,11 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 				continue;
 			}
 
+			// if the return reg is not initialized at all return statements, then it cant be the return reg
+			unsigned char canBeAX = 1;
+			unsigned char canBeXMM0 = 1;
+			unsigned char canBeST0 = 1;
+
 			unsigned char wasZero = setAReturnType == 0;
 			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
@@ -125,6 +130,19 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 					{
 						if (!isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, params->currentFunc->returnReg, 0, 0))
 						{
+							if (compareRegisters(params->currentFunc->returnReg, AX)) 
+							{
+								canBeAX = 0;
+							}
+							else if (compareRegisters(params->currentFunc->returnReg, XMM0))
+							{
+								canBeXMM0 = 0;
+							}
+							else if (compareRegisters(params->currentFunc->returnReg, ST0))
+							{
+								canBeST0 = 0;
+							}
+
 							params->currentFunc->returnType.primitiveType = VOID_TYPE;
 							params->currentFunc->returnReg = NO_REG;
 							if (wasZero) { setAReturnType = 0; }
@@ -137,23 +155,48 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 					
 					enum Register specificReg = NO_REG;
 					struct DataType dataType = { 0 };
-					if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, AX, &specificReg, &dataType))
+					if (canBeAX)
 					{
-						params->currentFunc->returnType = dataType;
-						params->currentFunc->returnReg = specificReg;
-						setAReturnType = 1;
+						if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, AX, &specificReg, &dataType))
+						{
+							params->currentFunc->returnType = dataType;
+							params->currentFunc->returnReg = specificReg;
+							setAReturnType = 1;
+						}
+						else 
+						{
+							canBeAX = 0;
+						}
 					}
-					else if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, XMM0, 0, &dataType))
+					else if (canBeXMM0)
 					{
-						params->currentFunc->returnType = dataType;
-						params->currentFunc->returnReg = XMM0;
-						setAReturnType = 1;
+						if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, XMM0, 0, &dataType))
+						{
+							params->currentFunc->returnType = dataType;
+							params->currentFunc->returnReg = XMM0;
+							setAReturnType = 1;
+						}
+						else 
+						{
+							canBeXMM0 = 0;
+						}
 					}
-					else if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, ST0, 0, 0))
+					else if (canBeST0)
 					{
-						params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
-						params->currentFunc->returnReg = ST0;
-						setAReturnType = 1;
+						if (isRegInitialized(params, j, params->currentFunc->firstInstructionIndex, ST0, 0, 0))
+						{
+							params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
+							params->currentFunc->returnReg = ST0;
+							setAReturnType = 1;
+						}
+						else 
+						{
+							canBeST0 = 0;
+						}
+					}
+					else 
+					{
+						break;
 					}
 				}
 			}
