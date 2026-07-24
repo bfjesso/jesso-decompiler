@@ -162,6 +162,7 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							params->currentFunc->returnType = dataType;
 							params->currentFunc->returnReg = specificReg;
 							setAReturnType = 1;
+							continue;
 						}
 						else 
 						{
@@ -176,6 +177,7 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							params->currentFunc->returnType = dataType;
 							params->currentFunc->returnReg = XMM0;
 							setAReturnType = 1;
+							continue;
 						}
 						else 
 						{
@@ -190,6 +192,7 @@ static unsigned char getAllFunctionReturnTypesAndConditions(struct Decompilation
 							params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
 							params->currentFunc->returnReg = ST0;
 							setAReturnType = 1;
+							continue;
 						}
 						else 
 						{
