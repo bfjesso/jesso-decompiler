@@ -16,15 +16,17 @@ extern "C"
 {
 #endif
 
-	extern struct IntrinsicFunc returningIntrinsicFuncs[]; // these modify the dst operand
+	// these modify the first operand
+	extern struct IntrinsicFunc returningIntrinsicFuncs[]; 
 
-	extern struct IntrinsicFunc voidIntrinsicFuncs[]; // these do not modify any operand
+	// these are not decompiled as asigning to any operand
+	extern struct IntrinsicFunc voidIntrinsicFuncs[]; 
 
 #ifdef __cplusplus
 }
 #endif
 
-unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
+unsigned char isOpcodeReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
 
 unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, int instructionIndex, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result);
 

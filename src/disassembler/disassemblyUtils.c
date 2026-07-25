@@ -113,20 +113,22 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		*overwrites = 0;
 	}
 
+	enum Mnemonic opcode = instruction->opcode;
+
 	if (operandNum == 0)
 	{
-		if (isOpcodeXor(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
+		if (isOpcodeXor(opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-		else if (isOpcodeOr(instruction->opcode) && instruction->operands[1].type == IMMEDIATE)
+		else if (isOpcodeOr(opcode) && instruction->operands[1].type == IMMEDIATE)
 		{
 			if (overwrites != 0) { *overwrites = isImmediateAllOnes(&instruction->operands[1].immediate); }
 			return 1;
 		}
 
-		if (instruction->opcode == IMUL)
+		if (opcode == IMUL)
 		{
 			if (instruction->numOfOperands == 3) 
 			{
@@ -142,44 +144,46 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			}
 		}
 		
-		if (isOpcodeMov(instruction->opcode) || 
-			instruction->opcode == LEA || 
-			instruction->opcode == POP || 
-			isOpcodeCvtToDbl(instruction->opcode) ||
-			isOpcodeCvtToFlt(instruction->opcode) ||
-			isOpcodeCMOVcc(instruction->opcode) || 
-			isOpcodeSETcc(instruction->opcode) ||
-			instruction->opcode == STMXCSR ||
-			isOpcodeAES(instruction->opcode) ||
-			isOpcodeShuf(instruction->opcode) ||
-			instruction->opcode == XCHG)
+		if (isOpcodeMov(opcode) || 
+			opcode == LEA || 
+			opcode == POP || 
+			isOpcodeCvtToDbl(opcode) ||
+			isOpcodeCvtToFlt(opcode) ||
+			isOpcodeCMOVcc(opcode) || 
+			isOpcodeSETcc(opcode) ||
+			opcode == STMXCSR ||
+			opcode == AESIMC || opcode == AESKEYGENASSIST ||
+			opcode == XCHG)
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
 
-		if (isOpcodeAdd(instruction->opcode) ||
-			isOpcodeSub(instruction->opcode) ||
-			isOpcodeAnd(instruction->opcode) ||
-			isOpcodeOr(instruction->opcode) ||
-			isOpcodeXor(instruction->opcode) ||
-			isOpcodeShl(instruction->opcode) ||
-			isOpcodeShr(instruction->opcode) ||
-			instruction->opcode == IMUL || instruction->opcode == IDIV ||
-			instruction->opcode == INC || instruction->opcode == DEC || 
-			instruction->opcode == NEG || instruction->opcode == NOT)
+		if (isOpcodeAdd(opcode) ||
+			isOpcodeSub(opcode) ||
+			isOpcodeAnd(opcode) ||
+			isOpcodeOr(opcode) ||
+			isOpcodeXor(opcode) ||
+			isOpcodeShl(opcode) ||
+			isOpcodeShr(opcode) ||
+			opcode == IMUL || opcode == IDIV ||
+			opcode == INC || opcode == DEC || 
+			opcode == NEG || opcode == NOT || 
+			opcode == AESDEC || opcode == AESDECLAST || opcode == AESENC || opcode == AESENCLAST ||
+			opcode == SHUFPD || opcode == SHUFPS ||
+			opcode == ROL || opcode == ROR)
 		{
 			return 1;
 		}
 	}
 	else if (operandNum == 1) 
 	{
-		if (instruction->opcode == XCHG) 
+		if (opcode == XCHG) 
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-		else if (isOpcodeXor(instruction->opcode))
+		else if (isOpcodeXor(opcode))
 		{
 			if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 			{
@@ -195,7 +199,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
 {
-	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && !isOpcodeAES(instruction->opcode) && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
+	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
 }
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)

@@ -52,7 +52,7 @@ enum Mnemonic
 	CMOVB, CMOVNB, CMOVZ, CMOVNZ, CMOVBE, CMOVA, CMOVS, CMOVNS, CMOVL, CMOVGE, CMOVLE, CMOVG,
 	SETA, SETB, SETBE, SETG, SETL, SETLE, SETNB, SETNL, SETNS, SETNZ, SETS, SETZ,
 
-	VSHUFPS, SHUFPS, VSHUFPD, SHUFPD,
+	SHUFPS, SHUFPD,
 
 	AESIMC, AESENC, AESENCLAST, AESDEC, AESDECLAST, AESKEYGENASSIST,
 
@@ -65,6 +65,8 @@ enum Mnemonic
 	UD2,
 
 	// opcodes not handled in decompiler beyond this point
+
+	VSHUFPS, VSHUFPD,
 
 	VAESIMC, VAESENC, VAESENCLAST, VAESDEC, VAESDECLAST, VAESKEYGENASSIST,
 
@@ -265,9 +267,5 @@ unsigned char isOpcodeJcc(enum Mnemonic opcode);
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeSETcc(enum Mnemonic opcode);
-
-unsigned char isOpcodeAES(enum Mnemonic opcode);
-
-unsigned char isOpcodeShuf(enum Mnemonic opcode);
 
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);

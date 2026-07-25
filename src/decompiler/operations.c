@@ -23,8 +23,8 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 		return 1;
 	}
 
-	struct IntrinsicFunc* intrinsicFunc;
-	if (checkForReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
+	struct IntrinsicFunc* intrinsicFunc = 0;
+	if (isOpcodeReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
 	{
 		return decompileReturningIntrinsicFunc(params, instructionIndex, intrinsicFunc, getAssignment, result);
 	}

@@ -49,7 +49,7 @@ extern const char* mnemonicStrs[] =
 	"CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
 	"SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNS", "SETNZ", "SETS", "SETZ",
 
-	"VSHUFPS", "SHUFPS", "VSHUFPD", "SHUFPD",
+	"SHUFPS", "SHUFPD",
 
 	"AESIMC", "AESENC", "AESENCLAST", "AESDEC", "AESDECLAST", "AESKEYGENASSIST",
 
@@ -61,6 +61,9 @@ extern const char* mnemonicStrs[] =
 
 	"UD2",
 
+	// opcodes not handled in decompiler beyond this point
+
+	"VSHUFPS", "VSHUFPD",
 
 	"VAESIMC", "VAESENC", "VAESENCLAST", "VAESDEC", "VAESDECLAST", "VAESKEYGENASSIST",
 
@@ -377,26 +380,6 @@ unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
 unsigned char isOpcodeSETcc(enum Mnemonic opcode)
 {
 	if (opcode >= SETA && opcode <= SETZ)
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-unsigned char isOpcodeAES(enum Mnemonic opcode)
-{
-	if (opcode >= AESIMC && opcode <= AESKEYGENASSIST)
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-unsigned char isOpcodeShuf(enum Mnemonic opcode)
-{
-	if (opcode >= VSHUFPS && opcode <= SHUFPD)
 	{
 		return 1;
 	}

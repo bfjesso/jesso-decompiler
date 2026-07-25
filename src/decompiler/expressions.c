@@ -8,6 +8,7 @@
 #include "assignment.h"
 #include "operations.h"
 #include "dataTypes.h"
+#include "intrinsics.h"
 
 unsigned char decompileOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char defaultToReg, struct JdcStr* result)
 {
@@ -395,6 +396,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	unsigned char finished = 0;
 	for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		
 		if (finished)
 		{
 			break;
@@ -412,7 +415,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			continue;
 		}
 
-		if (doesInstructionModifyRegister(params, i, targetReg, 0, &finished))
+		unsigned char overwrites = 0;
+		if (doesInstructionModifyRegister(params, i, targetReg, 0, &overwrites))
 		{
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
 			if (!decompileOperation(params, i, targetReg, 0, &expressions[expressionIndex].jdcStr, &expressions[expressionIndex].placeOperatorInfront))
@@ -426,6 +430,9 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			}
 
 			expressionIndex++;
+
+			// if the intrinsic function doesnt initialize the dst/first operand, then the first operand is decompiled as an argument
+			finished = overwrites || isOpcodeReturningIntrinsicFunc(instruction->opcode, 0);
 		}
 
 		if (expressionIndex >= expressionsBufferSize)

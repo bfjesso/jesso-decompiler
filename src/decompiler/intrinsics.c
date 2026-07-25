@@ -29,13 +29,13 @@ struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
 	{ XCHG, { 1, 1, 0, 0 }, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
-unsigned char checkForReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
+unsigned char isOpcodeReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
 {
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		if (opcode == returningIntrinsicFuncs[i].opcode)
 		{
-			*intrinsicFuncRef = &returningIntrinsicFuncs[i];
+			if (intrinsicFuncRef) { *intrinsicFuncRef = &returningIntrinsicFuncs[i]; }
 			return 1;
 		}
 	}
