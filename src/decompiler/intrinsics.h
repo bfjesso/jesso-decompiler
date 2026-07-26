@@ -7,7 +7,6 @@
 struct IntrinsicFunc 
 {
 	enum Mnemonic opcode;
-	unsigned char operandsToDecompile[4]; // as arguemnts
 	const char* name;
 };
 

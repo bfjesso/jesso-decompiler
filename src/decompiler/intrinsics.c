@@ -5,30 +5,30 @@
 
 struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 {
-	{ AESDEC, { 1, 1, 0, 0 }, "_mm_aesdec" },
-	{ AESDECLAST, { 1, 1, 0, 0 }, "_mm_aesdeclast" },
-	{ AESENC, { 1, 1, 0, 0 }, "_mm_aesenc" },
-	{ AESENCLAST, { 1, 1, 0, 0 }, "_mm_aesenclast" },
-	{ AESIMC, { 0, 1, 0, 0 }, "_mm_aesimc" },
-	{ AESKEYGENASSIST, { 0, 1, 1, 0 }, "_mm_aeskeygenassist" },
-	{ STMXCSR, { 0, 0, 0, 0 }, "_mm_getcsr" },
-	{ SHUFPD, { 1, 1, 1, 0 }, "_mm_shuffle_pd" },
-	{ SHUFPS, { 1, 1, 1, 0 }, "_mm_shuffle_ps" },
-	{ ROL, { 1, 1, 0, 0 }, "_rotl" },
-	{ ROR, { 1, 1, 0, 0 }, "_rotr" },
-	{ PUNPCKLBW, { 1, 1, 0, 0 }, "_mm_unpacklo_epi8" },
-	{ PUNPCKLWD, { 1, 1, 0, 0 }, "_mm_unpacklo_epi16" },
+	{ AESDEC, "_mm_aesdec" },
+	{ AESDECLAST, "_mm_aesdeclast" },
+	{ AESENC, "_mm_aesenc" },
+	{ AESENCLAST, "_mm_aesenclast" },
+	{ AESIMC, "_mm_aesimc" },
+	{ AESKEYGENASSIST, "_mm_aeskeygenassist" },
+	{ STMXCSR, "_mm_getcsr" },
+	{ SHUFPD, "_mm_shuffle_pd" },
+	{ SHUFPS, "_mm_shuffle_ps" },
+	{ ROL, "_rotl" },
+	{ ROR, "_rotr" },
+	{ PUNPCKLBW, "_mm_unpacklo_epi8" },
+	{ PUNPCKLWD, "_mm_unpacklo_epi16" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
 {
-	{ INT3, { 0, 0, 0, 0 }, "__debugbreak" },
-	{ _INT, { 0, 0, 0, 0 }, "__fastfail" }, // this is only when the immediate is 0x29
-	{ UD2, { 0, 0, 0, 0 }, "__ud2" },
-	{ HLT, { 0, 0, 0, 0 }, "__halt" },
-	{ DATA, { 1, 0, 0, 0 }, "DATA" },
-	{ MOVS, { 1, 1, 0, 0 }, "__movs" }, // REPZ prefix must be used
-	{ XCHG, { 1, 1, 0, 0 }, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
+	{ INT3, "__debugbreak" },
+	{ _INT, "__fastfail" }, // this is only when the immediate is 0x29
+	{ UD2, "__ud2" },
+	{ HLT, "__halt" },
+	{ DATA, "DATA" },
+	{ MOVS, "__movs" }, // REPZ prefix must be used
+	{ XCHG, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
 unsigned char isOpcodeReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
@@ -66,34 +66,26 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 		sprintfJdc(result, 0, "%s(", intrinsicFunc->name);
 	}
 
-	int lastDecompiledOperand = 0;
-	for (int i = 3; i >= 0; i--)
-	{
-		if (intrinsicFunc->operandsToDecompile[i]) 
-		{
-			lastDecompiledOperand = i;
-			break;
-		}
-	}
-
 	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (intrinsicFunc->operandsToDecompile[i]) 
+		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsicFunc->opcode)) 
 		{
-			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
-			{
-				freeJdcStr(&decompiledOperand);
-				return 0;
-			}
-
-			sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+			continue;
+		}
+		
+		struct JdcStr decompiledOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
+		{
 			freeJdcStr(&decompiledOperand);
+			return 0;
+		}
 
-			if (i < lastDecompiledOperand)
-			{
-				strcatJdc(result, ", ");
-			}
+		sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+		freeJdcStr(&decompiledOperand);
+
+		if (i < instruction->numOfOperands - 1)
+		{
+			strcatJdc(result, ", ");
 		}
 	}
 
@@ -149,34 +141,26 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 	
 	sprintfJdc(result, 1, "%s(", intrinsicFunc->name);
 
-	int lastDecompiledOperand = 0;
-	for (int i = 3; i >= 0; i--)
-	{
-		if (intrinsicFunc->operandsToDecompile[i])
-		{
-			lastDecompiledOperand = i;
-			break;
-		}
-	}
-
 	for(int i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (intrinsicFunc->operandsToDecompile[i])
+		if (intrinsicFunc->opcode == _INT) // the operand identifies the function
 		{
-			struct JdcStr decompiledOperand = initializeJdcStr();
-			if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
-			{
-				freeJdcStr(&decompiledOperand);
-				return 0;
-			}
-			
-			sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+			break;
+		}
+		
+		struct JdcStr decompiledOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
+		{
 			freeJdcStr(&decompiledOperand);
+			return 0;
+		}
 
-			if (i < lastDecompiledOperand)
-			{
-				strcatJdc(result, ", ");
-			}
+		sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+		freeJdcStr(&decompiledOperand);
+
+		if (i < instruction->numOfOperands - 1)
+		{
+			strcatJdc(result, ", ");
 		}
 	}
 
