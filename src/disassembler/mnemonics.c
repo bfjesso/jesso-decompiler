@@ -241,172 +241,87 @@ unsigned char doesOpcodeModifyFirstOperand(enum Mnemonic opcode)
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)
 {
-	if (opcode >= MOV && opcode <= MASKMOVDQU)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= MOV && opcode <= MASKMOVDQU;
 }
 
 unsigned char isOpcodeAdd(enum Mnemonic opcode)
 {
-	if (opcode >= ADD && opcode <= PADDQ)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= ADD && opcode <= PADDQ;
 }
 
 unsigned char isOpcodeSub(enum Mnemonic opcode)
 {
-	if (opcode >= SUB && opcode <= HSUBPS)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= SUB && opcode <= HSUBPS;
 }
 
 unsigned char isOpcodeAnd(enum Mnemonic opcode)
 {
-	if (opcode >= AND && opcode <= PANDN)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= AND && opcode <= PANDN;
 }
 
 unsigned char isOpcodeOr(enum Mnemonic opcode)
 {
-	if (opcode >= OR && opcode <= ORPD)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= OR && opcode <= ORPD;
 }
 
 unsigned char isOpcodeXor(enum Mnemonic opcode)
 {
-	if (opcode >= XOR && opcode <= PXOR)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= XOR && opcode <= PXOR;
 }
 
 unsigned char isOpcodeShl(enum Mnemonic opcode)
 {
-	if (opcode >= SHL && opcode <= SHLD)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= SHL && opcode <= SHLD;
 }
 
 unsigned char isOpcodeShr(enum Mnemonic opcode)
 {
-	if (opcode >= SHR && opcode <= SHRD)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= SHR && opcode <= SHRD;
 }
 
 unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)
 {
-	if (opcode >= VCVTPS2PD && opcode <= CVTDQ2PD)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= VCVTPS2PD && opcode <= CVTDQ2PD;
 }
 
 unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode)
 {
-	if (opcode >= VCVTPD2PS && opcode <= CVTDQ2PS)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= VCVTPD2PS && opcode <= CVTDQ2PS;
 }
 
 unsigned char isOpcodeCall(enum Mnemonic opcode)
 {
-	if (opcode == CALL_FAR || opcode == CALL_NEAR)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode == CALL_FAR || opcode == CALL_NEAR;
 }
 
 unsigned char isOpcodeReturn(enum Mnemonic opcode)
 {
-	if (opcode == RET_NEAR || opcode == RET_FAR)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode == RET_NEAR || opcode == RET_FAR;
 }
 
 unsigned char isOpcodeJmp(enum Mnemonic opcode)
 {
-	if (opcode == JMP_SHORT || opcode == JMP_NEAR || opcode == JMP_FAR)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode == JMP_SHORT || opcode == JMP_NEAR || opcode == JMP_FAR;
 }
 
 unsigned char isOpcodeCmp(enum Mnemonic opcode)
 {
-	if (opcode >= CMP && opcode <= COMISD)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= CMP && opcode <= COMISD;
 }
 
 unsigned char isOpcodeJcc(enum Mnemonic opcode)
 {
-	if (opcode >= JA_SHORT && opcode <= JZ_SHORT)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= JA_SHORT && opcode <= JZ_SHORT;
 }
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
 {
-	if (opcode >= CMOVB && opcode <= CMOVG)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= CMOVB && opcode <= CMOVG;
 }
 
 unsigned char isOpcodeSETcc(enum Mnemonic opcode)
 {
-	if (opcode >= SETA && opcode <= SETZ)
-	{
-		return 1;
-	}
-
-	return 0;
+	return opcode >= SETA && opcode <= SETZ;
 }
 
 unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
