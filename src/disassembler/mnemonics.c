@@ -6,8 +6,27 @@ extern const char* mnemonicStrs[] =
 {
 	"ERROR",
 
+	// these opcodes overwrite the first operand
 	"MOV", "VMOVUPS", "MOVUPS", "VMOVUPD", "MOVUPD", "VMOVSS", "MOVSS", "VMOVSD", "MOVSD", "MOVSX", "VMOVD", "MOVD", "VMOVAPS", "MOVAPS", "VMOVAPD", "MOVAPD", "VMOVLPS", "MOVLPS", "VMOVHLPS", "MOVHLPS", "VMOVLPD", "MOVLPD", "VMOVSLDUP", "MOVSLDUP", "VMOVDDUP", "MOVDDUP", "VMOVHPS", "MOVHPS", "VMOVLHPS", "MOVLHPS", "VMOVHPD", "MOVHPD", "VMOVSHDUP", "MOVSHDUP", "VMOVNTPS", "MOVNTPS", "VMOVNTPD", "MOVNTPD", "VMOVMSKPS", "MOVMSKPS", "VMOVMSKPD", "MOVMSKPD", "MOVS", "MOVSXD", "MOVZX", "VMOVQ", "MOVQ", "VMOVDQA", "MOVDQA", "VMOVDQU", "VMOVDQU8", "VMOVDQU16", "VMOVDQU32", "VMOVDQU64", "MOVDQU", "MOVNTI", "VMOVQ2DQ", "MOVQ2DQ", "VMOVDQ2Q", "MOVDQ2Q", "VPMOVMSKB", "PMOVMSKB", "MOVNTQ", "VMOVNTDQ", "MOVNTDQ", "MASKMOVQ", "VMASKMOVDQU", "MASKMOVDQU",
+	
+	"POP",
+
 	"LEA",
+
+	"VCVTPS2PD", "CVTPS2PD", "VCVTSS2SD", "CVTSS2SD",  "CVTPI2PD", "VCVTSI2SD", "CVTSI2SD", "VCVTDQ2PD", "CVTDQ2PD",
+	"VCVTPD2PS", "CVTPD2PS", "VCVTSD2SS", "CVTSD2SS",  "CVTPI2PS", "VCVTSI2SS", "CVTSI2SS", "VCVTDQ2PS", "CVTDQ2PS",
+
+	"XCHG",
+
+	"CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
+	"SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNS", "SETNZ", "SETS", "SETZ",
+
+	"STMXCSR",
+
+	"AESIMC", "AESKEYGENASSIST",
+	// end of opcodes that overwrite first operand
+
+	// these opcodes modify the first operand
 	"ADD", "VADDPS", "ADDPS", "VADDPD", "ADDPD", "VADDSS", "ADDSS", "VADDSD", "ADDSD", "VHADDPD", "HADDPD", "VHADDPS", "HADDPS", "XADD", "VPADDQ", "PADDQ",
 	"SUB", "VSUBPS", "SUBPS", "VSUBPD", "SUBPD", "VSUBSS", "SUBSS", "VSUBSD", "SUBSD", "VHSUBPD", "HSUBPD", "VHSUBPS", "HSUBPS",
 	"AND", "VANDPS", "ANDPS", "VANDPD", "ANDPD", "VANDNPS", "ANDNPS", "VANDNPD", "ANDNPD", "VPAND", "PAND", "VPANDN", "PANDN",
@@ -17,13 +36,18 @@ extern const char* mnemonicStrs[] =
 	"SHR", "SAR", "SHRD",
 	"IMUL",
 	"IDIV",
-	"VCVTPS2PD", "CVTPS2PD", "VCVTSS2SD", "CVTSS2SD",  "CVTPI2PD", "VCVTSI2SD", "CVTSI2SD", "VCVTDQ2PD", "CVTDQ2PD",
-	"VCVTPD2PS", "CVTPD2PS", "VCVTSD2SS", "CVTSD2SS",  "CVTPI2PS", "VCVTSI2SS", "CVTSI2SS", "VCVTDQ2PS", "CVTDQ2PS",
+	"INC", "DEC",
+	"NEG", "NOT",
 
-	"XCHG",
-
+	"SHUFPS", "SHUFPD",
 	"ROL", "ROR",
 
+	"VPUNPCKLBW", "PUNPCKLBW", "VPUNPCKLWD", "PUNPCKLWD", "VPUNPCKLDQ", "PUNPCKLDQ", "VPACKSSWB", "PACKSSWB", "VPACKUSWB", "PACKUSWB", "VPUNPCKHBW", "PUNPCKHBW", "VPUNPCKHWD", "PUNPCKHWD", "VPUNPCKHDQ", "PUNPCKHDQ", "VPACKSSDW", "PACKSSDW", "VPUNPCKLQDQ", "PUNPCKLQDQ", "VPUNPCKHQDQ", "PUNPCKHQDQ",
+
+	"AESENC", "AESENCLAST", "AESDEC", "AESDECLAST",
+	// end of opcodes that modify first operand
+	
+	// other opcodes that are handled in the decompiler
 	"CBW", "CWDE", "CDQE",
 	"CDQ", "CWD", "CQO",
 
@@ -32,13 +56,11 @@ extern const char* mnemonicStrs[] =
 
 	"FLD",
 
-	"NEG", "NOT",
 	"NOP",
 
-	"INC", "DEC",
 	"INT", "INT3",
 
-	"POP", "PUSH", "PUSHF",
+	"PUSH", "PUSHF",
 
 	"CALL FAR", "CALL NEAR",
 	"RET FAR", "RET NEAR",
@@ -46,25 +68,14 @@ extern const char* mnemonicStrs[] =
 	"JMP FAR", "JMP NEAR",
 	"JA SHORT", "JB SHORT", "JBE SHORT", "JG SHORT", "JL SHORT", "JLE SHORT", "JNB SHORT", "JGE SHORT", "JNS SHORT", "JNZ SHORT", "JS SHORT", "JZ SHORT", "JMP SHORT",
 
-	"CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVL", "CMOVGE", "CMOVLE", "CMOVG",
-	"SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNS", "SETNZ", "SETS", "SETZ",
-
-	"SHUFPS", "SHUFPD",
-
-	"AESIMC", "AESENC", "AESENCLAST", "AESDEC", "AESDECLAST", "AESKEYGENASSIST",
-
-	"STMXCSR",
-
 	"HLT",
 
 	"ENTER", "LEAVE", "ENDBR",
 
-	"VPUNPCKLBW", "PUNPCKLBW", "VPUNPCKLWD", "PUNPCKLWD", "VPUNPCKLDQ", "PUNPCKLDQ", "VPACKSSWB", "PACKSSWB", "VPACKUSWB", "PACKUSWB", "VPUNPCKHBW", "PUNPCKHBW", "VPUNPCKHWD", "PUNPCKHWD", "VPUNPCKHDQ", "PUNPCKHDQ", "VPACKSSDW", "PACKSSDW", "VPUNPCKLQDQ", "PUNPCKLQDQ", "VPUNPCKHQDQ", "PUNPCKHQDQ",
-
 	"UD2",
+	// end of other handled opcodes
 
-	// opcodes not handled in decompiler beyond this point
-
+	// all opcodes beyond this point are not handled in the decompiler yet
 	"VSHUFPS", "VSHUFPD",
 
 	"VAESIMC", "VAESENC", "VAESENCLAST", "VAESDEC", "VAESDECLAST", "VAESKEYGENASSIST",
@@ -217,6 +228,16 @@ extern const char* mnemonicStrs[] =
 
 	"DATA"
 };
+
+unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode) 
+{
+	return opcode >= MOV && opcode <= AESKEYGENASSIST;
+}
+
+unsigned char doesOpcodeModifyFirstOperand(enum Mnemonic opcode)
+{
+	return opcode >= ADD && opcode <= AESDECLAST;
+}
 
 unsigned char isOpcodeMov(enum Mnemonic opcode)
 {

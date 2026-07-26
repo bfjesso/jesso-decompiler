@@ -144,35 +144,12 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			}
 		}
 		
-		if (isOpcodeMov(opcode) || 
-			opcode == LEA || 
-			opcode == POP || 
-			isOpcodeCvtToDbl(opcode) ||
-			isOpcodeCvtToFlt(opcode) ||
-			isOpcodeCMOVcc(opcode) || 
-			isOpcodeSETcc(opcode) ||
-			opcode == STMXCSR ||
-			opcode == AESIMC || opcode == AESKEYGENASSIST ||
-			opcode == XCHG)
+		if (doesOpcodeOverwriteFirstOperand(opcode))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-
-		if (isOpcodeAdd(opcode) ||
-			isOpcodeSub(opcode) ||
-			isOpcodeAnd(opcode) ||
-			isOpcodeOr(opcode) ||
-			isOpcodeXor(opcode) ||
-			isOpcodeShl(opcode) ||
-			isOpcodeShr(opcode) ||
-			opcode == IMUL || opcode == IDIV ||
-			opcode == INC || opcode == DEC || 
-			opcode == NEG || opcode == NOT || 
-			opcode == AESDEC || opcode == AESDECLAST || opcode == AESENC || opcode == AESENCLAST ||
-			opcode == SHUFPD || opcode == SHUFPS ||
-			opcode == ROL || opcode == ROR ||
-			opcode == PUNPCKLBW || opcode == PUNPCKLWD)
+		else if (doesOpcodeModifyFirstOperand(opcode))
 		{
 			return 1;
 		}
