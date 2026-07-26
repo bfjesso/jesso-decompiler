@@ -171,7 +171,8 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			opcode == NEG || opcode == NOT || 
 			opcode == AESDEC || opcode == AESDECLAST || opcode == AESENC || opcode == AESENCLAST ||
 			opcode == SHUFPD || opcode == SHUFPS ||
-			opcode == ROL || opcode == ROR)
+			opcode == ROL || opcode == ROR ||
+			opcode == PUNPCKLBW || opcode == PUNPCKLWD)
 		{
 			return 1;
 		}

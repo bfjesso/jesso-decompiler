@@ -16,6 +16,8 @@ struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 	{ SHUFPS, { 1, 1, 1, 0 }, "_mm_shuffle_ps" },
 	{ ROL, { 1, 1, 0, 0 }, "_rotl" },
 	{ ROR, { 1, 1, 0, 0 }, "_rotr" },
+	{ PUNPCKLBW, { 1, 1, 0, 0 }, "_mm_unpacklo_epi8" },
+	{ PUNPCKLWD, { 1, 1, 0, 0 }, "_mm_unpacklo_epi16" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
