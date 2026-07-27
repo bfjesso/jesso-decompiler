@@ -11,4 +11,6 @@ unsigned char handleVEXPrefix(struct DisassemblyParameters* params);
 
 unsigned char handleEVEXPrefix(struct DisassemblyParameters* params);
 
+unsigned char checkFlagR(struct DisassemblyParameters* params);
+
 unsigned char checkFlagB(struct DisassemblyParameters* params);

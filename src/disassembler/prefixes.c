@@ -199,6 +199,11 @@ unsigned char handleEVEXPrefix(struct DisassemblyParameters* params)
 	return 1;
 }
 
+unsigned char checkFlagR(struct DisassemblyParameters* params)
+{
+	return params->rexPrefix.R || (params->vexPrefix.isValidVEX && !params->vexPrefix.R) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.R);
+}
+
 unsigned char checkFlagB(struct DisassemblyParameters* params)
 {
 	return params->rexPrefix.B || (params->vexPrefix.isValidVEX && !params->vexPrefix.B) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.B);

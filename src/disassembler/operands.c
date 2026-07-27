@@ -484,9 +484,10 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 		case Hss:
 		case Hsd:
 		case Hdq:
-			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
+			if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = vectorLength == 32 ? (YMM15 - params->vexPrefix.vvvv) : (XMM15 - params->vexPrefix.vvvv);
+			if (params->vexPrefix.isValidVEX) { currentOperand->reg = vectorLength == 32 ? (YMM15 - params->vexPrefix.vvvv) : (XMM15 - params->vexPrefix.vvvv); }
+			else { currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : params->evexPrefix.V_prime ? (ZMM15 - params->evexPrefix.vvvv) : (ZMM31 - params->evexPrefix.vvvv); }
 			break;
 		case Hqq:
 			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
@@ -501,7 +502,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 		case EVEXvvvv:
 			if (!params->evexPrefix.isValidEVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : (ZMM15 - params->evexPrefix.vvvv);
+			currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : params->evexPrefix.V_prime ? (ZMM15 - params->evexPrefix.vvvv) : (ZMM31 - params->evexPrefix.vvvv);
 			break;
 		case A_BYTE:
 			params->bytes++;
