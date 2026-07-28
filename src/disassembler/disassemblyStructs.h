@@ -137,7 +137,6 @@ enum OpcodeSuperscript
 	o64,  // only available in 64-bit mode
 	d64,  // operand size defaults to 64-bit size
 	f64,  // operand size forced to 64-bit size
-	f256  // operand size forced to 256-bit size
 };
 
 struct Opcode

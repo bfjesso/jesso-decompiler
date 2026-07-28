@@ -35,7 +35,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 
 	unsigned char vectorLength = 16;
 	if (params->evexPrefix.LL == 0b10) { vectorLength = 64; }
-	else if (params->opcode.opcodeSuperscript == f256 || params->vexPrefix.L || params->evexPrefix.LL == 0b01) { vectorLength = 32; }
+	else if (params->vexPrefix.L || params->evexPrefix.LL == 0b01) { vectorLength = 32; }
 	
 	int operandIndex = 0;
 	for (int i = 0; i < 4; i++)
