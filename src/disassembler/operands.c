@@ -33,9 +33,7 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 		result->operandSizeAttribute = 8;
 	}
 
-	unsigned char vectorLength = 16;
-	if (params->evexPrefix.LL == 0b10) { vectorLength = 64; }
-	else if (params->vexPrefix.L || params->evexPrefix.LL == 0b01) { vectorLength = 32; }
+	unsigned char vectorLength = getVectorLength(params);
 	
 	int operandIndex = 0;
 	for (int i = 0; i < 4; i++)
@@ -608,4 +606,18 @@ unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
 	}
 
 	return 0;
+}
+
+unsigned char getVectorLength(struct DisassemblyParameters* params)
+{
+	if (params->evexPrefix.LL == 0b10) 
+	{ 
+		return 64;
+	}
+	else if (params->vexPrefix.L || params->evexPrefix.LL == 0b01) 
+	{
+		return 32;
+	}
+
+	return 16;
 }

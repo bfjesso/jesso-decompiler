@@ -8,3 +8,5 @@ unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resu
 unsigned char getSizeOfOperand(struct Operand* operand);
 
 unsigned char compareOperands(struct Operand* op1, struct Operand* op2);
+
+unsigned char getVectorLength(struct DisassemblyParameters* params);

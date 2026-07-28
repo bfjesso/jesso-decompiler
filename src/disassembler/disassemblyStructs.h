@@ -137,6 +137,23 @@ enum OpcodeSuperscript
 	o64,  // only available in 64-bit mode
 	d64,  // operand size defaults to 64-bit size
 	f64,  // operand size forced to 64-bit size
+
+	// these are tuple types, which are attributes of EVEX encoded instructions. theyre not superscripts in the opcode tables, but im using this field to store it anyway.
+	// the number before "TT" is the input element size. this is used for disp8*N. see Table 2-34 and 2-35.
+	// i still need to go back and fill in the tuple types for most instructions in the maps.
+	FULL_32_TT, FULL_64_TT,
+	HALF_32_TT,
+	FULL_MEM_TT,
+	TUPLE1_SCALAR_8_TT, TUPLE1_SCALAR_16_TT, TUPLE1_SCALAR_32_TT, TUPLE1_SCALAR_64_TT,
+	TUPLE1_FIXED_32_TT, TUPLE1_FIXED_64_TT,
+	TUPLE2_32_TT, TUPLE2_64_TT,
+	TUPLE4_32_TT, TUPLE4_64_TT,
+	TUPLE8_32_TT,
+	HALF_MEM_TT,
+	QUARTER_MEM_TT,
+	EIGHTH_MEM_TT,
+	MEM128_TT,
+	MOVDDUP_TT,
 };
 
 struct Opcode

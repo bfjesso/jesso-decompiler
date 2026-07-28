@@ -437,6 +437,68 @@ unsigned char handleModRM(struct DisassemblyParameters* params, enum ModRMSelect
 		}
 	}
 
+	// EVEX disp8*N check
+	long long disp = result->memoryAddress.constDisplacement;
+	if (params->evexPrefix.isValidEVEX && disp >= -128 && disp <= 127 && disp != 0)
+	{
+		unsigned char vectorLength = getVectorLength(params);
+		
+		unsigned char N = 1;
+		switch (params->opcode.opcodeSuperscript) 
+		{
+		case FULL_32_TT:
+			N = params->evexPrefix.b == 0 ? vectorLength : 4;
+			break;
+		case FULL_64_TT:
+			N = params->evexPrefix.b == 0 ? vectorLength : 8;
+			break;
+		case HALF_32_TT:
+			N = params->evexPrefix.b == 0 ? (vectorLength / 2) : 4;
+			break;
+		case FULL_MEM_TT:
+			N = vectorLength;
+			break;
+		case TUPLE1_SCALAR_8_TT:
+			N = 1;
+			break;
+		case TUPLE1_SCALAR_16_TT:
+			N = 2;
+			break;
+		case TUPLE1_SCALAR_32_TT:
+		case TUPLE1_FIXED_32_TT:
+			N = 4;
+			break;
+		case TUPLE1_SCALAR_64_TT:
+		case TUPLE1_FIXED_64_TT:
+		case TUPLE2_32_TT:
+			N = 8;
+			break;
+		case TUPLE2_64_TT:
+		case TUPLE4_32_TT:
+		case MEM128_TT:
+			N = 16;
+			break;
+		case TUPLE4_64_TT:
+		case TUPLE8_32_TT:
+			N = 32;
+			break;
+		case HALF_MEM_TT:
+			N = vectorLength / 2;
+			break;
+		case QUARTER_MEM_TT:
+			N = vectorLength / 4;
+			break;
+		case EIGHTH_MEM_TT:
+			N = vectorLength / 8;
+			break;
+		case MOVDDUP_TT:
+			N = vectorLength == 16 ? 8 : vectorLength;
+			break;
+		}
+
+		result->memoryAddress.constDisplacement *= N;
+	}
+
 	return 1;
 }
 
