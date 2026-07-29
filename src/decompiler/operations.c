@@ -24,7 +24,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 
 	struct IntrinsicFunc* intrinsicFunc = 0;
-	if (isOpcodeReturningIntrinsicFunc(instruction->opcode, &intrinsicFunc))
+	if (isInstructionReturningIntrinsicFunc(instruction, &intrinsicFunc))
 	{
 		return decompileReturningIntrinsicFunc(params, instructionIndex, intrinsicFunc, getAssignment, result);
 	}

@@ -432,7 +432,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			expressionIndex++;
 
 			// if the intrinsic function doesnt initialize the dst/first operand, then the first operand is decompiled as an argument
-			finished = overwrites || isOpcodeReturningIntrinsicFunc(instruction->opcode, 0);
+			finished = overwrites || isInstructionReturningIntrinsicFunc(instruction, 0);
 		}
 
 		if (expressionIndex >= expressionsBufferSize)

@@ -5,38 +5,75 @@
 
 struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 {
-	{ AESDEC, "_mm_aesdec" },
-	{ AESDECLAST, "_mm_aesdeclast" },
-	{ AESENC, "_mm_aesenc" },
-	{ AESENCLAST, "_mm_aesenclast" },
-	{ AESIMC, "_mm_aesimc" },
-	{ AESKEYGENASSIST, "_mm_aeskeygenassist" },
-	{ STMXCSR, "_mm_getcsr" },
-	{ SHUFPD, "_mm_shuffle_pd" },
-	{ SHUFPS, "_mm_shuffle_ps" },
-	{ ROL, "_rotl" },
-	{ ROR, "_rotr" },
-	{ PUNPCKLBW, "_mm_unpacklo_epi8" },
-	{ PUNPCKLWD, "_mm_unpacklo_epi16" },
+	{ AESDEC, SINGLE_IFT, "_mm_aesdec" },
+	{ AESDECLAST, SINGLE_IFT, "_mm_aesdeclast" },
+	{ AESENC, SINGLE_IFT, "_mm_aesenc" },
+	{ AESENCLAST, SINGLE_IFT, "_mm_aesenclast" },
+	{ AESIMC, SINGLE_IFT, "_mm_aesimc" },
+	{ AESKEYGENASSIST, SINGLE_IFT, "_mm_aeskeygenassist" },
+	{ STMXCSR, SINGLE_IFT, "_mm_getcsr" },
+	{ SHUFPD, SINGLE_IFT, "_mm_shuffle_pd" },
+	{ SHUFPS, SINGLE_IFT, "_mm_shuffle_ps" },
+	{ ROL, SINGLE_IFT, "_rotl" },
+	{ ROR, SINGLE_IFT, "_rotr" },
+	{ PUNPCKLBW, MMX_IFT, "_m_punpcklbw" },
+	{ PUNPCKLBW, SSE_IFT, "_mm_unpacklo_epi8" },
+	{ PUNPCKLWD, MMX_IFT, "_m_punpcklwd" },
+	{ PUNPCKLWD, SSE_IFT, "_mm_unpacklo_epi16" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
 {
-	{ INT3, "__debugbreak" },
-	{ _INT, "__fastfail" }, // this is only when the immediate is 0x29
-	{ UD2, "__ud2" },
-	{ HLT, "__halt" },
-	{ DATA, "DATA" },
-	{ MOVS, "__movs" }, // REPZ prefix must be used
-	{ XCHG, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
+	{ INT3, SINGLE_IFT, "__debugbreak" },
+	{ _INT, SINGLE_IFT, "__fastfail" }, // this is only when the immediate is 0x29
+	{ UD2, SINGLE_IFT, "__ud2" },
+	{ HLT, SINGLE_IFT, "__halt" },
+	{ DATA, SINGLE_IFT, "DATA" },
+	{ MOVS, SINGLE_IFT, "__movs" }, // REPZ prefix must be used
+	{ XCHG, SINGLE_IFT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
-unsigned char isOpcodeReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef)
+static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruction* instruction, struct IntrinsicFunc* intrinsicFunc)
+{
+	if (intrinsicFunc->type == SINGLE_IFT)
+	{
+		return 1;
+	}
+
+	if (instruction->numOfOperands == 0 || instruction->operands[0].type != REGISTER)
+	{
+		return 0;
+	}
+
+	if (intrinsicFunc->type == MMX_IFT)
+	{
+		if (!isRegMM(instruction->operands[0].reg)) 
+		{
+			return 0;
+		}
+	}
+	else if (intrinsicFunc->type == SSE_IFT)
+	{
+		if (!isRegXMM(instruction->operands[0].reg)) 
+		{
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+unsigned char isInstructionReturningIntrinsicFunc(struct DisassembledInstruction* instruction, struct IntrinsicFunc** intrinsicFuncRef)
 {
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		if (opcode == returningIntrinsicFuncs[i].opcode)
+		if (instruction->opcode == returningIntrinsicFuncs[i].opcode)
 		{
+			if (!checkValidIntrinsicFunctionType(instruction, &returningIntrinsicFuncs[i])) 
+			{
+				continue;
+			}
+			
 			if (intrinsicFuncRef) { *intrinsicFuncRef = &returningIntrinsicFuncs[i]; }
 			return 1;
 		}
@@ -103,26 +140,31 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 		{
 			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29)) 
 			{
-				continue;
+				return 0;
 			}
 			else if (instruction->opcode == MOVS && instruction->group1Prefix != REPZ)
 			{
-				continue;
+				return 0;
 			}
 			else if (instruction->opcode == XCHG)
 			{
 				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
-					continue;
+					return 0;
 				}
 				else if (instruction->operands[1].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg))
 				{
-					continue;
+					return 0;
 				}
 				else if (!getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
-					continue;
+					return 0;
 				}
+			}
+
+			if (!checkValidIntrinsicFunctionType(instruction, &voidIntrinsicFuncs[i]))
+			{
+				continue;
 			}
 
 			*intrinsicFuncRef = &voidIntrinsicFuncs[i];

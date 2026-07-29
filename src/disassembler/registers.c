@@ -208,3 +208,13 @@ enum Register increaseRegisterSize(enum Register reg)
 		return (enum Register)(reg + (RAX - EAX));
 	}
 }
+
+unsigned char isRegMM(enum Register reg)
+{
+	return reg >= MM0 && reg <= MM7;
+}
+
+unsigned char isRegXMM(enum Register reg)
+{
+	return reg >= XMM0 && reg <= XMM15;
+}

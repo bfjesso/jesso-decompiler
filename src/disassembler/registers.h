@@ -76,3 +76,7 @@ unsigned char getSizeOfRegister(enum Register reg);
 enum Register extendRegister(enum Register reg);
 
 enum Register increaseRegisterSize(enum Register reg);
+
+unsigned char isRegMM(enum Register reg);
+
+unsigned char isRegXMM(enum Register reg);

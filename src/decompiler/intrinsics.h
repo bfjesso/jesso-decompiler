@@ -1,12 +1,20 @@
 #pragma once
 #include "decompilationStructs.h"
 
-#define NUM_OF_RETURNING_INTRINSICS 13
+#define NUM_OF_RETURNING_INTRINSICS 15
 #define NUM_OF_VOID_INTRINSICS 7
+
+enum IntrinsicFunctionType 
+{
+	SINGLE_IFT, // this is where one opcode corresponds to one intrinsic, so only the opcode needs to be checked
+	MMX_IFT,
+	SSE_IFT,
+};
 
 struct IntrinsicFunc 
 {
 	enum Mnemonic opcode;
+	enum IntrinsicFuncType type;
 	const char* name;
 };
 
@@ -25,7 +33,9 @@ extern "C"
 }
 #endif
 
-unsigned char isOpcodeReturningIntrinsicFunc(enum Mnemonic opcode, struct IntrinsicFunc** intrinsicFuncRef);
+static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruction* instruction, struct IntrinsicFunc* intrinsicFunc);
+
+unsigned char isInstructionReturningIntrinsicFunc(struct DisassembledInstruction* instruction, struct IntrinsicFunc** intrinsicFuncRef);
 
 unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, int instructionIndex, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result);
 
