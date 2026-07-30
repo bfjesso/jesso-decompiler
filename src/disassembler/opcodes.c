@@ -723,6 +723,9 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params) // th
 	case VPSRLQ:
 		params->opcode.mnemonic = !params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX ? PSRLQ : VPSRLQ;
 		break;
+	case VPSRLDQ:
+		params->opcode.mnemonic = !params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX ? PSRLDQ : VPSRLDQ;
+		break;
 	case VPADDQ:
 		params->opcode.mnemonic = !params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX ? PADDQ : VPADDQ;
 		break;
