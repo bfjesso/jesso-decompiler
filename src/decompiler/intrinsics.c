@@ -29,6 +29,9 @@ struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 	{ PSRAD, MMX_IMM_IFT, "_m_psradi" },
 	{ PSRAD, SSE_RM_IFT, "_mm_sra_epi32" },
 	{ PSRAD, SSE_IMM_IFT, "_mm_srai_epi32" },
+
+	{ PADDD, MMX_IFT, "_m_paddd" },
+	{ PADDD, SSE_IFT, "_mm_add_epi32" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
