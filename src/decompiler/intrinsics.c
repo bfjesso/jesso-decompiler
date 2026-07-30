@@ -11,15 +11,24 @@ struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 	{ AESENCLAST, SINGLE_IFT, "_mm_aesenclast" },
 	{ AESIMC, SINGLE_IFT, "_mm_aesimc" },
 	{ AESKEYGENASSIST, SINGLE_IFT, "_mm_aeskeygenassist" },
+
 	{ STMXCSR, SINGLE_IFT, "_mm_getcsr" },
+
 	{ SHUFPD, SINGLE_IFT, "_mm_shuffle_pd" },
 	{ SHUFPS, SINGLE_IFT, "_mm_shuffle_ps" },
+
 	{ ROL, SINGLE_IFT, "_rotl" },
 	{ ROR, SINGLE_IFT, "_rotr" },
+
 	{ PUNPCKLBW, MMX_IFT, "_m_punpcklbw" },
 	{ PUNPCKLBW, SSE_IFT, "_mm_unpacklo_epi8" },
 	{ PUNPCKLWD, MMX_IFT, "_m_punpcklwd" },
 	{ PUNPCKLWD, SSE_IFT, "_mm_unpacklo_epi16" },
+
+	{ PSRAD, MMX_RM_IFT, "_m_psrad" },
+	{ PSRAD, MMX_IMM_IFT, "_m_psradi" },
+	{ PSRAD, SSE_RM_IFT, "_mm_sra_epi32" },
+	{ PSRAD, SSE_IMM_IFT, "_mm_srai_epi32" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
@@ -45,19 +54,26 @@ static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruct
 		return 0;
 	}
 
-	if (intrinsicFunc->type == MMX_IFT)
+	switch (intrinsicFunc->type)
 	{
-		if (!isRegMM(instruction->operands[0].reg)) 
-		{
-			return 0;
-		}
-	}
-	else if (intrinsicFunc->type == SSE_IFT)
-	{
-		if (!isRegXMM(instruction->operands[0].reg)) 
-		{
-			return 0;
-		}
+	case MMX_IFT:
+		if (!isRegMM(instruction->operands[0].reg)) { return 0; }
+		break;
+	case MMX_RM_IFT:
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
+		break;
+	case MMX_IMM_IFT:
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
+		break;
+	case SSE_IFT:
+		if (!isRegXMM(instruction->operands[0].reg)) { return 0; }
+		break;
+	case SSE_RM_IFT:
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
+		break;
+	case SSE_IMM_IFT:
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
+		break;
 	}
 
 	return 1;
