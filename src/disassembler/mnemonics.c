@@ -47,6 +47,8 @@ extern const char* mnemonicStrs[] =
 
 	"PSRAD",
 
+	"PSRLDQ",
+
 	"AESENC", "AESENCLAST", "AESDEC", "AESDECLAST",
 	// end of opcodes that modify first operand
 	
@@ -132,7 +134,7 @@ extern const char* mnemonicStrs[] =
 
 	"VCMPPS", "CMPPS", "VCMPPD", "CMPPD", "VCMPSS", "CMPSS", "VCMPSD", "CMPSD",
 
-	"VPSRLW", "PSRLW", "VPSRLD", "PSRLD", "VPSRLQ", "PSRLQ", "VPSRLDQ", "PSRLDQ", "VPSLLDQ", "PSLLDQ",
+	"VPSRLW", "PSRLW", "VPSRLD", "PSRLD", "VPSRLQ", "PSRLQ", "VPSRLDQ", "VPSLLDQ", "PSLLDQ",
 
 	"VPSUBUSB", "PSUBUSB", "VPSUBUSW", "PSUBUSW",
 	"VPMINUB", "PMINUB",

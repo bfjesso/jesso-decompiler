@@ -1,7 +1,7 @@
 #pragma once
 #include "decompilationStructs.h"
 
-#define NUM_OF_RETURNING_INTRINSICS 21
+#define NUM_OF_RETURNING_INTRINSICS 22
 #define NUM_OF_VOID_INTRINSICS 7
 
 enum IntrinsicFunctionType 

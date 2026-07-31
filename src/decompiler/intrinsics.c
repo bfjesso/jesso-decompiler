@@ -3,6 +3,9 @@
 #include "expressions.h"
 #include "functions.h"
 
+// most intrinsics here come from intel's list of intrinsics, but some of them are OS specific, and some i just made up
+// www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html
+
 struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 {
 	{ AESDEC, SINGLE_IFT, "_mm_aesdec" },
@@ -32,6 +35,8 @@ struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
 
 	{ PADDD, MMX_IFT, "_m_paddd" },
 	{ PADDD, SSE_IFT, "_mm_add_epi32" },
+
+	{ PSRLDQ, SINGLE_IFT, "_mm_srli_si128" },
 };
 
 struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
