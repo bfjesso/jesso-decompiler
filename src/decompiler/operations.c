@@ -23,10 +23,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 		return 1;
 	}
 
-	struct IntrinsicFunc* intrinsicFunc = 0;
-	if (isInstructionReturningIntrinsicFunc(instruction, &intrinsicFunc))
+	struct Intrinsic* intrinsic = 0;
+	if (isInstructionReturningIntrinsic(instruction, &intrinsic))
 	{
-		return decompileReturningIntrinsicFunc(params, instructionIndex, intrinsicFunc, getAssignment, result);
+		return decompileReturningIntrinsic(params, instructionIndex, intrinsic, getAssignment, result);
 	}
 	else if (isOpcodeMov(instruction->opcode) || instruction->opcode == LEA) // LEA is handled when decompiling memory addresses 
 	{

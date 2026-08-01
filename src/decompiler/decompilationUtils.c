@@ -401,7 +401,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		if (strcmp(returningIntrinsicFuncs[i].name, name) == 0)
+		if (strcmp(returningIntrinsics[i].name, name) == 0)
 		{
 			return 0;
 		}
@@ -409,7 +409,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 
 	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		if (strcmp(voidIntrinsicFuncs[i].name, name) == 0)
+		if (strcmp(voidIntrinsics[i].name, name) == 0)
 		{
 			return 0;
 		}

@@ -6,53 +6,53 @@
 // most intrinsics here come from intel's list of intrinsics, but some of them are OS specific, and some i just made up
 // www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html
 
-struct IntrinsicFunc returningIntrinsicFuncs[NUM_OF_RETURNING_INTRINSICS] =
+struct Intrinsic returningIntrinsics[NUM_OF_RETURNING_INTRINSICS] =
 {
-	{ AESDEC, SINGLE_IFT, "_mm_aesdec" },
-	{ AESDECLAST, SINGLE_IFT, "_mm_aesdeclast" },
-	{ AESENC, SINGLE_IFT, "_mm_aesenc" },
-	{ AESENCLAST, SINGLE_IFT, "_mm_aesenclast" },
-	{ AESIMC, SINGLE_IFT, "_mm_aesimc" },
-	{ AESKEYGENASSIST, SINGLE_IFT, "_mm_aeskeygenassist" },
+	{ AESDEC, SINGLE_IT, "_mm_aesdec" },
+	{ AESDECLAST, SINGLE_IT, "_mm_aesdeclast" },
+	{ AESENC, SINGLE_IT, "_mm_aesenc" },
+	{ AESENCLAST, SINGLE_IT, "_mm_aesenclast" },
+	{ AESIMC, SINGLE_IT, "_mm_aesimc" },
+	{ AESKEYGENASSIST, SINGLE_IT, "_mm_aeskeygenassist" },
 
-	{ STMXCSR, SINGLE_IFT, "_mm_getcsr" },
+	{ STMXCSR, SINGLE_IT, "_mm_getcsr" },
 
-	{ SHUFPD, SINGLE_IFT, "_mm_shuffle_pd" },
-	{ SHUFPS, SINGLE_IFT, "_mm_shuffle_ps" },
+	{ SHUFPD, SINGLE_IT, "_mm_shuffle_pd" },
+	{ SHUFPS, SINGLE_IT, "_mm_shuffle_ps" },
 
-	{ ROL, SINGLE_IFT, "_rotl" },
-	{ ROR, SINGLE_IFT, "_rotr" },
+	{ ROL, SINGLE_IT, "_rotl" },
+	{ ROR, SINGLE_IT, "_rotr" },
 
-	{ PUNPCKLBW, MMX_IFT, "_m_punpcklbw" },
-	{ PUNPCKLBW, SSE_IFT, "_mm_unpacklo_epi8" },
-	{ PUNPCKLWD, MMX_IFT, "_m_punpcklwd" },
-	{ PUNPCKLWD, SSE_IFT, "_mm_unpacklo_epi16" },
+	{ PUNPCKLBW, MMX_IT, "_m_punpcklbw" },
+	{ PUNPCKLBW, SSE_IT, "_mm_unpacklo_epi8" },
+	{ PUNPCKLWD, MMX_IT, "_m_punpcklwd" },
+	{ PUNPCKLWD, SSE_IT, "_mm_unpacklo_epi16" },
 
-	{ PSRAD, MMX_RM_IFT, "_m_psrad" },
-	{ PSRAD, MMX_IMM_IFT, "_m_psradi" },
-	{ PSRAD, SSE_RM_IFT, "_mm_sra_epi32" },
-	{ PSRAD, SSE_IMM_IFT, "_mm_srai_epi32" },
+	{ PSRAD, MMX_RM_IT, "_m_psrad" },
+	{ PSRAD, MMX_IMM_IT, "_m_psradi" },
+	{ PSRAD, SSE_RM_IT, "_mm_sra_epi32" },
+	{ PSRAD, SSE_IMM_IT, "_mm_srai_epi32" },
 
-	{ PADDD, MMX_IFT, "_m_paddd" },
-	{ PADDD, SSE_IFT, "_mm_add_epi32" },
+	{ PADDD, MMX_IT, "_m_paddd" },
+	{ PADDD, SSE_IT, "_mm_add_epi32" },
 
-	{ PSRLDQ, SINGLE_IFT, "_mm_srli_si128" },
+	{ PSRLDQ, SINGLE_IT, "_mm_srli_si128" },
 };
 
-struct IntrinsicFunc voidIntrinsicFuncs[NUM_OF_VOID_INTRINSICS] =
+struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 {
-	{ INT3, SINGLE_IFT, "__debugbreak" },
-	{ _INT, SINGLE_IFT, "__fastfail" }, // this is only when the immediate is 0x29
-	{ UD2, SINGLE_IFT, "__ud2" },
-	{ HLT, SINGLE_IFT, "__halt" },
-	{ DATA, SINGLE_IFT, "DATA" },
-	{ MOVS, SINGLE_IFT, "__movs" }, // REPZ prefix must be used
-	{ XCHG, SINGLE_IFT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
+	{ INT3, SINGLE_IT, "__debugbreak" },
+	{ _INT, SINGLE_IT, "__fastfail" }, // this is only when the immediate is 0x29
+	{ UD2, SINGLE_IT, "__ud2" },
+	{ HLT, SINGLE_IT, "__halt" },
+	{ DATA, SINGLE_IT, "DATA" },
+	{ MOVS, SINGLE_IT, "__movs" }, // REPZ prefix must be used
+	{ XCHG, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
-static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruction* instruction, struct IntrinsicFunc* intrinsicFunc)
+static unsigned char checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic)
 {
-	if (intrinsicFunc->type == SINGLE_IFT)
+	if (intrinsic->type == SINGLE_IT)
 	{
 		return 1;
 	}
@@ -62,24 +62,24 @@ static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruct
 		return 0;
 	}
 
-	switch (intrinsicFunc->type)
+	switch (intrinsic->type)
 	{
-	case MMX_IFT:
+	case MMX_IT:
 		if (!isRegMM(instruction->operands[0].reg)) { return 0; }
 		break;
-	case MMX_RM_IFT:
+	case MMX_RM_IT:
 		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
 		break;
-	case MMX_IMM_IFT:
+	case MMX_IMM_IT:
 		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
 		break;
-	case SSE_IFT:
+	case SSE_IT:
 		if (!isRegXMM(instruction->operands[0].reg)) { return 0; }
 		break;
-	case SSE_RM_IFT:
+	case SSE_RM_IT:
 		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
 		break;
-	case SSE_IMM_IFT:
+	case SSE_IMM_IT:
 		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
 		break;
 	}
@@ -87,18 +87,18 @@ static unsigned char checkValidIntrinsicFunctionType(struct DisassembledInstruct
 	return 1;
 }
 
-unsigned char isInstructionReturningIntrinsicFunc(struct DisassembledInstruction* instruction, struct IntrinsicFunc** intrinsicFuncRef)
+unsigned char isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef)
 {
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		if (instruction->opcode == returningIntrinsicFuncs[i].opcode)
+		if (instruction->opcode == returningIntrinsics[i].opcode)
 		{
-			if (!checkValidIntrinsicFunctionType(instruction, &returningIntrinsicFuncs[i])) 
+			if (!checkValidIntrinsicType(instruction, &returningIntrinsics[i])) 
 			{
 				continue;
 			}
 			
-			if (intrinsicFuncRef) { *intrinsicFuncRef = &returningIntrinsicFuncs[i]; }
+			if (intrinsicRef) { *intrinsicRef = &returningIntrinsics[i]; }
 			return 1;
 		}
 	}
@@ -106,7 +106,7 @@ unsigned char isInstructionReturningIntrinsicFunc(struct DisassembledInstruction
 	return 0;
 }
 
-unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* params, int instructionIndex, struct IntrinsicFunc* intrinsicFunc, unsigned char getAssignment, struct JdcStr* result)
+unsigned char decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -119,17 +119,17 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 			return 0;
 		}
 
-		sprintfJdc(result, 0, "%s = %s(", decompiledFirstOperand.buffer, intrinsicFunc->name);
+		sprintfJdc(result, 0, "%s = %s(", decompiledFirstOperand.buffer, intrinsic->name);
 		freeJdcStr(&decompiledFirstOperand);
 	}
 	else
 	{
-		sprintfJdc(result, 0, "%s(", intrinsicFunc->name);
+		sprintfJdc(result, 0, "%s(", intrinsic->name);
 	}
 
 	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsicFunc->opcode)) 
+		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsic->opcode)) 
 		{
 			continue;
 		}
@@ -154,13 +154,13 @@ unsigned char decompileReturningIntrinsicFunc(struct DecompilationParameters* pa
 	return 1;
 }
 
-unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, int instructionIndex, struct IntrinsicFunc** intrinsicFuncRef)
+unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	
 	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		if (instruction->opcode == voidIntrinsicFuncs[i].opcode)
+		if (instruction->opcode == voidIntrinsics[i].opcode)
 		{
 			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29)) 
 			{
@@ -186,12 +186,12 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 				}
 			}
 
-			if (!checkValidIntrinsicFunctionType(instruction, &voidIntrinsicFuncs[i]))
+			if (!checkValidIntrinsicType(instruction, &voidIntrinsics[i]))
 			{
 				continue;
 			}
 
-			*intrinsicFuncRef = &voidIntrinsicFuncs[i];
+			*intrinsicRef = &voidIntrinsics[i];
 			return 1;
 		}
 	}
@@ -199,17 +199,17 @@ unsigned char checkForVoidIntrinsicFunc(struct DecompilationParameters* params, 
 	return 0;
 }
 
-unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params, int instructionIndex, struct IntrinsicFunc* intrinsicFunc, struct JdcStr* result)
+unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	addIndents(result, params->numOfIndents);
 	
-	sprintfJdc(result, 1, "%s(", intrinsicFunc->name);
+	sprintfJdc(result, 1, "%s(", intrinsic->name);
 
 	for(int i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (intrinsicFunc->opcode == _INT) // the operand identifies the function
+		if (intrinsic->opcode == _INT) // the operand identifies the function
 		{
 			break;
 		}
@@ -230,7 +230,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		}
 	}
 
-	if (intrinsicFunc->opcode == _INT)
+	if (intrinsic->opcode == _INT)
 	{
 		struct JdcStr code = initializeJdcStr();
 		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &code, 0))
@@ -242,7 +242,7 @@ unsigned char decompileVoidIntrinsicFunc(struct DecompilationParameters* params,
 		sprintfJdc(result, 1, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
-	else if (intrinsicFunc->opcode == MOVS)
+	else if (intrinsic->opcode == MOVS)
 	{
 		struct JdcStr count = initializeJdcStr();
 		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &count, 0))

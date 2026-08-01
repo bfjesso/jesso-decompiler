@@ -145,7 +145,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		}
 
 		struct Function* callee;
-		struct IntrinsicFunc* intrinsicFunc;
+		struct Intrinsic* intrinsic;
 		if (checkForKnownFunctionCall(params, i, &callee))
 		{
 			if (!decompileKnownFunctionCall(params, i, callee, result))
@@ -164,9 +164,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				return 0;
 			}
 		}
-		else if (checkForVoidIntrinsicFunc(params, i, &intrinsicFunc))
+		else if (checkForVoidIntrinsic(params, i, &intrinsic))
 		{
-			if (!decompileVoidIntrinsicFunc(params, i, intrinsicFunc, result))
+			if (!decompileVoidIntrinsic(params, i, intrinsic, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling intrinsic function at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }

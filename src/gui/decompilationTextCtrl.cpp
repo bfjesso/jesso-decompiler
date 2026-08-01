@@ -287,17 +287,17 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	// intrinsic functions
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		ColorAllStrs(text, returningIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+		ColorAllStrs(text, returningIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, 0);
 	}
 	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		if (voidIntrinsicFuncs[i].opcode == DATA) 
+		if (voidIntrinsics[i].opcode == DATA) 
 		{
-			ColorAllStrs(text, voidIntrinsicFuncs[i].name, ERROR_DECOMP_COLOR, 0);
+			ColorAllStrs(text, voidIntrinsics[i].name, ERROR_DECOMP_COLOR, 0);
 		}
 		else 
 		{
-			ColorAllStrs(text, voidIntrinsicFuncs[i].name, INTRINSIC_DECOMP_COLOR, 0);
+			ColorAllStrs(text, voidIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, 0);
 		}
 	}
 
