@@ -1,7 +1,5 @@
 #include "mnemonics.h"
 
-extern const enum Mnemonic lastImplementedOpcode = UD2;
-
 extern const char* mnemonicStrs[] =
 {
 	"ERROR",
@@ -78,6 +76,8 @@ extern const char* mnemonicStrs[] =
 	"ENTER", "LEAVE", "ENDBR",
 
 	"UD2",
+
+	"DATA",
 	// end of other handled opcodes
 
 	// all opcodes beyond this point are not handled in the decompiler yet
@@ -231,10 +231,13 @@ extern const char* mnemonicStrs[] =
 	"VSHUFI32X4", "VSHUFI64X2",
 	"VZEROUPPER", "VZEROALL",
 
-	"UD0", "UD1",
-
-	"DATA"
+	"UD0", "UD1"
 };
+
+unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode) 
+{
+	return opcode >= MOV && opcode <= DATA;
+}
 
 unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode) 
 {

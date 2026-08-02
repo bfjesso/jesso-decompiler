@@ -81,6 +81,8 @@ enum Mnemonic
 	ENTER, LEAVE, ENDBR,
 
 	UD2,
+
+	DATA,
 	// end of other handled opcodes
 
 	// all opcodes beyond this point are not handled in the decompiler yet
@@ -236,11 +238,8 @@ enum Mnemonic
 
 	UD0, UD1,
 
-	DATA,
 	EXTENDED_OPCODE,
 };
-
-extern const enum Mnemonic lastImplementedOpcode;
 
 #ifdef __cplusplus
 extern "C"
@@ -252,6 +251,8 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
 
 unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode);
 

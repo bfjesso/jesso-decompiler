@@ -84,7 +84,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			return 0;
 		}
 		
-		if (currentInstruction->opcode > lastImplementedOpcode && currentInstruction->opcode < DATA) // temporary check
+		if (!isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
 		{
 			sprintfJdc(statusMessage, 0, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
