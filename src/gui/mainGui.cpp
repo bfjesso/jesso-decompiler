@@ -119,7 +119,6 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	this->SetMenuBar(menuBar);
 
 	auiManager.SetManagedWindow(this);
-	auiManager.SetFlags(auiManager.GetFlags() ^ wxAUI_MGR_LIVE_RESIZE);
 	auiManager.GetArtProvider()->SetColor(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR, foregroundColor);
 	auiManager.GetArtProvider()->SetColor(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR, foregroundColor);
 	auiManager.GetArtProvider()->SetColor(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR, textColor);
