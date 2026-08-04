@@ -426,8 +426,11 @@ void MainGui::RefreshVarNames(int functionIndex)
 void MainGui::AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function)
 {
 	wxMenuItem* menuItem = new wxMenuItem(0, id, name);
-	menuItem->SetBackgroundColour(foregroundColor);
-	menuItem->SetTextColour(textColor);
+
+	// this does not work on linux
+	//menuItem->SetBackgroundColour(foregroundColor);
+	//menuItem->SetTextColour(textColor);
+	
 	menu->Append(menuItem);
 	menu->Bind(wxEVT_MENU, function, id);
 }

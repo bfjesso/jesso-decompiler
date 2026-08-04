@@ -59,7 +59,7 @@ unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* 
 			else
 			{
 				const char c[2] = { jdcStr->buffer[i], 0 };
-				strcatJdc(&result, &c);
+				strcatJdc(&result, (const char*)(&c));
 			}
 		}
 

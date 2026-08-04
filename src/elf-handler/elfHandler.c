@@ -83,7 +83,7 @@ unsigned long long getELFEntryPoint64(const char* filePath)
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
 		fclose(file);
 
-		return elfHeader->e_entry;
+		return elfHeader.e_entry;
 	}
 
 	return 0;
@@ -98,7 +98,7 @@ unsigned long long getELFEntryPoint32(const char* filePath)
 		fread(&elfHeader, sizeof(elfHeader), 1, file);
 		fclose(file);
 
-		return elfHeader->e_entry;
+		return elfHeader.e_entry;
 	}
 
 	return 0;

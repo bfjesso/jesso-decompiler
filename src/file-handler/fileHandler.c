@@ -180,7 +180,7 @@ unsigned int getNumOfFileBytes(const wchar_t* filePath)
 	if (file)
 	{
 		fseek(file, 0, SEEK_END);
-		return ftell(f);
+		return ftell(file);
 	}
 
 	return 0;
@@ -214,7 +214,7 @@ unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsi
 	FILE* file = fopen(filePathChar, "r");
 	if (file)
 	{
-		fseek(file, section->fileOffset, SEEK_SET);
+		fseek(file, 0, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
 		return 1;
 	}
