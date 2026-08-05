@@ -5,7 +5,7 @@ The GUI is made using [wxWidgets](https://wxwidgets.org).
 
 The decompiler is still a work in progress, and the disassembler is not yet fully comprehensive of the Intel instruction set.
 
-![Screenshot of the main JDC window on Windows 10](./screenshot.png)
+![Screenshot of the Jesso Decompiler on Windows 11](./jdc-screenshot.png)
 
 # Installation
 If you do not want to compile it yourself, there are binaries already in bin. 
