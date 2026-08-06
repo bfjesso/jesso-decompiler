@@ -287,16 +287,22 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 		{
 			if (cond->conditionType == ELSE_CT)
 			{
-				if (isRegInitialized(params, cond->lastBodyIndex, cond->firstBodyIndex, reg, specificReg, dataType))
+				struct Condition* currentCond = cond;
+				unsigned char isRegInitializedInAllCases = 1;
+				while(currentCond->connectedUpperConditionIndex != -1)
 				{
-					struct Condition* ifCond = getConditionFromLastBodyInstruction(params, cond->jccIndex);
-					if (ifCond && ifCond->conditionType == IF_CT) // I will handle else ifs later
+					if (!isRegInitialized(params, currentCond->lastBodyIndex, currentCond->firstBodyIndex, reg, specificReg, dataType))
 					{
-						if (isRegInitialized(params, ifCond->lastBodyIndex, ifCond->firstBodyIndex, reg, specificReg, dataType))
-						{
-							return 1;
-						}
+						isRegInitializedInAllCases = 0;
+						break;
 					}
+
+					currentCond = &params->currentFunc->conditions[currentCond->connectedUpperConditionIndex];
+				}
+
+				if (isRegInitializedInAllCases) 
+				{
+					return 1;
 				}
 			}
 
