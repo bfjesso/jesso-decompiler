@@ -1,6 +1,5 @@
 #include "functionsTextCtrl.h"
 #include "mainGui.h"
-#include "functionInfoMenu.h"
 
 #include "../decompiler/functions.h"
 #include "../decompiler/decompiler.h"
@@ -85,9 +84,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 		}, ID_DECOMPILE);
 
 		menu.Append(ID_VIEW_INFO, "View info");
-		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-			new FunctionInfoMenu(this, GetPosition(), mainGui->decompParams.instructions, function);
-		}, ID_VIEW_INFO);
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { mainGui->AddFunctionInfoWindow(function); }, ID_VIEW_INFO);
 
 		int pos = GetCurrentPos();
 		int start = WordStartPosition(pos, true);

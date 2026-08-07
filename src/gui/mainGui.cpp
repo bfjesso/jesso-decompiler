@@ -271,6 +271,20 @@ CodeReferencesWindow* MainGui::AddCodeReferencesWindow()
 	return codeReferencesWindow;
 }
 
+FunctionInfoWindow* MainGui::AddFunctionInfoWindow(struct Function* function)
+{
+	FunctionInfoWindow* functionInfoWindow = new FunctionInfoWindow(this, disassembledInstructions.data(), function);
+
+	auiManager.AddPane(functionInfoWindow, wxAuiPaneInfo()
+		.Name(function->name.buffer)
+		.Caption(wxString(function->name.buffer) + " information")
+		.Float()
+		.MinSize(functionInfoWindow->GetMinSize()));
+	auiManager.Update();
+
+	return functionInfoWindow;
+}
+
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 {
 	wxWindow* window = e.GetPane()->window;

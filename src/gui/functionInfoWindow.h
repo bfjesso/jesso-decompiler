@@ -2,10 +2,10 @@
 #include <wx/grid.h>
 #include "../decompiler/decompilationStructs.h"
 
-class FunctionInfoMenu : public wxFrame
+class FunctionInfoWindow : public wxWindow
 {
 public:
-	FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function);
+	FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function);
 
 	wxGrid* infoGrid = nullptr;
 	wxGrid* regVarsGrid = nullptr;
@@ -18,11 +18,6 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
-
-	enum ids
-	{
-		MainWindowID
-	};
 
 	void GridRightClickOptions(wxGridEvent& e);
 

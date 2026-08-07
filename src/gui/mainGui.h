@@ -8,6 +8,7 @@
 #include "colorsMenu.h"
 #include "logTextCtrl.h"
 #include "codeReferencesWindow.h"
+#include "functionInfoWindow.h"
 #include "../file-handler/fileHandler.h"
 #include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationStructs.h"
@@ -89,6 +90,8 @@ public:
 	DataTextCtrl* AddDataTextCtrl();
 
 	CodeReferencesWindow* AddCodeReferencesWindow();
+
+	FunctionInfoWindow* AddFunctionInfoWindow(struct Function* function);
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

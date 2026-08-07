@@ -199,7 +199,7 @@
     <ClCompile Include="src\gui\bytesDisassemblerWindow.cpp" />
     <ClCompile Include="src\gui\disassemblyTextCtrl.cpp" />
     <ClCompile Include="src\gui\fileHeadersWindow.cpp" />
-    <ClCompile Include="src\gui\functionInfoMenu.cpp" />
+    <ClCompile Include="src\gui\functionInfoWindow.cpp" />
     <ClCompile Include="src\gui\functionsTextCtrl.cpp" />
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\calculatorWindow.cpp" />
@@ -254,7 +254,7 @@
     <ClInclude Include="src\gui\bytesDisassemblerWindow.h" />
     <ClInclude Include="src\gui\disassemblyTextCtrl.h" />
     <ClInclude Include="src\gui\fileHeadersWindow.h" />
-    <ClInclude Include="src\gui\functionInfoMenu.h" />
+    <ClInclude Include="src\gui\functionInfoWindow.h" />
     <ClInclude Include="src\gui\functionsTextCtrl.h" />
     <ClInclude Include="src\gui\guiUtils.h" />
     <ClInclude Include="src\gui\calculatorWindow.h" />

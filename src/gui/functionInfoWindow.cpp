@@ -1,13 +1,13 @@
-#include "functionInfoMenu.h"
+#include "functionInfoWindow.h"
 #include "../decompiler/dataTypes.h"
 #include "../disassembler/registers.h"
 #include "../jdc-str/jdcStr.h"
 
-wxBEGIN_EVENT_TABLE(FunctionInfoMenu, wxFrame)
-EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoMenu::GridRightClickOptions)
+wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxWindow)
+EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoWindow::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, DisassembledInstruction* instructions, Function* function) : wxFrame(parent, MainWindowID, "Function Info", wxPoint(50, 50), wxSize(900, 600))
+FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function) : wxWindow(parent, wxID_ANY)
 {
     SetOwnBackgroundColour(backgroundColor);
 
@@ -305,15 +305,9 @@ FunctionInfoMenu::FunctionInfoMenu(wxWindow* parent, wxPoint position, Disassemb
 	vSizer->Add(row3Sizer, 0, wxEXPAND | wxBOTTOM, 10);
 
 	SetSizerAndFit(vSizer);
-
-	position.x += 10;
-	position.y += 10;
-	SetPosition(position);
-	Show();
-	Raise();
 }
 
-void FunctionInfoMenu::GridRightClickOptions(wxGridEvent& e)
+void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 {
 	wxMenu menu;
 

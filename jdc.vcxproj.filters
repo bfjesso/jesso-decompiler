@@ -105,7 +105,7 @@
     <ClCompile Include="src\decompiler\intrinsics.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\functionInfoMenu.cpp">
+    <ClCompile Include="src\gui\functionInfoWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decompiler\operations.c">
@@ -139,6 +139,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gui\logTextCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\codeReferencesWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -251,7 +254,7 @@
     <ClInclude Include="src\decompiler\intrinsics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gui\functionInfoMenu.h">
+    <ClInclude Include="src\gui\functionInfoWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\operations.h">
@@ -285,6 +288,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\logTextCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\codeReferencesWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
