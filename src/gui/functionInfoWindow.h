@@ -2,7 +2,7 @@
 #include <wx/grid.h>
 #include "../decompiler/decompilationStructs.h"
 
-class FunctionInfoWindow : public wxWindow
+class FunctionInfoWindow : public wxScrolledWindow
 {
 public:
 	FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function);
@@ -14,9 +14,6 @@ public:
 	wxGrid* conditionsGrid = nullptr;
 	wxGrid* directJmpsGrid = nullptr;
 
-	wxBoxSizer* row1Sizer = nullptr;
-	wxBoxSizer* row2Sizer = nullptr;
-	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
 	void GridRightClickOptions(wxGridEvent& e);

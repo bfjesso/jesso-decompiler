@@ -3,39 +3,36 @@
 #include "../disassembler/registers.h"
 #include "../jdc-str/jdcStr.h"
 
-wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxWindow)
+wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxScrolledWindow)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoWindow::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function) : wxWindow(parent, wxID_ANY)
+FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function) : wxScrolledWindow(parent, wxID_ANY)
 {
-    SetOwnBackgroundColour(backgroundColor);
+	SetOwnBackgroundColour(backgroundColor);
+	SetScrollRate(10, 10);
 
-	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	infoGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
+	infoGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(200, 200));
 	infoGrid->SetLabelBackgroundColour(foregroundColor);
 	infoGrid->SetLabelTextColour(textColor);
 	infoGrid->SetDefaultCellBackgroundColour(gridColor);
 	infoGrid->SetDefaultCellTextColour(textColor);
 	infoGrid->CreateGrid(0, 2);
-	infoGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	infoGrid->SetScrollRate(0, 10);
+	infoGrid->SetScrollRate(10, 10);
 	infoGrid->DisableDragRowSize();
 	infoGrid->EnableEditing(false);
 	infoGrid->SetColLabelValue(0, "Function property");
 	infoGrid->SetColLabelValue(1, "Value");
 	infoGrid->HideRowLabels();
 	infoGrid->SetColSize(0, 200);
-	infoGrid->SetColSize(1, 9999);
+	infoGrid->SetColSize(1, 200);
 	infoGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 	infoGrid->AppendRows(8);
 
-    struct JdcStr dataTypeStr = initializeJdcStr();
-    dataTypeToStr(function->returnType, &dataTypeStr);
+	struct JdcStr dataTypeStr = initializeJdcStr();
+	dataTypeToStr(function->returnType, &dataTypeStr);
 	infoGrid->SetCellValue(0, 0, "Return type");
 	infoGrid->SetCellValue(0, 1, dataTypeStr.buffer);
 
@@ -63,7 +60,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	infoGrid->SetCellValue(7, 0, "Number of lines");
 	infoGrid->SetCellValue(7, 1, std::to_string(function->numOfLines));
 
-	row1Sizer->Add(infoGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	vSizer->Add(infoGrid, 1, wxEXPAND | wxALL, 10);
 
 	returnedVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 200));
 	returnedVarsGrid->SetLabelBackgroundColour(foregroundColor);
@@ -71,8 +68,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	returnedVarsGrid->SetDefaultCellBackgroundColour(gridColor);
 	returnedVarsGrid->SetDefaultCellTextColour(textColor);
 	returnedVarsGrid->CreateGrid(0, 5);
-	returnedVarsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	returnedVarsGrid->SetScrollRate(0, 10);
+	returnedVarsGrid->SetScrollRate(10, 10);
 	returnedVarsGrid->DisableDragRowSize();
 	returnedVarsGrid->EnableEditing(false);
 	returnedVarsGrid->SetColLabelValue(0, "Returned var type");
@@ -85,7 +81,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	returnedVarsGrid->SetColSize(1, 150);
 	returnedVarsGrid->SetColSize(2, 150);
 	returnedVarsGrid->SetColSize(3, 150);
-	returnedVarsGrid->SetColSize(4, 9999);
+	returnedVarsGrid->SetColSize(4, 150);
 	returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	for (int i = 0; i < function->numOfReturnedVars; i++)
@@ -102,16 +98,15 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 		returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
 	}
 
-	row1Sizer->Add(returnedVarsGrid, 2, wxEXPAND | wxRIGHT, 10);
+	vSizer->Add(returnedVarsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
 
-    regVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
+	regVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
 	regVarsGrid->SetLabelBackgroundColour(foregroundColor);
 	regVarsGrid->SetLabelTextColour(textColor);
 	regVarsGrid->SetDefaultCellBackgroundColour(gridColor);
 	regVarsGrid->SetDefaultCellTextColour(textColor);
 	regVarsGrid->CreateGrid(0, 4);
-	regVarsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	regVarsGrid->SetScrollRate(0, 10);
+	regVarsGrid->SetScrollRate(10, 10);
 	regVarsGrid->DisableDragRowSize();
 	regVarsGrid->EnableEditing(false);
 	regVarsGrid->SetColLabelValue(0, "Reg var type");
@@ -122,10 +117,10 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	regVarsGrid->SetColSize(0, 100);
 	regVarsGrid->SetColSize(1, 100);
 	regVarsGrid->SetColSize(2, 100);
-	regVarsGrid->SetColSize(3, 9999);
+	regVarsGrid->SetColSize(3, 100);
 	regVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row2Sizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	vSizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	for (int i = 0; i < function->numOfRegVars; i++)
 	{
@@ -144,8 +139,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	stackVarsGrid->SetDefaultCellBackgroundColour(gridColor);
 	stackVarsGrid->SetDefaultCellTextColour(textColor);
 	stackVarsGrid->CreateGrid(0, 4);
-	stackVarsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	stackVarsGrid->SetScrollRate(0, 10);
+	stackVarsGrid->SetScrollRate(10, 10);
 	stackVarsGrid->DisableDragRowSize();
 	stackVarsGrid->EnableEditing(false);
 	stackVarsGrid->SetColLabelValue(0, "Stack var type");
@@ -156,10 +150,10 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	stackVarsGrid->SetColSize(0, 100);
 	stackVarsGrid->SetColSize(1, 100);
 	stackVarsGrid->SetColSize(2, 100);
-	stackVarsGrid->SetColSize(3, 9999);
+	stackVarsGrid->SetColSize(3, 100);
 	stackVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row3Sizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	vSizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	for (int i = 0; i < function->numOfStackVars; i++)
 	{
@@ -188,8 +182,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	conditionsGrid->SetDefaultCellBackgroundColour(gridColor);
 	conditionsGrid->SetDefaultCellTextColour(textColor);
 	conditionsGrid->CreateGrid(0, 8);
-	conditionsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	conditionsGrid->SetScrollRate(0, 10);
+	conditionsGrid->SetScrollRate(10, 10);
 	conditionsGrid->DisableDragRowSize();
 	conditionsGrid->EnableEditing(false);
 	conditionsGrid->SetColLabelValue(0, "Condition type");
@@ -208,10 +201,10 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	conditionsGrid->SetColSize(4, 100);
 	conditionsGrid->SetColSize(5, 100);
 	conditionsGrid->SetColSize(6, 150);
-	conditionsGrid->SetColSize(7, 9999);
+	conditionsGrid->SetColSize(7, 100);
 	conditionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row2Sizer->Add(conditionsGrid, 2, wxEXPAND | wxRIGHT, 10);
+	vSizer->Add(conditionsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
 
 	for (int i = 0; i < function->numOfConditions; i++)
 	{
@@ -274,8 +267,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	directJmpsGrid->SetDefaultCellBackgroundColour(gridColor);
 	directJmpsGrid->SetDefaultCellTextColour(textColor);
 	directJmpsGrid->CreateGrid(0, 3);
-	directJmpsGrid->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
-	directJmpsGrid->SetScrollRate(0, 10);
+	directJmpsGrid->SetScrollRate(10, 10);
 	directJmpsGrid->DisableDragRowSize();
 	directJmpsGrid->EnableEditing(false);
 	directJmpsGrid->SetColLabelValue(0, "Direct jmp type");
@@ -284,10 +276,10 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	directJmpsGrid->HideRowLabels();
 	directJmpsGrid->SetColSize(0, 100);
 	directJmpsGrid->SetColSize(1, 100);
-	directJmpsGrid->SetColSize(2, 9999);
+	directJmpsGrid->SetColSize(2, 100);
 	directJmpsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	row3Sizer->Add(directJmpsGrid, 2, wxEXPAND | wxRIGHT, 10);
+	vSizer->Add(directJmpsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
 
 	for (int i = 0; i < function->numOfDirectJmps; i++)
 	{
@@ -300,11 +292,8 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 		directJmpsGrid->SetCellValue(i, 2, wxString(std::to_string(directJmp->dstIndex)) + " (" + wxString(hexNumStr) + ")");
 	}
 
-	vSizer->Add(row1Sizer, 0, wxEXPAND | wxBOTTOM | wxUP, 10);
-	vSizer->Add(row2Sizer, 0, wxEXPAND | wxBOTTOM, 10);
-	vSizer->Add(row3Sizer, 0, wxEXPAND | wxBOTTOM, 10);
-
 	SetSizerAndFit(vSizer);
+	SetMinSize(wxSize(200, 200));
 }
 
 void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
