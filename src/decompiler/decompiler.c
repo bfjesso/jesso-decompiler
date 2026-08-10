@@ -93,7 +93,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 
 		if (isInUnreachableState)
 		{
-			struct Condition* cond = getConditionFromLastBodyInstruction(params, i);
+			struct Condition* cond = getConditionFromDstInstruction(params, i);
 			if (checkForDirectJmpDst(params, i) || cond)
 			{
 				if(numOfSkippedInstructions > 0)
@@ -111,8 +111,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				isInUnreachableState = 0;
 				numOfSkippedInstructions = 0;
 
-				if (cond)
+				if (cond && cond->conditionType != DO_WHILE_CT)
 				{
+					i--; // decompileConditionEnds checks for the last body index, not the jmp dst
 					if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
 					{
 						sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);

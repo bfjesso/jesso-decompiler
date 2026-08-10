@@ -590,6 +590,19 @@ unsigned char isConditionDirectJmp(struct Condition* condition)
 	return condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT;
 }
 
+struct Condition* getConditionFromDstInstruction(struct DecompilationParameters* params, int instructionIndex)
+{
+	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		if (instructionIndex == params->currentFunc->conditions[i].dstIndex)
+		{
+			return &params->currentFunc->conditions[i];
+		}
+	}
+
+	return 0;
+}
+
 struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
