@@ -2,6 +2,7 @@
 
 LogTextCtrl::LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(parent, mainGuiRef, "Log")
 {
+	Bind(wxEVT_CONTEXT_MENU, &LogTextCtrl::LogRightClickOptions, this);
 	Bind(wxEVT_STC_UPDATEUI, &LogTextCtrl::OnUpdateLogUI, this);
 
 	highlightSelectedLines = 0;
@@ -60,6 +61,22 @@ void LogTextCtrl::LogProgress(unsigned long long current, unsigned long long max
 	}
 
 	SetReadOnly(true);
+}
+
+void LogTextCtrl::LogRightClickOptions(wxContextMenuEvent& e)
+{
+	wxMenu menu;
+
+	AddDefaultRightClickOptions(&menu);
+
+	const int ID_CLEAR = 100;
+
+	menu.Append(ID_CLEAR, "Clear");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		ClearText();
+	}, ID_CLEAR);
+
+	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
 void LogTextCtrl::OnUpdateLogUI(wxStyledTextEvent& e) 

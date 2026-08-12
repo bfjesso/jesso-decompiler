@@ -14,5 +14,7 @@ public:
 
 	void LogProgress(unsigned long long current, unsigned long long max);
 
+	void LogRightClickOptions(wxContextMenuEvent& e);
+
 	void OnUpdateLogUI(wxStyledTextEvent& e);
 };
