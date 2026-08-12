@@ -123,6 +123,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	const int ID_UNASSOCIATE_FUNCTIONS = 104;
 	const int ID_SET_ASSOCIATED_DATA = 105;
 	const int ID_UNASSOCIATE_DATA = 106;
+	const int ID_SHOW_UNHANDLED_OPCODES = 107;
 
 	menu.Append(ID_GO_TO_ADDRESS, "Go to address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -224,6 +225,21 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 			dataTextCtrl = nullptr;
 		}, ID_UNASSOCIATE_DATA);
 	}
+
+	menu.Append(ID_SHOW_UNHANDLED_OPCODES, "Show all opcodes not handled in the decopliler");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+		mainGui->OpenLog(wxAUI_DOCK_NONE);
+		struct JdcStr errorBuffer = initializeJdcStr();
+		for (int i = 0; i < numOfInstructions; i++) 
+		{
+			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode)) 
+			{
+				sprintfJdc(&errorBuffer, 0, "%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address);
+				mainGui->logTextCtrl->Log(errorBuffer.buffer, 1);
+			}
+		}
+		freeJdcStr(&errorBuffer);
+	}, ID_SHOW_UNHANDLED_OPCODES);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }

@@ -248,11 +248,11 @@ extern "C"
 
 	extern const char* mnemonicStrs[];
 
+	unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
+
 #ifdef __cplusplus
 }
 #endif
-
-unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
 
 unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode);
 
