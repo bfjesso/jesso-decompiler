@@ -485,12 +485,6 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				*regVarRef = regArg;
 			}
 		}
-		else if (defaultToReg) 
-		{
-			expressions[expressionIndex].jdcStr = initializeJdcStr();
-			strcpyJdc(&expressions[expressionIndex].jdcStr, registerStrs[targetReg]);
-			expressionIndex++;
-		}
 		else
 		{
 			for (int i = 0; i < expressionIndex; i++)
@@ -498,6 +492,13 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				freeJdcStr(&expressions[i].jdcStr);
 			}
 			free(expressions);
+
+			if (defaultToReg)
+			{
+				strcpyJdc(result, registerStrs[targetReg]);
+				return 1;
+			}
+
 			return 0;
 		}
 	}
