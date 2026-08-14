@@ -36,14 +36,7 @@ unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64B
 		return 0;
 	}
 	
-	if (is64Bit) 
-	{
-		return getPEImageBase64(file);
-	}
-	else
-	{
-		return getPEImageBase32(file);
-	}
+	return getPEImageBase(file, is64Bit);
 #endif
 
 #ifdef linux
@@ -61,14 +54,7 @@ unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64
 		return 0;
 	}
 
-	if (is64Bit)
-	{
-		return getPEEntryPoint64(file);
-	}
-	else
-	{
-		return getPEEntryPoint32(file);
-	}
+	return getPEEntryPoint(file, is64Bit);
 #endif
 
 #ifdef linux
@@ -95,14 +81,7 @@ int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
 		return 0;
 	}
 
-	if (is64Bit)
-	{
-		return getNumOfPESections64(file);
-	}
-	else
-	{
-		return getNumOfPESections64(file);
-	}
+	return getNumOfPESections(file, is64Bit);
 #endif
 
 #ifdef linux
@@ -129,14 +108,7 @@ int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, str
 		return 0;
 	}
 
-	if(is64Bit)
-	{
-		return getAllPESectionHeaders64(file, buffer, bufferLen);
-	}
-	else
-	{
-		return getAllPESectionHeaders32(file, buffer, bufferLen);
-	}
+	return getAllPESectionHeaders(file, is64Bit, buffer, bufferLen);
 #endif
 
 #ifdef linux
@@ -232,14 +204,7 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 		return 0;
 	}
 
-	if (is64Bit)
-	{
-		return getPESymbolByValue64(file, value, result);
-	}
-	else 
-	{
-		return getPESymbolByValue32(file, value, result);
-	}
+	return getPESymbolByValue(file, is64Bit, value, result);
 #endif
 
 #ifdef linux
@@ -266,14 +231,7 @@ int getNumOfImports(const wchar_t* filePath, unsigned char is64Bit)
 		return 0;
 	}
 
-	if (is64Bit)
-	{
-		return getNumOfPEImports64(file);
-	}
-	else
-	{
-		return getNumOfPEImports32(file);
-	}
+	return getNumOfPEImports(file, is64Bit);
 #endif
 
 #ifdef linux
@@ -300,14 +258,7 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 		return 0;
 	}
 	
-	if (is64Bit) 
-	{
-		return getAllPEImports64(file, buffer, bufferLen);
-	}
-	else 
-	{
-		return getAllPEImports32(file, buffer, bufferLen);
-	}
+	return getAllPEImports(file, is64Bit, buffer, bufferLen);
 #endif
 
 #ifdef linux

@@ -20,116 +20,78 @@ unsigned char isPEX64(HANDLE file, unsigned char* isX64)
 	return 1;
 }
 
-unsigned long long getPEImageBase32(HANDLE file)
+unsigned char getImageNTHeadersInfo(HANDLE file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
 {
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.OptionalHeader.ImageBase;
-}
-
-unsigned long long getPEImageBase64(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.OptionalHeader.ImageBase;
-}
-
-unsigned long long getPEEntryPoint32(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
-}
-
-unsigned long long getPEEntryPoint64(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
-}
-
-int getNumOfPESections32(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.FileHeader.NumberOfSections;
-}
-
-int getNumOfPESections64(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	return imageNtHeaders.FileHeader.NumberOfSections;
-}
-
-unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
+	if (!result) 
+	{
+		return 0;
+	}
 	
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+	IMAGE_DOS_HEADER dosHeader = { 0 };
+	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
 
-	if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections) 
+	if (is64Bit)
+	{
+		IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
+		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+		if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+		if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+		result->e_lfanew = dosHeader.e_lfanew;
+		result->Signature = imageNtHeaders.Signature;
+		result->FileHeader = imageNtHeaders.FileHeader;
+		result->ImageBase = imageNtHeaders.OptionalHeader.ImageBase;
+		result->AddressOfEntryPoint = imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
+		result->NumberOfRvaAndSizes = imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes;
+		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * 16);
+	}
+	else 
+	{
+		IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
+		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
+		if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
+		if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+
+		result->e_lfanew = dosHeader.e_lfanew;
+		result->Signature = imageNtHeaders.Signature;
+		result->FileHeader = imageNtHeaders.FileHeader;
+		result->ImageBase = imageNtHeaders.OptionalHeader.ImageBase;
+		result->AddressOfEntryPoint = imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
+		result->NumberOfRvaAndSizes = imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes;
+		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * 16);
+	}
+
+	return 1;
+}
+
+unsigned long long getPEImageBase(HANDLE file, unsigned char is64Bit)
+{
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
+	return imageNtHeaders.ImageBase;
+}
+
+unsigned long long getPEEntryPoint(HANDLE file, unsigned char is64Bit)
+{
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
+	return imageNtHeaders.AddressOfEntryPoint;
+}
+
+int getNumOfPESections(HANDLE file, unsigned char is64Bit)
+{
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
+	return imageNtHeaders.FileHeader.NumberOfSections;
+}
+
+unsigned char getAllPESectionHeaders(HANDLE file, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+{
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
+
+	if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections)
 	{
 		return 0;
 	}
@@ -137,7 +99,7 @@ unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, 
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 
@@ -169,71 +131,10 @@ unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, 
 	return 1;
 }
 
-unsigned char getAllPESectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen)
+unsigned char getPESymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, struct JdcStr* result)
 {
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections)
-	{
-		return 0;
-	}
-
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		buffer[i].name = initializeJdcStrWithVal(sectionHeader.Name);
-
-		if (sectionHeader.Characteristics & IMAGE_SCN_CNT_CODE)
-		{
-			buffer[i].type = CODE_FST;
-		}
-		else if(sectionHeader.Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
-		{
-			buffer[i].type = INIT_DATA_FST;
-		}
-		else if (sectionHeader.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
-		{
-			buffer[i].type = UNINIT_DATA_FST;
-		}
-		else 
-		{
-			buffer[i].type = OTHER_FST;
-		}
-
-		buffer[i].isReadOnly = !(sectionHeader.Characteristics & IMAGE_SCN_MEM_WRITE);
-		buffer[i].rva = sectionHeader.VirtualAddress;
-		buffer[i].fileOffset = sectionHeader.PointerToRawData;
-		buffer[i].physicalSize = sectionHeader.SizeOfRawData;
-	}
-
-	return 1;
-}
-
-unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
 
 	for (DWORD i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
 	{
@@ -269,73 +170,18 @@ unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* resu
 	return 0;
 }
 
-unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* result)
+int getNumOfPEImports(HANDLE file, unsigned char is64Bit)
 {
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	for (DWORD i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
-	{
-		IMAGE_SYMBOL symbol = { 0 };
-		LONG symbolAddress = (sizeof(IMAGE_SYMBOL) * i) + imageNtHeaders.FileHeader.PointerToSymbolTable;
-		if (SetFilePointer(file, symbolAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &symbol, sizeof(symbol), 0, 0)) { return 0; }
-
-		if (symbol.Value == value)
-		{
-			if (!symbol.N.Name.Short)
-			{
-				IMAGE_SYMBOL symbol = { 0 };
-				LONG strTableAddress = imageNtHeaders.FileHeader.PointerToSymbolTable + imageNtHeaders.FileHeader.NumberOfSymbols;
-				LONG nameAddress = strTableAddress + symbol.N.Name.Long;
-				if (SetFilePointer(file, nameAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-
-				char tmpBuffer[50] = { 0 };
-				if (!ReadFile(file, tmpBuffer, 50, 0, 0)) { return 0; }
-				tmpBuffer[49] = 0;
-
-				strcpyJdc(result, tmpBuffer);
-			}
-			else
-			{
-				strcpyJdc(result, symbol.N.ShortName);
-			}
-
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-int getNumOfPEImports32(HANDLE file)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
 
 	int result = 0;
-	if (imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes > 1)
+	if (imageNtHeaders.NumberOfRvaAndSizes > 1)
 	{
-		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
-		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
+		DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
+		DWORD importDirectoryTableSize = imageNtHeaders.DataDirectory[1].Size;
 
-		DWORD importDirectoryTableFileOffset = rvaToFileOffset32(file, importDirectoryTableAddress);
+		DWORD importDirectoryTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress);
 
 		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 		{
@@ -348,7 +194,7 @@ int getNumOfPEImports32(HANDLE file)
 				break;
 			}
 
-			DWORD importLookupTableFileOffset = rvaToFileOffset32(file, importDescriptor.Characteristics);
+			DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
 
 			int j = 0;
 			while (1)
@@ -366,7 +212,7 @@ int getNumOfPEImports32(HANDLE file)
 				{
 					// checking for null name
 					char firstChar = 0;
-					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
+					DWORD nameFileOffset = rvaToFileOffsetPE(file, is64Bit, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, &firstChar, 1, 0, 0)) { return 0; }
 
@@ -378,7 +224,7 @@ int getNumOfPEImports32(HANDLE file)
 					result++;
 				}
 
-				j += 4;
+				j += is64Bit ? 8 : 4;
 			}
 		}
 	}
@@ -386,97 +232,18 @@ int getNumOfPEImports32(HANDLE file)
 	return result;
 }
 
-int getNumOfPEImports64(HANDLE file)
+int getAllPEImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
 {
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	int result = 0;
-	if (imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes > 1)
-	{
-		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
-		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
-
-		DWORD importDirectoryTableFileOffset = rvaToFileOffset64(file, importDirectoryTableAddress);
-
-		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
-		{
-			IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
-			if (SetFilePointer(file, importDirectoryTableFileOffset + i, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-			if (!ReadFile(file, &importDescriptor, sizeof(importDescriptor), 0, 0)) { return 0; }
-
-			if (!importDescriptor.Characteristics)
-			{
-				break;
-			}
-
-			DWORD importLookupTableFileOffset = rvaToFileOffset64(file, importDescriptor.Characteristics);
-
-			int j = 0;
-			while (1)
-			{
-				DWORD lookupValue = 0;
-				if (SetFilePointer(file, importLookupTableFileOffset + j, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-				if (!ReadFile(file, &lookupValue, sizeof(lookupValue), 0, 0)) { return 0; }
-
-				if (!lookupValue)
-				{
-					break;
-				}
-
-				
-				if (!(lookupValue & 0x80000000))
-				{
-					// checking for null name
-					char firstChar = 0;
-					DWORD nameFileOffset = rvaToFileOffset64(file, lookupValue + 2);
-					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, &firstChar, 1, 0, 0)) { return 0; }
-
-					if (firstChar == 0)
-					{
-						continue;
-					}
-
-					result++;
-				}
-
-				j += 8;
-			}
-		}
-	}
-
-	return result;
-}
-
-int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
 
 	int bufferIndex = 0;
-	if (imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes > 1) 
+	if (imageNtHeaders.NumberOfRvaAndSizes > 1) 
 	{
-		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
-		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
+		DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
+		DWORD importDirectoryTableSize = imageNtHeaders.DataDirectory[1].Size;
 		
-		DWORD importDirectoryTableFileOffset = rvaToFileOffset32(file, importDirectoryTableAddress);
+		DWORD importDirectoryTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress);
 
 		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 		{
@@ -489,7 +256,7 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 				break;
 			}
 
-			DWORD importLookupTableFileOffset = rvaToFileOffset32(file, importDescriptor.Characteristics);
+			DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
 
 			int j = 0;
 			while (bufferIndex < bufferLen)
@@ -506,7 +273,7 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 				if(!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 				{
 					char symbolName[255] = { 0 };
-					DWORD nameFileOffset = rvaToFileOffset32(file, lookupValue + 2);
+					DWORD nameFileOffset = rvaToFileOffsetPE(file, is64Bit, lookupValue + 2);
 					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 					if (!ReadFile(file, symbolName, 255, 0, 0)) { return 0; }
 
@@ -521,89 +288,12 @@ int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLe
 						strcpyJdc(&buffer[bufferIndex].name, symbolName);
 					}
 
-					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
+					buffer[bufferIndex].address = imageNtHeaders.ImageBase + importDescriptor.FirstThunk + j;
 
 					bufferIndex++;
 				}
 
-				j += 4;
-			}
-		}
-	}
-
-	return bufferIndex;
-}
-
-int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	int bufferIndex = 0;
-	if (imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes > 1)
-	{
-		DWORD importDirectoryTableAddress = imageNtHeaders.OptionalHeader.DataDirectory[1].VirtualAddress; // this is actually an RVA
-		DWORD importDirectoryTableSize = imageNtHeaders.OptionalHeader.DataDirectory[1].Size;
-
-		DWORD importDirectoryTableFileOffset = rvaToFileOffset64(file, importDirectoryTableAddress);
-
-		for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
-		{
-			IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
-			if (SetFilePointer(file, importDirectoryTableFileOffset + i, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-			if (!ReadFile(file, &importDescriptor, sizeof(importDescriptor), 0, 0)) { return 0; }
-
-			if (!importDescriptor.Characteristics)
-			{
-				break;
-			}
-
-			DWORD importLookupTableFileOffset = rvaToFileOffset64(file, importDescriptor.Characteristics);
-
-			int j = 0;
-			while (bufferIndex < bufferLen)
-			{
-				DWORD lookupValue = 0;
-				if (SetFilePointer(file, importLookupTableFileOffset + j, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-				if (!ReadFile(file, &lookupValue, sizeof(lookupValue), 0, 0)) { return 0; }
-
-				if (!lookupValue)
-				{
-					break;
-				}
-
-				if (!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
-				{
-					char symbolName[255] = { 0 };
-					DWORD nameFileOffset = rvaToFileOffset64(file, lookupValue + 2);
-					if (SetFilePointer(file, nameFileOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-					if (!ReadFile(file, symbolName, 255, 0, 0)) { return 0; }
-
-					if (symbolName[0] == 0)
-					{
-						continue;
-					}
-
-					buffer[bufferIndex].name = initializeJdcStrWithSize(255);
-					if (!demangleCppSymbol(symbolName, buffer[bufferIndex].name.buffer, 255))
-					{
-						strcpyJdc(&buffer[bufferIndex].name, symbolName);
-					}
-
-					buffer[bufferIndex].address = imageNtHeaders.OptionalHeader.ImageBase + importDescriptor.FirstThunk + j;
-
-					bufferIndex++;
-				}
-
-				j += 8;
+				j += is64Bit ? 8 : 4;
 			}
 		}
 	}
@@ -654,55 +344,16 @@ unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 	return 0;
 }
 
-DWORD rvaToFileOffset32(HANDLE file, DWORD rva)
+DWORD rvaToFileOffsetPE(HANDLE file, unsigned char is64Bit, DWORD rva)
 {
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
+	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
 
 	DWORD fileOffset = 0;
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
-
-		if (rva >= sectionHeader.VirtualAddress && rva < sectionHeader.VirtualAddress + sectionHeader.SizeOfRawData)
-		{
-			fileOffset = (rva - sectionHeader.VirtualAddress) + sectionHeader.PointerToRawData;
-			break;
-		}
-	}
-
-	return fileOffset;
-}
-
-DWORD rvaToFileOffset64(HANDLE file, DWORD rva)
-{
-	IMAGE_DOS_HEADER dosHeader = { 0 };
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &dosHeader, sizeof(dosHeader), 0, 0)) { return 0; }
-
-	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) { return 0; }
-
-	IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
-	LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-	if (SetFilePointer(file, imageNtHeadersAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
-	if (!ReadFile(file, &imageNtHeaders, sizeof(imageNtHeaders), 0, 0)) { return 0; }
-
-	DWORD fileOffset = 0;
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
-	{
-		IMAGE_SECTION_HEADER sectionHeader = { 0 };
-		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeadersAddress + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
+		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		if (SetFilePointer(file, sectionAddress, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) { return 0; }
 		if (!ReadFile(file, &sectionHeader, sizeof(sectionHeader), 0, 0)) { return 0; }
 

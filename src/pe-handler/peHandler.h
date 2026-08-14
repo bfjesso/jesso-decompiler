@@ -4,42 +4,39 @@
 # define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// this exists because there are 32 and 64 bit versions of the ImageNtHeaders/OptionalHeader
+struct IMAGE_NT_HEADERS_INFO
+{
+	LONG e_lfanew; // this is really in the DOS header
+	DWORD Signature;
+	IMAGE_FILE_HEADER FileHeader;
+	DWORD ImageBase;
+	DWORD AddressOfEntryPoint;
+	DWORD NumberOfRvaAndSizes;
+	IMAGE_DATA_DIRECTORY DataDirectory[16];
+};
 
 unsigned char isPEX64(HANDLE file, unsigned char* isX64);
 
-unsigned long long getPEImageBase32(HANDLE file);
+unsigned char getImageNTHeadersInfo(HANDLE file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
 
-unsigned long long getPEImageBase64(HANDLE file);
+unsigned long long getPEImageBase(HANDLE file, unsigned char is64Bit);
 
-unsigned long long getPEEntryPoint32(HANDLE file);
+unsigned long long getPEEntryPoint(HANDLE file, unsigned char is64Bit);
 
-unsigned long long getPEEntryPoint64(HANDLE file);
+int getNumOfPESections(HANDLE file, unsigned char is64Bit);
 
-int getNumOfPESections32(HANDLE file);
+unsigned char getAllPESectionHeaders(HANDLE file, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-int getNumOfPESections64(HANDLE file);
+unsigned char getPESymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, struct JdcStr* result);
 
-unsigned char getAllPESectionHeaders32(HANDLE file, struct FileSection* buffer, int bufferLen);
+int getNumOfPEImports(HANDLE file, unsigned char is64Bit);
 
-unsigned char getAllPESectionHeaders64(HANDLE file, struct FileSection* buffer, int bufferLen);
-
-unsigned char getPESymbolByValue32(HANDLE file, DWORD value, struct JdcStr* result);
-
-unsigned char getPESymbolByValue64(HANDLE file, DWORD value, struct JdcStr* result);
-
-int getNumOfPEImports32(HANDLE file);
-
-int getNumOfPEImports64(HANDLE file);
-
-int getAllPEImports32(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
-
-int getAllPEImports64(HANDLE file, struct ImportedFunction* buffer, int bufferLen);
+int getAllPEImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
 unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
 
-DWORD rvaToFileOffset32(HANDLE file, DWORD rva);
-
-DWORD rvaToFileOffset64(HANDLE file, DWORD rva);
+DWORD rvaToFileOffsetPE(HANDLE file, unsigned char is64Bit, DWORD rva);
 
 unsigned char generatePEHeadersInfoStr(HANDLE file, struct JdcStr* result);
 
