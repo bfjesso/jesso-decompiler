@@ -60,15 +60,7 @@ unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getELFEntryPoint64(filePathChar);
-	}
-	else
-	{
-		return getELFEntryPoint32(filePathChar);
-	}
+	return getELFEntryPoint(filePathChar, is64Bit);
 #endif
 }
 
@@ -87,15 +79,7 @@ int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getNumOfELFSections64(filePathChar);
-	}
-	else
-	{
-		return getNumOfELFSections32(filePathChar);
-	}
+	return getNumOfELFSections(filePathChar, is64Bit);
 #endif
 }
 
@@ -114,15 +98,7 @@ int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, str
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{ 
-		return getAllELFSectionHeaders64(filePathChar, buffer, bufferLen);
-	}
-	else
-	{ 
-		return getAllELFSectionHeaders32(filePathChar, buffer, bufferLen);
-	}
+	return getAllELFSectionHeaders(filePathChar, is64Bit, buffer, bufferLen);
 #endif
 }
 
@@ -210,15 +186,7 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getELFSymbolByValue64(filePathChar, value, result);
-	}
-	else
-	{
-		return getELFSymbolByValue32(filePathChar, value, result);
-	}
+	return getELFSymbolByValue(filePathChar, is64Bit, value, result);
 #endif
 }
 
@@ -237,15 +205,7 @@ int getNumOfImports(const wchar_t* filePath, unsigned char is64Bit)
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getNumOfELFImports64(filePathChar);
-	}
-	else
-	{
-		return getNumOfELFImports32(filePathChar);
-	}
+	return getNumOfELFImports(filePathChar, is64Bit);
 #endif
 }
 
@@ -264,15 +224,7 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
-	if (is64Bit)
-	{
-		return getAllELFImports64(filePathChar, buffer, bufferLen);
-	}
-	else
-	{
-		return getAllELFImports32(filePathChar, buffer, bufferLen);
-	}
+	return getAllELFImports(filePathChar, is64Bit, buffer, bufferLen);
 #endif
 }
 
@@ -291,7 +243,6 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr*
 #ifdef linux
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
-
 	return generateELFHeadersInfoStr(filePathChar, result);
 #endif
 }

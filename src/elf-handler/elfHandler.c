@@ -74,13 +74,68 @@ unsigned char isELFX64(const char* filePath, unsigned char* isX64)
 	return 0;
 }
 
-unsigned long long getELFEntryPoint64(const char* filePath)
+void readElfEhdr(FILE* file, unsigned char is64Bit, Elf64_Ehdr* result)
+{
+	if(!file)
+	{
+		return;
+	}
+
+	if(is64Bit)
+	{
+		fread(result, sizeof(Elf64_Ehdr), 1, file);
+	}
+	else
+	{
+		Elf32_Ehdr elf32Ehdr;
+		fread(&elf32Ehdr, sizeof(elf32Ehdr), 1, file);
+
+		memcpy(result, &elf32Ehdr, EI_NIDENT + 8);
+		result->e_entry = elf32Ehdr.e_entry; // only these 3 fields are different between 32/64 bit versions
+		result->e_phoff = elf32Ehdr.e_phoff;
+		result->e_shoff = elf32Ehdr.e_shoff;
+		memcpy(&(result->e_flags), &(elf32Ehdr.e_flags), 16);
+	}
+}
+
+void readElfShdr(FILE* file, unsigned char is64Bit, unsigned long long fileOffset, Elf64_Shdr* result)
+{
+	if(!file)
+	{
+		return;
+	}
+
+	fseek(file, fileOffset, SEEK_SET);
+
+	if(is64Bit)
+	{
+		fread(result, sizeof(Elf64_Shdr), 1, file);
+	}
+	else
+	{
+		Elf32_Shdr elf32Shdr;
+		fread(&elf32Shdr, sizeof(elf32Shdr), 1, file);
+
+		result->sh_name = elf32Shdr.sh_name;
+		result->sh_type = elf32Shdr.sh_type;
+		result->sh_flags = elf32Shdr.sh_flags;
+		result->sh_addr = elf32Shdr.sh_addr;
+		result->sh_offset = elf32Shdr.sh_offset;
+		result->sh_size = elf32Shdr.sh_size;
+		result->sh_link = elf32Shdr.sh_link;
+		result->sh_info = elf32Shdr.sh_info;
+		result->sh_addralign = elf32Shdr.sh_addralign;
+		result->sh_entsize = elf32Shdr.sh_entsize;
+	}
+}
+
+unsigned long long getELFEntryPoint(const char* filePath, unsigned char is64Bit)
 {
 	FILE* file = fopen(filePath, "r");
 	if (file)
 	{
 		Elf64_Ehdr elfHeader;
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		readElfEhdr(file, is64Bit, &elfHeader);
 		fclose(file);
 
 		return elfHeader.e_entry;
@@ -89,44 +144,29 @@ unsigned long long getELFEntryPoint64(const char* filePath)
 	return 0;
 }
 
-unsigned long long getELFEntryPoint32(const char* filePath)
-{
-	FILE* file = fopen(filePath, "r");
-	if (file)
-	{
-		Elf32_Ehdr elfHeader;
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-		fclose(file);
-
-		return elfHeader.e_entry;
-	}
-
-	return 0;
-}
-
-unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result)
+unsigned char getELFSymbolByValue(const char* filePath, unsigned char is64Bit, unsigned long long value, struct JdcStr* result)
 {
 	Elf64_Shdr strtabSection;
-	if(!getSectionHeaderByName64(filePath, ".strtab", &strtabSection))
+	if(!getSectionHeaderByName(filePath, is64Bit, ".strtab", &strtabSection))
 	{
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(strtabSection.sh_size);
-	if(!readSectionBytes64(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
+	if(!readSectionBytes(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
 		free(stringBytes);
 		return 0;
 	}
 
 	Elf64_Shdr symtabSection;
-	if(!getSectionHeaderByName64(filePath, ".symtab", &symtabSection))
+	if(!getSectionHeaderByName(filePath, is64Bit, ".symtab", &symtabSection))
 	{
 		return 0;
 	}
 
 	char* bytes = (char*)malloc(symtabSection.sh_size);
-	if(!readSectionBytes64(filePath, &symtabSection, bytes, symtabSection.sh_size))
+	if(!readSectionBytes(filePath, &symtabSection, bytes, symtabSection.sh_size))
 	{
 		free(bytes);
 		return 0;
@@ -135,19 +175,32 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	int i = 0;
 	while(i < symtabSection.sh_size)
 	{
-		Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
+		unsigned int st_name = 0;
+		unsigned long long st_value = 0;
+		if(is64Bit)
+		{
+			Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
+			st_name = symbol->st_name;
+			st_value = symbol->st_value;
+		}
+		else
+		{
+			Elf32_Sym* symbol = (Elf32_Sym*)(bytes + i);
+			st_name = symbol->st_name;
+			st_value = symbol->st_value;
+		}
 		
-		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
+		if(st_value == value && (stringBytes + st_name)[0] != 0)
 		{
 			int status = 0;
-			char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+			char* demangledStr = demangleSymbol(stringBytes + st_name, &status);
 			if(status == 0 && demangledStr != 0)
 			{
 				strcpyJdc(result, demangledStr);
 			}
 			else
 			{
-				strcpyJdc(result, stringBytes + symbol->st_name);
+				strcpyJdc(result, stringBytes + st_name);
 			}
 
 			free(demangledStr);
@@ -156,7 +209,7 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 			return 1;
 		}
 
-		i += sizeof(Elf64_Sym);
+		i += is64Bit ? sizeof(Elf64_Sym) : sizeof(Elf32_Sym);
 	}
 	
 	free(stringBytes);
@@ -164,81 +217,21 @@ unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long val
 	return 0;
 }
 
-unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result)
-{
-	Elf32_Shdr strtabSection;
-	if(!getSectionHeaderByName32(filePath, ".strtab", &strtabSection))
-	{
-		return 0;
-	}
-
-	char* stringBytes = (char*)malloc(strtabSection.sh_size);
-	if(!readSectionBytes32(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
-	{
-		free(stringBytes);
-		return 0;
-	}
-
-	Elf32_Shdr symtabSection;
-	if(!getSectionHeaderByName32(filePath, ".symtab", &symtabSection))
-	{
-		return 0;
-	}
-
-	char* bytes = (char*)malloc(symtabSection.sh_size);
-	if(!readSectionBytes32(filePath, &symtabSection, bytes, symtabSection.sh_size))
-	{
-		free(bytes);
-		return 0;
-	}
-
-	int i = 0;
-	while(i < symtabSection.sh_size)
-	{
-		Elf32_Sym* symbol = (Elf32_Sym*)(bytes + i);
-
-		if(symbol->st_value == value && (stringBytes + symbol->st_name)[0] != 0)
-		{
-			int status = 0;
-			char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
-			if(status == 0 && demangledStr != 0)
-			{
-				strcpyJdc(result, demangledStr);
-			}
-			else
-			{
-				strcpyJdc(result, stringBytes + symbol->st_name);
-			}
-
-			free(demangledStr);
-			free(stringBytes);
-			free(bytes);
-			return 1;
-		}
-
-		i += sizeof(Elf32_Sym);
-	}
-
-	free(stringBytes);
-	free(bytes);
-	return 0;
-}
-
-int getNumOfELFSections64(const char* filePath)
+int getNumOfELFSections(const char* filePath, unsigned char is64Bit)
 {
 	FILE* file = fopen(filePath, "r");
 	if (file)
 	{
 		Elf64_Ehdr elfHeader;
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		readElfEhdr(file, is64Bit, &elfHeader);
 
 		Elf64_Shdr sectionHeader;
+		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
 		int result = 0;
 		for (int i = 0; i < elfHeader.e_shnum; i++)
 		{
-			fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-			fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 
 			if(sectionHeader.sh_size == 0)
 			{
@@ -255,38 +248,7 @@ int getNumOfELFSections64(const char* filePath)
 	return 0;
 }
 
-int getNumOfELFSections32(const char* filePath)
-{
-	FILE* file = fopen(filePath, "r");
-	if (file)
-	{
-		Elf32_Ehdr elfHeader;
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-
-		Elf32_Shdr sectionHeader;
-
-		int result = 0;
-		for (int i = 0; i < elfHeader.e_shnum; i++)
-		{
-			fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-			fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-			if(sectionHeader.sh_size == 0)
-			{
-				continue;
-			}
-
-			result++;
-		}
-
-		fclose(file);
-		return result;
-	}
-
-	return 0;
-}
-
-unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection* buffer, int bufferLen)
+unsigned char getAllELFSectionHeaders(const char* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -294,11 +256,12 @@ unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection
 
 	if (file)
 	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		readElfEhdr(file, is64Bit, &elfHeader);
+
+		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
 		Elf64_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
+		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
 		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
@@ -315,8 +278,7 @@ unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection
 					return 0;
 				}
 
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
+				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 
 				if(sectionHeader.sh_size == 0)
 				{
@@ -416,7 +378,7 @@ unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection
 	return 0;
 }
 
-unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_Shdr* result)
+unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, char* name, Elf64_Shdr* result)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -424,11 +386,12 @@ unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_S
 
 	if (file)
 	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		readElfEhdr(file, is64Bit, &elfHeader);
+
+		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
 		Elf64_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
+		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
 		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
@@ -438,9 +401,7 @@ unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_S
 		{
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
+				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 				if (strcmp(sectionNames + sectionHeader.sh_name, name) == 0)
 				{
 					*result = sectionHeader;
@@ -459,50 +420,7 @@ unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_S
 	return 0;
 }
 
-unsigned char getSectionHeaderByName32(const char* filePath, char* name, Elf32_Shdr* result)
-{
-	Elf32_Ehdr elfHeader;
-	Elf32_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
-
-	if (file)
-	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-
-		Elf32_Shdr nameStrTable;
-		fseek(file, elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(nameStrTable), SEEK_SET);
-		fread(&nameStrTable, 1, sizeof(nameStrTable), file);
-
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
-		fread(sectionNames, 1, nameStrTable.sh_size, file);
-
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			for (int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if (strcmp(sectionNames + sectionHeader.sh_name, name) == 0)
-				{
-					*result = sectionHeader;
-
-					fclose(file);
-					free(sectionNames);
-					return 1;
-				}
-			}
-		}
-
-		fclose(file);
-		free(sectionNames);
-	}
-
-	return 0;
-}
-
-unsigned char readSectionBytes64(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize)
+unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize)
 {
 	FILE* file = fopen(filePath, "r");
 	if (file) 
@@ -516,21 +434,7 @@ unsigned char readSectionBytes64(const char* filePath, Elf64_Shdr* section, unsi
 	return 0;
 }
 
-unsigned char readSectionBytes32(const char* filePath, Elf32_Shdr* section, unsigned char* buffer, unsigned int bufferSize)
-{
-	FILE* file = fopen(filePath, "r");
-	if (file)
-	{
-		fseek(file, section->sh_offset, SEEK_SET);
-		fread(buffer, 1, bufferSize, file);
-		fclose(file);
-		return 1;
-	}
-
-	return 0;
-}
-
-unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, int index, Elf64_Shdr* result)
+unsigned char getSectionHeaderByType(const char* filePath, unsigned char is64Bit, unsigned int type, int index, Elf64_Shdr* result)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -538,17 +442,15 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 
 	if (file)
 	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
+		readElfEhdr(file, is64Bit, &elfHeader);
 
+		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
 		{
 			int num = 0;
-
 			for (int i = 0; i < elfHeader.e_shnum; i++)
 			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
+				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 				if (sectionHeader.sh_type == type)
 				{
 					if(num == index)
@@ -569,69 +471,30 @@ unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, 
 	return 0;
 }
 
-unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, int index, Elf32_Shdr* result)
-{
-	Elf32_Ehdr elfHeader;
-	Elf32_Shdr sectionHeader;
-	FILE* file = fopen(filePath, "r");
-
-	if (file)
-	{
-		fread(&elfHeader, sizeof(elfHeader), 1, file);
-
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			int num = 0;
-
-			for (int i = 0; i < elfHeader.e_shnum; i++)
-			{
-				fseek(file, elfHeader.e_shoff + i * sizeof(sectionHeader), SEEK_SET);
-				fread(&sectionHeader, 1, sizeof(sectionHeader), file);
-
-				if (sectionHeader.sh_type == type)
-				{
-					if(num == index)
-					{
-						*result = sectionHeader;
-						fclose(file);
-						return 1;
-					}
-
-					num++;
-				}
-			}
-		}
-
-		fclose(file);
-	}
-
-	return 0;
-}
-
-int getNumOfELFImports64(const char* filePath)
+int getNumOfELFImports(const char* filePath, unsigned char is64Bit)
 {
 	Elf64_Shdr dynstrSection;
-	if (!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
+	if (!getSectionHeaderByType(filePath, is64Bit, SHT_STRTAB, 0, &dynstrSection))
 	{
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
-	if (!readSectionBytes64(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
+	if (!readSectionBytes(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
 		free(stringBytes);
 		return 0;
 	}
 
 	Elf64_Shdr dynsymSection;
-	if (!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
+	if (!getSectionHeaderByType(filePath, is64Bit, SHT_DYNSYM, 0, &dynsymSection))
 	{
 		free(stringBytes);
 		return 0;
 	}
 
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
-	if (!readSectionBytes64(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
+	if (!readSectionBytes(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
 		free(stringBytes);
 		free(dynsymBytes);
@@ -641,10 +504,10 @@ int getNumOfELFImports64(const char* filePath)
 	int relaNum = 0;
 	Elf64_Shdr relaSection;
 	int result = 0;
-	while (getSectionHeaderByType64(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
+	while (getSectionHeaderByType(filePath, is64Bit, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
-		if (!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		if (!readSectionBytes(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
 			free(stringBytes);
 			free(dynsymBytes);
@@ -652,14 +515,28 @@ int getNumOfELFImports64(const char* filePath)
 			return 0;
 		}
 
-		int i = 0;
-		while ((i * sizeof(Elf64_Rela)) < relaSection.sh_size)
-		{
-			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
-			int val = ELF64_R_SYM(rela->r_info);
-			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+		unsigned int relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
 
-			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+		int i = 0;
+		while ((i * relaSize) < relaSection.sh_size)
+		{
+			unsigned int st_name = 0;
+			if(is64Bit)
+			{
+				Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
+				int val = ELF64_R_SYM(rela->r_info);
+				Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+				st_name = symbol->st_name;
+			}
+			else
+			{
+				Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
+				int val = ELF32_R_SYM(rela->r_info);
+				Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
+				st_name = symbol->st_name;
+			}
+			
+			if(strcmp(stringBytes + st_name, "") != 0)
 			{
 				result++;
 			}
@@ -678,100 +555,30 @@ int getNumOfELFImports64(const char* filePath)
 	return result;
 }
 
-int getNumOfELFImports32(const char* filePath)
-{
-	Elf32_Shdr dynstrSection;
-	if (!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
-	{
-		return 0;
-	}
-
-	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
-	if (!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
-	{
-		free(stringBytes);
-		return 0;
-	}
-
-	Elf32_Shdr dynsymSection;
-	if (!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
-	{
-		free(stringBytes);
-		return 0;
-	}
-
-	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
-	if (!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
-	{
-		free(stringBytes);
-		free(dynsymBytes);
-		return 0;
-	}
-
-	int relaNum = 0;
-	Elf32_Shdr relaSection;
-	int result = 0;
-	while (getSectionHeaderByType32(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
-	{
-		char* relaBytes = (char*)malloc(relaSection.sh_size);
-		if (!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
-		{
-			free(stringBytes);
-			free(dynsymBytes);
-			free(relaBytes);
-			return 0;
-		}
-
-		int i = 0;
-		while ((i * sizeof(Elf32_Rela)) < relaSection.sh_size)
-		{
-			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
-			int val = ELF32_R_SYM(rela->r_info);
-			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
-
-			if(strcmp(stringBytes + symbol->st_name, "") != 0)
-			{
-				result++;
-			}
-
-			i++;
-		}
-
-		free(relaBytes);
-
-		relaNum++;
-	}
-
-	free(stringBytes);
-	free(dynsymBytes);
-
-	return result;
-}
-
-int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
+int getAllELFImports(const char* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
 {
 	Elf64_Shdr dynstrSection;
-	if(!getSectionHeaderByType64(filePath, SHT_STRTAB, 0, &dynstrSection))
+	if(!getSectionHeaderByType(filePath, is64Bit, SHT_STRTAB, 0, &dynstrSection))
 	{
 		return 0;
 	}
 
 	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
-	if(!readSectionBytes64(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
+	if(!readSectionBytes(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
 		free(stringBytes);
 		return 0;
 	}
 
 	Elf64_Shdr dynsymSection;
-	if(!getSectionHeaderByType64(filePath, SHT_DYNSYM, 0, &dynsymSection))
+	if(!getSectionHeaderByType(filePath, is64Bit, SHT_DYNSYM, 0, &dynsymSection))
 	{
 		free(stringBytes);
 		return 0;
 	}
 
 	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
-	if(!readSectionBytes64(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
+	if(!readSectionBytes(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
 		free(stringBytes);
 		free(dynsymBytes);
@@ -781,10 +588,10 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 	int relaNum = 0;
 	Elf64_Shdr relaSection;
 	int bufferIndex = 0;
-	while(getSectionHeaderByType64(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
+	while(getSectionHeaderByType(filePath, is64Bit, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
-		if(!readSectionBytes64(filePath, &relaSection, relaBytes, relaSection.sh_size))
+		if(!readSectionBytes(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
 			free(stringBytes);
 			free(dynsymBytes);
@@ -792,111 +599,44 @@ int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, in
 			return 0;
 		}
 
+		unsigned int relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
+
 		int i = 0;
-		while((i * sizeof(Elf64_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
+		while((i * relaSize) < relaSection.sh_size && bufferIndex < bufferLen)
 		{
-			Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
-			int val = ELF64_R_SYM(rela->r_info);
-			Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
-
-			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			unsigned int st_name = 0;
+			unsigned long long r_offset = 0;
+			if(is64Bit)
 			{
-				int status = 0;
-				char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
-				if(status == 0 && demangledStr != 0)
-				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(demangledStr);
-				}
-				else
-				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
-				}
-				
-				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
-				bufferIndex++;
-
-				free(demangledStr);
+				Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
+				int val = ELF64_R_SYM(rela->r_info);
+				Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+				st_name = symbol->st_name;
+				r_offset = rela->r_offset;
+			}
+			else
+			{
+				Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
+				int val = ELF32_R_SYM(rela->r_info);
+				Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
+				st_name = symbol->st_name;
+				r_offset = rela->r_offset;
 			}
 
-			i++;
-		}
-
-		free(relaBytes);
-
-		relaNum++;
-	}
-
-	free(stringBytes);
-	free(dynsymBytes);
-
-	return bufferIndex;
-}
-
-int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen)
-{
-	Elf32_Shdr dynstrSection;
-	if(!getSectionHeaderByType32(filePath, SHT_STRTAB, 0, &dynstrSection))
-	{
-		return 0;
-	}
-
-	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
-	if(!readSectionBytes32(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
-	{
-		free(stringBytes);
-		return 0;
-	}
-
-	Elf32_Shdr dynsymSection;
-	if(!getSectionHeaderByType32(filePath, SHT_DYNSYM, 0, &dynsymSection))
-	{
-		free(stringBytes);
-		return 0;
-	}
-
-	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
-	if(!readSectionBytes32(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
-	{
-		free(stringBytes);
-		free(dynsymBytes);
-		return 0;
-	}
-
-	int relaNum = 0;
-	Elf32_Shdr relaSection;
-	int bufferIndex = 0;
-	while(getSectionHeaderByType32(filePath, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
-	{
-		char* relaBytes = (char*)malloc(relaSection.sh_size);
-		if(!readSectionBytes32(filePath, &relaSection, relaBytes, relaSection.sh_size))
-		{
-			free(stringBytes);
-			free(dynsymBytes);
-			free(relaBytes);
-			return 0;
-		}
-
-		int i = 0;
-		while((i * sizeof(Elf32_Rela)) < relaSection.sh_size && bufferIndex < bufferLen)
-		{
-			Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
-			int val = ELF32_R_SYM(rela->r_info);
-			Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
-
-			if(strcmp(stringBytes + symbol->st_name, "") != 0)
+			if(strcmp(stringBytes + st_name, "") != 0)
 			{
 				int status = 0;
-				char* demangledStr = demangleSymbol(stringBytes + symbol->st_name, &status);
+				char* demangledStr = demangleSymbol(stringBytes + st_name, &status);
 				if(status == 0 && demangledStr != 0)
 				{
 					buffer[bufferIndex].name = initializeJdcStrWithVal(demangledStr);
 				}
 				else
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + symbol->st_name);
+					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + st_name);
 				}
 				
-				buffer[bufferIndex].address = (unsigned long long)(rela->r_offset);
+				buffer[bufferIndex].address = r_offset;
 				bufferIndex++;
 
 				free(demangledStr);

@@ -5,45 +5,27 @@ char* demangleSymbol(const char* mangledStr, int* status);
 
 unsigned char isELFX64(const char* filePath, unsigned char* isX64);
 
-unsigned long long getELFEntryPoint64(const char* filePath);
+void readElfEhdr(FILE* file, unsigned char is64Bit, Elf64_Ehdr* result);
 
-unsigned long long getELFEntryPoint32(const char* filePath);
+void readElfShdr(FILE* file, unsigned char is64Bit, unsigned long long fileOffset, Elf64_Shdr* result);
 
-unsigned char getELFSymbolByValue64(const char* filePath, unsigned long long value, struct JdcStr* result);
+unsigned long long getELFEntryPoint(const char* filePath, unsigned char is64Bit);
 
-unsigned char getELFSymbolByValue32(const char* filePath, unsigned long long value, struct JdcStr* result);
+unsigned char getELFSymbolByValue(const char* filePath, unsigned char is64Bit, unsigned long long value, struct JdcStr* result);
 
-int getNumOfELFSections64(const char* filePath);
+int getNumOfELFSections(const char* filePath, unsigned char is64Bit);
 
-int getNumOfELFSections32(const char* filePath);
+unsigned char getAllELFSectionHeaders(const char* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-int getNumOfELFSections64(const char* filePath);
+unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, char* name, Elf64_Shdr* result);
 
-int getNumOfELFSections32(const char* filePath);
+unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize);
 
-unsigned char getAllELFSectionHeaders64(const char* filePath, struct FileSection* buffer, int bufferLen);
+unsigned char getSectionHeaderByType(const char* filePath, unsigned char is64Bit, unsigned int type, int index, Elf64_Shdr* result);
 
-unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection* buffer, int bufferLen);
+int getNumOfELFImports(const char* filePath, unsigned char is64Bit);
 
-unsigned char getSectionHeaderByName64(const char* filePath, char* name, Elf64_Shdr* result);
-
-unsigned char getSectionHeaderByName32(const char* filePath, char* name, Elf32_Shdr* result);
-
-unsigned char readSectionBytes64(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize);
-
-unsigned char readSectionBytes32(const char* filePath, Elf32_Shdr* section, unsigned char* buffer, unsigned int bufferSize);
-
-unsigned char getSectionHeaderByType64(const char* filePath, unsigned int type, int index, Elf64_Shdr* result);
-
-unsigned char getSectionHeaderByType32(const char* filePath, unsigned int type, int index, Elf32_Shdr* result);
-
-int getNumOfELFImports64(const char* filePath);
-
-int getNumOfELFImports32(const char* filePath);
-
-int getAllELFImports64(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
-
-int getAllELFImports32(const char* filePath, struct ImportedFunction* buffer, int bufferLen);
+int getAllELFImports(const char* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
 unsigned char generateELFHeadersInfoStr(const char* filePath, struct JdcStr* result);
 
