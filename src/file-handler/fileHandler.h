@@ -2,6 +2,8 @@
 #include "../fileStructs.h"
 #include <wchar.h>
 
+FILE* openFile(const wchar_t* filePath);
+
 #ifdef __cplusplus
 extern "C"
 {

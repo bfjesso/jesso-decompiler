@@ -8,16 +8,23 @@
 #include "../elf-handler/elfHandler.h"
 #endif
 
+FILE* openFile(const wchar_t* filePath)
+{
+#ifdef _WIN32
+	return _wfopen(filePath, L"rb");
+#endif
+
+#ifdef linux
+	char filePathChar[255] = { 0 };
+	wcstombs(filePathChar, filePath, 254);
+	return fopen(filePathChar, "rb");
+#endif
+}
+
 unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return isPEX64(file, isX64);
+	return isPEX64(filePath, isX64);
 #endif
 
 #ifdef linux
@@ -30,13 +37,7 @@ unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
 unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64Bit)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-	
-	return getPEImageBase(file, is64Bit);
+	return getPEImageBase(filePath, is64Bit);
 #endif
 
 #ifdef linux
@@ -48,13 +49,7 @@ unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64B
 unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64Bit)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return getPEEntryPoint(file, is64Bit);
+	return getPEEntryPoint(filePath, is64Bit);
 #endif
 
 #ifdef linux
@@ -67,13 +62,7 @@ unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64
 int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return getNumOfPESections(file, is64Bit);
+	return getNumOfPESections(filePath, is64Bit);
 #endif
 
 #ifdef linux
@@ -86,13 +75,7 @@ int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
 int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return getAllPESectionHeaders(file, is64Bit, buffer, bufferLen);
+	return getAllPESectionHeaders(filePath, is64Bit, buffer, bufferLen);
 #endif
 
 #ifdef linux
@@ -104,83 +87,36 @@ int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, str
 
 unsigned int getNumOfFileBytes(const wchar_t* filePath)
 {
-#ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	unsigned int result = GetFileSize(file, NULL);
-	if (result == INVALID_FILE_SIZE) 
-	{
-		return 0;
-	}
-
-	return result;
-#endif
-
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-
-	FILE* file = fopen(filePathChar, "r");
+	FILE* file = openFile(filePath);
 	if (file)
 	{
 		fseek(file, 0, SEEK_END);
-		return ftell(file);
+		unsigned int result = ftell(file);
+		fclose(file);
+		return result;
 	}
 
 	return 0;
-#endif
 }
 
 unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize)
 {
-#ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	if (SetFilePointer(file, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-	{
-		CloseHandle(file);
-		return 0;
-	}
-
-	BOOL result = ReadFile(file, buffer, bufferSize, 0, 0);
-	CloseHandle(file);
-	return result;
-#endif
-
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-
-	FILE* file = fopen(filePathChar, "r");
+	FILE* file = openFile(filePath);
 	if (file)
 	{
 		fseek(file, 0, SEEK_SET);
-		fread(buffer, 1, bufferSize, file);
-		return 1;
+		unsigned int bytesRead = fread(buffer, 1, bufferSize, file);
+		fclose(file);
+		return bytesRead == bufferSize;
 	}
 
 	return 0;
-#endif
 }
 
 unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return getPESymbolByValue(file, is64Bit, value, result);
+	return getPESymbolByValue(filePath, is64Bit, value, result);
 #endif
 
 #ifdef linux
@@ -193,13 +129,7 @@ unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, u
 int getNumOfImports(const wchar_t* filePath, unsigned char is64Bit)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return getNumOfPEImports(file, is64Bit);
+	return getNumOfPEImports(filePath, is64Bit);
 #endif
 
 #ifdef linux
@@ -212,13 +142,7 @@ int getNumOfImports(const wchar_t* filePath, unsigned char is64Bit)
 int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-	
-	return getAllPEImports(file, is64Bit, buffer, bufferLen);
+	return getAllPEImports(filePath, is64Bit, buffer, bufferLen);
 #endif
 
 #ifdef linux
@@ -231,13 +155,7 @@ int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct Importe
 unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
 {
 #ifdef _WIN32
-	HANDLE file = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-	if (!file || file == INVALID_HANDLE_VALUE)
-	{
-		return 0;
-	}
-
-	return generatePEHeadersInfoStr(file, result);
+	return generatePEHeadersInfoStr(filePath, result);
 #endif
 
 #ifdef linux

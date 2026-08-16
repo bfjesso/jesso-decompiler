@@ -16,29 +16,29 @@ struct IMAGE_NT_HEADERS_INFO
 	IMAGE_DATA_DIRECTORY DataDirectory[16];
 };
 
-unsigned char isPEX64(HANDLE file, unsigned char* isX64);
+unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
 
-unsigned char getImageNTHeadersInfo(HANDLE file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
+static unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
 
-unsigned long long getPEImageBase(HANDLE file, unsigned char is64Bit);
+unsigned long long getPEImageBase(const wchar_t* filePath, unsigned char is64Bit);
 
-unsigned long long getPEEntryPoint(HANDLE file, unsigned char is64Bit);
+unsigned long long getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit);
 
-int getNumOfPESections(HANDLE file, unsigned char is64Bit);
+int getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit);
 
-unsigned char getAllPESectionHeaders(HANDLE file, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
+unsigned char getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-unsigned char getPESymbolByValue(HANDLE file, unsigned char is64Bit, DWORD value, struct JdcStr* result);
+unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result);
 
-int getNumOfPEImports(HANDLE file, unsigned char is64Bit);
+int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit);
 
-int getAllPEImports(HANDLE file, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
+int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
 unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
 
-DWORD rvaToFileOffsetPE(HANDLE file, unsigned char is64Bit, DWORD rva);
+static DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva);
 
-unsigned char generatePEHeadersInfoStr(HANDLE file, struct JdcStr* result);
+unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
 
 static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr* result);
 
