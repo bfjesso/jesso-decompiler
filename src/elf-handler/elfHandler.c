@@ -378,7 +378,7 @@ unsigned char getAllELFSectionHeaders32(const char* filePath, struct FileSection
 	return 0;
 }
 
-unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, char* name, Elf64_Shdr* result)
+unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, const char* name, Elf64_Shdr* result)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -420,10 +420,10 @@ unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit
 	return 0;
 }
 
-unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize)
+unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, char* buffer, unsigned int bufferSize)
 {
 	FILE* file = fopen(filePath, "r");
-	if (file) 
+	if (file)
 	{
 		fseek(file, section->sh_offset, SEEK_SET);
 		fread(buffer, 1, bufferSize, file);
@@ -729,8 +729,8 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 	sprintfJdc(result, 1, "0x7\te_ident[EI_OSABI]\t");
 	switch(ehdr->e_ident[EI_OSABI])
 	{
-	case ELFOSABI_SYSV:
-		sprintfJdc(result, 1, "ELFOSABI_SYSV (0x%X)\tUNIX System V ABI\n", ehdr->e_ident[EI_OSABI]);
+	case ELFOSABI_NONE:
+		sprintfJdc(result, 1, "ELFOSABI_NONE (0x%X)\tNo extensions or unspecified\n", ehdr->e_ident[EI_OSABI]);
 		break;
 	case ELFOSABI_HPUX:
 		sprintfJdc(result, 1, "ELFOSABI_HPUX (0x%X)\tHP-UX ABI\n", ehdr->e_ident[EI_OSABI]);

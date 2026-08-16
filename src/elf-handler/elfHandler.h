@@ -1,5 +1,5 @@
 #include "../fileStructs.h"
-#include <elf.h>
+#include "elfStructs.h"
 
 char* demangleSymbol(const char* mangledStr, int* status);
 
@@ -17,9 +17,9 @@ int getNumOfELFSections(const char* filePath, unsigned char is64Bit);
 
 unsigned char getAllELFSectionHeaders(const char* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, char* name, Elf64_Shdr* result);
+unsigned char getSectionHeaderByName(const char* filePath, unsigned char is64Bit, const char* name, Elf64_Shdr* result);
 
-unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, unsigned char* buffer, unsigned int bufferSize);
+unsigned char readSectionBytes(const char* filePath, Elf64_Shdr* section, char* buffer, unsigned int bufferSize);
 
 unsigned char getSectionHeaderByType(const char* filePath, unsigned char is64Bit, unsigned int type, int index, Elf64_Shdr* result);
 
