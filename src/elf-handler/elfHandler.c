@@ -1,61 +1,6 @@
 #include "elfHandler.h"
 #include "../file-handler/fileHandler.h"
 
-extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int* status);
-
-char* demangleSymbol(const char* mangledStr, int* status)
-{
-	char* result = 0;
-
-	char* demangleResult = __cxa_demangle(mangledStr, 0, 0, status);
-	if(*status == 0)
-	{
-		result = (char*)calloc(strlen(demangleResult), 1);
-
-		int startIndex = 0;
-		int i = 0;
-		while(demangleResult[i] != 0)
-		{
-			if(demangleResult[i] == ' ') // this is looking for the return type
-			{
-				startIndex = i + 1;
-				break;
-			}
-			else if(demangleResult[i] == '<' || demangleResult[i] == '(')
-			{
-				break;
-			}
-
-			i++;
-		}
-
-		int numOfBrakets = 0;
-		int bufferIndex = 0;
-		i = startIndex;
-		while(demangleResult[i] != 0)
-		{
-			if(demangleResult[i] == '<' || demangleResult[i] == '(')
-			{
-				numOfBrakets++;
-			}
-			else if(demangleResult[i] == '>' || demangleResult[i] == ')')
-			{
-				numOfBrakets--;
-			}
-			else if(numOfBrakets == 0 && demangleResult[i] != ' ')
-			{
-				result[bufferIndex] = demangleResult[i];
-				bufferIndex++;
-			}
-
-			i++;
-		}
-	}
-
-	free(demangleResult);
-	return result;
-}
-
 unsigned char isELFX64(const wchar_t* filePath, unsigned char* isX64)
 {
 	FILE* file = openFile(filePath);
@@ -193,18 +138,11 @@ unsigned char getELFSymbolByValue(const wchar_t* filePath, unsigned char is64Bit
 		
 		if(st_value == value && (stringBytes + st_name)[0] != 0)
 		{
-			int status = 0;
-			char* demangledStr = demangleSymbol(stringBytes + st_name, &status);
-			if(status == 0 && demangledStr != 0)
-			{
-				strcpyJdc(result, demangledStr);
-			}
-			else
+			if (!demangleCppSymbol(stringBytes + st_name, result->buffer, result->bufferSize))
 			{
 				strcpyJdc(result, stringBytes + st_name);
 			}
 
-			free(demangledStr);
 			free(stringBytes);
 			free(bytes);
 			return 1;
@@ -561,21 +499,14 @@ int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct Impo
 
 			if(strcmp(stringBytes + st_name, "") != 0)
 			{
-				int status = 0;
-				char* demangledStr = demangleSymbol(stringBytes + st_name, &status);
-				if(status == 0 && demangledStr != 0)
+				buffer[bufferIndex].name = initializeJdcStrWithSize(255);
+				if (!demangleCppSymbol(stringBytes + st_name, buffer[bufferIndex].name.buffer, 255))
 				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(demangledStr);
-				}
-				else
-				{
-					buffer[bufferIndex].name = initializeJdcStrWithVal(stringBytes + st_name);
+					strcpyJdc(&buffer[bufferIndex].name, stringBytes + st_name);
 				}
 				
 				buffer[bufferIndex].address = r_offset;
 				bufferIndex++;
-
-				free(demangledStr);
 			}
 
 			i++;

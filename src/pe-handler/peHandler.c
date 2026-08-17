@@ -1,9 +1,6 @@
 #include "peHandler.h"
 #include "../file-handler/fileHandler.h"
 
-#include "dbghelp.h"
-#pragma comment(lib, "dbghelp.lib")
-
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64)
 {
 	FILE* file = openFile(filePath);
@@ -390,49 +387,6 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 
 		fclose(file);
 		return bufferIndex;
-	}
-
-	return 0;
-}
-
-unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen) 
-{
-	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
-	{
-		// removing template parameters
-		size_t nameLen = strlen(buffer);
-		int k = 0;
-		int openIndex = -1;
-		int openNum = 0;
-		int closeNum = 0;
-		while (buffer[k] != 0)
-		{
-			if (buffer[k] == '<')
-			{
-				if (openIndex == -1) { openIndex = k; }
-				openNum++;
-			}
-			else if (buffer[k] == '>')
-			{
-				closeNum++;
-
-				if (closeNum == openNum)
-				{
-					size_t len = strlen(buffer + k + 1);
-					memcpy(buffer + openIndex, buffer + k + 1, len);
-					memset(buffer + openIndex + len, 0, nameLen - (openIndex + len));
-
-					openIndex = -1;
-					openNum = 0;
-					closeNum = 0;
-				}
-
-			}
-
-			k++;
-		}
-
-		return 1;
 	}
 
 	return 0;

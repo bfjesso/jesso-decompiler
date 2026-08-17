@@ -1,8 +1,6 @@
 #include "../fileStructs.h"
 #include "elfStructs.h"
 
-char* demangleSymbol(const char* mangledStr, int* status);
-
 unsigned char isELFX64(const wchar_t* filePath, unsigned char* isX64);
 
 void readElfEhdr(FILE* file, unsigned char is64Bit, Elf64_Ehdr* result);

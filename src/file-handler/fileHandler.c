@@ -2,10 +2,15 @@
 
 #ifdef _WIN32
 #include "../pe-handler/peHandler.h"
+
+#include "dbghelp.h"
+#pragma comment(lib, "dbghelp.lib")
 #endif
 
 #ifdef linux
 #include "../elf-handler/elfHandler.h"
+
+extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int* status);
 #endif
 
 FILE* openFile(const wchar_t* filePath)
@@ -18,6 +23,109 @@ FILE* openFile(const wchar_t* filePath)
 	char filePathChar[255] = { 0 };
 	wcstombs(filePathChar, filePath, 254);
 	return fopen(filePathChar, "rb");
+#endif
+}
+
+unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen) 
+{
+#ifdef _WIN32
+	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
+	{
+		// removing template parameters
+		size_t nameLen = strlen(buffer);
+		int k = 0;
+		int openIndex = -1;
+		int openNum = 0;
+		int closeNum = 0;
+		while (buffer[k] != 0)
+		{
+			if (buffer[k] == '<')
+			{
+				if (openIndex == -1) { openIndex = k; }
+				openNum++;
+			}
+			else if (buffer[k] == '>')
+			{
+				closeNum++;
+
+				if (closeNum == openNum)
+				{
+					size_t len = strlen(buffer + k + 1);
+					memcpy(buffer + openIndex, buffer + k + 1, len);
+					memset(buffer + openIndex + len, 0, nameLen - (openIndex + len));
+
+					openIndex = -1;
+					openNum = 0;
+					closeNum = 0;
+				}
+
+			}
+
+			k++;
+		}
+
+		return 1;
+	}
+
+	return 0;
+#endif
+
+#ifdef linux
+	int status = 0;
+	char* demangleResult = __cxa_demangle(mangledStr, 0, 0, &status);
+	if (status == 0)
+	{
+		if (bufferLen <= strlen(demangleResult)) 
+		{
+			free(demangleResult);
+			return 0;
+		}
+
+		int startIndex = 0;
+		int i = 0;
+		while (demangleResult[i] != 0)
+		{
+			if (demangleResult[i] == ' ') // this is looking for the return type
+			{
+				startIndex = i + 1;
+				break;
+			}
+			else if (demangleResult[i] == '<' || demangleResult[i] == '(')
+			{
+				break;
+			}
+
+			i++;
+		}
+
+		int numOfBrakets = 0;
+		int bufferIndex = 0;
+		i = startIndex;
+		while (demangleResult[i] != 0)
+		{
+			if (demangleResult[i] == '<' || demangleResult[i] == '(')
+			{
+				numOfBrakets++;
+			}
+			else if (demangleResult[i] == '>' || demangleResult[i] == ')')
+			{
+				numOfBrakets--;
+			}
+			else if (numOfBrakets == 0 && demangleResult[i] != ' ')
+			{
+				buffer[bufferIndex] = demangleResult[i];
+				bufferIndex++;
+			}
+
+			i++;
+		}
+
+		free(demangleResult);
+		return 1;
+	}
+
+	free(demangleResult);
+	return 0;
 #endif
 }
 

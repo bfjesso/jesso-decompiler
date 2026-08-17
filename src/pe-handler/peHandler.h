@@ -34,8 +34,6 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit);
 
 int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
 
-unsigned demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
-
 static DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva);
 
 unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);

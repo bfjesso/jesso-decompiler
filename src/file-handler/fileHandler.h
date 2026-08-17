@@ -4,6 +4,8 @@
 
 FILE* openFile(const wchar_t* filePath);
 
+unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
+
 #ifdef __cplusplus
 extern "C"
 {
