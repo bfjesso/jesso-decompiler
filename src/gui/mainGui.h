@@ -32,6 +32,7 @@ public:
 	wxAuiNotebook* auiNotebook;
 
 	wxString currentFilePath = "";
+	enum FileFormat fileFormat = UNKNOWN_FF;
 	unsigned char is64Bit = 0;
 	unsigned long long imageBase = 0;
 	unsigned long long entryPoint = 0;

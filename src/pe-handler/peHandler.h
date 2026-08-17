@@ -17,11 +17,13 @@ struct IMAGE_NT_HEADERS_INFO
 	LONG e_lfanew; // this is really in the DOS header
 	DWORD Signature;
 	IMAGE_FILE_HEADER FileHeader;
-	DWORD ImageBase;
+	ULONGLONG ImageBase;
 	DWORD AddressOfEntryPoint;
 	DWORD NumberOfRvaAndSizes;
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 };
+
+unsigned char isFilePE(const wchar_t* filePath, unsigned char* isPE);
 
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
 

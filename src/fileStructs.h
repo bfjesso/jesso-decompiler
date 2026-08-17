@@ -1,6 +1,13 @@
 #pragma once
 #include "./jdc-str/jdcStr.h"
 
+enum FileFormat
+{
+	UNKNOWN_FF,
+	PE_FF,
+	ELF_FF
+};
+
 struct ImportedFunction
 {
 	struct JdcStr name;
@@ -9,18 +16,10 @@ struct ImportedFunction
 
 enum FileSectionType 
 {
+	OTHER_FST,
 	CODE_FST,
 	INIT_DATA_FST,
-	UNINIT_DATA_FST,
-	OTHER_FST
-};
-
-static const char* fileSectionTypeStrs[] =
-{
-	"CODE_FST",
-	"INIT_DATA_FST",
-	"UNINIT_DATA_FST",
-	"OTHER_FST"
+	UNINIT_DATA_FST
 };
 
 struct FileSection

@@ -1,6 +1,8 @@
 #include "../fileStructs.h"
 #include "elfStructs.h"
 
+unsigned char isFileELF(const wchar_t* filePath, unsigned char* isELF);
+
 unsigned char isELFX64(const wchar_t* filePath, unsigned char* isX64);
 
 void readElfEhdr(FILE* file, unsigned char is64Bit, Elf64_Ehdr* result);

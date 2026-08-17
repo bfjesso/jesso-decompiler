@@ -2,7 +2,7 @@
 #include <wx/grid.h>
 #include "../file-handler/fileHandler.h"
 
-FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxScrolledWindow(parent, wxID_ANY)
+FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath, enum FileFormat fileFormat) : wxScrolledWindow(parent, wxID_ANY)
 {
 	SetOwnBackgroundColour(backgroundColor);
 	SetScrollRate(10, 10);
@@ -14,7 +14,7 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath) : wxSc
 	}
 
 	struct JdcStr fileHeadersInfoJdcStr = initializeJdcStrWithSize(10000);
-	if (!generateFileHeadersInfoStr(filePath.c_str().AsWChar(), &fileHeadersInfoJdcStr))
+	if (!generateFileHeadersInfoStr(filePath.c_str().AsWChar(), fileFormat, &fileHeadersInfoJdcStr))
 	{
 		freeJdcStr(&fileHeadersInfoJdcStr);
 		wxMessageBox("Error getting file header info", "Failed to get file header info");

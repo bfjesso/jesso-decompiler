@@ -100,7 +100,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections"); });
 	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, this), "Strings"); });
 	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
-	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath), "File headers"); });
+	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath, fileFormat), "File headers"); });
 	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddCodeReferencesWindow(); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
@@ -470,7 +470,13 @@ void MainGui::OpenFile()
 				return;
 			}
 
-			if (isFile64Bit(filePath.c_str().AsWChar(), &is64Bit))
+			if (!identifyFileFormat(filePath.c_str().AsWChar(), &fileFormat)) 
+			{
+				wxMessageBox("Error identifying file format", "Failed to open file");
+				return;
+			}
+
+			if (fileFormat != UNKNOWN_FF)
 			{
 				logTextCtrl->Log("opened " + fileName, 0);
 				if (!LoadKnownFile(filePath))
@@ -482,7 +488,7 @@ void MainGui::OpenFile()
 			}
 			else 
 			{
-				int loadAnyway = wxMessageBox("Error determining file architecture. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
+				int loadAnyway = wxMessageBox("The file is in an unknown format. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
 				if (loadAnyway == wxYES)
 				{
 					logTextCtrl->Log("opened " + fileName, 0);
@@ -505,6 +511,7 @@ void MainGui::OpenFile()
 			char hexStr[20] = { 0 };
 			sprintf(hexStr, "0x%llX", numOfFileBytes);
 			logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
+			logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
 			logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
 			logTextCtrl->LogHexNum("image base", imageBase, 0);
 			logTextCtrl->LogHexNum("entry point", entryPoint + imageBase, 0);
@@ -532,6 +539,12 @@ void MainGui::OpenFile()
 
 unsigned char MainGui::LoadKnownFile(wxString filePath)
 {
+	if (!isFile64Bit(filePath.c_str().AsWChar(), fileFormat, &is64Bit)) 
+	{
+		wxMessageBox("Error determining file architecture", "Can't load file");
+		return 0;
+	}
+	
 	fileBytes = new unsigned char[numOfFileBytes];
 	if (!readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
 	{
@@ -539,20 +552,20 @@ unsigned char MainGui::LoadKnownFile(wxString filePath)
 		return 0;
 	}
 	
-	imageBase = getFileImageBase(filePath.c_str().AsWChar(), is64Bit);
-	entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), is64Bit);
+	imageBase = getFileImageBase(filePath.c_str().AsWChar(), fileFormat, is64Bit);
+	entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), fileFormat, is64Bit);
 
-	numOfSections = getNumOfSections(filePath.c_str().AsWChar(), is64Bit);
+	numOfSections = getNumOfSections(filePath.c_str().AsWChar(), fileFormat, is64Bit);
 	sections = new FileSection[numOfSections];
-	if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), is64Bit, sections, numOfSections))
+	if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), fileFormat, is64Bit, sections, numOfSections))
 	{
 		wxMessageBox("Error getting all file sections", "Failed to open file");
 		return 0;
 	}
 
-	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), is64Bit);
+	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit);
 	imports = new ImportedFunction[numOfImports];
-	if (getAllImports(filePath.c_str().AsWChar(), is64Bit, imports, numOfImports) != numOfImports)
+	if (getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports) != numOfImports)
 	{
 		wxMessageBox("Error getting all imports", "Failed to open file");
 		return 0;
@@ -596,7 +609,7 @@ unsigned char MainGui::LoadUnknownFile(wxString filePath)
 		}
 	}
 	
-	int ask64Bit = wxMessageBox("Do you want to disassemble in 64 bit mode?", "Specify architecture", wxYES_NO, this);
+	int ask64Bit = wxMessageBox("Do you want to treat the file as 64-bit?", "Specify architecture", wxYES_NO, this);
 	is64Bit = ask64Bit == wxYES;
 
 	// this is just for formatting in the gui
@@ -851,6 +864,7 @@ void MainGui::ClearData()
 	functions.shrink_to_fit();
 
 	currentFilePath = "";
+	fileFormat = UNKNOWN_FF;
 }
 
 unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)
@@ -1070,7 +1084,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		}
 
 		currentFunction.name = initializeJdcStr();
-		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
+		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), fileFormat, is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
 		{
 			sprintfJdc(&currentFunction.name, 0, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
 		}

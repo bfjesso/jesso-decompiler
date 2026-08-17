@@ -1,4 +1,5 @@
 #include "sectionsGrid.h"
+#include "../file-handler/fileHandler.h"
 
 wxBEGIN_EVENT_TABLE(SectionsGrid, wxGrid)
 EVT_GRID_CELL_RIGHT_CLICK(SectionsGrid::RightClickOptions)
@@ -43,7 +44,7 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 			AppendRows(1);
 
 			SetCellValue(i, 0, wxString(sections[i].name.buffer));
-			SetCellValue(i, 1, wxString(fileSectionTypeStrs[sections[i].type]));
+			SetCellValue(i, 1, wxString(fileSectionTypeToStr(sections[i].type)));
 
 			if (sections[i].isReadOnly)
 			{

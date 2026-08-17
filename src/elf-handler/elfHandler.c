@@ -1,6 +1,22 @@
 #include "elfHandler.h"
 #include "../file-handler/fileHandler.h"
 
+unsigned char isFileELF(const wchar_t* filePath, unsigned char* isELF)
+{
+	FILE* file = openFile(filePath);
+	if (file)
+	{
+		unsigned char e_ident[5];
+		fread(e_ident, 1, 5, file);
+		fclose(file);
+
+		*isELF = memcmp(e_ident, ELFMAG, SELFMAG) == 0;
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char isELFX64(const wchar_t* filePath, unsigned char* isX64)
 {
 	FILE* file = openFile(filePath);
@@ -10,11 +26,8 @@ unsigned char isELFX64(const wchar_t* filePath, unsigned char* isX64)
 		fread(e_ident, 1, 5, file);
 		fclose(file);
 
-		if(memcmp(e_ident, ELFMAG, SELFMAG) == 0)
-		{
-			*isX64 = e_ident[EI_CLASS] == ELFCLASS64;
-			return 1;
-		}
+		*isX64 = e_ident[EI_CLASS] == ELFCLASS64;
+		return 1;
 	}
 
 	return 0;
@@ -206,45 +219,42 @@ unsigned char getAllELFSectionHeaders(const wchar_t* filePath, unsigned char is6
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		int bufferIndex = 0;
+		for (int i = 0; i < elfHeader.e_shnum; i++)
 		{
-			int bufferIndex = 0;
-			for (int i = 0; i < elfHeader.e_shnum; i++)
+			if (bufferIndex >= bufferLen)
 			{
-				if (bufferIndex >= bufferLen)
-				{
-					fclose(file);
-					return 0;
-				}
-
-				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
-
-				if(sectionHeader.sh_size == 0)
-				{
-					continue;
-				}
-
-				buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
-
-				if (sectionHeader.sh_flags & SHF_EXECINSTR)
-				{
-					buffer[bufferIndex].type = CODE_FST;
-				}
-				else 
-				{
-					buffer[bufferIndex].type = INIT_DATA_FST;
-				}
-
-				buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
-				buffer[bufferIndex].rva = sectionHeader.sh_addr;
-				buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
-				buffer[bufferIndex].physicalSize = sectionHeader.sh_size;
-				bufferIndex++;
+				fclose(file);
+				return 0;
 			}
 
-			fclose(file);
-			return 1;
+			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
+
+			if (sectionHeader.sh_size == 0)
+			{
+				continue;
+			}
+
+			buffer[bufferIndex].name = initializeJdcStrWithVal(sectionNames + sectionHeader.sh_name);
+
+			if (sectionHeader.sh_flags & SHF_EXECINSTR)
+			{
+				buffer[bufferIndex].type = CODE_FST;
+			}
+			else
+			{
+				buffer[bufferIndex].type = INIT_DATA_FST;
+			}
+
+			buffer[bufferIndex].isReadOnly = !(sectionHeader.sh_flags & SHF_WRITE);
+			buffer[bufferIndex].rva = sectionHeader.sh_addr;
+			buffer[bufferIndex].fileOffset = sectionHeader.sh_offset;
+			buffer[bufferIndex].physicalSize = sectionHeader.sh_size;
+			bufferIndex++;
 		}
+
+		fclose(file);
+		return 1;
 
 		fclose(file);
 	}
@@ -271,19 +281,16 @@ unsigned char getSectionHeaderByName(const wchar_t* filePath, unsigned char is64
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		for (int i = 0; i < elfHeader.e_shnum; i++)
 		{
-			for (int i = 0; i < elfHeader.e_shnum; i++)
+			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
+			if (strcmp(sectionNames + sectionHeader.sh_name, name) == 0)
 			{
-				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
-				if (strcmp(sectionNames + sectionHeader.sh_name, name) == 0)
-				{
-					*result = sectionHeader;
+				*result = sectionHeader;
 
-					fclose(file);
-					free(sectionNames);
-					return 1;
-				}
+				fclose(file);
+				free(sectionNames);
+				return 1;
 			}
 		}
 
@@ -319,23 +326,20 @@ unsigned char getSectionHeaderByType(const wchar_t* filePath, unsigned char is64
 		readElfEhdr(file, is64Bit, &elfHeader);
 
 		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
-		if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) == 0)
+		int num = 0;
+		for (int i = 0; i < elfHeader.e_shnum; i++)
 		{
-			int num = 0;
-			for (int i = 0; i < elfHeader.e_shnum; i++)
+			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
+			if (sectionHeader.sh_type == type)
 			{
-				readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
-				if (sectionHeader.sh_type == type)
+				if (num == index)
 				{
-					if(num == index)
-					{
-						*result = sectionHeader;
-						fclose(file);
-						return 1;
-					}
-
-					num++;
+					*result = sectionHeader;
+					fclose(file);
+					return 1;
 				}
+
+				num++;
 			}
 		}
 

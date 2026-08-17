@@ -127,68 +127,142 @@ unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 #endif
 }
 
-unsigned char isFile64Bit(const wchar_t* filePath, unsigned char* isX64)
+unsigned char identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat)
 {
-#ifdef _WIN32
-	return isPEX64(filePath, isX64);
-#endif
+	if (!fileFormat) 
+	{
+		return 0;
+	}
+	
+	unsigned char isPE = 0;
+	if (!isFilePE(filePath, &isPE)) 
+	{
+		return 0;
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return isELFX64(filePathChar, isX64);
-#endif
+	if (isPE) 
+	{
+		*fileFormat = PE_FF;
+		return 1;
+	}
+
+	unsigned char isELF = 0;
+	if (!isFileELF(filePath, &isELF))
+	{
+		return 0;
+	}
+
+	if (isELF)
+	{
+		*fileFormat = ELF_FF;
+		return 1;
+	}
+
+	*fileFormat = UNKNOWN_FF;
+	return 1;
 }
 
-unsigned long long getFileImageBase(const wchar_t* filePath, unsigned char is64Bit)
+const char* fileFormatToStr(enum FileFormat fileFormat) 
 {
-#ifdef _WIN32
-	return getPEImageBase(filePath, is64Bit);
-#endif
+	switch (fileFormat) 
+	{
+	case UNKNOWN_FF:
+		return "Unknown format";
+	case PE_FF:
+		return "Portable executable (PE)";
+	case ELF_FF:
+		return "Executable and linkable format (ELF)";
+	}
 
-#ifdef linux
-	// not done
+	return "";
+}
+
+const char* fileSectionTypeToStr(enum FileSectionType fileSectionType) 
+{
+	switch (fileSectionType)
+	{
+	case OTHER_FST:
+		return "Unknown";
+	case CODE_FST:
+		return "Code";
+	case INIT_DATA_FST:
+		return "Initialized data";
+	case UNINIT_DATA_FST:
+		return "Uninitialized data";
+	}
+
+	return "";
+}
+
+unsigned char isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* isX64)
+{
+	if (fileFormat == PE_FF) 
+	{
+		return isPEX64(filePath, isX64);
+	}
+	else if (fileFormat == ELF_FF) 
+	{
+		return isELFX64(filePath, isX64);
+	}
+
 	return 0;
-#endif
 }
 
-unsigned long long getFileEntryPoint(const wchar_t* filePath, unsigned char is64Bit)
+unsigned long long getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
 {
-#ifdef _WIN32
-	return getPEEntryPoint(filePath, is64Bit);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getPEImageBase(filePath, is64Bit);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		// not done
+		return 0;
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getELFEntryPoint(filePathChar, is64Bit);
-#endif
+	return 0;
 }
 
-int getNumOfSections(const wchar_t* filePath, unsigned char is64Bit)
+unsigned long long getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
 {
-#ifdef _WIN32
-	return getNumOfPESections(filePath, is64Bit);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getPEEntryPoint(filePath, is64Bit);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getELFEntryPoint(filePath, is64Bit);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getNumOfELFSections(filePathChar, is64Bit);
-#endif
+	return 0;
 }
 
-int getAllFileSectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+int getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
 {
-#ifdef _WIN32
-	return getAllPESectionHeaders(filePath, is64Bit, buffer, bufferLen);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getNumOfPESections(filePath, is64Bit);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getNumOfELFSections(filePath, is64Bit);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getAllELFSectionHeaders(filePathChar, is64Bit, buffer, bufferLen);
-#endif
+	return 0;
+}
+
+int getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+{
+	if (fileFormat == PE_FF)
+	{
+		return getAllPESectionHeaders(filePath, is64Bit, buffer, bufferLen);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getAllELFSectionHeaders(filePath, is64Bit, buffer, bufferLen);
+	}
+
+	return 0;
 }
 
 unsigned int getNumOfFileBytes(const wchar_t* filePath)
@@ -219,56 +293,60 @@ unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsi
 	return 0;
 }
 
-unsigned char getSymbolByValue(const wchar_t* filePath, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
+unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
 {
-#ifdef _WIN32
-	return getPESymbolByValue(filePath, is64Bit, value, result);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getPESymbolByValue(filePath, is64Bit, value, result);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getELFSymbolByValue(filePath, is64Bit, value, result);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getELFSymbolByValue(filePathChar, is64Bit, value, result);
-#endif
+	return 0;
 }
 
-int getNumOfImports(const wchar_t* filePath, unsigned char is64Bit)
+int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
 {
-#ifdef _WIN32
-	return getNumOfPEImports(filePath, is64Bit);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getNumOfPEImports(filePath, is64Bit);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getNumOfELFImports(filePath, is64Bit);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getNumOfELFImports(filePathChar, is64Bit);
-#endif
+	return 0;
 }
 
-int getAllImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
+int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
 {
-#ifdef _WIN32
-	return getAllPEImports(filePath, is64Bit, buffer, bufferLen);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return getAllPEImports(filePath, is64Bit, buffer, bufferLen);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return getAllELFImports(filePath, is64Bit, buffer, bufferLen);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return getAllELFImports(filePathChar, is64Bit, buffer, bufferLen);
-#endif
+	return 0;
 }
 
-unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
+unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result)
 {
-#ifdef _WIN32
-	return generatePEHeadersInfoStr(filePath, result);
-#endif
+	if (fileFormat == PE_FF)
+	{
+		return generatePEHeadersInfoStr(filePath, result);
+	}
+	else if (fileFormat == ELF_FF)
+	{
+		return generateELFHeadersInfoStr(filePath, result);
+	}
 
-#ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return generateELFHeadersInfoStr(filePathChar, result);
-#endif
+	return 0;
 }
 
 unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)

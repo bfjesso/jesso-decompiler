@@ -1,6 +1,23 @@
 #include "peHandler.h"
 #include "../file-handler/fileHandler.h"
 
+unsigned char isFilePE(const wchar_t* filePath, unsigned char* isPE)
+{
+	FILE* file = openFile(filePath);
+	if (file)
+	{
+		IMAGE_DOS_HEADER dosHeader = { 0 };
+		fseek(file, 0, SEEK_SET);
+		fread(&dosHeader, 1, sizeof(dosHeader), file);
+		fclose(file);
+
+		*isPE = dosHeader.e_magic == IMAGE_DOS_SIGNATURE;
+		return 1;
+	}
+
+	return 0;
+}
+
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64)
 {
 	FILE* file = openFile(filePath);
@@ -9,12 +26,6 @@ unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64)
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		fseek(file, 0, SEEK_SET);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
-
-		if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) 
-		{ 
-			fclose(file);
-			return 0; 
-		}
 
 		IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
@@ -423,12 +434,6 @@ unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* r
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		fseek(file, 0, SEEK_SET);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
-
-		if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE) 
-		{ 
-			fclose(file);
-			return 0; 
-		}
 
 		generateDOSHeaderInfoStr(&dosHeader, result);
 
