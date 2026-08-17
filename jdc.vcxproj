@@ -269,6 +269,7 @@
     <ClInclude Include="src\gui\stringsTextCtrl.h" />
     <ClInclude Include="src\jdc-str\jdcStr.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
+    <ClInclude Include="src\pe-handler\windowsStructs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

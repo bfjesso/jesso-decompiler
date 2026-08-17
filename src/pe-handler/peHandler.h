@@ -1,8 +1,15 @@
 #pragma once
 #include "../fileStructs.h"
 
-# define WIN32_LEAN_AND_MEAN
+// dbghelp.h needs windows.h
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
+
+#ifdef linux
+#include "windowsStructs.h"
+#endif
 
 // this exists because there are 32 and 64 bit versions of the ImageNtHeaders/OptionalHeader
 struct IMAGE_NT_HEADERS_INFO
@@ -13,7 +20,7 @@ struct IMAGE_NT_HEADERS_INFO
 	DWORD ImageBase;
 	DWORD AddressOfEntryPoint;
 	DWORD NumberOfRvaAndSizes;
-	IMAGE_DATA_DIRECTORY DataDirectory[16];
+	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 };
 
 unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
@@ -42,4 +49,4 @@ static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr*
 
 static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcStr* result);
 
-static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER* optionalHeader, struct JdcStr* result);
+static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeader, struct JdcStr* result);

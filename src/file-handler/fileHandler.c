@@ -1,15 +1,13 @@
 #include "fileHandler.h"
+#include "../pe-handler/peHandler.h"
+#include "../elf-handler/elfHandler.h"
 
 #ifdef _WIN32
-#include "../pe-handler/peHandler.h"
-
 #include "dbghelp.h"
 #pragma comment(lib, "dbghelp.lib")
 #endif
 
 #ifdef linux
-#include "../elf-handler/elfHandler.h"
-
 extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int* status);
 #endif
 

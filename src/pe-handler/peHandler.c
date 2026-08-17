@@ -54,7 +54,7 @@ unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IM
 		result->ImageBase = imageNtHeaders.OptionalHeader.ImageBase;
 		result->AddressOfEntryPoint = imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
 		result->NumberOfRvaAndSizes = imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes;
-		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * 16);
+		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * IMAGE_NUMBEROF_DIRECTORY_ENTRIES);
 	}
 	else 
 	{
@@ -69,7 +69,7 @@ unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IM
 		result->ImageBase = imageNtHeaders.OptionalHeader.ImageBase;
 		result->AddressOfEntryPoint = imageNtHeaders.OptionalHeader.AddressOfEntryPoint;
 		result->NumberOfRvaAndSizes = imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes;
-		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * 16);
+		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * IMAGE_NUMBEROF_DIRECTORY_ENTRIES);
 	}
 
 	return 1;
