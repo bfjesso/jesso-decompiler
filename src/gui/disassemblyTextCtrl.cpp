@@ -84,7 +84,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 		unsigned long long address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findInstructionByAddress(instructions, numOfInstructions, address);
+			int index = findInstructionByAddressInclusive(instructions, numOfInstructions, address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -92,6 +92,12 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 			}
 
 			CenterLine(index);
+
+			if (address != instructions[index].address) 
+			{
+				wxMessageBox("Exact address not found", "Failed to find address");
+			}
+			
 			return;
 		}
 

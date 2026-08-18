@@ -70,6 +70,23 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int n
 	return -1;
 }
 
+int findInstructionByAddressInclusive(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
+{
+	int low = 0;
+	int high = numOfInstructions - 1;
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (instructions[mid].address <= address && instructions[mid].address + instructions[mid].numOfBytes > address) { return mid; }
+
+		if (instructions[mid].address < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
 int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
 {
 	int low = 0;

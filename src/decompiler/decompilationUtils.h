@@ -14,6 +14,8 @@ extern "C"
 
 	int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
+	int findInstructionByAddressInclusive(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
+
 	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
