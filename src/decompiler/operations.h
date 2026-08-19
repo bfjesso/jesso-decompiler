@@ -19,7 +19,7 @@ static unsigned char decompileXor(struct DecompilationParameters* params, int in
 
 static unsigned char decompileFLD(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
 
-static unsigned char decompileIDIV(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
+static unsigned char decompileIDIV(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result);
 
 static unsigned char decompileIMUL(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result);
 

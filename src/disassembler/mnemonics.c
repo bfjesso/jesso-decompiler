@@ -33,8 +33,6 @@ extern const char* mnemonicStrs[] =
 	"XOR", "VXORPD", "XORPD", "VXORPS", "XORPS", "VPXOR", "PXOR",
 	"SHL", "SHLD",
 	"SHR", "SAR", "SHRD",
-	"IMUL",
-	"IDIV",
 	"INC", "DEC",
 	"NEG", "NOT",
 
@@ -51,6 +49,9 @@ extern const char* mnemonicStrs[] =
 	// end of opcodes that modify first operand
 	
 	// other opcodes that are handled in the decompiler
+	"IMUL", "MUL",
+	"IDIV", "DIV",
+
 	"CBW", "CWDE", "CDQE",
 	"CDQ", "CWD", "CQO",
 
@@ -101,14 +102,14 @@ extern const char* mnemonicStrs[] =
 	"AAA", "AAD", "AAM", "AAS", "ADC", "ARPL",
 	"BOUND", "BSF", "BSR", "BSWAP", "BT", "BTC", "BTR", "BTS", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
 	"CLAC", "CLC", "CLD", "CLI", "CLTS", "CMC", "CMPS", "CMPXCHG", "CPUID",
-	"DAA", "DAS", "DIV",
+	"DAA", "DAS",
 	"EMMS", "ENCLS", "ENCLU",
 	"F2XM1", "FABS", "FADD", "FADDP", "FBLD", "FBSTP", "FCHS", "FCLEX", "FCMOVB", "FCMOVBE", "FCMOVE", "FCMOVNB", "FCMOVNBE", "FCMOVNE", "FCMOVNU", "FCMOVU", "FCOM", "FCOMI", "FCOMIP", "FCOMP", "FCOMPP", "FCOS", "FDECSTP", "FDIV", "FDIVP", "FDIVR", "FDIVRP", "FFREE", "FIADD", "FICOM", "FICOMP", "FIDIV", "FIDIVR", "FILD", "FIMUL", "FINCSTP", "FINIT", "FIST", "FISTP", "FISTTP", "FISUB", "FISUBR", "FLD1", "FLDCW", "FLDENV", "FLDL2E", "FLDL2T", "FLDLG2", "FLDLN2", "FLDPI", "FLDZ", "FMUL", "FMULP", "FNOP", "FPATAN", "FPREM", "FPREM1", "FPTAN", "FRNDINT", "FRSTOR", "FSAVE", "FSCALE", "FSIN", "FSINCOS", "FSQRT", "FST", "FSTCW", "FSTENV", "FSTP", "FSTSW", "FSUB", "FSUBP", "FSUBR", "FSUBRP", "FTST", "FUCOM", "FUCOMI", "FUCOMIP", "FUCOMP", "FUCOMPP", "FXAM", "FXCH", "FXTRACT", "FYL2X", "FYL2XP1",
 	"GETSEC",
 	"IN", "INS", "INT1", "INTO", "INVD", "IRET",
 	"JRCXZ", "JMPE",
 	"LAHF", "LAR", "VLDDQU", "LDDQU", "LDS", "LES", "LFS", "LGS", "LODS", "LOOP", "LOOPNZ", "LOOPZ", "LSL", "LSS", "LZCNT",
-	"MONITOR", "MUL", "MWAIT",
+	"MONITOR", "MWAIT",
 	"OUT", "OUTS",
 	"POPAD", "POPF", "PREFETCHW", "PUSHAD", "POPCNT", "VPINSRW", "PINSRW", "VPEXTRW", "PEXTRW",
 	"RCL", "RCR", "RDMSR", "RDPMC", "RDTSC", "RSM", "VRCPPS", "RCPPS", "VRCPSS", "RCPSS",

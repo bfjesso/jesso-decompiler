@@ -229,8 +229,9 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	enum Mnemonic opcode = instruction->opcode;
 
-	if (instruction->opcode == POP && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, reg))
+	if (opcode == POP && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, reg))
 	{
 		int stackOffset = 0;
 		for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--) 
@@ -261,7 +262,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
-		if (instruction->opcode == IDIV) // remainder needs to be handled
+		if (opcode == IDIV || opcode == DIV)
 		{
 			if (specificReg) 
 			{
@@ -291,7 +292,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 			return 1;
 		}
 
-		if (instruction->opcode == IMUL && instruction->numOfOperands == 1)
+		if ((opcode == IMUL || opcode == MUL) && instruction->numOfOperands == 1)
 		{
 			if (specificReg)
 			{
@@ -321,7 +322,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 	else if (compareRegisters(reg, DX))
 	{
-		if (instruction->opcode == IMUL && instruction->numOfOperands == 1)
+		if ((opcode == IMUL || opcode == MUL || opcode == IDIV || opcode == DIV) && instruction->numOfOperands == 1)
 		{
 			if (specificReg) 
 			{ 
@@ -351,7 +352,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 	else if (compareRegisters(reg, ST0))
 	{
-		switch (instruction->opcode)
+		switch (opcode)
 		{
 		case FLD:
 			if (specificReg) { *specificReg = ST0; }

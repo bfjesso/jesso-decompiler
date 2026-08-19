@@ -88,11 +88,11 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileFLD(params, instructionIndex, getAssignment, result);
 	}
-	else if (instruction->opcode == IDIV)
+	else if (instruction->opcode == IDIV || instruction->opcode == DIV)
 	{
-		return decompileIDIV(params, instructionIndex, getAssignment, result);
+		return decompileIDIV(params, instructionIndex, targetReg, getAssignment, result);
 	}
-	else if (instruction->opcode == IMUL)
+	else if (instruction->opcode == IMUL || instruction->opcode == MUL)
 	{
 		return decompileIMUL(params, instructionIndex, targetReg, getAssignment, result);
 	}
@@ -311,7 +311,7 @@ static unsigned char decompileFLD(struct DecompilationParameters* params, int in
 	return 1;
 }
 
-static unsigned char decompileIDIV(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+static unsigned char decompileIDIV(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -319,26 +319,57 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 		freeJdcStr(&decompiledFirstOperand);
 		return 0;
 	}
-	
-	if (getAssignment)
+
+	struct JdcStr decompiledAX = initializeJdcStr();
+	if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
 	{
-		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledAX);
+		return 0;
+	}
+
+	if (compareRegisters(targetReg, AX))
+	{
+		if (getAssignment)
 		{
-			freeJdcStr(&decompiledFirstOperand);
+			sprintfJdc(result, 0, "%s /= %s", decompiledAX.buffer, decompiledFirstOperand.buffer);
 			freeJdcStr(&decompiledAX);
-			return 0;
+			freeJdcStr(&decompiledFirstOperand);
+			return 1;
 		}
 
-		sprintfJdc(result, 0, "%s /= %s", decompiledAX.buffer, decompiledFirstOperand.buffer);
+		sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer);
 		freeJdcStr(&decompiledAX);
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
+	else if (compareRegisters(targetReg, DX)) 
+	{
+		if (getAssignment)
+		{
+			struct JdcStr decompiledDX = initializeJdcStr();
+			if (!decompileRegister(params, instructionIndex, -1, DX, 1, &decompiledDX, 0))
+			{
+				freeJdcStr(&decompiledAX);
+				freeJdcStr(&decompiledFirstOperand);
+				freeJdcStr(&decompiledDX);
+				return 0;
+			}
+			
+			sprintfJdc(result, 0, "%s = %s % %s", decompiledDX.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer);
+			freeJdcStr(&decompiledAX);
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledDX);
+			return 1;
+		}
 
-	sprintfJdc(result, 0, " / %s", decompiledFirstOperand.buffer);
-	freeJdcStr(&decompiledFirstOperand);
-	return 1;
+		sprintfJdc(result, 0, "%s % %s", decompiledAX.buffer, decompiledFirstOperand.buffer);
+		freeJdcStr(&decompiledAX);
+		freeJdcStr(&decompiledFirstOperand);
+		return 1;
+	}
+	
+	return 0;
 }
 
 static unsigned char decompileIMUL(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result)

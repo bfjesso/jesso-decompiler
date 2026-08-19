@@ -138,6 +138,10 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 				}
 				return 1;
 			}
+			else if (instruction->numOfOperands == 2)
+			{
+				return 1;
+			}
 			else if (instruction->numOfOperands == 1) 
 			{
 				return 0;
