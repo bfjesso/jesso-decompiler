@@ -216,8 +216,7 @@ unsigned long long getFileImageBase(const wchar_t* filePath, enum FileFormat fil
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		// not done
-		return 0;
+		return 0; // ELF files do not have an image base like PE files
 	}
 
 	return 0;
