@@ -75,13 +75,28 @@ unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 	return 0;
 }
 
-struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg)
-{
+struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, unsigned char operandNum, enum Register reg)
+{	
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER;
 	regOperand.reg = reg;
 
-	return getOperandDataType(opcode, &regOperand);
+	if (instruction)
+	{
+		struct DataType result = getOperandDataType(instruction->opcode, &regOperand);
+		if (operandNum < 4 && instruction->operands[operandNum].type == MEM_ADDRESS)
+		{
+			struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
+			if (memAddress->reg == reg && memAddress->constDisplacement < 0x10000) // this is to check that the reg is not being used as a displacement
+			{
+				result.pointerLevel = 1;
+			}
+		}
+
+		return result;
+	}
+	
+	return getOperandDataType(NO_MNEMONIC, &regOperand);
 }
 
 struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress)

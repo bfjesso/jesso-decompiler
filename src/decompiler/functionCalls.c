@@ -227,7 +227,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		}
 		else 
 		{
-			dataTypeToStr(getRegisterDataType(NO_MNEMONIC, platformRegArgs[i]), &regArgTypeStrs[i]);
+			dataTypeToStr(getRegisterDataType(0, -1, platformRegArgs[i]), &regArgTypeStrs[i]);
 		}
 
 		numOfRegArgs++;

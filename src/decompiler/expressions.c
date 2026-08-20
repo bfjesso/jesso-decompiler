@@ -367,7 +367,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				*regVarRef = localRegVar;
 			}
 
-			struct DataType targetType = getRegisterDataType(params->instructions[instructionIndex].opcode, targetReg);
+			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
 			if (!compareDataTypes(targetType, localRegVar->dataType))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
@@ -464,7 +464,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		{
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
 
-			struct DataType targetType = getRegisterDataType(params->instructions[ogInstructionIndex].opcode, targetReg);
+			struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
 			if (!compareDataTypes(targetType, regArg->dataType))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();

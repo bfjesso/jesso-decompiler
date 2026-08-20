@@ -48,7 +48,7 @@ unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit);
 
 unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 
-struct DataType getRegisterDataType(enum Mnemonic opcode, enum Register reg);
+struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, unsigned char operandNum, enum Register reg);
 
 struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress);
 

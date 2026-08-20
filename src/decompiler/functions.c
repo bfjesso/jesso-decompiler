@@ -313,7 +313,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 		unsigned char overwrites = 0;
 		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
 		{
-			if (dataType) { *dataType = getRegisterDataType(params->instructions[i].opcode, specificReg ? *specificReg : reg); }
+			if (dataType) { *dataType = getRegisterDataType(&params->instructions[i], -1, specificReg ? *specificReg : reg); }
 			return 1;
 		}
 	}
@@ -871,7 +871,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
 	unsigned char foundFirstInstance = 0;
-	regVar->dataType = getRegisterDataType(NO_MNEMONIC, regVar->reg);
+	regVar->dataType = getRegisterDataType(0, -1, regVar->reg);
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
@@ -902,7 +902,7 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 					return;
 				}
 				
-				struct DataType dataType = getRegisterDataType(instruction->opcode, reg);
+				struct DataType dataType = getRegisterDataType(instruction, j, reg);
 				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
 					regVar->dataType.primitiveType = dataType.primitiveType;
