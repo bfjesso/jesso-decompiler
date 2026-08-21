@@ -777,7 +777,12 @@ void MainGui::AnalyzeFile()
 
 	logTextCtrl->Log("finding all functions...", 0);
 
-	int getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
+	int getSymbols = wxNO;
+	if (fileFormat != UNKNOWN_FF) 
+	{
+		getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
+	}
+
 	FindAllFunctions(getSymbols == wxYES);
 
 	logTextCtrl->Log("analyzing functions...", 0);
