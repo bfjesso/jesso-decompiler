@@ -1,22 +1,25 @@
-jdc-cli:
-	gcc -c -w ./src/cli/main.c -o main.o
-	gcc -c -w ./src/disassembler/*.c
-	gcc -c -w ./src/decompiler/*.c
-	gcc -c -w ./src/elf-handler/*.c
-	gcc *.o -o ./bin/linux/x64/cli/jdc
+# the CLI is currently not up to date.
 
-debug-jdc-cli:
-	gcc -g -O0 -c -w ./src/cli/main.c -o main.o
-	gcc -g -O0 -c -w ./src/disassembler/*.c
-	gcc -g -O0 -c -w ./src/decompiler/*.c
-	gcc -g -O0 -c -w ./src/elf-handler/*.c
-	gcc *.o -o ./bin/linux/x64/cli/debug-jdc
+# jdc-cli:
+# 	gcc -c -w ./src/cli/main.c -o main.o
+# 	gcc -c -w ./src/disassembler/*.c
+# 	gcc -c -w ./src/decompiler/*.c
+# 	gcc -c -w ./src/elf-handler/*.c
+# 	gcc *.o -o ./bin/linux/x64/cli/jdc
+
+# debug-jdc-cli:
+# 	gcc -g -O0 -c -w ./src/cli/main.c -o main.o
+# 	gcc -g -O0 -c -w ./src/disassembler/*.c
+# 	gcc -g -O0 -c -w ./src/decompiler/*.c
+# 	gcc -g -O0 -c -w ./src/elf-handler/*.c
+# 	gcc *.o -o ./bin/linux/x64/cli/debug-jdc
 
 jdc-gui:
 	g++ -c -w ./src/gui/*.cpp `../wxWidgets-3.2.10/gtk-build/wx-config --static --cxxflags`
 	gcc -c -w ./src/disassembler/*.c
 	gcc -c -w ./src/decompiler/*.c
 	gcc -c -w ./src/elf-handler/*.c
+	gcc -c -w ./src/pe-handler/*.c
 	gcc -c -w ./src/file-handler/*.c
 	gcc -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/jdc *.o `../wxWidgets-3.2.10/gtk-build/wx-config --static --libs core,base,stc,aui`
@@ -26,6 +29,7 @@ debug-jdc-gui:
 	gcc -g -O0 -c -w ./src/disassembler/*.c
 	gcc -g -O0 -c -w ./src/decompiler/*.c
 	gcc -g -O0 -c -w ./src/elf-handler/*.c
+	gcc -g -O0 -c -w ./src/pe-handler/*.c
 	gcc -g -O0 -c -w ./src/file-handler/*.c
 	gcc -g -O0 -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/debug-jdc *.o `../wxWidgets-3.2.10/gtk-build/wx-config --static --libs core,base,stc,aui`
