@@ -4,10 +4,10 @@
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
-typedef unsigned long DWORD;
+typedef unsigned int DWORD;
 typedef unsigned long long ULONGLONG;
 typedef short SHORT;
-typedef long LONG;
+typedef int LONG;
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 
