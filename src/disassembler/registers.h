@@ -1,10 +1,17 @@
 #pragma once
+#include "../fileStructs.h"
 
 // this includes NO_SEGMENT
 #define NUM_OF_SEGMENTS 7
 
 // this includes NO_REG
 #define NUM_OF_REGISTERS 180
+
+#define NUM_PLATFORM_REG_ARGS_PE 4
+#define NUM_PLATFORM_REG_ARGS_ELF 6
+
+// this is for buffers
+#define MAX_NUM_PLATFORM_REG_ARGS NUM_PLATFORM_REG_ARGS_ELF
 
 enum Segment
 {
@@ -57,19 +64,15 @@ extern "C"
 }
 #endif
 
-extern const enum Register platformRegArgs[];
-extern const enum Register altPlatformRegArgs[];
+int getNumOfPlatformRegArgs(enum FileFormat fileFormat);
 
-#ifdef _WIN32
-#define NUM_PLATFORM_REG_ARGS 4
-#endif
-#ifdef linux
-#define NUM_PLATFORM_REG_ARGS 6
-#endif
+const enum Register* getPlatformRegArgs(enum FileFormat fileFormat);
+
+const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat);
 
 unsigned char isRegisterPointer(enum Register reg);
 
-unsigned char isRegisterPlatformArg(enum Register reg);
+unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
 
 unsigned char getSizeOfRegister(enum Register reg);
 

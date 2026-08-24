@@ -36,16 +36,75 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
 };
 
-#ifdef _WIN32
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9
-extern const enum Register platformRegArgs[NUM_PLATFORM_REG_ARGS] = { RCX, RDX, R8, R9 };
-extern const enum Register altPlatformRegArgs[NUM_PLATFORM_REG_ARGS] = { XMM0, XMM1, XMM2, XMM3 };
+const enum Register platformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { RCX, RDX, R8, R9 };
+const enum Register altPlatformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { XMM0, XMM1, XMM2, XMM3 };
+
+const enum Register platformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { RDI, RSI, RDX, RCX, R8, R9 };
+const enum Register altPlatformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { NO_REG };
+
+int getNumOfPlatformRegArgs(enum FileFormat fileFormat)
+{
+	switch (fileFormat)
+	{
+	case PE_FF:
+		return NUM_PLATFORM_REG_ARGS_PE;
+	case ELF_FF:
+		return NUM_PLATFORM_REG_ARGS_ELF;
+	}
+
+#ifdef _WIN32
+	return NUM_PLATFORM_REG_ARGS_PE;
 #endif
 
 #ifdef linux
-extern const enum Register platformRegArgs[NUM_PLATFORM_REG_ARGS] = { RDI, RSI, RDX, RCX, R8, R9 };
-extern const enum Register altPlatformRegArgs[NUM_PLATFORM_REG_ARGS] = { NO_REG };
+	return NUM_PLATFORM_REG_ARGS_ELF;
 #endif
+
+	return 0;
+}
+
+const enum Register* getPlatformRegArgs(enum FileFormat fileFormat) 
+{
+	switch (fileFormat)
+	{
+	case PE_FF:
+		return platformRegArgsPE;
+	case ELF_FF:
+		return platformRegArgsELF;
+	}
+
+#ifdef _WIN32
+	return platformRegArgsPE;
+#endif
+
+#ifdef linux
+	return platformRegArgsELF;
+#endif
+
+	return 0;
+}
+
+const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat)
+{
+	switch (fileFormat)
+	{
+	case PE_FF:
+		return altPlatformRegArgsPE;
+	case ELF_FF:
+		return altPlatformRegArgsELF;
+	}
+
+#ifdef _WIN32
+	return altPlatformRegArgsPE;
+#endif
+
+#ifdef linux
+	return altPlatformRegArgsELF;
+#endif
+
+	return 0;
+}
 
 unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 {
@@ -126,9 +185,13 @@ unsigned char isRegisterPointer(enum Register reg)
 	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
 }
 
-unsigned char isRegisterPlatformArg(enum Register reg) 
+unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 {
-	for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++)
+	int numOfPlatformRegArgs = getNumOfPlatformRegArgs(fileFormat);
+	const enum Register* platformRegArgs = getPlatformRegArgs(fileFormat);
+	const enum Register* altPlatformRegArgs = getAltPlatformRegArgs(fileFormat);
+
+	for (int i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		if (compareRegisters(reg, platformRegArgs[i]) || compareRegisters(reg, altPlatformRegArgs[i]))
 		{

@@ -207,10 +207,13 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		}
 	}
 
-	struct JdcStr regArgTypeStrs[NUM_PLATFORM_REG_ARGS] = { 0 };
-	struct JdcStr decompiledRegArgs[NUM_PLATFORM_REG_ARGS] = { 0 };
+	int numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
+	const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
+
+	struct JdcStr regArgTypeStrs[MAX_NUM_PLATFORM_REG_ARGS] = { 0 };
+	struct JdcStr decompiledRegArgs[MAX_NUM_PLATFORM_REG_ARGS] = { 0 };
 	int numOfRegArgs = 0;
-	for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++) 
+	for (int i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		struct RegisterVariable* regVar = 0;
 		decompiledRegArgs[i] = initializeJdcStr();
@@ -303,7 +306,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 		strcatJdc(result, " (*)("); // calling convention should go here
 
-		for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++)
+		for (int i = 0; i < numOfPlatformRegArgs; i++)
 		{
 			if (regArgTypeStrs[i].buffer)
 			{
@@ -336,7 +339,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 				freeJdcStr(&stackArgTypeStrs[k]);
 				freeJdcStr(&decompiledStackArgs[k]);
 			}
-			for (int k = 0; k < NUM_PLATFORM_REG_ARGS; k++)
+			for (int k = 0; k < numOfPlatformRegArgs; k++)
 			{
 				freeJdcStr(&regArgTypeStrs[k]);
 				freeJdcStr(&decompiledRegArgs[k]);
@@ -358,7 +361,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		strcatJdc(result, ")(");
 	}
 
-	for(int i = 0; i < NUM_PLATFORM_REG_ARGS; i++)
+	for(int i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		if(decompiledRegArgs[i].buffer)
 		{

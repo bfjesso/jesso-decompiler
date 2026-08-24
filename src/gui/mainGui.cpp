@@ -740,6 +740,7 @@ void MainGui::DisassembleFile()
 	decompParams.numOfFileBytes = numOfFileBytes;
 
 	decompParams.is64Bit = is64Bit;
+	decompParams.fileFormat = fileFormat;
 
 	logTextCtrl->Log("updating disassembly GUI...", 0);
 

@@ -826,10 +826,14 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 
 	if (isArgument) 
 	{
+		int numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
+		const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
+		const enum Register* altPlatformRegArgs = getAltPlatformRegArgs(params->fileFormat);
+
 		// sorting
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) // all reg vars in the buffer should be args
 		{
-			for (int j = 0; j < NUM_PLATFORM_REG_ARGS; j++)
+			for (int j = 0; j < numOfPlatformRegArgs; j++)
 			{
 				if ((compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[j]) || compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[j])) && params->currentFunc->numOfRegVars > j)
 				{
@@ -843,7 +847,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 
 		if (params->currentFunc->callingConvention != __UNKNOWNCALL)
 		{
-			if (!isRegisterPlatformArg(reg))
+			if (!isRegisterPlatformArg(reg, params->fileFormat))
 			{
 				params->currentFunc->callingConvention = __UNKNOWNCALL;
 			}
@@ -854,7 +858,7 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 			else
 			{
 				params->currentFunc->callingConvention = __FASTCALL;
-				for (int i = 0; i < params->currentFunc->numOfRegVars && i < NUM_PLATFORM_REG_ARGS; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
+				for (int i = 0; i < params->currentFunc->numOfRegVars && i < numOfPlatformRegArgs; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
 				{
 					if (!compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[i]) && !compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[i]))
 					{

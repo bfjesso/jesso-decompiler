@@ -186,4 +186,5 @@ struct DecompilationParameters
 
 	unsigned char numOfIndents;
 	unsigned char is64Bit;
+	enum FileFormat fileFormat;
 };

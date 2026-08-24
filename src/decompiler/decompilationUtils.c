@@ -156,7 +156,9 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 	}
 	else if (checkUnknownCalls && checkForUnknownFunctionCall(params, instructionIndex))
 	{
-		for (int i = 0; i < NUM_PLATFORM_REG_ARGS; i++) 
+		int numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
+		const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
+		for (int i = 0; i < numOfPlatformRegArgs; i++)
 		{
 			if (compareRegisters(reg, platformRegArgs[i])) 
 			{
