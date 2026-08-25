@@ -4,7 +4,7 @@
 #include "conditions.h"
 #include "returnStatements.h"
 
-unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long currentSectionEndAddress, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
 {
 	int indexToJumpTo = 0;
 
@@ -12,6 +12,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 	int startInstructionIndex = *instructionIndex;
 
+	unsigned long long currentSectionEndAddress = 0;
 	unsigned char foundFirstInstruction = 0;
 	for (int i = startInstructionIndex; i < params->numOfInstructions; i++)
 	{
@@ -21,6 +22,15 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		if (!foundFirstInstruction)
 		{
+			for (int j = 0; j < params->numOfSections; j++)
+			{
+				if (currentInstruction->address >= params->sections[j].rva && currentInstruction->address < params->sections[j].rva + params->sections[j].physicalSize)
+				{
+					currentSectionEndAddress = params->sections[j].rva + params->sections[j].physicalSize;
+					break;
+				}
+			}
+
 			if (checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, currentInstruction->address) || 
 				(!doesInstructionGenerateInterruptOrException(currentInstruction) && !doesInstructionDoNothing(currentInstruction)))
 			{

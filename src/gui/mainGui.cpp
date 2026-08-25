@@ -1040,17 +1040,6 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 
-	int codeSectionIndex = 0;
-	for (int i = 0; i < numOfSections; i++) 
-	{
-		if (sections[i].type == CODE_FST) 
-		{
-			codeSectionIndex = i;
-			break;
-		}
-	}
-	unsigned long long currentSectionEndAddress = imageBase + sections[codeSectionIndex].rva + sections[codeSectionIndex].physicalSize - 1;
-
 	std::vector<unsigned long long> calledAddresses;
 	calledAddresses.push_back(imageBase + entryPoint);
 	for (int i = 0; i < numOfInstructions; i++) 
@@ -1068,27 +1057,8 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
 	int numOfFunctions = 0;
-	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, currentSectionEndAddress, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
+	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
 	{
-		if (disassembledInstructions[instructionIndex].address > currentSectionEndAddress)
-		{
-			unsigned foundNextCodeSection = 0;
-			for (int i = codeSectionIndex + 1; i < numOfSections; i++)
-			{
-				if (sections[i].type == CODE_FST)
-				{
-					codeSectionIndex = i;
-					foundNextCodeSection = 1;
-					break;
-				}
-			}
-
-			if (foundNextCodeSection)
-			{
-				currentSectionEndAddress = imageBase + sections[codeSectionIndex].rva + sections[codeSectionIndex].physicalSize - 1;
-			}
-		}
-
 		currentFunction.name = initializeJdcStr();
 		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), fileFormat, is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
 		{
