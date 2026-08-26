@@ -24,9 +24,10 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 		{
 			for (int j = 0; j < params->numOfSections; j++)
 			{
-				if (currentInstruction->address >= params->sections[j].rva && currentInstruction->address < params->sections[j].rva + params->sections[j].physicalSize)
+				if (currentInstruction->address >= params->sections[j].rva + params->imageBase && 
+					currentInstruction->address < params->sections[j].rva + params->sections[j].physicalSize + params->imageBase)
 				{
-					currentSectionEndAddress = params->sections[j].rva + params->sections[j].physicalSize;
+					currentSectionEndAddress = params->sections[j].rva + params->sections[j].physicalSize + params->imageBase;
 					break;
 				}
 			}
