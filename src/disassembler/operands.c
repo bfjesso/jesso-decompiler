@@ -502,9 +502,6 @@ unsigned char handleOperands(struct DisassemblyParameters* params, struct Disass
 			currentOperand->type = REGISTER;
 			currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : params->evexPrefix.V_prime ? (ZMM15 - params->evexPrefix.vvvv) : (ZMM31 - params->evexPrefix.vvvv);
 			break;
-		case A_BYTE:
-			params->bytes++;
-			break;
 		}
 
 		if (currentOperandCode != NO_OPERAND_CODE) 

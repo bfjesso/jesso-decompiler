@@ -95,6 +95,19 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 					}
 				}
 			}
+			else if (opcodeByte == 0x1E) 
+			{
+				if (params->bytes[0] == 0xFA)
+				{
+					params->opcode.mnemonic = ENDBR64;
+				}
+				else if(params->bytes[0] != 0xFB)
+				{
+					return 0;
+				}
+
+				params->bytes++;
+			}
 		}
 		else
 		{

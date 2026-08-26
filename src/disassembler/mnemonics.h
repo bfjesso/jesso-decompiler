@@ -79,7 +79,8 @@ enum Mnemonic
 
 	HLT,
 
-	ENTER, LEAVE, ENDBR,
+	ENTER, LEAVE, 
+	ENDBR32, ENDBR64,
 
 	UD2,
 
