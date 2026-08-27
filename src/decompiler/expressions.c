@@ -689,6 +689,47 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			addAssociatedInstruction(params->currentFunc, i);
 			return 1;
 		}
+		else if ((jcc == JB_SHORT || jcc == JNB_SHORT) && currentInstruction->opcode == BT) 
+		{
+			struct JdcStr operand1Str = initializeJdcStr();
+			if (!decompileOperand(params, i, 0, 1, &operand1Str))
+			{
+				freeJdcStr(&operand1Str);
+				return 0;
+			}
+
+			if (currentInstruction->operands[1].type == IMMEDIATE) 
+			{
+				unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(currentInstruction->operands[1].immediate.value);
+				sprintfJdc(result, 0, "%s & 0x%llX", operand1Str.buffer, bitMask);
+			}
+			else 
+			{
+				struct JdcStr operand2Str = initializeJdcStr();
+				if (!decompileOperand(params, i, 1, 1, &operand2Str))
+				{
+					freeJdcStr(&operand2Str);
+					return 0;
+				}
+
+				sprintfJdc(result, 0, "%s & (1 << %s)", operand1Str.buffer, operand2Str.buffer);
+				freeJdcStr(&operand2Str);
+			}
+
+			freeJdcStr(&operand1Str);
+
+			if (jcc == JB_SHORT && invertOperator)
+			{
+				strcatJdc(result, " == 0");
+			}
+			else
+			{
+				strcatJdc(result, " != 0");
+			}
+
+			addAssociatedInstruction(params->currentFunc, i);
+			return 1;
+		}
 	}
 
 	return 0;
