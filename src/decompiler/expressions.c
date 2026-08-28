@@ -168,6 +168,11 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 			strcatJdc(result, memAddrStr.buffer);
 			return 1;
 		}
+		else if (getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		{
+			strcatJdc(result, memAddrStr.buffer);
+			return 1;
+		}
 		else 
 		{
 			int importIndex = getImportIndexByAddress(params, totalDisplacement);
