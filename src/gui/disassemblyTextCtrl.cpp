@@ -236,6 +236,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		mainGui->OpenLog(wxAUI_DOCK_NONE);
 		struct JdcStr errorBuffer = initializeJdcStr();
+		mainGui->logTextCtrl->Freeze();
 		for (int i = 0; i < numOfInstructions; i++) 
 		{
 			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode)) 
@@ -244,6 +245,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 				mainGui->logTextCtrl->Log(errorBuffer.buffer, 1);
 			}
 		}
+		mainGui->logTextCtrl->Thaw();
 		freeJdcStr(&errorBuffer);
 	}, ID_SHOW_UNHANDLED_OPCODES);
 
