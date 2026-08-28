@@ -56,6 +56,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " >> ", " >>= ", result);
 	}
+	else if (isOpcodeMul(instruction->opcode))
+	{
+		return decompileBinaryOperation(params, instructionIndex, getAssignment, " * ", " *= ", result);
+	}
 	else if (isOpcodeCvtToDbl(instruction->opcode))
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, "(double)", " = (double)", result);
