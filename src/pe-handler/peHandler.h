@@ -39,9 +39,9 @@ unsigned char getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64
 
 unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result);
 
-int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit);
+int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef);
 
-int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
+int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
 
 static DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva);
 

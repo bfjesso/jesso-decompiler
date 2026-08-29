@@ -33,9 +33,9 @@ extern "C"
 
 	unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result);
 
-	int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit);
+	int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfLibrariesRef);
 
-	int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
+	int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
 
 	unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result);
 

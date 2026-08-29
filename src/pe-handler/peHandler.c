@@ -250,7 +250,7 @@ unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit,
 	return 0;
 }
 
-int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit)
+int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -259,10 +259,11 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit)
 		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
 		{ 
 			fclose(file);
-			return 0; 
+			return 0;
 		}
 
-		int result = 0;
+		int numOfImports = 0;
+		int numOfLibraries = 0;
 		if (imageNtHeaders.NumberOfRvaAndSizes > 1)
 		{
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
@@ -280,6 +281,8 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit)
 				{
 					break;
 				}
+
+				numOfLibraries++;
 
 				DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
 
@@ -308,7 +311,7 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit)
 							continue;
 						}
 
-						result++;
+						numOfImports++;
 					}
 
 					j += is64Bit ? 8 : 4;
@@ -317,13 +320,14 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit)
 		}
 
 		fclose(file);
-		return result;
+		*numOfLibrariesRef = numOfLibraries;
+		return numOfImports;
 	}
 	
 	return 0;
 }
 
-int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
+int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -335,7 +339,7 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 			return 0; 
 		}
 
-		int bufferIndex = 0;
+		int importsIndex = 0;
 		if (imageNtHeaders.NumberOfRvaAndSizes > 1)
 		{
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
@@ -343,6 +347,7 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 
 			DWORD importDirectoryTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress);
 
+			int libraryIndex = 0;
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 			{
 				IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
@@ -354,10 +359,19 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 					break;
 				}
 
+				if (libraryIndex < libraryNamesBufferLen)
+				{
+					char libraryName[255] = { 0 };
+					DWORD libraryNameFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Name);
+					fseek(file, libraryNameFileOffset, SEEK_SET);
+					fread(libraryName, 1, 255, file);
+					libraryNamesBuffer[libraryIndex] = initializeJdcStrWithVal(libraryName);
+				}
+
 				DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
 
 				int j = 0;
-				while (bufferIndex < bufferLen)
+				while (importsIndex < importsBufferLen)
 				{
 					DWORD lookupValue = 0;
 					fseek(file, importLookupTableFileOffset + j, SEEK_SET);
@@ -380,24 +394,27 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 							continue;
 						}
 
-						buffer[bufferIndex].name = initializeJdcStrWithSize(255);
-						if (!demangleCppSymbol(symbolName, buffer[bufferIndex].name.buffer, 255))
+						importsBuffer[importsIndex].name = initializeJdcStrWithSize(255);
+						if (!demangleCppSymbol(symbolName, importsBuffer[importsIndex].name.buffer, 255))
 						{
-							strcpyJdc(&buffer[bufferIndex].name, symbolName);
+							strcpyJdc(&importsBuffer[importsIndex].name, symbolName);
 						}
 
-						buffer[bufferIndex].address = imageNtHeaders.ImageBase + importDescriptor.FirstThunk + j;
+						importsBuffer[importsIndex].address = imageNtHeaders.ImageBase + importDescriptor.FirstThunk + j;
+						importsBuffer[importsIndex].libraryNameIndex = libraryIndex;
 
-						bufferIndex++;
+						importsIndex++;
 					}
 
 					j += is64Bit ? 8 : 4;
 				}
+
+				libraryIndex++;
 			}
 		}
 
 		fclose(file);
-		return bufferIndex;
+		return importsIndex;
 	}
 
 	return 0;

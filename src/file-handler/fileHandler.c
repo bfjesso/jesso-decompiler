@@ -306,29 +306,29 @@ unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileForm
 	return 0;
 }
 
-int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
+int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfLibrariesRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getNumOfPEImports(filePath, is64Bit);
+		return getNumOfPEImports(filePath, is64Bit, numOfLibrariesRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return getNumOfELFImports(filePath, is64Bit);
+		return getNumOfELFImports(filePath, is64Bit, numOfLibrariesRef);
 	}
 
 	return 0;
 }
 
-int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
+int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getAllPEImports(filePath, is64Bit, buffer, bufferLen);
+		return getAllPEImports(filePath, is64Bit, importsBuffer, importsBufferLen, libraryNamesBuffer, libraryNamesBufferLen);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return getAllELFImports(filePath, is64Bit, buffer, bufferLen);
+		return getAllELFImports(filePath, is64Bit, importsBuffer, importsBufferLen, libraryNamesBuffer, libraryNamesBufferLen);
 	}
 
 	return 0;

@@ -45,6 +45,8 @@ public:
 
 	ImportedFunction* imports = nullptr;
 	int numOfImports = 0;
+	JdcStr* libraryNames = nullptr;
+	int numOfLibraries = 0;
 
 	std::vector<DisassembledInstruction> disassembledInstructions;
 

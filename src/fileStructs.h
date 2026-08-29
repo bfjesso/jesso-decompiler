@@ -12,6 +12,7 @@ struct ImportedFunction
 {
 	struct JdcStr name;
 	unsigned long long address;
+	int libraryNameIndex;
 };
 
 enum FileSectionType 

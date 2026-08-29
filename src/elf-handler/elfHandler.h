@@ -23,9 +23,9 @@ unsigned char readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, cha
 
 unsigned char getSectionHeaderByType(const wchar_t* filePath, unsigned char is64Bit, unsigned int type, int index, Elf64_Shdr* result);
 
-int getNumOfELFImports(const wchar_t* filePath, unsigned char is64Bit);
+int getNumOfELFImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef);
 
-int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen);
+int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
 
 unsigned char generateELFHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
 

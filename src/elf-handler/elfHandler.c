@@ -349,8 +349,10 @@ unsigned char getSectionHeaderByType(const wchar_t* filePath, unsigned char is64
 	return 0;
 }
 
-int getNumOfELFImports(const wchar_t* filePath, unsigned char is64Bit)
+int getNumOfELFImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef)
 {
+	*numOfLibrariesRef = 1; // this is just the .dynsym section
+	
 	Elf64_Shdr dynstrSection;
 	if (!getSectionHeaderByType(filePath, is64Bit, SHT_STRTAB, 0, &dynstrSection))
 	{
@@ -433,8 +435,13 @@ int getNumOfELFImports(const wchar_t* filePath, unsigned char is64Bit)
 	return result;
 }
 
-int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* buffer, int bufferLen)
+int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
+	if (libraryNamesBufferLen > 0) 
+	{
+		libraryNamesBuffer[0] = initializeJdcStrWithVal(".dynsym");
+	}
+	
 	Elf64_Shdr dynstrSection;
 	if(!getSectionHeaderByType(filePath, is64Bit, SHT_STRTAB, 0, &dynstrSection))
 	{
@@ -465,7 +472,7 @@ int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct Impo
 
 	int relaNum = 0;
 	Elf64_Shdr relaSection;
-	int bufferIndex = 0;
+	int importsIndex = 0;
 	while(getSectionHeaderByType(filePath, is64Bit, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
 		char* relaBytes = (char*)malloc(relaSection.sh_size);
@@ -480,7 +487,7 @@ int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct Impo
 		unsigned int relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
 
 		int i = 0;
-		while((i * relaSize) < relaSection.sh_size && bufferIndex < bufferLen)
+		while((i * relaSize) < relaSection.sh_size && importsIndex < importsBufferLen)
 		{
 			unsigned int st_name = 0;
 			unsigned long long r_offset = 0;
@@ -503,14 +510,15 @@ int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct Impo
 
 			if(strcmp(stringBytes + st_name, "") != 0)
 			{
-				buffer[bufferIndex].name = initializeJdcStrWithSize(255);
-				if (!demangleCppSymbol(stringBytes + st_name, buffer[bufferIndex].name.buffer, 255))
+				importsBuffer[importsIndex].name = initializeJdcStrWithSize(255);
+				if (!demangleCppSymbol(stringBytes + st_name, importsBuffer[importsIndex].name.buffer, 255))
 				{
-					strcpyJdc(&buffer[bufferIndex].name, stringBytes + st_name);
+					strcpyJdc(&importsBuffer[importsIndex].name, stringBytes + st_name);
 				}
 				
-				buffer[bufferIndex].address = r_offset;
-				bufferIndex++;
+				importsBuffer[importsIndex].address = r_offset;
+				importsBuffer[importsIndex].libraryNameIndex = 0;
+				importsIndex++;
 			}
 
 			i++;
@@ -524,7 +532,7 @@ int getAllELFImports(const wchar_t* filePath, unsigned char is64Bit, struct Impo
 	free(stringBytes);
 	free(dynsymBytes);
 
-	return bufferIndex;
+	return importsIndex;
 }
 
 unsigned char generateELFHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)

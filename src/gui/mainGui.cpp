@@ -99,7 +99,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenDataID, "Data", [&](wxCommandEvent& ce) -> void { AddDataTextCtrl(); });
 	AddMenuItem(toolMenu, OpenSectionsViewerID, "File sections", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new SectionsGrid(this, sections, numOfSections), "File sections"); });
 	AddMenuItem(toolMenu, OpenStringsMenuID, "Strings", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new StringsTextCtrl(this, this), "Strings"); });
-	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports), "Imports"); });
+	AddMenuItem(toolMenu, OpenImportsViewerID, "Imports", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new ImportsGrid(this, imports, numOfImports, libraryNames, numOfLibraries), "Imports"); });
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath, fileFormat), "File headers"); });
 	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddCodeReferencesWindow(); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
@@ -563,9 +563,10 @@ unsigned char MainGui::LoadKnownFile(wxString filePath)
 		return 0;
 	}
 
-	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit);
+	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfLibraries);
 	imports = new ImportedFunction[numOfImports];
-	if (getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports) != numOfImports)
+	libraryNames = new JdcStr[numOfLibraries];
+	if (getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports, libraryNames, numOfLibraries) != numOfImports)
 	{
 		wxMessageBox("Error getting all imports", "Failed to open file");
 		return 0;
@@ -840,25 +841,38 @@ void MainGui::ClearData()
 
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
-
-	for (int i = 0; i < numOfSections; i++)
-	{
-		freeJdcStr(&sections[i].name);
-	}
+	
 	if (sections)
 	{
+		for (int i = 0; i < numOfSections; i++)
+		{
+			freeJdcStr(&sections[i].name);
+		}
+		
 		delete[] sections;
 		sections = 0;
 	}
-
-	for (int i = 0; i < numOfImports; i++) 
-	{
-		freeJdcStr(&imports[i].name);
-	}
+	
 	if (imports)
 	{
+		for (int i = 0; i < numOfImports; i++)
+		{
+			freeJdcStr(&imports[i].name);
+		}
+		
 		delete[] imports;
 		imports = 0;
+	}
+
+	if (libraryNames)
+	{
+		for (int i = 0; i < numOfLibraries; i++)
+		{
+			freeJdcStr(&libraryNames[i]);
+		}
+		
+		delete[] libraryNames;
+		numOfLibraries = 0;
 	}
 	
 	for (int i = 0; i < functions.size(); i++)
