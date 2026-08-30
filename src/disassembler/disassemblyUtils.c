@@ -66,7 +66,7 @@ unsigned char operandToValue(struct DisassembledInstruction* instructions, int s
 	}
 	else if (operand->type == REGISTER)
 	{
-		return regToValue(instructions, startInstructionIndex, minInstructionIndex, operand->reg, result);
+		return regToValue(instructions, startInstructionIndex - 1, minInstructionIndex, operand->reg, result);
 	}
 
 	return 0;
