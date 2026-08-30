@@ -7,7 +7,7 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex);
+	unsigned char findNextFunction(struct DecompilationParameters* params, struct Function* result, int* instructionIndex);
 
 	unsigned char analyzeAllFunctions(struct DecompilationParameters* params);
 

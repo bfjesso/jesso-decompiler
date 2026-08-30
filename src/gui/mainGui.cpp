@@ -743,6 +743,25 @@ void MainGui::DisassembleFile()
 	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;
 
+	// setting called instructions
+	numOfInstructions = disassembledInstructions.size();
+	for (int i = 0; i < numOfInstructions; i++)
+	{
+		if (disassembledInstructions[i].address == imageBase + entryPoint) 
+		{
+			disassembledInstructions[i].isCalled = 1;
+		}
+		
+		if (disassembledInstructions[i].opcode == CALL_NEAR)
+		{
+			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
+			if (calledInstructionIndex == -1)
+			{
+				disassembledInstructions[calledInstructionIndex].isCalled = 1;
+			}
+		}
+	}
+
 	logTextCtrl->Log("updating disassembly GUI...", 0);
 
 	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
@@ -1054,24 +1073,10 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
 
-	std::vector<unsigned long long> calledAddresses;
-	calledAddresses.push_back(imageBase + entryPoint);
-	for (int i = 0; i < numOfInstructions; i++) 
-	{
-		if (disassembledInstructions[i].opcode == CALL_NEAR) 
-		{
-			unsigned long long address = resolveJmpChain(&decompParams, i);
-			if (findAddressInArr(calledAddresses.data(), calledAddresses.size(), address) == -1)
-			{
-				calledAddresses.insert(std::lower_bound(calledAddresses.begin(), calledAddresses.end(), address), address); // sorting it
-			}
-		}
-	}
-
 	struct Function currentFunction;
 	memset(&currentFunction, 0, sizeof(struct Function));
 	int numOfFunctions = 0;
-	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, &calledAddresses[0], calledAddresses.size(), &currentFunction, &instructionIndex))
+	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, &currentFunction, &instructionIndex))
 	{
 		currentFunction.name = initializeJdcStr();
 		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), fileFormat, is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))

@@ -4,19 +4,19 @@
 #include "conditions.h"
 #include "returnStatements.h"
 
-unsigned char findNextFunction(struct DecompilationParameters* params, unsigned long long* calledAddresses, int numOfCalledAddresses, struct Function* result, int* instructionIndex)
+unsigned char findNextFunction(struct DecompilationParameters* params, struct Function* result, int* instructionIndexRef)
 {
 	int indexToJumpTo = 0;
 
 	params->currentFunc = result;
 
-	int startInstructionIndex = *instructionIndex;
+	int startInstructionIndex = *instructionIndexRef;
 
 	unsigned long long currentSectionEndAddress = 0;
 	unsigned char foundFirstInstruction = 0;
 	for (int i = startInstructionIndex; i < params->numOfInstructions; i++)
 	{
-		(*instructionIndex)++;
+		(*instructionIndexRef)++;
 
 		struct DisassembledInstruction* currentInstruction = &params->instructions[i];
 
@@ -32,7 +32,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 				}
 			}
 
-			if (checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, currentInstruction->address) || 
+			if (currentInstruction->isCalled ||
 				(!doesInstructionGenerateInterruptOrException(currentInstruction) && !doesInstructionDoNothing(currentInstruction)))
 			{
 				result->firstInstructionIndex = i;
@@ -46,25 +46,25 @@ unsigned char findNextFunction(struct DecompilationParameters* params, unsigned 
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
-			unsigned long long jumpAddr = getJmpDst(params->instructions, i, result->firstInstructionIndex);
-			int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpAddr);
-			if (instructionIndex > indexToJumpTo && instructionIndex > i && jumpAddr <= currentSectionEndAddress)
+			unsigned long long jumpDst = getJmpDst(params->instructions, i, result->firstInstructionIndex);
+			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpDst);
+			if (dstIndex > indexToJumpTo && dstIndex > i && jumpDst < currentSectionEndAddress)
 			{
-				if (!checkForAddressInArrInRange(calledAddresses, numOfCalledAddresses, currentInstruction->address, jumpAddr))
+				for (int j = i + 1; j < dstIndex; j++) 
 				{
-					indexToJumpTo = instructionIndex;
+					if (params->instructions[j].isCalled) 
+					{
+						result->callingConvention = __UNKNOWNCALL;
+						result->lastInstructionIndex = i;
+						return 1;
+					}
 				}
-				else 
-				{
-					result->callingConvention = __UNKNOWNCALL;
-					result->lastInstructionIndex = i;
-					return 1;
-				}
+
+				indexToJumpTo = dstIndex;
 			}
 		}
 		
-		if ((checkForReturnStatement(params, i) && i >= indexToJumpTo) || 
-			findAddressInArr(calledAddresses, numOfCalledAddresses, params->instructions[i + 1].address) != -1)
+		if ((checkForReturnStatement(params, i) && i >= indexToJumpTo) || params->instructions[i + 1].isCalled)
 		{
 			result->lastInstructionIndex = i;
 			return 1;

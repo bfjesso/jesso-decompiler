@@ -239,6 +239,7 @@ struct DisassembledInstruction
 	
 	unsigned char numOfBytes;
 	unsigned char isInvalid;
+	unsigned char isCalled;
 
 	unsigned long long address;
 };
