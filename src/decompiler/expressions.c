@@ -40,12 +40,6 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 			return strcpyJdc(result, params->functions[calleeIndex].name.buffer);
 		}
 
-		int importIndex = getImportIndexByAddress(params, (unsigned long long)(operand->immediate.value));
-		if (calleeIndex != -1)
-		{
-			return strcpyJdc(result, params->imports[importIndex].name.buffer);
-		}
-
 		if (getStringFromDataSection(params, operand->immediate.value, result))
 		{
 			return 1;
