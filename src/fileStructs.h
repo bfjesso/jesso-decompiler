@@ -11,7 +11,7 @@ enum FileFormat
 struct ImportedFunction
 {
 	struct JdcStr name;
-	unsigned long long address;
+	unsigned long long address; // this is the address of the import's entry in either the IAT for PE files or GOT/PLT for ELF files
 	int libraryNameIndex;
 };
 

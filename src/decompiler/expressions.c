@@ -159,31 +159,32 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		unsigned long long totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
 
 		int calleeIndex = findFunctionByAddress(params, totalDisplacement);
+		int importIndex = getImportIndexByAddress(params, totalDisplacement);
 		if (calleeIndex != -1)
 		{
 			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);
 		}
-		else if (getStringFromDataSection(params, totalDisplacement, &memAddrStr))
+		else if (importIndex != -1 && instruction->opcode != LEA)
 		{
-			strcatJdc(result, memAddrStr.buffer);
+			strcpyJdc(result, params->imports[importIndex].name.buffer); // the import.address is the address of the table entry for the import, so it is like a ptr
+			freeJdcStr(&memAddrStr);
 			return 1;
 		}
-		else if (getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		else if (instruction->opcode == LEA && getStringFromDataSection(params, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
+			freeJdcStr(&memAddrStr);
+			return 1;
+		}
+		else if (instruction->opcode != LEA && getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		{
+			strcatJdc(result, memAddrStr.buffer);
+			freeJdcStr(&memAddrStr);
 			return 1;
 		}
 		else 
 		{
-			int importIndex = getImportIndexByAddress(params, totalDisplacement);
-			if (calleeIndex != -1)
-			{
-				strcpyJdc(&memAddrStr, params->imports[importIndex].name.buffer);
-			}
-			else 
-			{
-				sprintfJdc(&memAddrStr, 0, "0x%llX", totalDisplacement);
-			}
+			sprintfJdc(&memAddrStr, 0, "0x%llX", totalDisplacement);
 		}
 	}
 	else if (baseRegVal != 0 || displacementRegVal != 0) 
