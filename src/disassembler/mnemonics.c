@@ -37,6 +37,7 @@ extern const char* mnemonicStrs[] =
 	"NEG", "NOT",
 
 	"MULSS", "MULSD",
+	"DIVSS", "DIVSD",
 
 	"SHUFPS", "SHUFPD",
 	"ROL", "ROR",
@@ -97,7 +98,7 @@ extern const char* mnemonicStrs[] =
 	"SETNO", "SETP", "SETO", "SETNP",
 
 	"VMULPS", "MULPS", "VMULPD", "MULPD", "VMULSS", "VMULSD",
-	"VDIVPS", "DIVPS", "VDIVPD", "DIVPD", "VDIVSS", "DIVSS", "VDIVSD", "DIVSD",
+	"VDIVPS", "DIVPS", "VDIVPD", "DIVPD", "VDIVSS", "VDIVSD",
 
 	"VPMULLW", "PMULLW",
 
@@ -297,6 +298,11 @@ unsigned char isOpcodeShr(enum Mnemonic opcode)
 unsigned char isOpcodeMul(enum Mnemonic opcode) // this is for the opcodes that simply multiply the dst by the src
 {
 	return opcode >= MULSS && opcode <= MULSD;
+}
+
+unsigned char isOpcodeDiv(enum Mnemonic opcode) // this is for the opcodes that simply divide the dst by the src
+{
+	return opcode >= DIVSS && opcode <= DIVSD;
 }
 
 unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)

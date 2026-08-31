@@ -42,6 +42,7 @@ enum Mnemonic
 	NEG, NOT,
 
 	MULSS, MULSD,
+	DIVSS, DIVSD,
 
 	SHUFPS, SHUFPD,
 	ROL, ROR,
@@ -102,7 +103,7 @@ enum Mnemonic
 	SETNO, SETP, SETO, SETNP,
 
 	VMULPS, MULPS, VMULPD, MULPD, VMULSS, VMULSD,
-	VDIVPS, DIVPS, VDIVPD, DIVPD, VDIVSS, DIVSS, VDIVSD, DIVSD,
+	VDIVPS, DIVPS, VDIVPD, DIVPD, VDIVSS, VDIVSD,
 
 	VPMULLW, PMULLW,
 
@@ -280,6 +281,8 @@ unsigned char isOpcodeShl(enum Mnemonic opcode);
 unsigned char isOpcodeShr(enum Mnemonic opcode);
 
 unsigned char isOpcodeMul(enum Mnemonic opcode);
+
+unsigned char isOpcodeDiv(enum Mnemonic opcode);
 
 unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode);
 
