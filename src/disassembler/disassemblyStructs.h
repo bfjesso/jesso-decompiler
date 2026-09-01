@@ -240,6 +240,7 @@ struct DisassembledInstruction
 	unsigned char numOfBytes;
 	unsigned char isInvalid;
 	unsigned char isCalled;
+	unsigned char isJmpDst;
 
 	unsigned long long address;
 };

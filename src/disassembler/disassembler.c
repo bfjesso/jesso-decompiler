@@ -241,14 +241,14 @@ unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructio
 	return 0;
 }
 
-unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size)
+unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int instructionIndex, unsigned char* size)
 {
-	if (numOfInstructions < 2) 
+	if (instructionIndex < 2)
 	{
 		return 0;
 	}
 	
-	struct DisassembledInstruction* jmpInstruction = &instructions[numOfInstructions - 1];
+	struct DisassembledInstruction* jmpInstruction = &instructions[instructionIndex];
 
 	if (jmpInstruction->opcode != JMP_NEAR)
 	{
@@ -260,11 +260,12 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 		unsigned long long result = 0;
 		
 		enum Register targetReg = jmpInstruction->operands[0].reg;
-		int i = numOfInstructions - 2;
+		int i = instructionIndex - 2;
 		struct DisassembledInstruction* instruction = &instructions[i];
 		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode) && i >= 0)
 		{
-			if (instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg)) 
+			instruction = &instructions[i];
+			if (instruction->numOfOperands == 2 && instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg))
 			{
 				if (instruction->opcode == ADD) 
 				{
@@ -277,19 +278,18 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 				else if ((instruction->opcode == MOV || instruction->opcode == LEA) && instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
 				{
 					unsigned long long regDisplacementVal = 0;
-					if (regToValue(instructions, numOfInstructions - 2, numOfInstructions - 0x1000, jmpInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+					if (regToValue(instructions, instructionIndex - 2, instructionIndex - 0x1000, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 					{
 						result += regDisplacementVal;
 					}
 
-					*size = instruction->operands[1].memoryAddress.ptrSize;
+					if (size) { *size = instruction->operands[1].memoryAddress.ptrSize; }
 
 					return result + instruction->operands[1].memoryAddress.constDisplacement;
 				}
 			}
 
 			i--;
-			instruction = &instructions[i];
 		}
 	}
 	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
@@ -297,7 +297,7 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 		unsigned long long result = jmpInstruction->operands[0].memoryAddress.constDisplacement;
 
 		unsigned long long regDisplacementVal = 0;
-		if (regToValue(instructions, numOfInstructions - 2, numOfInstructions - 0x1000, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
+		if (regToValue(instructions, instructionIndex - 2, instructionIndex - 0x1000, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
 		{
 			result += regDisplacementVal;
 		}
@@ -310,16 +310,16 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 	return 0;
 }
 
-unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions)
+unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int instructionIndex)
 {
-	struct DisassembledInstruction* instruction = &instructions[numOfInstructions - 1];
+	struct DisassembledInstruction* instruction = &instructions[instructionIndex];
 
 	if (instruction->opcode == MOVZX && instruction->operands[1].type == MEM_ADDRESS)
 	{
 		unsigned long long result = instruction->operands[1].memoryAddress.constDisplacement;
 		
 		unsigned long long regDisplacementVal = 0;
-		if (regToValue(instructions, numOfInstructions - 2, numOfInstructions - 0x1000, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+		if (regToValue(instructions, instructionIndex - 2, instructionIndex - 0x1000, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 		{
 			result += regDisplacementVal;
 		}

@@ -17,9 +17,9 @@ extern "C"
 
 	unsigned char checkForControlFlowJump(struct DisassembledInstruction* instruction, unsigned long long* jmpDst, unsigned char* stop);
 
-	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned char* size);
+	unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int instructionIndex, unsigned char* size);
 
-	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int numOfInstructions);
+	unsigned long long getIndirectTableAddress(struct DisassembledInstruction* instructions, int instructionIndex);
 
 #ifdef __cplusplus
 }

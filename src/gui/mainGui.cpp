@@ -743,24 +743,7 @@ void MainGui::DisassembleFile()
 	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;
 
-	// setting called instructions
-	numOfInstructions = disassembledInstructions.size();
-	for (int i = 0; i < numOfInstructions; i++)
-	{
-		if (disassembledInstructions[i].address == imageBase + entryPoint) 
-		{
-			disassembledInstructions[i].isCalled = 1;
-		}
-		
-		if (disassembledInstructions[i].opcode == CALL_NEAR)
-		{
-			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
-			if (calledInstructionIndex == -1)
-			{
-				disassembledInstructions[calledInstructionIndex].isCalled = 1;
-			}
-		}
-	}
+	HandleJmpTables();
 
 	logTextCtrl->Log("updating disassembly GUI...", 0);
 
@@ -1066,6 +1049,67 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	}
 
 	return 1;
+}
+
+void MainGui::HandleJmpTables() 
+{
+	std::vector<unsigned long long> jmpTableAddresses;
+	std::vector<unsigned char> jmpTableSizes;
+
+	std::vector<unsigned long long> indirectTableAddresses;
+
+	int numOfInstructions = disassembledInstructions.size();
+	for (int i = 0; i < numOfInstructions; i++)
+	{
+		if (disassembledInstructions[i].address == imageBase + entryPoint)
+		{
+			disassembledInstructions[i].isCalled = 1;
+		}
+
+		unsigned char jmpTableSize = 0;
+		unsigned long long jmpTableAddress = getJumpTableAddress(disassembledInstructions.data(), i, &jmpTableSize);
+		unsigned long long indirectTableAddress = getIndirectTableAddress(disassembledInstructions.data(), i);
+		if (jmpTableAddress != 0) 
+		{
+			jmpTableAddresses.push_back(jmpTableAddress);
+			jmpTableSizes.push_back(jmpTableSize);
+		}
+		else if (indirectTableAddress != 0)
+		{
+			indirectTableAddresses.push_back(indirectTableAddress);
+		}
+		else if (disassembledInstructions[i].opcode == CALL_NEAR)
+		{
+			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
+			if (calledInstructionIndex != -1)
+			{
+				disassembledInstructions[calledInstructionIndex].isCalled = 1;
+			}
+		}
+		else if (isOpcodeJmp(disassembledInstructions[i].opcode) || isOpcodeJcc(disassembledInstructions[i].opcode))
+		{
+			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
+			if (dstIndex != -1)
+			{
+				disassembledInstructions[dstIndex].isJmpDst = 1;
+			}
+		}
+	}
+
+	int numOfJmpTables = jmpTableAddresses.size();
+	for (int i = 0; i < numOfJmpTables; i++)
+	{
+		int instructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), jmpTableAddresses[i]);
+		if (instructionIndex != -1)
+		{
+			int j = instructionIndex;
+			while (!disassembledInstructions[j].isCalled && !disassembledInstructions[j].isJmpDst && disassembledInstructions[j].opcode != INT3)
+			{
+				disassembledInstructions[j].opcode = DATA; // temporary
+				j++;
+			}
+		}
+	}
 }
 
 void MainGui::FindAllFunctions(unsigned char getSymbols) 
