@@ -243,11 +243,6 @@ unsigned char checkForControlFlowJump(struct DisassembledInstruction* instructio
 
 unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructions, int instructionIndex, unsigned char* size)
 {
-	if (instructionIndex < 2)
-	{
-		return 0;
-	}
-	
 	struct DisassembledInstruction* jmpInstruction = &instructions[instructionIndex];
 
 	if (jmpInstruction->opcode != JMP_NEAR)
@@ -255,7 +250,7 @@ unsigned long long getJumpTableAddress(struct DisassembledInstruction* instructi
 		return 0;
 	}
 
-	if (jmpInstruction->operands[0].type == REGISTER)
+	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
 	{
 		unsigned long long result = 0;
 		
