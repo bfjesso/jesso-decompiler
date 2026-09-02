@@ -743,7 +743,10 @@ void MainGui::DisassembleFile()
 	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;
 
-	HandleJmpTables();
+	if (!HandleJmpTables()) 
+	{
+		wxMessageBox("An error occured while handling jump tables", "Disassembly not fully completed");
+	}
 
 	logTextCtrl->Log("updating disassembly GUI...", 0);
 
@@ -1051,7 +1054,7 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 	return 1;
 }
 
-void MainGui::HandleJmpTables() 
+unsigned char MainGui::HandleJmpTables() 
 {
 	std::vector<unsigned long long> jmpTableAddresses;
 	std::vector<unsigned char> jmpTableSizes;
@@ -1096,20 +1099,62 @@ void MainGui::HandleJmpTables()
 		}
 	}
 
+	std::vector<struct DisassembledInstruction> dataInstructions; // this buffer is used so that only one insert call is needed
 	int numOfJmpTables = jmpTableAddresses.size();
 	for (int i = 0; i < numOfJmpTables; i++)
 	{
+		unsigned long long fileOffest = rvaToFileOffset(sections, numOfSections, jmpTableAddresses[i] - imageBase, 0);
 		int instructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), jmpTableAddresses[i]);
 		if (instructionIndex != -1)
 		{
-			int j = instructionIndex;
-			while (!disassembledInstructions[j].isCalled && !disassembledInstructions[j].isJmpDst && disassembledInstructions[j].opcode != INT3)
+			int lastInstructionIndex = instructionIndex;
+			while (!disassembledInstructions[lastInstructionIndex].isCalled &&
+				!disassembledInstructions[lastInstructionIndex].isJmpDst &&
+				disassembledInstructions[lastInstructionIndex].opcode != INT3)
 			{
-				disassembledInstructions[j].opcode = DATA; // temporary
-				j++;
+				free(disassembledInstructions[lastInstructionIndex].operands);
+				lastInstructionIndex++;
 			}
+
+			unsigned long long lastAddress = disassembledInstructions[lastInstructionIndex].address;
+			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
+			
+			unsigned long long currentAddress = jmpTableAddresses[i];
+			while(currentAddress < lastAddress)
+			{
+				struct DisassembledInstruction instruction;
+				instruction.opcode = DATA;
+				instruction.group1Prefix = NO_PREFIX;
+				instruction.numOfOperands = 1;
+				instruction.operands = (struct Operand*)calloc(1, sizeof(struct Operand));
+				if (!instruction.operands)
+				{
+					return 0;
+				}
+				instruction.operands[0].type = IMMEDIATE;
+				instruction.operands[0].immediate.size = jmpTableSizes[i];
+				instruction.numOfBytes = jmpTableSizes[i];
+				instruction.address = currentAddress;
+
+				if (jmpTableSizes[i] == 4)
+				{
+					instruction.operands[0].immediate.value = *(unsigned int*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+				}
+				else 
+				{
+					instruction.operands[0].immediate.value = *(unsigned long long*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+				}
+
+				dataInstructions.push_back(instruction);
+				currentAddress += jmpTableSizes[i];
+			}
+
+			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());
+			dataInstructions.clear();
 		}
 	}
+
+	return 1;
 }
 
 void MainGui::FindAllFunctions(unsigned char getSymbols) 

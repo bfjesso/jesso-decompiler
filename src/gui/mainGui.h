@@ -126,7 +126,7 @@ public:
 
 	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
-	void HandleJmpTables();
+	unsigned char HandleJmpTables();
 
 	void FindAllFunctions(unsigned char getSymbols);
 
