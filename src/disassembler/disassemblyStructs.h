@@ -244,3 +244,11 @@ struct DisassembledInstruction
 
 	unsigned long long address;
 };
+
+struct JumpTable 
+{
+	unsigned long long jmpTableAddress;
+	unsigned long long indirectTableAddress;
+	int jmpInstructionIndex;
+	unsigned char addressSize;
+};

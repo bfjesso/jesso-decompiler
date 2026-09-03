@@ -642,6 +642,11 @@ unsigned char CompareInstructions(const DisassembledInstruction& a, const Disass
 	return a.address < b.address;
 }
 
+unsigned char CompareJumpTables(const JumpTable& a, const JumpTable& b)
+{
+	return a.jmpTableAddress < b.jmpTableAddress;
+}
+
 void MainGui::DisassembleFile()
 {
 	if (currentFilePath == "")
@@ -846,6 +851,9 @@ void MainGui::ClearData()
 
 	disassembledInstructions.clear();
 	disassembledInstructions.shrink_to_fit();
+
+	jumpTables.clear();
+	jumpTables.shrink_to_fit();
 	
 	if (sections)
 	{
@@ -1085,11 +1093,6 @@ unsigned char MainGui::HandleJmpTables()
 			}
 		}
 	}
-	
-	std::vector<unsigned long long> jmpTableAddresses;
-	std::vector<unsigned char> jmpTableSizes;
-
-	std::vector<unsigned long long> indirectTableAddresses;
 
 	int numOfInstructions = disassembledInstructions.size();
 	for (int i = 0; i < numOfInstructions; i++)
@@ -1099,17 +1102,10 @@ unsigned char MainGui::HandleJmpTables()
 			disassembledInstructions[i].isCalled = 1;
 		}
 
-		unsigned char jmpTableSize = 0;
-		unsigned long long jmpTableAddress = getJumpTableAddress(disassembledInstructions.data(), i, &jmpTableSize);
-		unsigned long long indirectTableAddress = getIndirectTableAddress(disassembledInstructions.data(), i);
-		if (jmpTableAddress != 0) 
+		struct JumpTable jumpTable = { 0 };
+		if (getJumpTable(disassembledInstructions.data(), i, &jumpTable)) 
 		{
-			jmpTableAddresses.push_back(jmpTableAddress);
-			jmpTableSizes.push_back(jmpTableSize);
-		}
-		else if (indirectTableAddress != 0)
-		{
-			indirectTableAddresses.push_back(indirectTableAddress);
+			jumpTables.push_back(jumpTable);
 		}
 		else if (disassembledInstructions[i].opcode == CALL_NEAR)
 		{
@@ -1129,14 +1125,14 @@ unsigned char MainGui::HandleJmpTables()
 		}
 	}
 
-	std::sort(indirectTableAddresses.begin(), indirectTableAddresses.end());
+	std::sort(jumpTables.begin(), jumpTables.end(), CompareJumpTables);
 
 	std::vector<struct DisassembledInstruction> dataInstructions; // this buffer is used so that only one insert call is needed
-	int numOfJmpTables = jmpTableAddresses.size();
+	int numOfJmpTables = jumpTables.size();
 	for (int i = 0; i < numOfJmpTables; i++)
 	{
-		unsigned long long fileOffest = rvaToFileOffset(sections, numOfSections, jmpTableAddresses[i] - imageBase, 0);
-		int instructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), jmpTableAddresses[i]);
+		unsigned long long fileOffest = rvaToFileOffset(sections, numOfSections, jumpTables[i].jmpTableAddress - imageBase, 0);
+		int instructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), jumpTables[i].jmpTableAddress);
 		if (instructionIndex != -1)
 		{
 			int lastInstructionIndex = instructionIndex;
@@ -1151,12 +1147,18 @@ unsigned char MainGui::HandleJmpTables()
 			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
 			
 			unsigned char isInIndirectTable = 0;
-			unsigned long long currentAddress = jmpTableAddresses[i];
+			unsigned long long currentAddress = jumpTables[i].jmpTableAddress;
+			unsigned long long initialAddress = currentAddress;
 			while(currentAddress < lastAddress)
 			{
-				if (findAddressInArr(indirectTableAddresses.data(), indirectTableAddresses.size(), currentAddress) != -1) 
+				if (currentAddress == jumpTables[i].indirectTableAddress)
 				{
 					isInIndirectTable = 1;
+				}
+				else if (i + 1 < numOfJmpTables && currentAddress == jumpTables[i + 1].jmpTableAddress)
+				{
+					i++;
+					isInIndirectTable = 0;
 				}
 				
 				struct DisassembledInstruction instruction;
@@ -1170,25 +1172,25 @@ unsigned char MainGui::HandleJmpTables()
 					return 0;
 				}
 				instruction.operands[0].type = IMMEDIATE;
-				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : jmpTableSizes[i];
-				instruction.numOfBytes = isInIndirectTable ? 1 : jmpTableSizes[i];
+				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : jumpTables[i].addressSize;
+				instruction.numOfBytes = isInIndirectTable ? 1 : jumpTables[i].addressSize;
 				instruction.address = currentAddress;
 
 				if (isInIndirectTable) 
 				{
-					instruction.operands[0].immediate.value = *(unsigned char*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+					instruction.operands[0].immediate.value = *(unsigned char*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
-				else if (jmpTableSizes[i] == 4)
+				else if (jumpTables[i].addressSize == 4)
 				{
-					instruction.operands[0].immediate.value = *(unsigned int*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+					instruction.operands[0].immediate.value = *(unsigned int*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
 				else 
 				{
-					instruction.operands[0].immediate.value = *(unsigned long long*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+					instruction.operands[0].immediate.value = *(unsigned long long*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
 
 				dataInstructions.push_back(instruction);
-				currentAddress += isInIndirectTable ? 1 : jmpTableSizes[i];
+				currentAddress += isInIndirectTable ? 1 : jumpTables[i].addressSize;
 			}
 
 			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());

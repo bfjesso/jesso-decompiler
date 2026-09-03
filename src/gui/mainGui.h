@@ -49,6 +49,7 @@ public:
 	int numOfLibraries = 0;
 
 	std::vector<DisassembledInstruction> disassembledInstructions;
+	std::vector<JumpTable> jumpTables;
 
 	std::vector<Function> functions;
 
