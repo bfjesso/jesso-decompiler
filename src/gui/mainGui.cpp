@@ -1056,6 +1056,36 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 
 unsigned char MainGui::HandleJmpTables() 
 {
+	// this is setting called instructions from the RUNTIME_FUNCTION structs in .pdata
+	if (fileFormat == PE_FF && is64Bit) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
+	{
+		for (int i = 0; i < numOfSections; i++) 
+		{
+			if (strcmp(sections[i].name.buffer, ".pdata") == 0) 
+			{
+				int j = 0;
+				while (j < sections[i].physicalSize)
+				{
+					unsigned long long beginAddress = imageBase + *(unsigned int*)(fileBytes + sections[i].fileOffset + j);
+					if (beginAddress == 0) 
+					{
+						break;
+					}
+
+					int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), beginAddress);
+					if (calledInstructionIndex != -1)
+					{
+						disassembledInstructions[calledInstructionIndex].isCalled = 1;
+					}
+
+					j += 0xC;
+				}
+				
+				break;
+			}
+		}
+	}
+	
 	std::vector<unsigned long long> jmpTableAddresses;
 	std::vector<unsigned char> jmpTableSizes;
 
@@ -1111,8 +1141,7 @@ unsigned char MainGui::HandleJmpTables()
 		{
 			int lastInstructionIndex = instructionIndex;
 			while (!disassembledInstructions[lastInstructionIndex].isCalled &&
-				!disassembledInstructions[lastInstructionIndex].isJmpDst &&
-				disassembledInstructions[lastInstructionIndex].opcode != INT3)
+				!disassembledInstructions[lastInstructionIndex].isJmpDst)
 			{
 				free(disassembledInstructions[lastInstructionIndex].operands);
 				lastInstructionIndex++;
