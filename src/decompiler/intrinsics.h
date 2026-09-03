@@ -2,7 +2,7 @@
 #include "decompilationStructs.h"
 
 #define NUM_OF_RETURNING_INTRINSICS 22
-#define NUM_OF_VOID_INTRINSICS 7
+#define NUM_OF_VOID_INTRINSICS 8
 
 enum IntrinsicType
 {
@@ -13,7 +13,7 @@ enum IntrinsicType
 	SSE_IT, // first operand is an XMM reg
 	SSE_RM_IT, // SSE_IT, and second operand is a reg or memory address
 	SSE_IMM_IT, // SSE_IT, and second operand is an immediate
-	
+	REP_IT // REPZ prefix needed
 };
 
 struct Intrinsic

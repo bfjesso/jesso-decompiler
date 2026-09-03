@@ -46,7 +46,8 @@ struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 	{ UD2, SINGLE_IT, "__ud2" },
 	{ HLT, SINGLE_IT, "__halt" },
 	{ DATA, SINGLE_IT, "DATA" },
-	{ MOVS, SINGLE_IT, "__movs" }, // REPZ prefix must be used
+	{ MOVS, REP_IT, "__movs" },
+	{ STOS, REP_IT, "memset" },
 	{ XCHG, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
@@ -55,6 +56,10 @@ static unsigned char checkValidIntrinsicType(struct DisassembledInstruction* ins
 	if (intrinsic->type == SINGLE_IT)
 	{
 		return 1;
+	}
+	else if (intrinsic->type == REP_IT) 
+	{
+		return instruction->group1Prefix == REPZ;
 	}
 
 	if (instruction->numOfOperands == 0 || instruction->operands[0].type != REGISTER)
@@ -166,10 +171,6 @@ unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int 
 			{
 				return 0;
 			}
-			else if (instruction->opcode == MOVS && instruction->group1Prefix != REPZ)
-			{
-				return 0;
-			}
 			else if (instruction->opcode == XCHG)
 			{
 				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
@@ -213,9 +214,19 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 		{
 			break;
 		}
-		
+
 		struct JdcStr decompiledOperand = initializeJdcStr();
-		if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
+
+		if (intrinsic->opcode == STOS && i == 0)
+		{
+			// the first operand is a memory address with DI as the reg. this intrinsic takes a pointer for the first argument, so DI shouldnt be dereferenced
+			if (!decompileRegister(params, instructionIndex, -1, DI, 1, &decompiledOperand, 0))
+			{
+				freeJdcStr(&decompiledOperand);
+				return 0;
+			}
+		}
+		else if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 		{
 			freeJdcStr(&decompiledOperand);
 			return 0;
@@ -242,7 +253,7 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 		sprintfJdc(result, 1, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
-	else if (intrinsic->opcode == MOVS)
+	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
 	{
 		struct JdcStr count = initializeJdcStr();
 		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &count, 0))

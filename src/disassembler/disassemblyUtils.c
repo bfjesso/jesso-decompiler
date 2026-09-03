@@ -113,6 +113,11 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 		*overwrites = 0;
 	}
 
+	if (instruction->group1Prefix != NO_PREFIX) // REPZ instructions are decompiled as void intrinsics and I have not handled the other prefixes yet
+	{
+		return 0;
+	}
+
 	enum Mnemonic opcode = instruction->opcode;
 
 	if (operandNum == 0)
