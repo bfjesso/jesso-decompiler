@@ -1099,6 +1099,8 @@ unsigned char MainGui::HandleJmpTables()
 		}
 	}
 
+	std::sort(indirectTableAddresses.begin(), indirectTableAddresses.end());
+
 	std::vector<struct DisassembledInstruction> dataInstructions; // this buffer is used so that only one insert call is needed
 	int numOfJmpTables = jmpTableAddresses.size();
 	for (int i = 0; i < numOfJmpTables; i++)
@@ -1119,10 +1121,17 @@ unsigned char MainGui::HandleJmpTables()
 			unsigned long long lastAddress = disassembledInstructions[lastInstructionIndex].address;
 			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
 			
+			unsigned char isInIndirectTable = 0;
 			unsigned long long currentAddress = jmpTableAddresses[i];
 			while(currentAddress < lastAddress)
 			{
+				if (findAddressInArr(indirectTableAddresses.data(), indirectTableAddresses.size(), currentAddress) != -1) 
+				{
+					isInIndirectTable = 1;
+				}
+				
 				struct DisassembledInstruction instruction;
+				instruction.isInvalid = 0;
 				instruction.opcode = DATA;
 				instruction.group1Prefix = NO_PREFIX;
 				instruction.numOfOperands = 1;
@@ -1132,11 +1141,15 @@ unsigned char MainGui::HandleJmpTables()
 					return 0;
 				}
 				instruction.operands[0].type = IMMEDIATE;
-				instruction.operands[0].immediate.size = jmpTableSizes[i];
-				instruction.numOfBytes = jmpTableSizes[i];
+				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : jmpTableSizes[i];
+				instruction.numOfBytes = isInIndirectTable ? 1 : jmpTableSizes[i];
 				instruction.address = currentAddress;
 
-				if (jmpTableSizes[i] == 4)
+				if (isInIndirectTable) 
+				{
+					instruction.operands[0].immediate.value = *(unsigned char*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
+				}
+				else if (jmpTableSizes[i] == 4)
 				{
 					instruction.operands[0].immediate.value = *(unsigned int*)(fileBytes + fileOffest + (currentAddress - jmpTableAddresses[i]));
 				}
@@ -1146,7 +1159,7 @@ unsigned char MainGui::HandleJmpTables()
 				}
 
 				dataInstructions.push_back(instruction);
-				currentAddress += jmpTableSizes[i];
+				currentAddress += isInIndirectTable ? 1 : jmpTableSizes[i];
 			}
 
 			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());
