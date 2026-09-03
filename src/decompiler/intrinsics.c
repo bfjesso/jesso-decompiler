@@ -46,7 +46,7 @@ struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 	{ UD2, SINGLE_IT, "__ud2" },
 	{ HLT, SINGLE_IT, "__halt" },
 	{ DATA, SINGLE_IT, "DATA" },
-	{ MOVS, REP_IT, "__movs" },
+	{ MOVS, REP_IT, "memcpy" },
 	{ STOS, REP_IT, "memset" },
 	{ XCHG, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
@@ -217,10 +217,10 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 
 		struct JdcStr decompiledOperand = initializeJdcStr();
 
-		if (intrinsic->opcode == STOS && i == 0)
+		if ((intrinsic->opcode == STOS && i == 0) || intrinsic->opcode == MOVS)
 		{
-			// the first operand is a memory address with DI as the reg. this intrinsic takes a pointer for the first argument, so DI shouldnt be dereferenced
-			if (!decompileRegister(params, instructionIndex, -1, DI, 1, &decompiledOperand, 0))
+			// the REP STOS/MOVS intrinsics take pointer(s) as arguments, so the reg in the mem address shouldnt be dereferenced
+			if (!decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, &decompiledOperand, 0))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
