@@ -412,6 +412,17 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			asmStr += " ; entry point";
 		}
+		else if (instructions[i].opcode == DATA) 
+		{
+			unsigned char foundIndirectTable = 0;
+			int jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
+			if (jumpTableIndex != -1)
+			{
+				char jmpInstructionAddressStr[20] = { 0 };
+				sprintf(jmpInstructionAddressStr, "0x%llX", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
+				asmStr += " ; start of " + wxString(foundIndirectTable ? "indirect" : "jump") + " table. jmp instruction: " + wxString(jmpInstructionAddressStr);
+			}
+		}
 
 		unsigned long long dst = getJmpDst(&instructions[0], i, i - 0x1000);
 		if (dst != 0)

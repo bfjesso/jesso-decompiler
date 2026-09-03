@@ -18,6 +18,8 @@ extern "C"
 
 	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
+	int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, unsigned char* foundIndirectTable);
+
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
 
 	unsigned char validateName(struct DecompilationParameters* params, const char* name);

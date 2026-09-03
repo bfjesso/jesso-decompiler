@@ -249,6 +249,6 @@ struct JumpTable
 {
 	unsigned long long jmpTableAddress;
 	unsigned long long indirectTableAddress;
-	int jmpInstructionIndex;
+	unsigned long long jmpInstructionAddress;
 	unsigned char addressSize;
 };

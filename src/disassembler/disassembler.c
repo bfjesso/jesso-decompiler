@@ -272,7 +272,7 @@ unsigned char getJumpTable(struct DisassembledInstruction* instructions, int ins
 
 				result->addressSize = instruction->operands[1].memoryAddress.ptrSize;
 				result->jmpTableAddress = jmpTableAddress;
-				result->jmpInstructionIndex = instructionIndex;
+				result->jmpInstructionAddress = jmpInstruction->address;
 
 				// checking for indirect table
 				struct DisassembledInstruction* prevInstruction = &instructions[i - 1];
@@ -317,7 +317,7 @@ unsigned char getJumpTable(struct DisassembledInstruction* instructions, int ins
 
 		result->addressSize = jmpInstruction->operands[0].memoryAddress.ptrSize;
 		result->jmpTableAddress = jmpTableAddress;
-		result->jmpInstructionIndex = instructionIndex;
+		result->jmpInstructionAddress = jmpInstruction->address;
 		result->indirectTableAddress = 0; // not sure if should check for this here too
 
 		return 1;

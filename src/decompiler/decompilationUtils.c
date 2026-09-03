@@ -121,6 +121,32 @@ int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned
 	return -1;
 }
 
+int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, unsigned char* foundIndirectTable)
+{
+	int low = 0;
+	int high = numOfJumpTables - 1;
+	while (low <= high)
+	{
+		int mid = low + (high - low) / 2;
+
+		if (jumpTables[mid].jmpTableAddress == address) 
+		{ 
+			if (foundIndirectTable) { *foundIndirectTable = 0; }
+			return mid; 
+		}
+		else if (jumpTables[mid].indirectTableAddress == address)
+		{
+			if (foundIndirectTable) { *foundIndirectTable = 1; }
+			return mid;
+		}
+
+		if (jumpTables[mid].jmpTableAddress < address) { low = mid + 1; }
+		else { high = mid - 1; }
+	}
+
+	return -1;
+}
+
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress)
 {
 	int low = 0;
