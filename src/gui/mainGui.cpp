@@ -1115,7 +1115,7 @@ unsigned char MainGui::HandleJmpTables()
 				disassembledInstructions[calledInstructionIndex].isCalled = 1;
 			}
 		}
-		else if (isOpcodeJmp(disassembledInstructions[i].opcode) || isOpcodeJcc(disassembledInstructions[i].opcode))
+		else if (disassembledInstructions[i].opcode == JMP_NEAR)
 		{
 			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), i, i - 0x1000));
 			if (dstIndex != -1)
@@ -1139,18 +1139,6 @@ unsigned char MainGui::HandleJmpTables()
 			while (!disassembledInstructions[lastInstructionIndex].isCalled &&
 				!disassembledInstructions[lastInstructionIndex].isJmpDst)
 			{
-				if (disassembledInstructions[lastInstructionIndex].opcode == CALL_NEAR ||
-					isOpcodeJmp(disassembledInstructions[lastInstructionIndex].opcode) ||
-					isOpcodeJcc(disassembledInstructions[lastInstructionIndex].opcode)) 
-				{
-					int dstInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), lastInstructionIndex, lastInstructionIndex - 0x1000));
-					if (dstInstructionIndex != -1)
-					{
-						disassembledInstructions[dstInstructionIndex].isCalled = 0;
-						disassembledInstructions[dstInstructionIndex].isJmpDst = 0;
-					}
-				}
-				
 				free(disassembledInstructions[lastInstructionIndex].operands);
 				lastInstructionIndex++;
 			}

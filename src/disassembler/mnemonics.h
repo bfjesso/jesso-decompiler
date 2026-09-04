@@ -256,10 +256,6 @@ extern "C"
 
 	unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
 
-	unsigned char isOpcodeJmp(enum Mnemonic opcode);
-
-	unsigned char isOpcodeJcc(enum Mnemonic opcode);
-
 #ifdef __cplusplus
 }
 #endif
@@ -296,11 +292,11 @@ unsigned char isOpcodeCall(enum Mnemonic opcode);
 
 unsigned char isOpcodeReturn(enum Mnemonic opcode);
 
-
+unsigned char isOpcodeJmp(enum Mnemonic opcode);
 
 unsigned char isOpcodeCmp(enum Mnemonic opcode);
 
-
+unsigned char isOpcodeJcc(enum Mnemonic opcode);
 
 unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
 
