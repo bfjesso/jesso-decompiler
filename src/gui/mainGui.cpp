@@ -1109,7 +1109,7 @@ unsigned char MainGui::HandleJmpTables()
 		}
 		else if (disassembledInstructions[i].opcode == CALL_NEAR)
 		{
-			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
+			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), i, i - 0x1000));
 			if (calledInstructionIndex != -1)
 			{
 				disassembledInstructions[calledInstructionIndex].isCalled = 1;
@@ -1117,7 +1117,7 @@ unsigned char MainGui::HandleJmpTables()
 		}
 		else if (isOpcodeJmp(disassembledInstructions[i].opcode) || isOpcodeJcc(disassembledInstructions[i].opcode))
 		{
-			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), resolveJmpChain(&decompParams, i));
+			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), i, i - 0x1000));
 			if (dstIndex != -1)
 			{
 				disassembledInstructions[dstIndex].isJmpDst = 1;
@@ -1139,6 +1139,18 @@ unsigned char MainGui::HandleJmpTables()
 			while (!disassembledInstructions[lastInstructionIndex].isCalled &&
 				!disassembledInstructions[lastInstructionIndex].isJmpDst)
 			{
+				if (disassembledInstructions[lastInstructionIndex].opcode == CALL_NEAR ||
+					isOpcodeJmp(disassembledInstructions[lastInstructionIndex].opcode) ||
+					isOpcodeJcc(disassembledInstructions[lastInstructionIndex].opcode)) 
+				{
+					int dstInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), lastInstructionIndex, lastInstructionIndex - 0x1000));
+					if (dstInstructionIndex != -1)
+					{
+						disassembledInstructions[dstInstructionIndex].isCalled = 0;
+						disassembledInstructions[dstInstructionIndex].isJmpDst = 0;
+					}
+				}
+				
 				free(disassembledInstructions[lastInstructionIndex].operands);
 				lastInstructionIndex++;
 			}
