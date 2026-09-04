@@ -36,6 +36,8 @@ extern const char* mnemonicStrs[] =
 	"INC", "DEC",
 	"NEG", "NOT",
 
+	"BTS",
+
 	"MULSS", "MULSD",
 	"DIVSS", "DIVSD",
 
@@ -105,7 +107,7 @@ extern const char* mnemonicStrs[] =
 	"CVTTPS2PI", "CVTTPD2PI", "VCVTTSS2SI", "CVTTSS2SI", "VCVTTSD2SI", "CVTTSD2SI", "CVTPS2PI", "CVTPD2PI", "VCVTSS2SI", "CVTSS2SI", "VCVTSD2SI", "CVTSD2SI", "VCVTPS2DQ", "CVTPS2DQ", "VCVTTPS2DQ", "CVTTPS2DQ", "VCVTTPD2DQ", "CVTTPD2DQ", "VCVTPD2DQ", "CVTPD2DQ",
 
 	"AAA", "AAD", "AAM", "AAS", "ADC", "ARPL",
-	"BOUND", "BSF", "BSR", "BSWAP", "BTC", "BTR", "BTS", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
+	"BOUND", "BSF", "BSR", "BSWAP", "BTC", "BTR", "BNDLDX", "BNDMOV", "BNDCL", "BNDCU", "BNDSTX", "BNDMK", "BNDCN",
 	"CLAC", "CLC", "CLD", "CLI", "CLTS", "CMC", "CMPS", "CMPXCHG", "CPUID",
 	"DAA", "DAS",
 	"EMMS", "ENCLS", "ENCLU",

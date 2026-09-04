@@ -92,6 +92,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileXor(params, instructionIndex, getAssignment, result);
 	}
+	else if (instruction->opcode == BTS)
+	{
+		return decompileBitSet(params, instructionIndex, getAssignment, result);
+	}
 	else if (instruction->opcode == FLD)
 	{
 		return decompileFLD(params, instructionIndex, getAssignment, result);
@@ -287,6 +291,54 @@ static unsigned char decompileXor(struct DecompilationParameters* params, int in
 	}
 	
 	return decompileBinaryOperation(params, instructionIndex, getAssignment, " ^ ", " ^= ", result);
+}
+
+static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+{
+	struct JdcStr decompiledFirstOperand = initializeJdcStr();
+	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+	{
+		freeJdcStr(&decompiledFirstOperand);
+		return 0;
+	}
+
+	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
+	if (secondOperand->type == IMMEDIATE)
+	{
+		unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(secondOperand->immediate.value);
+		if (getAssignment) 
+		{
+			sprintfJdc(result, 0, "%s |= 0x%llX", decompiledFirstOperand.buffer, bitMask);
+		}
+		else 
+		{
+			sprintfJdc(result, 0, " | 0x%llX", bitMask);
+		}
+	}
+	else
+	{
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, 1, 1, &decompiledSecondOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
+			return 0;
+		}
+
+		if (getAssignment) 
+		{
+			sprintfJdc(result, 0, "%s |= (1 << %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+		}
+		else 
+		{
+			sprintfJdc(result, 0, " | (1 << %s)", decompiledSecondOperand.buffer);
+		}
+
+		freeJdcStr(&decompiledSecondOperand);
+	}
+
+	freeJdcStr(&decompiledFirstOperand);
+	return 1;
 }
 
 static unsigned char decompileFLD(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
