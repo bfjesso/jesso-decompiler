@@ -373,25 +373,29 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					continue;
 				}
 
-				struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, j);
-				if (regVar)
-				{
-					getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar); // this is to update the scope if it needs to be larger
-					continue;
-				}
+				struct RegisterVariable* existingRegVar = getLocalRegVarByReg(params->currentFunc, j);
 
 				if ((condition->conditionType == WHILE_CT || condition->conditionType == DO_WHILE_CT))
 				{
 					// if condition is a loop, it needs to check from the start of it since the code can run more than once
 					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, condition->lastBodyIndex, j, 1, 0))
 					{
-						if (!addRegVar(params, 0, 0, j))
+						if (existingRegVar)
 						{
-							return 0;
+							getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, existingRegVar);
 						}
+						else 
+						{
+							if (!addRegVar(params, 0, 0, j))
+							{
+								return 0;
+							}
 
-						regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-						getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, regVar);
+							struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+							getLocalRegVarScope(params, condition->firstBodyIndex - 1, condition->lastBodyIndex + 1, newRegVar);
+						}
+						
+						
 						continue;
 					}
 				}
@@ -400,13 +404,20 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 				int lastChainBodyIndex = getConditionChainLastBodyInstruction(params, condition);
 				if (isRegisterAccessedBeforeInit(params, lastChainBodyIndex + 1, params->currentFunc->lastInstructionIndex, j, 0, 0))
 				{
-					if (!addRegVar(params, 0, 0, j))
+					if (existingRegVar)
 					{
-						return 0;
+						getLocalRegVarScope(params, firstChainBodyIndex - 1, lastChainBodyIndex + 1, existingRegVar);
 					}
+					else 
+					{
+						if (!addRegVar(params, 0, 0, j))
+						{
+							return 0;
+						}
 
-					regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-					getLocalRegVarScope(params, firstChainBodyIndex - 1, lastChainBodyIndex + 1, regVar);
+						struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+						getLocalRegVarScope(params, firstChainBodyIndex - 1, lastChainBodyIndex + 1, newRegVar);
+					}
 				}
 			}
 		}
