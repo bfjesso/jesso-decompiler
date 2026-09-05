@@ -19,6 +19,8 @@ static unsigned char decompileXor(struct DecompilationParameters* params, int in
 
 static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
 
+static unsigned char decompileBitReset(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
+
 static unsigned char decompileFLD(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
 
 static unsigned char decompileIDIV(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result);
