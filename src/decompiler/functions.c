@@ -829,8 +829,8 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 	}
 
 	// these are only used for local reg vars
-	regVar->scopeStartIndex = -1;
-	regVar->scopeEndIndex = -1;
+	regVar->scopes = 0;
+	regVar->numOfScopes = 0;
 
 	regVar->name = initializeJdcStr();
 	sprintfJdc(&regVar->name, 0, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
@@ -879,6 +879,22 @@ unsigned char addRegVar(struct DecompilationParameters* params, struct DataType*
 			}
 		}
 	}
+
+	return 1;
+}
+
+unsigned char addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex)
+{
+	struct RegVarScope* newScopes = (struct RegVarScope*)realloc(regVar->scopes, (regVar->numOfScopes + 1) * sizeof(struct RegVarScope));
+	if(!newScopes)
+	{
+		return 0;
+	}
+
+	regVar->scopes = newScopes;
+	regVar->scopes[regVar->numOfScopes].startIndex = startIndex;
+	regVar->scopes[regVar->numOfScopes].endIndex = endIndex;
+	regVar->numOfScopes++;
 
 	return 1;
 }

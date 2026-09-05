@@ -458,8 +458,8 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 							return 0;
 						}
 
-						params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1].scopeStartIndex = i;
-						params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1].scopeStartIndex = j;
+						struct RegisterVariable* regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+						addRegVarScope(regVar, i, j);
 						break;
 					}
 				}
@@ -472,6 +472,9 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 
 static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)
 {
+	int startIndex = params->currentFunc->firstInstructionIndex - 1;
+	int endIndex = params->currentFunc->lastInstructionIndex + 1;
+	
 	for (int i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
@@ -484,11 +487,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 		unsigned char overwrites = 0;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
-			if (i < regVar->scopeStartIndex || regVar->scopeStartIndex == -1)
-			{
-				regVar->scopeStartIndex = i;
-			}
-
+			startIndex = i;
 			break;
 		}
 	}
@@ -505,24 +504,12 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 		unsigned char overwrites = 0;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
-			if (i > regVar->scopeEndIndex || regVar->scopeEndIndex == -1)
-			{
-				regVar->scopeEndIndex = i;
-			}
-			
+			endIndex = i;
 			break;
 		}
 	}
 
-	if (regVar->scopeStartIndex == -1)
-	{
-		regVar->scopeStartIndex = params->currentFunc->firstInstructionIndex - 1;
-	}
-
-	if (regVar->scopeEndIndex == -1)
-	{
-		regVar->scopeEndIndex = params->currentFunc->lastInstructionIndex + 1;
-	}
+	addRegVarScope(regVar, startIndex, endIndex);
 }
 
 unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
@@ -598,7 +585,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 
 			addIndents(result, 1);
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
-			if (regArg && localRegVar->scopeStartIndex <= params->currentFunc->firstInstructionIndex)
+			if (regArg && checkRegVarScope(localRegVar, params->currentFunc->firstInstructionIndex, 1))
 			{
 				if (!compareDataTypes(localRegVar->dataType, regArg->dataType))
 				{

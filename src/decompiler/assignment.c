@@ -19,7 +19,7 @@ unsigned char checkForAssignment(struct DecompilationParameters* params, int ins
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
 		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
-		if (!localRegVar->isArgument && instructionIndex >= localRegVar->scopeStartIndex && instructionIndex < localRegVar->scopeEndIndex &&
+		if (!localRegVar->isArgument && checkRegVarScope(localRegVar, instructionIndex, 1) &&
 			doesInstructionModifyRegister(params, instructionIndex, localRegVar->reg, 0, 0))
 		{
 			return 1;
@@ -55,7 +55,7 @@ unsigned char decompileAssignments(struct DecompilationParameters* params, int i
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
 		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
-		if (!localRegVar->isArgument && instructionIndex >= localRegVar->scopeStartIndex && instructionIndex < localRegVar->scopeEndIndex &&
+		if (!localRegVar->isArgument && checkRegVarScope(localRegVar, instructionIndex, 1) &&
 			doesInstructionModifyRegister(params, instructionIndex, localRegVar->reg, 0, 0))
 		{
 			struct JdcStr operation = initializeJdcStr();

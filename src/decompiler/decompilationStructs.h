@@ -3,13 +3,19 @@
 #include "../fileStructs.h"
 #include "dataTypes.h"
 
+struct RegVarScope
+{
+	int startIndex; // instruction that initialzes the reg
+	int endIndex; // instruction that overwrites the reg
+};
+
 struct RegisterVariable
 {
 	struct DataType dataType;
 	enum Register reg;
 	unsigned char isArgument;
-	int scopeStartIndex; // instruction that initialzes the reg
-	int scopeEndIndex;// instruction that overwrites the reg
+	unsigned short numOfScopes;
+	struct RegVarScope* scopes;
 	struct JdcStr name;
 };
 

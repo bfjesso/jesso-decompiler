@@ -341,26 +341,10 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	struct RegisterVariable* localRegVar = getLocalRegVarByReg(params->currentFunc, targetReg);
 	if (localRegVar)
 	{
-		unsigned char decompileLocalRegVar = 0;
-		if (operandNum < instruction->numOfOperands && instruction->operands[operandNum].type == REGISTER && 
-			doesInstructionModifyOperand(instruction, operandNum, 0))
-		{
-			// scopeStartIndex is when the reg is initialized, so the reg var needs to be decompiled when it is the dst but not as a src
-			if (instructionIndex >= localRegVar->scopeStartIndex && instructionIndex < localRegVar->scopeEndIndex) 
-			{
-				decompileLocalRegVar = 1;
-			}
-		}
-		else 
-		{
-			// scopeEndIndex is when the reg is overwritten, so as a src it still needs to be the reg var
-			if (instructionIndex > localRegVar->scopeStartIndex && instructionIndex <= localRegVar->scopeEndIndex)
-			{
-				decompileLocalRegVar = 1;
-			}
-		}
-		
-		if (decompileLocalRegVar)
+		// the scope startIndex is when the reg is initialized, so the reg var needs to be decompiled when it is the dst but not as a src
+		// the scope endIndex is when the reg is overwritten, so as a src it still needs to be the reg var
+		unsigned char isRegDst = operandNum < instruction->numOfOperands && instruction->operands[operandNum].type == REGISTER && doesInstructionModifyOperand(instruction, operandNum, 0);
+		if (checkRegVarScope(localRegVar, instructionIndex, isRegDst))
 		{
 			if (regVarRef)
 			{

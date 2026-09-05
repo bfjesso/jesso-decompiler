@@ -55,6 +55,8 @@ static unsigned char addStackVar(struct Function* function, long long offsetFrom
 
 unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
 
+unsigned char addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex);
+
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
 
 unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);

@@ -514,3 +514,26 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 
 	return 1;
 }
+
+unsigned char checkRegVarScope(struct RegisterVariable* regVar, int instructionIndex, unsigned char isRegDst)
+{
+	for (int i = 0; i < regVar->numOfScopes; i++)
+	{
+		if (isRegDst)
+		{
+			if (instructionIndex >= regVar->scopes[i].startIndex && instructionIndex < regVar->scopes[i].endIndex)
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			if (instructionIndex > regVar->scopes[i].startIndex && instructionIndex <= regVar->scopes[i].endIndex)
+			{
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}

@@ -35,3 +35,5 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int num
 unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
 
 unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites);
+
+unsigned char checkRegVarScope(struct RegisterVariable* regVar, int instructionIndex, unsigned char isRegDst);
