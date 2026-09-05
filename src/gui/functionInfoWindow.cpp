@@ -321,8 +321,13 @@ void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 		{
 			menu.Append(ID_SHOW_SCOPES, "Show scopes");
 			menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
-				ScopesDialog dlg(this, instructions, regVar);
-				dlg.ShowModal();
+				ScopesDialog* dlg = new ScopesDialog(this, instructions, regVar);
+				dlg->Bind(wxEVT_CLOSE_WINDOW, [dlg](wxCloseEvent& evt) {
+					dlg->Destroy();
+					evt.Skip();
+				});
+
+				dlg->Show();
 			}, ID_SHOW_SCOPES);
 		}
 	}
