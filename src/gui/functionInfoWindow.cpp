@@ -83,8 +83,8 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	returnedVarsGrid->SetColSize(0, 150);
 	returnedVarsGrid->SetColSize(1, 150);
 	returnedVarsGrid->SetColSize(2, 150);
-	returnedVarsGrid->SetColSize(3, 150);
-	returnedVarsGrid->SetColSize(4, 150);
+	returnedVarsGrid->SetColSize(3, 200);
+	returnedVarsGrid->SetColSize(4, 100);
 	returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	for (int i = 0; i < function->numOfReturnedVars; i++)
@@ -150,9 +150,9 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	stackVarsGrid->SetColLabelValue(2, "Initial SP offset");
 	stackVarsGrid->SetColLabelValue(3, "Is argument");
 	stackVarsGrid->HideRowLabels();
-	stackVarsGrid->SetColSize(0, 100);
+	stackVarsGrid->SetColSize(0, 150);
 	stackVarsGrid->SetColSize(1, 100);
-	stackVarsGrid->SetColSize(2, 100);
+	stackVarsGrid->SetColSize(2, 150);
 	stackVarsGrid->SetColSize(3, 100);
 	stackVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
@@ -197,14 +197,14 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	conditionsGrid->SetColLabelValue(6, "Combined jcc indexes");
 	conditionsGrid->SetColLabelValue(7, "Jcc combination type");
 	conditionsGrid->HideRowLabels();
-	conditionsGrid->SetColSize(0, 100);
-	conditionsGrid->SetColSize(1, 100);
-	conditionsGrid->SetColSize(2, 100);
-	conditionsGrid->SetColSize(3, 100);
-	conditionsGrid->SetColSize(4, 100);
-	conditionsGrid->SetColSize(5, 100);
-	conditionsGrid->SetColSize(6, 150);
-	conditionsGrid->SetColSize(7, 100);
+	conditionsGrid->SetColSize(0, 150);
+	conditionsGrid->SetColSize(1, 200);
+	conditionsGrid->SetColSize(2, 200);
+	conditionsGrid->SetColSize(3, 200);
+	conditionsGrid->SetColSize(4, 200);
+	conditionsGrid->SetColSize(5, 200);
+	conditionsGrid->SetColSize(6, 200);
+	conditionsGrid->SetColSize(7, 200);
 	conditionsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	vSizer->Add(conditionsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
@@ -277,9 +277,9 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	directJmpsGrid->SetColLabelValue(1, "Jmp index");
 	directJmpsGrid->SetColLabelValue(2, "Dst index");
 	directJmpsGrid->HideRowLabels();
-	directJmpsGrid->SetColSize(0, 100);
-	directJmpsGrid->SetColSize(1, 100);
-	directJmpsGrid->SetColSize(2, 100);
+	directJmpsGrid->SetColSize(0, 150);
+	directJmpsGrid->SetColSize(1, 200);
+	directJmpsGrid->SetColSize(2, 200);
 	directJmpsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	vSizer->Add(directJmpsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
