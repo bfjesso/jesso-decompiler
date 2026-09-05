@@ -7,10 +7,13 @@ wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxScrolledWindow)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoWindow::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructions, Function* function) : wxScrolledWindow(parent, wxID_ANY)
+FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructionsPtr, Function* theFunction) : wxScrolledWindow(parent, wxID_ANY)
 {
 	SetOwnBackgroundColour(backgroundColor);
 	SetScrollRate(10, 10);
+
+	function = theFunction;
+	instructions = instructionsPtr;
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -306,10 +309,65 @@ void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 	int col = e.GetCol();
 
 	const int ID_COPY = 100;
+	const int ID_SHOW_SCOPES = 101;
 	
 	menu.Append(ID_COPY, "Copy");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(grid->GetCellValue(row, col)); }, ID_COPY);
 
+	if (grid == regVarsGrid) 
+	{
+		struct RegisterVariable* regVar = &function->regVars[row];
+		if (regVar->numOfScopes > 0) 
+		{
+			menu.Append(ID_SHOW_SCOPES, "Show scopes");
+			menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
+				ScopesDialog dlg(this, instructions, regVar);
+				dlg.ShowModal();
+			}, ID_SHOW_SCOPES);
+		}
+	}
+
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();
+}
+
+ScopesDialog::ScopesDialog(wxWindow* parent, DisassembledInstruction* instructions, const RegisterVariable* regVar) : wxDialog(parent, wxID_ANY, wxString(regVar->name.buffer) + " scopes", wxDefaultPosition, wxSize(700, 300), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX)
+{
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+	wxGrid* grid = new wxGrid(this, wxID_ANY);
+
+	grid->SetLabelBackgroundColour(foregroundColor);
+	grid->SetLabelTextColour(textColor);
+	grid->SetDefaultCellBackgroundColour(gridColor);
+	grid->SetDefaultCellTextColour(textColor);
+	grid->CreateGrid(0, 3);
+	grid->SetScrollRate(10, 10);
+	grid->DisableDragRowSize();
+	grid->EnableEditing(false);
+	grid->SetColLabelValue(0, "Scope index");
+	grid->SetColLabelValue(1, "Start index");
+	grid->SetColLabelValue(2, "End index");
+	grid->HideRowLabels();
+	grid->SetColSize(0, 100);
+	grid->SetColSize(1, 200);
+	grid->SetColSize(2, 200);
+	grid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
+
+	char hexNumStr[10] = { 0 };
+	for (int i = 0; i < regVar->numOfScopes; i++)
+	{
+		grid->AppendRows(1);
+
+		grid->SetCellValue(i, 0, std::to_string(i));
+
+		sprintf(hexNumStr, "0x%llX", instructions[regVar->scopes[i].startIndex].address);
+		grid->SetCellValue(i, 1, std::to_string(regVar->scopes[i].startIndex) + " (" + wxString(hexNumStr) + ")");
+
+		sprintf(hexNumStr, "0x%llX", instructions[regVar->scopes[i].endIndex].address);
+		grid->SetCellValue(i, 2, std::to_string(regVar->scopes[i].endIndex) + " (" + wxString(hexNumStr) + ")");
+	}
+
+	sizer->Add(grid, 1, wxEXPAND | wxALL, 10);
+	SetSizerAndFit(sizer);
+	SetMinSize(wxSize(200, 200));
 }
