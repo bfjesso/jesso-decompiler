@@ -1,5 +1,6 @@
 #include "codeReferencesWindow.h"
 #include "mainGui.h"
+#include "../decompiler/decompilationUtils.h"
 
 wxBEGIN_EVENT_TABLE(CodeReferencesWindow, wxWindow)
 EVT_BUTTON(FindReferencesID, CodeReferencesWindow::OnFindCodeReferencesButton)
@@ -81,7 +82,7 @@ void CodeReferencesWindow::FindCodeReferences(long long value, unsigned char isH
 	{
 		struct DisassembledInstruction* instruction = &mainGui->decompParams.instructions[i];
 		
-		if (getJmpDst(mainGui->decompParams.instructions, i, i - 0x100) == value)
+		if (getJmpDst(&mainGui->decompParams, i) == value)
 		{
 			foundInstructions.push_back(*instruction);
 			continue;

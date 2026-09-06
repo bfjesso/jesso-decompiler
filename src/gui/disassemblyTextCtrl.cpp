@@ -424,12 +424,15 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		unsigned long long dst = getJmpDst(&instructions[0], i, i - 0x1000);
-		if (dst != 0)
+		if (mainGui->decompParams.instructions == instructions) 
 		{
-			char dstStr[20] = { 0 };
-			sprintf(dstStr, "0x%llX", dst);
-			asmStr += " ; dst: " + wxString(dstStr);
+			unsigned long long dst = getJmpDst(&mainGui->decompParams, i);
+			if (dst != 0)
+			{
+				char dstStr[20] = { 0 };
+				sprintf(dstStr, "0x%llX", dst);
+				asmStr += " ; dst: " + wxString(dstStr);
+			}
 		}
 
 		InsertText(PositionFromLine(i), addressInfoStr + asmStr);

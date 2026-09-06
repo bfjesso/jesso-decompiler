@@ -1,21 +1,6 @@
 #pragma once
 #include "disassemblyStructs.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-	unsigned long long getJmpDst(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex);
-
-#ifdef __cplusplus
-}
-#endif
-
-unsigned char operandToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, struct Operand* operand, unsigned long long* result);
-
-unsigned char regToValue(struct DisassembledInstruction* instructions, int startInstructionIndex, int minInstructionIndex, enum Register reg, unsigned long long* result);
-
 unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
 
 unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);

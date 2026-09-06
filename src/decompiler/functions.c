@@ -46,7 +46,7 @@ unsigned char findNextFunction(struct DecompilationParameters* params, struct Fu
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
-			unsigned long long jumpDst = getJmpDst(params->instructions, i, result->firstInstructionIndex);
+			unsigned long long jumpDst = getJmpDst(params, i);
 			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpDst);
 			if (dstIndex > indexToJumpTo && dstIndex > i && jumpDst < currentSectionEndAddress)
 			{

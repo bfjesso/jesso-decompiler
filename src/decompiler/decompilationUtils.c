@@ -28,9 +28,116 @@ void addIndents(struct JdcStr* result, int numOfIndents)
 	}
 }
 
+unsigned long long getJmpDst(struct DecompilationParameters* params, int startInstructionIndex)
+{
+	struct DisassembledInstruction* instruction = &params->instructions[startInstructionIndex];
+	if (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode) && !isOpcodeCall(instruction->opcode))
+	{
+		return 0;
+	}
+
+	unsigned long long dst = 0;
+	if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &dst))
+	{
+		return 0;
+	}
+
+	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
+	{
+		dst += instruction->address + instruction->numOfBytes;
+	}
+
+	return dst;
+}
+
+static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+{
+	if (operand->type == IMMEDIATE)
+	{
+		*result = operand->immediate.value;
+		return 1;
+	}
+	else if (operand->type == MEM_ADDRESS)
+	{
+		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
+		{
+			*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+		}
+		else
+		{
+			unsigned long long baseRegVal = 0;
+			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
+			{
+				*result = baseRegVal;
+			}
+		}
+
+		*result *= operand->memoryAddress.scale;
+
+		if (compareRegisters(operand->memoryAddress.regDisplacement, IP))
+		{
+			*result += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+		}
+		else
+		{
+			unsigned long long displacementRegVal = 0;
+			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
+			{
+				*result += displacementRegVal;
+			}
+		}
+
+		*result += operand->memoryAddress.constDisplacement;
+
+		return 1;
+	}
+	else if (operand->type == REGISTER)
+	{
+		return regToValue(params, startInstructionIndex - 1, operand->reg, result);
+	}
+
+	return 0;
+}
+
+static unsigned char regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result)
+{
+	if (reg == NO_REG)
+	{
+		return 0;
+	}
+
+	if (compareRegisters(reg, IP))
+	{
+		*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+		return 1;
+	}
+
+	int minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
+	for (int i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
+	{
+		if ((params->instructions[i].opcode == MOV || params->instructions[i].opcode == LEA) && 
+			params->instructions[i].operands[0].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, reg))
+		{
+			int start = i;
+			if (params->instructions[i].operands[1].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, params->instructions[i].operands[1].reg))
+			{
+				start--;
+			}
+
+			return operandToValue(params, start, &(params->instructions[i].operands[1]), result);
+		}
+		else if (isOpcodeCall(params->instructions[i].opcode) || isOpcodeJmp(params->instructions[i].opcode))
+		{
+			return 0;
+		}
+	}
+
+	return 0;
+}
+
 unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
 {
-	unsigned long long jmpAddress = getJmpDst(params->instructions, startInstructionIndex, params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000);
+	unsigned long long jmpAddress = getJmpDst(params, startInstructionIndex);
 	if (jmpAddress == 0)
 	{
 		return 0;
@@ -51,6 +158,91 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 	}
 
 	return jmpAddress;
+}
+
+unsigned char getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result)
+{
+	struct DisassembledInstruction* jmpInstruction = &params->instructions[instructionIndex];
+
+	if (jmpInstruction->opcode != JMP_NEAR)
+	{
+		return 0;
+	}
+
+	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
+	{
+		enum Register targetReg = jmpInstruction->operands[0].reg;
+		int i = instructionIndex - 1;
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode) && i >= 0)
+		{
+			// the actual value of targetReg will be an address of some instruction to jmp to, but this code is just looking for the address of the jmp table and not the value of targetReg
+			if (instruction->opcode == MOV &&
+				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
+				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+			{
+				unsigned long long jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
+
+				unsigned long long regDisplacementVal = 0;
+				if (regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+				{
+					jmpTableAddress += regDisplacementVal;
+				}
+
+				result->addressSize = instruction->operands[1].memoryAddress.ptrSize;
+				result->jmpTableAddress = jmpTableAddress;
+				result->jmpInstructionAddress = jmpInstruction->address;
+
+				// checking for indirect table
+				struct DisassembledInstruction* prevInstruction = &params->instructions[i - 1];
+				if (prevInstruction->opcode == MOVZX &&
+					prevInstruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[1].memoryAddress.reg, prevInstruction->operands[0].reg) &&
+					prevInstruction->operands[1].type == MEM_ADDRESS)
+				{
+					unsigned long long indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
+
+					regDisplacementVal = 0;
+					if (regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+					{
+						indirectTableAddress += regDisplacementVal;
+					}
+
+					result->indirectTableAddress = indirectTableAddress;
+				}
+				else
+				{
+					result->indirectTableAddress = 0;
+				}
+
+				return 1;
+			}
+
+			i--;
+			if (i >= 0)
+			{
+				instruction = &params->instructions[i];
+			}
+		}
+	}
+	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
+	{
+		unsigned long long jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
+
+		unsigned long long regDisplacementVal = 0;
+		if (regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
+		{
+			jmpTableAddress += regDisplacementVal;
+		}
+
+		result->addressSize = jmpInstruction->operands[0].memoryAddress.ptrSize;
+		result->jmpTableAddress = jmpTableAddress;
+		result->jmpInstructionAddress = jmpInstruction->address;
+		result->indirectTableAddress = 0; // not sure if should check for this here too
+
+		return 1;
+	}
+
+	return 0;
 }
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)

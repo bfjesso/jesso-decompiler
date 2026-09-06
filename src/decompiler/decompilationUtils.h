@@ -10,6 +10,12 @@ extern "C"
 
 	extern const char* keywordStrs[];
 
+	unsigned long long getJmpDst(struct DecompilationParameters* params, int startInstructionIndex);
+
+	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
+
+	unsigned char getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result);
+
 	int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address);
 
 	int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
@@ -20,8 +26,6 @@ extern "C"
 
 	int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, unsigned char* foundIndirectTable);
 
-	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
-
 	unsigned char validateName(struct DecompilationParameters* params, const char* name);
 
 #ifdef __cplusplus
@@ -29,6 +33,10 @@ extern "C"
 #endif
 
 void addIndents(struct JdcStr* result, int numOfIndents);
+
+static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
+
+static unsigned char regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result);
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 

@@ -662,6 +662,19 @@ void MainGui::DisassembleFile()
 
 	logTextCtrl->Log("disassembling...", 0);
 
+	decompParams.imports = imports;
+	decompParams.numOfImports = numOfImports;
+
+	decompParams.imageBase = imageBase;
+	decompParams.sections = sections;
+	decompParams.numOfSections = numOfSections;
+
+	decompParams.fileBytes = fileBytes;
+	decompParams.numOfFileBytes = numOfFileBytes;
+
+	decompParams.is64Bit = is64Bit;
+	decompParams.fileFormat = fileFormat;
+
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
@@ -732,21 +745,8 @@ void MainGui::DisassembleFile()
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
 
-	decompParams.imports = imports;
-	decompParams.numOfImports = numOfImports;
-
 	decompParams.instructions = disassembledInstructions.data();
 	decompParams.numOfInstructions = disassembledInstructions.size();
-
-	decompParams.imageBase = imageBase;
-	decompParams.sections = sections;
-	decompParams.numOfSections = numOfSections;
-
-	decompParams.fileBytes = fileBytes;
-	decompParams.numOfFileBytes = numOfFileBytes;
-
-	decompParams.is64Bit = is64Bit;
-	decompParams.fileFormat = fileFormat;
 
 	if (!HandleJmpTables()) 
 	{
@@ -952,13 +952,14 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			storeInstruction = 0;
 		}
 
+		decompParams.instructions = instructionBuffer;
 		if (isOpcodeReturn(instructionBuffer->opcode))
 		{
 			return 1;
 		}
 		else if (isOpcodeJmp(instructionBuffer->opcode))
 		{
-			unsigned long long jmpDst = getJmpDst(instructionBuffer, 0, -1);
+			unsigned long long jmpDst = getJmpDst(&decompParams, 0);
 			if (jmpDst != 0) 
 			{
 				struct FileSection* section = 0;
@@ -978,7 +979,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 		}
 		else if (isOpcodeJcc(instructionBuffer->opcode) || isOpcodeCall(instructionBuffer->opcode))
 		{
-			unsigned long long jmpDst = getJmpDst(instructionBuffer, 0, -1);
+			unsigned long long jmpDst = getJmpDst(&decompParams, 0);
 			if (jmpDst != 0)
 			{
 				if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
@@ -1105,13 +1106,13 @@ unsigned char MainGui::HandleJmpTables()
 		}
 
 		struct JumpTable jumpTable = { 0 };
-		if (getJumpTable(disassembledInstructions.data(), i, &jumpTable)) 
+		if (getJumpTable(&decompParams, i, &jumpTable))
 		{
 			jumpTables.push_back(jumpTable);
 		}
 		else if (disassembledInstructions[i].opcode == CALL_NEAR)
 		{
-			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), i, i - 0x1000));
+			int calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(&decompParams, i));
 			if (calledInstructionIndex != -1)
 			{
 				disassembledInstructions[calledInstructionIndex].isCalled = 1;
@@ -1119,7 +1120,7 @@ unsigned char MainGui::HandleJmpTables()
 		}
 		else if (disassembledInstructions[i].opcode == JMP_NEAR)
 		{
-			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(disassembledInstructions.data(), i, i - 0x1000));
+			int dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(&decompParams, i));
 			if (dstIndex != -1)
 			{
 				disassembledInstructions[dstIndex].isJmpDst = 1;
@@ -1196,6 +1197,7 @@ unsigned char MainGui::HandleJmpTables()
 			}
 
 			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());
+			decompParams.numOfInstructions = disassembledInstructions.size();
 			dataInstructions.clear();
 		}
 	}
