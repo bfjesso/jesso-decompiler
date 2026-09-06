@@ -120,9 +120,6 @@
     <ClCompile Include="src\gui\calculatorWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\disassembler\disassemblyUtils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\gui\stringsTextCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -267,9 +264,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\calculatorWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\disassemblyUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\stringsTextCtrl.h">

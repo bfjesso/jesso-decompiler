@@ -1,5 +1,4 @@
 #include "functions.h"
-#include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 #include "conditions.h"
 #include "returnStatements.h"

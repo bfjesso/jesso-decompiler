@@ -1,6 +1,5 @@
 #include "expressions.h"
 #include "../file-handler/fileHandler.h"
-#include "../disassembler/operands.h"
 #include "decompilationUtils.h"
 #include "conditions.h"
 #include "functions.h"

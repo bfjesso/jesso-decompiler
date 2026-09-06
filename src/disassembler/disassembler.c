@@ -1,5 +1,4 @@
 #include "disassembler.h"
-#include "disassemblyUtils.h"
 #include "prefixes.h"
 #include "opcodes.h"
 #include "operands.h"

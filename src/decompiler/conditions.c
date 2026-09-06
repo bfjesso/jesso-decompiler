@@ -4,7 +4,6 @@
 #include "returnStatements.h"
 #include "expressions.h"
 #include "assignment.h"
-#include "../disassembler/operands.h"
 
 unsigned char getAllConditions(struct DecompilationParameters* params)
 {

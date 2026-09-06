@@ -40,8 +40,22 @@ static unsigned char regToValue(struct DecompilationParameters* params, int star
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 
+unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
+
 unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
 
 unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites);
+
+unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
+
+unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
+
+unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction);
+
+unsigned char isImmediateAllOnes(struct Immediate* immediate);
+
+unsigned char compareOperands(struct Operand* op1, struct Operand* op2);
+
+unsigned char getSizeOfOperand(struct Operand* operand);
 
 unsigned char checkRegVarScope(struct RegisterVariable* regVar, int instructionIndex, unsigned char isRegDst);

@@ -1,7 +1,7 @@
 #include "operations.h"
+#include "decompilationUtils.h"
 #include "functions.h"
 #include "intrinsics.h"
-#include "../disassembler/operands.h"
 #include "expressions.h"
 
 unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
