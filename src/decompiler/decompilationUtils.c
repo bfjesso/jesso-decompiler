@@ -68,10 +68,12 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		else
 		{
 			unsigned long long baseRegVal = 0;
-			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
+			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
 			{
-				address = baseRegVal;
+				return 0;
 			}
+
+			address = baseRegVal;
 		}
 
 		address *= operand->memoryAddress.scale;
@@ -83,10 +85,12 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		else
 		{
 			unsigned long long displacementRegVal = 0;
-			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
+			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
 			{
-				address += displacementRegVal;
+				return 0;
 			}
+
+			address += displacementRegVal;
 		}
 
 		address += operand->memoryAddress.constDisplacement;
@@ -217,10 +221,12 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 				unsigned long long jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
 
 				unsigned long long regDisplacementVal = 0;
-				if (regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+				if (!regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 				{
-					jmpTableAddress += regDisplacementVal;
+					return 0;
 				}
+
+				jmpTableAddress += regDisplacementVal;
 
 				result->addressSize = instruction->operands[1].memoryAddress.ptrSize;
 				result->jmpTableAddress = jmpTableAddress;
@@ -235,10 +241,12 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 					unsigned long long indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
 
 					regDisplacementVal = 0;
-					if (regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+					if (!regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 					{
-						indirectTableAddress += regDisplacementVal;
+						return 0;
 					}
+
+					indirectTableAddress += regDisplacementVal;
 
 					result->indirectTableAddress = indirectTableAddress;
 				}
@@ -262,10 +270,12 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 		unsigned long long jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
 
 		unsigned long long regDisplacementVal = 0;
-		if (regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
+		if (!regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
 		{
-			jmpTableAddress += regDisplacementVal;
+			return 0;
 		}
+
+		jmpTableAddress += regDisplacementVal;
 
 		result->addressSize = jmpInstruction->operands[0].memoryAddress.ptrSize;
 		result->jmpTableAddress = jmpTableAddress;
