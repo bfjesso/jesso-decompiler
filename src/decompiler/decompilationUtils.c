@@ -82,7 +82,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		{
 			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
-		else
+		else if(operand->memoryAddress.regDisplacement != NO_REG)
 		{
 			unsigned long long displacementRegVal = 0;
 			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
@@ -163,10 +163,6 @@ static unsigned char regToValue(struct DecompilationParameters* params, int star
 
 			return operandToValue(params, start, &(params->instructions[i].operands[1]), result);
 		}
-		else if (isOpcodeCall(params->instructions[i].opcode) || isOpcodeJmp(params->instructions[i].opcode))
-		{
-			return 0;
-		}
 	}
 
 	return 0;
@@ -209,10 +205,10 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
 	{
 		enum Register targetReg = jmpInstruction->operands[0].reg;
-		int i = instructionIndex - 1;
-		struct DisassembledInstruction* instruction = &params->instructions[i];
-		while (!isOpcodeJcc(instruction->opcode) && !isOpcodeReturn(instruction->opcode) && i >= 0)
+		for(int i = instructionIndex - 1; i >= 0; i--)
 		{
+			struct DisassembledInstruction* instruction = &params->instructions[i];
+			
 			// the actual value of targetReg will be an address of some instruction to jmp to, but this code is just looking for the address of the jmp table and not the value of targetReg
 			if (instruction->opcode == MOV &&
 				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
@@ -256,12 +252,6 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 				}
 
 				return 1;
-			}
-
-			i--;
-			if (i >= 0)
-			{
-				instruction = &params->instructions[i];
 			}
 		}
 	}
