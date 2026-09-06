@@ -3,6 +3,7 @@
 #include "functionCalls.h"
 #include "../disassembler/disassemblyUtils.h"
 #include "intrinsics.h"
+#include "../file-handler/fileHandler.h"
 
 // this is used for name validation and syntax highlighting
 extern const char* keywordStrs[NUM_OF_KEYWORDS] = 
@@ -59,35 +60,67 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
+		unsigned long long address = 0;
 		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
-			*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
 		else
 		{
 			unsigned long long baseRegVal = 0;
 			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
 			{
-				*result = baseRegVal;
+				address = baseRegVal;
 			}
 		}
 
-		*result *= operand->memoryAddress.scale;
+		address *= operand->memoryAddress.scale;
 
 		if (compareRegisters(operand->memoryAddress.regDisplacement, IP))
 		{
-			*result += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
 		else
 		{
 			unsigned long long displacementRegVal = 0;
 			if (regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
 			{
-				*result += displacementRegVal;
+				address += displacementRegVal;
 			}
 		}
 
-		*result += operand->memoryAddress.constDisplacement;
+		address += operand->memoryAddress.constDisplacement;
+
+		if (params->instructions[startInstructionIndex].opcode == LEA) 
+		{
+			*result = address;
+		}
+		else 
+		{
+			struct FileSection* section = 0;
+			unsigned long long fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+
+			if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
+			{
+				return 0;
+			}
+
+			switch (operand->memoryAddress.ptrSize) 
+			{
+			case 1:
+				*result = *(unsigned char*)(params->fileBytes + fileOffset);
+				break;
+			case 2:
+				*result = *(unsigned short*)(params->fileBytes + fileOffset);
+				break;
+			case 4:
+				*result = *(unsigned int*)(params->fileBytes + fileOffset);
+				break;
+			case 8:
+				*result = *(unsigned long long*)(params->fileBytes + fileOffset);
+				break;
+			}
+		}
 
 		return 1;
 	}
