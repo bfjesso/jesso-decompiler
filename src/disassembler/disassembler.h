@@ -15,8 +15,6 @@ extern "C"
 
 	const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction);
 
-	unsigned char checkForControlFlowJump(struct DisassembledInstruction* instruction, unsigned long long* jmpDst, unsigned char* stop);
-
 	unsigned char getJumpTable(struct DisassembledInstruction* instructions, int instructionIndex, struct JumpTable* result);
 
 #ifdef __cplusplus

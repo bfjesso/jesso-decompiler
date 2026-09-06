@@ -212,35 +212,6 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 	return "";
 }
 
-unsigned char checkForControlFlowJump(struct DisassembledInstruction* instruction, unsigned long long* jmpDst, unsigned char* stop)
-{
-	if (!instruction || !jmpDst || !stop)
-	{
-		return 0;
-	}
-	
-	if (isOpcodeReturn(instruction->opcode))
-	{
-		*jmpDst = instruction->address;
-		*stop = 1;
-		return 1;
-	}
-	else if (isOpcodeJmp(instruction->opcode))
-	{
-		*jmpDst = getJmpDst(instruction, 0, -1);
-		*stop = 1;
-		return 1;
-	}
-	else if (isOpcodeJcc(instruction->opcode) || isOpcodeCall(instruction->opcode))
-	{
-		*jmpDst = getJmpDst(instruction, 0, -1);
-		*stop = 0;
-		return 1;
-	}
-
-	return 0;
-}
-
 unsigned char getJumpTable(struct DisassembledInstruction* instructions, int instructionIndex, struct JumpTable* result)
 {
 	struct DisassembledInstruction* jmpInstruction = &instructions[instructionIndex];

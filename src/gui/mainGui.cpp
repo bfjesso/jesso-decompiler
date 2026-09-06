@@ -952,37 +952,39 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			storeInstruction = 0;
 		}
 
-		unsigned long long jmpDst = 0;
-		unsigned char stop = 0;
-		if (checkForControlFlowJump(instructionBuffer, &jmpDst, &stop))
+		if (isOpcodeReturn(instructionBuffer->opcode))
 		{
-			if (jmpDst == 0)
+			return 1;
+		}
+		else if (isOpcodeJmp(instructionBuffer->opcode))
+		{
+			unsigned long long jmpDst = getJmpDst(instructionBuffer, 0, -1);
+			if (jmpDst != 0) 
 			{
-				continue;
-			}
-
-			if (jmpDst != instructionBuffer->address)
-			{
-				if (stop)
+				struct FileSection* section = 0;
+				currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
+				if (!section || section->type != CODE_FST)
 				{
-					struct FileSection* section = 0;
-					currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
-					if (!section || section->type != CODE_FST)
-					{
-						return 1;
-					}
-
-					currentVirtualAddress = jmpDst;
-					storeInstruction = 1;
+					return 1;
 				}
-				else if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
+
+				currentVirtualAddress = jmpDst;
+				storeInstruction = 1;
+			}
+			else 
+			{
+				return 1;
+			}
+		}
+		else if (isOpcodeJcc(instructionBuffer->opcode) || isOpcodeCall(instructionBuffer->opcode))
+		{
+			unsigned long long jmpDst = getJmpDst(instructionBuffer, 0, -1);
+			if (jmpDst != 0)
+			{
+				if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
 				{
 					return 0;
 				}
-			}
-			else if(stop)
-			{
-				return 1;
 			}
 		}
 	}
