@@ -1165,9 +1165,8 @@ unsigned char MainGui::HandleJmpTables()
 				}
 				
 				struct DisassembledInstruction instruction;
-				instruction.isInvalid = 0;
+				memset(&instruction, 0, sizeof(struct DisassembledInstruction));
 				instruction.opcode = DATA;
-				instruction.group1Prefix = NO_PREFIX;
 				instruction.numOfOperands = 1;
 				instruction.operands = (struct Operand*)calloc(1, sizeof(struct Operand));
 				if (!instruction.operands)
