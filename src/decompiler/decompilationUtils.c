@@ -94,7 +94,8 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 
 		address += operand->memoryAddress.constDisplacement;
 
-		if (params->instructions[startInstructionIndex].opcode == LEA) 
+		if (params->instructions[startInstructionIndex].opcode == LEA || 
+			getImportIndexByAddress(params, address) != -1) // the address that I store for imports is the table entry. when decompiling a function call, this table entry address is needed to check for the import
 		{
 			*result = address;
 		}
