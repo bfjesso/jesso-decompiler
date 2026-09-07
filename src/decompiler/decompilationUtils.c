@@ -404,7 +404,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 	if (operandNum == 0)
 	{
-		if (isOpcodeXor(opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
+		if ((isOpcodeXor(opcode) || opcode == SBB) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
@@ -452,7 +452,7 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 			if (overwrites != 0) { *overwrites = 1; }
 			return 1;
 		}
-		else if (isOpcodeXor(opcode))
+		else if (isOpcodeXor(opcode) || opcode == SBB)
 		{
 			if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 			{
