@@ -46,8 +46,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 
 unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites);
 
-unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction);
-
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
 
 unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction);

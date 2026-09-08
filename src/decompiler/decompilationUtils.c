@@ -469,6 +469,70 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg)
 {
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	enum Mnemonic opcode = instruction->opcode;
+	
+	if (isRegisterStatusFlag(reg)) 
+	{
+		switch (opcode) 
+		{
+		case JA_SHORT:
+		case JBE_SHORT:
+		case CMOVA:
+		case CMOVBE:
+		case SETA:
+		case SETBE:
+			return reg == CF || reg == ZF;
+		case JB_SHORT:
+		case JNB_SHORT:
+		case CMOVB:
+		case CMOVNB:
+		case SETB:
+		case SETNB:
+		case SBB:
+			return reg == CF;
+		case JG_SHORT:
+		case JLE_SHORT:
+		case CMOVG:
+		case CMOVLE:
+		case SETG:
+		case SETLE:
+			return reg == ZF || reg == SF;
+		case JGE_SHORT:
+		case JL_SHORT: 
+		case JNS_SHORT:
+		case CMOVGE:
+		case CMOVL:
+		case CMOVNS:
+		case SETL:
+		case SETNS:
+			return reg == SF;
+		case JNO_SHORT:
+		case JO_SHORT:
+		case CMOVNO:
+		case CMOVO:
+		case SETNO:
+		case SETO:
+			return reg == OF;
+		case JNP_SHORT:
+		case JP_SHORT:
+		case CMOVNP:
+		case CMOVP:
+		case SETNP:
+		case SETP:
+			return reg == PF;
+		case JNZ_SHORT:
+		case JZ_SHORT:
+		case CMOVNZ:
+		case CMOVZ:
+		case SETNZ:
+		case SETZ:
+			return reg == ZF;
+		}
+
+		return 0;
+	}
+	
 	struct Function* callee;
 	if (checkForKnownFunctionCall(params, instructionIndex, &callee) && callee)
 	{
@@ -501,7 +565,6 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 		}
 	}
 	
-	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
 		unsigned char overwrites = 0;
@@ -545,6 +608,38 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 {
 	if (specificReg) { *specificReg = NO_REG; }
 	if (overwrites) { *overwrites = 0; }
+
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	enum Mnemonic opcode = instruction->opcode;
+
+	if (isRegisterStatusFlag(reg)) 
+	{
+		if (overwrites) { *overwrites = 1; }
+
+		if (isOpcodeCmp(opcode))
+		{
+			return 1;
+		}
+
+		switch (opcode)
+		{
+		case ADD:
+		case SUB:
+		case SBB:
+		case NEG:
+			return 1;
+		case TEST:
+		case AND:
+		case OR:
+		case XOR:
+			return reg != AF;
+		case BT:
+			return reg == CF;
+		}
+
+		if (overwrites) { *overwrites = 0; }
+		return 0;
+	}
 	
 	struct Function* callee = 0;
 	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
@@ -558,9 +653,6 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		}
 		return 1;
 	}
-
-	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	enum Mnemonic opcode = instruction->opcode;
 
 	if (opcode == POP && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, reg))
 	{
@@ -706,11 +798,6 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 	}
 
 	return 0;
-}
-
-unsigned char doesInstructionModifyZF(struct DisassembledInstruction* instruction)
-{
-	return !isOpcodeMov(instruction->opcode) && instruction->opcode != LEA && doesInstructionModifyOperand(instruction, 0, 0); // this isn't a full check
 }
 
 unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)

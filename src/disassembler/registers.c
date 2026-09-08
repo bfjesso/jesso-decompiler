@@ -34,6 +34,8 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
+
+	"CF", "PF", "AF", "ZF", "SF", "OF",
 };
 
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9
@@ -183,6 +185,11 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 unsigned char isRegisterPointer(enum Register reg) 
 {
 	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
+}
+
+unsigned char isRegisterStatusFlag(enum Register reg)
+{
+	return reg >= CF && reg <= OF;
 }
 
 unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)

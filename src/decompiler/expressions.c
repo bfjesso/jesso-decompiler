@@ -657,7 +657,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int jc
 			addAssociatedInstruction(params->currentFunc, i);
 			return 1;
 		}
-		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyZF(currentInstruction)) 
+		else if ((jcc == JZ_SHORT || jcc == JNZ_SHORT) && doesInstructionModifyRegister(params, i, ZF, 0, 0)) 
 		{
 			struct JdcStr operand1Str = initializeJdcStr();
 			if (!decompileOperand(params, i, 0, 1, &operand1Str))

@@ -5,7 +5,7 @@
 #define NUM_OF_SEGMENTS 7
 
 // this includes NO_REG
-#define NUM_OF_REGISTERS 180
+#define NUM_OF_REGISTERS 186
 
 #define NUM_PLATFORM_REG_ARGS_PE 4
 #define NUM_PLATFORM_REG_ARGS_ELF 6
@@ -46,7 +46,11 @@ enum Register
 	ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7,
 
 	CR0, CR1, CR2, CR3, CR4, CR5, CR6, CR7, CR8, CR9, CR10, CR11, CR12, CR13, CR14, CR15,
-	DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7, DR8, DR9, DR10, DR11, DR12, DR13, DR14, DR15
+	DR0, DR1, DR2, DR3, DR4, DR5, DR6, DR7, DR8, DR9, DR10, DR11, DR12, DR13, DR14, DR15,
+
+	
+	// these are actually the status flag bits in the EFLAGS register, but I am treating them as their own regs
+	CF, PF, AF, ZF, SF, OF,
 };
 
 #ifdef __cplusplus
@@ -71,6 +75,8 @@ const enum Register* getPlatformRegArgs(enum FileFormat fileFormat);
 const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat);
 
 unsigned char isRegisterPointer(enum Register reg);
+
+unsigned char isRegisterStatusFlag(enum Register reg);
 
 unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
 
