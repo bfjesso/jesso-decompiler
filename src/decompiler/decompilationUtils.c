@@ -497,14 +497,18 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 		case CMOVLE:
 		case SETG:
 		case SETLE:
-			return reg == ZF || reg == SF;
+			return reg == ZF || reg == SF || reg == OF;
 		case JGE_SHORT:
 		case JL_SHORT: 
-		case JNS_SHORT:
 		case CMOVGE:
 		case CMOVL:
-		case CMOVNS:
 		case SETL:
+			return reg == SF || reg == OF;
+		case JS_SHORT:
+		case JNS_SHORT:
+		case CMOVS:
+		case CMOVNS:
+		case SETS:
 		case SETNS:
 			return reg == SF;
 		case JNO_SHORT:

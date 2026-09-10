@@ -220,7 +220,7 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 		if ((intrinsic->opcode == STOS && i == 0) || intrinsic->opcode == MOVS)
 		{
 			// the REP STOS/MOVS intrinsics take pointer(s) as arguments, so the reg in the mem address shouldnt be dereferenced
-			if (!decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, &decompiledOperand, 0))
+			if (!decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, 0, &decompiledOperand, 0))
 			{
 				freeJdcStr(&decompiledOperand);
 				return 0;
@@ -244,7 +244,7 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 	if (intrinsic->opcode == _INT)
 	{
 		struct JdcStr code = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &code, 0))
+		if (!decompileRegister(params, instructionIndex, -1, CX, 1, 0, &code, 0))
 		{
 			freeJdcStr(&code);
 			return 0;
@@ -256,7 +256,7 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
 	{
 		struct JdcStr count = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, CX, 1, &count, 0))
+		if (!decompileRegister(params, instructionIndex, -1, CX, 1, 0, &count, 0))
 		{
 			freeJdcStr(&count);
 			return 0;

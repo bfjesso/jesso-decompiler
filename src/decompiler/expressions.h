@@ -13,7 +13,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 
 static unsigned char decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long offsetFromInitSP, struct JdcStr* result);
 
-unsigned char decompileRegister(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, enum Register targetReg, unsigned char defaultToReg, struct JdcStr* result, struct RegisterVariable** regVarRef);
+unsigned char decompileRegister(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, enum Register targetReg, unsigned char defaultToReg, unsigned char notStatusFlag, struct JdcStr* result, struct RegisterVariable** regVarRef);
 
 unsigned char decompileComparison(struct DecompilationParameters* params, int jccIndex, unsigned char invertOperator, struct JdcStr* result);
 

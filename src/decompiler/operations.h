@@ -1,7 +1,7 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront);
+unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result, unsigned char* placeOperatorInfront);
 
 static unsigned char decompileBinaryOperation(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, const char* regularOperator, const char* assignmentOperator, struct JdcStr* result);
 
@@ -16,6 +16,8 @@ static unsigned char decompileNot(struct DecompilationParameters* params, int in
 static unsigned char decompileOr(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
 
 static unsigned char decompileXor(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
+
+static unsigned char decompileBitTest(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result);
 
 static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
 

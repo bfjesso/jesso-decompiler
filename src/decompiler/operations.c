@@ -4,7 +4,7 @@
 #include "intrinsics.h"
 #include "expressions.h"
 
-unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
+unsigned char decompileOperation(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result, unsigned char* placeOperatorInfront)
 {
 	if (placeOperatorInfront) { *placeOperatorInfront = 0; }
 	
@@ -91,6 +91,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	else if (isOpcodeXor(instruction->opcode))
 	{
 		return decompileXor(params, instructionIndex, getAssignment, result);
+	}
+	else if (instruction->opcode == BT)
+	{
+		return decompileBitTest(params, instructionIndex, getAssignment, notStatusFlag, result);
 	}
 	else if (instruction->opcode == BTS)
 	{
@@ -301,6 +305,59 @@ static unsigned char decompileXor(struct DecompilationParameters* params, int in
 	return decompileBinaryOperation(params, instructionIndex, getAssignment, " ^ ", " ^= ", result);
 }
 
+static unsigned char decompileBitTest(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result)
+{
+	struct JdcStr decompiledFirstOperand = initializeJdcStr();
+	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+	{
+		freeJdcStr(&decompiledFirstOperand);
+		return 0;
+	}
+
+	if (getAssignment) 
+	{
+		struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, CF);
+		if (!regVar) 
+		{
+			return 0;
+		}
+
+		sprintfJdc(result, 0, "%s = ", regVar->name.buffer);
+	}
+
+	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
+	if (secondOperand->type == IMMEDIATE)
+	{
+		unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(secondOperand->immediate.value);
+		sprintfJdc(result, 1, "%s & 0x%llX", decompiledFirstOperand.buffer, bitMask);
+	}
+	else
+	{
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, 1, 1, &decompiledSecondOperand))
+		{
+			freeJdcStr(&decompiledSecondOperand);
+			return 0;
+		}
+
+		sprintfJdc(result, 1, "%s & (1 << %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+		freeJdcStr(&decompiledSecondOperand);
+	}
+
+	freeJdcStr(&decompiledFirstOperand);
+
+	if (notStatusFlag)
+	{
+		strcatJdc(result, " == 0");
+	}
+	else
+	{
+		strcatJdc(result, " != 0");
+	}
+
+	return 1;
+}
+
 static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
@@ -482,7 +539,7 @@ static unsigned char decompileFLD(struct DecompilationParameters* params, int in
 	if (getAssignment) 
 	{ 
 		struct JdcStr decompiledST0 = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, ST0, 1, &decompiledST0, 0))
+		if (!decompileRegister(params, instructionIndex, -1, ST0, 1, 0, &decompiledST0, 0))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledST0);
@@ -510,7 +567,7 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 	}
 
 	struct JdcStr decompiledAX = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
+	if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
 	{
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&decompiledAX);
@@ -537,7 +594,7 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 		if (getAssignment)
 		{
 			struct JdcStr decompiledDX = initializeJdcStr();
-			if (!decompileRegister(params, instructionIndex, -1, DX, 1, &decompiledDX, 0))
+			if (!decompileRegister(params, instructionIndex, -1, DX, 1, 0, &decompiledDX, 0))
 			{
 				freeJdcStr(&decompiledAX);
 				freeJdcStr(&decompiledFirstOperand);
@@ -649,7 +706,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 	if (getAssignment)
 	{
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledAX);
 			return 0;
@@ -665,7 +722,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		else if (compareRegisters(targetReg, DX))
 		{
 			struct JdcStr decompiledDX = initializeJdcStr();
-			if (!decompileRegister(params, instructionIndex, -1, DX, 1, &decompiledDX, 0))
+			if (!decompileRegister(params, instructionIndex, -1, DX, 1, 0, &decompiledDX, 0))
 			{
 				freeJdcStr(&decompiledFirstOperand);
 				freeJdcStr(&decompiledAX);
@@ -699,7 +756,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		}
 
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, AX, 1, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledAX);
 			return 0;

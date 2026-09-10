@@ -72,7 +72,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		if (callee->regVars[i].isArgument) 
 		{
 			struct JdcStr argStr = initializeJdcStr();
-			if (!decompileRegister(params, callInstructionIndex, -1, callee->regVars[i].reg, 1, &argStr, 0))
+			if (!decompileRegister(params, callInstructionIndex, -1, callee->regVars[i].reg, 1, 0, &argStr, 0))
 			{
 				freeJdcStr(&argStr);
 				return 0;
@@ -215,7 +215,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	{
 		struct RegisterVariable* regVar = 0;
 		decompiledRegArgs[i] = initializeJdcStr();
-		if (!decompileRegister(params, callInstructionIndex, -1, platformRegArgs[i], 0, &decompiledRegArgs[i], &regVar))
+		if (!decompileRegister(params, callInstructionIndex, -1, platformRegArgs[i], 0, 0, &decompiledRegArgs[i], &regVar))
 		{
 			freeJdcStr(&decompiledRegArgs[i]);
 			break;
