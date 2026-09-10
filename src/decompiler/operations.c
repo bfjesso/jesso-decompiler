@@ -82,7 +82,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 	else if (instruction->opcode == NEG)
 	{
-		return decompileNeg(params, instructionIndex, getAssignment, result, placeOperatorInfront);
+		return decompileNeg(params, instructionIndex, targetReg, getAssignment, result, placeOperatorInfront);
 	}
 	else if (instruction->opcode == NOT)
 	{
@@ -210,7 +210,7 @@ static unsigned char decompileDec(struct DecompilationParameters* params, int in
 	return 1;
 }
 
-static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
+static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
 {
 	if (getAssignment)
 	{
@@ -220,14 +220,46 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 			freeJdcStr(&decompiledFirstOperand);
 			return 0;
 		}
+		
+		if (targetReg == CF) 
+		{
+			struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, CF);
+			if (!regVar)
+			{
+				return 0;
+			}
 
-		sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
+			sprintfJdc(result, 0, "%s = (%s != 0)", regVar->name.buffer, decompiledFirstOperand.buffer);
+		}
+		else
+		{
+			sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
+		}
+
+		
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 
-	if (placeOperatorInfront) { *placeOperatorInfront = 1; }
-	strcpyJdc(result, "-");
+	if (targetReg == CF) 
+	{
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+
+		sprintfJdc(result, 0, "(%s != 0)", decompiledFirstOperand.buffer);
+		freeJdcStr(&decompiledFirstOperand);
+	}
+	else 
+	{
+		if (placeOperatorInfront) { *placeOperatorInfront = 1; }
+		strcpyJdc(result, "-");
+	}
+
+	
 	return 1;
 }
 
@@ -456,15 +488,10 @@ static unsigned char decompileBitReset(struct DecompilationParameters* params, i
 
 static unsigned char decompileSBB(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
 {
-	if (params->instructions[instructionIndex - 1].opcode != NEG) 
+	struct JdcStr decompiledCF = initializeJdcStr();
+	if (!decompileRegister(params, instructionIndex, -1, CF, 1, 0, &decompiledCF, 0))
 	{
-		return 0;
-	}
-
-	struct JdcStr decompiledNegOperand = initializeJdcStr();
-	if (!decompileOperand(params, instructionIndex - 1, 0, 1, &decompiledNegOperand))
-	{
-		freeJdcStr(&decompiledNegOperand);
+		freeJdcStr(&decompiledCF);
 		return 0;
 	}
 	
@@ -477,21 +504,20 @@ static unsigned char decompileSBB(struct DecompilationParameters* params, int in
 			struct JdcStr decompiledFirstOperand = initializeJdcStr();
 			if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 			{
-				freeJdcStr(&decompiledNegOperand);
+				freeJdcStr(&decompiledCF);
 				freeJdcStr(&decompiledFirstOperand);
 				return 0;
 			}
 			
-			sprintfJdc(result, 0, "%s = -(%s != 0)", decompiledFirstOperand.buffer, decompiledNegOperand.buffer);
+			sprintfJdc(result, 0, "%s = -%s", decompiledFirstOperand.buffer, decompiledCF.buffer);
 			freeJdcStr(&decompiledFirstOperand);
-			freeJdcStr(&decompiledNegOperand);
 		}
 		else
 		{
-			sprintfJdc(result, 0, "-(%s != 0)", decompiledNegOperand.buffer);
-			freeJdcStr(&decompiledNegOperand);
+			sprintfJdc(result, 0, "-%s", decompiledCF.buffer);
 		}
 
+		freeJdcStr(&decompiledCF);
 		return 1;
 	}
 
@@ -499,7 +525,7 @@ static unsigned char decompileSBB(struct DecompilationParameters* params, int in
 	if (!decompileOperand(params, instructionIndex, 1, 1, &decompiledSecondOperand))
 	{
 		freeJdcStr(&decompiledSecondOperand);
-		freeJdcStr(&decompiledNegOperand);
+		freeJdcStr(&decompiledCF);
 		return 0;
 	}
 
@@ -510,20 +536,20 @@ static unsigned char decompileSBB(struct DecompilationParameters* params, int in
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledSecondOperand);
-			freeJdcStr(&decompiledNegOperand);
+			freeJdcStr(&decompiledCF);
 			return 0;
 		}
 		
-		sprintfJdc(result, 0, "%s -= (%s + (%s != 0))", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledNegOperand.buffer);
+		sprintfJdc(result, 0, "%s -= (%s + %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
 		freeJdcStr(&decompiledFirstOperand);
 	}
 	else 
 	{
-		sprintfJdc(result, 0, " - (%s + (%s != 0))", decompiledSecondOperand.buffer, decompiledNegOperand.buffer);
+		sprintfJdc(result, 0, " - (%s + %s)", decompiledSecondOperand.buffer, decompiledCF.buffer);
 	}
 
 	freeJdcStr(&decompiledSecondOperand);
-	freeJdcStr(&decompiledNegOperand);
+	freeJdcStr(&decompiledCF);
 	return 1;
 }
 
