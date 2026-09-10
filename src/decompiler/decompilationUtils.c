@@ -638,6 +638,8 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		case XOR:
 			return reg != AF;
 		case BT:
+		case BTS:
+		case BTR:
 			return reg == CF;
 		}
 

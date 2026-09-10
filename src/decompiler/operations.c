@@ -98,11 +98,11 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 	else if (instruction->opcode == BTS)
 	{
-		return decompileBitSet(params, instructionIndex, getAssignment, result);
+		return decompileBitSet(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result);
 	}
 	else if (instruction->opcode == BTR)
 	{
-		return decompileBitReset(params, instructionIndex, getAssignment, result);
+		return decompileBitReset(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result);
 	}
 	else if (instruction->opcode == SBB)
 	{
@@ -390,8 +390,13 @@ static unsigned char decompileBitTest(struct DecompilationParameters* params, in
 	return 1;
 }
 
-static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+static unsigned char decompileBitSet(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result)
 {
+	if (targetReg == CF) 
+	{
+		return decompileBitTest(params, instructionIndex, getAssignment, notStatusFlag, result);
+	}
+	
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 	{
@@ -438,8 +443,13 @@ static unsigned char decompileBitSet(struct DecompilationParameters* params, int
 	return 1;
 }
 
-static unsigned char decompileBitReset(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+static unsigned char decompileBitReset(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result)
 {
+	if (targetReg == CF)
+	{
+		return decompileBitTest(params, instructionIndex, getAssignment, notStatusFlag, result);
+	}
+	
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 	{
