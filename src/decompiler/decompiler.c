@@ -423,54 +423,57 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		}
 	}
 
-	// if a reg is set to a regVar, and then that regVar changes before the reg is accessed, the reg needs to also be a regVar
+	// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
-
-		if (currentInstruction->numOfOperands == 2 && 
-			currentInstruction->operands[0].type == REGISTER && 
-			!isRegisterPointer(currentInstruction->operands[0].reg) && doesInstructionModifyOperand(currentInstruction, 0, 0))
+		for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
 		{
-			enum Register reg = currentInstruction->operands[0].reg;
-			if (getLocalRegVarByReg(params->currentFunc, reg)) 
+			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
+			if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
+				!doesInstructionModifyRegister(params, i, modifiedReg, 0, 0))
 			{
 				continue;
 			}
 
-			struct RegisterVariable* regVar = 0;
-			if (currentInstruction->operands[1].type == REGISTER)
+			for (int accessedReg = RAX; accessedReg < ST0; accessedReg++)
 			{
-				regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].reg);
-			}
-			else if (currentInstruction->operands[1].type == MEM_ADDRESS)
-			{
-				regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.reg);
-				if (!regVar) 
+				struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
+				if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP || 
+					!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(accessedRegVar, i, 1))
 				{
-					regVar = getLocalRegVarByReg(params->currentFunc, currentInstruction->operands[1].memoryAddress.regDisplacement);
+					continue;
 				}
-			}
 
-			if (regVar) 
-			{
 				for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 				{
-					unsigned char overwrites = 0;
-					if (doesInstructionModifyRegister(params, j, reg, 0, &overwrites) && overwrites) 
+					if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
 					{
 						break;
 					}
 					
-					if (doesInstructionModifyRegister(params, j, regVar->reg, 0, 0) && currentInstruction->numOfOperands > 0)
+					unsigned char overwrites = 0;
+					if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
 					{
-						if (!addRegVar(params, 0, 0, reg))
+						break;
+					}
+
+					if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0))
+					{
+						if (!modifiedRegVar) 
 						{
-							return 0;
+							if (!addRegVar(params, 0, 0, modifiedReg))
+							{
+								return 0;
+							}
+
+							struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+							addRegVarScope(newRegVar, i, j);
+						}
+						else 
+						{
+							addRegVarScope(modifiedRegVar, i, j);
 						}
 
-						struct RegisterVariable* regVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-						addRegVarScope(regVar, i, j);
 						break;
 					}
 				}
