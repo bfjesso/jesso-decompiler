@@ -439,7 +439,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 			{
 				struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
 				if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP || 
-					!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(accessedRegVar, i, 1))
+					!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(params, accessedRegVar, i))
 				{
 					continue;
 				}
@@ -599,7 +599,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 
 			addIndents(result, 1);
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
-			if (regArg && checkRegVarScope(localRegVar, params->currentFunc->firstInstructionIndex, 1))
+			if (regArg && checkRegVarScope(params, localRegVar, params->currentFunc->firstInstructionIndex))
 			{
 				if (!compareDataTypes(localRegVar->dataType, regArg->dataType))
 				{

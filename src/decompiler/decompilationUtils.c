@@ -1022,11 +1022,16 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	return 1;
 }
 
-unsigned char checkRegVarScope(struct RegisterVariable* regVar, int instructionIndex, unsigned char isRegDst)
+unsigned char checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex)
 {
+	// the scope startIndex is when the reg is initialized, so the reg var needs to be decompiled when it is the dst but not as a src
+	// the scope endIndex is when the reg is overwritten, so as a src it still needs to be the reg var
+	unsigned char isRegOverwritten = 0;
+	doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, &isRegOverwritten);
+	
 	for (int i = 0; i < regVar->numOfScopes; i++)
 	{
-		if (isRegDst)
+		if (isRegOverwritten)
 		{
 			if (instructionIndex >= regVar->scopes[i].startIndex && instructionIndex < regVar->scopes[i].endIndex)
 			{

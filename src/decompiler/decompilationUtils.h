@@ -56,4 +56,4 @@ unsigned char compareOperands(struct Operand* op1, struct Operand* op2);
 
 unsigned char getSizeOfOperand(struct Operand* operand);
 
-unsigned char checkRegVarScope(struct RegisterVariable* regVar, int instructionIndex, unsigned char isRegDst);
+unsigned char checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex);

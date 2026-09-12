@@ -51,7 +51,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
-			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg) && checkRegVarScope(regVar, callInstructionIndex, 1))
+			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
 				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
 				isReturnRegLocalVar = 1;
@@ -191,7 +191,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
-			if (!regVar->isArgument && compareRegisters(regVar->reg, AX) && checkRegVarScope(regVar, callInstructionIndex, 1))
+			if (!regVar->isArgument && compareRegisters(regVar->reg, AX) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
 				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
 				isReturnRegLocalVar = 1;
