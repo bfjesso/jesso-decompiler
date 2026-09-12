@@ -360,25 +360,6 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		}
 	}
 
-	// regs/segs that arent variables/arguments
-	for (int i = 0; i < NUM_OF_REGISTERS; i++)
-	{
-		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
-	}
-	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
-	{
-		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
-	}
-	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, 0);
-	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, 0);
-
-	// numbers
-	const char* numberChars[17] = { "0x", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
-	for (int i = 0; i < 17; i++)
-	{
-		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
-	}
-
 	// functions
 	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
@@ -410,6 +391,53 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		{
 			break;
 		}
+	}
+
+	// hex numbers (these need to be forced due to conflicts with some reg names)
+	start = 0;
+	while (start < text.length())
+	{
+		int num = text.find("0x", start);
+		if (num != wxNOT_FOUND)
+		{
+			int end = text.length();
+			for (int i = num + 2; i < end; i++)
+			{
+				if ((text[i] < '0' || text[i] > '9') && (text[i] < 'A' || text[i] > 'F'))
+				{
+					end = i;
+					break;
+				}
+			}
+
+			StartStyling(num);
+			SetStyling(end - num, NUMBER_DECOMP_COLOR);
+
+			start = end + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// regs/segs that arent variables/arguments
+	for (int i = 0; i < NUM_OF_REGISTERS; i++)
+	{
+		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
+	}
+	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
+	{
+		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
+	}
+	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, 0);
+	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, 0);
+
+	// decimal numbers
+	const char* numberChars[10] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+	for (int i = 0; i < 10; i++)
+	{
+		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
 	}
 }
 
