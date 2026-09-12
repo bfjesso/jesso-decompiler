@@ -64,7 +64,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		{
 			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
-		else
+		else if(operand->memoryAddress.reg != NO_REG)
 		{
 			unsigned long long baseRegVal = 0;
 			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
