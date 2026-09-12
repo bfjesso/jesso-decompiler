@@ -493,7 +493,7 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 
 			unsigned short offsetDif = (unsigned short)(var2->offsetFromInitSP - var1->offsetFromInitSP);
 			unsigned char primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
-			if (offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
+			if (!var1->isArgument && offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
 			{
 				if (offsetDif % primitiveTypeSize == 0) 
 				{
