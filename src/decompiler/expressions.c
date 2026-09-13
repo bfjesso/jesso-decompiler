@@ -348,7 +348,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			}
 
 			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
-			if (!compareDataTypes(targetType, localRegVar->dataType))
+			if (!compareDataTypes(targetType, localRegVar->dataType) && 
+				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
 				dataTypeToStr(targetType, &targetTypeStr);
