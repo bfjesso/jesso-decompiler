@@ -211,7 +211,7 @@ unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileForma
 
 unsigned char getSizeOfRegister(enum Register reg) // in bytes
 {
-	if (reg >= AL && reg <= R15B) 
+	if ((reg >= AL && reg <= R15B) || isRegisterStatusFlag(reg)) // the status flags are actually single bits in the EFLAGS reg
 	{
 		return 1;
 	}
