@@ -5,9 +5,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 
 static unsigned char decompileBinaryOperation(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, const char* regularOperator, const char* assignmentOperator, struct JdcStr* result);
 
-static unsigned char decompileInc(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
-
-static unsigned char decompileDec(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result);
+static unsigned char decompileIncDec(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result);
 
 static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront);
 

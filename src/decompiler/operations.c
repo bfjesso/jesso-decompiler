@@ -72,13 +72,9 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, "(float)", " = (float)", result);
 	}
-	else if (instruction->opcode == INC)
+	else if (instruction->opcode == INC || instruction->opcode == DEC)
 	{
-		return decompileInc(params, instructionIndex, getAssignment, result);
-	}
-	else if (instruction->opcode == DEC)
-	{
-		return decompileDec(params, instructionIndex, getAssignment, result);
+		return decompileIncDec(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result);
 	}
 	else if (instruction->opcode == NEG)
 	{
@@ -170,28 +166,9 @@ static unsigned char decompileBinaryOperation(struct DecompilationParameters* pa
 	return 1;
 }
 
-static unsigned char decompileInc(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
+static unsigned char decompileIncDec(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result)
 {
-	if (getAssignment) 
-	{ 
-		struct JdcStr decompiledFirstOperand = initializeJdcStr();
-		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
-		{
-			freeJdcStr(&decompiledFirstOperand);
-			return 0;
-		}
-
-		sprintfJdc(result, 0, "%s++", decompiledFirstOperand.buffer); 
-		freeJdcStr(&decompiledFirstOperand);
-		return 1;
-	}
-
-	strcpyJdc(result, " + 1");
-	return 1;
-}
-
-static unsigned char decompileDec(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result)
-{
+	unsigned char isInc = params->instructions[instructionIndex].opcode == INC;
 	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
@@ -201,12 +178,39 @@ static unsigned char decompileDec(struct DecompilationParameters* params, int in
 			return 0;
 		}
 
-		sprintfJdc(result, 0, "%s--", decompiledFirstOperand.buffer);
+		if (targetReg == ZF) 
+		{
+			struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, ZF);
+			if (!regVar) 
+			{
+				return 0;
+			}
+
+			sprintfJdc(result, 0, "%s = %s %s 0", regVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
+			freeJdcStr(&decompiledFirstOperand);
+			return 1;
+		}
+
+		sprintfJdc(result, 0, "%s%s", decompiledFirstOperand.buffer, isInc ? "++" : "--");
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
 	}
 
-	strcpyJdc(result, " - 1");
+	if (targetReg == ZF) 
+	{
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return 0;
+		}
+
+		sprintfJdc(result, 0, "%s %s 0",  decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
+		freeJdcStr(&decompiledFirstOperand);
+		return 1;
+	}
+
+	sprintfJdc(result, 0, " %s 1", isInc ? "+" : "-");
 	return 1;
 }
 

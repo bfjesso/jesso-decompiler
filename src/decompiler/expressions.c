@@ -385,7 +385,8 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		}
 
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
-		if (condition)
+		if (condition && 
+			(i != instructionIndex - 1 || condition->conditionType != DO_WHILE_CT)) // this is if decompileReg is called from decompileComparison
 		{
 			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;

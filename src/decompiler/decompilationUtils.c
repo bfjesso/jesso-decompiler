@@ -641,6 +641,9 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		case BTS:
 		case BTR:
 			return reg == CF;
+		case INC:
+		case DEC:
+			return reg != CF;
 		}
 
 		if (overwrites) { *overwrites = 0; }
