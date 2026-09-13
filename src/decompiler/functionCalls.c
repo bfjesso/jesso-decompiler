@@ -41,6 +41,11 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params, int callInstructionIndex, struct Function* callee, struct JdcStr* result)
 {
 	struct DisassembledInstruction* callInstruction = &(params->instructions[callInstructionIndex]);
+	if (!isOpcodeCall(callInstruction->opcode) && !isOpcodeJmp(callInstruction->opcode)) 
+	{
+		// this is when the called function is just the next instruction
+		callInstructionIndex++; // this instruction could pass an argument so callInstructionIndex needs to incremented
+	}
 
 	addIndents(result, params->numOfIndents);
 
