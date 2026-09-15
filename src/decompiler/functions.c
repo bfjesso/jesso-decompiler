@@ -989,6 +989,11 @@ unsigned char addReturnedVar(struct Function* function, struct DataType dataType
 
 unsigned char addAssociatedInstruction(struct Function* function, int instructionIndex)
 {
+	if (instructionIndex == -1) 
+	{
+		return 1;
+	}
+	
 	if (function->numOfLines >= function->associatedInstructionsBufferLen) 
 	{
 		int ogBufferLen = function->associatedInstructionsBufferLen;

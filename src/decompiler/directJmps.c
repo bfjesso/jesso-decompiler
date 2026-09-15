@@ -129,36 +129,31 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 	{
 		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
 		{
-			addIndents(result, params->numOfIndents - 1);
-			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			params->numOfIndents--;
+			addDecompiledLine(params, result, instructionIndex, "label_%llX:", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
+			params->numOfIndents++;
 			return 1;
 		}
 		else if (instructionIndex == params->currentFunc->directJmps[i].jmpIndex)
 		{
-			addIndents(result, params->numOfIndents);
-
 			switch (params->currentFunc->directJmps[i].type)
 			{
 			case GO_TO_DJT:
-				sprintfJdc(result, 1, "goto label_%llX;\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
+				addDecompiledLine(params, result, instructionIndex, "goto label_%llX;", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
 				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 				break;
 			case CONTINUE_DJT:
-				sprintfJdc(result, 1, "continue;\n");
+				addDecompiledLine(params, result, instructionIndex, "continue;");
 				break;
 			case BREAK_DJT:
-				sprintfJdc(result, 1, "break;\n");
+				addDecompiledLine(params, result, instructionIndex, "break;");
 				break;
 			case JUMP_TO_DJT:
-				sprintfJdc(result, 1, "jumpTo(0x%llX);\n", params->instructions[params->currentFunc->directJmps[i].dstIndex].address);
+				addDecompiledLine(params, result, instructionIndex, "jumpTo(0x%llX);", params->instructions[params->currentFunc->directJmps[i].dstIndex].address);
 				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 				break;
 			}
 
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
 			return 1;
 		}
 	}
@@ -168,10 +163,9 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
 		{
-			addIndents(result, params->numOfIndents - 1);
-			sprintfJdc(result, 1, "label_%llX:\n", params->instructions[condition->dstIndex].address - params->imageBase);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			params->numOfIndents--;
+			addDecompiledLine(params, result, instructionIndex, "label_%llX:", params->instructions[condition->dstIndex].address - params->imageBase);
+			params->numOfIndents++;
 			break;
 		}
 	}

@@ -165,10 +165,7 @@ static unsigned char decompileBinaryOperation(struct DecompilationParameters* pa
 			return 0;
 		}
 
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s%s%s;\n", decompiledFirstOperand.buffer, assignmentOperator, decompiledSecondOperand.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s%s%s;", decompiledFirstOperand.buffer, assignmentOperator, decompiledSecondOperand.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&decompiledSecondOperand);
@@ -194,19 +191,13 @@ static unsigned char decompileIncDec(struct DecompilationParameters* params, int
 
 		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s%s;\n", decompiledFirstOperand.buffer, isInc ? "++" : "--");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s%s;", decompiledFirstOperand.buffer, isInc ? "++" : "--");
 		}
 
 		struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
 		if (zfVar)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = %s %s 0;\n", zfVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = %s %s 0;", zfVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
 		}
 
 		freeJdcStr(&decompiledFirstOperand);
@@ -245,18 +236,12 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
 		if (cfVar)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = (%s != 0);\n", cfVar->name.buffer, decompiledFirstOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = (%s != 0);", cfVar->name.buffer, decompiledFirstOperand.buffer);
 		}
 
 		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = -%s;\n", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = -%s;", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
 		}
 		
 		freeJdcStr(&decompiledFirstOperand);
@@ -296,10 +281,7 @@ static unsigned char decompileNot(struct DecompilationParameters* params, int in
 			return 0;
 		}
 
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s = ~%s;\n", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s = ~%s;", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
@@ -324,10 +306,7 @@ static unsigned char decompileOr(struct DecompilationParameters* params, int ins
 				return 0;
 			}
 			
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = 0x%llX;\n", decompiledFirstOperand.buffer, secondOperand->immediate.value);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = 0x%llX;", decompiledFirstOperand.buffer, secondOperand->immediate.value);
 
 			freeJdcStr(&decompiledFirstOperand);
 			return 1;
@@ -355,10 +334,7 @@ static unsigned char decompileXor(struct DecompilationParameters* params, int in
 				return 0;
 			}
 			
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = 0;\n", decompiledFirstOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = 0;", decompiledFirstOperand.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 			return 1;
@@ -380,22 +356,13 @@ static unsigned char decompileBitTest(struct DecompilationParameters* params, in
 		return 0;
 	}
 
-	if (getAssignment)
-	{
-		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
-		if (!cfVar)
-		{
-			return 0;
-		}
-
-		sprintfJdc(result, 1, "%s = ", cfVar->name.buffer);
-	}
+	struct JdcStr expression = initializeJdcStr();
 
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
 	if (secondOperand->type == IMMEDIATE)
 	{
 		unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(secondOperand->immediate.value);
-		sprintfJdc(result, 1, "%s & 0x%llX", decompiledFirstOperand.buffer, bitMask);
+		sprintfJdc(&expression, 0, "%s & 0x%llX", decompiledFirstOperand.buffer, bitMask);
 	}
 	else
 	{
@@ -406,7 +373,7 @@ static unsigned char decompileBitTest(struct DecompilationParameters* params, in
 			return 0;
 		}
 
-		sprintfJdc(result, 1, "%s & (1 << %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+		sprintfJdc(&expression, 0, "%s & (1 << %s)", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		freeJdcStr(&decompiledSecondOperand);
 	}
 
@@ -414,21 +381,29 @@ static unsigned char decompileBitTest(struct DecompilationParameters* params, in
 
 	if (notStatusFlag)
 	{
-		strcatJdc(result, " == 0");
+		strcatJdc(&expression, " == 0");
 	}
 	else
 	{
-		strcatJdc(result, " != 0");
+		strcatJdc(&expression, " != 0");
 	}
 
 	if (getAssignment) 
 	{
-		addIndents(result, params->numOfIndents);
-		strcatJdc(result, ";\n");
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+		if (!cfVar)
+		{
+			return 0;
+		}
+
+		addDecompiledLine(params, result, instructionIndex, "%s = %s;", cfVar->name.buffer, expression.buffer);
+	}
+	else 
+	{
+		strcatJdc(result, expression.buffer);
 	}
 
+	freeJdcStr(&expression);
 	return 1;
 }
 
@@ -456,10 +431,7 @@ static unsigned char decompileBitSet(struct DecompilationParameters* params, int
 		unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(secondOperand->immediate.value);
 		if (getAssignment) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s |= 0x%llX;\n", decompiledFirstOperand.buffer, bitMask);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s |= 0x%llX;", decompiledFirstOperand.buffer, bitMask);
 		}
 		else 
 		{
@@ -478,10 +450,7 @@ static unsigned char decompileBitSet(struct DecompilationParameters* params, int
 
 		if (getAssignment) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s |= (1 << %s);\n", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s |= (1 << %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
 		else 
 		{
@@ -519,10 +488,7 @@ static unsigned char decompileBitReset(struct DecompilationParameters* params, i
 		unsigned long long bitMask = (unsigned long long)(1) << (unsigned char)(secondOperand->immediate.value);
 		if (getAssignment)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s &= ~0x%llX;\n", decompiledFirstOperand.buffer, bitMask);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s &= ~0x%llX;", decompiledFirstOperand.buffer, bitMask);
 		}
 		else
 		{
@@ -541,10 +507,7 @@ static unsigned char decompileBitReset(struct DecompilationParameters* params, i
 
 		if (getAssignment)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s &= ~(1 << %s);\n", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s &= ~(1 << %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
 		else
 		{
@@ -581,10 +544,7 @@ static unsigned char decompileSBB(struct DecompilationParameters* params, int in
 				return 0;
 			}
 			
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = -%s;\n", decompiledFirstOperand.buffer, decompiledCF.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = -%s;", decompiledFirstOperand.buffer, decompiledCF.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 		}
@@ -616,10 +576,7 @@ static unsigned char decompileSBB(struct DecompilationParameters* params, int in
 			return 0;
 		}
 		
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s -= (%s + %s);\n", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s -= (%s + %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 	}
@@ -652,10 +609,7 @@ static unsigned char decompileFLD(struct DecompilationParameters* params, int in
 			return 0;
 		}
 		
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s = %s;\n", decompiledST0.buffer, decompiledFirstOperand.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledST0.buffer, decompiledFirstOperand.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&decompiledST0);
@@ -681,10 +635,7 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
 		if (axVar) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s /= %s;\n", axVar->name.buffer, decompiledFirstOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s /= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
 
 		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX);
@@ -697,11 +648,8 @@ static unsigned char decompileIDIV(struct DecompilationParameters* params, int i
 				freeJdcStr(&decompiledAX);
 				return 0;
 			}
-			
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = %s %% %s;\n", dxVar->name.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+
+			addDecompiledLine(params, result, instructionIndex, "%s = %s %% %s;", dxVar->name.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer);
 
 			freeJdcStr(&decompiledAX);
 		}
@@ -764,10 +712,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 
 			if (compareOperands(firstOperand, secondOperand))
 			{
-				addIndents(result, params->numOfIndents);
-				sprintfJdc(result, 1, "%s *= %s;\n", decompiledFirstOperand.buffer, decompiledThirdOperand.buffer);
-				addAssociatedInstruction(params->currentFunc, instructionIndex);
-				params->currentFunc->numOfLines++;
+				addDecompiledLine(params, result, instructionIndex, "%s *= %s;", decompiledFirstOperand.buffer, decompiledThirdOperand.buffer);
 
 				freeJdcStr(&decompiledThirdOperand);
 				freeJdcStr(&decompiledFirstOperand);
@@ -783,10 +728,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 				return 0;
 			}
 
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = (%s * %s);\n", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledThirdOperand.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = (%s * %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledThirdOperand.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledSecondOperand);
@@ -833,9 +775,7 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
 		if (axVar)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s *= %s;\n", axVar->name.buffer, decompiledFirstOperand.buffer);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s *= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
 		
 		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX);
@@ -849,13 +789,9 @@ static unsigned char decompileIMUL(struct DecompilationParameters* params, int i
 				return 0;
 			}
 			
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = %s >> %d;\n", dxVar->name.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, 8 * getSizeOfOperand(firstOperand));
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = %s >> %d;", dxVar->name.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, 8 * getSizeOfOperand(firstOperand));
 
 			freeJdcStr(&decompiledAX);
-			
 		}
 
 		freeJdcStr(&decompiledFirstOperand);
@@ -918,10 +854,7 @@ static unsigned char decompileCMOVcc(struct DecompilationParameters* params, int
 
 	if (getAssignment) 
 	{ 
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s = (%s ? %s : %s);\n", decompiledFirstOperand.buffer, comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s = (%s ? %s : %s);", decompiledFirstOperand.buffer, comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
 	}
 	else 
 	{
@@ -953,10 +886,7 @@ static unsigned char decompileSETcc(struct DecompilationParameters* params, int 
 			return 0;
 		}
 
-		addIndents(result, params->numOfIndents);
-		sprintfJdc(result, 1, "%s = %s;\n", decompiledFirstOperand.buffer, comparisonStr.buffer); 
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
+		addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, comparisonStr.buffer);
 
 		freeJdcStr(&comparisonStr);
 		freeJdcStr(&decompiledFirstOperand);
@@ -1022,10 +952,7 @@ static unsigned char decompilePop(struct DecompilationParameters* params, int in
 
 		if (gotValue) 
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = %s;\n", decompiledFirstOperand.buffer, value.buffer);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, value.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&value);
@@ -1033,10 +960,7 @@ static unsigned char decompilePop(struct DecompilationParameters* params, int in
 		}
 		else if (firstOperand->type == REGISTER)
 		{
-			addIndents(result, params->numOfIndents);
-			sprintfJdc(result, 1, "%s = %s;\n", decompiledFirstOperand.buffer, registerStrs[firstOperand->reg]);
-			addAssociatedInstruction(params->currentFunc, instructionIndex);
-			params->currentFunc->numOfLines++;
+			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, registerStrs[firstOperand->reg]);
 
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&value);
@@ -1086,18 +1010,14 @@ static unsigned char decompileXCHG(struct DecompilationParameters* params, int i
 			return 0;
 		}
 		
-		addIndents(result, params->numOfIndents);
 		if ((firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg)) || firstOperand->type == MEM_ADDRESS)
 		{
-			sprintfJdc(result, 1, "%s = %s;\n", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
 		else 
 		{
-			sprintfJdc(result, 1, "%s = %s;\n", decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
+			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
 		}
-
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
 
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&decompiledSecondOperand);

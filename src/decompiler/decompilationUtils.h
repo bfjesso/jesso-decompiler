@@ -32,7 +32,7 @@ extern "C"
 }
 #endif
 
-void addIndents(struct JdcStr* result, int numOfIndents);
+unsigned char addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...);
 
 static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 

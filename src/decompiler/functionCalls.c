@@ -47,7 +47,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		callInstructionIndex++; // this instruction could pass an argument so callInstructionIndex needs to incremented
 	}
 
-	addIndents(result, params->numOfIndents);
+	struct JdcStr decompiledCall = initializeJdcStr();
 
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
@@ -58,7 +58,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
 			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
-				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
+				sprintfJdc(&decompiledCall, 0, "%s = ", regVar->name.buffer);
 				isReturnRegLocalVar = 1;
 				break;
 			}
@@ -66,11 +66,11 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		
 		if(!isReturnRegLocalVar)
 		{
-			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+			sprintfJdc(&decompiledCall, 0, "%s = ", returnedVar->name.buffer);
 		}
 	}
 
-	sprintfJdc(result, 1, "%s(", callee->name.buffer);
+	sprintfJdc(&decompiledCall, 1, "%s(", callee->name.buffer);
 
 	for (int i = 0; i < callee->numOfRegVars; i++)
 	{
@@ -83,7 +83,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 				return 0;
 			}
 
-			sprintfJdc(result, 1, "%s, ", argStr.buffer);
+			sprintfJdc(&decompiledCall, 1, "%s, ", argStr.buffer);
 			freeJdcStr(&argStr);
 		}
 	}
@@ -101,11 +101,11 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 				dataTypeToStr(callee->stackVars[i].dataType, &dataTypeStr);
 				if (callee->stackVars[i].dataType.pointerLevel > 0) 
 				{
-					sprintfJdc(result, 1, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+					sprintfJdc(&decompiledCall, 1, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
 				}
 				else
 				{
-					sprintfJdc(result, 1, "*(%s*)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+					sprintfJdc(&decompiledCall, 1, "*(%s*)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
 				}
 
 				freeJdcStr(&spStr);
@@ -117,10 +117,10 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 			{
 				if (callee->stackVars[i].dataType.pointerLevel > 0 && stackArgContainer->dataType.pointerLevel == 0) 
 				{
-					strcatJdc(result, "&");
+					strcatJdc(&decompiledCall, "&");
 				}
 
-				sprintfJdc(result, 1, "%s, ", stackArgContainer->name.buffer);
+				sprintfJdc(&decompiledCall, 1, "%s, ", stackArgContainer->name.buffer);
 			}
 			else if (pushInstructionIndex != -1)
 			{
@@ -133,7 +133,7 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 					return 0;
 				}
 
-				sprintfJdc(result, 1, "%s, ", argStr.buffer);
+				sprintfJdc(&decompiledCall, 1, "%s, ", argStr.buffer);
 				freeJdcStr(&argStr);
 			}
 			else
@@ -143,20 +143,18 @@ unsigned char decompileKnownFunctionCall(struct DecompilationParameters* params,
 		}
 	}
 
-	if (result->buffer[strlen(result->buffer)-1] != '(')
+	if (decompiledCall.buffer[strlen(decompiledCall.buffer)-1] != '(')
 	{
-		result->buffer[strlen(result->buffer) - 2] = ')';
-		result->buffer[strlen(result->buffer) - 1] = 0;
+		decompiledCall.buffer[strlen(decompiledCall.buffer) - 2] = ')';
+		decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] = 0;
 	}
 	else
 	{
-		strcatJdc(result, ")");
+		strcatJdc(&decompiledCall, ")");
 	}
 
-	strcatJdc(result, ";\n");
-	addAssociatedInstruction(params->currentFunc, callInstructionIndex);
-	params->currentFunc->numOfLines++;
-
+	addDecompiledLine(params, result, callInstructionIndex, "%s;", decompiledCall.buffer);
+	freeJdcStr(&decompiledCall);
 	return 1;
 }
 
@@ -187,7 +185,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	struct DisassembledInstruction* callInstruction = &(params->instructions[callInstructionIndex]);
 	unsigned long long unknownFuncAddress = resolveJmpChain(params, callInstructionIndex);
 
-	addIndents(result, params->numOfIndents);
+	struct JdcStr decompiledCall = initializeJdcStr();
 
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
@@ -198,7 +196,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
 			if (!regVar->isArgument && compareRegisters(regVar->reg, AX) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
-				sprintfJdc(result, 1, "%s = ", regVar->name.buffer);
+				sprintfJdc(&decompiledCall, 0, "%s = ", regVar->name.buffer);
 				isReturnRegLocalVar = 1;
 				break;
 			}
@@ -206,7 +204,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 		if (!isReturnRegLocalVar)
 		{
-			sprintfJdc(result, 1, "%s = ", returnedVar->name.buffer);
+			sprintfJdc(&decompiledCall, 0, "%s = ", returnedVar->name.buffer);
 		}
 	}
 
@@ -289,11 +287,11 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 	int importIndex = getImportIndexByAddress(params, unknownFuncAddress);
 	if (importIndex != -1) 
 	{
-		sprintfJdc(result, 1, "%s(", params->imports[importIndex].name.buffer);
+		sprintfJdc(&decompiledCall, 1, "%s(", params->imports[importIndex].name.buffer);
 	}
 	else // func ptr
 	{
-		strcatJdc(result, "((");
+		strcatJdc(&decompiledCall, "((");
 
 		if (returnedVar != 0) 
 		{
@@ -304,35 +302,35 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		}
 		else 
 		{
-			strcatJdc(result, "void");
+			strcatJdc(&decompiledCall, "void");
 		}
 
-		strcatJdc(result, " (*)("); // calling convention should go here
+		strcatJdc(&decompiledCall, " (*)("); // calling convention should go here
 
 		for (int i = 0; i < numOfPlatformRegArgs; i++)
 		{
 			if (regArgTypeStrs[i].buffer)
 			{
-				sprintfJdc(result, 1, "%s, ", regArgTypeStrs[i].buffer);
+				sprintfJdc(&decompiledCall, 1, "%s, ", regArgTypeStrs[i].buffer);
 			}
 		}
 
 		for (int i = 0; i < numOfStackArgs; i++)
 		{
-			sprintfJdc(result, 1, "%s, ", stackArgTypeStrs[i].buffer);
+			sprintfJdc(&decompiledCall, 1, "%s, ", stackArgTypeStrs[i].buffer);
 		}
 
-		if (result->buffer[strlen(result->buffer) - 1] != '(')
+		if (decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] != '(')
 		{
-			result->buffer[strlen(result->buffer) - 2] = ')'; // removing the last comma
-			result->buffer[strlen(result->buffer) - 1] = 0;
+			decompiledCall.buffer[strlen(decompiledCall.buffer) - 2] = ')'; // removing the last comma
+			decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] = 0;
 		}
 		else
 		{
-			strcatJdc(result, ")");
+			strcatJdc(&decompiledCall, ")");
 		}
 
-		strcatJdc(result, ")");
+		strcatJdc(&decompiledCall, ")");
 
 		struct JdcStr functionPointer = initializeJdcStr();
 		if (!decompileOperand(params, callInstructionIndex, 0, 1, &functionPointer))
@@ -352,23 +350,23 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE) 
 		{
-			sprintfJdc(result, 1, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
+			sprintfJdc(&decompiledCall, 1, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
 		}
 		else 
 		{
-			sprintfJdc(result, 1, "(%s)", functionPointer.buffer);
+			sprintfJdc(&decompiledCall, 1, "(%s)", functionPointer.buffer);
 		}
 		
 		freeJdcStr(&functionPointer);
 
-		strcatJdc(result, ")(");
+		strcatJdc(&decompiledCall, ")(");
 	}
 
 	for(int i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		if(decompiledRegArgs[i].buffer)
 		{
-			sprintfJdc(result, 1, "%s, ", decompiledRegArgs[i].buffer);
+			sprintfJdc(&decompiledCall, 1, "%s, ", decompiledRegArgs[i].buffer);
 			freeJdcStr(&regArgTypeStrs[i]);
 			freeJdcStr(&decompiledRegArgs[i]);
 		}
@@ -376,25 +374,24 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 
 	for(int i = 0; i < numOfStackArgs; i++)
 	{
-		sprintfJdc(result, 1, "%s, ", decompiledStackArgs[i].buffer);
+		sprintfJdc(&decompiledCall, 1, "%s, ", decompiledStackArgs[i].buffer);
 		freeJdcStr(&stackArgTypeStrs[i]);
 		freeJdcStr(&decompiledStackArgs[i]);
 	}
 
-	if (result->buffer[strlen(result->buffer) - 1] != '(')
+	if (decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] != '(')
 	{
-		result->buffer[strlen(result->buffer) - 2] = ')'; // removing the last comma
-		result->buffer[strlen(result->buffer) - 1] = 0;
-		strcatJdc(result, "; // arguments are guessed\n");
+		decompiledCall.buffer[strlen(decompiledCall.buffer) - 2] = ')'; // removing the last comma
+		decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] = 0;
+		strcatJdc(&decompiledCall, "; // arguments are guessed");
 	}
 	else
 	{
-		strcatJdc(result, ");\n");
+		strcatJdc(&decompiledCall, ");");
 	}
 
-	addAssociatedInstruction(params->currentFunc, callInstructionIndex);
-	params->currentFunc->numOfLines++;
-
+	addDecompiledLine(params, result, callInstructionIndex, "%s", decompiledCall.buffer);
+	freeJdcStr(&decompiledCall);
 	return 1;
 }
 

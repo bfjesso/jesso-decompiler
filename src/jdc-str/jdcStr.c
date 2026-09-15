@@ -164,7 +164,7 @@ unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* f
 	return result;
 }
 
-static unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
+unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
 {
 	if (jdcStr && jdcStr->buffer)
 	{

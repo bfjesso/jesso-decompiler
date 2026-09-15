@@ -85,10 +85,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{
-		addIndents(result, params->numOfIndents);
-		addAssociatedInstruction(params->currentFunc, instructionIndex);
-		params->currentFunc->numOfLines++;
-		return strcatJdc(result, "return;\n");
+		return addDecompiledLine(params, result, instructionIndex, "return;");
 	}
 
 	if (checkForKnownFunctionCall(params, instructionIndex, 0) || checkForUnknownFunctionCall(params, instructionIndex))
@@ -103,10 +100,7 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 		return 0;
 	}
 
-	addIndents(result, params->numOfIndents);
-	addAssociatedInstruction(params->currentFunc, instructionIndex);
-	params->currentFunc->numOfLines++;
-	sprintfJdc(result, 1, "return %s;\n", returnExpression.buffer);
+	addDecompiledLine(params, result, instructionIndex, "return %s;", returnExpression.buffer);
 
 	freeJdcStr(&returnExpression);
 	return 1;

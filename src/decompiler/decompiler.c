@@ -53,6 +53,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	strcatJdc(result, "\n{\n");
+	params->numOfIndents = 1;
 
 	if (!declareAllLocalVariables(params, result))
 	{
@@ -61,17 +62,6 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
-	int len = (int)strlen(result->buffer);
-	for (int i = 0; i < len; i++) 
-	{
-		if (result->buffer[i] == '\n')
-		{
-			addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
-			params->currentFunc->numOfLines++;
-		}
-	}
-
-	params->numOfIndents = 1;
 	unsigned char isInUnreachableState = 0;
 	int numOfSkippedInstructions = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
@@ -99,14 +89,12 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			{
 				if(numOfSkippedInstructions > 0)
 				{
-					addIndents(result, params->numOfIndents);
-					sprintfJdc(result, 1, "// %i instruction(s) skipped\n", numOfSkippedInstructions);
-
 					for (int j = numOfSkippedInstructions; j > 0; j--)
 					{
 						addAssociatedInstruction(params->currentFunc, i - j);
 					}
-					params->currentFunc->numOfLines++;
+
+					addDecompiledLine(params, result, -1, "// %i instruction(s) skipped", numOfSkippedInstructions);
 				}
 
 				isInUnreachableState = 0;
@@ -578,15 +566,16 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		if (!stackVar->isArgument) 
 		{
 			dataTypeToStr(stackVar->dataType, &typeStr);
-			addIndents(result, 1);
-			sprintfJdc(result, 1, "%s %s", typeStr.buffer, stackVar->name.buffer);
 
+			struct JdcStr varNameTmp = copyJdcStr(&stackVar->name);
 			if (stackVar->dataType.arrayLen > 1)
 			{
 				sprintfJdc(result, 1, "[%u]", stackVar->dataType.arrayLen);
 			}
+			strcatJdc(result, ";");
 
-			strcatJdc(result, ";\n");
+			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s", typeStr.buffer, varNameTmp.buffer);
+			freeJdcStr(&varNameTmp);
 			declaredAVar = 1;
 		}
 	}
@@ -598,22 +587,21 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		{
 			dataTypeToStr(localRegVar->dataType, &typeStr);
 
-			addIndents(result, 1);
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
 			if (regArg && checkRegVarScope(params, localRegVar, params->currentFunc->firstInstructionIndex))
 			{
 				if (!compareDataTypes(localRegVar->dataType, regArg->dataType))
 				{
-					sprintfJdc(result, 1, "%s %s = (%s)%s;\n", typeStr.buffer, localRegVar->name.buffer, typeStr.buffer, regArg->name.buffer);
+					addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s = (%s)%s;", typeStr.buffer, localRegVar->name.buffer, typeStr.buffer, regArg->name.buffer);
 				}
 				else
 				{
-					sprintfJdc(result, 1, "%s %s = %s;\n", typeStr.buffer, localRegVar->name.buffer, regArg->name.buffer);
+					addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s = %s;", typeStr.buffer, localRegVar->name.buffer, regArg->name.buffer);
 				}
 			}
 			else
 			{
-				sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, localRegVar->name.buffer);
+				addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, localRegVar->name.buffer);
 			}
 
 			declaredAVar = 1;
@@ -635,15 +623,14 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 		if (!isReturnRegVar) 
 		{
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
-			addIndents(result, 1);
-			sprintfJdc(result, 1, "%s %s;\n", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
+			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
 			declaredAVar = 1;
 		}
 	}
 
 	if (declaredAVar) 
 	{
-		strcatJdc(result, "\n");
+		addDecompiledLine(params, result, -1, "");
 	}
 
 	freeJdcStr(&typeStr);

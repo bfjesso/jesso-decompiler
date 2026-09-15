@@ -20,12 +20,23 @@ extern const char* keywordStrs[NUM_OF_KEYWORDS] =
 	"return" 
 };
 
-void addIndents(struct JdcStr* result, int numOfIndents)
+unsigned char addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...)
 {
-	for (int i = 0; i < numOfIndents; i++)
+	for (int i = 0; i < params->numOfIndents; i++)
 	{
-		strcatJdc(result, "\t");
+		strcatJdc(decompiledFunction, "\t");
 	}
+
+	va_list args;
+	va_start(args, format);
+	unsigned char result = sprintfJdcArgs(decompiledFunction, 1, format, args);
+	va_end(args);
+
+	strcatJdc(decompiledFunction, "\n");
+
+	addAssociatedInstruction(params->currentFunc, associatedInstruction);
+	params->currentFunc->numOfLines++;
+	return result;
 }
 
 unsigned long long getJmpDst(struct DecompilationParameters* params, int startInstructionIndex)

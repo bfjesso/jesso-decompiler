@@ -204,9 +204,8 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	addIndents(result, params->numOfIndents);
-	
-	sprintfJdc(result, 1, "%s(", intrinsic->name);
+	struct JdcStr decompiledCall = initializeJdcStrWithVal(intrinsic->name);
+	strcatJdc(&decompiledCall, "(");
 
 	for(int i = 0; i < instruction->numOfOperands; i++)
 	{
@@ -232,12 +231,12 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 			return 0;
 		}
 
-		sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+		sprintfJdc(&decompiledCall, 1, "%s", decompiledOperand.buffer);
 		freeJdcStr(&decompiledOperand);
 
 		if (i < instruction->numOfOperands - 1)
 		{
-			strcatJdc(result, ", ");
+			strcatJdc(&decompiledCall, ", ");
 		}
 	}
 
@@ -250,7 +249,7 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 			return 0;
 		}
 
-		sprintfJdc(result, 1, "%s", code.buffer);
+		sprintfJdc(&decompiledCall, 1, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
 	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
@@ -278,13 +277,11 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 			break;
 		}
 
-		sprintfJdc(result, 1, ", %s", count.buffer);
+		sprintfJdc(&decompiledCall, 1, ", %s", count.buffer);
 		freeJdcStr(&count);
 	}
 
-	strcatJdc(result, ");\n");
-	addAssociatedInstruction(params->currentFunc, instructionIndex);
-	params->currentFunc->numOfLines++;
-
+	addDecompiledLine(params, result, instructionIndex, "%s);", decompiledCall.buffer);
+	freeJdcStr(&decompiledCall);
 	return 1;
 }
