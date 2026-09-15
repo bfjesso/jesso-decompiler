@@ -1,26 +1,22 @@
 #include "assignment.h"
 #include "decompilationUtils.h"
-#include "operations.h"
+#include "functions.h"
 
-unsigned char checkForAssignment(struct DecompilationParameters* params, int instructionIndex)
+unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int instructionIndex)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->instructions[instructionIndex]);
+	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
-	if (doesInstructionDoNothing(currentInstruction)) 
+	for (int i = 0; i < instruction->numOfOperands; i++) 
 	{
-		return 0;
-	}
-
-	if (currentInstruction->numOfOperands > 0 && currentInstruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, 0, 0))
-	{
-		return 1;
+		if (doesInstructionAssignToOperand(params, instructionIndex, i)) 
+		{
+			return 1;
+		}
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
-		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
-		if (!localRegVar->isArgument && checkRegVarScope(params, localRegVar, instructionIndex) &&
-			doesInstructionModifyRegister(params, instructionIndex, localRegVar->reg, 0, 0))
+		if (doesInstructionAssignToRegVar(params, instructionIndex, params->currentFunc->regVars[i].reg)) 
 		{
 			return 1;
 		}
@@ -29,49 +25,33 @@ unsigned char checkForAssignment(struct DecompilationParameters* params, int ins
 	return 0;
 }
 
-unsigned char decompileAssignments(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
+unsigned char doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->instructions[instructionIndex]);
-
-	for (int i = 0; i < currentInstruction->numOfOperands; i++)
+	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
+	struct Operand* operand = &instruction->operands[operandNum];
+	if (doesInstructionModifyOperand(instruction, operandNum, 0))
 	{
-		if (currentInstruction->operands[i].type == MEM_ADDRESS && doesInstructionModifyOperand(currentInstruction, i, 0))
+		if (operand->type == MEM_ADDRESS) 
 		{
-			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, instructionIndex, NO_REG, 1, 0, &operation, 0))
-			{
-				freeJdcStr(&operation);
-				return 0;
-			}
-
-			addIndents(result, params->numOfIndents);
-			strcatJdc(result, operation.buffer);
-			freeJdcStr(&operation);
-			strcatJdc(result, ";\n");
-			params->currentFunc->numOfLines++;
+			return 1;
+		}
+		else if (operand->type == REGISTER)
+		{
+			struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, operand->reg);
+			return regVar && !regVar->isArgument && checkRegVarScope(params, regVar, instructionIndex);
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
-	{
-		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
-		if (!localRegVar->isArgument && checkRegVarScope(params, localRegVar, instructionIndex) &&
-			doesInstructionModifyRegister(params, instructionIndex, localRegVar->reg, 0, 0))
-		{
-			struct JdcStr operation = initializeJdcStr();
-			if (!decompileOperation(params, instructionIndex, localRegVar->reg, 1, 0, &operation, 0))
-			{
-				freeJdcStr(&operation);
-				return 0;
-			}
+	return 0;
+}
 
-			addIndents(result, params->numOfIndents);
-			strcatJdc(result, operation.buffer);
-			freeJdcStr(&operation);
-			strcatJdc(result, ";\n");
-			params->currentFunc->numOfLines++;
-		}
+struct RegisterVariable* doesInstructionAssignToRegVar(struct DecompilationParameters* params, int instructionIndex, enum Register reg)
+{
+	struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, reg);
+	if (regVar && !regVar->isArgument && doesInstructionModifyRegister(params, instructionIndex, reg, 0, 0) && checkRegVarScope(params, regVar, instructionIndex))
+	{
+		return regVar;
 	}
 
-	return 1;
+	return 0;
 }

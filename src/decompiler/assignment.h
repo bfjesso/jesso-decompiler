@@ -1,6 +1,8 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char checkForAssignment(struct DecompilationParameters* params, int instructionIndex);
+unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char decompileAssignments(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
+unsigned char doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum);
+
+struct RegisterVariable* doesInstructionAssignToRegVar(struct DecompilationParameters* params, int instructionIndex, enum Register reg);

@@ -592,7 +592,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 				return 0;
 			}
 			
-			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && checkForAssignment(params, i)))
+			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && doesInstructionAssignToOperand(params, i, 0)))
 			{
 				if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
 				{
@@ -632,7 +632,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 				return 0;
 			}
 			
-			if (currentInstruction->opcode == SUB && checkForAssignment(params, i))
+			if (currentInstruction->opcode == SUB && doesInstructionAssignToOperand(params, i, 0))
 			{
 				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);

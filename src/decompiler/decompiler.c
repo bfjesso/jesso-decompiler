@@ -1,6 +1,7 @@
 #include "decompiler.h"
 #include "decompilationUtils.h"
 #include "functions.h"
+#include "operations.h"
 #include "assignment.h"
 #include "returnStatements.h"
 #include "functionCalls.h"
@@ -174,9 +175,9 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				return 0;
 			}
 		}
-		else if (checkForAssignment(params, i))
+		else if (checkForAnyAssignments(params, i))
 		{
-			if (!decompileAssignments(params, i, result))
+			if (!decompileOperation(params, i, NO_REG, 1, 0, result, 0))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
