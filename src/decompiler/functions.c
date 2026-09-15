@@ -474,7 +474,7 @@ static unsigned char setAllStackVarTypes(struct DecompilationParameters* params)
 						stackVar->dataType.primitiveType = getOperandDataType(instruction->opcode, operand).primitiveType;
 					}
 
-					if (doesInstructionModifyOperand(instruction, k, 0) && stackVar->isArgument)
+					if (doesInstructionModifyOperand(params, j, k, 0) && stackVar->isArgument)
 					{
 						stackVar->dataType.pointerLevel = 1; // all stack vars could be treated as pointers since they are memory addresses, but it is only necesary for arguments that are modified because they can be accessed outside the function 
 					}

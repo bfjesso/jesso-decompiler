@@ -389,12 +389,14 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int num
 	return 0;
 }
 
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites)
+unsigned char doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char* overwrites)
 {
 	if (overwrites != 0)
 	{
 		*overwrites = 0;
 	}
+
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	if (instruction->group1Prefix != NO_PREFIX) // REPZ instructions are decompiled as void intrinsics and I have not handled the other prefixes yet
 	{
@@ -405,6 +407,34 @@ unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instr
 
 	if (operandNum == 0)
 	{
+		if (opcode == POP && instruction->operands[0].type == REGISTER)
+		{
+			int stackOffset = 0;
+			for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
+			{
+				if (params->instructions[i].opcode == PUSH)
+				{
+					stackOffset++;
+					if (stackOffset == 0)
+					{
+						if (params->instructions[i].operands[0].type == REGISTER && instruction->operands[0].reg == params->instructions[i].operands[0].reg)
+						{
+							return 0;
+						}
+
+						if (overwrites) { *overwrites = 1; }
+						return 1;
+					}
+				}
+				else if (params->instructions[i].opcode == POP)
+				{
+					stackOffset--;
+				}
+			}
+
+			return 0;
+		}
+		
 		if ((isOpcodeXor(opcode) || opcode == SBB) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
@@ -594,7 +624,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 				return 1;
 			}
 		}
-		else if ((!doesInstructionModifyOperand(instruction, i, &overwrites) || !overwrites) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		else if ((!doesInstructionModifyOperand(params, instructionIndex, i, &overwrites) || !overwrites) && op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
 			if (specificReg)
 			{
@@ -661,35 +691,6 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 			else { *specificReg = params->is64Bit ? RAX : EAX; }
 		}
 		return 1;
-	}
-
-	if (opcode == POP && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, reg))
-	{
-		int stackOffset = 0;
-		for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--) 
-		{
-			if (params->instructions[i].opcode == PUSH) 
-			{
-				stackOffset++;
-				if (stackOffset == 0)
-				{
-					if (params->instructions[i].operands[0].type == REGISTER && instruction->operands[0].reg == params->instructions[i].operands[0].reg)
-					{
-						return 0;
-					}
-
-					if (specificReg) { *specificReg = instruction->operands[0].reg; }
-					if (overwrites) { *overwrites = 1; }
-					return 1;
-				}
-			}
-			else if (params->instructions[i].opcode == POP)
-			{
-				stackOffset--;
-			}
-		}
-
-		return 0;
 	}
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
@@ -798,7 +799,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
 		{
-			if (doesInstructionModifyOperand(instruction, i, overwrites))
+			if (doesInstructionModifyOperand(params, instructionIndex, i, overwrites))
 			{
 				if (specificReg) { *specificReg = op->reg; }
 				return 1;

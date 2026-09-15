@@ -40,7 +40,7 @@ static unsigned char regToValue(struct DecompilationParameters* params, int star
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 
-unsigned char doesInstructionModifyOperand(struct DisassembledInstruction* instruction, unsigned char operandNum, unsigned char* overwrites);
+unsigned char doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char* overwrites);
 
 unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
 

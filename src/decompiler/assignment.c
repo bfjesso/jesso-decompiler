@@ -27,9 +27,8 @@ unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int
 
 unsigned char doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum)
 {
-	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
-	struct Operand* operand = &instruction->operands[operandNum];
-	if (doesInstructionModifyOperand(instruction, operandNum, 0))
+	struct Operand* operand = &params->instructions[instructionIndex].operands[operandNum];
+	if (doesInstructionModifyOperand(params, instructionIndex, operandNum, 0))
 	{
 		if (operand->type == MEM_ADDRESS) 
 		{
