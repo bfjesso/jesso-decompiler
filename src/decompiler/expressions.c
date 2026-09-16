@@ -336,6 +336,21 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	{
 		return sprintfJdc(result, 0, "0x%llX", instruction->address + instruction->numOfBytes);
 	}
+	else if (compareRegisters(targetReg, SP)) 
+	{
+		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, -getStackFrameSizeAtInstruction(params, instructionIndex));
+		if (stackVar)
+		{
+			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1) 
+			{
+				return strcpyJdc(result, stackVar->name.buffer);
+			}
+			else 
+			{
+				return sprintfJdc(result, 0, "&%s", stackVar->name.buffer);
+			}
+		}
+	}
 
 	struct RegisterVariable* localRegVar = getLocalRegVarByReg(params->currentFunc, targetReg);
 	if (localRegVar)
