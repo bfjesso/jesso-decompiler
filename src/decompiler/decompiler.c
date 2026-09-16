@@ -53,6 +53,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	}
 
 	strcatJdc(result, "\n{\n");
+	params->currentFunc->numOfLines = 2;
 	params->numOfIndents = 1;
 
 	if (!declareAllLocalVariables(params, result))
@@ -570,9 +571,9 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			struct JdcStr varNameTmp = copyJdcStr(&stackVar->name);
 			if (stackVar->dataType.arrayLen > 1)
 			{
-				sprintfJdc(result, 1, "[%u]", stackVar->dataType.arrayLen);
+				sprintfJdc(&varNameTmp, 1, "[%u]", stackVar->dataType.arrayLen);
 			}
-			strcatJdc(result, ";");
+			strcatJdc(&varNameTmp, ";");
 
 			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s", typeStr.buffer, varNameTmp.buffer);
 			freeJdcStr(&varNameTmp);
