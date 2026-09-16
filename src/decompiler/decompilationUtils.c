@@ -418,34 +418,6 @@ unsigned char doesInstructionModifyOperand(struct DecompilationParameters* param
 
 	if (operandNum == 0)
 	{
-		if (opcode == POP && instruction->operands[0].type == REGISTER)
-		{
-			int stackOffset = 0;
-			for (int i = instructionIndex; i >= params->currentFunc->firstInstructionIndex; i--)
-			{
-				if (params->instructions[i].opcode == PUSH)
-				{
-					stackOffset++;
-					if (stackOffset == 0)
-					{
-						if (params->instructions[i].operands[0].type == REGISTER && instruction->operands[0].reg == params->instructions[i].operands[0].reg)
-						{
-							return 0;
-						}
-
-						if (overwrites) { *overwrites = 1; }
-						return 1;
-					}
-				}
-				else if (params->instructions[i].opcode == POP)
-				{
-					stackOffset--;
-				}
-			}
-
-			return 0;
-		}
-		
 		if ((isOpcodeXor(opcode) || opcode == SBB) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (overwrites != 0) { *overwrites = 1; }
