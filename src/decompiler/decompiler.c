@@ -52,9 +52,14 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		return 0;
 	}
 
+	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
+	params->currentFunc->numOfLines++;
+
 	strcatJdc(result, "\n{\n");
-	params->currentFunc->numOfLines = 2;
 	params->numOfIndents = 1;
+
+	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
+	params->currentFunc->numOfLines++;
 
 	if (!declareAllLocalVariables(params, result))
 	{
