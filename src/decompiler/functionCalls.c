@@ -297,7 +297,7 @@ unsigned char decompileUnknownFunctionCall(struct DecompilationParameters* param
 		{
 			struct JdcStr returnTypeStr = initializeJdcStr();
 			dataTypeToStr(returnedVar->dataType, &returnTypeStr);
-			strcatJdc(result, returnTypeStr.buffer);
+			strcatJdc(&decompiledCall, returnTypeStr.buffer);
 			freeJdcStr(&returnTypeStr);
 		}
 		else 
