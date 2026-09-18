@@ -739,41 +739,20 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 			return 1;
 		}
 
-		if (dataType.isUnsigned)
+		switch (dataType.primitiveType)
 		{
-			switch (dataType.primitiveType)
-			{
-			case CHAR_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned char*)(params->fileBytes + fileOffset));
-				break;
-			case SHORT_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned short*)(params->fileBytes + fileOffset));
-				break;
-			case INT_TYPE:
-				sprintfJdc(result, 0, "%u", *(unsigned int*)(params->fileBytes + fileOffset));
-				break;
-			case LONG_LONG_TYPE:
-				sprintfJdc(result, 0, "%llu", *(unsigned long long*)(params->fileBytes + fileOffset));
-				break;
-			}
-		}
-		else
-		{
-			switch (dataType.primitiveType)
-			{
-			case CHAR_TYPE:
-				sprintfJdc(result, 0, "%d", *(char*)(params->fileBytes + fileOffset));
-				break;
-			case SHORT_TYPE:
-				sprintfJdc(result, 0, "%d", *(short*)(params->fileBytes + fileOffset));
-				break;
-			case INT_TYPE:
-				sprintfJdc(result, 0, "%d", *(int*)(params->fileBytes + fileOffset));
-				break;
-			case LONG_LONG_TYPE:
-				sprintfJdc(result, 0, "%lld", *(long long*)(params->fileBytes + fileOffset));
-				break;
-			}
+		case CHAR_TYPE:
+			sprintfJdc(result, 0, "0x%X", *(unsigned char*)(params->fileBytes + fileOffset));
+			break;
+		case SHORT_TYPE:
+			sprintfJdc(result, 0, "0x%X", *(unsigned short*)(params->fileBytes + fileOffset));
+			break;
+		case INT_TYPE:
+			sprintfJdc(result, 0, "0x%X", *(unsigned int*)(params->fileBytes + fileOffset));
+			break;
+		case LONG_LONG_TYPE:
+			sprintfJdc(result, 0, "0x%llX", *(unsigned long long*)(params->fileBytes + fileOffset));
+			break;
 		}
 	}
 
