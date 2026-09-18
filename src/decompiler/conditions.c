@@ -60,7 +60,8 @@ unsigned char getAllConditions(struct DecompilationParameters* params)
 
 				lastCondition->numOfCombinedJccs = combinationCount;
 			}
-			else if (lastCondition && lastCondition->dstIndex - 1 == i && dstIndex > i && !stopCombination)
+			else if (lastCondition && lastCondition->conditionType != CONDITIONAL_RETURN_CT && 
+				lastCondition->dstIndex - 1 == i && dstIndex > i && !stopCombination)
 			{
 				if (!handleCombinedJccResize(lastCondition))
 				{
