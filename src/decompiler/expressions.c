@@ -504,7 +504,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 
 	for (int i = expressionIndex - 1; i >= 0; i--)
 	{
-		if (i < expressionIndex - 2)
+		if (i < expressionIndex - 2 || expressions[i].placeOperatorInfront)
 		{
 			wrapJdcStrInParentheses(result);
 		}

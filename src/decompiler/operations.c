@@ -241,7 +241,7 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 
 		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
 		{
-			addDecompiledLine(params, result, instructionIndex, "%s = -%s;", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
+			addDecompiledLine(params, result, instructionIndex, "%s = -(%s);", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
 		}
 		
 		freeJdcStr(&decompiledFirstOperand);
@@ -281,7 +281,7 @@ static unsigned char decompileNot(struct DecompilationParameters* params, int in
 			return 0;
 		}
 
-		addDecompiledLine(params, result, instructionIndex, "%s = ~%s;", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
+		addDecompiledLine(params, result, instructionIndex, "%s = ~(%s);", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 		return 1;
