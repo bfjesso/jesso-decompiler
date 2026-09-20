@@ -456,13 +456,13 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 	int firstLine = GetFirstVisibleLine();
 	int lastLine = firstLine + LinesOnScreen();
 
-	firstLine -= 99;
+	firstLine -= 100;
 	if (firstLine < 0)
 	{
 		firstLine = 0;
 	}
 
-	lastLine += 99;
+	lastLine += 100;
 	if (lastLine > numOfInstructions)
 	{
 		lastLine = numOfInstructions;
