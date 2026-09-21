@@ -644,6 +644,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		case SUB:
 		case SBB:
 		case NEG:
+		case CMPXCHG:
 			return 1;
 		case TEST:
 		case AND:
@@ -678,6 +679,31 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
+		if (opcode == CMPXCHG) 
+		{
+			if (specificReg)
+			{
+				int size = getSizeOfRegister(instruction->operands[1].reg);
+				switch (size)
+				{
+				case 1:
+					*specificReg = AL;
+					break;
+				case 2:
+					*specificReg = AX;
+					break;
+				case 4:
+					*specificReg = EAX;
+					break;
+				case 8:
+					*specificReg = RAX;
+					break;
+				}
+			}
+			
+			return 1;
+		}
+		
 		if (opcode == IDIV || opcode == DIV)
 		{
 			if (specificReg) 
@@ -788,6 +814,21 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 				return 1;
 			}
 		}
+	}
+
+	return 0;
+}
+
+unsigned char doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg) 
+{
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	enum Mnemonic opcode = instruction->opcode;
+
+	// CMOVcc is not checked here because it is decompiled as a ternary operator, so its dst is always set to something
+
+	if (compareRegisters(reg, AX))
+	{
+		return opcode == CMPXCHG;
 	}
 
 	return 0;

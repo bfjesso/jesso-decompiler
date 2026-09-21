@@ -321,6 +321,33 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 
 static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 {
+	// checking for individual instructions that conditionally modify a reg
+	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	{
+		for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
+		{
+			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
+			if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
+				!doesInstructionConditionallyModifyRegister(params, i, modifiedReg))
+			{
+				continue;
+			}
+
+			if (!modifiedRegVar)
+			{
+				if (!addRegVar(params, 0, 0, modifiedReg))
+				{
+					return 0;
+				}
+
+				modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+			}
+
+			getLocalRegVarScope(params, i - 1, i + 1, modifiedRegVar);
+			break;
+		}
+	}
+	
 	// checking for registers that are modified in a condition
 	unsigned char modifiedRegs[NUM_OF_REGISTERS] = { 0 };
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
@@ -439,6 +466,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					continue;
 				}
 
+				unsigned char doesAccessedRegVarChange = 0;
 				for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 				{
 					if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
@@ -447,28 +475,31 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 					}
 					
 					unsigned char overwrites = 0;
-					if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
+					if (!doesAccessedRegVarChange)
 					{
-						break;
+						if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites) 
+						{
+							break;
+						}
+						
+						if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0)) 
+						{
+							doesAccessedRegVarChange = 1;
+						}
 					}
-
-					if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0))
+					else if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
 					{
-						if (!modifiedRegVar) 
+						if (!modifiedRegVar)
 						{
 							if (!addRegVar(params, 0, 0, modifiedReg))
 							{
 								return 0;
 							}
 
-							struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-							addRegVarScope(newRegVar, i, j);
-						}
-						else 
-						{
-							addRegVarScope(modifiedRegVar, i, j);
+							modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];	
 						}
 
+						addRegVarScope(modifiedRegVar, i, j);
 						break;
 					}
 				}

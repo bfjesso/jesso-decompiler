@@ -136,6 +136,10 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	{
 		return decompileXCHG(params, instructionIndex, targetReg, getAssignment, result);
 	}
+	else if (instruction->opcode == CMPXCHG)
+	{
+		return decompileCMPXCHG(params, instructionIndex, getAssignment, result);
+	}
 
 	return 0;
 }
@@ -1039,5 +1043,76 @@ static unsigned char decompileXCHG(struct DecompilationParameters* params, int i
 		}
 	}
 
+	return 1;
+}
+
+static unsigned char decompileCMPXCHG(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result) 
+{
+	if (!getAssignment) 
+	{
+		return 0;
+	}
+
+	struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
+	if (!axVar) 
+	{
+		return 0;
+	}
+
+	struct JdcStr decompiledAX = initializeJdcStr();
+	if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+	{
+		freeJdcStr(&decompiledAX);
+		return 0;
+	}
+
+	struct JdcStr decompiledFirstOperand = initializeJdcStr();
+	if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+	{
+		freeJdcStr(&decompiledAX);
+		freeJdcStr(&decompiledFirstOperand);
+		return 0;
+	}
+
+	addDecompiledLine(params, result, instructionIndex, "if (%s == %s)", decompiledAX.buffer, decompiledFirstOperand.buffer);
+	addDecompiledLine(params, result, instructionIndex, "{");
+	params->numOfIndents++;
+
+	struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+	if (zfVar) 
+	{
+		addDecompiledLine(params, result, instructionIndex, "%s = 1;", zfVar->name.buffer);
+	}
+
+	struct JdcStr decompiledSecondOperand = initializeJdcStr();
+	if (!decompileOperand(params, instructionIndex, 1, 1, &decompiledSecondOperand))
+	{
+		freeJdcStr(&decompiledAX);
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledSecondOperand);
+		return 0;
+	}
+
+	addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+
+	params->numOfIndents--;
+	addDecompiledLine(params, result, instructionIndex, "}");
+	addDecompiledLine(params, result, instructionIndex, "else");
+	addDecompiledLine(params, result, instructionIndex, "{");
+	params->numOfIndents++;
+
+	if (zfVar)
+	{
+		addDecompiledLine(params, result, instructionIndex, "%s = 0;", zfVar->name.buffer);
+	}
+
+	addDecompiledLine(params, result, instructionIndex, "%s = %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
+
+	params->numOfIndents--;
+	addDecompiledLine(params, result, instructionIndex, "}");
+
+	freeJdcStr(&decompiledAX);
+	freeJdcStr(&decompiledFirstOperand);
+	freeJdcStr(&decompiledSecondOperand);
 	return 1;
 }
