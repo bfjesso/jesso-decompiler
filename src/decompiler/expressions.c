@@ -122,6 +122,8 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		hasGotFirstTerm = 1;
 	}
 
+	unsigned char addedDisplacement = 0;
+
 	unsigned long long displacementRegVal = 0;
 	if (compareRegisters(memAddress->regDisplacement, IP))
 	{
@@ -139,6 +141,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		if (hasGotFirstTerm) 
 		{
 			sprintfJdc(&memAddrStr, 1, " + %s", displacementRegStr.buffer);
+			addedDisplacement = 1;
 		}
 		else 
 		{
@@ -185,14 +188,22 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	else if (baseRegVal != 0 || displacementRegVal != 0) 
 	{
 		sprintfJdc(&memAddrStr, 1, " + 0x%llX", baseRegVal + displacementRegVal + memAddress->constDisplacement); // this has to be positive because baseRegVal and displacementRegVal are either zero or the IP
+		addedDisplacement = 1;
 	}
 	else if (memAddress->constDisplacement < 0)
 	{
 		sprintfJdc(&memAddrStr, 1, " - 0x%llX", -memAddress->constDisplacement);
+		addedDisplacement = 1;
 	}
 	else if (memAddress->constDisplacement > 0)
 	{
 		sprintfJdc(&memAddrStr, 1, " + 0x%llX", memAddress->constDisplacement);
+		addedDisplacement = 1;
+	}
+
+	if (addedDisplacement) 
+	{
+		wrapJdcStrInParentheses(&memAddrStr);
 	}
 
 	if (instruction->opcode != LEA)
