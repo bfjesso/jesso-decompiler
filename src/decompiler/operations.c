@@ -82,7 +82,7 @@ unsigned char decompileOperation(struct DecompilationParameters* params, int ins
 	}
 	else if (instruction->opcode == NEG)
 	{
-		return decompileNeg(params, instructionIndex, targetReg, getAssignment, result, placeOperatorInfront);
+		return decompileNeg(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result, placeOperatorInfront);
 	}
 	else if (instruction->opcode == NOT)
 	{
@@ -226,7 +226,7 @@ static unsigned char decompileIncDec(struct DecompilationParameters* params, int
 	return 1;
 }
 
-static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront)
+static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result, unsigned char* placeOperatorInfront)
 {
 	if (getAssignment)
 	{
@@ -240,7 +240,15 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
 		if (cfVar)
 		{
-			addDecompiledLine(params, result, instructionIndex, "%s = (%s != 0);", cfVar->name.buffer, decompiledFirstOperand.buffer);
+			addDecompiledLine(params, result, instructionIndex, "%s = (%s) %s 0;", cfVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "==" : "!=");
+		}
+
+		struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF);
+		if (ofVar)
+		{
+			// NEG is the same as (0 - firstOperand). it will only overflow if the firstOperand is equal to the smallest 2's complement integer
+			unsigned char operandSize = getSizeOfOperand(&params->instructions[instructionIndex].operands[0]);
+			addDecompiledLine(params, result, instructionIndex, "%s = (%s) %s -(1 << %d);", ofVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==", ((operandSize * 8) - 1));
 		}
 
 		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
@@ -252,7 +260,7 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 		return 1;
 	}
 
-	if (targetReg == CF) 
+	if (targetReg == CF || targetReg == OF)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -261,7 +269,16 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 			return 0;
 		}
 
-		sprintfJdc(result, 0, "(%s != 0)", decompiledFirstOperand.buffer);
+		if (targetReg == CF) 
+		{
+			sprintfJdc(result, 0, "%s %s 0", decompiledFirstOperand.buffer, notStatusFlag ? "==" : "!=");
+		}
+		else 
+		{
+			unsigned char operandSize = getSizeOfOperand(&params->instructions[instructionIndex].operands[0]);
+			sprintfJdc(result, 0, "%s %s -(1 << %d)", decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==", ((operandSize * 8) - 1));
+		}
+
 		freeJdcStr(&decompiledFirstOperand);
 	}
 	else 
@@ -269,7 +286,6 @@ static unsigned char decompileNeg(struct DecompilationParameters* params, int in
 		if (placeOperatorInfront) { *placeOperatorInfront = 1; }
 		strcpyJdc(result, "-");
 	}
-
 	
 	return 1;
 }

@@ -448,6 +448,21 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 	// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
+		if (params->instructions[i].opcode == NEG && doesInstructionAssignToOperand(params, i, 0)) 
+		{
+			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, OF, 0, 0)) 
+			{
+				if (!addRegVar(params, 0, 0, OF))
+				{
+					return 0;
+				}
+
+				struct RegisterVariable* ofRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+				getLocalRegVarScope(params, i, i + 1, ofRegVar);
+				break;
+			}
+		}
+		
 		for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
 		{
 			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);

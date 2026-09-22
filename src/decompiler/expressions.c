@@ -375,6 +375,11 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 				*regVarRef = localRegVar;
 			}
 
+			if(isRegisterStatusFlag(targetReg))
+			{
+				return sprintfJdc(result, 0, "%s%s", notStatusFlag ? "!" : "", localRegVar->name.buffer);
+			}
+
 			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
 			if (!compareDataTypes(targetType, localRegVar->dataType) && 
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
@@ -603,103 +608,104 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 		if (invertOperator) { strcpy(compOperator, "<"); }
 		else { strcpy(compOperator, ">="); }
 		break;
-	default:
-		return 0;
 	}
 
 	// looking for TEST/AND or CMP/SUB instruction first before resorting to decompiling the status flags individually
-	for (int i = conditionalInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	if (compOperator[0] != 0) 
 	{
-		currentInstruction = &(params->instructions[i]);
-		if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
+		for (int i = conditionalInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 		{
-			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, i, 0, 1, &operand1Str))
+			currentInstruction = &(params->instructions[i]);
+			if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 			{
-				freeJdcStr(&operand1Str);
-				return 0;
-			}
-			
-			if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && doesInstructionAssignToOperand(params, i, 0)))
-			{
-				if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+				struct JdcStr operand1Str = initializeJdcStr();
+				if (!decompileOperand(params, i, 0, 1, &operand1Str))
 				{
-					i--;
 					freeJdcStr(&operand1Str);
-					continue;
+					return 0;
 				}
 
-				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+				if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && doesInstructionAssignToOperand(params, i, 0)))
+				{
+					if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
+					{
+						i--;
+						freeJdcStr(&operand1Str);
+						continue;
+					}
+
+					sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+					freeJdcStr(&operand1Str);
+
+					addAssociatedInstruction(params->currentFunc, i);
+					return 1;
+				}
+
+				struct JdcStr operand2Str = initializeJdcStr();
+				if (!decompileOperand(params, i, 1, 1, &operand2Str))
+				{
+					freeJdcStr(&operand1Str);
+					freeJdcStr(&operand2Str);
+					return 0;
+				}
+
+				sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
 				freeJdcStr(&operand1Str);
+				freeJdcStr(&operand2Str);
+
+				addAssociatedInstruction(params->currentFunc, i);
+				return 1;
+			}
+			else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
+			{
+				struct JdcStr operand1Str = initializeJdcStr();
+				if (!decompileOperand(params, i, 0, 1, &operand1Str))
+				{
+					freeJdcStr(&operand1Str);
+					return 0;
+				}
+
+				if (currentInstruction->opcode == SUB && doesInstructionAssignToOperand(params, i, 0))
+				{
+					sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
+					freeJdcStr(&operand1Str);
+
+					addAssociatedInstruction(params->currentFunc, i);
+					return 1;
+				}
+
+				struct JdcStr operand2Str = initializeJdcStr();
+				if (!decompileOperand(params, i, 1, 1, &operand2Str))
+				{
+					freeJdcStr(&operand1Str);
+					freeJdcStr(&operand2Str);
+					return 0;
+				}
+
+				sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
+				freeJdcStr(&operand1Str);
+				freeJdcStr(&operand2Str);
 
 				addAssociatedInstruction(params->currentFunc, i);
 				return 1;
 			}
 
-			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, i, 1, 1, &operand2Str))
+			unsigned char stop = 0;
+			for (int j = CF; j <= OF; j++)
 			{
-				freeJdcStr(&operand1Str);
-				freeJdcStr(&operand2Str);
-				return 0;
+				if (doesInstructionAccessRegister(params, conditionalInstructionIndex, j, 0, 0) && doesInstructionModifyRegister(params, i, j, 0, 0))
+				{
+					stop = 1;
+					break;
+				}
 			}
-
-			sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
-			freeJdcStr(&operand1Str);
-			freeJdcStr(&operand2Str);
-
-			addAssociatedInstruction(params->currentFunc, i);
-			return 1;
-		}
-		else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
-		{
-			struct JdcStr operand1Str = initializeJdcStr();
-			if (!decompileOperand(params, i, 0, 1, &operand1Str))
+			if (stop)
 			{
-				freeJdcStr(&operand1Str);
-				return 0;
-			}
-			
-			if (currentInstruction->opcode == SUB && doesInstructionAssignToOperand(params, i, 0))
-			{
-				sprintfJdc(result, 0, "%s %s 0", operand1Str.buffer, compOperator);
-				freeJdcStr(&operand1Str);
-
-				addAssociatedInstruction(params->currentFunc, i);
-				return 1;
-			}
-
-			struct JdcStr operand2Str = initializeJdcStr();
-			if (!decompileOperand(params, i, 1, 1, &operand2Str))
-			{
-				freeJdcStr(&operand1Str);
-				freeJdcStr(&operand2Str);
-				return 0;
-			}
-
-			sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
-			freeJdcStr(&operand1Str);
-			freeJdcStr(&operand2Str);
-
-			addAssociatedInstruction(params->currentFunc, i);
-			return 1;
-		}
-
-		unsigned char stop = 0;
-		for (int j = CF; j <= OF; j++) 
-		{
-			if (doesInstructionAccessRegister(params, conditionalInstructionIndex, j, 0, 0) && doesInstructionModifyRegister(params, i, j, 0, 0)) 
-			{
-				stop = 1;
 				break;
 			}
 		}
-		if (stop)
-		{
-			break;
-		}
 	}
-
+	
 	if (cc == JZ_SHORT || cc == SETZ || cc == CMOVZ) 
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, invertOperator, result, 0);
@@ -715,6 +721,14 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 	else if (cc == JNB_SHORT || cc == SETNB || cc == CMOVNB)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, CF, 1, !invertOperator, result, 0);
+	}
+	else if (cc == JO_SHORT || cc == SETO || cc == CMOVO)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, invertOperator, result, 0);
+	}
+	else if (cc == JNO_SHORT || cc == SETNO || cc == CMOVNO)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, !invertOperator, result, 0);
 	}
 
 	return 0;

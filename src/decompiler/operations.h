@@ -7,7 +7,7 @@ static unsigned char decompileBinaryOperation(struct DecompilationParameters* pa
 
 static unsigned char decompileIncDec(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result);
 
-static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront);
+static unsigned char decompileNeg(struct DecompilationParameters* params, int instructionIndex, enum Register targetReg, unsigned char getAssignment, unsigned char notStatusFlag, struct JdcStr* result, unsigned char* placeOperatorInfront);
 
 static unsigned char decompileNot(struct DecompilationParameters* params, int instructionIndex, unsigned char getAssignment, struct JdcStr* result, unsigned char* placeOperatorInfront);
 
