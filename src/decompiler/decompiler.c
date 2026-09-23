@@ -561,11 +561,15 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 			i = getConditionChainLastBodyInstruction(params, condition);
 			continue;
 		}
+
+		if (doesInstructionAccessRegister(params, i, regVar->reg, 1, 0))
+		{
+			endIndex = i;
+		}
 		
 		unsigned char overwrites = 0;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
-			endIndex = i;
 			break;
 		}
 	}

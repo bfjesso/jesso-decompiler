@@ -5,7 +5,7 @@
 struct RegVarScope
 {
 	int startIndex; // instruction that initialzes the reg
-	int endIndex; // instruction that overwrites the reg
+	int endIndex; // last instruction that accesses the reg before it is initialized again
 };
 
 struct RegisterVariable
