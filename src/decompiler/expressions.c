@@ -730,6 +730,14 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, !invertOperator, result, 0);
 	}
+	else if (cc == JS_SHORT || cc == SETS || cc == CMOVS)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, invertOperator, result, 0);
+	}
+	else if (cc == JNS_SHORT || cc == SETNS || cc == CMOVNS)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, !invertOperator, result, 0);
+	}
 
 	return 0;
 }
