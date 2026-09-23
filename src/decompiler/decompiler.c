@@ -360,8 +360,7 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 			for (int j = condition->firstBodyIndex; j <= condition->lastBodyIndex; j++)
 			{
 				struct Condition* cond = getConditionFromFirstBodyInstruction(params, j);
-				if (cond && cond != condition && !isConditionDirectJmp(cond) &&
-					cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
+				if (cond && cond != condition && cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
 				{
 					j = getConditionChainLastBodyInstruction(params, cond);
 					continue;

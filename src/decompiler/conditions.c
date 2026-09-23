@@ -563,7 +563,8 @@ struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParam
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (instructionIndex == params->currentFunc->conditions[i].firstBodyIndex)
+		struct Condition* cond = &params->currentFunc->conditions[i];
+		if (!isConditionDirectJmp(cond) && instructionIndex == cond->firstBodyIndex)
 		{
 			return &params->currentFunc->conditions[i];
 		}
@@ -576,7 +577,8 @@ struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParame
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		if (instructionIndex == params->currentFunc->conditions[i].lastBodyIndex)
+		struct Condition* cond = &params->currentFunc->conditions[i];
+		if (!isConditionDirectJmp(cond) && instructionIndex == params->currentFunc->conditions[i].lastBodyIndex)
 		{
 			return &params->currentFunc->conditions[i];
 		}
