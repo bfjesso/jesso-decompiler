@@ -502,6 +502,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 		case CMOVNB:
 		case SETB:
 		case SETNB:
+		case ADC:
 		case SBB:
 			return reg == CF;
 		case JG_SHORT:
@@ -641,6 +642,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		switch (opcode)
 		{
 		case ADD:
+		case ADC:
 		case SUB:
 		case SBB:
 		case NEG:
