@@ -721,13 +721,13 @@ static unsigned char decompileADC(struct DecompilationParameters* params, int in
 				return 0;
 			}
 
-			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, decompiledCF.buffer);
+			addDecompiledLine(params, result, instructionIndex, "%s += %s;", decompiledFirstOperand.buffer, decompiledCF.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 		}
 		else
 		{
-			sprintfJdc(result, 0, "%s", decompiledCF.buffer);
+			sprintfJdc(result, 0, " + %s", decompiledCF.buffer);
 		}
 
 		freeJdcStr(&decompiledCF);
@@ -753,13 +753,13 @@ static unsigned char decompileADC(struct DecompilationParameters* params, int in
 			return 0;
 		}
 
-		addDecompiledLine(params, result, instructionIndex, "%s += %s + %s;", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
+		addDecompiledLine(params, result, instructionIndex, "%s += (%s) + (%s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 	}
 	else
 	{
-		sprintfJdc(result, 0, " + %s + %s", decompiledSecondOperand.buffer, decompiledCF.buffer);
+		sprintfJdc(result, 0, " + (%s) + (%s)", decompiledSecondOperand.buffer, decompiledCF.buffer);
 	}
 
 	freeJdcStr(&decompiledSecondOperand);
