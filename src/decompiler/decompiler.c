@@ -652,7 +652,7 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
 			if (regArg && checkRegVarScope(params, localRegVar, params->currentFunc->firstInstructionIndex))
 			{
-				if (!compareDataTypes(localRegVar->dataType, regArg->dataType))
+				if (doDataTypesRequireCasting(localRegVar->dataType, regArg->dataType, params->is64Bit))
 				{
 					addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s = (%s)%s;", typeStr.buffer, localRegVar->name.buffer, typeStr.buffer, regArg->name.buffer);
 				}

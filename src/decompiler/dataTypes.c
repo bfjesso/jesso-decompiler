@@ -1,4 +1,5 @@
 #include "dataTypes.h"
+#include "decompilationUtils.h"
 
 extern const char* primitiveTypeStrs[NUM_OF_PRIMITIVE_TYPES] =
 {
@@ -34,15 +35,20 @@ void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 	}
 }
 
-unsigned char compareDataTypes(struct DataType t1, struct DataType t2, unsigned char is64Bit)
+unsigned char doDataTypesRequireCasting(struct DataType t1, struct DataType t2, unsigned char is64Bit)
 {
+	if ((t1.pointerLevel > 0 || t1.arrayLen > 1) && (t2.pointerLevel > 0 || t2.arrayLen > 1)) 
+	{
+		return 0;
+	}
+	
 	if (((t1.pointerLevel > 0 || t1.arrayLen > 1) && t2.primitiveType == is64Bit ? LONG_LONG_TYPE : INT_TYPE) || 
 		((t2.pointerLevel > 0 || t2.arrayLen > 1) && t1.primitiveType == is64Bit ? LONG_LONG_TYPE : INT_TYPE))
 	{
-		return 1;
+		return 0;
 	}
 
-	return t1.primitiveType == t2.primitiveType && t1.isUnsigned == t2.isUnsigned && t1.pointerLevel == t2.pointerLevel && t1.arrayLen == t2.arrayLen;
+	return t1.primitiveType != t2.primitiveType || t1.isUnsigned != t2.isUnsigned;
 }
 
 unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit) 

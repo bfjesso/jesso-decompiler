@@ -381,7 +381,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			}
 
 			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
-			if (!compareDataTypes(targetType, localRegVar->dataType) && 
+			if (doDataTypesRequireCasting(targetType, localRegVar->dataType, params->is64Bit) &&
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
@@ -480,7 +480,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
 
 			struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
-			if (!compareDataTypes(targetType, regArg->dataType))
+			if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
 				dataTypeToStr(targetType, &targetTypeStr);
