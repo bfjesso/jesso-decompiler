@@ -6,6 +6,26 @@
 
 unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 {
+	if (!getLocalRegVarsFromConditionalInstructions(params)) 
+	{
+		return 0;
+	}
+
+	if (!getLocalRegVarsFromConditions(params)) 
+	{
+		return 0;
+	}
+
+	if (!getTempLocalRegVars(params)) 
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
+static unsigned char getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params)
+{
 	// checking for individual instructions that conditionally modify a reg
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
@@ -33,6 +53,11 @@ unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		}
 	}
 
+	return 1;
+}
+
+static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameters* params) 
+{
 	// checking for registers that are modified in a condition
 	unsigned char modifiedRegs[NUM_OF_REGISTERS] = { 0 };
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
@@ -129,6 +154,12 @@ unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		}
 	}
 
+	return 1;
+}
+
+static unsigned char getTempLocalRegVars(struct DecompilationParameters* params) 
+{
+	// these are reg vars that contain the value of another variable before it changes
 	unsigned char addedNewRegVar = 0;
 	do
 	{
@@ -230,7 +261,7 @@ unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 	return 1;
 }
 
-void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)
+static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)
 {
 	int startIndex = params->currentFunc->firstInstructionIndex - 1;
 	int endIndex = params->currentFunc->lastInstructionIndex + 1;
