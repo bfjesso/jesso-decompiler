@@ -1,27 +1,27 @@
 #include "peHandler.h"
 #include "../file-handler/fileHandler.h"
 
-unsigned char isFilePE(const wchar_t* filePath, unsigned char* isPE)
+enum JdcStatus isFilePE(const wchar_t* filePath, unsigned char* isPERef)
 {
 	FILE* file = openFile(filePath);
-	if (file)
+	if (file && isPERef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		fseek(file, 0, SEEK_SET);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
 		fclose(file);
 
-		*isPE = dosHeader.e_magic == IMAGE_DOS_SIGNATURE;
-		return 1;
+		*isPERef = dosHeader.e_magic == IMAGE_DOS_SIGNATURE;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64)
+enum JdcStatus isPEX64(const wchar_t* filePath, unsigned char* is64BitRef)
 {
 	FILE* file = openFile(filePath);
-	if (file) 
+	if (file && is64BitRef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		fseek(file, 0, SEEK_SET);
@@ -34,18 +34,18 @@ unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64)
 
 		fclose(file);
 
-		*isX64 = imageNtHeaders.OptionalHeader.Magic == 0x20b; // PE32+
-		return 1;
+		*is64BitRef = imageNtHeaders.OptionalHeader.Magic == 0x20b; // PE32+
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
+enum JdcStatus getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
 {
 	if (!result) 
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 	
 	IMAGE_DOS_HEADER dosHeader = { 0 };
@@ -83,31 +83,13 @@ unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IM
 		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * IMAGE_NUMBEROF_DIRECTORY_ENTRIES);
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned long long getPEImageBase(const wchar_t* filePath, unsigned char is64Bit)
+enum JdcStatus getPEImageBase(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* imageBaseRef)
 {
 	FILE* file = openFile(filePath);
-	if (file)
-	{
-		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
-			fclose(file);
-			return 0; 
-		}
-		fclose(file);
-		return imageNtHeaders.ImageBase;
-	}
-	
-	return 0;
-}
-
-unsigned long long getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit)
-{
-	FILE* file = openFile(filePath);
-	if (file)
+	if (file && imageBaseRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
 		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
@@ -117,16 +99,17 @@ unsigned long long getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bi
 		}
 
 		fclose(file);
-		return imageNtHeaders.AddressOfEntryPoint;
+		*imageBaseRef = imageNtHeaders.ImageBase;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
-int getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit)
+enum JdcStatus getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* entryPointRef)
 {
 	FILE* file = openFile(filePath);
-	if (file)
+	if (file && entryPointRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
 		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
@@ -136,28 +119,49 @@ int getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit)
 		}
 
 		fclose(file);
-		return imageNtHeaders.FileHeader.NumberOfSections;
+		*entryPointRef = imageNtHeaders.AddressOfEntryPoint;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit, int* numOfSectionsRef)
+{
+	FILE* file = openFile(filePath);
+	if (file && numOfSectionsRef)
+	{
+		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
+		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		{ 
+			fclose(file);
+			return 0; 
+		}
+
+		fclose(file);
+		*numOfSectionsRef = imageNtHeaders.FileHeader.NumberOfSections;
+		return SUCCESS_JDC;
+	}
+	
+	return ERROR_JDC;
+}
+
+enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
 		{ 
 			fclose(file);
-			return 0; 
+			return ERROR_JDC;
 		}
 
 		if (bufferLen != imageNtHeaders.FileHeader.NumberOfSections)
 		{
 			fclose(file);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
@@ -193,22 +197,22 @@ unsigned char getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64
 		}
 
 		fclose(file);
-		return 1;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result)
+enum JdcStatus getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
 		{ 
 			fclose(file);
-			return 0; 
+			return ERROR_JDC;
 		}
 
 		for (DWORD i = 0; i < imageNtHeaders.FileHeader.NumberOfSymbols; i++)
@@ -239,27 +243,27 @@ unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit,
 				}
 
 				fclose(file);
-				return 1;
+				return SUCCESS_JDC;
 			}
 		}
 
 		fclose(file);
-		return 0;
+		return ERROR_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef)
+enum JdcStatus getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
 {
 	FILE* file = openFile(filePath);
-	if (file) 
+	if (file && numOfImportsRef && numOfLibrariesRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
 		{ 
 			fclose(file);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		int numOfImports = 0;
@@ -269,7 +273,11 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOf
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
 			DWORD importDirectoryTableSize = imageNtHeaders.DataDirectory[1].Size;
 
-			DWORD importDirectoryTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress);
+			DWORD importDirectoryTableFileOffset = 0;
+			if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress, &importDirectoryTableFileOffset))
+			{
+				return ERROR_JDC;
+			}
 
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 			{
@@ -284,7 +292,11 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOf
 
 				numOfLibraries++;
 
-				DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
+				DWORD importLookupTableFileOffset = 0;
+				if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics, &importLookupTableFileOffset))
+				{
+					return ERROR_JDC;
+				}
 
 				int j = 0;
 				while (1)
@@ -302,7 +314,12 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOf
 					{
 						// checking for null name
 						char firstChar = 0;
-						DWORD nameFileOffset = rvaToFileOffsetPE(file, is64Bit, lookupValue + 2);
+						DWORD nameFileOffset = 0;
+						if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, lookupValue + 2, &nameFileOffset))
+						{
+							return ERROR_JDC;
+						}
+
 						fseek(file, nameFileOffset, SEEK_SET);
 						fread(&firstChar, 1, sizeof(firstChar), file);
 
@@ -320,23 +337,24 @@ int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOf
 		}
 
 		fclose(file);
+		*numOfImportsRef = numOfImports;
 		*numOfLibrariesRef = numOfLibraries;
-		return numOfImports;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
-int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
 		{
 			fclose(file);
-			return 0; 
+			return ERROR_JDC;
 		}
 
 		int importsIndex = 0;
@@ -345,7 +363,11 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
 			DWORD importDirectoryTableSize = imageNtHeaders.DataDirectory[1].Size;
 
-			DWORD importDirectoryTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress);
+			DWORD importDirectoryTableFileOffset = 0;
+			if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, importDirectoryTableAddress, &importDirectoryTableFileOffset))
+			{
+				return ERROR_JDC;
+			}
 
 			int libraryIndex = 0;
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
@@ -362,13 +384,22 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 				if (libraryIndex < libraryNamesBufferLen)
 				{
 					char libraryName[255] = { 0 };
-					DWORD libraryNameFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Name);
+					DWORD libraryNameFileOffset = 0;
+					if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, importDescriptor.Name, &libraryNameFileOffset))
+					{
+						return ERROR_JDC;
+					}
+
 					fseek(file, libraryNameFileOffset, SEEK_SET);
 					fread(libraryName, 1, 255, file);
 					libraryNamesBuffer[libraryIndex] = initializeJdcStrWithVal(libraryName);
 				}
 
-				DWORD importLookupTableFileOffset = rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics);
+				DWORD importLookupTableFileOffset = 0;
+				if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, importDescriptor.Characteristics, &importLookupTableFileOffset))
+				{
+					return ERROR_JDC;
+				}
 
 				int j = 0;
 				while (importsIndex < importsBufferLen)
@@ -385,7 +416,12 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 					if (!(lookupValue & 0x80000000)) // import by name. import by ordinal needs to be implemented
 					{
 						char symbolName[255] = { 0 };
-						DWORD nameFileOffset = rvaToFileOffsetPE(file, is64Bit, lookupValue + 2);
+						DWORD nameFileOffset = 0;
+						if (ERROR_JDC == rvaToFileOffsetPE(file, is64Bit, lookupValue + 2, &nameFileOffset))
+						{
+							return ERROR_JDC;
+						}
+
 						fseek(file, nameFileOffset, SEEK_SET);
 						fread(symbolName, 1, 255, file);
 
@@ -414,16 +450,19 @@ int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct Impor
 		}
 
 		fclose(file);
-		return importsIndex;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva)
+static enum JdcStatus rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva, DWORD* fileOffsetRef)
 {
 	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-	if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) { return 0; }
+	if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+	{
+		return ERROR_JDC;
+	}
 
 	DWORD fileOffset = 0;
 	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
@@ -440,10 +479,11 @@ DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva)
 		}
 	}
 
-	return fileOffset;
+	*fileOffsetRef = fileOffset;
+	return SUCCESS_JDC;
 }
 
-unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
+enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -463,10 +503,10 @@ unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* r
 		generateOptionalHeaderInfoStr(&imageNtHeaders.OptionalHeader, result);
 
 		fclose(file);
-		return 1;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
 static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr* result)

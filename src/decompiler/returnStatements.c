@@ -79,7 +79,7 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 	return 0;
 }
 
-unsigned char decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
 
@@ -94,14 +94,14 @@ unsigned char decompileReturnStatement(struct DecompilationParameters* params, i
 	}
 
 	struct JdcStr returnExpression = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex, -1, params->currentFunc->returnReg, 1, 0, &returnExpression, 0))
+	if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, params->currentFunc->returnReg, 1, 0, &returnExpression, 0))
 	{
 		freeJdcStr(&returnExpression);
-		return 0;
+		return ERROR_JDC;
 	}
 
 	addDecompiledLine(params, result, instructionIndex, "return %s;", returnExpression.buffer);
 
 	freeJdcStr(&returnExpression);
-	return 1;
+	return SUCCESS_JDC;
 }

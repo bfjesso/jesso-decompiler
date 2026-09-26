@@ -1,6 +1,6 @@
 #include "jdcStr.h"
 
-unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
+enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 {
 	if (jdcStr && jdcStr->buffer && jdcStr->bufferSize >= 3)
 	{
@@ -9,9 +9,9 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 
 		if (len >= jdcStr->bufferSize - 2)
 		{
-			if (!resizeJdcStr(jdcStr, len + 3))
+			if (ERROR_JDC == resizeJdcStr(jdcStr, len + 3))
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
@@ -23,13 +23,13 @@ unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 		jdcStr->buffer[0] = '(';
 		jdcStr->buffer[len + 1] = ')';
 		jdcStr->buffer[len + 2] = 0;
-		return 1;
+		return SUCCESS_JDC;
 	}
 	
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr)
+enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr)
 {
 	if (jdcStr && jdcStr->buffer && oldStr && newStr)
 	{
@@ -65,26 +65,26 @@ unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* 
 
 		strcpyJdc(jdcStr, result.buffer);
 		freeJdcStr(&result);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
+enum JdcStatus strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
 		int srcLen = (int)strlen(src);
 		if (srcLen >= jdcStr->bufferSize)
 		{
-			if (resizeJdcStr(jdcStr, srcLen + 1))
+			if (SUCCESS_JDC == resizeJdcStr(jdcStr, srcLen + 1))
 			{
 				return strcpyJdc(jdcStr, src);
 			}
 			else
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
@@ -93,10 +93,10 @@ unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src)
 		return strcpy(jdcStr->buffer, src) == jdcStr->buffer;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
+enum JdcStatus strcatJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
@@ -104,23 +104,23 @@ unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src)
 		int newLen = (int)strlen(src) + (int)strlen(jdcStr->buffer);
 		if (newLen >= jdcStr->bufferSize)
 		{
-			if (resizeJdcStr(jdcStr, newLen + 1))
+			if (SUCCESS_JDC == resizeJdcStr(jdcStr, newLen + 1))
 			{
 				return strcatJdc(jdcStr, src);
 			}
 			else
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
 		return strcat(jdcStr->buffer, src) == jdcStr->buffer;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char strcatStartJdc(struct JdcStr* jdcStr, const char* src)
+enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
@@ -129,13 +129,13 @@ unsigned char strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 		int srcLen = (int)strlen(src);
 		if (currentLen + srcLen >= jdcStr->bufferSize)
 		{
-			if (resizeJdcStr(jdcStr, currentLen + srcLen + 1))
+			if (SUCCESS_JDC == resizeJdcStr(jdcStr, currentLen + srcLen + 1))
 			{
 				return strcatStartJdc(jdcStr, src);
 			}
 			else
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
@@ -146,25 +146,25 @@ unsigned char strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 			strcpy(jdcStr->buffer, src);
 			strcat(jdcStr->buffer, tmp);
 			free(tmp);
-			return 1;
+			return SUCCESS_JDC;
 		}
 
-		return 0;
+		return ERROR_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...)
+enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	unsigned char result = sprintfJdcArgs(jdcStr, cat, format, args);
+	enum JdcStatus result = sprintfJdcArgs(jdcStr, cat, format, args);
 	va_end(args);
 	return result;
 }
 
-unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
+enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
@@ -178,20 +178,20 @@ unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const cha
 			if (result < 0)
 			{
 				va_end(copy);
-				return 0;
+				return ERROR_JDC;
 			}
 			else if (result >= jdcStr->bufferSize - ogLen)
 			{
 				if (resizeJdcStr(jdcStr, ogLen + result + 1))
 				{
 					memset(jdcStr->buffer + ogLen, 0, jdcStr->bufferSize - ogLen);
-					unsigned char result = sprintfJdcArgs(jdcStr, 1, format, copy);
+					enum JdcStatus statusResult = sprintfJdcArgs(jdcStr, 1, format, copy);
 					va_end(copy);
-					return result;
+					return statusResult;
 				}
 
 				va_end(copy);
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 		else
@@ -202,28 +202,28 @@ unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const cha
 			if (result < 0)
 			{
 				va_end(copy);
-				return 0;
+				return ERROR_JDC;
 			}
 			else if (result >= jdcStr->bufferSize)
 			{
 				if (resizeJdcStr(jdcStr, result + 1))
 				{
 					memset(jdcStr->buffer, 0, jdcStr->bufferSize);
-					unsigned char result = sprintfJdcArgs(jdcStr, 0, format, copy);
+					enum JdcStatus statusResult = sprintfJdcArgs(jdcStr, 0, format, copy);
 					va_end(copy);
-					return result;
+					return statusResult;
 				}
 
 				va_end(copy);
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
 		va_end(copy);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy)
@@ -282,7 +282,7 @@ struct JdcStr initializeJdcStrWithVal(const char* initStr)
 	return result;
 }
 
-unsigned char freeJdcStr(struct JdcStr* jdcStr)
+enum JdcStatus freeJdcStr(struct JdcStr* jdcStr)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
@@ -290,13 +290,13 @@ unsigned char freeJdcStr(struct JdcStr* jdcStr)
 		free(jdcStr->buffer);
 		jdcStr->buffer = 0;
 		jdcStr->bufferSize = 0;
-		return 1;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
+static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 {
 	if (jdcStr && jdcStr->buffer && newSize > 0)
 	{
@@ -309,9 +309,9 @@ static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
 			int len = (int)strlen(jdcStr->buffer);
 			memset(jdcStr->buffer + len, 0, jdcStr->bufferSize - len);
-			return 1;
+			return SUCCESS_JDC;
 		}
 	}
 
-	return 0;
+	return ERROR_JDC;
 }

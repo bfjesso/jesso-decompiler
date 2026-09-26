@@ -24,7 +24,7 @@ FILE* openFile(const wchar_t* filePath)
 #endif
 }
 
-unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen) 
+enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 {
 #ifdef _WIN32
 	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
@@ -62,10 +62,10 @@ unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 			k++;
 		}
 
-		return 1;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 #endif
 
 #ifdef linux
@@ -119,47 +119,47 @@ unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 		}
 
 		free(demangleResult);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	free(demangleResult);
-	return 0;
+	return ERROR_JDC;
 #endif
 }
 
-unsigned char identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat)
+enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat)
 {
 	if (!fileFormat) 
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 	
 	unsigned char isPE = 0;
-	if (!isFilePE(filePath, &isPE)) 
+	if (ERROR_JDC == isFilePE(filePath, &isPE)) 
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (isPE) 
 	{
 		*fileFormat = PE_FF;
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	unsigned char isELF = 0;
-	if (!isFileELF(filePath, &isELF))
+	if (ERROR_JDC == isFileELF(filePath, &isELF))
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (isELF)
 	{
 		*fileFormat = ELF_FF;
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	*fileFormat = UNKNOWN_FF;
-	return 1;
+	return SUCCESS_JDC;
 }
 
 const char* fileFormatToStr(enum FileFormat fileFormat) 
@@ -194,63 +194,64 @@ const char* fileSectionTypeToStr(enum FileSectionType fileSectionType)
 	return "";
 }
 
-unsigned char isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* isX64)
+enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* is64BitRef)
 {
 	if (fileFormat == PE_FF) 
 	{
-		return isPEX64(filePath, isX64);
+		return isPEX64(filePath, is64BitRef);
 	}
 	else if (fileFormat == ELF_FF) 
 	{
-		return isELFX64(filePath, isX64);
+		return isELFX64(filePath, is64BitRef);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned long long getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
+enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* imageBaseRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getPEImageBase(filePath, is64Bit);
+		return getPEImageBase(filePath, is64Bit, imageBaseRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return 0; // ELF files do not have an image base like PE files
+		*imageBaseRef = 0; // ELF files do not have an image base like PE files
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned long long getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
+enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* entryPointRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getPEEntryPoint(filePath, is64Bit);
+		return getPEEntryPoint(filePath, is64Bit, entryPointRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return getELFEntryPoint(filePath, is64Bit);
+		return getELFEntryPoint(filePath, is64Bit, entryPointRef);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-int getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit)
+enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfSectionsRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getNumOfPESections(filePath, is64Bit);
+		return getNumOfPESections(filePath, is64Bit, numOfSectionsRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return getNumOfELFSections(filePath, is64Bit);
+		return getNumOfELFSections(filePath, is64Bit, numOfSectionsRef);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-int getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -261,24 +262,26 @@ int getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat
 		return getAllELFSectionHeaders(filePath, is64Bit, buffer, bufferLen);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned int getNumOfFileBytes(const wchar_t* filePath)
+enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, unsigned int* numOfBytesRef)
 {
 	FILE* file = openFile(filePath);
-	if (file)
+	if (file && numOfBytesRef)
 	{
 		fseek(file, 0, SEEK_END);
 		unsigned int result = ftell(file);
 		fclose(file);
-		return result;
+
+		*numOfBytesRef = result;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize)
+enum JdcStatus readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize)
 {
 	FILE* file = openFile(filePath);
 	if (file)
@@ -286,13 +289,17 @@ unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsi
 		fseek(file, 0, SEEK_SET);
 		unsigned int bytesRead = fread(buffer, 1, bufferSize, file);
 		fclose(file);
-		return bytesRead == bufferSize;
+
+		if (bytesRead == bufferSize) 
+		{
+			return SUCCESS_JDC;
+		}
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
+enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -303,24 +310,24 @@ unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileForm
 		return getELFSymbolByValue(filePath, is64Bit, value, result);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfLibrariesRef)
+enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return getNumOfPEImports(filePath, is64Bit, numOfLibrariesRef);
+		return getNumOfPEImports(filePath, is64Bit, numOfImportsRef, numOfLibrariesRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return getNumOfELFImports(filePath, is64Bit, numOfLibrariesRef);
+		return getNumOfELFImports(filePath, is64Bit, numOfImportsRef, numOfLibrariesRef);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -331,10 +338,10 @@ int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned 
 		return getAllELFImports(filePath, is64Bit, importsBuffer, importsBufferLen, libraryNamesBuffer, libraryNamesBufferLen);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result)
+enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -345,7 +352,7 @@ unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, enum FileForma
 		return generateELFHeadersInfoStr(filePath, result);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
 unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)

@@ -9,12 +9,12 @@
 #include "dataTypes.h"
 #include "intrinsics.h"
 
-unsigned char decompileOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char defaultToReg, struct JdcStr* result)
+enum JdcStatus decompileOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char defaultToReg, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	if (operandNum >= instruction->numOfOperands)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	struct Operand* operand = &instruction->operands[operandNum];
@@ -41,7 +41,7 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 
 		if (getStringFromDataSection(params, operand->immediate.value, result))
 		{
-			return 1;
+			return SUCCESS_JDC;
 		}
 
 		return sprintfJdc(result, 0, "0x%llX", operand->immediate.value);
@@ -59,10 +59,10 @@ unsigned char decompileOperand(struct DecompilationParameters* params, int instr
 		return strcpyJdc(result, segmentStrs[operand->segment]);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-static unsigned char decompileMemoryAddress(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, struct JdcStr* result)
+static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
@@ -72,7 +72,6 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	{
 		return decompileStackVar(params, instructionIndex, operandNum, offsetFromInitSP, result);
 	}
-
 	
 	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
 
@@ -88,11 +87,11 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	{
 		struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 		struct JdcStr baseRegStr = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, operandNum, memAddress->reg, 1, 0, &baseRegStr, &regArgVar))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, operandNum, memAddress->reg, 1, 0, &baseRegStr, &regArgVar))
 		{
 			freeJdcStr(&memAddrStr);
 			freeJdcStr(&baseRegStr);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && regArgVar->dataType.isUnsigned == memAddrType.isUnsigned && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
@@ -106,7 +105,7 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 				sprintfJdc(result, 0, "*%s", regArgVar->name.buffer);
 			}
 
-			return 1;
+			return SUCCESS_JDC;
 		}
 
 		if (memAddress->scale != 1)
@@ -132,10 +131,10 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	else if (memAddress->regDisplacement != NO_REG)
 	{
 		struct JdcStr displacementRegStr = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, operandNum, memAddress->regDisplacement, 1, 0, &displacementRegStr, 0))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, operandNum, memAddress->regDisplacement, 1, 0, &displacementRegStr, 0))
 		{
 			freeJdcStr(&displacementRegStr);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		if (hasGotFirstTerm) 
@@ -166,19 +165,19 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 		{
 			strcpyJdc(result, params->imports[importIndex].name.buffer); // the import.address is the address of the table entry for the import, so it is like a ptr
 			freeJdcStr(&memAddrStr);
-			return 1;
+			return SUCCESS_JDC;
 		}
 		else if (instruction->opcode == LEA && getStringFromDataSection(params, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
-			return 1;
+			return SUCCESS_JDC;
 		}
 		else if (instruction->opcode != LEA && getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
-			return 1;
+			return SUCCESS_JDC;
 		}
 		else 
 		{
@@ -219,15 +218,15 @@ static unsigned char decompileMemoryAddress(struct DecompilationParameters* para
 	}
 	
 	freeJdcStr(&memAddrStr);
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long offsetFromInitSP, struct JdcStr* result)
+static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long offsetFromInitSP, struct JdcStr* result)
 {
 	struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 	if (!stackVar)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
@@ -236,10 +235,10 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 
 	struct JdcStr displacementRegStr = initializeJdcStr();
 	if (memAddress->regDisplacement != NO_REG &&
-		!decompileRegister(params, instructionIndex, operandNum, memAddress->regDisplacement, 1, 0, &displacementRegStr, 0))
+		ERROR_JDC == decompileRegister(params, instructionIndex, operandNum, memAddress->regDisplacement, 1, 0, &displacementRegStr, 0))
 	{
 		freeJdcStr(&displacementRegStr);
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (instruction->opcode == LEA) 
@@ -268,7 +267,7 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 		}
 		
 		freeJdcStr(&displacementRegStr);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	if (memAddrType.primitiveType != stackVar->dataType.primitiveType)
@@ -301,7 +300,7 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 
 		freeJdcStr(&newTypeStr);
 		freeJdcStr(&displacementRegStr);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	if (stackVar->dataType.arrayLen > 1)
@@ -325,7 +324,7 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 		}
 
 		freeJdcStr(&displacementRegStr);
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	if (stackVar->dataType.pointerLevel > 0)
@@ -338,10 +337,10 @@ static unsigned char decompileStackVar(struct DecompilationParameters* params, i
 	}
 
 	freeJdcStr(&displacementRegStr);
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char decompileRegister(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, enum Register targetReg, unsigned char defaultToReg, unsigned char notStatusFlag, struct JdcStr* result, struct RegisterVariable** regVarRef)
+enum JdcStatus decompileRegister(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, enum Register targetReg, unsigned char defaultToReg, unsigned char notStatusFlag, struct JdcStr* result, struct RegisterVariable** regVarRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -389,7 +388,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 
 				sprintfJdc(result, 0, "(%s)%s", targetTypeStr.buffer, localRegVar->name.buffer);
 				freeJdcStr(&targetTypeStr);
-				return 1;
+				return SUCCESS_JDC;
 			}
 
 			return strcpyJdc(result, localRegVar->name.buffer);
@@ -399,7 +398,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 	struct Expression* expressions = (struct Expression*)calloc(5, sizeof(struct Expression));
 	if (!expressions)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	int expressionsBufferSize = 5;
@@ -434,14 +433,14 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		if (doesInstructionModifyRegister(params, i, targetReg, 0, &overwrites))
 		{
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
-			if (!decompileOperation(params, i, targetReg, 0, notStatusFlag, &expressions[expressionIndex].jdcStr, &expressions[expressionIndex].placeOperatorInfront))
+			if (ERROR_JDC == decompileOperation(params, i, targetReg, 0, notStatusFlag, &expressions[expressionIndex].jdcStr, &expressions[expressionIndex].placeOperatorInfront))
 			{
 				for (int j = 0; j < expressionIndex; j++)
 				{
 					freeJdcStr(&expressions[j].jdcStr);
 				}
 				free(expressions);
-				return 0;
+				return ERROR_JDC;
 			}
 
 			expressionIndex++;
@@ -466,7 +465,7 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 					freeJdcStr(&expressions[j].jdcStr);
 				}
 				free(expressions);
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 	}
@@ -511,10 +510,10 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 			if (defaultToReg)
 			{
 				strcpyJdc(result, registerStrs[targetReg]);
-				return 1;
+				return SUCCESS_JDC;
 			}
 
-			return 0;
+			return ERROR_JDC;
 		}
 	}
 
@@ -544,10 +543,10 @@ unsigned char decompileRegister(struct DecompilationParameters* params, int inst
 		wrapJdcStrInParentheses(result);
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char decompileComparison(struct DecompilationParameters* params, int conditionalInstructionIndex, unsigned char invertOperator, struct JdcStr* result)
+enum JdcStatus decompileComparison(struct DecompilationParameters* params, int conditionalInstructionIndex, unsigned char invertOperator, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params->instructions[conditionalInstructionIndex]);
 	enum Mnemonic cc = currentInstruction->opcode;
@@ -619,10 +618,10 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 			if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
 			{
 				struct JdcStr operand1Str = initializeJdcStr();
-				if (!decompileOperand(params, i, 0, 1, &operand1Str))
+				if (ERROR_JDC == decompileOperand(params, i, 0, 1, &operand1Str))
 				{
 					freeJdcStr(&operand1Str);
-					return 0;
+					return ERROR_JDC;
 				}
 
 				if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && doesInstructionAssignToOperand(params, i, 0)))
@@ -638,15 +637,15 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 					freeJdcStr(&operand1Str);
 
 					addAssociatedInstruction(params->currentFunc, i);
-					return 1;
+					return SUCCESS_JDC;
 				}
 
 				struct JdcStr operand2Str = initializeJdcStr();
-				if (!decompileOperand(params, i, 1, 1, &operand2Str))
+				if (ERROR_JDC == decompileOperand(params, i, 1, 1, &operand2Str))
 				{
 					freeJdcStr(&operand1Str);
 					freeJdcStr(&operand2Str);
-					return 0;
+					return ERROR_JDC;
 				}
 
 				sprintfJdc(result, 0, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
@@ -654,15 +653,15 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 				freeJdcStr(&operand2Str);
 
 				addAssociatedInstruction(params->currentFunc, i);
-				return 1;
+				return SUCCESS_JDC;
 			}
 			else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
 			{
 				struct JdcStr operand1Str = initializeJdcStr();
-				if (!decompileOperand(params, i, 0, 1, &operand1Str))
+				if (ERROR_JDC == decompileOperand(params, i, 0, 1, &operand1Str))
 				{
 					freeJdcStr(&operand1Str);
-					return 0;
+					return ERROR_JDC;
 				}
 
 				if (currentInstruction->opcode == SUB && doesInstructionAssignToOperand(params, i, 0))
@@ -671,15 +670,15 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 					freeJdcStr(&operand1Str);
 
 					addAssociatedInstruction(params->currentFunc, i);
-					return 1;
+					return SUCCESS_JDC;
 				}
 
 				struct JdcStr operand2Str = initializeJdcStr();
-				if (!decompileOperand(params, i, 1, 1, &operand2Str))
+				if (ERROR_JDC == decompileOperand(params, i, 1, 1, &operand2Str))
 				{
 					freeJdcStr(&operand1Str);
 					freeJdcStr(&operand2Str);
-					return 0;
+					return ERROR_JDC;
 				}
 
 				sprintfJdc(result, 0, "%s %s %s", operand1Str.buffer, compOperator, operand2Str.buffer);
@@ -687,7 +686,7 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 				freeJdcStr(&operand2Str);
 
 				addAssociatedInstruction(params->currentFunc, i);
-				return 1;
+				return SUCCESS_JDC;
 			}
 
 			unsigned char stop = 0;
@@ -739,14 +738,14 @@ unsigned char decompileComparison(struct DecompilationParameters* params, int co
 		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, !invertOperator, result, 0);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-static unsigned char getValueFromDataSection(struct DecompilationParameters* params, struct DataType dataType, unsigned long long address, struct JdcStr* result)
+static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* params, struct DataType dataType, unsigned long long address, struct JdcStr* result)
 {
 	if (address < params->imageBase)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	struct FileSection* section = 0;
@@ -754,7 +753,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (dataType.primitiveType == FLOAT_TYPE)
@@ -769,7 +768,7 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 	{
 		if (getStringFromDataSection(params, address, result))
 		{
-			return 1;
+			return SUCCESS_JDC;
 		}
 
 		switch (dataType.primitiveType)
@@ -789,14 +788,14 @@ static unsigned char getValueFromDataSection(struct DecompilationParameters* par
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char getStringFromDataSection(struct DecompilationParameters* params, unsigned long long address, struct JdcStr* result)
+static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* params, unsigned long long address, struct JdcStr* result)
 {
 	if (address < params->imageBase)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	struct FileSection* section = 0;
@@ -804,7 +803,7 @@ static unsigned char getStringFromDataSection(struct DecompilationParameters* pa
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	char isString = 1;
@@ -866,5 +865,5 @@ static unsigned char getStringFromDataSection(struct DecompilationParameters* pa
 	}
 
 	freeJdcStr(&tmp);
-	return 0;
+	return ERROR_JDC;
 }

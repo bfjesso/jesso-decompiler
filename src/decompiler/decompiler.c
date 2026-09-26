@@ -11,45 +11,45 @@
 #include "dataTypes.h"
 #include "localRegVars.h"
 
-unsigned char decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int* errorInstructionIndex)
+enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int* errorInstructionIndex)
 {
 	params->currentFunc->numOfLines = 0;
 	
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
-		if (!getAllDirectJmps(params))
+		if (ERROR_JDC == getAllDirectJmps(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all direct jumps.");
-			return 0;
+			return ERROR_JDC;
 		}
 		
-		if (!getAllLocalRegVars(params))
+		if (ERROR_JDC == getAllLocalRegVars(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all local reg vars.");
-			return 0;
+			return ERROR_JDC;
 		}
 
-		if (!getAllReturnedVars(params))
+		if (ERROR_JDC == getAllReturnedVars(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all returned vars.");
-			return 0;
+			return ERROR_JDC;
 		}
 
 		params->currentFunc->associatedInstructionsBufferLen = params->currentFunc->lastInstructionIndex - params->currentFunc->firstInstructionIndex;
 		params->currentFunc->associatedInstructions = (struct AssociatedInstructions*)calloc(params->currentFunc->associatedInstructionsBufferLen, sizeof(struct AssociatedInstructions));
 		if (!params->currentFunc->associatedInstructions) 
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 
 		params->currentFunc->hasDoneInitialAnalysis = 1;
 	}
 	
-	if (!generateFunctionHeader(params->currentFunc, result))
+	if (ERROR_JDC == generateFunctionHeader(params->currentFunc, result))
 	{
 		strcpyJdc(statusMessage, "Error generating function header.");
 		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
-		return 0;
+		return ERROR_JDC;
 	}
 
 	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
@@ -61,11 +61,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	addAssociatedInstruction(params->currentFunc, params->currentFunc->firstInstructionIndex);
 	params->currentFunc->numOfLines++;
 
-	if (!declareAllLocalVariables(params, result))
+	if (ERROR_JDC == declareAllLocalVariables(params, result))
 	{
 		strcpyJdc(statusMessage, "Error declaring local variables.");
 		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
-		return 0;
+		return ERROR_JDC;
 	}
 
 	unsigned char isInUnreachableState = 0;
@@ -78,14 +78,14 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 		{
 			sprintfJdc(statusMessage, 0, "Bad indentation. There is an error with condition handling at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return 0;
+			return ERROR_JDC;
 		}
 		
-		if (!isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
+		if (ERROR_JDC == isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
 		{
 			sprintfJdc(statusMessage, 0, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return 0;
+			return ERROR_JDC;
 		}
 
 		if (isInUnreachableState)
@@ -109,11 +109,11 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 				if (cond && cond->conditionType != DO_WHILE_CT)
 				{
 					i--; // decompileConditionEnds checks for the last body index, not the jmp dst
-					if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
+					if (ERROR_JDC == decompileConditionEnds(params, i, &isInUnreachableState, result))
 					{
 						sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
 						if (errorInstructionIndex) { *errorInstructionIndex = i; }
-						return 0;
+						return ERROR_JDC;
 					}
 
 					continue;
@@ -126,74 +126,74 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 			}
 		}
 
-		if (!decompileConditionStarts(params, i, result))
+		if (ERROR_JDC == decompileConditionStarts(params, i, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling start of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return 0;
+			return ERROR_JDC;
 		}
 
-		if (!decompileDirectJmps(params, i, &isInUnreachableState, result))
+		if (ERROR_JDC == decompileDirectJmps(params, i, &isInUnreachableState, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return 0;
+			return ERROR_JDC;
 		}
 
 		struct Function* callee;
 		struct Intrinsic* intrinsic;
 		if (checkForKnownFunctionCall(params, i, &callee))
 		{
-			if (!decompileKnownFunctionCall(params, i, callee, result))
+			if (ERROR_JDC == decompileKnownFunctionCall(params, i, callee, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling known function call at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 		else if (checkForUnknownFunctionCall(params, i))
 		{
-			if (!decompileUnknownFunctionCall(params, i, result))
+			if (ERROR_JDC == decompileUnknownFunctionCall(params, i, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling unknown function call at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 		else if (checkForVoidIntrinsic(params, i, &intrinsic))
 		{
-			if (!decompileVoidIntrinsic(params, i, intrinsic, result))
+			if (ERROR_JDC == decompileVoidIntrinsic(params, i, intrinsic, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling intrinsic function at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 		else if (checkForAnyAssignments(params, i))
 		{
-			if (!decompileOperation(params, i, NO_REG, 1, 0, result, 0))
+			if (ERROR_JDC == decompileOperation(params, i, NO_REG, 1, 0, result, 0))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
 		if (checkForReturnStatement(params, i))
 		{
-			if (!decompileReturnStatement(params, i, &isInUnreachableState, result))
+			if (ERROR_JDC == decompileReturnStatement(params, i, &isInUnreachableState, result))
 			{
 				sprintfJdc(statusMessage, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
-				return 0;
+				return ERROR_JDC;
 			}
 		}
 
-		if (!decompileConditionEnds(params, i, &isInUnreachableState, result))
+		if (ERROR_JDC == decompileConditionEnds(params, i, &isInUnreachableState, result))
 		{
 			sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return 0;
+			return ERROR_JDC;
 		}
 	}
 
@@ -201,7 +201,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	{
 		strcpyJdc(statusMessage, "Bad indentation. There is an error with condition handling and the decompilation did not finish at one indentation.");
 		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->lastInstructionIndex; }
-		return 0;
+		return ERROR_JDC;
 	}
 
 	addAssociatedInstruction(params->currentFunc, params->currentFunc->lastInstructionIndex);
@@ -209,7 +209,7 @@ unsigned char decompileFunction(struct DecompilationParameters* params, struct J
 	return strcatJdc(result, "}");
 }
 
-static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
+static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
@@ -225,9 +225,9 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 				
 				if (callee)
 				{
-					if (!addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
+					if (ERROR_JDC == addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
 					{
-						return 0;
+						return ERROR_JDC;
 					}
 				}
 				else
@@ -238,16 +238,16 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 					int importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
 					{
-						if (!addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
+						if (ERROR_JDC == addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
 						{
-							return 0;
+							return ERROR_JDC;
 						}
 					}
 					else
 					{
-						if (!addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
+						if (ERROR_JDC == addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, "funcPtr"))
 						{
-							return 0;
+							return ERROR_JDC;
 						}
 					}
 				}
@@ -255,10 +255,10 @@ static unsigned char getAllReturnedVars(struct DecompilationParameters* params)
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* result)
+enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 
@@ -295,10 +295,10 @@ unsigned char generateFunctionHeader(struct Function* function, struct JdcStr* r
 	}
 
 	freeJdcStr(&typeStr);
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
+static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	unsigned char declaredAVar = 0;
@@ -377,5 +377,5 @@ static unsigned char declareAllLocalVariables(struct DecompilationParameters* pa
 	}
 
 	freeJdcStr(&typeStr);
-	return 1;
+	return SUCCESS_JDC;
 }

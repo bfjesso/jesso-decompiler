@@ -7,9 +7,9 @@ extern "C"
 {
 #endif
 
-	unsigned char findNextFunction(struct DecompilationParameters* params, struct Function* result, int* instructionIndex);
+	enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct Function* result, int* instructionIndex);
 
-	unsigned char analyzeAllFunctions(struct DecompilationParameters* params);
+	enum JdcStatus analyzeAllFunctions(struct DecompilationParameters* params);
 
 	void freeFunction(struct Function* function);
 
@@ -21,17 +21,17 @@ extern "C"
 }
 #endif
 
-static unsigned char getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params);
+static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params);
 
-static unsigned char getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
+static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
 
 static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
-static unsigned char fixAllFunctionArgs(struct DecompilationParameters* params);
+static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params);
 
 unsigned char getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef);
 
-static unsigned char setAllStackVarTypes(struct DecompilationParameters* params);
+static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params);
 
 static long long getStackFrameChange(struct DisassembledInstruction* instruction);
 
@@ -51,14 +51,14 @@ struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Reg
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress);
 
-static unsigned char addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef);
+static enum JdcStatus addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef);
 
-unsigned char addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
+enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
 
-unsigned char addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex);
+enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex);
 
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
 
-unsigned char addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
+enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName);
 
-unsigned char addAssociatedInstruction(struct Function* function, int instructionIndex);
+enum JdcStatus addAssociatedInstruction(struct Function* function, int instructionIndex);

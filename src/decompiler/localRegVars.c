@@ -4,27 +4,27 @@
 #include "assignment.h"
 #include "returnStatements.h"
 
-unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
+enum JdcStatus getAllLocalRegVars(struct DecompilationParameters* params)
 {
-	if (!getLocalRegVarsFromConditionalInstructions(params)) 
+	if (ERROR_JDC == getLocalRegVarsFromConditionalInstructions(params)) 
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
-	if (!getLocalRegVarsFromConditions(params)) 
+	if (ERROR_JDC == getLocalRegVarsFromConditions(params))
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
-	if (!getTempLocalRegVars(params)) 
+	if (ERROR_JDC == getTempLocalRegVars(params))
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params)
+static enum JdcStatus getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params)
 {
 	// checking for individual instructions that conditionally modify a reg
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
@@ -40,9 +40,9 @@ static unsigned char getLocalRegVarsFromConditionalInstructions(struct Decompila
 
 			if (!modifiedRegVar)
 			{
-				if (!addRegVar(params, 0, 0, modifiedReg))
+				if (ERROR_JDC == addRegVar(params, 0, 0, modifiedReg))
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 
 				modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
@@ -53,10 +53,10 @@ static unsigned char getLocalRegVarsFromConditionalInstructions(struct Decompila
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameters* params) 
+static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
 	unsigned char modifiedRegs[NUM_OF_REGISTERS] = { 0 };
@@ -117,9 +117,9 @@ static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameter
 						}
 						else
 						{
-							if (!addRegVar(params, 0, 0, j))
+							if (ERROR_JDC == addRegVar(params, 0, 0, j))
 							{
-								return 0;
+								return ERROR_JDC;
 							}
 
 							struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
@@ -141,9 +141,9 @@ static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameter
 					}
 					else
 					{
-						if (!addRegVar(params, 0, 0, j))
+						if (ERROR_JDC == addRegVar(params, 0, 0, j))
 						{
-							return 0;
+							return ERROR_JDC;
 						}
 
 						struct RegisterVariable* newRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
@@ -154,10 +154,10 @@ static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameter
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char getTempLocalRegVars(struct DecompilationParameters* params) 
+static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params)
 {
 	// these are reg vars that contain the value of another variable before it changes
 	unsigned char addedNewRegVar = 0;
@@ -180,9 +180,9 @@ static unsigned char getTempLocalRegVars(struct DecompilationParameters* params)
 							struct RegisterVariable* statusFlagVar = getLocalRegVarByReg(params->currentFunc, statusFlag);
 							if (!statusFlagVar)
 							{
-								if (!addRegVar(params, 0, 0, statusFlag))
+								if (ERROR_JDC == addRegVar(params, 0, 0, statusFlag))
 								{
-									return 0;
+									return ERROR_JDC;
 								}
 
 								statusFlagVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
@@ -240,9 +240,9 @@ static unsigned char getTempLocalRegVars(struct DecompilationParameters* params)
 						{
 							if (!modifiedRegVar)
 							{
-								if (!addRegVar(params, 0, 0, modifiedReg))
+								if (ERROR_JDC == addRegVar(params, 0, 0, modifiedReg))
 								{
-									return 0;
+									return ERROR_JDC;
 								}
 
 								modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
@@ -258,7 +258,7 @@ static unsigned char getTempLocalRegVars(struct DecompilationParameters* params)
 		}
 	} while (addedNewRegVar);
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)

@@ -1,4 +1,5 @@
 #pragma once
+#include "../jdcTypes.h"
 #include "../fileStructs.h"
 
 // dbghelp.h needs windows.h
@@ -23,29 +24,29 @@ struct IMAGE_NT_HEADERS_INFO
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 };
 
-unsigned char isFilePE(const wchar_t* filePath, unsigned char* isPE);
+enum JdcStatus isFilePE(const wchar_t* filePath, unsigned char* isPERef);
 
-unsigned char isPEX64(const wchar_t* filePath, unsigned char* isX64);
+enum JdcStatus isPEX64(const wchar_t* filePath, unsigned char* is64BitRef);
 
-static unsigned char getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
+static enum JdcStatus getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
 
-unsigned long long getPEImageBase(const wchar_t* filePath, unsigned char is64Bit);
+enum JdcStatus getPEImageBase(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* imageBaseRef);
 
-unsigned long long getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit);
+enum JdcStatus getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* entryPointRef);
 
-int getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit);
+enum JdcStatus getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit, int* numOfSectionsRef);
 
-unsigned char getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
+enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-unsigned char getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result);
+enum JdcStatus getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result);
 
-int getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfLibrariesRef);
+enum JdcStatus getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef);
 
-int getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
+enum JdcStatus getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
 
-static DWORD rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva);
+static enum JdcStatus rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva, DWORD* fileOffsetRef);
 
-unsigned char generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
+enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result);
 
 static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr* result);
 

@@ -38,7 +38,7 @@ public:
 	unsigned long long entryPoint = 0;
 
 	unsigned char* fileBytes = nullptr;
-	unsigned long long numOfFileBytes = 0;
+	unsigned int numOfFileBytes = 0;
 
 	FileSection* sections = nullptr;
 	int numOfSections = 0;
@@ -113,9 +113,9 @@ public:
 
 	void OpenFile();
 
-	unsigned char LoadKnownFile(wxString filePath);
+	enum JdcStatus LoadKnownFile(wxString filePath);
 
-	unsigned char LoadUnknownFile(wxString filePath);
+	enum JdcStatus LoadUnknownFile(wxString filePath);
 
 	void DisassembleFile();
 
@@ -123,11 +123,11 @@ public:
 
 	void ClearData();
 
-	unsigned char DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress);
+	enum JdcStatus DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress);
 
-	unsigned char DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
+	enum JdcStatus DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
-	unsigned char HandleJmpTables();
+	enum JdcStatus HandleJmpTables();
 
 	void FindAllFunctions(unsigned char getSymbols);
 

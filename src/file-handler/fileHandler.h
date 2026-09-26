@@ -1,43 +1,44 @@
 #pragma once
+#include "../jdcTypes.h"
 #include "../fileStructs.h"
 #include <wchar.h>
 
 FILE* openFile(const wchar_t* filePath);
 
-unsigned char demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
+enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen);
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-	unsigned char identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat);
+	enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat);
 
 	const char* fileFormatToStr(enum FileFormat fileFormat);
 
 	const char* fileSectionTypeToStr(enum FileSectionType fileSectionType);
 
-	unsigned char isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* isX64);
+	enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* is64BitRef);
 
-	unsigned long long getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit);
+	enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* imageBaseRef);
 
-	unsigned long long getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit);
+	enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* entryPointRef);
 
-	int getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit);
+	enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfSectionsRef);
 
-	int getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
+	enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen);
 
-	unsigned int getNumOfFileBytes(const wchar_t* filePath);
+	enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, unsigned int* numOfBytesRef);
 
-	unsigned char readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize);
+	enum JdcStatus readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize);
 
-	unsigned char getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result);
+	enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result);
 
-	int getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfLibrariesRef);
+	enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef);
 
-	int getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
+	enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
 
-	unsigned char generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result);
+	enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result);
 
 	unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section);
 

@@ -1,21 +1,21 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char getAllConditions(struct DecompilationParameters* params);
+enum JdcStatus getAllConditions(struct DecompilationParameters* params);
 
 static int getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1);
 
-static unsigned char handleConditionsResize(struct DecompilationParameters* params);
+static enum JdcStatus handleConditionsResize(struct DecompilationParameters* params);
 
-static unsigned char removeCondition(struct DecompilationParameters* params, int conditionIndex);
+static enum JdcStatus removeCondition(struct DecompilationParameters* params, int conditionIndex);
 
-static unsigned char handleCombinedJccResize(struct Condition* condition);
+static enum JdcStatus handleCombinedJccResize(struct Condition* condition);
 
-unsigned char decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
+enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
 
-unsigned char decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
+enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
 
-static unsigned char decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
+static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
 
 unsigned char isConditionDirectJmp(struct Condition* condition);
 

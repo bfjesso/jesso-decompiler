@@ -4,7 +4,7 @@
 #include "decompilationUtils.h"
 #include "returnStatements.h"
 
-unsigned char getAllDirectJmps(struct DecompilationParameters* params)
+enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 {
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
@@ -18,9 +18,9 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 			}
 			else if ((dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex) && !checkForKnownFunctionCall(params, i, 0) && !checkForUnknownFunctionCall(params, i))
 			{
-				if (!handleDirectJmpsResize(params))
+				if (ERROR_JDC == handleDirectJmpsResize(params))
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 
 				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].dstIndex = dstIndex;
@@ -89,9 +89,9 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 
 			if (directJmpType != NONE_DJT)
 			{
-				if (!handleDirectJmpsResize(params)) 
+				if (ERROR_JDC == handleDirectJmpsResize(params))
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 				
 				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].dstIndex = dstIndex;
@@ -102,28 +102,26 @@ unsigned char getAllDirectJmps(struct DecompilationParameters* params)
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-static unsigned char handleDirectJmpsResize(struct DecompilationParameters* params)
+static enum JdcStatus handleDirectJmpsResize(struct DecompilationParameters* params)
 {
 	if (params->currentFunc->numOfDirectJmps % 5 == 0)
 	{
 		struct DirectJmp* newDirectJmps = (struct DirectJmp*)realloc(params->currentFunc->directJmps, (params->currentFunc->numOfDirectJmps + 5) * sizeof(struct DirectJmp));
-		if (newDirectJmps)
+		if (!newDirectJmps)
 		{
-			params->currentFunc->directJmps = newDirectJmps;
+			return ERROR_JDC;
 		}
-		else
-		{
-			return 0;
-		}
+
+		params->currentFunc->directJmps = newDirectJmps;
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
@@ -132,7 +130,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 			params->numOfIndents--;
 			addDecompiledLine(params, result, instructionIndex, "label_%llX:", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
 			params->numOfIndents++;
-			return 1;
+			return SUCCESS_JDC;
 		}
 		else if (instructionIndex == params->currentFunc->directJmps[i].jmpIndex)
 		{
@@ -154,7 +152,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 				break;
 			}
 
-			return 1;
+			return SUCCESS_JDC;
 		}
 	}
 
@@ -170,7 +168,7 @@ unsigned char decompileDirectJmps(struct DecompilationParameters* params, int in
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 unsigned char checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)

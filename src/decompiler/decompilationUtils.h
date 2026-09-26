@@ -14,7 +14,7 @@ extern "C"
 
 	unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex);
 
-	unsigned char getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result);
+	enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result);
 
 	int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address);
 
@@ -32,11 +32,11 @@ extern "C"
 }
 #endif
 
-unsigned char addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...);
+enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...);
 
-static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
+static enum JdcStatus operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result);
 
-static unsigned char regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result);
+static enum JdcStatus regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result);
 
 unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 

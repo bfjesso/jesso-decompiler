@@ -7,9 +7,9 @@
 #include "extendedOpcodeMap.h"
 #include "escapeOpcodeMaps.h"
 
-unsigned char handleOpcode(struct DisassemblyParameters* params)
+enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 {
-	if (params->bytes > params->maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 	unsigned char prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
 	unsigned char opcodeByte = 0;
@@ -103,7 +103,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 				}
 				else if(params->bytes[0] != 0xFB)
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 
 				params->bytes++;
@@ -111,7 +111,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 		}
 		else
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 	}
 	else if (params->bytes <= params->maxBytesAddr) // sequence: opcode
@@ -130,13 +130,13 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 	}
 	else
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	// handle extended opcodes or escape opcodes
 	if (params->opcode.mnemonic == EXTENDED_OPCODE)
 	{
-		if (params->bytes > params->maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 		params->modRM.hasGotModRM = 1;
 		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
@@ -288,7 +288,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 
 		if (extendedOpcode == 0)
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 
 		params->opcode.mnemonic = extendedOpcode->mnemonic;
@@ -313,7 +313,7 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 	}
 	else if (escapeToCoprocessor) // escape to coprocessor instruction set
 	{
-		if (params->bytes > params->maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 		params->modRM.hasGotModRM = 1;
 		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
@@ -353,11 +353,11 @@ unsigned char handleOpcode(struct DisassemblyParameters* params)
 
 	if (params->opcode.mnemonic == NO_MNEMONIC)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	handleAlternateMnemonics(params);
-	return 1;
+	return SUCCESS_JDC;
 }
 
 static void handleAlternateMnemonics(struct DisassemblyParameters* params) // this should only be for when the alternate mnemonic represents a different instruction

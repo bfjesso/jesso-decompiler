@@ -1,15 +1,15 @@
 #pragma once
 #include "disassemblyStructs.h"
 
-unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params);
+enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params);
 
 enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix);
 
-unsigned char handleREXPrefix(struct DisassemblyParameters* params);
+enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params);
 
-unsigned char handleVEXPrefix(struct DisassemblyParameters* params);
+enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params);
 
-unsigned char handleEVEXPrefix(struct DisassemblyParameters* params);
+enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params);
 
 unsigned char checkFlagR(struct DisassemblyParameters* params);
 

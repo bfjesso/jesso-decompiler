@@ -1,13 +1,13 @@
 #pragma once
 #include "decompilationUtils.h"
 
-unsigned char getAllLocalRegVars(struct DecompilationParameters* params);
+enum JdcStatus getAllLocalRegVars(struct DecompilationParameters* params);
 
-static unsigned char getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params);
+static enum JdcStatus getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params);
 
-static unsigned char getLocalRegVarsFromConditions(struct DecompilationParameters* params);
+static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParameters* params);
 
-static unsigned char getTempLocalRegVars(struct DecompilationParameters* params);
+static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params);
 
 static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar);
 

@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../jdcTypes.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,9 +16,9 @@ extern "C"
 {
 #endif
 
-	unsigned char strcpyJdc(struct JdcStr* jdcStr, const char* src);
+	enum JdcStatus strcpyJdc(struct JdcStr* jdcStr, const char* src);
 
-	unsigned char sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
+	enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
 	
 	struct JdcStr initializeJdcStr();
 
@@ -26,22 +26,22 @@ extern "C"
 
 	struct JdcStr initializeJdcStrWithSize(int size);
 
-	unsigned char freeJdcStr(struct JdcStr* jdcStr);
+	enum JdcStatus freeJdcStr(struct JdcStr* jdcStr);
 
 #ifdef __cplusplus
 }
 #endif
 
-unsigned char wrapJdcStrInParentheses(struct JdcStr* jdcStr);
+enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr);
 
-unsigned char replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr);
+enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr);
 
-unsigned char strcatJdc(struct JdcStr* jdcStr, const char* src);
+enum JdcStatus strcatJdc(struct JdcStr* jdcStr, const char* src);
 
-unsigned char strcatStartJdc(struct JdcStr* jdcStr, const char* src);
+enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src);
 
-unsigned char sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
+enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
 
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy);
 
-static unsigned char resizeJdcStr(struct JdcStr* jdcStr, int newSize);
+static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int newSize);

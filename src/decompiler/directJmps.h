@@ -1,10 +1,10 @@
 #pragma once
 #include "decompilationStructs.h"
 
-unsigned char getAllDirectJmps(struct DecompilationParameters* params);
+enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params);
 
-static unsigned char handleDirectJmpsResize(struct DecompilationParameters* params);
+static enum JdcStatus handleDirectJmpsResize(struct DecompilationParameters* params);
 
-unsigned char decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
+enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
 
 unsigned char checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex);

@@ -1,4 +1,5 @@
 #pragma once
+#include "../jdcTypes.h"
 #include "../fileStructs.h"
 #include "dataTypes.h"
 

@@ -1,6 +1,6 @@
 #include "prefixes.h"
 
-unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params)
+enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params)
 {
 	params->legPrefixes.group1 = NO_PREFIX;
 	params->legPrefixes.group2 = NO_PREFIX;
@@ -47,13 +47,13 @@ unsigned char handleLegacyPrefixes(struct DisassemblyParameters* params)
 			params->legPrefixes.group4 = ASO;
 			break;
 		default:
-			return 1;
+			return SUCCESS_JDC;
 		}
 
 		params->bytes++;
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
@@ -77,13 +77,13 @@ enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
 	return NO_SEGMENT;
 }
 
-unsigned char handleREXPrefix(struct DisassemblyParameters* params)
+enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params)
 {
-	if (params->bytes > params->maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 	unsigned char rexByte = params->bytes[0];
 
-	if (rexByte < 0x40 || rexByte > 0x4F) { return 1; }
+	if (rexByte < 0x40 || rexByte > 0x4F) { return SUCCESS_JDC; }
 
 	params->rexPrefix.isValidREX = 1;
 	params->rexPrefix.W = (rexByte >> 3) & 0x01;
@@ -93,12 +93,12 @@ unsigned char handleREXPrefix(struct DisassemblyParameters* params)
 
 	params->bytes++;
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char handleVEXPrefix(struct DisassemblyParameters* params)
+enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 {
-	if (params->bytes > params->maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 	unsigned char byte0 = params->bytes[0];
 	unsigned char byte1 = params->bytes[1];
@@ -148,12 +148,12 @@ unsigned char handleVEXPrefix(struct DisassemblyParameters* params)
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char handleEVEXPrefix(struct DisassemblyParameters* params)
+enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 {
-	if (params->bytes > params->maxBytesAddr) { return 0; }
+	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 	unsigned char firstByte = params->bytes[0];
 	unsigned char p0 = params->bytes[1];
@@ -196,7 +196,7 @@ unsigned char handleEVEXPrefix(struct DisassemblyParameters* params)
 		params->bytes += 4;
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 unsigned char checkFlagR(struct DisassemblyParameters* params)

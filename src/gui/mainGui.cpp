@@ -463,14 +463,13 @@ void MainGui::OpenFile()
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
 		{
-			numOfFileBytes = getNumOfFileBytes(filePath.c_str().AsWChar());
-			if (numOfFileBytes == 0)
+			if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes))
 			{
 				wxMessageBox("Error getting number of bytes in file", "Can't load data");
 				return;
 			}
 
-			if (!identifyFileFormat(filePath.c_str().AsWChar(), &fileFormat)) 
+			if (ERROR_JDC == identifyFileFormat(filePath.c_str().AsWChar(), &fileFormat)) 
 			{
 				wxMessageBox("Error identifying file format", "Failed to open file");
 				return;
@@ -479,7 +478,7 @@ void MainGui::OpenFile()
 			if (fileFormat != UNKNOWN_FF)
 			{
 				logTextCtrl->Log("opened " + fileName, 0);
-				if (!LoadKnownFile(filePath))
+				if (ERROR_JDC == LoadKnownFile(filePath))
 				{
 					ClearData();
 					logTextCtrl->Log("closed " + fileName, 0);
@@ -492,7 +491,7 @@ void MainGui::OpenFile()
 				if (loadAnyway == wxYES)
 				{
 					logTextCtrl->Log("opened " + fileName, 0);
-					if (!LoadUnknownFile(filePath))
+					if (ERROR_JDC == LoadUnknownFile(filePath))
 					{
 						ClearData();
 						logTextCtrl->Log("closed " + fileName, 0);
@@ -537,51 +536,70 @@ void MainGui::OpenFile()
 	openFileDialog.Close(true);
 }
 
-unsigned char MainGui::LoadKnownFile(wxString filePath)
+enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 {
-	if (!isFile64Bit(filePath.c_str().AsWChar(), fileFormat, &is64Bit)) 
+	if (ERROR_JDC == isFile64Bit(filePath.c_str().AsWChar(), fileFormat, &is64Bit))
 	{
 		wxMessageBox("Error determining file architecture", "Can't load file");
-		return 0;
+		return ERROR_JDC;
 	}
 	
 	fileBytes = new unsigned char[numOfFileBytes];
-	if (!readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+	if (ERROR_JDC == readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
 	{
-		wxMessageBox("Error reading bytes from file", "Can't load data");
-		return 0;
+		wxMessageBox("Error reading bytes from file", "Can't load file");
+		return ERROR_JDC;
 	}
 	
-	imageBase = getFileImageBase(filePath.c_str().AsWChar(), fileFormat, is64Bit);
-	entryPoint = getFileEntryPoint(filePath.c_str().AsWChar(), fileFormat, is64Bit);
+	if (ERROR_JDC == getFileImageBase(filePath.c_str().AsWChar(), fileFormat, is64Bit, &imageBase)) 
+	{
+		wxMessageBox("Error getting image base", "Can't load file");
+		return ERROR_JDC;
+	}
+	
+	if (ERROR_JDC == getFileEntryPoint(filePath.c_str().AsWChar(), fileFormat, is64Bit, &entryPoint)) 
+	{
+		wxMessageBox("Error getting entry point", "Can't load file");
+		return ERROR_JDC;
+	}
 
-	numOfSections = getNumOfSections(filePath.c_str().AsWChar(), fileFormat, is64Bit);
+	if (ERROR_JDC == getNumOfSections(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfSections)) 
+	{
+		wxMessageBox("Error getting number of file sections", "Can't load file");
+		return ERROR_JDC;
+	}
+
 	sections = new FileSection[numOfSections];
-	if (!getAllFileSectionHeaders(filePath.c_str().AsWChar(), fileFormat, is64Bit, sections, numOfSections))
+	if (ERROR_JDC == getAllFileSectionHeaders(filePath.c_str().AsWChar(), fileFormat, is64Bit, sections, numOfSections))
 	{
 		wxMessageBox("Error getting all file sections", "Failed to open file");
-		return 0;
+		return ERROR_JDC;
 	}
 
-	numOfImports = getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfLibraries);
+	if (ERROR_JDC == getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfImports, &numOfLibraries)) 
+	{
+		wxMessageBox("Error getting number of imports", "Failed to open file");
+		return ERROR_JDC;
+	}
+
 	imports = new ImportedFunction[numOfImports];
 	libraryNames = new JdcStr[numOfLibraries];
-	if (getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports, libraryNames, numOfLibraries) != numOfImports)
+	if (ERROR_JDC == getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports, libraryNames, numOfLibraries))
 	{
 		wxMessageBox("Error getting all imports", "Failed to open file");
-		return 0;
+		return ERROR_JDC;
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char MainGui::LoadUnknownFile(wxString filePath)
+enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 {
 	fileBytes = new unsigned char[numOfFileBytes];
-	if (!readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
+	if (ERROR_JDC == readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
 	{
 		wxMessageBox("Error reading bytes from file", "Can't load data");
-		return 0;
+		return ERROR_JDC;
 	}
 
 	entryPoint = 0;
@@ -606,7 +624,7 @@ unsigned char MainGui::LoadUnknownFile(wxString filePath)
 		}
 		else
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 	}
 	
@@ -634,7 +652,7 @@ unsigned char MainGui::LoadUnknownFile(wxString filePath)
 
 	numOfImports = 0;
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 unsigned char CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
@@ -900,18 +918,18 @@ void MainGui::ClearData()
 	fileFormat = UNKNOWN_FF;
 }
 
-unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)
+enum JdcStatus MainGui::DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress)
 {
 	struct FileSection* currentSection = 0;
 	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
-		return 1;
+		return SUCCESS_JDC;
 	}
 	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
 	{
 		logTextCtrl->LogHexNum("instruction jumps outside file", instructionBuffer->address, 1);
-		return 0;
+		return ERROR_JDC;
 	}
 
 	unsigned char storeInstruction = 1;
@@ -921,7 +939,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 	{
 		if (findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress) != -1)
 		{
-			return 1;
+			return SUCCESS_JDC;
 		}
 
 		int instructionIndex = findInstructionInsertPoint(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress);
@@ -930,14 +948,14 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
 		{
 			logTextCtrl->LogHexNum("instruction overlaps with existing instruction", currentVirtualAddress, 1);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
 			logTextCtrl->LogHexNum("bad instruction at", currentVirtualAddress, 1);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		instructionBuffer->address = currentVirtualAddress;
@@ -955,7 +973,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 		decompParams.instructions = instructionBuffer;
 		if (isOpcodeReturn(instructionBuffer->opcode))
 		{
-			return 1;
+			return SUCCESS_JDC;
 		}
 		else if (isOpcodeJmp(instructionBuffer->opcode))
 		{
@@ -966,7 +984,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 				currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
 				if (!section || section->type != CODE_FST)
 				{
-					return 1;
+					return SUCCESS_JDC;
 				}
 
 				currentVirtualAddress = jmpDst;
@@ -974,7 +992,7 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			}
 			else 
 			{
-				return 1;
+				return SUCCESS_JDC;
 			}
 		}
 		else if (isOpcodeJcc(instructionBuffer->opcode) || isOpcodeCall(instructionBuffer->opcode))
@@ -982,34 +1000,34 @@ unsigned char MainGui::DisassembleTakingJumps(unsigned long long startVA, struct
 			unsigned long long jmpDst = getJmpDst(&decompParams, 0);
 			if (jmpDst != 0)
 			{
-				if (!DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
+				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 			}
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
+enum JdcStatus MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
 	unsigned long long currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
-		return 1;
+		return SUCCESS_JDC;
 	}
 	else if (currentFileOffset >= numOfFileBytes)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	unsigned long long endFileOffset = rvaToFileOffset(sections, numOfSections, endVA - imageBase, 0);
 	if (endFileOffset > numOfFileBytes || endFileOffset == 0)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	unsigned long long currentVirtualAddress = startVA;
@@ -1021,7 +1039,7 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 			int numOfBytes = instructionBuffer->numOfBytes;
 			if (numOfBytes == 0) 
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 
 			memset(instructionBuffer, 0, sizeof(struct DisassembledInstruction));
@@ -1032,14 +1050,14 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 			{
 				if (currentFileOffset >= endFileOffset)
 				{
-					return 1;
+					return SUCCESS_JDC;
 				}
 				
 				instructionBuffer->address = currentVirtualAddress;
 				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
 				if (!instructionBuffer->operands) 
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 
 				instructionBuffer->operands[0].immediate.value = fileBytes[currentFileOffset];
@@ -1062,10 +1080,10 @@ unsigned char MainGui::DisassembleBetweenBounds(unsigned long long startVA, unsi
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
-unsigned char MainGui::HandleJmpTables() 
+enum JdcStatus MainGui::HandleJmpTables() 
 {
 	// this is setting called instructions from the RUNTIME_FUNCTION structs in .pdata
 	if (fileFormat == PE_FF && is64Bit) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
@@ -1171,7 +1189,7 @@ unsigned char MainGui::HandleJmpTables()
 				instruction.operands = (struct Operand*)calloc(1, sizeof(struct Operand));
 				if (!instruction.operands)
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 				instruction.operands[0].type = IMMEDIATE;
 				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : jumpTables[i].addressSize;
@@ -1201,7 +1219,7 @@ unsigned char MainGui::HandleJmpTables()
 		}
 	}
 
-	return 1;
+	return SUCCESS_JDC;
 }
 
 void MainGui::FindAllFunctions(unsigned char getSymbols) 

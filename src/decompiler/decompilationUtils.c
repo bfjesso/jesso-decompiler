@@ -20,7 +20,7 @@ extern const char* keywordStrs[NUM_OF_KEYWORDS] =
 	"return" 
 };
 
-unsigned char addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...)
+enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...)
 {
 	for (int i = 0; i < params->numOfIndents; i++)
 	{
@@ -29,7 +29,7 @@ unsigned char addDecompiledLine(struct DecompilationParameters* params, struct J
 
 	va_list args;
 	va_start(args, format);
-	unsigned char result = sprintfJdcArgs(decompiledFunction, 1, format, args);
+	enum JdcStatus result = sprintfJdcArgs(decompiledFunction, 1, format, args);
 	va_end(args);
 
 	strcatJdc(decompiledFunction, "\n");
@@ -61,12 +61,12 @@ unsigned long long getJmpDst(struct DecompilationParameters* params, int startIn
 	return dst;
 }
 
-static unsigned char operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+static enum JdcStatus operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
 		*result = operand->immediate.value;
-		return 1;
+		return SUCCESS_JDC;
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
@@ -78,9 +78,9 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		else if(operand->memoryAddress.reg != NO_REG)
 		{
 			unsigned long long baseRegVal = 0;
-			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
+			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 
 			address = baseRegVal;
@@ -95,9 +95,9 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		else if(operand->memoryAddress.regDisplacement != NO_REG)
 		{
 			unsigned long long displacementRegVal = 0;
-			if (!regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
+			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 
 			address += displacementRegVal;
@@ -117,7 +117,7 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 
 			if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 			{
-				return 0;
+				return ERROR_JDC;
 			}
 
 			switch (operand->memoryAddress.ptrSize) 
@@ -144,20 +144,20 @@ static unsigned char operandToValue(struct DecompilationParameters* params, int 
 		return regToValue(params, startInstructionIndex - 1, operand->reg, result);
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
-static unsigned char regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result)
+static enum JdcStatus regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result)
 {
 	if (reg == NO_REG)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (compareRegisters(reg, IP))
 	{
 		*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
-		return 1;
+		return SUCCESS_JDC;
 	}
 
 	int minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
@@ -176,7 +176,7 @@ static unsigned char regToValue(struct DecompilationParameters* params, int star
 		}
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
 unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
@@ -204,13 +204,13 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 	return jmpAddress;
 }
 
-unsigned char getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result)
+enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result)
 {
 	struct DisassembledInstruction* jmpInstruction = &params->instructions[instructionIndex];
 
 	if (jmpInstruction->opcode != JMP_NEAR)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
 	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
@@ -228,9 +228,9 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 				unsigned long long jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
 
 				unsigned long long regDisplacementVal = 0;
-				if (!regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+				if (ERROR_JDC == regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 				{
-					return 0;
+					return ERROR_JDC;
 				}
 
 				jmpTableAddress += regDisplacementVal;
@@ -248,9 +248,9 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 					unsigned long long indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
 
 					regDisplacementVal = 0;
-					if (!regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
+					if (ERROR_JDC == regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 					{
-						return 0;
+						return ERROR_JDC;
 					}
 
 					indirectTableAddress += regDisplacementVal;
@@ -262,7 +262,7 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 					result->indirectTableAddress = 0;
 				}
 
-				return 1;
+				return SUCCESS_JDC;
 			}
 		}
 	}
@@ -271,9 +271,9 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 		unsigned long long jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
 
 		unsigned long long regDisplacementVal = 0;
-		if (!regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
+		if (ERROR_JDC == regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 
 		jmpTableAddress += regDisplacementVal;
@@ -283,10 +283,10 @@ unsigned char getJumpTable(struct DecompilationParameters* params, int instructi
 		result->jmpInstructionAddress = jmpInstruction->address;
 		result->indirectTableAddress = 0; // not sure if should check for this here too
 
-		return 1;
+		return SUCCESS_JDC;
 	}
 
-	return 0;
+	return ERROR_JDC;
 }
 
 int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)

@@ -7,9 +7,9 @@ extern "C"
 {
 #endif
 
-	unsigned char disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+	enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 	
-	unsigned char instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result);
+	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result);
 
 	const char* getPtrSizeStr(int ptrSize);
 
@@ -19,4 +19,4 @@ extern "C"
 }
 #endif
 
-static unsigned char memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result);
+static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result);

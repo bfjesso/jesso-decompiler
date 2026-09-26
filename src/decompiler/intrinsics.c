@@ -111,17 +111,17 @@ unsigned char isInstructionReturningIntrinsic(struct DisassembledInstruction* in
 	return 0;
 }
 
-unsigned char decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, unsigned char getAssignment, struct JdcStr* result)
+enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, unsigned char getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
-		if (!decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 		{
 			freeJdcStr(&decompiledFirstOperand);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		sprintfJdc(result, 0, "%s = %s(", decompiledFirstOperand.buffer, intrinsic->name);
@@ -140,10 +140,10 @@ unsigned char decompileReturningIntrinsic(struct DecompilationParameters* params
 		}
 		
 		struct JdcStr decompiledOperand = initializeJdcStr();
-		if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
+		if (ERROR_JDC == decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 		{
 			freeJdcStr(&decompiledOperand);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
@@ -156,7 +156,7 @@ unsigned char decompileReturningIntrinsic(struct DecompilationParameters* params
 	}
 
 	strcatJdc(result, ")");
-	return 1;
+	return SUCCESS_JDC;
 }
 
 unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef)
@@ -200,7 +200,7 @@ unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int 
 	return 0;
 }
 
-unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
+enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -219,16 +219,16 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 		if ((intrinsic->opcode == STOS && i == 0) || intrinsic->opcode == MOVS)
 		{
 			// the REP STOS/MOVS intrinsics take pointer(s) as arguments, so the reg in the mem address shouldnt be dereferenced
-			if (!decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, 0, &decompiledOperand, 0))
+			if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, 0, &decompiledOperand, 0))
 			{
 				freeJdcStr(&decompiledOperand);
-				return 0;
+				return ERROR_JDC;
 			}
 		}
-		else if (!decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
+		else if (ERROR_JDC == decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 		{
 			freeJdcStr(&decompiledOperand);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		sprintfJdc(&decompiledCall, 1, "%s", decompiledOperand.buffer);
@@ -243,10 +243,10 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 	if (intrinsic->opcode == _INT)
 	{
 		struct JdcStr code = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, CX, 1, 0, &code, 0))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &code, 0))
 		{
 			freeJdcStr(&code);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		sprintfJdc(&decompiledCall, 1, "%s", code.buffer);
@@ -255,10 +255,10 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
 	{
 		struct JdcStr count = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, CX, 1, 0, &count, 0))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &count, 0))
 		{
 			freeJdcStr(&count);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		switch (instruction->operands[0].memoryAddress.ptrSize)
@@ -283,5 +283,5 @@ unsigned char decompileVoidIntrinsic(struct DecompilationParameters* params, int
 
 	addDecompiledLine(params, result, instructionIndex, "%s);", decompiledCall.buffer);
 	freeJdcStr(&decompiledCall);
-	return 1;
+	return SUCCESS_JDC;
 }
