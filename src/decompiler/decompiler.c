@@ -444,89 +444,103 @@ static unsigned char getAllLocalRegVars(struct DecompilationParameters* params)
 		}
 	}
 
-	// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	unsigned char addedNewRegVar = 0;
+	do 
 	{
-		if (doesInstructionAssignToOperand(params, i, 0)) 
+		addedNewRegVar = 0;
+		for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 		{
-			for (int statusFlag = CF; statusFlag <= OF; statusFlag++) 
+			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
+			if (checkForAnyAssignments(params, i))
 			{
-				if (params->instructions[i].opcode == ADD || params->instructions[i].opcode == SUB || 
-					(params->instructions[i].opcode == NEG && statusFlag == OF))
+				for (int statusFlag = CF; statusFlag <= OF; statusFlag++)
 				{
-					if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, statusFlag, 0, 0))
+					enum Mnemonic opcode = params->instructions[i].opcode;
+					if (opcode == ADD || opcode == SUB || opcode == CMPXCHG ||
+						(opcode == NEG && statusFlag == OF))
 					{
-						if (!addRegVar(params, 0, 0, statusFlag))
+						if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, statusFlag, 0, 0))
 						{
-							return 0;
-						}
+							struct RegisterVariable* statusFlagVar = getLocalRegVarByReg(params->currentFunc, statusFlag);
+							if (!statusFlagVar) 
+							{
+								if (!addRegVar(params, 0, 0, statusFlag))
+								{
+									return 0;
+								}
 
-						struct RegisterVariable* statusFlagVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-						getLocalRegVarScope(params, i, i + 1, statusFlagVar);
-						break;
+								statusFlagVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+								addedNewRegVar = 1;
+							}
+							
+							getLocalRegVarScope(params, i, i + 1, statusFlagVar);
+							break;
+						}
 					}
 				}
 			}
-		}
-		
-		for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
-		{
-			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
-			if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
-				!doesInstructionModifyRegister(params, i, modifiedReg, 0, 0))
-			{
-				continue;
-			}
 
-			for (int accessedReg = RAX; accessedReg < ST0; accessedReg++)
+			// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
+			for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
 			{
-				struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
-				if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP || 
-					!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(params, accessedRegVar, i))
+				struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
+				if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
+					!doesInstructionModifyRegister(params, i, modifiedReg, 0, 0))
 				{
 					continue;
 				}
 
-				unsigned char doesAccessedRegVarChange = 0;
-				for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
+				for (int accessedReg = RAX; accessedReg < ST0; accessedReg++)
 				{
-					if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
+					struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
+					if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP ||
+						!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(params, accessedRegVar, i))
 					{
-						break;
+						continue;
 					}
-					
-					unsigned char overwrites = 0;
-					if (!doesAccessedRegVarChange)
+
+					unsigned char doesAccessedRegVarChange = 0;
+					for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 					{
-						if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites) 
+						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
 						{
 							break;
 						}
-						
-						if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0)) 
+
+						unsigned char overwrites = 0;
+						if (!doesAccessedRegVarChange)
 						{
-							doesAccessedRegVarChange = 1;
-						}
-					}
-					else if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
-					{
-						if (!modifiedRegVar)
-						{
-							if (!addRegVar(params, 0, 0, modifiedReg))
+							if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
 							{
-								return 0;
+								break;
 							}
 
-							modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];	
+							if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0))
+							{
+								doesAccessedRegVarChange = 1;
+							}
 						}
+						else if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
+						{
+							if (!modifiedRegVar)
+							{
+								if (!addRegVar(params, 0, 0, modifiedReg))
+								{
+									return 0;
+								}
 
-						addRegVarScope(modifiedRegVar, i, j);
-						break;
+								modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+								addedNewRegVar = 1;
+							}
+
+							addRegVarScope(modifiedRegVar, i, j);
+							break;
+						}
 					}
 				}
 			}
 		}
-	}
+	} while (addedNewRegVar);
 
 	return 1;
 }
