@@ -141,6 +141,9 @@
     <ClCompile Include="src\gui\codeReferencesWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decompiler\localRegVars.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -291,6 +294,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\pe-handler\windowsStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decompiler\localRegVars.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

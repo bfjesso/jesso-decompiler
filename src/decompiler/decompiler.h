@@ -14,12 +14,6 @@ extern "C"
 }
 #endif
 
-static unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, int callNum);
-
 static unsigned char getAllReturnedVars(struct DecompilationParameters* params);
-
-static unsigned char getAllLocalRegVars(struct DecompilationParameters* params);
-
-static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar);
 
 static unsigned char declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result);
