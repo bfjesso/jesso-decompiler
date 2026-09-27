@@ -463,7 +463,7 @@ void MainGui::OpenFile()
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
 		{
-			if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes))
+			if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes) || numOfFileBytes == 0)
 			{
 				wxMessageBox("Error getting number of bytes in file", "Can't load data");
 				return;
