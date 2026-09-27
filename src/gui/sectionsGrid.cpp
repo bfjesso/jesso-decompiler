@@ -56,13 +56,13 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int32_t numO
 			}
 
 			char hexNumStr[10];
-			sprintf(hexNumStr, "%llX", sections[i].rva);
+			sprintf(hexNumStr, "0x%llX", sections[i].rva);
 			SetCellValue(i, 3, wxString(hexNumStr));
 
-			sprintf(hexNumStr, "%llX", sections[i].fileOffset);
+			sprintf(hexNumStr, "0x%llX", sections[i].fileOffset);
 			SetCellValue(i, 4, wxString(hexNumStr));
 
-			sprintf(hexNumStr, "%X", sections[i].physicalSize);
+			sprintf(hexNumStr, "0x%llX", sections[i].physicalSize);
 			SetCellValue(i, 5, wxString(hexNumStr));
 		}
 	}

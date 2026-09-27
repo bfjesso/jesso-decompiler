@@ -5,7 +5,9 @@
 
 FILE* openFile(const wchar_t* filePath);
 
-enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int32_t bufferLen);
+int32_t seek64(FILE* file, uint64_t fileOffset);
+
+enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, size_t bufferLen);
 
 #ifdef __cplusplus
 extern "C"

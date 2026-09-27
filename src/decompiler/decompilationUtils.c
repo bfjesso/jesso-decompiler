@@ -947,7 +947,7 @@ uint8_t getSizeOfOperand(struct Operand* operand)
 
 bool validateName(struct DecompilationParameters* params, const char* name) 
 {
-	int32_t nameLen = (int32_t)strlen(name);
+	size_t nameLen = strlen(name);
 	if (nameLen == 0) 
 	{
 		return false;

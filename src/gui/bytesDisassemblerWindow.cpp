@@ -96,7 +96,7 @@ int32_t BytesDisassemblerWindow::ParseStringBytes(wxString str, uint8_t* bytesBu
 	str.Replace("x", "", true);
 	str.Replace("X", "", true);
 
-	int32_t strLen = str.Length();
+	size_t strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0)
 	{
 		return 0;

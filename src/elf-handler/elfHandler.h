@@ -20,7 +20,7 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 
 enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, const char* name, Elf64_Shdr* result);
 
-enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint32_t bufferSize);
+enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint64_t bufferSize);
 
 enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, uint32_t type, int32_t index, Elf64_Shdr* result);
 

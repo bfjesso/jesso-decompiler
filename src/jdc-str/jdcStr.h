@@ -8,7 +8,7 @@
 struct JdcStr
 {
 	char* buffer;
-	int32_t bufferSize;
+	size_t bufferSize;
 };
 
 #ifdef __cplusplus
@@ -44,4 +44,4 @@ enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* forma
 
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy);
 
-static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int32_t newSize);
+static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, size_t newSize);

@@ -7,7 +7,7 @@ enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef)
 	if (file && isPERef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
-		fseek(file, 0, SEEK_SET);
+		seek64(file, 0);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
 		fclose(file);
 
@@ -24,12 +24,12 @@ enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
 	if (file && is64BitRef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
-		fseek(file, 0, SEEK_SET);
+		seek64(file, 0);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
 
 		IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-		fseek(file, imageNtHeadersAddress, SEEK_SET);
+		seek64(file, imageNtHeadersAddress);
 		fread(&imageNtHeaders, 1, sizeof(imageNtHeaders), file);
 
 		fclose(file);
@@ -49,14 +49,14 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_H
 	}
 	
 	IMAGE_DOS_HEADER dosHeader = { 0 };
-	fseek(file, 0, SEEK_SET);
+	seek64(file, 0);
 	fread(&dosHeader, 1, sizeof(dosHeader), file);
 
 	if (is64Bit)
 	{
 		IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-		fseek(file, imageNtHeadersAddress, SEEK_SET);
+		seek64(file, imageNtHeadersAddress);
 		fread(&imageNtHeaders, 1, sizeof(imageNtHeaders), file);
 
 		result->e_lfanew = dosHeader.e_lfanew;
@@ -71,7 +71,7 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_H
 	{
 		IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-		fseek(file, imageNtHeadersAddress, SEEK_SET);
+		seek64(file, imageNtHeadersAddress);
 		fread(&imageNtHeaders, 1, sizeof(imageNtHeaders), file);
 
 		result->e_lfanew = dosHeader.e_lfanew;
@@ -168,7 +168,7 @@ enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, str
 		{
 			IMAGE_SECTION_HEADER sectionHeader = { 0 };
 			LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-			fseek(file, sectionAddress, SEEK_SET);
+			seek64(file, sectionAddress);
 			fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
 			buffer[i].name = initializeJdcStrWithVal(sectionHeader.Name);
@@ -219,7 +219,7 @@ enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD v
 		{
 			IMAGE_SYMBOL symbol = { 0 };
 			LONG symbolAddress = (sizeof(IMAGE_SYMBOL) * i) + imageNtHeaders.FileHeader.PointerToSymbolTable;
-			fseek(file, symbolAddress, SEEK_SET);
+			seek64(file, symbolAddress);
 			fread(&symbol, 1, sizeof(symbol), file);
 
 			if (symbol.Value == value)
@@ -229,7 +229,7 @@ enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD v
 					IMAGE_SYMBOL symbol = { 0 };
 					LONG strTableAddress = imageNtHeaders.FileHeader.PointerToSymbolTable + imageNtHeaders.FileHeader.NumberOfSymbols;
 					LONG nameAddress = strTableAddress + symbol.N.Name.Long;
-					fseek(file, nameAddress, SEEK_SET);
+					seek64(file, nameAddress);
 
 					char tmpBuffer[50] = { 0 };
 					fread(tmpBuffer, 1, 50, file);
@@ -282,7 +282,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 			{
 				IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
-				fseek(file, importDirectoryTableFileOffset + i, SEEK_SET);
+				seek64(file, importDirectoryTableFileOffset + i);
 				fread(&importDescriptor, 1, sizeof(importDescriptor), file);
 
 				if (!importDescriptor.Characteristics)
@@ -302,7 +302,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 				while (1)
 				{
 					DWORD lookupValue = 0;
-					fseek(file, importLookupTableFileOffset + j, SEEK_SET);
+					seek64(file, importLookupTableFileOffset + j);
 					fread(&lookupValue, 1, sizeof(lookupValue), file);
 
 					if (!lookupValue)
@@ -320,7 +320,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 							return ERROR_JDC;
 						}
 
-						fseek(file, nameFileOffset, SEEK_SET);
+						seek64(file, nameFileOffset);
 						fread(&firstChar, 1, sizeof(firstChar), file);
 
 						if (firstChar == 0)
@@ -373,7 +373,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 			{
 				IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
-				fseek(file, importDirectoryTableFileOffset + i, SEEK_SET);
+				seek64(file, importDirectoryTableFileOffset + i);
 				fread(&importDescriptor, 1, sizeof(importDescriptor), file);
 
 				if (!importDescriptor.Characteristics)
@@ -390,7 +390,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 						return ERROR_JDC;
 					}
 
-					fseek(file, libraryNameFileOffset, SEEK_SET);
+					seek64(file, libraryNameFileOffset);
 					fread(libraryName, 1, 255, file);
 					libraryNamesBuffer[libraryIndex] = initializeJdcStrWithVal(libraryName);
 				}
@@ -405,7 +405,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 				while (importsIndex < importsBufferLen)
 				{
 					DWORD lookupValue = 0;
-					fseek(file, importLookupTableFileOffset + j, SEEK_SET);
+					seek64(file, importLookupTableFileOffset + j);
 					fread(&lookupValue, 1, sizeof(lookupValue), file);
 
 					if (!lookupValue)
@@ -422,7 +422,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 							return ERROR_JDC;
 						}
 
-						fseek(file, nameFileOffset, SEEK_SET);
+						seek64(file, nameFileOffset);
 						fread(symbolName, 1, 255, file);
 
 						if (symbolName[0] == 0)
@@ -469,7 +469,7 @@ static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWO
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
 		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
-		fseek(file, sectionAddress, SEEK_SET);
+		seek64(file, sectionAddress);
 		fread(&sectionHeader, 1, sizeof(sectionHeader), file);
 
 		if (rva >= sectionHeader.VirtualAddress && rva < sectionHeader.VirtualAddress + sectionHeader.SizeOfRawData)
@@ -489,14 +489,14 @@ enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* 
 	if (file) 
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
-		fseek(file, 0, SEEK_SET);
+		seek64(file, 0);
 		fread(&dosHeader, 1, sizeof(dosHeader), file);
 
 		generateDOSHeaderInfoStr(&dosHeader, result);
 
 		IMAGE_NT_HEADERS64 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
-		fseek(file, imageNtHeadersAddress, SEEK_SET);
+		seek64(file, imageNtHeadersAddress);
 		fread(&imageNtHeaders, 1, sizeof(imageNtHeaders), file);
 
 		generateFileHeaderInfoStr(&imageNtHeaders.FileHeader, result);

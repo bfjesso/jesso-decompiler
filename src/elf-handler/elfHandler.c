@@ -66,7 +66,7 @@ static enum JdcStatus readElfShdr(FILE* file, bool is64Bit, uint64_t fileOffset,
 		return ERROR_JDC;
 	}
 
-	fseek(file, fileOffset, SEEK_SET);
+	seek64(file, fileOffset);
 
 	if(is64Bit)
 	{
@@ -144,14 +144,20 @@ enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, uint64
 		if(is64Bit)
 		{
 			Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
-			st_name = symbol->st_name;
-			st_value = symbol->st_value;
+			if(symbol)
+			{
+				st_name = symbol->st_name;
+				st_value = symbol->st_value;
+			}
 		}
 		else
 		{
 			Elf32_Sym* symbol = (Elf32_Sym*)(bytes + i);
-			st_name = symbol->st_name;
-			st_value = symbol->st_value;
+			if (symbol) 
+			{
+				st_name = symbol->st_name;
+				st_value = symbol->st_value;
+			}
 		}
 		
 		if(st_value == value && (stringBytes + st_name)[0] != 0)
@@ -223,7 +229,12 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
 		uint8_t* sectionNames = (uint8_t*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
+		if (!sectionNames) 
+		{
+			return ERROR_JDC;
+		}
+
+		seek64(file, nameStrTable.sh_offset);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
 		int32_t bufferIndex = 0;
@@ -232,6 +243,7 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 			if (bufferIndex >= bufferLen)
 			{
 				fclose(file);
+				free(sectionNames);
 				return ERROR_JDC;
 			}
 
@@ -261,6 +273,7 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 		}
 
 		fclose(file);
+		free(sectionNames);
 		return SUCCESS_JDC;
 	}
 
@@ -283,7 +296,12 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
 		uint8_t* sectionNames = (uint8_t*)malloc(nameStrTable.sh_size);
-		fseek(file, nameStrTable.sh_offset, SEEK_SET);
+		if (!sectionNames) 
+		{
+			return ERROR_JDC;
+		}
+
+		seek64(file, nameStrTable.sh_offset);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
 		for (int32_t i = 0; i < elfHeader.e_shnum; i++)
@@ -306,12 +324,12 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 	return ERROR_JDC;
 }
 
-enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint32_t bufferSize)
+enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint64_t bufferSize)
 {
 	FILE* file = openFile(filePath);
 	if (file)
 	{
-		fseek(file, section->sh_offset, SEEK_SET);
+		seek64(file, section->sh_offset);
 		fread(buffer, 1, bufferSize, file);
 		fclose(file);
 		return SUCCESS_JDC;
@@ -414,16 +432,22 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int32_t
 			if(is64Bit)
 			{
 				Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
-				int32_t val = ELF64_R_SYM(rela->r_info);
-				Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
-				st_name = symbol->st_name;
+				if (rela) 
+				{
+					int32_t val = ELF64_R_SYM(rela->r_info);
+					Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
+					st_name = symbol->st_name;
+				}
 			}
 			else
 			{
 				Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
-				int32_t val = ELF32_R_SYM(rela->r_info);
-				Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
-				st_name = symbol->st_name;
+				if (rela) 
+				{
+					int32_t val = ELF32_R_SYM(rela->r_info);
+					Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
+					st_name = symbol->st_name;
+				}
 			}
 			
 			if(strcmp(stringBytes + st_name, "") != 0)

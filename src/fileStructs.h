@@ -31,5 +31,5 @@ struct FileSection
 	bool isReadOnly;
 	uint64_t rva;
 	uint64_t fileOffset;
-	uint32_t physicalSize;
+	uint64_t physicalSize;
 };

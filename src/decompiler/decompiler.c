@@ -283,7 +283,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 		}
 	}
 
-	int32_t len = (int32_t)strlen(result->buffer);
+	size_t len = strlen(result->buffer);
 	if (result->buffer[len - 1] != '(')
 	{
 		result->buffer[len - 2] = ')';

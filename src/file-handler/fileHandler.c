@@ -22,12 +22,27 @@ FILE* openFile(const wchar_t* filePath)
 	wcstombs(filePathChar, filePath, 254);
 	return fopen(filePathChar, "rb");
 #endif
+
+	return 0;
 }
 
-enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int32_t bufferLen)
+int32_t seek64(FILE* file, uint64_t fileOffset) 
 {
 #ifdef _WIN32
-	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
+	return _fseeki64(file, fileOffset, SEEK_SET);
+#endif
+
+#ifdef linux
+	return fseeko(file, fileOffset, SEEK_SET);
+#endif
+
+	return -1;
+}
+
+enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, size_t bufferLen)
+{
+#ifdef _WIN32
+	if (UnDecorateSymbolName(mangledStr, buffer, (DWORD)bufferLen, UNDNAME_NAME_ONLY))
 	{
 		// removing template parameters
 		size_t nameLen = strlen(buffer);
@@ -270,7 +285,7 @@ enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint32_t* numOfBytesRe
 	FILE* file = openFile(filePath);
 	if (file && numOfBytesRef)
 	{
-		fseek(file, 0, SEEK_END);
+		seek64(file, 0);
 		uint32_t result = ftell(file);
 		fclose(file);
 
@@ -286,8 +301,8 @@ enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint32_t 
 	FILE* file = openFile(filePath);
 	if (file)
 	{
-		fseek(file, 0, SEEK_SET);
-		uint32_t bytesRead = fread(buffer, 1, bufferSize, file);
+		seek64(file, 0);
+		size_t bytesRead = fread(buffer, 1, bufferSize, file);
 		fclose(file);
 
 		if (bytesRead == bufferSize) 
