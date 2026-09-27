@@ -1,4 +1,5 @@
 #pragma once
+#include "../jdcTypes.h"
 
 // Intel 64 and IA-32 Architectures Software Developer’s Manuals:
 //	intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html
@@ -261,52 +262,52 @@ extern "C"
 
 	extern const char* mnemonicStrs[];
 
-	unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
+	bool isOpcodeImplementedInDecompiler(enum Mnemonic opcode);
 
-	unsigned char isOpcodeCall(enum Mnemonic opcode);
+	bool isOpcodeCall(enum Mnemonic opcode);
 
-	unsigned char isOpcodeReturn(enum Mnemonic opcode);
+	bool isOpcodeReturn(enum Mnemonic opcode);
 
-	unsigned char isOpcodeJmp(enum Mnemonic opcode);
+	bool isOpcodeJmp(enum Mnemonic opcode);
 
-	unsigned char isOpcodeJcc(enum Mnemonic opcode);
+	bool isOpcodeJcc(enum Mnemonic opcode);
 
 #ifdef __cplusplus
 }
 #endif
 
-unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode);
+bool doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode);
 
-unsigned char doesOpcodeModifyFirstOperand(enum Mnemonic opcode);
+bool doesOpcodeModifyFirstOperand(enum Mnemonic opcode);
 
-unsigned char isOpcodeMov(enum Mnemonic opcode);
+bool isOpcodeMov(enum Mnemonic opcode);
 
-unsigned char isOpcodeAdd(enum Mnemonic opcode);
+bool isOpcodeAdd(enum Mnemonic opcode);
 
-unsigned char isOpcodeSub(enum Mnemonic opcode);
+bool isOpcodeSub(enum Mnemonic opcode);
 
-unsigned char isOpcodeAnd(enum Mnemonic opcode);
+bool isOpcodeAnd(enum Mnemonic opcode);
 
-unsigned char isOpcodeOr(enum Mnemonic opcode);
+bool isOpcodeOr(enum Mnemonic opcode);
 
-unsigned char isOpcodeXor(enum Mnemonic opcode);
+bool isOpcodeXor(enum Mnemonic opcode);
 
-unsigned char isOpcodeShl(enum Mnemonic opcode);
+bool isOpcodeShl(enum Mnemonic opcode);
 
-unsigned char isOpcodeShr(enum Mnemonic opcode);
+bool isOpcodeShr(enum Mnemonic opcode);
 
-unsigned char isOpcodeMul(enum Mnemonic opcode);
+bool isOpcodeMul(enum Mnemonic opcode);
 
-unsigned char isOpcodeDiv(enum Mnemonic opcode);
+bool isOpcodeDiv(enum Mnemonic opcode);
 
-unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode);
+bool isOpcodeCvtToDbl(enum Mnemonic opcode);
 
-unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode);
+bool isOpcodeCvtToFlt(enum Mnemonic opcode);
 
-unsigned char isOpcodeCmp(enum Mnemonic opcode);
+bool isOpcodeCmp(enum Mnemonic opcode);
 
-unsigned char isOpcodeCMOVcc(enum Mnemonic opcode);
+bool isOpcodeCMOVcc(enum Mnemonic opcode);
 
-unsigned char isOpcodeSETcc(enum Mnemonic opcode);
+bool isOpcodeSETcc(enum Mnemonic opcode);
 
-unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode);
+bool doesOpcodeUseUnsignedInt(enum Mnemonic opcode);

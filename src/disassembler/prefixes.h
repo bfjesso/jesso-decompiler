@@ -11,6 +11,6 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params);
 
 enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params);
 
-unsigned char checkFlagR(struct DisassemblyParameters* params);
+bool checkFlagR(struct DisassemblyParameters* params);
 
-unsigned char checkFlagB(struct DisassemblyParameters* params);
+bool checkFlagB(struct DisassemblyParameters* params);

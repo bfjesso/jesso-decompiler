@@ -5,7 +5,7 @@
 
 struct DisassemblerOptions
 {
-	char is64BitMode;
+	bool is64BitMode;
 };
 
 enum LegacyPrefix
@@ -39,7 +39,7 @@ struct LegacyPrefixes
 
 struct REXPrefix
 {
-	unsigned char isValidREX;
+	bool isValidREX;
 
 	unsigned char W; // 64 bit operand size if 1
 	unsigned char R; // extension of the ModR/M reg field
@@ -49,7 +49,7 @@ struct REXPrefix
 
 struct VEXPrefix
 {
-	unsigned char isValidVEX;
+	bool isValidVEX;
 
 	unsigned char R; // inverted REX.R
 
@@ -66,7 +66,7 @@ struct VEXPrefix
 
 struct EVEXPrefix
 {
-	unsigned char isValidEVEX;
+	bool isValidEVEX;
 
 	// P0
 	unsigned char R; // combine with ModR/M.reg
@@ -175,7 +175,7 @@ enum OperandType
 
 struct ModRM
 {
-	unsigned char hasGotModRM;
+	bool hasGotModRM;
 
 	unsigned char mod;
 	unsigned char reg;
@@ -219,7 +219,7 @@ struct DisassemblyParameters
 	unsigned char* maxBytesAddr;
 	unsigned char* startBytePtr;
 	
-	unsigned char is64BitMode;
+	bool is64BitMode;
 	
 	struct LegacyPrefixes legPrefixes;
 	struct REXPrefix rexPrefix;
@@ -239,9 +239,9 @@ struct DisassembledInstruction
 	unsigned char operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
 	
 	unsigned char numOfBytes;
-	unsigned char isInvalid;
-	unsigned char isCalled;
-	unsigned char isJmpDst;
+	bool isInvalid;
+	bool isCalled;
+	bool isJmpDst;
 
 	unsigned long long address;
 };

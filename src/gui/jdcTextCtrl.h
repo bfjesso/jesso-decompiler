@@ -30,7 +30,7 @@ public:
 	wxString lastFindText = "";
 	int totalFindResults = 0;
 
-	unsigned char highlightSelectedLines = 1;
+	bool highlightSelectedLines = true;
 
 	void EnableLineNumbers();
 
@@ -38,7 +38,7 @@ public:
 
 	void CenterLine(int line);
 
-	void HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine);
+	void HighlightLine(int line, enum IndicatorColor color, bool gotoLine);
 
 	void ClearIndicators();
 
@@ -48,7 +48,7 @@ public:
 
 	void OnFindDialog(wxFindDialogEvent& e);
 
-	int FindInRange(const wxString& text, int start, int end, int flags, unsigned char forward);
+	int FindInRange(const wxString& text, int start, int end, int flags, bool forward);
 
 	int CountNumOfResults(const wxString& text, int end, int flags);
 

@@ -24,9 +24,9 @@ extern "C"
 
 	int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address);
 
-	int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, unsigned char* foundIndirectTable);
+	int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, bool* foundIndirectTable);
 
-	unsigned char validateName(struct DecompilationParameters* params, const char* name);
+	bool validateName(struct DecompilationParameters* params, const char* name);
 
 #ifdef __cplusplus
 }
@@ -38,24 +38,24 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 static enum JdcStatus regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result);
 
-unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
+bool checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress);
 
-unsigned char doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char* overwrites);
+bool doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, bool* overwrites);
 
-unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
+bool doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, bool checkUnknownCalls, enum Register* specificReg); // this will return 0 if the instruction only writes to the reg without reading its value
 
-unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites);
+bool doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, bool* overwrites);
 
-unsigned char doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg);
+bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg);
 
-unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction);
+bool doesInstructionDoNothing(struct DisassembledInstruction* instruction);
 
-unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction);
+bool doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction);
 
-unsigned char isImmediateAllOnes(struct Immediate* immediate);
+bool isImmediateAllOnes(struct Immediate* immediate);
 
-unsigned char compareOperands(struct Operand* op1, struct Operand* op2);
+bool compareOperands(struct Operand* op1, struct Operand* op2);
 
 unsigned char getSizeOfOperand(struct Operand* operand);
 
-unsigned char checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex);
+bool checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex);

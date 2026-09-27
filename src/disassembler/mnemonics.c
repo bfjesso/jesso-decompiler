@@ -247,124 +247,124 @@ extern const char* mnemonicStrs[] =
 	"UD0", "UD1"
 };
 
-unsigned char isOpcodeImplementedInDecompiler(enum Mnemonic opcode) 
+bool isOpcodeImplementedInDecompiler(enum Mnemonic opcode) 
 {
 	return opcode >= MOV && opcode <= DATA;
 }
 
-unsigned char doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode) 
+bool doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode) 
 {
 	return opcode >= MOV && opcode <= AESKEYGENASSIST;
 }
 
-unsigned char doesOpcodeModifyFirstOperand(enum Mnemonic opcode)
+bool doesOpcodeModifyFirstOperand(enum Mnemonic opcode)
 {
 	return opcode >= ADD && opcode <= AESDECLAST;
 }
 
-unsigned char isOpcodeMov(enum Mnemonic opcode)
+bool isOpcodeMov(enum Mnemonic opcode)
 {
 	return opcode >= MOV && opcode <= MASKMOVDQU;
 }
 
-unsigned char isOpcodeAdd(enum Mnemonic opcode)
+bool isOpcodeAdd(enum Mnemonic opcode)
 {
 	return opcode >= ADD && opcode <= PADDQ;
 }
 
-unsigned char isOpcodeSub(enum Mnemonic opcode)
+bool isOpcodeSub(enum Mnemonic opcode)
 {
 	return opcode >= SUB && opcode <= HSUBPS;
 }
 
-unsigned char isOpcodeAnd(enum Mnemonic opcode)
+bool isOpcodeAnd(enum Mnemonic opcode)
 {
 	return opcode >= AND && opcode <= PANDN;
 }
 
-unsigned char isOpcodeOr(enum Mnemonic opcode)
+bool isOpcodeOr(enum Mnemonic opcode)
 {
 	return opcode >= OR && opcode <= ORPD;
 }
 
-unsigned char isOpcodeXor(enum Mnemonic opcode)
+bool isOpcodeXor(enum Mnemonic opcode)
 {
 	return opcode >= XOR && opcode <= PXOR;
 }
 
-unsigned char isOpcodeShl(enum Mnemonic opcode)
+bool isOpcodeShl(enum Mnemonic opcode)
 {
 	return opcode >= SHL && opcode <= SHLD;
 }
 
-unsigned char isOpcodeShr(enum Mnemonic opcode)
+bool isOpcodeShr(enum Mnemonic opcode)
 {
 	return opcode >= SHR && opcode <= SHRD;
 }
 
-unsigned char isOpcodeMul(enum Mnemonic opcode) // this is for the opcodes that simply multiply the dst by the src
+bool isOpcodeMul(enum Mnemonic opcode) // this is for the opcodes that simply multiply the dst by the src
 {
 	return opcode >= MULSS && opcode <= MULSD;
 }
 
-unsigned char isOpcodeDiv(enum Mnemonic opcode) // this is for the opcodes that simply divide the dst by the src
+bool isOpcodeDiv(enum Mnemonic opcode) // this is for the opcodes that simply divide the dst by the src
 {
 	return opcode >= DIVSS && opcode <= DIVSD;
 }
 
-unsigned char isOpcodeCvtToDbl(enum Mnemonic opcode)
+bool isOpcodeCvtToDbl(enum Mnemonic opcode)
 {
 	return opcode >= VCVTPS2PD && opcode <= CVTDQ2PD;
 }
 
-unsigned char isOpcodeCvtToFlt(enum Mnemonic opcode)
+bool isOpcodeCvtToFlt(enum Mnemonic opcode)
 {
 	return opcode >= VCVTPD2PS && opcode <= CVTDQ2PS;
 }
 
-unsigned char isOpcodeCall(enum Mnemonic opcode)
+bool isOpcodeCall(enum Mnemonic opcode)
 {
 	return opcode == CALL_FAR || opcode == CALL_NEAR;
 }
 
-unsigned char isOpcodeReturn(enum Mnemonic opcode)
+bool isOpcodeReturn(enum Mnemonic opcode)
 {
 	return opcode == RET_NEAR || opcode == RET_FAR;
 }
 
-unsigned char isOpcodeJmp(enum Mnemonic opcode)
+bool isOpcodeJmp(enum Mnemonic opcode)
 {
 	return opcode == JMP_SHORT || opcode == JMP_NEAR || opcode == JMP_FAR;
 }
 
-unsigned char isOpcodeCmp(enum Mnemonic opcode)
+bool isOpcodeCmp(enum Mnemonic opcode)
 {
 	return opcode >= CMP && opcode <= COMISD;
 }
 
-unsigned char isOpcodeJcc(enum Mnemonic opcode)
+bool isOpcodeJcc(enum Mnemonic opcode)
 {
 	return opcode >= JA_SHORT && opcode <= JZ_SHORT;
 }
 
-unsigned char isOpcodeCMOVcc(enum Mnemonic opcode)
+bool isOpcodeCMOVcc(enum Mnemonic opcode)
 {
 	return opcode >= CMOVB && opcode <= CMOVG;
 }
 
-unsigned char isOpcodeSETcc(enum Mnemonic opcode)
+bool isOpcodeSETcc(enum Mnemonic opcode)
 {
 	return opcode >= SETA && opcode <= SETZ;
 }
 
-unsigned char doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
+bool doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
 {
 	switch (opcode)
 	{
 	case MUL:
 	case DIV:
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }

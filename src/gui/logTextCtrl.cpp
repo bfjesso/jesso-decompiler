@@ -10,7 +10,7 @@ LogTextCtrl::LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(pa
 	Log("JDC started", 0);
 }
 
-void LogTextCtrl::Log(wxString text, unsigned char isError)
+void LogTextCtrl::Log(wxString text, bool isError)
 {
 	SetReadOnly(false);
 	AppendText(wxDateTime::Now().Format(wxT("%X")) + ": ");
@@ -29,7 +29,7 @@ void LogTextCtrl::Log(wxString text, unsigned char isError)
 	Update();
 }
 
-void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, unsigned char isError)
+void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, bool isError)
 {
 	char numStr[20] = { 0 };
 	sprintf(numStr, "0x%llX", num);

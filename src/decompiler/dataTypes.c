@@ -22,11 +22,11 @@ void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 {
 	if (!dataType.isUnsigned || dataType.primitiveType == FLOAT_TYPE || dataType.primitiveType == DOUBLE_TYPE || dataType.primitiveType == VOID_TYPE)
 	{
-		sprintfJdc(result, 0, "%s", primitiveTypeStrs[dataType.primitiveType]);
+		sprintfJdc(result, false, "%s", primitiveTypeStrs[dataType.primitiveType]);
 	}
 	else 
 	{
-		sprintfJdc(result, 0, "unsigned %s", primitiveTypeStrs[dataType.primitiveType]);
+		sprintfJdc(result, false, "unsigned %s", primitiveTypeStrs[dataType.primitiveType]);
 	}
 
 	for (int i = 0; i < dataType.pointerLevel; i++)
@@ -35,23 +35,23 @@ void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 	}
 }
 
-unsigned char doDataTypesRequireCasting(struct DataType t1, struct DataType t2, unsigned char is64Bit)
+bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit)
 {
 	if ((t1.pointerLevel > 0 || t1.arrayLen > 1) && (t2.pointerLevel > 0 || t2.arrayLen > 1)) 
 	{
-		return 0;
+		return false;
 	}
 	
 	if (((t1.pointerLevel > 0 || t1.arrayLen > 1) && t2.primitiveType == is64Bit ? LONG_LONG_TYPE : INT_TYPE) || 
 		((t2.pointerLevel > 0 || t2.arrayLen > 1) && t1.primitiveType == is64Bit ? LONG_LONG_TYPE : INT_TYPE))
 	{
-		return 0;
+		return false;
 	}
 
 	return t1.primitiveType != t2.primitiveType || t1.isUnsigned != t2.isUnsigned;
 }
 
-unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit) 
+unsigned char getDataTypeSize(struct DataType type, bool is64Bit) 
 {
 	if (type.pointerLevel > 0 || type.arrayLen > 1)
 	{

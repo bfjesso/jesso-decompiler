@@ -51,11 +51,11 @@ struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 	{ XCHG, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
-static unsigned char checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic)
+static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic)
 {
 	if (intrinsic->type == SINGLE_IT)
 	{
-		return 1;
+		return true;
 	}
 	else if (intrinsic->type == REP_IT) 
 	{
@@ -64,35 +64,35 @@ static unsigned char checkValidIntrinsicType(struct DisassembledInstruction* ins
 
 	if (instruction->numOfOperands == 0 || instruction->operands[0].type != REGISTER)
 	{
-		return 0;
+		return false;
 	}
 
 	switch (intrinsic->type)
 	{
 	case MMX_IT:
-		if (!isRegMM(instruction->operands[0].reg)) { return 0; }
+		if (!isRegMM(instruction->operands[0].reg)) { return false; }
 		break;
 	case MMX_RM_IT:
-		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return false; }
 		break;
 	case MMX_IMM_IT:
-		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return false; }
 		break;
 	case SSE_IT:
-		if (!isRegXMM(instruction->operands[0].reg)) { return 0; }
+		if (!isRegXMM(instruction->operands[0].reg)) { return false; }
 		break;
 	case SSE_RM_IT:
-		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return 0; }
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return false; }
 		break;
 	case SSE_IMM_IT:
-		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return 0; }
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return false; }
 		break;
 	}
 
-	return 1;
+	return true;
 }
 
-unsigned char isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef)
+bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef)
 {
 	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
@@ -104,14 +104,14 @@ unsigned char isInstructionReturningIntrinsic(struct DisassembledInstruction* in
 			}
 			
 			if (intrinsicRef) { *intrinsicRef = &returningIntrinsics[i]; }
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, unsigned char getAssignment, struct JdcStr* result)
+enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -124,12 +124,12 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(result, 0, "%s = %s(", decompiledFirstOperand.buffer, intrinsic->name);
+		sprintfJdc(result, false, "%s = %s(", decompiledFirstOperand.buffer, intrinsic->name);
 		freeJdcStr(&decompiledFirstOperand);
 	}
 	else
 	{
-		sprintfJdc(result, 0, "%s(", intrinsic->name);
+		sprintfJdc(result, false, "%s(", intrinsic->name);
 	}
 
 	for (int i = 0; i < instruction->numOfOperands; i++)
@@ -146,7 +146,7 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(result, 1, "%s", decompiledOperand.buffer);
+		sprintfJdc(result, true, "%s", decompiledOperand.buffer);
 		freeJdcStr(&decompiledOperand);
 
 		if (i < instruction->numOfOperands - 1)
@@ -159,7 +159,7 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 	return SUCCESS_JDC;
 }
 
-unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef)
+bool checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	
@@ -169,21 +169,21 @@ unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int 
 		{
 			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29)) 
 			{
-				return 0;
+				return false;
 			}
 			else if (instruction->opcode == XCHG)
 			{
 				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
-					return 0;
+					return false;
 				}
 				else if (instruction->operands[1].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg))
 				{
-					return 0;
+					return false;
 				}
 				else if (!getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
 				{
-					return 0;
+					return false;
 				}
 			}
 
@@ -193,11 +193,11 @@ unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int 
 			}
 
 			*intrinsicRef = &voidIntrinsics[i];
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
@@ -231,7 +231,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(&decompiledCall, 1, "%s", decompiledOperand.buffer);
+		sprintfJdc(&decompiledCall, true, "%s", decompiledOperand.buffer);
 		freeJdcStr(&decompiledOperand);
 
 		if (i < instruction->numOfOperands - 1)
@@ -249,7 +249,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(&decompiledCall, 1, "%s", code.buffer);
+		sprintfJdc(&decompiledCall, true, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
 	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
@@ -277,7 +277,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 			break;
 		}
 
-		sprintfJdc(&decompiledCall, 1, ", %s", count.buffer);
+		sprintfJdc(&decompiledCall, true, ", %s", count.buffer);
 		freeJdcStr(&count);
 	}
 

@@ -92,7 +92,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 		wxString word = GetTextRange(start, end);
 		if (function && word != "")
 		{
-			unsigned char foundName = 0;
+			bool foundName = false;
 
 			if (strcmp(function->name.buffer, word.c_str()) == 0)
 			{
@@ -101,7 +101,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 					ShowRenameDialog(selectedLine, &function->name);
 				}, ID_RENAME);
 
-				foundName = 1;
+				foundName = true;
 
 				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -121,7 +121,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 						ShowRenameDialog(selectedLine, &regVar->name);
 					}, ID_RENAME);
 
-					foundName = 1;
+					foundName = true;
 					break;
 				}
 			}
@@ -136,7 +136,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 						ShowRenameDialog(selectedLine, &stackVar->name);
 					}, ID_RENAME);
 
-					foundName = 1;
+					foundName = true;
 					break;
 				}
 			}
@@ -176,7 +176,7 @@ wxString FunctionsTextCtrl::GenerateFunctionDefinition(int functionIndex, struct
 		return "";
 	}
 
-	sprintfJdc(functionHeaderBuffer, 1, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
+	sprintfJdc(functionHeaderBuffer, true, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
 	
 	wxString result = wxString(functionHeaderBuffer->buffer);
 

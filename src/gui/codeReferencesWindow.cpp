@@ -61,7 +61,7 @@ void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 	FindCodeReferences(value, hexCheckBox->IsChecked());
 }
 
-void CodeReferencesWindow::FindCodeReferences(long long value, unsigned char isHex)
+void CodeReferencesWindow::FindCodeReferences(long long value, bool isHex)
 {
 	if (isHex)
 	{

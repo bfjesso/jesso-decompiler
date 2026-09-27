@@ -13,7 +13,7 @@ struct RegisterVariable
 {
 	struct DataType dataType;
 	enum Register reg;
-	unsigned char isArgument;
+	bool isArgument;
 	unsigned short numOfScopes;
 	struct RegVarScope* scopes;
 	struct JdcStr name;
@@ -22,7 +22,7 @@ struct RegisterVariable
 struct StackVariable
 {
 	struct DataType dataType;
-	unsigned char isArgument;
+	bool isArgument;
 	long long offsetFromInitSP; // this is the offset from the initial value of the stack pointer, which may not be the same as the base pointer
 	struct JdcStr name;
 };
@@ -156,7 +156,7 @@ struct Function
 	unsigned short numOfReturnedVars;
 	unsigned short numOfRegVars;
 
-	unsigned char hasDoneInitialAnalysis;
+	bool hasDoneInitialAnalysis;
 
 	int firstInstructionIndex;
 	int lastInstructionIndex;
@@ -191,6 +191,6 @@ struct DecompilationParameters
 	unsigned long long numOfFileBytes;
 
 	unsigned char numOfIndents;
-	unsigned char is64Bit;
+	bool is64Bit;
 	enum FileFormat fileFormat;
 };

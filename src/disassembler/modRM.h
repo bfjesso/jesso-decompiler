@@ -14,4 +14,4 @@ enum ModRMSelection
 
 enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result);
 
-static enum JdcStatus handleSIB(struct DisassemblyParameters* params, unsigned char* gotDisp, struct Operand* result);
+static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotDisp, struct Operand* result);

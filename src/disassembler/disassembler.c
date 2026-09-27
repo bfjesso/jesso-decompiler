@@ -102,7 +102,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, str
 			if (memAddressToStr(&currentOperand->memoryAddress, result) == ERROR_JDC) { return ERROR_JDC; }
 			break;
 		case IMMEDIATE:
-			sprintfJdc(result, 1, "0x%llX", currentOperand->immediate.value);
+			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
 			break;
 		}
 	}
@@ -125,7 +125,7 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 	}
 	else if (memAddr->constSegment != 0) 
 	{
-		sprintfJdc(result, 1, "0x%X", memAddr->constSegment);
+		sprintfJdc(result, true, "0x%X", memAddr->constSegment);
 		strcatJdc(result, ":");
 	}
 
@@ -138,7 +138,7 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 
 	if (memAddr->scale > 1) 
 	{
-		sprintfJdc(result, 1, "*0x%X", memAddr->scale);
+		sprintfJdc(result, true, "*0x%X", memAddr->scale);
 	}
 
 	if (memAddr->regDisplacement != NO_REG)
@@ -151,16 +151,16 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 	{
 		if (memAddr->constDisplacement > 0)
 		{
-			sprintfJdc(result, 1, "+0x%llX", memAddr->constDisplacement);
+			sprintfJdc(result, true, "+0x%llX", memAddr->constDisplacement);
 		}
 		else if (memAddr->constDisplacement < 0)
 		{
-			sprintfJdc(result, 1, "-0x%llX", -memAddr->constDisplacement);
+			sprintfJdc(result, true, "-0x%llX", -memAddr->constDisplacement);
 		}
 	}
 	else
 	{
-		sprintfJdc(result, 1, "0x%llX", memAddr->constDisplacement);
+		sprintfJdc(result, true, "0x%llX", memAddr->constDisplacement);
 	}
 
 	strcatJdc(result, "]");

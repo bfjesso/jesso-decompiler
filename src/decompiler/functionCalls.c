@@ -5,7 +5,7 @@
 #include "dataTypes.h"
 #include "conditions.h"
 
-unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, int instructionIndex, struct Function** calleeRef)
+bool checkForKnownFunctionCall(struct DecompilationParameters* params, int instructionIndex, struct Function** calleeRef)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
@@ -21,13 +21,13 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 	}
 	else 
 	{
-		return 0;
+		return false;
 	}
 
 	int calleeIndex = findFunctionByAddress(params, calleeAddress);
 	if (calleeIndex == -1)
 	{
-		return 0;
+		return false;
 	}
 
 	if (calleeRef) 
@@ -35,7 +35,7 @@ unsigned char checkForKnownFunctionCall(struct DecompilationParameters* params, 
 		*calleeRef = &(params->functions[calleeIndex]);
 	}
 
-	return 1;
+	return true;
 }
 
 enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params, int callInstructionIndex, struct Function* callee, struct JdcStr* result)
@@ -52,25 +52,25 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
 	{
-		unsigned char isReturnRegLocalVar = 0;
+		bool isReturnRegLocalVar = false;
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
 			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
-				sprintfJdc(&decompiledCall, 0, "%s = ", regVar->name.buffer);
-				isReturnRegLocalVar = 1;
+				sprintfJdc(&decompiledCall, false, "%s = ", regVar->name.buffer);
+				isReturnRegLocalVar = true;
 				break;
 			}
 		}
 		
 		if(!isReturnRegLocalVar)
 		{
-			sprintfJdc(&decompiledCall, 0, "%s = ", returnedVar->name.buffer);
+			sprintfJdc(&decompiledCall, false, "%s = ", returnedVar->name.buffer);
 		}
 	}
 
-	sprintfJdc(&decompiledCall, 1, "%s(", callee->name.buffer);
+	sprintfJdc(&decompiledCall, true, "%s(", callee->name.buffer);
 
 	for (int i = 0; i < callee->numOfRegVars; i++)
 	{
@@ -83,7 +83,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 				return ERROR_JDC;
 			}
 
-			sprintfJdc(&decompiledCall, 1, "%s, ", argStr.buffer);
+			sprintfJdc(&decompiledCall, true, "%s, ", argStr.buffer);
 			freeJdcStr(&argStr);
 		}
 	}
@@ -101,11 +101,11 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 				dataTypeToStr(callee->stackVars[i].dataType, &dataTypeStr);
 				if (callee->stackVars[i].dataType.pointerLevel > 0) 
 				{
-					sprintfJdc(&decompiledCall, 1, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+					sprintfJdc(&decompiledCall, true, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
 				}
 				else
 				{
-					sprintfJdc(&decompiledCall, 1, "*(%s*)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
+					sprintfJdc(&decompiledCall, true, "*(%s*)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
 				}
 
 				freeJdcStr(&spStr);
@@ -120,7 +120,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 					strcatJdc(&decompiledCall, "&");
 				}
 
-				sprintfJdc(&decompiledCall, 1, "%s, ", stackArgContainer->name.buffer);
+				sprintfJdc(&decompiledCall, true, "%s, ", stackArgContainer->name.buffer);
 			}
 			else if (pushInstructionIndex != -1)
 			{
@@ -133,7 +133,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 					return ERROR_JDC;
 				}
 
-				sprintfJdc(&decompiledCall, 1, "%s, ", argStr.buffer);
+				sprintfJdc(&decompiledCall, true, "%s, ", argStr.buffer);
 				freeJdcStr(&argStr);
 			}
 			else
@@ -158,18 +158,18 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 	return SUCCESS_JDC;
 }
 
-unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params, int instructionIndex)
+bool checkForUnknownFunctionCall(struct DecompilationParameters* params, int instructionIndex)
 {
 	if (checkForKnownFunctionCall(params, instructionIndex, 0))
 	{
-		return 0;
+		return false;
 	}
 	
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
 	if (isOpcodeCall(instruction->opcode)) 
 	{
-		return 1;
+		return true;
 	}
 	else if (instruction->opcode == JMP_NEAR)
 	{
@@ -177,7 +177,7 @@ unsigned char checkForUnknownFunctionCall(struct DecompilationParameters* params
 		return (calleeAddress == 0) || (getImportIndexByAddress(params, calleeAddress) != -1);
 	}
 
-	return 0;
+	return false;
 }
 
 enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* params, int callInstructionIndex, struct JdcStr* result)
@@ -190,21 +190,21 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 	struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, callInstruction->address);
 	if (returnedVar != 0)
 	{
-		unsigned char isReturnRegLocalVar = 0;
+		bool isReturnRegLocalVar = false;
 		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
 			if (!regVar->isArgument && compareRegisters(regVar->reg, AX) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
-				sprintfJdc(&decompiledCall, 0, "%s = ", regVar->name.buffer);
-				isReturnRegLocalVar = 1;
+				sprintfJdc(&decompiledCall, false, "%s = ", regVar->name.buffer);
+				isReturnRegLocalVar = true;
 				break;
 			}
 		}
 
 		if (!isReturnRegLocalVar)
 		{
-			sprintfJdc(&decompiledCall, 0, "%s = ", returnedVar->name.buffer);
+			sprintfJdc(&decompiledCall, false, "%s = ", returnedVar->name.buffer);
 		}
 	}
 
@@ -287,7 +287,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 	int importIndex = getImportIndexByAddress(params, unknownFuncAddress);
 	if (importIndex != -1) 
 	{
-		sprintfJdc(&decompiledCall, 1, "%s(", params->imports[importIndex].name.buffer);
+		sprintfJdc(&decompiledCall, true, "%s(", params->imports[importIndex].name.buffer);
 	}
 	else // func ptr
 	{
@@ -311,13 +311,13 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		{
 			if (regArgTypeStrs[i].buffer)
 			{
-				sprintfJdc(&decompiledCall, 1, "%s, ", regArgTypeStrs[i].buffer);
+				sprintfJdc(&decompiledCall, true, "%s, ", regArgTypeStrs[i].buffer);
 			}
 		}
 
 		for (int i = 0; i < numOfStackArgs; i++)
 		{
-			sprintfJdc(&decompiledCall, 1, "%s, ", stackArgTypeStrs[i].buffer);
+			sprintfJdc(&decompiledCall, true, "%s, ", stackArgTypeStrs[i].buffer);
 		}
 
 		if (decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] != '(')
@@ -351,11 +351,11 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 
 		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE) 
 		{
-			sprintfJdc(&decompiledCall, 1, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
+			sprintfJdc(&decompiledCall, true, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
 		}
 		else 
 		{
-			sprintfJdc(&decompiledCall, 1, "(%s)", functionPointer.buffer);
+			sprintfJdc(&decompiledCall, true, "(%s)", functionPointer.buffer);
 		}
 		
 		freeJdcStr(&functionPointer);
@@ -367,7 +367,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 	{
 		if(decompiledRegArgs[i].buffer)
 		{
-			sprintfJdc(&decompiledCall, 1, "%s, ", decompiledRegArgs[i].buffer);
+			sprintfJdc(&decompiledCall, true, "%s, ", decompiledRegArgs[i].buffer);
 			freeJdcStr(&regArgTypeStrs[i]);
 			freeJdcStr(&decompiledRegArgs[i]);
 		}
@@ -375,7 +375,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 
 	for(int i = 0; i < numOfStackArgs; i++)
 	{
-		sprintfJdc(&decompiledCall, 1, "%s, ", decompiledStackArgs[i].buffer);
+		sprintfJdc(&decompiledCall, true, "%s, ", decompiledStackArgs[i].buffer);
 		freeJdcStr(&stackArgTypeStrs[i]);
 		freeJdcStr(&decompiledStackArgs[i]);
 	}

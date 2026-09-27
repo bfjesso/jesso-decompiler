@@ -41,12 +41,12 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 				start = dstIndex;
 				end = i;
 			}
-			unsigned char doesJmpSkipNothing = 1;
+			bool doesJmpSkipNothing = true;
 			for (int j = start + 1; j < end; j++) 
 			{
 				if (!doesInstructionDoNothing(&params->instructions[j]))
 				{
-					doesJmpSkipNothing = 0;
+					doesJmpSkipNothing = false;
 					break;
 				}
 			}
@@ -121,7 +121,7 @@ static enum JdcStatus handleDirectJmpsResize(struct DecompilationParameters* par
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
@@ -138,7 +138,7 @@ enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int i
 			{
 			case GO_TO_DJT:
 				addDecompiledLine(params, result, instructionIndex, "goto label_%llX;", params->instructions[params->currentFunc->directJmps[i].dstIndex].address - params->imageBase);
-				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
+				if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
 				break;
 			case CONTINUE_DJT:
 				addDecompiledLine(params, result, instructionIndex, "continue;");
@@ -148,7 +148,7 @@ enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int i
 				break;
 			case JUMP_TO_DJT:
 				addDecompiledLine(params, result, instructionIndex, "jumpTo(0x%llX);", params->instructions[params->currentFunc->directJmps[i].dstIndex].address);
-				if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
+				if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
 				break;
 			}
 
@@ -171,13 +171,13 @@ enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int i
 	return SUCCESS_JDC;
 }
 
-unsigned char checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
+bool checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
 		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex)
 		{
-			return 1;
+			return true;
 		}
 	}
 
@@ -186,9 +186,9 @@ unsigned char checkForDirectJmpDst(struct DecompilationParameters* params, int i
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
 		{
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }

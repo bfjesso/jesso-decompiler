@@ -9,14 +9,14 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 {
 	struct Operand operands[4] = { 0 };
 
-	unsigned char is64BitOperandSize = 0;
+	bool is64BitOperandSize = false;
 	if (params->is64BitMode)
 	{
 		if ((params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) ||
 			params->opcode.opcodeSuperscript == f64 ||
 			params->rexPrefix.W) 
 		{
-			is64BitOperandSize = 1;
+			is64BitOperandSize = true;
 		}
 	}
 

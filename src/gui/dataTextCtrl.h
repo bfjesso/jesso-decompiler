@@ -43,8 +43,8 @@ public:
 	};
 
 	enum DataTextCtrlTypes selectedType = ONE_BYTE_INT_TYPE;
-	unsigned char isHex = 1;
-	unsigned char isSigned = 0;
+	bool isHex = true;
+	bool isSigned = false;
 
 	void Initialize();
 

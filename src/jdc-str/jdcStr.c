@@ -41,12 +41,12 @@ enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char*
 		int oldLen = (int)strlen(oldStr);
 		for (int i = 0; i < jdcStrLen; i++)
 		{
-			unsigned char foundStr = 1;
+			bool foundStr = true;
 			for (int j = 0; j < oldLen; j++)
 			{
 				if (i + j >= jdcStrLen || jdcStr->buffer[i + j] != oldStr[j])
 				{
-					foundStr = 0;
+					foundStr = false;
 					break;
 				}
 			}
@@ -155,7 +155,7 @@ enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 	return ERROR_JDC;
 }
 
-enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...)
+enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, bool cat, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -164,7 +164,7 @@ enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* 
 	return result;
 }
 
-enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args)
+enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* format, va_list args)
 {
 	if (jdcStr && jdcStr->buffer)
 	{
@@ -185,7 +185,7 @@ enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const ch
 				if (resizeJdcStr(jdcStr, ogLen + result + 1))
 				{
 					memset(jdcStr->buffer + ogLen, 0, jdcStr->bufferSize - ogLen);
-					enum JdcStatus statusResult = sprintfJdcArgs(jdcStr, 1, format, copy);
+					enum JdcStatus statusResult = sprintfJdcArgs(jdcStr, true, format, copy);
 					va_end(copy);
 					return statusResult;
 				}

@@ -68,7 +68,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		return ERROR_JDC;
 	}
 
-	unsigned char isInUnreachableState = 0;
+	bool isInUnreachableState = false;
 	int numOfSkippedInstructions = 0;
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
@@ -76,14 +76,14 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 		if (params->numOfIndents < 1)
 		{
-			sprintfJdc(statusMessage, 0, "Bad indentation. There is an error with condition handling at 0x%llX.", currentInstruction->address);
+			sprintfJdc(statusMessage, false, "Bad indentation. There is an error with condition handling at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
 		
 		if (ERROR_JDC == isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
 		{
-			sprintfJdc(statusMessage, 0, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
+			sprintfJdc(statusMessage, false, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
@@ -103,7 +103,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 					addDecompiledLine(params, result, -1, "// %i instruction(s) skipped", numOfSkippedInstructions);
 				}
 
-				isInUnreachableState = 0;
+				isInUnreachableState = false;
 				numOfSkippedInstructions = 0;
 
 				if (cond && cond->conditionType != DO_WHILE_CT)
@@ -111,7 +111,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 					i--; // decompileConditionEnds checks for the last body index, not the jmp dst
 					if (ERROR_JDC == decompileConditionEnds(params, i, &isInUnreachableState, result))
 					{
-						sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
+						sprintfJdc(statusMessage, false, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
 						if (errorInstructionIndex) { *errorInstructionIndex = i; }
 						return ERROR_JDC;
 					}
@@ -128,14 +128,14 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 		if (ERROR_JDC == decompileConditionStarts(params, i, result))
 		{
-			sprintfJdc(statusMessage, 0, "Error decompiling start of condition at 0x%llX.", currentInstruction->address);
+			sprintfJdc(statusMessage, false, "Error decompiling start of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
 
 		if (ERROR_JDC == decompileDirectJmps(params, i, &isInUnreachableState, result))
 		{
-			sprintfJdc(statusMessage, 0, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
+			sprintfJdc(statusMessage, false, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
@@ -146,7 +146,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		{
 			if (ERROR_JDC == decompileKnownFunctionCall(params, i, callee, result))
 			{
-				sprintfJdc(statusMessage, 0, "Error decompiling known function call at 0x%llX.", currentInstruction->address);
+				sprintfJdc(statusMessage, false, "Error decompiling known function call at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return ERROR_JDC;
 			}
@@ -155,7 +155,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		{
 			if (ERROR_JDC == decompileUnknownFunctionCall(params, i, result))
 			{
-				sprintfJdc(statusMessage, 0, "Error decompiling unknown function call at 0x%llX.", currentInstruction->address);
+				sprintfJdc(statusMessage, false, "Error decompiling unknown function call at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return ERROR_JDC;
 			}
@@ -164,7 +164,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		{
 			if (ERROR_JDC == decompileVoidIntrinsic(params, i, intrinsic, result))
 			{
-				sprintfJdc(statusMessage, 0, "Error decompiling intrinsic function at 0x%llX.", currentInstruction->address);
+				sprintfJdc(statusMessage, false, "Error decompiling intrinsic function at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return ERROR_JDC;
 			}
@@ -173,7 +173,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		{
 			if (ERROR_JDC == decompileOperation(params, i, NO_REG, 1, 0, result, 0))
 			{
-				sprintfJdc(statusMessage, 0, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
+				sprintfJdc(statusMessage, false, "Error decompiling assignment at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return ERROR_JDC;
 			}
@@ -183,7 +183,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		{
 			if (ERROR_JDC == decompileReturnStatement(params, i, &isInUnreachableState, result))
 			{
-				sprintfJdc(statusMessage, 0, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
+				sprintfJdc(statusMessage, false, "Error decompiling return statement at 0x%llX.", currentInstruction->address);
 				if (errorInstructionIndex) { *errorInstructionIndex = i; }
 				return ERROR_JDC;
 			}
@@ -191,7 +191,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 		if (ERROR_JDC == decompileConditionEnds(params, i, &isInUnreachableState, result))
 		{
-			sprintfJdc(statusMessage, 0, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
+			sprintfJdc(statusMessage, false, "Error decompiling end of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
@@ -263,14 +263,14 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 	struct JdcStr typeStr = initializeJdcStr();
 
 	dataTypeToStr(function->returnType, &typeStr);
-	sprintfJdc(result, 0, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
+	sprintfJdc(result, false, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
 	for (int i = 0; i < function->numOfRegVars; i++) 
 	{
 		if (function->regVars[i].isArgument) 
 		{
 			dataTypeToStr(function->regVars[i].dataType, &typeStr);
-			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->regVars[i].name.buffer);
+			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->regVars[i].name.buffer);
 		}
 	}
 
@@ -279,7 +279,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 		if (function->stackVars[i].isArgument) 
 		{
 			dataTypeToStr(function->stackVars[i].dataType, &typeStr);
-			sprintfJdc(result, 1, "%s %s, ", typeStr.buffer, function->stackVars[i].name.buffer);
+			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->stackVars[i].name.buffer);
 		}
 	}
 
@@ -301,7 +301,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* params, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
-	unsigned char declaredAVar = 0;
+	bool declaredAVar = false;
 	
 	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
@@ -313,13 +313,13 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 			struct JdcStr varNameTmp = copyJdcStr(&stackVar->name);
 			if (stackVar->dataType.arrayLen > 1)
 			{
-				sprintfJdc(&varNameTmp, 1, "[%u]", stackVar->dataType.arrayLen);
+				sprintfJdc(&varNameTmp, true, "[%u]", stackVar->dataType.arrayLen);
 			}
 			strcatJdc(&varNameTmp, ";");
 
 			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s", typeStr.buffer, varNameTmp.buffer);
 			freeJdcStr(&varNameTmp);
-			declaredAVar = 1;
+			declaredAVar = true;
 		}
 	}
 
@@ -347,18 +347,18 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 				addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, localRegVar->name.buffer);
 			}
 
-			declaredAVar = 1;
+			declaredAVar = true;
 		}
 	}
 
 	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 	{
-		unsigned char isReturnRegVar = 0;
+		bool isReturnRegVar = false;
 		for (int j = 0; j < params->currentFunc->numOfRegVars; j++) 
 		{
 			if (!params->currentFunc->regVars[j].isArgument && compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg))
 			{
-				isReturnRegVar = 1;
+				isReturnRegVar = true;
 				break;
 			}
 		}
@@ -367,7 +367,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		{
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
 			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
-			declaredAVar = 1;
+			declaredAVar = true;
 		}
 	}
 

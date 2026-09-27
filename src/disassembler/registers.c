@@ -108,7 +108,7 @@ const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat)
 	return 0;
 }
 
-unsigned char compareRegisters(enum Register reg1, enum Register reg2)
+bool compareRegisters(enum Register reg1, enum Register reg2)
 {
 	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)
 	{
@@ -182,17 +182,17 @@ unsigned char compareRegisters(enum Register reg1, enum Register reg2)
 	return reg1 == reg2;
 }
 
-unsigned char isRegisterPointer(enum Register reg) 
+bool isRegisterPointer(enum Register reg) 
 {
 	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
 }
 
-unsigned char isRegisterStatusFlag(enum Register reg)
+bool isRegisterStatusFlag(enum Register reg)
 {
 	return reg >= CF && reg <= OF;
 }
 
-unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
+bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 {
 	int numOfPlatformRegArgs = getNumOfPlatformRegArgs(fileFormat);
 	const enum Register* platformRegArgs = getPlatformRegArgs(fileFormat);
@@ -202,11 +202,11 @@ unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileForma
 	{
 		if (compareRegisters(reg, platformRegArgs[i]) || compareRegisters(reg, altPlatformRegArgs[i]))
 		{
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 unsigned char getSizeOfRegister(enum Register reg) // in bytes
@@ -279,12 +279,12 @@ enum Register increaseRegisterSize(enum Register reg)
 	}
 }
 
-unsigned char isRegMM(enum Register reg)
+bool isRegMM(enum Register reg)
 {
 	return reg >= MM0 && reg <= MM7;
 }
 
-unsigned char isRegXMM(enum Register reg)
+bool isRegXMM(enum Register reg)
 {
 	return reg >= XMM0 && reg <= XMM15;
 }

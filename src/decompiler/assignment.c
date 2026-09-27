@@ -2,7 +2,7 @@
 #include "decompilationUtils.h"
 #include "functions.h"
 
-unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int instructionIndex)
+bool checkForAnyAssignments(struct DecompilationParameters* params, int instructionIndex)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
@@ -10,7 +10,7 @@ unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int
 	{
 		if (doesInstructionAssignToOperand(params, instructionIndex, i)) 
 		{
-			return 1;
+			return true;
 		}
 	}
 
@@ -18,21 +18,21 @@ unsigned char checkForAnyAssignments(struct DecompilationParameters* params, int
 	{
 		if (doesInstructionAssignToRegVar(params, instructionIndex, params->currentFunc->regVars[i].reg)) 
 		{
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum)
+bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum)
 {
 	struct Operand* operand = &params->instructions[instructionIndex].operands[operandNum];
 	if (doesInstructionModifyOperand(params, instructionIndex, operandNum, 0))
 	{
 		if (operand->type == MEM_ADDRESS) 
 		{
-			return 1;
+			return true;
 		}
 		else if (operand->type == REGISTER)
 		{
@@ -41,7 +41,7 @@ unsigned char doesInstructionAssignToOperand(struct DecompilationParameters* par
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 struct RegisterVariable* doesInstructionAssignToRegVar(struct DecompilationParameters* params, int instructionIndex, enum Register reg)

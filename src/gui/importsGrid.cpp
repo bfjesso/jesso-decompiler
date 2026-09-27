@@ -70,7 +70,7 @@ void ImportsGrid::RightClickOptions(wxGridEvent& e)
 		wxTextEntryDialog dlg(this, "", "Text");
 		if (dlg.ShowModal() == wxID_OK)
 		{
-			unsigned char found = 0;
+			bool found = false;
 			wxString txt = dlg.GetValue();
 			if (!txt.IsEmpty())
 			{
@@ -81,7 +81,7 @@ void ImportsGrid::RightClickOptions(wxGridEvent& e)
 					{
 						GoToCell(i, 0);
 						SelectRow(i);
-						found = 1;
+						found = true;
 						break;
 					}
 				}

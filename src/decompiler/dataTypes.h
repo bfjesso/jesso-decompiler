@@ -23,8 +23,8 @@ enum PrimitiveType
 
 struct DataType
 {
-	unsigned char isUnsigned;
-	unsigned char pointerLevel;
+	bool isUnsigned;
+	bool pointerLevel;
 	unsigned short arrayLen;
 	enum PrimitiveType primitiveType;
 };
@@ -42,9 +42,9 @@ extern "C"
 }
 #endif
 
-unsigned char doDataTypesRequireCasting(struct DataType t1, struct DataType t2, unsigned char is64Bit);
+bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit);
 
-unsigned char getDataTypeSize(struct DataType type, unsigned char is64Bit);
+unsigned char getDataTypeSize(struct DataType type, bool is64Bit);
 
 unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 

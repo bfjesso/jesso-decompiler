@@ -4,7 +4,7 @@
 #include "functionCalls.h"
 #include "expressions.h"
 
-unsigned char checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex)
+bool checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -22,7 +22,7 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 			}
 		}
 		
-		return 1;
+		return true;
 	}
 
 	// check if jump to a return. this only counts if the jump goes to a location that leads directly to a return with nothing but stack clean up before
@@ -34,29 +34,29 @@ unsigned char checkForReturnStatement(struct DecompilationParameters* params, in
 		if (jmpDstIndex == -1)
 		{
 			params->currentFunc->callingConvention = __UNKNOWNCALL;
-			return 1;
+			return true;
 		}
 		else if (params->currentFunc)
 		{
 			if (jmpDstIndex < params->currentFunc->firstInstructionIndex)
 			{
 				params->currentFunc->callingConvention = __UNKNOWNCALL;
-				return 1;
+				return true;
 			}
 			else if (jmpDstIndex > params->currentFunc->lastInstructionIndex && params->currentFunc->lastInstructionIndex != 0)
 			{
 				params->currentFunc->callingConvention = __UNKNOWNCALL;
-				return 1;
+				return true;
 			}
 		}
 
 		return doesInstructionLeadStraightToReturn(params, jmpDstIndex);
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex) // checks if the function leads to a return without doing anything in between
+bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex) // checks if the function leads to a return without doing anything in between
 {
 	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
 	for (int i = startInstructionIndex; i <= lastInstruction; i++)
@@ -64,7 +64,7 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (isOpcodeReturn(instruction->opcode))
 		{
-			return 1;
+			return true;
 		}
 		
 		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE || 
@@ -73,15 +73,15 @@ unsigned char doesInstructionLeadStraightToReturn(struct DecompilationParameters
 			continue;
 		}
 
-		return 0;
+		return false;
 	}
 
-	return 0;
+	return false;
 }
 
-enum JdcStatus decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
-	if (isInUnreachableStateRef) { *isInUnreachableStateRef = 1; }
+	if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
 
 	if (params->currentFunc->returnType.primitiveType == VOID_TYPE)
 	{

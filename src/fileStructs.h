@@ -1,4 +1,5 @@
 #pragma once
+#include "jdcTypes.h"
 #include "./jdc-str/jdcStr.h"
 
 enum FileFormat
@@ -27,7 +28,7 @@ struct FileSection
 {
 	struct JdcStr name;
 	enum FileSectionType type;
-	unsigned char isReadOnly;
+	bool isReadOnly;
 	unsigned long long rva;
 	unsigned long long fileOffset;
 	unsigned int physicalSize;

@@ -9,7 +9,7 @@ enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params)
 
 	while (1)
 	{
-		if (params->bytes > params->maxBytesAddr) { return 0; }
+		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
 		switch (params->bytes[0])
 		{
@@ -85,7 +85,7 @@ enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params)
 
 	if (rexByte < 0x40 || rexByte > 0x4F) { return SUCCESS_JDC; }
 
-	params->rexPrefix.isValidREX = 1;
+	params->rexPrefix.isValidREX = true;
 	params->rexPrefix.W = (rexByte >> 3) & 0x01;
 	params->rexPrefix.R = (rexByte >> 2) & 0x01;
 	params->rexPrefix.X = (rexByte >> 1) & 0x01;
@@ -106,7 +106,7 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 
 	if (byte0 == 0xC5) // two-byte form
 	{
-		params->vexPrefix.isValidVEX = 1;
+		params->vexPrefix.isValidVEX = true;
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
 		params->vexPrefix.vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
 		params->vexPrefix.L = (byte1 >> 2) & 0x01;
@@ -118,7 +118,7 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
-		params->vexPrefix.isValidVEX = 1;
+		params->vexPrefix.isValidVEX = true;
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
 		params->vexPrefix.X = (byte1 >> 6) & 0x01;
 		params->vexPrefix.B = (byte1 >> 5) & 0x01;
@@ -162,7 +162,7 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 
 	if (firstByte == 0x62)
 	{
-		params->evexPrefix.isValidEVEX = 1;
+		params->evexPrefix.isValidEVEX = true;
 
 		params->evexPrefix.R = ((p0 >> 7) & 0x01);
 		params->evexPrefix.X = ((p0 >> 6) & 0x01);
@@ -199,12 +199,12 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 	return SUCCESS_JDC;
 }
 
-unsigned char checkFlagR(struct DisassemblyParameters* params)
+bool checkFlagR(struct DisassemblyParameters* params)
 {
 	return params->rexPrefix.R || (params->vexPrefix.isValidVEX && !params->vexPrefix.R) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.R);
 }
 
-unsigned char checkFlagB(struct DisassemblyParameters* params)
+bool checkFlagB(struct DisassemblyParameters* params)
 {
 	return params->rexPrefix.B || (params->vexPrefix.isValidVEX && !params->vexPrefix.B) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.B);
 }

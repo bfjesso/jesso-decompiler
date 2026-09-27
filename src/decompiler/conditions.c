@@ -8,7 +8,7 @@
 enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 {
 	int combinationCount = 0;
-	unsigned char stopCombination = 0;
+	bool stopCombination = false;
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
@@ -119,13 +119,13 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				}
 
 				combinationCount = 0;
-				stopCombination = 0;
+				stopCombination = false;
 				params->currentFunc->numOfConditions++;
 			}
 		}
 		else if(params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
-			stopCombination = 1;
+			stopCombination = true;
 		}
 	}
 	
@@ -136,7 +136,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
 		if ((cond1->conditionType == IF_CT || cond1->conditionType == ELSE_IF_CT) && cond1->exitIndex > cond1->dstIndex)
 		{
-			unsigned char foundElseIf = 0;
+			bool foundElseIf = false;
 			for (int j = i + 1; j < ogNumOfConditions; j++)
 			{
 				struct Condition* cond2 = &params->currentFunc->conditions[j];
@@ -147,7 +147,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 					cond1->connectedLowerConditionIndex = j;
 					cond2->connectedUpperConditionIndex = i;
 					cond2->conditionType = ELSE_IF_CT;
-					foundElseIf = 1;
+					foundElseIf = true;
 					break;
 				}
 			}
@@ -353,7 +353,7 @@ static enum JdcStatus handleCombinedJccResize(struct Condition* condition)
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
@@ -370,7 +370,7 @@ enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, in
 				return ERROR_JDC;
 			}
 
-			if (isInUnreachableStateRef) { *isInUnreachableStateRef = 0; }
+			if (isInUnreachableStateRef) { *isInUnreachableStateRef = false; }
 
 			i = -1; // the loop needs to restart in order to recheck condition->indentLevel
 		}
@@ -410,7 +410,7 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result)
+static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, bool decompileStart, struct JdcStr* result)
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
@@ -439,7 +439,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 	}
 
 	// invert condition menas that if the jmp is taken, then the body is not executed. combinedJccsLogicType is set assuming that invertCondition is true
-	unsigned char invertCondition = condition->conditionType == IF_CT || condition->conditionType == ELSE_IF_CT || condition->conditionType == WHILE_CT;
+	bool invertCondition = condition->conditionType == IF_CT || condition->conditionType == ELSE_IF_CT || condition->conditionType == WHILE_CT;
 
 	struct JdcStr conditionExpression = initializeJdcStr();
 	if (condition->combinedJccsLogicType == OR_LT)
@@ -452,7 +452,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 
 		for (int i = 0; i < condition->numOfCombinedJccs; i++)
 		{
-			unsigned char invertOperator = i == (condition->numOfCombinedJccs - 1);
+			bool invertOperator = i == (condition->numOfCombinedJccs - 1);
 			if (!invertCondition)
 			{
 				invertOperator = !invertOperator;
@@ -541,7 +541,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 	return freeJdcStr(&conditionExpression);
 }
 
-unsigned char isConditionDirectJmp(struct Condition* condition)
+bool isConditionDirectJmp(struct Condition* condition)
 {
 	return condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT;
 }
@@ -607,15 +607,15 @@ int getConditionChainLastBodyInstruction(struct DecompilationParameters* params,
 	return condition->lastBodyIndex;
 }
 
-unsigned char checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex)
+bool checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex)
 {
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (instructionIndex == params->currentFunc->conditions[i].jccIndex && params->currentFunc->conditions[i].conditionType == CONDITIONAL_RETURN_CT)
 		{
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }

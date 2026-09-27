@@ -29,7 +29,7 @@ enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct 
 
 	va_list args;
 	va_start(args, format);
-	enum JdcStatus result = sprintfJdcArgs(decompiledFunction, 1, format, args);
+	enum JdcStatus result = sprintfJdcArgs(decompiledFunction, true, format, args);
 	va_end(args);
 
 	strcatJdc(decompiledFunction, "\n");
@@ -137,7 +137,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 			}
 		}
 
-		return 1;
+		return SUCCESS_JDC;
 	}
 	else if (operand->type == REGISTER)
 	{
@@ -357,7 +357,7 @@ int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned
 	return -1;
 }
 
-int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, unsigned char* foundIndirectTable)
+int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, bool* foundIndirectTable)
 {
 	int low = 0;
 	int high = numOfJumpTables - 1;
@@ -367,12 +367,12 @@ int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, un
 
 		if (jumpTables[mid].jmpTableAddress == address) 
 		{ 
-			if (foundIndirectTable) { *foundIndirectTable = 0; }
+			if (foundIndirectTable) { *foundIndirectTable = false; }
 			return mid; 
 		}
 		else if (jumpTables[mid].indirectTableAddress == address)
 		{
-			if (foundIndirectTable) { *foundIndirectTable = 1; }
+			if (foundIndirectTable) { *foundIndirectTable = true; }
 			return mid;
 		}
 
@@ -383,7 +383,7 @@ int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, un
 	return -1;
 }
 
-unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress)
+bool checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress)
 {
 	int low = 0;
 	int high = numOfAddresses - 1;
@@ -391,27 +391,27 @@ unsigned char checkForAddressInArrInRange(unsigned long long* addresses, int num
 	{
 		int mid = low + (high - low) / 2;
 
-		if (addresses[mid] >= minAddress && addresses[mid] <= maxAddress) { return 1; }
+		if (addresses[mid] >= minAddress && addresses[mid] <= maxAddress) { return true; }
 
 		if (addresses[mid] < minAddress) { low = mid + 1; }
 		else { high = mid - 1; }
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, unsigned char* overwrites)
+bool doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, bool* overwrites)
 {
 	if (overwrites != 0)
 	{
-		*overwrites = 0;
+		*overwrites = false;
 	}
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	if (instruction->group1Prefix != NO_PREFIX) // REPZ instructions are decompiled as void intrinsics and I have not handled the other prefixes yet
 	{
-		return 0;
+		return false;
 	}
 
 	enum Mnemonic opcode = instruction->opcode;
@@ -420,13 +420,13 @@ unsigned char doesInstructionModifyOperand(struct DecompilationParameters* param
 	{
 		if ((isOpcodeXor(opcode) || opcode == SBB) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
-			if (overwrites != 0) { *overwrites = 1; }
-			return 1;
+			if (overwrites != 0) { *overwrites = true; }
+			return true;
 		}
 		else if (isOpcodeOr(opcode) && instruction->operands[1].type == IMMEDIATE)
 		{
 			if (overwrites != 0) { *overwrites = isImmediateAllOnes(&instruction->operands[1].immediate); }
-			return 1;
+			return true;
 		}
 
 		if (opcode == IMUL)
@@ -437,50 +437,52 @@ unsigned char doesInstructionModifyOperand(struct DecompilationParameters* param
 				{
 					*overwrites = !compareOperands(&instruction->operands[0], &instruction->operands[1]);
 				}
-				return 1;
+
+				return true;
 			}
 			else if (instruction->numOfOperands == 2)
 			{
-				return 1;
+				return true;
 			}
 			else if (instruction->numOfOperands == 1)
 			{
-				return 0;
+				return false;
 			}
 		}
 
 		if (doesOpcodeOverwriteFirstOperand(opcode))
 		{
-			if (overwrites != 0) { *overwrites = 1; }
-			return 1;
+			if (overwrites != 0) { *overwrites = true; }
+			return true;
 		}
 		else if (doesOpcodeModifyFirstOperand(opcode))
 		{
-			return 1;
+			return true;
 		}
 	}
 	else if (operandNum == 1)
 	{
 		if (opcode == XCHG)
 		{
-			if (overwrites != 0) { *overwrites = 1; }
-			return 1;
+			if (overwrites != 0) { *overwrites = true; }
+			return true;
 		}
 		else if (isOpcodeXor(opcode) || opcode == SBB)
 		{
 			if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 			{
-				if (overwrites != 0) { *overwrites = 1; }
-				return 1;
+				if (overwrites != 0) { *overwrites = true; }
+				return true;
 			}
-			return 0;
+
+			return false;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, unsigned char checkUnknownCalls, enum Register* specificReg)
+bool doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, bool checkUnknownCalls, enum Register* specificReg)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -548,7 +550,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 			return reg == ZF;
 		}
 
-		return 0;
+		return false;
 	}
 	
 	struct Function* callee;
@@ -562,7 +564,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 				*specificReg = regArg->reg;
 			}
 
-			return 1;
+			return true;
 		}
 	}
 	else if (checkUnknownCalls && checkForUnknownFunctionCall(params, instructionIndex))
@@ -578,14 +580,14 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 					*specificReg = reg;
 				}
 
-				return 1;
+				return true;
 			}
 		}
 	}
 	
 	for (int i = 0; i < instruction->numOfOperands; i++)
 	{
-		unsigned char overwrites = 0;
+		bool overwrites = false;
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == MEM_ADDRESS)
 		{
@@ -596,7 +598,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 					*specificReg = op->memoryAddress.reg;
 				}
 
-				return 1;
+				return true;
 			}
 			else if (compareRegisters(op->memoryAddress.regDisplacement, reg))
 			{
@@ -605,7 +607,7 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 					*specificReg = op->memoryAddress.regDisplacement;
 				}
 
-				return 1;
+				return true;
 			}
 		}
 		else if ((!doesInstructionModifyOperand(params, instructionIndex, i, &overwrites) || !overwrites) && op->type == REGISTER && compareRegisters(op->reg, reg))
@@ -615,28 +617,28 @@ unsigned char doesInstructionAccessRegister(struct DecompilationParameters* para
 				*specificReg = op->reg;
 			}
 
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, unsigned char* overwrites)
+bool doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, bool* overwrites)
 {
 	if (specificReg) { *specificReg = NO_REG; }
-	if (overwrites) { *overwrites = 0; }
+	if (overwrites) { *overwrites = false; }
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
 
 	if (isRegisterStatusFlag(reg)) 
 	{
-		if (overwrites) { *overwrites = 1; }
+		if (overwrites) { *overwrites = true; }
 
 		if (isOpcodeCmp(opcode))
 		{
-			return 1;
+			return true;
 		}
 
 		switch (opcode)
@@ -647,7 +649,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		case SBB:
 		case NEG:
 		case CMPXCHG:
-			return 1;
+			return true;
 		case TEST:
 		case AND:
 		case OR:
@@ -662,21 +664,22 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 			return reg != CF;
 		}
 
-		if (overwrites) { *overwrites = 0; }
-		return 0;
+		if (overwrites) { *overwrites = false; }
+		return false;
 	}
 	
 	struct Function* callee = 0;
 	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
 		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
 	{
-		if (overwrites) { *overwrites = 1; }
+		if (overwrites) { *overwrites = true; }
 		if (specificReg) 
 		{ 
 			if (callee) { *specificReg = callee->returnReg; }
 			else { *specificReg = params->is64Bit ? RAX : EAX; }
 		}
-		return 1;
+
+		return true;
 	}
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
@@ -703,7 +706,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 				}
 			}
 			
-			return 1;
+			return true;
 		}
 		
 		if (opcode == IDIV || opcode == DIV)
@@ -733,7 +736,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 				}
 			}
 			
-			return 1;
+			return true;
 		}
 
 		if ((opcode == IMUL || opcode == MUL) && instruction->numOfOperands == 1)
@@ -761,7 +764,7 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 				}
 			}
 
-			return 1;
+			return true;
 		}
 	}
 	else if (compareRegisters(reg, DX))
@@ -790,8 +793,8 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 				}
 			}
 
-			if (overwrites) { *overwrites = 1; }
-			return 1;
+			if (overwrites) { *overwrites = true; }
+			return true;
 		}
 	}
 	else if (compareRegisters(reg, ST0))
@@ -800,8 +803,8 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 		{
 		case FLD:
 			if (specificReg) { *specificReg = ST0; }
-			if (overwrites) { *overwrites = 1; }
-			return 1;
+			if (overwrites) { *overwrites = true; }
+			return true;
 		}
 	}
 
@@ -813,15 +816,15 @@ unsigned char doesInstructionModifyRegister(struct DecompilationParameters* para
 			if (doesInstructionModifyOperand(params, instructionIndex, i, overwrites))
 			{
 				if (specificReg) { *specificReg = op->reg; }
-				return 1;
+				return true;
 			}
 		}
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg) 
+bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg) 
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -833,39 +836,39 @@ unsigned char doesInstructionConditionallyModifyRegister(struct DecompilationPar
 		return opcode == CMPXCHG;
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionDoNothing(struct DisassembledInstruction* instruction)
+bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 {
 	if (instruction->opcode == NOP)
 	{
-		return 1;
+		return true;
 	}
 	else if (isOpcodeMov(instruction->opcode) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 	{
-		return 1;
+		return true;
 	}
 	else if (instruction->opcode == LEA &&
 		instruction->operands[0].type == REGISTER && instruction->operands[1].type == MEM_ADDRESS &&
 		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) &&
 		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)
 	{
-		return 1;
+		return true;
 	}
 	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0)
 	{
-		return 1;
+		return true;
 	}
 	else if ((instruction->opcode == JMP_NEAR || instruction->opcode == JMP_SHORT) && instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0)
 	{
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction)
+bool doesInstructionGenerateInterruptOrException(struct DisassembledInstruction* instruction)
 {
 	switch (instruction->opcode)
 	{
@@ -876,13 +879,13 @@ unsigned char doesInstructionGenerateInterruptOrException(struct DisassembledIns
 	case UD1:
 	case UD2:
 	case DATA:
-		return 1;
+		return true;
 	}
 
 	return instruction->isInvalid;
 }
 
-unsigned char isImmediateAllOnes(struct Immediate* immediate)
+bool isImmediateAllOnes(struct Immediate* immediate)
 {
 	switch (immediate->size)
 	{
@@ -896,10 +899,10 @@ unsigned char isImmediateAllOnes(struct Immediate* immediate)
 		return immediate->value == 0xFFFFFFFFFFFFFFFF;
 	}
 
-	return 0;
+	return false;
 }
 
-unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
+bool compareOperands(struct Operand* op1, struct Operand* op2)
 {
 	if (op1->type == op2->type)
 	{
@@ -909,7 +912,7 @@ unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
 		switch (op1->type)
 		{
 		case NO_OPERAND:
-			return 1;
+			return true;
 		case SEGMENT:
 			return op1->segment == op2->segment;
 		case REGISTER:
@@ -921,7 +924,7 @@ unsigned char compareOperands(struct Operand* op1, struct Operand* op2)
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 unsigned char getSizeOfOperand(struct Operand* operand)
@@ -942,17 +945,17 @@ unsigned char getSizeOfOperand(struct Operand* operand)
 	return 0;
 }
 
-unsigned char validateName(struct DecompilationParameters* params, const char* name) 
+bool validateName(struct DecompilationParameters* params, const char* name) 
 {
 	int nameLen = (int)strlen(name);
 	if (nameLen == 0) 
 	{
-		return 0;
+		return false;
 	}
 
 	if (name[0] != '_' && (name[0] < 'a' || name[0] > 'z') && (name[0] < 'A' || name[0] > 'Z')) // first character cannot be a number
 	{
-		return 0;
+		return false;
 	}
 
 	for (int i = 1; i < nameLen; i++) 
@@ -962,7 +965,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 			(name[i] < 'A' || name[i] > 'Z') &&
 			(name[i] < '0' || name[i] > '9'))
 		{
-			return 0;
+			return false;
 		}
 	}
 	
@@ -970,7 +973,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(keywordStrs[i], name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -978,7 +981,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(primitiveTypeStrs[i], name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -986,7 +989,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(returningIntrinsics[i].name, name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -994,7 +997,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(voidIntrinsics[i].name, name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -1002,7 +1005,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(callingConventionStrs[i], name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 	
@@ -1010,7 +1013,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(params->functions[i].name.buffer, name) == 0) 
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -1018,7 +1021,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 	{
 		if (strcmp(params->imports[i].name.buffer, name) == 0)
 		{
-			return 0;
+			return false;
 		}
 	}
 
@@ -1028,7 +1031,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 		{
 			if (strcmp(params->currentFunc->regVars[i].name.buffer, name) == 0)
 			{
-				return 0;
+				return false;
 			}
 		}
 
@@ -1036,7 +1039,7 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 		{
 			if (strcmp(params->currentFunc->stackVars[i].name.buffer, name) == 0)
 			{
-				return 0;
+				return false;
 			}
 		}
 
@@ -1044,19 +1047,19 @@ unsigned char validateName(struct DecompilationParameters* params, const char* n
 		{
 			if (strcmp(params->currentFunc->returnedVars[i].name.buffer, name) == 0)
 			{
-				return 0;
+				return false;
 			}
 		}
 	}
 
-	return 1;
+	return true;
 }
 
-unsigned char checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex)
+bool checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex)
 {
 	// the scope startIndex is when the reg is initialized, so the reg var needs to be decompiled when it is the dst but not as a src
 	// the scope endIndex is the last time the reg is accessed before it is initialized again, so as a src it still needs to be the reg var but not as the dst if the instruction also initializes the reg
-	unsigned char isRegOverwritten = 0;
+	bool isRegOverwritten = 0;
 	doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, &isRegOverwritten);
 	
 	for (int i = 0; i < regVar->numOfScopes; i++)
@@ -1065,17 +1068,17 @@ unsigned char checkRegVarScope(struct DecompilationParameters* params, struct Re
 		{
 			if (instructionIndex >= regVar->scopes[i].startIndex && instructionIndex < regVar->scopes[i].endIndex)
 			{
-				return 1;
+				return true;
 			}
 		}
 		else
 		{
 			if (instructionIndex > regVar->scopes[i].startIndex && instructionIndex <= regVar->scopes[i].endIndex)
 			{
-				return 1;
+				return true;
 			}
 		}
 	}
 
-	return 0;
+	return false;
 }

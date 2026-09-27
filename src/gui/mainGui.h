@@ -33,7 +33,7 @@ public:
 
 	wxString currentFilePath = "";
 	enum FileFormat fileFormat = UNKNOWN_FF;
-	unsigned char is64Bit = 0;
+	bool is64Bit = false;
 	unsigned long long imageBase = 0;
 	unsigned long long entryPoint = 0;
 
@@ -129,7 +129,7 @@ public:
 
 	enum JdcStatus HandleJmpTables();
 
-	void FindAllFunctions(unsigned char getSymbols);
+	void FindAllFunctions(bool getSymbols);
 
 	void CloseApp(wxCloseEvent& e);
 

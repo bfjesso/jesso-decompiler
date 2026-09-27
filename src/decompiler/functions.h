@@ -25,11 +25,11 @@ static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct Decompilatio
 
 static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
 
-static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
+static bool isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
 static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params);
 
-unsigned char getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef);
+bool getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef);
 
 static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params);
 
@@ -37,7 +37,7 @@ static long long getStackFrameChange(struct DisassembledInstruction* instruction
 
 long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex);
 
-unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP);
+bool isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP);
 
 struct StackVariable* getStackVarByOffset(struct Function* function, long long offsetFromInitSP);
 
@@ -53,7 +53,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 
 static enum JdcStatus addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef);
 
-enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg);
+enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, bool isArgument, enum Register reg);
 
 enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex);
 

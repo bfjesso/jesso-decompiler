@@ -29,7 +29,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 	wxString word = GetTextRange(start, end);
 	if (word != "")
 	{
-		unsigned char foundName = 0;
+		bool foundName = false;
 
 		int numOfFunctions = mainGui->functions.size();
 		for (int i = 0; i < numOfFunctions; i++)
@@ -58,7 +58,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
 				}, ID_FIND_CODE_REFERENCES);
 				
-				foundName = 1;
+				foundName = true;
 				break;
 			}
 		}
@@ -76,7 +76,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 						ShowRenameDialog(currentDecompiledFunc, &func->regVars[i].name);
 					}, ID_RENAME);
 
-					foundName = 1;
+					foundName = true;
 					break;
 				}
 			}
@@ -90,7 +90,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 						ShowRenameDialog(currentDecompiledFunc, &func->stackVars[i].name);
 					}, ID_RENAME);
 
-					foundName = 1;
+					foundName = true;
 					break;
 				}
 			}
@@ -104,7 +104,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 						ShowRenameDialog(currentDecompiledFunc, &func->returnedVars[i].name);
 					}, ID_RENAME);
 
-					foundName = 1;
+					foundName = true;
 					break;
 				}
 			}
@@ -157,7 +157,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 
 	ClearIndicators();
 	
-	unsigned char isLineHighlighted = 0;
+	bool isLineHighlighted = false;
 
 	if (disassemblyTextCtrl && HasFocus())
 	{
@@ -174,7 +174,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 
 			ClearIndicators();
 			HighlightLine(selectedLine, PURPLE_INDICATOR, 0);
-			isLineHighlighted = 1;
+			isLineHighlighted = true;
 		}
 	}
 
@@ -441,7 +441,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 }
 
-void DecompilationTextCtrl::ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor)
+void DecompilationTextCtrl::ColorAllStrs(wxString text, const char* str, DecompilationColor color, bool forceColor)
 {
 	if (!str || !strcmp(str, ""))
 	{

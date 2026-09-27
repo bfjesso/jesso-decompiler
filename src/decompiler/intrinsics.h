@@ -38,12 +38,12 @@ extern "C"
 }
 #endif
 
-static unsigned char checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic);
+static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic);
 
-unsigned char isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef);
+bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef);
 
-enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, unsigned char getAssignment, struct JdcStr* result);
+enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result);
 
-unsigned char checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef);
+bool checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef);
 
 enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result);

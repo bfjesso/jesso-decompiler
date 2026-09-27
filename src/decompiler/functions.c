@@ -12,7 +12,7 @@ enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct F
 	int startInstructionIndex = *instructionIndexRef;
 
 	unsigned long long currentSectionEndAddress = 0;
-	unsigned char foundFirstInstruction = 0;
+	bool foundFirstInstruction = false;
 	for (int i = startInstructionIndex; i < params->numOfInstructions; i++)
 	{
 		(*instructionIndexRef)++;
@@ -35,7 +35,7 @@ enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct F
 				(!doesInstructionGenerateInterruptOrException(currentInstruction) && !doesInstructionDoNothing(currentInstruction)))
 			{
 				result->firstInstructionIndex = i;
-				foundFirstInstruction = 1;
+				foundFirstInstruction = true;
 			}
 			else 
 			{
@@ -105,13 +105,13 @@ enum JdcStatus analyzeAllFunctions(struct DecompilationParameters* params)
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params)
+static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params)
 {
-	unsigned char setAReturnType = 0;
-	unsigned char getConditions = 1;
+	bool setAReturnType = false;
+	bool getConditions = true;
 	do
 	{
-		setAReturnType = 0;
+		setAReturnType = false;
 		for (int i = 0; i < params->numOfFunctions; i++)
 		{
 			params->currentFunc = &params->functions[i];
@@ -127,11 +127,11 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 			}
 
 			// if the return reg is not initialized at all return statements, then it cant be the return reg
-			unsigned char canBeAX = 1;
-			unsigned char canBeXMM0 = 1;
-			unsigned char canBeST0 = 1;
+			bool canBeAX = true;
+			bool canBeXMM0 = true;
+			bool canBeST0 = true;
 
-			unsigned char wasZero = setAReturnType == 0;
+			bool wasZero = !setAReturnType;
 			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
 				if (checkForReturnStatement(params, j) || checkForConditionalReturn(params, j))
@@ -142,20 +142,20 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 						{
 							if (compareRegisters(params->currentFunc->returnReg, AX)) 
 							{
-								canBeAX = 0;
+								canBeAX = false;
 							}
 							else if (compareRegisters(params->currentFunc->returnReg, XMM0))
 							{
-								canBeXMM0 = 0;
+								canBeXMM0 = false;
 							}
 							else if (compareRegisters(params->currentFunc->returnReg, ST0))
 							{
-								canBeST0 = 0;
+								canBeST0 = false;
 							}
 
 							params->currentFunc->returnType.primitiveType = VOID_TYPE;
 							params->currentFunc->returnReg = NO_REG;
-							if (wasZero) { setAReturnType = 0; }
+							if (wasZero) { setAReturnType = false; }
 						}
 						else 
 						{
@@ -171,12 +171,12 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 						{
 							params->currentFunc->returnType = dataType;
 							params->currentFunc->returnReg = specificReg;
-							setAReturnType = 1;
+							setAReturnType = true;
 							continue;
 						}
 						else 
 						{
-							canBeAX = 0;
+							canBeAX = false;
 						}
 					}
 
@@ -186,12 +186,12 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 						{
 							params->currentFunc->returnType = dataType;
 							params->currentFunc->returnReg = XMM0;
-							setAReturnType = 1;
+							setAReturnType = true;
 							continue;
 						}
 						else 
 						{
-							canBeXMM0 = 0;
+							canBeXMM0 = false;
 						}
 					}
 
@@ -201,12 +201,12 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 						{
 							params->currentFunc->returnType.primitiveType = FLOAT_TYPE;
 							params->currentFunc->returnReg = ST0;
-							setAReturnType = 1;
+							setAReturnType = true;
 							continue;
 						}
 						else 
 						{
-							canBeST0 = 0;
+							canBeST0 = false;
 						}
 					}
 
@@ -218,13 +218,13 @@ static enum JdcStatuss getAllFunctionReturnTypesAndConditions(struct Decompilati
 			}
 		}
 
-		getConditions = 0;
+		getConditions = false;
 	} while (setAReturnType); // a function's return type may depend on another function
 
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatuss getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
+static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
 {
 	for (int i = 0; i < params->numOfFunctions; i++) 
 	{
@@ -246,7 +246,7 @@ static enum JdcStatuss getAllFunctionRegArgsAndStackVars(struct DecompilationPar
 					continue;
 				}
 
-				unsigned char overwrites = 0;
+				bool overwrites = false;
 				enum Register specificReg = NO_REG;
 				if (doesInstructionAccessRegister(params, j, k, 0, &specificReg) && !getRegArgByReg(params->currentFunc, k))
 				{
@@ -280,14 +280,14 @@ static enum JdcStatuss getAllFunctionRegArgsAndStackVars(struct DecompilationPar
 	return SUCCESS_JDC;
 }
 
-static unsigned char isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType)
+static bool isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType)
 {
 	struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, reg);
 	if (regArg)
 	{
 		if (specificReg) { *specificReg = regArg->reg; }
 		if (dataType) { *dataType = regArg->dataType; }
-		return 1;
+		return true;
 	}
 	
 	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
@@ -298,12 +298,12 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 			if (cond->conditionType == ELSE_CT)
 			{
 				struct Condition* currentCond = cond;
-				unsigned char isRegInitializedInAllCases = 1;
+				bool isRegInitializedInAllCases = true;
 				while(currentCond->connectedUpperConditionIndex != -1)
 				{
 					if (!isRegInitialized(params, currentCond->lastBodyIndex, currentCond->firstBodyIndex, reg, specificReg, dataType))
 					{
-						isRegInitializedInAllCases = 0;
+						isRegInitializedInAllCases = false;
 						break;
 					}
 
@@ -312,7 +312,7 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 
 				if (isRegInitializedInAllCases) 
 				{
-					return 1;
+					return true;
 				}
 			}
 
@@ -320,15 +320,15 @@ static unsigned char isRegInitialized(struct DecompilationParameters* params, in
 			continue;
 		}
 
-		unsigned char overwrites = 0;
+		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
 		{
 			if (dataType) { *dataType = getRegisterDataType(&params->instructions[i], -1, specificReg ? *specificReg : reg); }
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
@@ -384,7 +384,7 @@ static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params)
 	return SUCCESS_JDC;
 }
 
-unsigned char getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef)
+bool getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef)
 {
 	if (stackVarRef) { *stackVarRef = 0; }
 	if (pushInstructionRef) { *pushInstructionRef = -1; }
@@ -403,7 +403,7 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 		if (stackArgOffset - initialStackFrameSize == stackVar->offsetFromInitSP)
 		{
 			if (stackVarRef) { *stackVarRef = stackVar; }
-			return 1;
+			return true;
 		}
 	}
 
@@ -424,11 +424,11 @@ unsigned char getStackArgInitializer(struct DecompilationParameters* params, int
 		if (instruction->opcode == PUSH && initialStackFrameSize - currentStackFrameSize == stackArgOffset)
 		{
 			if (pushInstructionRef) { *pushInstructionRef = i; }
-			return 1;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
 }
 
 static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params)
@@ -438,10 +438,10 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 		params->currentFunc = &params->functions[i];
 
 		// sorting from least to greatest stack offset
-		unsigned char keepSorting = 1;
+		bool keepSorting = true;
 		while (keepSorting)
 		{
-			keepSorting = 0;
+			keepSorting = false;
 			for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
 			{
 				if (params->currentFunc->stackVars[j].offsetFromInitSP > params->currentFunc->stackVars[j + 1].offsetFromInitSP)
@@ -449,7 +449,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 					struct StackVariable temp = params->currentFunc->stackVars[j];
 					params->currentFunc->stackVars[j] = params->currentFunc->stackVars[j + 1];
 					params->currentFunc->stackVars[j + 1] = temp;
-					keepSorting = 1;
+					keepSorting = true;
 				}
 			}
 		}
@@ -641,17 +641,17 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 	return -1;
 }
 
-unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP)
+bool isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP)
 {
 	if (!memAddress)
 	{
-		return 0;
+		return false;
 	}
 
 	if (compareRegisters(memAddress->reg, SP))
 	{
 		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
-		return 1;
+		return true;
 	}
 
 	// this is a simple check for other registers that are set to the SP, usually the BP
@@ -666,11 +666,11 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 				if (compareRegisters(instruction->operands[1].reg, SP))
 				{
 					if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
-					return 1;
+					return true;
 				}
 				else
 				{
-					return 0;
+					return false;
 				}
 			}
 		}
@@ -680,10 +680,10 @@ unsigned char isMemAddressStackVar(struct DecompilationParameters* params, int i
 	{
 		// if mov BP, SP is not found, the BP is assumed to be the initial SP value
 		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement; }
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
 
 struct StackVariable* getStackVarByOffset(struct Function* function, long long offsetFromInitSP)
@@ -779,7 +779,7 @@ static enum JdcStatus addStackVar(struct Function* function, long long offsetFro
 		return ERROR_JDC;
 	}
 
-	unsigned char isArgument = offsetFromInitSP > 0;
+	bool isArgument = offsetFromInitSP > 0;
 
 	function->stackVars = newStackVars;
 	struct StackVariable* stackVar = &function->stackVars[function->numOfStackVars];
@@ -788,7 +788,7 @@ static enum JdcStatus addStackVar(struct Function* function, long long offsetFro
 	stackVar->offsetFromInitSP = offsetFromInitSP;
 	stackVar->isArgument = isArgument;
 	stackVar->name = initializeJdcStr();
-	sprintfJdc(&(stackVar->name), 0, "%s%X", isArgument ? "arg" : "var", offsetFromInitSP < 0 ? -offsetFromInitSP : offsetFromInitSP);
+	sprintfJdc(&(stackVar->name), false, "%s%X", isArgument ? "arg" : "var", offsetFromInitSP < 0 ? -offsetFromInitSP : offsetFromInitSP);
 
 	if (dataTypeRef)
 	{
@@ -798,7 +798,7 @@ static enum JdcStatus addStackVar(struct Function* function, long long offsetFro
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, unsigned char isArgument, enum Register reg)
+enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, bool isArgument, enum Register reg)
 {
 	if ((isArgument && getRegArgByReg(params->currentFunc, reg)) || (!isArgument && getLocalRegVarByReg(params->currentFunc, reg)))
 	{
@@ -832,7 +832,7 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 	regVar->numOfScopes = 0;
 
 	regVar->name = initializeJdcStr();
-	sprintfJdc(&regVar->name, 0, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
+	sprintfJdc(&regVar->name, false, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
 
 	if (isArgument) 
 	{
@@ -900,7 +900,7 @@ enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int startIndex, i
 
 static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
-	unsigned char foundFirstInstance = 0;
+	bool foundFirstInstance = false;
 	regVar->dataType = getRegisterDataType(0, -1, regVar->reg);
 	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
@@ -937,12 +937,12 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 				{
 					regVar->dataType.primitiveType = dataType.primitiveType;
 					regVar->reg = reg;
-					foundFirstInstance = 1;
+					foundFirstInstance = true;
 				}
 
 				if (dataType.isUnsigned)
 				{
-					regVar->dataType.isUnsigned = 1;
+					regVar->dataType.isUnsigned = true;
 				}
 			}
 		}
@@ -976,7 +976,7 @@ enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataTyp
 	function->returnedVars[function->numOfReturnedVars].dataType = dataType;
 
 	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
-	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), 0, "%sRetVal%d", calleeName, callNum);
+	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), false, "%sRetVal%d", calleeName, callNum);
 	replaceJdc(&(function->returnedVars[function->numOfReturnedVars].name), "::", "_");
 
 	function->returnedVars[function->numOfReturnedVars].calleeAddress = calleeAddress;

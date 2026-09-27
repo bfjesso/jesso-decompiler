@@ -11,13 +11,13 @@ static enum JdcStatus removeCondition(struct DecompilationParameters* params, in
 
 static enum JdcStatus handleCombinedJccResize(struct Condition* condition);
 
-enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, unsigned char* isInUnreachableStateRef, struct JdcStr* result);
+enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result);
 
 enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result);
 
-static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, unsigned char decompileStart, struct JdcStr* result);
+static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, bool decompileStart, struct JdcStr* result);
 
-unsigned char isConditionDirectJmp(struct Condition* condition);
+bool isConditionDirectJmp(struct Condition* condition);
 
 struct Condition* getConditionFromDstInstruction(struct DecompilationParameters* params, int instructionIndex);
 
@@ -29,4 +29,4 @@ int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params
 
 int getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition);
 
-unsigned char checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex);
+bool checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex);

@@ -20,5 +20,5 @@ public:
 
 	void ApplyDecompilationHighlighting();
 
-	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, unsigned char forceColor);
+	void ColorAllStrs(wxString text, const char* str, DecompilationColor color, bool forceColor);
 };

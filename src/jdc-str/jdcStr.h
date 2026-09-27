@@ -18,7 +18,7 @@ extern "C"
 
 	enum JdcStatus strcpyJdc(struct JdcStr* jdcStr, const char* src);
 
-	enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, unsigned char cat, const char* format, ...);
+	enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, bool cat, const char* format, ...);
 	
 	struct JdcStr initializeJdcStr();
 
@@ -40,7 +40,7 @@ enum JdcStatus strcatJdc(struct JdcStr* jdcStr, const char* src);
 
 enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src);
 
-enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, unsigned char cat, const char* format, va_list args);
+enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* format, va_list args);
 
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy);
 

@@ -105,7 +105,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 	}
 }
 
-void DisassemblyTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine)
+void DisassemblyTextCtrl::HighlightLine(int line, enum IndicatorColor color, bool gotoLine)
 {
 	if (gotoLine) 
 	{
@@ -241,7 +241,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		{
 			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode)) 
 			{
-				sprintfJdc(&errorBuffer, 0, "%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address);
+				sprintfJdc(&errorBuffer, false, "%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address);
 				mainGui->logTextCtrl->Log(errorBuffer.buffer, 1);
 			}
 		}
@@ -279,7 +279,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 	ClearIndicators();
 
 	int instructionIndex = GetCurrentLine();
-	unsigned char isLineHighlighted = 0;
+	bool isLineHighlighted = false;
 
 	if (decompilationTextCtrl)
 	{
@@ -302,7 +302,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 
 			ClearIndicators();
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			isLineHighlighted = 1;
+			isLineHighlighted = true;
 		}
 	}
 
@@ -315,7 +315,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
 			ClearIndicators();
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			isLineHighlighted = 1;
+			isLineHighlighted = true;
 		}
 	}
 
@@ -329,7 +329,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 			dataTextCtrl->HighlightBytes(fileOffset, instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
 			ClearIndicators();
 			HighlightLine(instructionIndex, PURPLE_INDICATOR, 0);
-			isLineHighlighted = 1;
+			isLineHighlighted = true;
 		}
 	}
 
@@ -414,7 +414,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		}
 		else if (instructions[i].opcode == DATA) 
 		{
-			unsigned char foundIndirectTable = 0;
+			bool foundIndirectTable = false;
 			int jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
 			if (jumpTableIndex != -1)
 			{

@@ -508,7 +508,7 @@ void MainGui::OpenFile()
 			SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
 			char hexStr[20] = { 0 };
-			sprintf(hexStr, "0x%llX", numOfFileBytes);
+			sprintf(hexStr, "0x%X", numOfFileBytes);
 			logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
 			logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
 			logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
@@ -655,12 +655,12 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 	return SUCCESS_JDC;
 }
 
-unsigned char CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
+bool CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
 {
 	return a.address < b.address;
 }
 
-unsigned char CompareJumpTables(const JumpTable& a, const JumpTable& b)
+bool CompareJumpTables(const JumpTable& a, const JumpTable& b)
 {
 	return a.jmpTableAddress < b.jmpTableAddress;
 }
@@ -698,10 +698,10 @@ void MainGui::DisassembleFile()
 	options.is64BitMode = is64Bit;
 	struct DisassembledInstruction instructionBuffer;
 	unsigned long long errorAddress = 0;
-	unsigned char didErrorOccur = 0;
+	bool didErrorOccur = false;
 	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
 	{
-		didErrorOccur = 1;
+		didErrorOccur = true;
 	}
 
 	unsigned long long firstAddress = disassembledInstructions[0].address;
@@ -716,7 +716,7 @@ void MainGui::DisassembleFile()
 			{
 				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
 				{
-					didErrorOccur = 1;
+					didErrorOccur = true;
 				}
 			}
 			else
@@ -725,7 +725,7 @@ void MainGui::DisassembleFile()
 				{
 					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
 					{
-						didErrorOccur = 1;
+						didErrorOccur = true;
 					}
 				}
 
@@ -733,7 +733,7 @@ void MainGui::DisassembleFile()
 				{
 					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
 					{
-						didErrorOccur = 1;
+						didErrorOccur = true;
 					}
 				}
 			}
@@ -751,7 +751,7 @@ void MainGui::DisassembleFile()
 		{
 			if (!DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
 			{
-				didErrorOccur = 1;
+				didErrorOccur = true;
 			}
 		}
 	}
@@ -932,7 +932,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(unsigned long long startVA, struc
 		return ERROR_JDC;
 	}
 
-	unsigned char storeInstruction = 1;
+	bool storeInstruction = true;
 
 	unsigned long long currentVirtualAddress = startVA;
 	while (currentFileOffset < currentSection->fileOffset + currentSection->physicalSize)
@@ -967,7 +967,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(unsigned long long startVA, struc
 		{
 			// this needs to be sorted here because the find instruction functions use a binary search
 			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
-			storeInstruction = 0;
+			storeInstruction = false;
 		}
 
 		decompParams.instructions = instructionBuffer;
@@ -988,7 +988,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(unsigned long long startVA, struc
 				}
 
 				currentVirtualAddress = jmpDst;
-				storeInstruction = 1;
+				storeInstruction = true;
 			}
 			else 
 			{
@@ -1167,19 +1167,19 @@ enum JdcStatus MainGui::HandleJmpTables()
 			unsigned long long lastAddress = disassembledInstructions[lastInstructionIndex].address;
 			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
 			
-			unsigned char isInIndirectTable = 0;
+			bool isInIndirectTable = false;
 			unsigned long long currentAddress = jumpTables[i].jmpTableAddress;
 			unsigned long long initialAddress = currentAddress;
 			while(currentAddress < lastAddress)
 			{
 				if (currentAddress == jumpTables[i].indirectTableAddress)
 				{
-					isInIndirectTable = 1;
+					isInIndirectTable = true;
 				}
 				else if (i + 1 < numOfJmpTables && currentAddress == jumpTables[i + 1].jmpTableAddress)
 				{
 					i++;
-					isInIndirectTable = 0;
+					isInIndirectTable = false;
 				}
 				
 				struct DisassembledInstruction instruction;
@@ -1222,7 +1222,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 	return SUCCESS_JDC;
 }
 
-void MainGui::FindAllFunctions(unsigned char getSymbols) 
+void MainGui::FindAllFunctions(bool getSymbols) 
 {
 	int numOfInstructions = disassembledInstructions.size();
 	int instructionIndex = 0;
@@ -1235,7 +1235,7 @@ void MainGui::FindAllFunctions(unsigned char getSymbols)
 		currentFunction.name = initializeJdcStr();
 		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), fileFormat, is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
 		{
-			sprintfJdc(&currentFunction.name, 0, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
+			sprintfJdc(&currentFunction.name, false, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
 		}
 
 		functions.push_back(currentFunction);

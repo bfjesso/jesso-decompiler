@@ -1,7 +1,7 @@
 #include "peHandler.h"
 #include "../file-handler/fileHandler.h"
 
-enum JdcStatus isFilePE(const wchar_t* filePath, unsigned char* isPERef)
+enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef)
 {
 	FILE* file = openFile(filePath);
 	if (file && isPERef)
@@ -18,7 +18,7 @@ enum JdcStatus isFilePE(const wchar_t* filePath, unsigned char* isPERef)
 	return ERROR_JDC;
 }
 
-enum JdcStatus isPEX64(const wchar_t* filePath, unsigned char* is64BitRef)
+enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && is64BitRef)
@@ -41,7 +41,7 @@ enum JdcStatus isPEX64(const wchar_t* filePath, unsigned char* is64BitRef)
 	return ERROR_JDC;
 }
 
-enum JdcStatus getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
+enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
 {
 	if (!result) 
 	{
@@ -86,7 +86,7 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, unsigned char is64Bit, struct I
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus getPEImageBase(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* imageBaseRef)
+enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, unsigned long long* imageBaseRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && imageBaseRef)
@@ -106,7 +106,7 @@ enum JdcStatus getPEImageBase(const wchar_t* filePath, unsigned char is64Bit, un
 	return ERROR_JDC;
 }
 
-enum JdcStatus getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit, unsigned long long* entryPointRef)
+enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned long long* entryPointRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && entryPointRef)
@@ -126,7 +126,7 @@ enum JdcStatus getPEEntryPoint(const wchar_t* filePath, unsigned char is64Bit, u
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit, int* numOfSectionsRef)
+enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int* numOfSectionsRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfSectionsRef)
@@ -146,7 +146,7 @@ enum JdcStatus getNumOfPESections(const wchar_t* filePath, unsigned char is64Bit
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int bufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -203,7 +203,7 @@ enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, unsigned char is6
 	return ERROR_JDC;
 }
 
-enum JdcStatus getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit, DWORD value, struct JdcStr* result)
+enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD value, struct JdcStr* result)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -254,7 +254,7 @@ enum JdcStatus getPESymbolByValue(const wchar_t* filePath, unsigned char is64Bit
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
+enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfImportsRef && numOfLibrariesRef)
@@ -345,7 +345,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, unsigned char is64Bit,
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -456,7 +456,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, unsigned char is64Bit, s
 	return ERROR_JDC;
 }
 
-static enum JdcStatus rvaToFileOffsetPE(FILE* file, unsigned char is64Bit, DWORD rva, DWORD* fileOffsetRef)
+static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWORD* fileOffsetRef)
 {
 	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
 	if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
@@ -512,24 +512,24 @@ enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* 
 static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr* result)
 {
 	strcatJdc(result, "IMAGE_DOS_HEADER\n\n");
-	sprintfJdc(result, 1, "0x0\te_magic\t0x%llX\tMagic number\n", dosHeader->e_magic);
-	sprintfJdc(result, 1, "0x2\te_cblp\t%d\tBytes on last page of file\n", dosHeader->e_cblp);
-	sprintfJdc(result, 1, "0x4\te_cp\t%d\tPages in file\n", dosHeader->e_cp);
-	sprintfJdc(result, 1, "0x6\te_crlc\t%d\tRelocations\n", dosHeader->e_crlc);
-	sprintfJdc(result, 1, "0x8\te_cparhdr\t0x%llX\tSize of header in paragraphs\n", dosHeader->e_cparhdr);
-	sprintfJdc(result, 1, "0xA\te_minalloc\t0x%llX\tMinimum extra paragraphs needed\n", dosHeader->e_minalloc);
-	sprintfJdc(result, 1, "0xC\te_maxalloc\t0x%llX\tMaximum extra paragraphs needed\n", dosHeader->e_maxalloc);
-	sprintfJdc(result, 1, "0xE\te_ss\t0x%llX\tInitial (relative) SS value\n", dosHeader->e_ss);
-	sprintfJdc(result, 1, "0x10\te_sp\t0x%llX\tInitial SP value\n", dosHeader->e_sp);
-	sprintfJdc(result, 1, "0x12\te_csum\t0x%llX\tChecksum\n", dosHeader->e_csum);
-	sprintfJdc(result, 1, "0x14\te_ip\t0x%llX\tInitial IP value\n", dosHeader->e_ip);
-	sprintfJdc(result, 1, "0x16\te_cs\t0x%llX\tInitial (relative) CS value\n", dosHeader->e_cs);
-	sprintfJdc(result, 1, "0x18\te_lfarlc\t0x%llX\tFile address of relocation table\n", dosHeader->e_lfarlc);
-	sprintfJdc(result, 1, "0x1A\te_ovno\t0x%llX\tOverlay number\n", dosHeader->e_ovno);
-	sprintfJdc(result, 1, "0x1C\te_res[4]\t");
+	sprintfJdc(result, true, "0x0\te_magic\t0x%llX\tMagic number\n", dosHeader->e_magic);
+	sprintfJdc(result, true, "0x2\te_cblp\t%d\tBytes on last page of file\n", dosHeader->e_cblp);
+	sprintfJdc(result, true, "0x4\te_cp\t%d\tPages in file\n", dosHeader->e_cp);
+	sprintfJdc(result, true, "0x6\te_crlc\t%d\tRelocations\n", dosHeader->e_crlc);
+	sprintfJdc(result, true, "0x8\te_cparhdr\t0x%llX\tSize of header in paragraphs\n", dosHeader->e_cparhdr);
+	sprintfJdc(result, true, "0xA\te_minalloc\t0x%llX\tMinimum extra paragraphs needed\n", dosHeader->e_minalloc);
+	sprintfJdc(result, true, "0xC\te_maxalloc\t0x%llX\tMaximum extra paragraphs needed\n", dosHeader->e_maxalloc);
+	sprintfJdc(result, true, "0xE\te_ss\t0x%llX\tInitial (relative) SS value\n", dosHeader->e_ss);
+	sprintfJdc(result, true, "0x10\te_sp\t0x%llX\tInitial SP value\n", dosHeader->e_sp);
+	sprintfJdc(result, true, "0x12\te_csum\t0x%llX\tChecksum\n", dosHeader->e_csum);
+	sprintfJdc(result, true, "0x14\te_ip\t0x%llX\tInitial IP value\n", dosHeader->e_ip);
+	sprintfJdc(result, true, "0x16\te_cs\t0x%llX\tInitial (relative) CS value\n", dosHeader->e_cs);
+	sprintfJdc(result, true, "0x18\te_lfarlc\t0x%llX\tFile address of relocation table\n", dosHeader->e_lfarlc);
+	sprintfJdc(result, true, "0x1A\te_ovno\t0x%llX\tOverlay number\n", dosHeader->e_ovno);
+	sprintfJdc(result, true, "0x1C\te_res[4]\t");
 	for (int i = 0; i < 4; i++)
 	{
-		sprintfJdc(result, 1, "0x%llX", dosHeader->e_res[i]);
+		sprintfJdc(result, true, "0x%llX", dosHeader->e_res[i]);
 		if (i != 3)
 		{
 			strcatJdc(result, ", ");
@@ -540,13 +540,13 @@ static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr*
 		}
 	}
 
-	sprintfJdc(result, 1, "0x24\te_oemid\t0x%llX\tOEM identifier (for e_oeminfo)\n", dosHeader->e_oemid);
-	sprintfJdc(result, 1, "0x26\te_oeminfo\t0x%llX\tOEM information; e_oemid specific\n", dosHeader->e_oeminfo);
+	sprintfJdc(result, true, "0x24\te_oemid\t0x%llX\tOEM identifier (for e_oeminfo)\n", dosHeader->e_oemid);
+	sprintfJdc(result, true, "0x26\te_oeminfo\t0x%llX\tOEM information; e_oemid specific\n", dosHeader->e_oeminfo);
 
-	sprintfJdc(result, 1, "0x28\te_res2[10]\t");
+	sprintfJdc(result, true, "0x28\te_res2[10]\t");
 	for (int i = 0; i < 10; i++)
 	{
-		sprintfJdc(result, 1, "0x%llX", dosHeader->e_res2[i]);
+		sprintfJdc(result, true, "0x%llX", dosHeader->e_res2[i]);
 		if (i != 9)
 		{
 			strcatJdc(result, ", ");
@@ -557,7 +557,7 @@ static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr*
 		}
 	}
 
-	sprintfJdc(result, 1, "0x3C\te_lfanew\t0x%llX\tFile address of new exe header\n", dosHeader->e_lfanew);
+	sprintfJdc(result, true, "0x3C\te_lfanew\t0x%llX\tFile address of new exe header\n", dosHeader->e_lfanew);
 }
 
 static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcStr* result)
@@ -671,88 +671,88 @@ static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcS
 		break;
 	}
 
-	sprintfJdc(result, 1, "0x2\tNumberOfSections\t%d\tNumber of sections\n", fileHeader->NumberOfSections);
-	sprintfJdc(result, 1, "0x4\tTimeDateStamp\t%d\tThe low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.\n", fileHeader->TimeDateStamp);
-	sprintfJdc(result, 1, "0x8\tPointerToSymbolTable\t0x%llX\tFile offset of the COFF symbol table\n", fileHeader->PointerToSymbolTable);
-	sprintfJdc(result, 1, "0xC\tNumberOfSymbols\t%d\tNumber of entries in the symbol table\n", fileHeader->NumberOfSymbols);
-	sprintfJdc(result, 1, "0x10\tSizeOfOptionalHeader\t0x%llX\tSize of the optional header\n", fileHeader->SizeOfOptionalHeader);
+	sprintfJdc(result, true, "0x2\tNumberOfSections\t%d\tNumber of sections\n", fileHeader->NumberOfSections);
+	sprintfJdc(result, true, "0x4\tTimeDateStamp\t%d\tThe low 32 bits of the number of seconds since 00:00 January 1, 1970 (a C run-time time_t value), which indicates when the file was created.\n", fileHeader->TimeDateStamp);
+	sprintfJdc(result, true, "0x8\tPointerToSymbolTable\t0x%llX\tFile offset of the COFF symbol table\n", fileHeader->PointerToSymbolTable);
+	sprintfJdc(result, true, "0xC\tNumberOfSymbols\t%d\tNumber of entries in the symbol table\n", fileHeader->NumberOfSymbols);
+	sprintfJdc(result, true, "0x10\tSizeOfOptionalHeader\t0x%llX\tSize of the optional header\n", fileHeader->SizeOfOptionalHeader);
 
-	sprintfJdc(result, 1, "0x12\tCharacteristics\t0x%llX", fileHeader->Characteristics);
-	unsigned char gotFirstFlag = 0;
+	sprintfJdc(result, true, "0x12\tCharacteristics\t0x%llX", fileHeader->Characteristics);
+	bool gotFirstFlag = false;
 	if (fileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) 
 	{
 		strcatJdc(result, " (IMAGE_FILE_RELOCS_STRIPPED");
-		gotFirstFlag = 1;
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_EXECUTABLE_IMAGE", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_EXECUTABLE_IMAGE", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_LINE_NUMS_STRIPPED)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_LINE_NUMS_STRIPPED", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_LINE_NUMS_STRIPPED", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_LOCAL_SYMS_STRIPPED)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_LOCAL_SYMS_STRIPPED", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_LOCAL_SYMS_STRIPPED", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & 0x0010)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_AGGRESSIVE_WS_TRIM", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_AGGRESSIVE_WS_TRIM", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_LARGE_ADDRESS_AWARE", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_LARGE_ADDRESS_AWARE", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_BYTES_REVERSED_LO)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_BYTES_REVERSED_LO", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_BYTES_REVERSED_LO", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_32BIT_MACHINE)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_32BIT_MACHINE", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_32BIT_MACHINE", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_DEBUG_STRIPPED)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_DEBUG_STRIPPED", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_DEBUG_STRIPPED", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_REMOVABLE_RUN_FROM_SWAP", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_REMOVABLE_RUN_FROM_SWAP", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_NET_RUN_FROM_SWAP)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_NET_RUN_FROM_SWAP", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_NET_RUN_FROM_SWAP", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_SYSTEM)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_SYSTEM", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_SYSTEM", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_DLL)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_DLL", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_DLL", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_UP_SYSTEM_ONLY", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_UP_SYSTEM_ONLY", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (fileHeader->Characteristics & IMAGE_FILE_BYTES_REVERSED_HI)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_FILE_BYTES_REVERSED_HI", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_FILE_BYTES_REVERSED_HI", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 
 	if(gotFirstFlag)
@@ -766,7 +766,7 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 {
 	strcatJdc(result, "IMAGE_OPTIONAL_HEADER\n\n");
 
-	sprintfJdc(result, 1, "0x0\tMagic\t0x%llX\t", optionalHeader->Magic);
+	sprintfJdc(result, true, "0x0\tMagic\t0x%llX\t", optionalHeader->Magic);
 	switch (optionalHeader->Magic) 
 	{
 	case 0x10B:
@@ -780,39 +780,39 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 		break;
 	}
 
-	sprintfJdc(result, 1, "0x2\tMajorLinkerVersion\t0x%llX\tLinker major version number\n", optionalHeader->MajorLinkerVersion);
-	sprintfJdc(result, 1, "0x3\tMinorLinkerVersion\t0x%llX\tLinker minor version number\n", optionalHeader->MinorLinkerVersion);
-	sprintfJdc(result, 1, "0x4\tSizeOfCode\t0x%llX\tSize of all code sections\n", optionalHeader->SizeOfCode);
-	sprintfJdc(result, 1, "0x8\tSizeOfInitializedData\t0x%llX\tSize of all initialized data sections\n", optionalHeader->SizeOfInitializedData);
-	sprintfJdc(result, 1, "0xC\tSizeOfUninitializedData\t0x%llX\tSize of all uninitialized data sections\n", optionalHeader->SizeOfUninitializedData);
-	sprintfJdc(result, 1, "0x10\tAddressOfEntryPoint\t0x%llX\tAddress of the entry point relative to the image base when the executable file is loaded into memory\n", optionalHeader->AddressOfEntryPoint);
-	sprintfJdc(result, 1, "0x14\tBaseOfCode\t0x%llX\tAddress that is relative to the image base of the beginning-of-code section when it is loaded into memory\n", optionalHeader->BaseOfCode);
+	sprintfJdc(result, true, "0x2\tMajorLinkerVersion\t0x%llX\tLinker major version number\n", optionalHeader->MajorLinkerVersion);
+	sprintfJdc(result, true, "0x3\tMinorLinkerVersion\t0x%llX\tLinker minor version number\n", optionalHeader->MinorLinkerVersion);
+	sprintfJdc(result, true, "0x4\tSizeOfCode\t0x%llX\tSize of all code sections\n", optionalHeader->SizeOfCode);
+	sprintfJdc(result, true, "0x8\tSizeOfInitializedData\t0x%llX\tSize of all initialized data sections\n", optionalHeader->SizeOfInitializedData);
+	sprintfJdc(result, true, "0xC\tSizeOfUninitializedData\t0x%llX\tSize of all uninitialized data sections\n", optionalHeader->SizeOfUninitializedData);
+	sprintfJdc(result, true, "0x10\tAddressOfEntryPoint\t0x%llX\tAddress of the entry point relative to the image base when the executable file is loaded into memory\n", optionalHeader->AddressOfEntryPoint);
+	sprintfJdc(result, true, "0x14\tBaseOfCode\t0x%llX\tAddress that is relative to the image base of the beginning-of-code section when it is loaded into memory\n", optionalHeader->BaseOfCode);
 
 	// after this point there are differenences between 32 and 64 bit versions
-	unsigned char x64 = optionalHeader->Magic == 0x20b;
+	bool x64 = optionalHeader->Magic == 0x20b;
 	if (x64) 
 	{
-		sprintfJdc(result, 1, "0x18\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", optionalHeader->ImageBase);
+		sprintfJdc(result, true, "0x18\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", optionalHeader->ImageBase);
 	}
 	else 
 	{
-		sprintfJdc(result, 1, "0x18\tBaseOfData\t0x%llX\tAddress that is relative to the image base of the beginning-of-data section when it is loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->BaseOfData);
-		sprintfJdc(result, 1, "0x1C\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->ImageBase);
+		sprintfJdc(result, true, "0x18\tBaseOfData\t0x%llX\tAddress that is relative to the image base of the beginning-of-data section when it is loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->BaseOfData);
+		sprintfJdc(result, true, "0x1C\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->ImageBase);
 	}
 
 	// the offsets for the 32 and 64 bit versions are the same for the next few fields
-	sprintfJdc(result, 1, "0x20\tSectionAlignment\t0x%llX\tAlignment (in bytes) of sections when they are loaded into memory\n", optionalHeader->SectionAlignment);
-	sprintfJdc(result, 1, "0x24\tFileAlignment\t0x%llX\tAlignment factor (in bytes) that is used to align the raw data of sections in the image file\n", optionalHeader->FileAlignment);
-	sprintfJdc(result, 1, "0x28\tMajorOperatingSystemVersion\t0x%llX\tMajor version number of the required operating system\n", optionalHeader->MajorOperatingSystemVersion);
-	sprintfJdc(result, 1, "0x2A\tMinorOperatingSystemVersion\t0x%llX\tMinor version number of the required operating system\n", optionalHeader->MinorOperatingSystemVersion);
-	sprintfJdc(result, 1, "0x2C\tMajorImageVersion\t0x%llX\tMajor version number of the image\n", optionalHeader->MajorImageVersion);
-	sprintfJdc(result, 1, "0x2E\tMinorImageVersion\t0x%llX\tMinor version number of the image\n", optionalHeader->MinorImageVersion);
-	sprintfJdc(result, 1, "0x30\tMajorSubsystemVersion\t0x%llX\tMajor version number of the subsystem\n", optionalHeader->MajorSubsystemVersion);
-	sprintfJdc(result, 1, "0x32\tMinorSubsystemVersion\t0x%llX\tMinor version number of the subsystem\n", optionalHeader->MinorSubsystemVersion);
-	sprintfJdc(result, 1, "0x34\tWin32VersionValue\t0x%llX\tReserved, must be zero\n", optionalHeader->Win32VersionValue);
-	sprintfJdc(result, 1, "0x38\tSizeOfImage\t0x%llX\tSize (in bytes) of the image, including all headers\n", optionalHeader->SizeOfImage);
-	sprintfJdc(result, 1, "0x3C\tSizeOfHeaders\t0x%llX\tCombined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of FileAlignment\n", optionalHeader->SizeOfHeaders);
-	sprintfJdc(result, 1, "0x40\tCheckSum\t0x%llX\tImage file checksum\n", optionalHeader->CheckSum);
+	sprintfJdc(result, true, "0x20\tSectionAlignment\t0x%llX\tAlignment (in bytes) of sections when they are loaded into memory\n", optionalHeader->SectionAlignment);
+	sprintfJdc(result, true, "0x24\tFileAlignment\t0x%llX\tAlignment factor (in bytes) that is used to align the raw data of sections in the image file\n", optionalHeader->FileAlignment);
+	sprintfJdc(result, true, "0x28\tMajorOperatingSystemVersion\t0x%llX\tMajor version number of the required operating system\n", optionalHeader->MajorOperatingSystemVersion);
+	sprintfJdc(result, true, "0x2A\tMinorOperatingSystemVersion\t0x%llX\tMinor version number of the required operating system\n", optionalHeader->MinorOperatingSystemVersion);
+	sprintfJdc(result, true, "0x2C\tMajorImageVersion\t0x%llX\tMajor version number of the image\n", optionalHeader->MajorImageVersion);
+	sprintfJdc(result, true, "0x2E\tMinorImageVersion\t0x%llX\tMinor version number of the image\n", optionalHeader->MinorImageVersion);
+	sprintfJdc(result, true, "0x30\tMajorSubsystemVersion\t0x%llX\tMajor version number of the subsystem\n", optionalHeader->MajorSubsystemVersion);
+	sprintfJdc(result, true, "0x32\tMinorSubsystemVersion\t0x%llX\tMinor version number of the subsystem\n", optionalHeader->MinorSubsystemVersion);
+	sprintfJdc(result, true, "0x34\tWin32VersionValue\t0x%llX\tReserved, must be zero\n", optionalHeader->Win32VersionValue);
+	sprintfJdc(result, true, "0x38\tSizeOfImage\t0x%llX\tSize (in bytes) of the image, including all headers\n", optionalHeader->SizeOfImage);
+	sprintfJdc(result, true, "0x3C\tSizeOfHeaders\t0x%llX\tCombined size of an MS-DOS stub, PE header, and section headers rounded up to a multiple of FileAlignment\n", optionalHeader->SizeOfHeaders);
+	sprintfJdc(result, true, "0x40\tCheckSum\t0x%llX\tImage file checksum\n", optionalHeader->CheckSum);
 
 	strcatJdc(result, "0x44\tSubsystem\t");
 	switch (optionalHeader->Subsystem) 
@@ -861,62 +861,62 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 		break;
 	}
 
-	sprintfJdc(result, 1, "0x46\tDllCharacteristics\t0x%llX", optionalHeader->DllCharacteristics);
-	unsigned char gotFirstFlag = 0;
+	sprintfJdc(result, true, "0x46\tDllCharacteristics\t0x%llX", optionalHeader->DllCharacteristics);
+	bool gotFirstFlag = false;
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA)
 	{
 		strcatJdc(result, " (IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA ");
-		gotFirstFlag = 1;
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NX_COMPAT)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_NX_COMPAT", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_NX_COMPAT", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_ISOLATION)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_NO_ISOLATION", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_NO_ISOLATION", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_SEH)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_NO_SEH", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_NO_SEH", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_BIND)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_NO_BIND", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_NO_BIND", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_APPCONTAINER)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_APPCONTAINER", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_APPCONTAINER", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_WDM_DRIVER)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_WDM_DRIVER", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_WDM_DRIVER", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_GUARD_CF)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_GUARD_CF ", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_GUARD_CF ", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 	if (optionalHeader->DllCharacteristics & IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE)
 	{
-		sprintfJdc(result, 1, "%sIMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE ", gotFirstFlag ? " | " : " (");
-		gotFirstFlag = 1;
+		sprintfJdc(result, true, "%sIMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE ", gotFirstFlag ? " | " : " (");
+		gotFirstFlag = true;
 	}
 
 	if (gotFirstFlag)
@@ -925,22 +925,22 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 	}
 	strcatJdc(result, "\tDLL characteristics of the image\n");
 
-	sprintfJdc(result, 1, "0x48\tSizeOfStackReserve\t0x%llX\tSize of the stack to reserve\n", optionalHeader->SizeOfStackReserve);
+	sprintfJdc(result, true, "0x48\tSizeOfStackReserve\t0x%llX\tSize of the stack to reserve\n", optionalHeader->SizeOfStackReserve);
 
 	if (x64) 
 	{
-		sprintfJdc(result, 1, "0x50\tSizeOfStackCommit\t0x%llX\tSize of the stack to commit\n", optionalHeader->SizeOfStackCommit);
-		sprintfJdc(result, 1, "0x58\tSizeOfHeapReserve\t0x%llX\tSize of the local heap space to reserve\n", optionalHeader->SizeOfHeapReserve);;
-		sprintfJdc(result, 1, "0x60\tSizeOfHeapCommit\t0x%llX\tSize of the local heap space to commit\n", optionalHeader->SizeOfHeapCommit);
-		sprintfJdc(result, 1, "0x68\tLoaderFlags\t0x%llX\tReserved, must be zero\n", optionalHeader->LoaderFlags);
-		sprintfJdc(result, 1, "0x6C\tNumberOfRvaAndSizes\t0x%llX\tNumber of data-directory entries in the remainder of the optional header\n", optionalHeader->NumberOfRvaAndSizes);
+		sprintfJdc(result, true, "0x50\tSizeOfStackCommit\t0x%llX\tSize of the stack to commit\n", optionalHeader->SizeOfStackCommit);
+		sprintfJdc(result, true, "0x58\tSizeOfHeapReserve\t0x%llX\tSize of the local heap space to reserve\n", optionalHeader->SizeOfHeapReserve);;
+		sprintfJdc(result, true, "0x60\tSizeOfHeapCommit\t0x%llX\tSize of the local heap space to commit\n", optionalHeader->SizeOfHeapCommit);
+		sprintfJdc(result, true, "0x68\tLoaderFlags\t0x%llX\tReserved, must be zero\n", optionalHeader->LoaderFlags);
+		sprintfJdc(result, true, "0x6C\tNumberOfRvaAndSizes\t0x%llX\tNumber of data-directory entries in the remainder of the optional header\n", optionalHeader->NumberOfRvaAndSizes);
 	}
 	else
 	{
-		sprintfJdc(result, 1, "0x4C\tSizeOfStackCommit\t0x%llX\tSize of the stack to commit\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfStackCommit);
-		sprintfJdc(result, 1, "0x50\tSizeOfHeapReserve\t0x%llX\tSize of the local heap space to reserve\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfHeapReserve);;
-		sprintfJdc(result, 1, "0x54\tSizeOfHeapCommit\t0x%llX\tSize of the local heap space to commit\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfHeapCommit);
-		sprintfJdc(result, 1, "0x58\tLoaderFlags\t0x%llX\tReserved, must be zero\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->LoaderFlags);
-		sprintfJdc(result, 1, "0x5C\tNumberOfRvaAndSizes\t0x%llX\tNumber of data-directory entries in the remainder of the optional header\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->NumberOfRvaAndSizes);
+		sprintfJdc(result, true, "0x4C\tSizeOfStackCommit\t0x%llX\tSize of the stack to commit\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfStackCommit);
+		sprintfJdc(result, true, "0x50\tSizeOfHeapReserve\t0x%llX\tSize of the local heap space to reserve\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfHeapReserve);;
+		sprintfJdc(result, true, "0x54\tSizeOfHeapCommit\t0x%llX\tSize of the local heap space to commit\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->SizeOfHeapCommit);
+		sprintfJdc(result, true, "0x58\tLoaderFlags\t0x%llX\tReserved, must be zero\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->LoaderFlags);
+		sprintfJdc(result, true, "0x5C\tNumberOfRvaAndSizes\t0x%llX\tNumber of data-directory entries in the remainder of the optional header\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->NumberOfRvaAndSizes);
 	}
 }

@@ -76,7 +76,7 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 		if (bufferLen <= strlen(demangleResult)) 
 		{
 			free(demangleResult);
-			return 0;
+			return ERROR_JDC;
 		}
 
 		int startIndex = 0;
@@ -134,7 +134,7 @@ enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* file
 		return ERROR_JDC;
 	}
 	
-	unsigned char isPE = 0;
+	bool isPE = false;
 	if (ERROR_JDC == isFilePE(filePath, &isPE)) 
 	{
 		return ERROR_JDC;
@@ -146,7 +146,7 @@ enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* file
 		return SUCCESS_JDC;
 	}
 
-	unsigned char isELF = 0;
+	bool isELF = false;
 	if (ERROR_JDC == isFileELF(filePath, &isELF))
 	{
 		return ERROR_JDC;
@@ -194,7 +194,7 @@ const char* fileSectionTypeToStr(enum FileSectionType fileSectionType)
 	return "";
 }
 
-enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char* is64BitRef)
+enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, bool* is64BitRef)
 {
 	if (fileFormat == PE_FF) 
 	{
@@ -208,7 +208,7 @@ enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, 
 	return ERROR_JDC;
 }
 
-enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* imageBaseRef)
+enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned long long* imageBaseRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -223,7 +223,7 @@ enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned long long* entryPointRef)
+enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned long long* entryPointRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -237,7 +237,7 @@ enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFo
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfSectionsRef)
+enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int* numOfSectionsRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -251,7 +251,7 @@ enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct FileSection* buffer, int bufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -299,7 +299,7 @@ enum JdcStatus readFileBytes(const wchar_t* filePath, unsigned char* buffer, uns
 	return ERROR_JDC;
 }
 
-enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, unsigned int value, struct JdcStr* result)
+enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned int value, struct JdcStr* result)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -313,7 +313,7 @@ enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
+enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -327,7 +327,7 @@ enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileForm
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, unsigned char is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
 {
 	if (fileFormat == PE_FF)
 	{

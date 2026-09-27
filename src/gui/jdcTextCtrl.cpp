@@ -84,7 +84,7 @@ void JdcTextCtrl::CenterLine(int line)
 	LineScroll(0, line - GetFirstVisibleLine() - (LinesOnScreen() / 2));
 }
 
-void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine)
+void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, bool gotoLine)
 {
 	if (gotoLine)
 	{
@@ -174,7 +174,7 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 
 	long selStart = GetSelectionStart();
 	long selEnd = GetSelectionEnd();
-	unsigned char forward = (e.GetFlags() & wxFR_DOWN) != 0;
+	bool forward = (e.GetFlags() & wxFR_DOWN) != 0;
 
 	int start = forward ? selEnd : 0;
 	int end = forward ? GetLength() : selStart;
@@ -196,7 +196,7 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 	//}
 }
 
-int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags, unsigned char forward)
+int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags, bool forward)
 {
 	if (forward)
 	{
@@ -282,10 +282,10 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 		int numColor = GetStyleAt(start);
 		long long num = 0;
-		unsigned char isHex = 0;
-		unsigned char isDec = 0;
-		unsigned char isSigned = 0; // its possible for both isSigned and isUnsigned to be 1
-		unsigned char isUnsigned = 0;
+		bool isHex = false;
+		bool isDec = false;
+		bool isSigned = false; // its possible for both isSigned and isUnsigned to be 1
+		bool isUnsigned = false;
 
 		if (word.substr(0, 2) == "0x" || word.substr(0, 3) == "-0x")
 		{
@@ -302,7 +302,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 		if (word[0] == '-')
 		{
-			isUnsigned = 0;
+			isUnsigned = false;
 		}
 
 		if (isHex || (!isUnsigned && isDec))

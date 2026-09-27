@@ -62,7 +62,7 @@ extern "C"
 
 	extern const char* registerStrs[];
 
-	unsigned char compareRegisters(enum Register reg1, enum Register reg2);
+	bool compareRegisters(enum Register reg1, enum Register reg2);
 
 #ifdef __cplusplus
 }
@@ -74,11 +74,11 @@ const enum Register* getPlatformRegArgs(enum FileFormat fileFormat);
 
 const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat);
 
-unsigned char isRegisterPointer(enum Register reg);
+bool isRegisterPointer(enum Register reg);
 
-unsigned char isRegisterStatusFlag(enum Register reg);
+bool isRegisterStatusFlag(enum Register reg);
 
-unsigned char isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
+bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
 
 unsigned char getSizeOfRegister(enum Register reg);
 
@@ -86,6 +86,6 @@ enum Register extendRegister(enum Register reg);
 
 enum Register increaseRegisterSize(enum Register reg);
 
-unsigned char isRegMM(enum Register reg);
+bool isRegMM(enum Register reg);
 
-unsigned char isRegXMM(enum Register reg);
+bool isRegXMM(enum Register reg);

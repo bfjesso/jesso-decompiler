@@ -59,10 +59,10 @@ static enum JdcStatus getLocalRegVarsFromConditionalInstructions(struct Decompil
 static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParameters* params)
 {
 	// checking for registers that are modified in a condition
-	unsigned char modifiedRegs[NUM_OF_REGISTERS] = { 0 };
+	bool modifiedRegs[NUM_OF_REGISTERS] = { 0 };
 	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
-		memset(modifiedRegs, 0, NUM_OF_REGISTERS);
+		memset(modifiedRegs, false, NUM_OF_REGISTERS);
 
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType != CONDITIONAL_RETURN_CT)
@@ -78,7 +78,7 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 
 				if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
 				{
-					memset(modifiedRegs, 0, NUM_OF_REGISTERS); // no regs are accessed after the condition because execution doesnt continue
+					memset(modifiedRegs, false, NUM_OF_REGISTERS); // no regs are accessed after the condition because execution doesnt continue
 					break;
 				}
 
@@ -91,7 +91,7 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 
 					if (doesInstructionModifyRegister(params, j, k, 0, 0))
 					{
-						modifiedRegs[k] = 1;
+						modifiedRegs[k] = true;
 					}
 				}
 			}
@@ -160,10 +160,10 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params)
 {
 	// these are reg vars that contain the value of another variable before it changes
-	unsigned char addedNewRegVar = 0;
+	bool addedNewRegVar = false;
 	do
 	{
-		addedNewRegVar = 0;
+		addedNewRegVar = false;
 		for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 		{
 			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
@@ -186,7 +186,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 								}
 
 								statusFlagVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-								addedNewRegVar = 1;
+								addedNewRegVar = true;
 							}
 
 							getLocalRegVarScope(params, i, i + 1, statusFlagVar);
@@ -215,7 +215,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 						continue;
 					}
 
-					unsigned char doesAccessedRegVarChange = 0;
+					bool doesAccessedRegVarChange = false;
 					for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 					{
 						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
@@ -223,7 +223,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 							break;
 						}
 
-						unsigned char overwrites = 0;
+						bool overwrites = false;
 						if (!doesAccessedRegVarChange)
 						{
 							if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
@@ -233,7 +233,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 
 							if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0))
 							{
-								doesAccessedRegVarChange = 1;
+								doesAccessedRegVarChange = true;
 							}
 						}
 						else if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
@@ -246,7 +246,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 								}
 
 								modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-								addedNewRegVar = 1;
+								addedNewRegVar = true;
 							}
 
 							addRegVarScope(modifiedRegVar, i, j);
@@ -275,7 +275,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 			continue;
 		}
 
-		unsigned char overwrites = 0;
+		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
 			startIndex = i;
@@ -297,7 +297,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 			endIndex = i;
 		}
 
-		unsigned char overwrites = 0;
+		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
 			break;
@@ -307,33 +307,33 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 	addRegVarScope(regVar, startIndex, endIndex);
 }
 
-unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, unsigned char ignoreInitialization, int callNum)
+bool isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, bool ignoreInitialization, int callNum)
 {
 	// preventing recursive loop. this assumes it is accessed
 	if (callNum > 9)
 	{
-		return 1;
+		return true;
 	}
 
 	// this happens if the last instruction of the function also initializes the return reg. the start instruction index is incremented before isRegisterAccessedBeforeInit is called, so the loop here wont run
 	if (startInstructionIndex > params->currentFunc->lastInstructionIndex && compareRegisters(params->currentFunc->returnReg, reg))
 	{
-		return 1;
+		return true;
 	}
 
 	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
 		if (doesInstructionAccessRegister(params, i, reg, 1, 0))
 		{
-			return 1;
+			return true;
 		}
 
 		if (!ignoreInitialization)
 		{
-			unsigned char overwrites = 0;
+			bool overwrites = false;
 			if (doesInstructionModifyRegister(params, i, reg, 0, &overwrites) && overwrites)
 			{
-				return 0;
+				return false;
 			}
 		}
 
@@ -341,9 +341,10 @@ unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* param
 		{
 			if (compareRegisters(params->currentFunc->returnReg, reg))
 			{
-				return 1;
+				return true;
 			}
-			return 0;
+
+			return false;
 		}
 
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
@@ -356,7 +357,7 @@ unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* param
 				{
 					if (isRegisterAccessedBeforeInit(params, i + 1, dstIndex - 1, reg, ignoreInitialization, callNum + 1))
 					{
-						return 1;
+						return true;
 					}
 				}
 
@@ -365,5 +366,5 @@ unsigned char isRegisterAccessedBeforeInit(struct DecompilationParameters* param
 		}
 	}
 
-	return 0;
+	return false;
 }

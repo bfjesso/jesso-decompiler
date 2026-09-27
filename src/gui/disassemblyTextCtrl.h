@@ -23,7 +23,7 @@ public:
 
 	void ShowGoToAddressDialog();
 
-	void HighlightLine(int line, enum IndicatorColor color, unsigned char gotoLine);
+	void HighlightLine(int line, enum IndicatorColor color, bool gotoLine);
 
 	void DisassemblyRightClickOptions(wxContextMenuEvent& e);
 

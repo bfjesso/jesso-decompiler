@@ -134,7 +134,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	result->memoryAddress.ptrSize = operandSize;
 	result->memoryAddress.segment = segmentOverrideToSegment(params->legPrefixes.group2);
 
-	unsigned char usedSIB = 0;
+	bool usedSIB = false;
 
 	if (params->legPrefixes.group4 == ASO && !params->is64BitMode)
 	{
@@ -306,7 +306,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			case 4:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				handleSIB(params, 0, result);
-				usedSIB = 1;
+				usedSIB = true;
 				break;
 			case 5:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
@@ -350,10 +350,10 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 4:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
-				unsigned char gotDisp = 0;
+				bool gotDisp = false;
 				handleSIB(params, &gotDisp, result);
 				if (!gotDisp) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); } // disp8
-				usedSIB = 1;
+				usedSIB = true;
 				break;
 			case 5:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
@@ -400,10 +400,10 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 4:
 				if ((params->bytes + 4) > params->maxBytesAddr) { return ERROR_JDC; }
-				unsigned char gotDisp = 0;
+				bool gotDisp = false;
 				handleSIB(params, &gotDisp, result);
 				if (!gotDisp) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); } // disp32
-				usedSIB = 1;
+				usedSIB = true;
 				break;
 			case 5:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
@@ -502,7 +502,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus handleSIB(struct DisassemblyParameters* params, unsigned char* gotDisp, struct Operand* result)
+static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotDisp, struct Operand* result)
 {
 	unsigned char sibByte = params->bytes[0];
 	params->bytes++;
@@ -563,7 +563,7 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, unsigned c
 
 		if (gotDisp)
 		{
-			*gotDisp = 1;
+			*gotDisp = true;
 		}
 	}
 
