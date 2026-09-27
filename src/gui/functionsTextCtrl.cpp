@@ -20,10 +20,10 @@ void FunctionsTextCtrl::ShowFindAddressDialog()
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
-		unsigned long long address = 0;
+		uint64_t address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findFunctionByAddressInclusive(&mainGui->decompParams, address);
+			int32_t index = findFunctionByAddressInclusive(&mainGui->decompParams, address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -42,13 +42,13 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
 
-	const int ID_DECOMPILE = 100;
-	const int ID_VIEW_INFO = 101;
-	const int ID_RENAME = 102;
-	const int ID_FIND_CODE_REFERENCES = 103;
-	const int ID_FIND_ADDRESS = 104;
+	const int32_t ID_DECOMPILE = 100;
+	const int32_t ID_VIEW_INFO = 101;
+	const int32_t ID_RENAME = 102;
+	const int32_t ID_FIND_CODE_REFERENCES = 103;
+	const int32_t ID_FIND_ADDRESS = 104;
 
-	int selectedLine = GetCurrentLine();
+	int32_t selectedLine = GetCurrentLine();
 	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions) 
 	{
 		struct Function* function = &mainGui->decompParams.functions[selectedLine];
@@ -62,7 +62,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 			else
 			{
 				wxArrayString windowCaptions;
-				for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
+				for (int32_t i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 				{
 					windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 				}
@@ -70,7 +70,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 				if (choiceDialog.ShowModal() != wxID_CANCEL)
 				{
-					int selection = choiceDialog.GetSelection();
+					int32_t selection = choiceDialog.GetSelection();
 					if (selection == mainGui->decompilationTextCtrls.size())
 					{
 						mainGui->AddDecompilationTextCtrl()->DecompileFunction(selectedLine);
@@ -86,9 +86,9 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 		menu.Append(ID_VIEW_INFO, "View info");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { mainGui->AddFunctionInfoWindow(function); }, ID_VIEW_INFO);
 
-		int pos = GetCurrentPos();
-		int start = WordStartPosition(pos, true);
-		int end = WordEndPosition(pos, true);
+		int32_t pos = GetCurrentPos();
+		int32_t start = WordStartPosition(pos, true);
+		int32_t end = WordEndPosition(pos, true);
 		wxString word = GetTextRange(start, end);
 		if (function && word != "")
 		{
@@ -106,12 +106,12 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ShowRenameDialog(selectedLine, &function->name);
-					unsigned long long functionAddress = mainGui->decompParams.instructions[function->firstInstructionIndex].address;
+					uint64_t functionAddress = mainGui->decompParams.instructions[function->firstInstructionIndex].address;
 					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
 				}, ID_FIND_CODE_REFERENCES);
 			}
 
-			for (int i = 0; i < function->numOfRegVars && !foundName; i++)
+			for (int32_t i = 0; i < function->numOfRegVars && !foundName; i++)
 			{
 				struct RegisterVariable* regVar = &function->regVars[i];
 				if (regVar->isArgument && strcmp(regVar->name.buffer, word.c_str()) == 0)
@@ -126,7 +126,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				}
 			}
 
-			for (int i = 0; i < function->numOfStackVars && !foundName; i++)
+			for (int32_t i = 0; i < function->numOfStackVars && !foundName; i++)
 			{
 				struct StackVariable* stackVar = &function->stackVars[i];
 				if (stackVar->isArgument && strcmp(stackVar->name.buffer, word.c_str()) == 0)
@@ -155,7 +155,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 
 void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 {
-	int key = e.GetKeyCode();
+	int32_t key = e.GetKeyCode();
 	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
 	{
 		if (key == 'G')
@@ -168,7 +168,7 @@ void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 	e.Skip();
 }
 
-wxString FunctionsTextCtrl::GenerateFunctionDefinition(int functionIndex, struct JdcStr* functionHeaderBuffer)
+wxString FunctionsTextCtrl::GenerateFunctionDefinition(int32_t functionIndex, struct JdcStr* functionHeaderBuffer)
 {
 	struct Function* function = &mainGui->decompParams.functions[functionIndex];
 	if (!generateFunctionHeader(function, functionHeaderBuffer))
@@ -188,7 +188,7 @@ wxString FunctionsTextCtrl::GenerateFunctionDefinition(int functionIndex, struct
 	return result + "\n";
 }
 
-void FunctionsTextCtrl::UpdateFunctionHeader(int functionIndex)
+void FunctionsTextCtrl::UpdateFunctionHeader(int32_t functionIndex)
 {
 	if (functionIndex < 0 || functionIndex >= GetNumberOfLines()) 
 	{
@@ -204,8 +204,8 @@ void FunctionsTextCtrl::UpdateFunctionHeader(int functionIndex)
 		return;
 	}
 	
-	int lineStart = PositionFromLine(functionIndex);
-	int lineLen = GetLineLength(functionIndex);
+	int32_t lineStart = PositionFromLine(functionIndex);
+	int32_t lineLen = GetLineLength(functionIndex);
 
 	SetReadOnly(false);
 	Replace(lineStart, lineStart + lineLen + 1, functionDefinition);
@@ -213,7 +213,7 @@ void FunctionsTextCtrl::UpdateFunctionHeader(int functionIndex)
 	SetReadOnly(true);
 }
 
-void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
+void FunctionsTextCtrl::ShowAllFunctions(int32_t highlightIndex)
 {
 	ClearText();
 	SetReadOnly(false);
@@ -222,7 +222,7 @@ void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
 	entryFunctionIndex = findFunctionByAddress(&mainGui->decompParams, mainGui->entryPoint + mainGui->imageBase);
 	wxString functionsStr = "";
 	struct JdcStr functionHeaderBuffer = initializeJdcStr();
-	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
 		wxString functionDefinition = GenerateFunctionDefinition(i, &functionHeaderBuffer);
 		if (functionDefinition == "") 
@@ -251,9 +251,9 @@ void FunctionsTextCtrl::ShowAllFunctions(int highlightIndex)
 	}
 }
 
-void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
+void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 {
-	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
 		StyleSetForeground(i, mainGui->colorsMenu->decompColors[i]);
 	}
@@ -262,17 +262,17 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
 
 	StartStyling(start);
 
-	int lineStart = start;
+	int32_t lineStart = start;
 	while (lineStart < end)
 	{
-		int argsStartPos = text.find("(", lineStart);
-		int functionNamePos = text.rfind(" ", argsStartPos);
-		int callingConventionPos = text.rfind(" ", functionNamePos - 1);
-		int argsEndPos = text.find(")", lineStart);
+		int32_t argsStartPos = text.find("(", lineStart);
+		int32_t functionNamePos = text.rfind(" ", argsStartPos);
+		int32_t callingConventionPos = text.rfind(" ", functionNamePos - 1);
+		int32_t argsEndPos = text.find(")", lineStart);
 
 		if (argsStartPos != wxNOT_FOUND && functionNamePos != wxNOT_FOUND && argsEndPos != wxNOT_FOUND)
 		{
-			int numOfPtrs = 0;
+			int32_t numOfPtrs = 0;
 			while (text[callingConventionPos - numOfPtrs - 1] == '*')
 			{
 				numOfPtrs++;
@@ -289,11 +289,11 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
 
 			if (argsStartPos + 1 != argsEndPos)
 			{
-				int argTypePos = argsStartPos + 1;
-				int argEndPos = text.find(",", argsStartPos);
+				int32_t argTypePos = argsStartPos + 1;
+				int32_t argEndPos = text.find(",", argsStartPos);
 				while (argEndPos != wxNOT_FOUND && argEndPos < argsEndPos)
 				{
-					int argNamePos = text.rfind(" ", argEndPos);
+					int32_t argNamePos = text.rfind(" ", argEndPos);
 
 					numOfPtrs = 0;
 					while (text[argNamePos - numOfPtrs - 1] == '*')
@@ -312,7 +312,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
 				}
 
 				// last argument does not end with a comma
-				int lastArgNamePos = text.rfind(" ", argsEndPos);
+				int32_t lastArgNamePos = text.rfind(" ", argsEndPos);
 				StartStyling(lastArgNamePos);
 				SetStyling(argsEndPos - lastArgNamePos, ARGUMENT_DECOMP_COLOR);
 
@@ -326,7 +326,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int start, int end)
 				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
 			}
 
-			int commentStartPos = text.find(";", lineStart) + 1;
+			int32_t commentStartPos = text.find(";", lineStart) + 1;
 			StartStyling(commentStartPos);
 
 			lineStart = text.find("\n", commentStartPos);

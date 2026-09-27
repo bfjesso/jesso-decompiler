@@ -16,10 +16,10 @@ void StringsTextCtrl::ShowFindAddressDialog()
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
-		unsigned long long address = 0;
+		uint64_t address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findAddressInArr(foundAddresses.data(), foundAddresses.size(), address);
+			int32_t index = findAddressInArr(foundAddresses.data(), foundAddresses.size(), address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -38,7 +38,7 @@ void StringsTextCtrl::StringsRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
 
-	const int ID_FIND_ADDRESS = 100;
+	const int32_t ID_FIND_ADDRESS = 100;
 
 	menu.Append(ID_FIND_ADDRESS, "Find string by address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -52,7 +52,7 @@ void StringsTextCtrl::StringsRightClickOptions(wxContextMenuEvent& e)
 
 void StringsTextCtrl::OnStringsKeyDown(wxKeyEvent& e)
 {
-	int key = e.GetKeyCode();
+	int32_t key = e.GetKeyCode();
 	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
 	{
 		if (key == 'G')
@@ -81,15 +81,15 @@ void StringsTextCtrl::LoadStrings()
 
     wxString stringsText = "";
     wxString currentStr = "";
-    int numOfStrings = 0;
+    int32_t numOfStrings = 0;
 
-    for (int i = 0; i < mainGui->decompParams.numOfSections; i++)
+    for (int32_t i = 0; i < mainGui->decompParams.numOfSections; i++)
     {
-        int startIndex = -1;
-        for (unsigned int j = 0; j < mainGui->decompParams.sections[i].physicalSize; j++)
+        int32_t startIndex = -1;
+        for (uint32_t j = 0; j < mainGui->decompParams.sections[i].physicalSize; j++)
         {
             char c = *(char*)(mainGui->decompParams.fileBytes + mainGui->decompParams.sections[i].fileOffset + j);
-            if (c > 31 && c < 127)
+            if (c >= ' ' && c <= '~')
             {
                 if (startIndex == -1)
                 {
@@ -103,7 +103,7 @@ void StringsTextCtrl::LoadStrings()
             {
                 if (startIndex != -1 && c == 0 && currentStr.length() > 1)
                 {
-                    unsigned long long address = mainGui->decompParams.imageBase + mainGui->decompParams.sections[i].rva + startIndex;
+                    uint64_t address = mainGui->decompParams.imageBase + mainGui->decompParams.sections[i].rva + startIndex;
                     foundAddresses.push_back(address);
 
                     char addressStr[50] = { 0 };
@@ -126,18 +126,18 @@ void StringsTextCtrl::LoadStrings()
 
 void StringsTextCtrl::ApplyStringsHighlighting()
 {
-    for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
+    for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
     {
         StyleSetForeground(i, mainGui->colorsMenu->dataColors[i]);
     }
 
-    int lineStart = 0;
+    int32_t lineStart = 0;
     wxString dataText = GetValue();
-    int end = dataText.length();
+    int32_t end = dataText.length();
     while (lineStart < end)
     {
-        int stringStart = dataText.find("\t", lineStart);
-        int lineEnd = dataText.find("\n", stringStart);
+        int32_t stringStart = dataText.find("\t", lineStart);
+        int32_t lineEnd = dataText.find("\n", stringStart);
         if (stringStart != wxNOT_FOUND && lineEnd != wxNOT_FOUND)
         {
             StartStyling(stringStart);

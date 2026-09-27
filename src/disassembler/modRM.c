@@ -3,7 +3,7 @@
 #include "operands.h"
 #include"prefixes.h"
 
-enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, unsigned char operandSize, struct Operand* result)
+enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, uint8_t operandSize, struct Operand* result)
 {
 	if (!params->modRM.hasGotModRM)
 	{
@@ -168,7 +168,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 6:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 7:
 				result->memoryAddress.reg = BX;
@@ -185,45 +185,45 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 1:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 2:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 3:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 4:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = SI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 5:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = DI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 6:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 7:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			}
 
@@ -237,45 +237,45 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 1:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 2:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = SI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 3:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
 				result->memoryAddress.regDisplacement = DI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 4:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = SI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 5:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = DI;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 6:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BP;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			case 7:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = BX;
-				result->memoryAddress.constDisplacement = (short)getUIntFromBytes(&params->bytes, 2); // disp16
+				result->memoryAddress.constDisplacement = (int16_t)getUIntFromBytes(&params->bytes, 2); // disp16
 				break;
 			}
 
@@ -312,7 +312,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				if (params->is64BitMode) { result->memoryAddress.reg = RIP; }
 				else { result->memoryAddress.segment = DS; }
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 6:
 				result->memoryAddress.reg = ESI;
@@ -331,44 +331,44 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			case 0:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EAX;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 1:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = ECX;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 2:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EDX;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 3:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EBX;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 4:
 				if ((params->bytes + 1) > params->maxBytesAddr) { return ERROR_JDC; }
 				bool gotDisp = false;
 				handleSIB(params, &gotDisp, result);
-				if (!gotDisp) { result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); } // disp8
+				if (!gotDisp) { result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); } // disp8
 				usedSIB = true;
 				break;
 			case 5:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EBP;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 6:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = ESI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			case 7:
 				if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EDI;
-				result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+				result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 				break;
 			}
 
@@ -381,44 +381,44 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			case 0:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EAX;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 1:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = ECX;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 2:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EDX;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 3:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EBX;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 4:
 				if ((params->bytes + 4) > params->maxBytesAddr) { return ERROR_JDC; }
 				bool gotDisp = false;
 				handleSIB(params, &gotDisp, result);
-				if (!gotDisp) { result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); } // disp32
+				if (!gotDisp) { result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); } // disp32
 				usedSIB = true;
 				break;
 			case 5:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EBP;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 6:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = ESI;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			case 7:
 				if ((params->bytes + 3) > params->maxBytesAddr) { return ERROR_JDC; }
 				result->memoryAddress.reg = EDI;
-				result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+				result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 				break;
 			}
 
@@ -438,12 +438,12 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	}
 
 	// EVEX disp8*N check
-	long long disp = result->memoryAddress.constDisplacement;
+	int64_t disp = result->memoryAddress.constDisplacement;
 	if (params->evexPrefix.isValidEVEX && disp >= -128 && disp <= 127 && disp != 0)
 	{
-		unsigned char vectorLength = getVectorLength(params);
+		uint8_t vectorLength = getVectorLength(params);
 		
-		unsigned char N = 1;
+		uint8_t N = 1;
 		switch (params->opcode.opcodeSuperscript) 
 		{
 		case FULL_32_TT:
@@ -504,14 +504,14 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotDisp, struct Operand* result)
 {
-	unsigned char sibByte = params->bytes[0];
+	uint8_t sibByte = params->bytes[0];
 	params->bytes++;
 
-	unsigned char scale = (((sibByte >> 7) & 0x01) * 2) + ((sibByte >> 6) & 0x01);
-	unsigned char index = (((sibByte >> 5) & 0x01) * 4) + (((sibByte >> 4) & 0x01) * 2) + ((sibByte >> 3) & 0x01);
-	unsigned char base = (((sibByte >> 2) & 0x01) * 4) + (((sibByte >> 1) & 0x01) * 2) + ((sibByte >> 0) & 0x01);
+	uint8_t scale = (((sibByte >> 7) & 0x01) * 2) + ((sibByte >> 6) & 0x01);
+	uint8_t index = (((sibByte >> 5) & 0x01) * 4) + (((sibByte >> 4) & 0x01) * 2) + ((sibByte >> 3) & 0x01);
+	uint8_t base = (((sibByte >> 2) & 0x01) * 4) + (((sibByte >> 1) & 0x01) * 2) + ((sibByte >> 0) & 0x01);
 
-	for (int i = 0; i < scale; i++)
+	for (int32_t i = 0; i < scale; i++)
 	{
 		result->memoryAddress.scale *= 2;
 	}
@@ -551,13 +551,13 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 		case 0:
 			if (index != 4 || params->rexPrefix.X) { result->memoryAddress.regDisplacement = NO_REG; }
 			else { result->memoryAddress.reg = NO_REG; }
-			result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+			result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 			break;
 		case 1:
-			result->memoryAddress.constDisplacement = (char)getUIntFromBytes(&params->bytes, 1); // disp8
+			result->memoryAddress.constDisplacement = (int8_t)getUIntFromBytes(&params->bytes, 1); // disp8
 			break;
 		case 2:
-			result->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4); // disp32
+			result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 			break;
 		}
 

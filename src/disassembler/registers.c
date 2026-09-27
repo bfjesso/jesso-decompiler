@@ -45,7 +45,7 @@ const enum Register altPlatformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { XMM0, XMM
 const enum Register platformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { RDI, RSI, RDX, RCX, R8, R9 };
 const enum Register altPlatformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { NO_REG };
 
-int getNumOfPlatformRegArgs(enum FileFormat fileFormat)
+int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat)
 {
 	switch (fileFormat)
 	{
@@ -194,11 +194,11 @@ bool isRegisterStatusFlag(enum Register reg)
 
 bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 {
-	int numOfPlatformRegArgs = getNumOfPlatformRegArgs(fileFormat);
+	int32_t numOfPlatformRegArgs = getNumOfPlatformRegArgs(fileFormat);
 	const enum Register* platformRegArgs = getPlatformRegArgs(fileFormat);
 	const enum Register* altPlatformRegArgs = getAltPlatformRegArgs(fileFormat);
 
-	for (int i = 0; i < numOfPlatformRegArgs; i++)
+	for (int32_t i = 0; i < numOfPlatformRegArgs; i++)
 	{
 		if (compareRegisters(reg, platformRegArgs[i]) || compareRegisters(reg, altPlatformRegArgs[i]))
 		{
@@ -209,7 +209,7 @@ bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 	return false;
 }
 
-unsigned char getSizeOfRegister(enum Register reg) // in bytes
+uint8_t getSizeOfRegister(enum Register reg) // in bytes
 {
 	if ((reg >= AL && reg <= R15B) || isRegisterStatusFlag(reg)) // the status flags are actually single bits in the EFLAGS reg
 	{

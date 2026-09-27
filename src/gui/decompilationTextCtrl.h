@@ -10,13 +10,13 @@ public:
 
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 
-	int currentDecompiledFunc = -1;
+	int32_t currentDecompiledFunc = -1;
 
 	void DecompilationRightClickOptions(wxContextMenuEvent& e);
 
 	void OnUpdateDecompilationUI(wxStyledTextEvent& e);
 
-	void DecompileFunction(int functionIndex);
+	void DecompileFunction(int32_t functionIndex);
 
 	void ApplyDecompilationHighlighting();
 

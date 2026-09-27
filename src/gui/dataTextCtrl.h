@@ -8,20 +8,20 @@ class DataTextCtrl : public JdcTextCtrl
 public:
 	DataTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name);
 
-	const unsigned int bytesPerLine = 8;
-	int numOfLines = 0;
+	const uint32_t bytesPerLine = 8;
+	int32_t numOfLines = 0;
 
 	const char* dataTypeStrs[NUM_OF_DATA_TEXT_CTRL_TYPES] =
 	{
-		"1-byte int",
-		"2-byte int",
-		"4-byte int",
-		"8-byte int",
+		"1-byte int32_t",
+		"2-byte int32_t",
+		"4-byte int32_t",
+		"8-byte int32_t",
 		"float",
 		"double",
 		"ASCII character"
 	};
-	const int typeSizes[NUM_OF_DATA_TEXT_CTRL_TYPES] =
+	const int32_t typeSizes[NUM_OF_DATA_TEXT_CTRL_TYPES] =
 	{
 		1,
 		2,
@@ -64,5 +64,5 @@ public:
 
 	void ApplyDataHighlighting();
 
-	void HighlightBytes(unsigned long long address, unsigned int numOfBytes, enum IndicatorColor color);
+	void HighlightBytes(uint64_t address, uint32_t numOfBytes, enum IndicatorColor color);
 };

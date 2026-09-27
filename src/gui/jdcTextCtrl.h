@@ -28,7 +28,7 @@ public:
 	wxFindReplaceData findData;
 	wxFindReplaceDialog* findDialog = nullptr;
 	wxString lastFindText = "";
-	int totalFindResults = 0;
+	int32_t totalFindResults = 0;
 
 	bool highlightSelectedLines = true;
 
@@ -36,21 +36,21 @@ public:
 
 	void ClearText();
 
-	void CenterLine(int line);
+	void CenterLine(int32_t line);
 
-	void HighlightLine(int line, enum IndicatorColor color, bool gotoLine);
+	void HighlightLine(int32_t line, enum IndicatorColor color, bool gotoLine);
 
 	void ClearIndicators();
 
-	void ShowRenameDialog(int functionIndex, struct JdcStr* currentName);
+	void ShowRenameDialog(int32_t functionIndex, struct JdcStr* currentName);
 
 	void ShowFindDialog();
 
 	void OnFindDialog(wxFindDialogEvent& e);
 
-	int FindInRange(const wxString& text, int start, int end, int flags, bool forward);
+	int32_t FindInRange(const wxString& text, int32_t start, int32_t end, int32_t flags, bool forward);
 
-	int CountNumOfResults(const wxString& text, int end, int flags);
+	int32_t CountNumOfResults(const wxString& text, int32_t end, int32_t flags);
 
 	void OnFindDialogClose(wxFindDialogEvent& e);
 

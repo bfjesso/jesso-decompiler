@@ -5,8 +5,8 @@
 
 struct RegVarScope
 {
-	int startIndex; // instruction that initialzes the reg
-	int endIndex; // last instruction that accesses the reg before it is initialized again
+	int32_t startIndex; // instruction that initialzes the reg
+	int32_t endIndex; // last instruction that accesses the reg before it is initialized again
 };
 
 struct RegisterVariable
@@ -14,7 +14,7 @@ struct RegisterVariable
 	struct DataType dataType;
 	enum Register reg;
 	bool isArgument;
-	unsigned short numOfScopes;
+	uint16_t numOfScopes;
 	struct RegVarScope* scopes;
 	struct JdcStr name;
 };
@@ -23,15 +23,15 @@ struct StackVariable
 {
 	struct DataType dataType;
 	bool isArgument;
-	long long offsetFromInitSP; // this is the offset from the initial value of the stack pointer, which may not be the same as the base pointer
+	int64_t offsetFromInitSP; // this is the offset from the initial value of the stack pointer, which may not be the same as the base pointer
 	struct JdcStr name;
 };
 
 struct ReturnedVariable // variables that contain the reuturn value of another function call
 {
 	struct DataType dataType;
-	unsigned long long calleeAddress;
-	unsigned long long callInstructionAddress;
+	uint64_t calleeAddress;
+	uint64_t callInstructionAddress;
 	enum Register returnReg;
 	struct JdcStr name;
 };
@@ -92,21 +92,21 @@ static const char* logicalTypeStrs[] =
 
 struct Condition
 {
-	int jccIndex;
-	int dstIndex;
-	int exitIndex; // if the instruction before dstIndex is a jmp, this is the index of the instruction jumped to by that jmp
-	int firstBodyIndex; // first instruction in the body of the condition
-	int lastBodyIndex;  // last instruction in the body of the condition
+	int32_t jccIndex;
+	int32_t dstIndex;
+	int32_t exitIndex; // if the instruction before dstIndex is a jmp, this is the index of the instruction jumped to by that jmp
+	int32_t firstBodyIndex; // first instruction in the body of the condition
+	int32_t lastBodyIndex;  // last instruction in the body of the condition
 	enum ConditionType conditionType;
 
-	int* combinedJccIndexes; // these will be either all connected by && or ||
-	int numOfCombinedJccs;
+	int32_t* combinedJccIndexes; // these will be either all connected by && or ||
+	int32_t numOfCombinedJccs;
 	enum LogicalType combinedJccsLogicType;
 
-	int connectedUpperConditionIndex; // this would be an if or else if condition
-	int connectedLowerConditionIndex; // this would be an else if or else condition
+	int32_t connectedUpperConditionIndex; // this would be an if or else if condition
+	int32_t connectedLowerConditionIndex; // this would be an else if or else condition
 
-	int indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
+	int32_t indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
 };
 
 enum DirectJmpType
@@ -129,15 +129,15 @@ static const char* directJmpTypeStrs[] =
 
 struct DirectJmp
 {
-	int jmpIndex;
-	int dstIndex;
+	int32_t jmpIndex;
+	int32_t dstIndex;
 	enum DirectJmpType type;
 };
 
 struct AssociatedInstructions
 {
-	int* indexes;
-	int numOfIndexes;
+	int32_t* indexes;
+	int32_t numOfIndexes;
 };
 
 struct Function
@@ -152,45 +152,45 @@ struct Function
 	struct StackVariable* stackVars;
 	struct ReturnedVariable* returnedVars;
 	struct RegisterVariable* regVars;
-	unsigned short numOfStackVars;
-	unsigned short numOfReturnedVars;
-	unsigned short numOfRegVars;
+	uint16_t numOfStackVars;
+	uint16_t numOfReturnedVars;
+	uint16_t numOfRegVars;
 
 	bool hasDoneInitialAnalysis;
 
-	int firstInstructionIndex;
-	int lastInstructionIndex;
+	int32_t firstInstructionIndex;
+	int32_t lastInstructionIndex;
 
 	struct Condition* conditions;
 	struct DirectJmp* directJmps;
-	int numOfConditions;
-	int numOfDirectJmps;
+	int32_t numOfConditions;
+	int32_t numOfDirectJmps;
 
 	struct AssociatedInstructions* associatedInstructions; // these are a list of instructions indexes that correspond to each line of the decompilation
-	int numOfLines;
-	int associatedInstructionsBufferLen;
+	int32_t numOfLines;
+	int32_t associatedInstructionsBufferLen;
 };
 
 struct DecompilationParameters
 {
 	struct Function* functions;
 	struct ImportedFunction* imports;
-	int numOfFunctions;
-	int numOfImports;
+	int32_t numOfFunctions;
+	int32_t numOfImports;
 
 	struct Function* currentFunc; // function being decompiled
 
 	struct DisassembledInstruction* instructions;
 	struct FileSection* sections;
-	int numOfInstructions;
-	int numOfSections;
+	int32_t numOfInstructions;
+	int32_t numOfSections;
 
-	unsigned long long imageBase;
+	uint64_t imageBase;
 	
-	unsigned char* fileBytes;
-	unsigned long long numOfFileBytes;
+	uint8_t* fileBytes;
+	uint64_t numOfFileBytes;
 
-	unsigned char numOfIndents;
+	uint8_t numOfIndents;
 	bool is64Bit;
 	enum FileFormat fileFormat;
 };

@@ -6,12 +6,12 @@
 
 enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 {
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJmp(instruction->opcode))
 		{
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 			if (dstIndex == -1 || dstIndex == i + 1) 
 			{
 				continue;
@@ -34,15 +34,15 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 				continue;
 			}
 
-			int start = i;
-			int end = dstIndex;
+			int32_t start = i;
+			int32_t end = dstIndex;
 			if (start > end) 
 			{
 				start = dstIndex;
 				end = i;
 			}
 			bool doesJmpSkipNothing = true;
-			for (int j = start + 1; j < end; j++) 
+			for (int32_t j = start + 1; j < end; j++) 
 			{
 				if (!doesInstructionDoNothing(&params->instructions[j]))
 				{
@@ -56,7 +56,7 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 			}
 			
 			enum DirectJmpType directJmpType = GO_TO_DJT;
-			for (int j = 0; j < params->currentFunc->numOfConditions; j++)
+			for (int32_t j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
 				struct Condition* cond = &params->currentFunc->conditions[j];
 
@@ -68,8 +68,8 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 				}
 				else if (cond->conditionType == WHILE_CT || cond->conditionType == DO_WHILE_CT)
 				{
-					int loopStart = cond->firstBodyIndex;
-					int loopEnd = cond->lastBodyIndex;
+					int32_t loopStart = cond->firstBodyIndex;
+					int32_t loopEnd = cond->lastBodyIndex;
 					
 					if (i >= loopStart && i <= loopEnd) 
 					{
@@ -121,9 +121,9 @@ static enum JdcStatus handleDirectJmpsResize(struct DecompilationParameters* par
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
-	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
 		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex && params->currentFunc->directJmps[i].type == GO_TO_DJT)
 		{
@@ -156,7 +156,7 @@ enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int i
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)
@@ -171,9 +171,9 @@ enum JdcStatus decompileDirectJmps(struct DecompilationParameters* params, int i
 	return SUCCESS_JDC;
 }
 
-bool checkForDirectJmpDst(struct DecompilationParameters* params, int instructionIndex)
+bool checkForDirectJmpDst(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	for (int i = 0; i < params->currentFunc->numOfDirectJmps; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfDirectJmps; i++)
 	{
 		if (instructionIndex == params->currentFunc->directJmps[i].dstIndex)
 		{
@@ -181,7 +181,7 @@ bool checkForDirectJmpDst(struct DecompilationParameters* params, int instructio
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType == CONDITIONAL_GOTO_CT && instructionIndex == condition->dstIndex)

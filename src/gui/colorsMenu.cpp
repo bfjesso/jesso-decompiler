@@ -38,7 +38,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	dataLabel->SetOwnForegroundColour(textColor);
 	dataSizer->Add(dataLabel, 0, wxCENTER | wxLEFT | wxRIGHT | wxUP, 10);
 
-	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		wxStaticText* label = new wxStaticText(disassemblyScrollWindow, wxID_ANY, disassemblyColorNames[i]);
 		label->SetOwnForegroundColour(textColor);
@@ -50,7 +50,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		disassemblyColorPickerCtrls.push_back(ctrl);
 	}
 
-	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++) 
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++) 
 	{
 		wxStaticText* label = new wxStaticText(decompilationScrollWindow, wxID_ANY, decompColorNames[i]);
 		label->SetOwnForegroundColour(textColor);
@@ -62,7 +62,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		decompilationColorPickerCtrls.push_back(ctrl);
 	}
 
-	for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
 	{
 		wxStaticText* label = new wxStaticText(dataScrollWindow, wxID_ANY, dataColorNames[i]);
 		label->SetOwnForegroundColour(textColor);
@@ -114,27 +114,27 @@ void ColorsMenu::AddDataTextCtrl(JdcTextCtrl* ctrl)
 
 void ColorsMenu::ApplyColors()
 {
-	for (int i = 0; i < disassemblyTextCtrls.size(); i++)
+	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		for (int j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++)
+		for (int32_t j = 0; j < NUM_OF_DISASSEMBLY_COLORS; j++)
 		{
 			disassemblyColors[j] = disassemblyColorPickerCtrls[j]->GetColour();
 			disassemblyTextCtrls[i]->StyleSetForeground(j, disassemblyColors[j]);
 		}
 	}
 
-	for (int i = 0; i < decompilationTextCtrls.size(); i++)
+	for (int32_t i = 0; i < decompilationTextCtrls.size(); i++)
 	{
-		for (int j = 0; j < NUM_OF_DECOMP_COLORS; j++)
+		for (int32_t j = 0; j < NUM_OF_DECOMP_COLORS; j++)
 		{
 			decompColors[j] = decompilationColorPickerCtrls[j]->GetColour();
 			decompilationTextCtrls[i]->StyleSetForeground(j, decompColors[j]);
 		}
 	}
 
-	for (int i = 0; i < dataTextCtrls.size(); i++)
+	for (int32_t i = 0; i < dataTextCtrls.size(); i++)
 	{
-		for (int j = 0; j < NUM_OF_DATA_COLORS; j++)
+		for (int32_t j = 0; j < NUM_OF_DATA_COLORS; j++)
 		{
 			dataColors[j] = dataColorPickerCtrls[j]->GetColour();
 			dataTextCtrls[i]->StyleSetForeground(j, dataColors[j]);

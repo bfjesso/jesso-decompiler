@@ -23,7 +23,7 @@ public:
 
 	void DisassembleBytes(wxCommandEvent& e);
 
-	int ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen);
+	int32_t ParseStringBytes(wxString str, uint8_t* bytesBuffer, uint8_t bytesBufferLen);
 
 	wxDECLARE_EVENT_TABLE();
 };

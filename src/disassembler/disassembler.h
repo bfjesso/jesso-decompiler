@@ -7,11 +7,11 @@ extern "C"
 {
 #endif
 
-	enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+	enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 	
 	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result);
 
-	const char* getPtrSizeStr(int ptrSize);
+	const char* getPtrSizeStr(int32_t ptrSize);
 
 	const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction);
 

@@ -8,10 +8,10 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions);
+	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions);
 
 	struct DisassembledInstruction* instructions;
-	int numOfInstructions;
+	int32_t numOfInstructions;
 
 	DecompilationTextCtrl* decompilationTextCtrl = nullptr;
 	FunctionsTextCtrl* functionsTextCtrl = nullptr;
@@ -19,11 +19,11 @@ public:
 
 	void ClearData();
 
-	void Initialize(struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions, unsigned long long errorAddress);
+	void Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, uint64_t errorAddress);
 
 	void ShowGoToAddressDialog();
 
-	void HighlightLine(int line, enum IndicatorColor color, bool gotoLine);
+	void HighlightLine(int32_t line, enum IndicatorColor color, bool gotoLine);
 
 	void DisassemblyRightClickOptions(wxContextMenuEvent& e);
 

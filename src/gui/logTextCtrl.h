@@ -6,13 +6,13 @@ class LogTextCtrl : public JdcTextCtrl
 public:
 	LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef);
 
-	int progressPos = 0;
+	int32_t progressPos = 0;
 
 	void Log(wxString text, bool isError);
 
-	void LogHexNum(wxString label, unsigned long long num, bool isError);
+	void LogHexNum(wxString label, uint64_t num, bool isError);
 
-	void LogProgress(unsigned long long current, unsigned long long max);
+	void LogProgress(uint64_t current, uint64_t max);
 
 	void LogRightClickOptions(wxContextMenuEvent& e);
 

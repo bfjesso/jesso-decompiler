@@ -6,7 +6,7 @@ enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef)
 	FILE* file = openFile(filePath);
 	if (file)
 	{
-		unsigned char e_ident[5];
+		uint8_t e_ident[5];
 		fread(e_ident, 1, 5, file);
 		fclose(file);
 
@@ -22,7 +22,7 @@ enum JdcStatus isELFX64(const wchar_t* filePath, bool* is64BitRef)
 	FILE* file = openFile(filePath);
 	if(file)
 	{
-		unsigned char e_ident[5];
+		uint8_t e_ident[5];
 		fread(e_ident, 1, 5, file);
 		fclose(file);
 
@@ -59,7 +59,7 @@ static enum JdcStatus readElfEhdr(FILE* file, bool is64Bit, Elf64_Ehdr* result)
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus readElfShdr(FILE* file, bool is64Bit, unsigned long long fileOffset, Elf64_Shdr* result)
+static enum JdcStatus readElfShdr(FILE* file, bool is64Bit, uint64_t fileOffset, Elf64_Shdr* result)
 {
 	if(!file)
 	{
@@ -92,7 +92,7 @@ static enum JdcStatus readElfShdr(FILE* file, bool is64Bit, unsigned long long f
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus getELFEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned long long* entryPointRef)
+enum JdcStatus getELFEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* entryPointRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && entryPointRef)
@@ -108,7 +108,7 @@ enum JdcStatus getELFEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned 
 	return ERROR_JDC;
 }
 
-enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, unsigned long long value, struct JdcStr* result)
+enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, uint64_t value, struct JdcStr* result)
 {
 	Elf64_Shdr strtabSection;
 	if(ERROR_JDC == getSectionHeaderByName(filePath, is64Bit, ".strtab", &strtabSection))
@@ -116,7 +116,7 @@ enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, unsign
 		return ERROR_JDC;
 	}
 
-	char* stringBytes = (char*)malloc(strtabSection.sh_size);
+	uint8_t* stringBytes = (uint8_t*)malloc(strtabSection.sh_size);
 	if(ERROR_JDC == readSectionBytes(filePath, &strtabSection, stringBytes, strtabSection.sh_size))
 	{
 		free(stringBytes);
@@ -129,18 +129,18 @@ enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, unsign
 		return ERROR_JDC;
 	}
 
-	char* bytes = (char*)malloc(symtabSection.sh_size);
+	uint8_t* bytes = (uint8_t*)malloc(symtabSection.sh_size);
 	if(ERROR_JDC == readSectionBytes(filePath, &symtabSection, bytes, symtabSection.sh_size))
 	{
 		free(bytes);
 		return ERROR_JDC;
 	}
 
-	int i = 0;
+	int32_t i = 0;
 	while(i < symtabSection.sh_size)
 	{
-		unsigned int st_name = 0;
-		unsigned long long st_value = 0;
+		uint32_t st_name = 0;
+		uint64_t st_value = 0;
 		if(is64Bit)
 		{
 			Elf64_Sym* symbol = (Elf64_Sym*)(bytes + i);
@@ -174,7 +174,7 @@ enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, unsign
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfELFSections(const wchar_t* filePath, bool is64Bit, int* numOfSectionsRef)
+enum JdcStatus getNumOfELFSections(const wchar_t* filePath, bool is64Bit, int32_t* numOfSectionsRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfSectionsRef)
@@ -183,10 +183,10 @@ enum JdcStatus getNumOfELFSections(const wchar_t* filePath, bool is64Bit, int* n
 		readElfEhdr(file, is64Bit, &elfHeader);
 
 		Elf64_Shdr sectionHeader;
-		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
+		uint32_t shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
-		int result = 0;
-		for (int i = 0; i < elfHeader.e_shnum; i++)
+		int32_t result = 0;
+		for (int32_t i = 0; i < elfHeader.e_shnum; i++)
 		{
 			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 
@@ -207,7 +207,7 @@ enum JdcStatus getNumOfELFSections(const wchar_t* filePath, bool is64Bit, int* n
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int32_t bufferLen)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -217,17 +217,17 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 	{
 		readElfEhdr(file, is64Bit, &elfHeader);
 
-		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
+		uint32_t shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
 		Elf64_Shdr nameStrTable;
 		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
+		uint8_t* sectionNames = (uint8_t*)malloc(nameStrTable.sh_size);
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
-		int bufferIndex = 0;
-		for (int i = 0; i < elfHeader.e_shnum; i++)
+		int32_t bufferIndex = 0;
+		for (int32_t i = 0; i < elfHeader.e_shnum; i++)
 		{
 			if (bufferIndex >= bufferLen)
 			{
@@ -277,16 +277,16 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 	{
 		readElfEhdr(file, is64Bit, &elfHeader);
 
-		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
+		uint32_t shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
 
 		Elf64_Shdr nameStrTable;
 		readElfShdr(file, is64Bit, elfHeader.e_shoff + elfHeader.e_shstrndx * shdrSize, &nameStrTable);
 
-		char* sectionNames = (char*)malloc(nameStrTable.sh_size);
+		uint8_t* sectionNames = (uint8_t*)malloc(nameStrTable.sh_size);
 		fseek(file, nameStrTable.sh_offset, SEEK_SET);
 		fread(sectionNames, 1, nameStrTable.sh_size, file);
 
-		for (int i = 0; i < elfHeader.e_shnum; i++)
+		for (int32_t i = 0; i < elfHeader.e_shnum; i++)
 		{
 			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 			if (strcmp(sectionNames + sectionHeader.sh_name, name) == 0)
@@ -306,7 +306,7 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 	return ERROR_JDC;
 }
 
-enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, char* buffer, unsigned int bufferSize)
+enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint32_t bufferSize)
 {
 	FILE* file = openFile(filePath);
 	if (file)
@@ -320,7 +320,7 @@ enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, ch
 	return ERROR_JDC;
 }
 
-enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, unsigned int type, int index, Elf64_Shdr* result)
+enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, uint32_t type, int32_t index, Elf64_Shdr* result)
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
@@ -330,9 +330,9 @@ enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, uns
 	{
 		readElfEhdr(file, is64Bit, &elfHeader);
 
-		unsigned int shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
-		int num = 0;
-		for (int i = 0; i < elfHeader.e_shnum; i++)
+		uint32_t shdrSize = is64Bit ? sizeof(Elf64_Shdr) : sizeof(Elf32_Shdr);
+		int32_t num = 0;
+		for (int32_t i = 0; i < elfHeader.e_shnum; i++)
 		{
 			readElfShdr(file, is64Bit, elfHeader.e_shoff + i * shdrSize, &sectionHeader);
 			if (sectionHeader.sh_type == type)
@@ -354,7 +354,7 @@ enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, uns
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
+enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int32_t* numOfImportsRef, int32_t* numOfLibrariesRef)
 {
 	if(!numOfImportsRef || !numOfLibrariesRef)
 	{
@@ -369,7 +369,7 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* nu
 		return ERROR_JDC;
 	}
 
-	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
+	uint8_t* stringBytes = (uint8_t*)malloc(dynstrSection.sh_size);
 	if (ERROR_JDC == readSectionBytes(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
 		free(stringBytes);
@@ -383,7 +383,7 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* nu
 		return ERROR_JDC;
 	}
 
-	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
+	uint8_t* dynsymBytes = (uint8_t*)malloc(dynsymSection.sh_size);
 	if (ERROR_JDC == readSectionBytes(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
 		free(stringBytes);
@@ -391,12 +391,12 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* nu
 		return ERROR_JDC;
 	}
 
-	int relaNum = 0;
+	int32_t relaNum = 0;
 	Elf64_Shdr relaSection;
-	int result = 0;
+	int32_t result = 0;
 	while (getSectionHeaderByType(filePath, is64Bit, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
-		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		uint8_t* relaBytes = (uint8_t*)malloc(relaSection.sh_size);
 		if (ERROR_JDC == readSectionBytes(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
 			free(stringBytes);
@@ -405,23 +405,23 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* nu
 			return ERROR_JDC;
 		}
 
-		unsigned int relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
+		uint32_t relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
 
-		int i = 0;
+		int32_t i = 0;
 		while ((i * relaSize) < relaSection.sh_size)
 		{
-			unsigned int st_name = 0;
+			uint32_t st_name = 0;
 			if(is64Bit)
 			{
 				Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
-				int val = ELF64_R_SYM(rela->r_info);
+				int32_t val = ELF64_R_SYM(rela->r_info);
 				Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 				st_name = symbol->st_name;
 			}
 			else
 			{
 				Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
-				int val = ELF32_R_SYM(rela->r_info);
+				int32_t val = ELF32_R_SYM(rela->r_info);
 				Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 				st_name = symbol->st_name;
 			}
@@ -446,7 +446,7 @@ enum JdcStatus getNumOfELFImports(const wchar_t* filePath, bool is64Bit, int* nu
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen)
 {
 	if (libraryNamesBufferLen > 0) 
 	{
@@ -459,7 +459,7 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 		return ERROR_JDC;
 	}
 
-	char* stringBytes = (char*)malloc(dynstrSection.sh_size);
+	uint8_t* stringBytes = (uint8_t*)malloc(dynstrSection.sh_size);
 	if(ERROR_JDC == readSectionBytes(filePath, &dynstrSection, stringBytes, dynstrSection.sh_size))
 	{
 		free(stringBytes);
@@ -473,7 +473,7 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 		return ERROR_JDC;
 	}
 
-	char* dynsymBytes = (char*)malloc(dynsymSection.sh_size);
+	uint8_t* dynsymBytes = (uint8_t*)malloc(dynsymSection.sh_size);
 	if(ERROR_JDC == readSectionBytes(filePath, &dynsymSection, dynsymBytes, dynsymSection.sh_size))
 	{
 		free(stringBytes);
@@ -481,12 +481,12 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 		return ERROR_JDC;
 	}
 
-	int relaNum = 0;
+	int32_t relaNum = 0;
 	Elf64_Shdr relaSection;
-	int importsIndex = 0;
+	int32_t importsIndex = 0;
 	while(getSectionHeaderByType(filePath, is64Bit, SHT_RELA, relaNum, &relaSection)) // going through all rela sections
 	{
-		char* relaBytes = (char*)malloc(relaSection.sh_size);
+		uint8_t* relaBytes = (uint8_t*)malloc(relaSection.sh_size);
 		if(ERROR_JDC == readSectionBytes(filePath, &relaSection, relaBytes, relaSection.sh_size))
 		{
 			free(stringBytes);
@@ -495,17 +495,17 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 			return ERROR_JDC;
 		}
 
-		unsigned int relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
+		uint32_t relaSize = is64Bit ? sizeof(Elf64_Rela) : sizeof(Elf32_Rela);
 
-		int i = 0;
+		int32_t i = 0;
 		while((i * relaSize) < relaSection.sh_size && importsIndex < importsBufferLen)
 		{
-			unsigned int st_name = 0;
-			unsigned long long r_offset = 0;
+			uint32_t st_name = 0;
+			uint64_t r_offset = 0;
 			if(is64Bit)
 			{
 				Elf64_Rela* rela = (Elf64_Rela*)(relaBytes + (i * sizeof(Elf64_Rela)));
-				int val = ELF64_R_SYM(rela->r_info);
+				int32_t val = ELF64_R_SYM(rela->r_info);
 				Elf64_Sym* symbol = (Elf64_Sym*)(dynsymBytes + (val * sizeof(Elf64_Sym)));
 				st_name = symbol->st_name;
 				r_offset = rela->r_offset;
@@ -513,7 +513,7 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 			else
 			{
 				Elf32_Rela* rela = (Elf32_Rela*)(relaBytes + (i * sizeof(Elf32_Rela)));
-				int val = ELF32_R_SYM(rela->r_info);
+				int32_t val = ELF32_R_SYM(rela->r_info);
 				Elf32_Sym* symbol = (Elf32_Sym*)(dynsymBytes + (val * sizeof(Elf32_Sym)));
 				st_name = symbol->st_name;
 				r_offset = rela->r_offset;
@@ -574,7 +574,7 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 		strcatJdc(result, "Elf32_Ehdr\n\n");
 	}
 	
-	sprintfJdc(result, true, "0x0\te_ident[0-4]\t0x%llX\tMagic number\n", *(unsigned int*)(ehdr->e_ident));
+	sprintfJdc(result, true, "0x0\te_ident[0-4]\t0x%llX\tMagic number\n", *(uint32_t*)(ehdr->e_ident));
 
 	sprintfJdc(result, true, "0x4\te_ident[EI_CLASS]\t");
 	switch(ehdr->e_ident[EI_CLASS])
@@ -652,7 +652,7 @@ static void generateELFHeaderInfoStr(Elf64_Ehdr* ehdr, struct JdcStr* result)
 
 	sprintfJdc(result, true, "0x8\te_ident[EI_ABIVERSION]\t0x%llX\tVersion of the ABI to which the object is targeted\n", ehdr->e_ident[EI_ABIVERSION]);
 	sprintfJdc(result, true, "0x9\te_ident[EI_PAD]\t");
-	for (int i = EI_PAD; i < EI_NIDENT; i++)
+	for (int32_t i = EI_PAD; i < EI_NIDENT; i++)
 	{
 		sprintfJdc(result, true, "0x%llX", ehdr->e_ident[i]);
 		if (i != EI_NIDENT - 1)

@@ -86,7 +86,7 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_H
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, unsigned long long* imageBaseRef)
+enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, uint64_t* imageBaseRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && imageBaseRef)
@@ -106,7 +106,7 @@ enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, unsigned lo
 	return ERROR_JDC;
 }
 
-enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned long long* entryPointRef)
+enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* entryPointRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && entryPointRef)
@@ -126,7 +126,7 @@ enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned l
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int* numOfSectionsRef)
+enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int32_t* numOfSectionsRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfSectionsRef)
@@ -146,7 +146,7 @@ enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int* nu
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int32_t bufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -164,7 +164,7 @@ enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, str
 			return ERROR_JDC;
 		}
 
-		for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
+		for (int32_t i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 		{
 			IMAGE_SECTION_HEADER sectionHeader = { 0 };
 			LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
@@ -254,7 +254,7 @@ enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD v
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
+enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t* numOfImportsRef, int32_t* numOfLibrariesRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfImportsRef && numOfLibrariesRef)
@@ -266,8 +266,8 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* num
 			return ERROR_JDC;
 		}
 
-		int numOfImports = 0;
-		int numOfLibraries = 0;
+		int32_t numOfImports = 0;
+		int32_t numOfLibraries = 0;
 		if (imageNtHeaders.NumberOfRvaAndSizes > 1)
 		{
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
@@ -298,7 +298,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* num
 					return ERROR_JDC;
 				}
 
-				int j = 0;
+				int32_t j = 0;
 				while (1)
 				{
 					DWORD lookupValue = 0;
@@ -345,7 +345,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* num
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen)
 {
 	FILE* file = openFile(filePath);
 	if (file) 
@@ -357,7 +357,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 			return ERROR_JDC;
 		}
 
-		int importsIndex = 0;
+		int32_t importsIndex = 0;
 		if (imageNtHeaders.NumberOfRvaAndSizes > 1)
 		{
 			DWORD importDirectoryTableAddress = imageNtHeaders.DataDirectory[1].VirtualAddress; // this is actually an RVA
@@ -369,7 +369,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 				return ERROR_JDC;
 			}
 
-			int libraryIndex = 0;
+			int32_t libraryIndex = 0;
 			for (DWORD i = 0; i < importDirectoryTableSize; i += sizeof(IMAGE_IMPORT_DESCRIPTOR))
 			{
 				IMAGE_IMPORT_DESCRIPTOR importDescriptor = { 0 };
@@ -401,7 +401,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 					return ERROR_JDC;
 				}
 
-				int j = 0;
+				int32_t j = 0;
 				while (importsIndex < importsBufferLen)
 				{
 					DWORD lookupValue = 0;
@@ -465,7 +465,7 @@ static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWO
 	}
 
 	DWORD fileOffset = 0;
-	for (int i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
+	for (int32_t i = 0; i < imageNtHeaders.FileHeader.NumberOfSections; i++)
 	{
 		IMAGE_SECTION_HEADER sectionHeader = { 0 };
 		LONG sectionAddress = (sizeof(IMAGE_SECTION_HEADER) * i) + imageNtHeaders.e_lfanew + sizeof(imageNtHeaders.Signature) + sizeof(imageNtHeaders.FileHeader) + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
@@ -527,7 +527,7 @@ static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr*
 	sprintfJdc(result, true, "0x18\te_lfarlc\t0x%llX\tFile address of relocation table\n", dosHeader->e_lfarlc);
 	sprintfJdc(result, true, "0x1A\te_ovno\t0x%llX\tOverlay number\n", dosHeader->e_ovno);
 	sprintfJdc(result, true, "0x1C\te_res[4]\t");
-	for (int i = 0; i < 4; i++)
+	for (int32_t i = 0; i < 4; i++)
 	{
 		sprintfJdc(result, true, "0x%llX", dosHeader->e_res[i]);
 		if (i != 3)
@@ -544,7 +544,7 @@ static void generateDOSHeaderInfoStr(IMAGE_DOS_HEADER* dosHeader, struct JdcStr*
 	sprintfJdc(result, true, "0x26\te_oeminfo\t0x%llX\tOEM information; e_oemid specific\n", dosHeader->e_oeminfo);
 
 	sprintfJdc(result, true, "0x28\te_res2[10]\t");
-	for (int i = 0; i < 10; i++)
+	for (int32_t i = 0; i < 10; i++)
 	{
 		sprintfJdc(result, true, "0x%llX", dosHeader->e_res2[i]);
 		if (i != 9)

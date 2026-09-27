@@ -2,11 +2,11 @@
 #include "decompilationUtils.h"
 #include "functions.h"
 
-bool checkForAnyAssignments(struct DecompilationParameters* params, int instructionIndex)
+bool checkForAnyAssignments(struct DecompilationParameters* params, int32_t instructionIndex)
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
-	for (int i = 0; i < instruction->numOfOperands; i++) 
+	for (int32_t i = 0; i < instruction->numOfOperands; i++) 
 	{
 		if (doesInstructionAssignToOperand(params, instructionIndex, i)) 
 		{
@@ -14,7 +14,7 @@ bool checkForAnyAssignments(struct DecompilationParameters* params, int instruct
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfRegVars; i++) 
+	for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++) 
 	{
 		if (doesInstructionAssignToRegVar(params, instructionIndex, params->currentFunc->regVars[i].reg)) 
 		{
@@ -25,7 +25,7 @@ bool checkForAnyAssignments(struct DecompilationParameters* params, int instruct
 	return false;
 }
 
-bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum)
+bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum)
 {
 	struct Operand* operand = &params->instructions[instructionIndex].operands[operandNum];
 	if (doesInstructionModifyOperand(params, instructionIndex, operandNum, 0))
@@ -44,7 +44,7 @@ bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int 
 	return false;
 }
 
-struct RegisterVariable* doesInstructionAssignToRegVar(struct DecompilationParameters* params, int instructionIndex, enum Register reg)
+struct RegisterVariable* doesInstructionAssignToRegVar(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg)
 {
 	struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, reg);
 	if (regVar && !regVar->isArgument && doesInstructionModifyRegister(params, instructionIndex, reg, 0, 0) && checkRegVarScope(params, regVar, instructionIndex))

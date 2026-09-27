@@ -78,13 +78,13 @@ void JdcTextCtrl::ClearText()
 	SetReadOnly(true);
 }
 
-void JdcTextCtrl::CenterLine(int line)
+void JdcTextCtrl::CenterLine(int32_t line)
 {
 	GotoLine(line);
 	LineScroll(0, line - GetFirstVisibleLine() - (LinesOnScreen() / 2));
 }
 
-void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, bool gotoLine)
+void JdcTextCtrl::HighlightLine(int32_t line, enum IndicatorColor color, bool gotoLine)
 {
 	if (gotoLine)
 	{
@@ -92,21 +92,21 @@ void JdcTextCtrl::HighlightLine(int line, enum IndicatorColor color, bool gotoLi
 	}
 
 	SetIndicatorCurrent(color);
-	int start = PositionFromLine(line);
-	int len = GetLineLength(line);
+	int32_t start = PositionFromLine(line);
+	int32_t len = GetLineLength(line);
 	IndicatorFillRange(start, len);
 }
 
 void JdcTextCtrl::ClearIndicators()
 {	
-	for (int i = 0; i < NUM_OF_INDICATORS; i++) 
+	for (int32_t i = 0; i < NUM_OF_INDICATORS; i++) 
 	{
 		SetIndicatorCurrent(i);
 		IndicatorClearRange(0, GetTextLength());
 	}
 }
 
-void JdcTextCtrl::ShowRenameDialog(int functionIndex, struct JdcStr* currentName)
+void JdcTextCtrl::ShowRenameDialog(int32_t functionIndex, struct JdcStr* currentName)
 {
 	wxTextEntryDialog dlg(this, "", "Rename " + wxString(currentName->buffer));
 	if (dlg.ShowModal() == wxID_OK)
@@ -149,7 +149,7 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 		return;
 	}
 
-	int flags = 0;
+	int32_t flags = 0;
 	if (e.GetFlags() & wxFR_MATCHCASE)
 	{
 		flags |= wxSTC_FIND_MATCHCASE;
@@ -176,14 +176,14 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 	long selEnd = GetSelectionEnd();
 	bool forward = (e.GetFlags() & wxFR_DOWN) != 0;
 
-	int start = forward ? selEnd : 0;
-	int end = forward ? GetLength() : selStart;
+	int32_t start = forward ? selEnd : 0;
+	int32_t end = forward ? GetLength() : selStart;
 
-	int pos = FindInRange(text, start, end, flags, forward);
+	int32_t pos = FindInRange(text, start, end, flags, forward);
 	if (pos == -1)
 	{
-		int wrapStart = forward ? 0 : selEnd;
-		int wrapEnd = forward ? selStart : GetLength();
+		int32_t wrapStart = forward ? 0 : selEnd;
+		int32_t wrapEnd = forward ? selStart : GetLength();
 		pos = FindInRange(text, wrapStart, wrapEnd, flags, forward);
 	}
 
@@ -196,15 +196,15 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 	//}
 }
 
-int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags, bool forward)
+int32_t JdcTextCtrl::FindInRange(const wxString& text, int32_t start, int32_t end, int32_t flags, bool forward)
 {
 	if (forward)
 	{
 		return FindText(start, end, text, flags);
 	}
 
-	int lastPos = -1;
-	int pos = FindText(start, end, text, flags);
+	int32_t lastPos = -1;
+	int32_t pos = FindText(start, end, text, flags);
 	while (pos != -1)
 	{
 		lastPos = pos;
@@ -214,12 +214,12 @@ int JdcTextCtrl::FindInRange(const wxString& text, int start, int end, int flags
 	return lastPos;
 }
 
-int JdcTextCtrl::CountNumOfResults(const wxString& text, int end, int flags)
+int32_t JdcTextCtrl::CountNumOfResults(const wxString& text, int32_t end, int32_t flags)
 {
-	int result = 0;
+	int32_t result = 0;
 
-	int start = 0;
-	int pos = FindText(start, end, text, flags);
+	int32_t start = 0;
+	int32_t pos = FindText(start, end, text, flags);
 	while (pos != -1)
 	{
 		result++;
@@ -251,15 +251,15 @@ char JdcTextCtrl::IsCharDigit(char c)
 
 void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 {
-	const int ID_COPY = 1000;
-	const int ID_SELECT_ALL = 1001;
-	const int ID_CONVERT_TO_UNSIGNED_DEC = 1002;
-	const int ID_CONVERT_TO_SIGNED_DEC = 1003;
-	const int ID_CONVERT_TO_UNSIGNED_HEX = 1004;
-	const int ID_CONVERT_TO_SIGNED_HEX = 1005;
-	const int ID_FIND = 1006;
-	const int ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 1007;
-	const int ID_FIND_CODE_REFERENCES = 1008;
+	const int32_t ID_COPY = 1000;
+	const int32_t ID_SELECT_ALL = 1001;
+	const int32_t ID_CONVERT_TO_UNSIGNED_DEC = 1002;
+	const int32_t ID_CONVERT_TO_SIGNED_DEC = 1003;
+	const int32_t ID_CONVERT_TO_UNSIGNED_HEX = 1004;
+	const int32_t ID_CONVERT_TO_SIGNED_HEX = 1005;
+	const int32_t ID_FIND = 1006;
+	const int32_t ID_HIGHLIGHT_SELECTED_INSTRUCTIONS = 1007;
+	const int32_t ID_FIND_CODE_REFERENCES = 1008;
 
 	wxString selection = GetSelectedText();
 	if (selection != "")
@@ -268,9 +268,9 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 		menu->Bind(wxEVT_MENU, [selection](wxCommandEvent&) { CopyToClipboard(selection); }, ID_COPY);
 	}
 
-	int pos = GetCurrentPos();
-	int start = WordStartPosition(pos, true);
-	int end = WordEndPosition(pos, true);
+	int32_t pos = GetCurrentPos();
+	int32_t start = WordStartPosition(pos, true);
+	int32_t end = WordEndPosition(pos, true);
 	if (start != end)
 	{
 		if (start > 0 && GetText()[start - 1] == '-') 
@@ -280,8 +280,8 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 		wxString word = GetTextRange(start, end);
 
-		int numColor = GetStyleAt(start);
-		long long num = 0;
+		int32_t numColor = GetStyleAt(start);
+		int64_t num = 0;
 		bool isHex = false;
 		bool isDec = false;
 		bool isSigned = false; // its possible for both isSigned and isUnsigned to be 1
@@ -290,13 +290,13 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 		if (word.substr(0, 2) == "0x" || word.substr(0, 3) == "-0x")
 		{
 			isSigned = word.ToLongLong(&num, 16);
-			isUnsigned = word.ToULongLong((unsigned long long*)(&num), 16);
+			isUnsigned = word.ToULongLong((uint64_t*)(&num), 16);
 			isHex = isSigned || isUnsigned;
 		}
 		else
 		{
 			isSigned = word.ToLongLong(&num, 10);
-			isUnsigned = word.ToULongLong((unsigned long long*)(&num), 10);
+			isUnsigned = word.ToULongLong((uint64_t*)(&num), 10);
 			isDec = isSigned || isUnsigned;
 		}
 
@@ -310,7 +310,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Append(ID_CONVERT_TO_UNSIGNED_DEC, "Convert to unsigned decimal");
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
-				wxString numStr = std::to_string((unsigned long long)num);
+				wxString numStr = std::to_string((uint64_t)num);
 				Replace(start, end, numStr);
 				StartStyling(start);
 				SetStyling(strlen(numStr), numColor);
@@ -337,7 +337,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
 				char numStr[50] = { 0 };
-				sprintf(numStr, "0x%llX", (unsigned long long)num);
+				sprintf(numStr, "0x%llX", (uint64_t)num);
 				Replace(start, end, numStr);
 				StartStyling(start);
 				SetStyling(strlen(numStr), numColor);
@@ -404,7 +404,7 @@ void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
 
 void JdcTextCtrl::OnKeyDown(wxKeyEvent& e)
 {
-	int key = e.GetKeyCode();
+	int32_t key = e.GetKeyCode();
 	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
 	{
 		if (key == 'F')
@@ -436,10 +436,10 @@ void JdcTextCtrl::OnUpdateUI(wxStyledTextEvent& e)
 
 void JdcTextCtrl::HighlightSelectedBraces()
 {
-	int pos = GetCurrentPos();
-	int bracePos1 = -1;
-	int bracePos2 = -1;
-	int ch = GetCharAt(pos);
+	int32_t pos = GetCurrentPos();
+	int32_t bracePos1 = -1;
+	int32_t bracePos2 = -1;
+	int32_t ch = GetCharAt(pos);
 	if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '[' || ch == ']')
 	{
 		bracePos1 = pos;
@@ -469,9 +469,9 @@ void JdcTextCtrl::HighlightSelectionInstances()
 	wxString selection = GetSelectedText();
 	if (selection == "") 
 	{
-		int pos = GetCurrentPos();
-		int start = WordStartPosition(pos, true);
-		int end = WordEndPosition(pos, true);
+		int32_t pos = GetCurrentPos();
+		int32_t start = WordStartPosition(pos, true);
+		int32_t end = WordEndPosition(pos, true);
 		wxString word = GetTextRange(start, end);
 		if (word == "") 
 		{
@@ -483,17 +483,17 @@ void JdcTextCtrl::HighlightSelectionInstances()
 
 	SetIndicatorCurrent(GRAY_INDICATOR);
 
-	int selectionLen = selection.Length();
-	int firstVisibleLine = GetFirstVisibleLine();
-	int lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
+	int32_t selectionLen = selection.Length();
+	int32_t firstVisibleLine = GetFirstVisibleLine();
+	int32_t lastVisibleLine = firstVisibleLine + LinesOnScreen() + 1;
 
-	int minPos = 0;
+	int32_t minPos = 0;
 	if (firstVisibleLine > 0)
 	{
 		minPos = PositionFromLine(firstVisibleLine - 1);
 	}
 
-	int maxPos = GetTextLength();
+	int32_t maxPos = GetTextLength();
 	if (lastVisibleLine < GetNumberOfLines())
 	{
 		maxPos = PositionFromLine(lastVisibleLine);
@@ -501,7 +501,7 @@ void JdcTextCtrl::HighlightSelectionInstances()
 
 	while (1)
 	{
-		int index = FindText(minPos, maxPos, selection);
+		int32_t index = FindText(minPos, maxPos, selection);
 		if (index == -1)
 		{
 			break;

@@ -17,22 +17,22 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 {
 	wxMenu menu;
 
-	const int ID_DECOMPILE = 100;
-	const int ID_RENAME = 101;
-	const int ID_FIND_CODE_REFERENCES = 102;
-	const int ID_SET_ASSOCIATED_DISASSEMBLY = 103;
-	const int ID_UNASSOCIATE_DISASSEMBLY = 104;
+	const int32_t ID_DECOMPILE = 100;
+	const int32_t ID_RENAME = 101;
+	const int32_t ID_FIND_CODE_REFERENCES = 102;
+	const int32_t ID_SET_ASSOCIATED_DISASSEMBLY = 103;
+	const int32_t ID_UNASSOCIATE_DISASSEMBLY = 104;
 
-	int pos = GetCurrentPos();
-	int start = WordStartPosition(pos, true);
-	int end = WordEndPosition(pos, true);
+	int32_t pos = GetCurrentPos();
+	int32_t start = WordStartPosition(pos, true);
+	int32_t end = WordEndPosition(pos, true);
 	wxString word = GetTextRange(start, end);
 	if (word != "")
 	{
 		bool foundName = false;
 
-		int numOfFunctions = mainGui->functions.size();
-		for (int i = 0; i < numOfFunctions; i++)
+		int32_t numOfFunctions = mainGui->functions.size();
+		for (int32_t i = 0; i < numOfFunctions; i++)
 		{
 			struct Function* func = &mainGui->decompParams.functions[i];
 			if(strcmp(func->name.buffer, word.c_str()) == 0)
@@ -54,7 +54,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 
 				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-					unsigned long long functionAddress = mainGui->decompParams.instructions[func->firstInstructionIndex].address;
+					uint64_t functionAddress = mainGui->decompParams.instructions[func->firstInstructionIndex].address;
 					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
 				}, ID_FIND_CODE_REFERENCES);
 				
@@ -67,7 +67,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		{
 			struct Function* func = &mainGui->decompParams.functions[currentDecompiledFunc];
 
-			for (int i = 0; i < func->numOfRegVars && !foundName; i++)
+			for (int32_t i = 0; i < func->numOfRegVars && !foundName; i++)
 			{
 				if (strcmp(func->regVars[i].name.buffer, word.c_str()) == 0)
 				{
@@ -81,7 +81,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				}
 			}
 
-			for (int i = 0; i < func->numOfStackVars && !foundName; i++)
+			for (int32_t i = 0; i < func->numOfStackVars && !foundName; i++)
 			{
 				if (strcmp(func->stackVars[i].name.buffer, word.c_str()) == 0)
 				{
@@ -95,7 +95,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				}
 			}
 
-			for (int i = 0; i < func->numOfReturnedVars && !foundName; i++)
+			for (int32_t i = 0; i < func->numOfReturnedVars && !foundName; i++)
 			{
 				if (strcmp(func->returnedVars[i].name.buffer, word.c_str()) == 0)
 				{
@@ -116,7 +116,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 	menu.Append(ID_SET_ASSOCIATED_DISASSEMBLY, "Set associated disassembly");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
+		for (int32_t i = 0; i < mainGui->disassemblyTextCtrls.size(); i++)
 		{
 			windowCaptions.push_back(mainGui->disassemblyTextCtrls[i]->GetName());
 		}
@@ -124,7 +124,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			int selection = choiceDialog.GetSelection();
+			int32_t selection = choiceDialog.GetSelection();
 			if (selection == mainGui->disassemblyTextCtrls.size())
 			{
 				disassemblyTextCtrl = mainGui->AddDisassemblyTextCtrl();
@@ -162,12 +162,12 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 	if (disassemblyTextCtrl && HasFocus())
 	{
 		disassemblyTextCtrl->ClearIndicators();
-		int selectedLine = GetCurrentLine();
+		int32_t selectedLine = GetCurrentLine();
 		if (currentDecompiledFunc != -1 && selectedLine < mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructionsBufferLen)
 		{
 			struct AssociatedInstructions* a = &mainGui->decompParams.functions[currentDecompiledFunc].associatedInstructions[selectedLine];
 
-			for (int i = 0; i < a->numOfIndexes; i++)
+			for (int32_t i = 0; i < a->numOfIndexes; i++)
 			{
 				disassemblyTextCtrl->HighlightLine(a->indexes[i], PURPLE_INDICATOR, 1);
 			}
@@ -187,7 +187,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 	HighlightSelectionInstances();
 }
 
-void DecompilationTextCtrl::DecompileFunction(int functionIndex)
+void DecompilationTextCtrl::DecompileFunction(int32_t functionIndex)
 {
 	if (mainGui->decompParams.numOfFileBytes == 0)
 	{
@@ -213,7 +213,7 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 	}
 
 	struct JdcStr statusMessage = initializeJdcStr();
-	int errorInstructionIndex = 0;
+	int32_t errorInstructionIndex = 0;
 	if (!decompileFunction(&mainGui->decompParams, &decompilationResult, &statusMessage, &errorInstructionIndex))
 	{
 		if (disassemblyTextCtrl)
@@ -225,7 +225,7 @@ void DecompilationTextCtrl::DecompileFunction(int functionIndex)
 		wxMessageBox(statusMessage.buffer, "Can't decompile");
 		freeJdcStr(&statusMessage);
 
-		int showOutput = wxMessageBox("Do you still want to see the mangled output?", "Show output", wxYES_NO, this);
+		int32_t showOutput = wxMessageBox("Do you still want to see the mangled output?", "Show output", wxYES_NO, this);
 		if (showOutput == wxNO)
 		{
 			freeJdcStr(&decompilationResult);
@@ -248,7 +248,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		return;
 	}
 
-	for (int i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
 		StyleSetForeground(i, mainGui->colorsMenu->decompColors[i]);
 	}
@@ -259,37 +259,37 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	SetStyling(text.length(), OPERATOR_DECOMP_COLOR);
 
 	// stack vars
-	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfStackVars; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &mainGui->decompParams.currentFunc->stackVars[i];
 		ColorAllStrs(text, stackVar->name.buffer, stackVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// reg vars
-	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfRegVars; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfRegVars; i++)
 	{
 		struct RegisterVariable* regVar = &mainGui->decompParams.currentFunc->regVars[i];
 		ColorAllStrs(text, regVar->name.buffer, regVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// returned vars
-	for (int i = 0; i < mainGui->decompParams.currentFunc->numOfReturnedVars; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfReturnedVars; i++)
 	{
 		ColorAllStrs(text, mainGui->decompParams.currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
 	}
 
 	// imports
-	for (int i = 0; i < mainGui->decompParams.numOfImports; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.numOfImports; i++)
 	{
 		ColorAllStrs(text, mainGui->decompParams.imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
 	}
 
 	// intrinsic functions
-	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		ColorAllStrs(text, returningIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, 0);
 	}
-	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (voidIntrinsics[i].opcode == DATA) 
 		{
@@ -302,13 +302,13 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// calling conventions
-	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
+	for (int32_t i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
 	{
 		ColorAllStrs(text, callingConventionStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
 	}
 
 	// primitive data types
-	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
+	for (int32_t i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
 		ColorAllStrs(text, primitiveTypeStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
 	}
@@ -316,17 +316,17 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, 0);
 
 	// keywords
-	for (int i = 0; i < NUM_OF_KEYWORDS; i++)
+	for (int32_t i = 0; i < NUM_OF_KEYWORDS; i++)
 	{
 		ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, 0);
 	}
 
 	// strings
-	int start = 0;
+	int32_t start = 0;
 	while (start < text.length())
 	{
-		int pos = text.find("\"", start);
-		int end = text.find("\"", pos + 1);
+		int32_t pos = text.find("\"", start);
+		int32_t end = text.find("\"", pos + 1);
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
 			StartStyling(pos);
@@ -344,8 +344,8 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	start = 0;
 	while (start < text.length())
 	{
-		int pos = text.find("label_", start);
-		int end = text.find("\n", pos + 1);
+		int32_t pos = text.find("label_", start);
+		int32_t end = text.find("\n", pos + 1);
 
 		if (pos != wxNOT_FOUND && end != wxNOT_FOUND)
 		{
@@ -361,7 +361,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// functions
-	for (int i = 0; i < mainGui->decompParams.numOfFunctions; i++)
+	for (int32_t i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
 		ColorAllStrs(text, mainGui->decompParams.functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
 	}
@@ -373,8 +373,8 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	start = 0;
 	while (start < text.length())
 	{
-		int pos = text.find("//", start);
-		int end = text.find("\n", pos + 1);
+		int32_t pos = text.find("//", start);
+		int32_t end = text.find("\n", pos + 1);
 		if (pos != wxNOT_FOUND)
 		{
 			if (end == wxNOT_FOUND)
@@ -397,11 +397,11 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	start = 0;
 	while (start < text.length())
 	{
-		int num = text.find("0x", start);
+		int32_t num = text.find("0x", start);
 		if (num != wxNOT_FOUND)
 		{
-			int end = text.length();
-			for (int i = num + 2; i < end; i++)
+			int32_t end = text.length();
+			for (int32_t i = num + 2; i < end; i++)
 			{
 				if ((text[i] < '0' || text[i] > '9') && (text[i] < 'A' || text[i] > 'F'))
 				{
@@ -422,11 +422,11 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// regs/segs that arent variables/arguments
-	for (int i = 0; i < NUM_OF_REGISTERS; i++)
+	for (int32_t i = 0; i < NUM_OF_REGISTERS; i++)
 	{
 		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
 	}
-	for (int i = 0; i < NUM_OF_SEGMENTS; i++)
+	for (int32_t i = 0; i < NUM_OF_SEGMENTS; i++)
 	{
 		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
 	}
@@ -435,7 +435,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 
 	// decimal numbers
 	const char* numberChars[10] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-	for (int i = 0; i < 10; i++)
+	for (int32_t i = 0; i < 10; i++)
 	{
 		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
 	}
@@ -448,14 +448,14 @@ void DecompilationTextCtrl::ColorAllStrs(wxString text, const char* str, Decompi
 		return;
 	}
 
-	int start = 0;
-	int pos = 0;
+	int32_t start = 0;
+	int32_t pos = 0;
 	while (start < text.length())
 	{
 		pos = text.find(str, start);
 		if (pos != wxNOT_FOUND)
 		{
-			int end = pos + strlen(str);
+			int32_t end = pos + strlen(str);
 
 			if (forceColor ||
 				GetStyleAt(pos) == color || // incase there are two strs that are equal except for one having more text at the end

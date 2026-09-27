@@ -6,7 +6,7 @@ class FunctionsTextCtrl : public JdcTextCtrl
 public:
 	FunctionsTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name);
 
-	int entryFunctionIndex = -1;
+	int32_t entryFunctionIndex = -1;
 
 	void ShowFindAddressDialog();
 
@@ -14,11 +14,11 @@ public:
 
 	void OnFunctionsKeyDown(wxKeyEvent& e);
 
-	wxString GenerateFunctionDefinition(int functionIndex, struct JdcStr* functionHeaderBuffer);
+	wxString GenerateFunctionDefinition(int32_t functionIndex, struct JdcStr* functionHeaderBuffer);
 
-	void UpdateFunctionHeader(int functionIndex);
+	void UpdateFunctionHeader(int32_t functionIndex);
 
-	void ShowAllFunctions(int highlightIndex);
+	void ShowAllFunctions(int32_t highlightIndex);
 
-	void ApplyFunctionsHighlighting(int start, int end);
+	void ApplyFunctionsHighlighting(int32_t start, int32_t end);
 };

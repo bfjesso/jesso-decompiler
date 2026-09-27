@@ -94,7 +94,7 @@ static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction,
 
 bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef)
 {
-	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		if (instruction->opcode == returningIntrinsics[i].opcode)
 		{
@@ -111,7 +111,7 @@ bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction
 	return false;
 }
 
-enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result)
+enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -132,7 +132,7 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 		sprintfJdc(result, false, "%s(", intrinsic->name);
 	}
 
-	for (int i = 0; i < instruction->numOfOperands; i++)
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsic->opcode)) 
 		{
@@ -159,11 +159,11 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 	return SUCCESS_JDC;
 }
 
-bool checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef)
+bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic** intrinsicRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	
-	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (instruction->opcode == voidIntrinsics[i].opcode)
 		{
@@ -200,14 +200,14 @@ bool checkForVoidIntrinsic(struct DecompilationParameters* params, int instructi
 	return false;
 }
 
-enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
+enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
 	struct JdcStr decompiledCall = initializeJdcStrWithVal(intrinsic->name);
 	strcatJdc(&decompiledCall, "(");
 
-	for(int i = 0; i < instruction->numOfOperands; i++)
+	for(int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (intrinsic->opcode == _INT) // the operand identifies the function
 		{
@@ -264,16 +264,16 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 		switch (instruction->operands[0].memoryAddress.ptrSize)
 		{
 		case 1:
-			strcatJdc(&count, " * sizeof(char)");
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[CHAR_TYPE]);
 			break;
 		case 2:
-			strcatJdc(&count, " * sizeof(short)");
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[SHORT_TYPE]);
 			break;
 		case 4:
-			strcatJdc(&count, " * sizeof(int)");
+			sprintfJdc(&count, false, " * sizeof(%)", primitiveTypeStrs[INT_TYPE]);
 			break;
 		case 8:
-			strcatJdc(&count, " * sizeof(long long)");
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[LONG_LONG_TYPE]);
 			break;
 		}
 

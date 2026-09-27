@@ -12,8 +12,8 @@ enum FileFormat
 struct ImportedFunction
 {
 	struct JdcStr name;
-	unsigned long long address; // this is the address of the import's entry in either the IAT for PE files or GOT/PLT for ELF files
-	int libraryNameIndex;
+	uint64_t address; // this is the address of the import's entry in either the IAT for PE files or GOT/PLT for ELF files
+	int32_t libraryNameIndex;
 };
 
 enum FileSectionType 
@@ -29,7 +29,7 @@ struct FileSection
 	struct JdcStr name;
 	enum FileSectionType type;
 	bool isReadOnly;
-	unsigned long long rva;
-	unsigned long long fileOffset;
-	unsigned int physicalSize;
+	uint64_t rva;
+	uint64_t fileOffset;
+	uint32_t physicalSize;
 };

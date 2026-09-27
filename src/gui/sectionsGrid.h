@@ -6,7 +6,7 @@
 class SectionsGrid : public wxGrid
 {
 public:
-	SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSections);
+	SectionsGrid(wxWindow* parent, FileSection* sections, int32_t numOfSections);
 
 	void RightClickOptions(wxGridEvent& e);
 

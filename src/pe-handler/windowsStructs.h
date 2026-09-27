@@ -2,12 +2,12 @@
 
 // taken from winnt.h
 
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned int DWORD;
-typedef unsigned long long ULONGLONG;
-typedef short SHORT;
-typedef int LONG;
+typedef uint8_t BYTE;
+typedef uint16_t WORD;
+typedef uint32_t DWORD;
+typedef uint64_t ULONGLONG;
+typedef int16_t SHORT;
+typedef int32_t LONG;
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 

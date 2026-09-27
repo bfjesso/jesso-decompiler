@@ -28,7 +28,7 @@ public:
 
 	void OnFindCodeReferencesButton(wxCommandEvent& e);
 
-	void FindCodeReferences(long long value, bool isHex);
+	void FindCodeReferences(int64_t value, bool isHex);
 
 	wxDECLARE_EVENT_TABLE();
 };

@@ -3,7 +3,7 @@
 #include "opcodes.h"
 #include "operands.h"
 
-enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
+enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	struct DisassemblyParameters params = { 0 };
 	params.bytes = bytes;
@@ -15,7 +15,7 @@ enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBy
 	
 	if (ERROR_JDC == handleLegacyPrefixes(&params))
 	{
-		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 		return ERROR_JDC;
 	}
 
@@ -23,19 +23,19 @@ enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBy
 	{
 		if (ERROR_JDC == handleREXPrefix(&params))
 		{
-			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 			return ERROR_JDC;
 		}
 
 		if (!params.rexPrefix.isValidREX && ERROR_JDC == handleVEXPrefix(&params))
 		{
-			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 			return ERROR_JDC;
 		}
 
 		if (!params.rexPrefix.isValidREX && !params.vexPrefix.isValidVEX && ERROR_JDC == handleEVEXPrefix(&params))
 		{
-			result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 			return ERROR_JDC;
 		}
 	}
@@ -43,19 +43,19 @@ enum JdcStatus disassembleInstruction(unsigned char* bytes, unsigned char* maxBy
 	// if the opcode is an extended one then modRM will be retrieved
 	if (ERROR_JDC == handleOpcode(&params))
 	{
-		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 		return ERROR_JDC;
 	}
 
 	if (ERROR_JDC == handleOperands(&params, result))
 	{
-		result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 		return ERROR_JDC;
 	}
 
 	result->opcode = params.opcode.mnemonic;
 	result->group1Prefix = params.legPrefixes.group1;
-	result->numOfBytes = (unsigned char)(params.bytes - params.startBytePtr);
+	result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
 
 	if (result->numOfBytes == 0) 
@@ -78,7 +78,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, str
 
 	strcatJdc(result, mnemonicStrs[instruction->opcode]);
 
-	for (int i = 0; i < instruction->numOfOperands; i++)
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (i != 0) 
 		{
@@ -167,7 +167,7 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 	return SUCCESS_JDC;
 }
 
-const char* getPtrSizeStr(int ptrSize)
+const char* getPtrSizeStr(int32_t ptrSize)
 {
 	switch (ptrSize) 
 	{

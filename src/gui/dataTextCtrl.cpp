@@ -26,10 +26,10 @@ void DataTextCtrl::Initialize()
 
 void DataTextCtrl::ResetTextCtrl()
 {
-	int ogLine = GetCurrentLine();
+	int32_t ogLine = GetCurrentLine();
 
 	wxString newLines = "";
-	for (int i = 0; i < numOfLines; i++)
+	for (int32_t i = 0; i < numOfLines; i++)
 	{
 		newLines += "\n";
 	}
@@ -49,7 +49,7 @@ void DataTextCtrl::ShowGoToVirtualAddressDialog()
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
-		unsigned long long address = 0;
+		uint64_t address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
 			if (address < mainGui->decompParams.imageBase)
@@ -59,7 +59,7 @@ void DataTextCtrl::ShowGoToVirtualAddressDialog()
 			}
 
 			FileSection* section = 0;
-			unsigned long long fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+			uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
 			if (!section) 
 			{
 				wxMessageBox("Address is not within a section", "Failed to find address");
@@ -80,7 +80,7 @@ void DataTextCtrl::ShowGoToFileOffsetDialog()
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		wxString txt = dlg.GetValue();
-		unsigned long long fileOffset = 0;
+		uint64_t fileOffset = 0;
 		if (txt.ToULongLong(&fileOffset, 16))
 		{
 			if (fileOffset >= mainGui->decompParams.numOfFileBytes)
@@ -101,11 +101,11 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 {
 	wxMenu menu;
 
-	const int ID_CHANGE_DISPLAY_TYPE = 100;
-	const int ID_HEX = 101;
-	const int ID_SIGNED = 102;
-	const int ID_GO_TO_VIRTUAL_ADDRESS = 103;
-	const int ID_GO_TO_FILE_OFFSET = 104;
+	const int32_t ID_CHANGE_DISPLAY_TYPE = 100;
+	const int32_t ID_HEX = 101;
+	const int32_t ID_SIGNED = 102;
+	const int32_t ID_GO_TO_VIRTUAL_ADDRESS = 103;
+	const int32_t ID_GO_TO_FILE_OFFSET = 104;
 
 	menu.Append(ID_CHANGE_DISPLAY_TYPE, "Change display type");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -151,7 +151,7 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 
 void DataTextCtrl::OnDataKeyDown(wxKeyEvent& e)
 {
-	int key = e.GetKeyCode();
+	int32_t key = e.GetKeyCode();
 	if (key == 'G')
 	{
 		if ((e.GetModifiers() & wxMOD_CONTROL) != 0)
@@ -182,8 +182,8 @@ void DataTextCtrl::UpdateTextCtrl()
 		return;
 	}
 
-	int firstLine = GetFirstVisibleLine();
-	int lastLine = firstLine + LinesOnScreen();
+	int32_t firstLine = GetFirstVisibleLine();
+	int32_t lastLine = firstLine + LinesOnScreen();
 	if (GetLineLength(firstLine) != 0 && GetLineLength(lastLine) != 0)
 	{
 		return;
@@ -204,19 +204,19 @@ void DataTextCtrl::UpdateTextCtrl()
 	SetReadOnly(false);
 	Freeze();
 
-	int typeSize = typeSizes[selectedType];
+	int32_t typeSize = typeSizes[selectedType];
 
 	char lineBuffer[512] = { 0 };
-	for (unsigned long long i = firstLine * bytesPerLine; i < lastLine * bytesPerLine; i += bytesPerLine)
+	for (uint64_t i = firstLine * bytesPerLine; i < lastLine * bytesPerLine; i += bytesPerLine)
 	{
-		int lineLen = GetLineLength(i / bytesPerLine);
+		int32_t lineLen = GetLineLength(i / bytesPerLine);
 		if (lineLen != 0)
 		{
 			continue;
 		}
 		
 		struct FileSection* section = 0;
-		for (int j = 0; j < mainGui->decompParams.numOfSections; j++)
+		for (int32_t j = 0; j < mainGui->decompParams.numOfSections; j++)
 		{
 			if (i >= mainGui->decompParams.sections[j].fileOffset && i < mainGui->decompParams.sections[j].fileOffset + mainGui->decompParams.sections[j].physicalSize)
 			{
@@ -234,7 +234,7 @@ void DataTextCtrl::UpdateTextCtrl()
 			sprintf(lineBuffer, "no section (0x%llX)\t", i);
 		}
 
-		for (unsigned int j = 0; j < bytesPerLine; j += typeSize)
+		for (uint32_t j = 0; j < bytesPerLine; j += typeSize)
 		{
 			if (i + j >= mainGui->decompParams.numOfFileBytes)
 			{
@@ -257,12 +257,12 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex && isSigned) 
 				{ 
-					char val = (char)mainGui->decompParams.fileBytes[i + j];
+					int8_t val = (int8_t)mainGui->decompParams.fileBytes[i + j];
 					if (val < 0) { sprintf(lineBuffer + strlen(lineBuffer), "-0x%02X", -val); }
 					else { sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", val); }
 				}
 				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", mainGui->decompParams.fileBytes[i + j]); }
-				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", (char)mainGui->decompParams.fileBytes[i + j]); }
+				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", (int8_t)mainGui->decompParams.fileBytes[i + j]); }
 				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", mainGui->decompParams.fileBytes[i + j]); }
 				break;
 			}
@@ -270,39 +270,39 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				if (isHex && isSigned)
 				{
-					short val = *(short*)(mainGui->decompParams.fileBytes + i + j);
+					int16_t val = *(int16_t*)(mainGui->decompParams.fileBytes + i + j);
 					if (val < 0) { sprintf(lineBuffer + strlen(lineBuffer), "-0x%04X", -val); }
 					else { sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", val); }
 				}
-				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(unsigned short*)(mainGui->decompParams.fileBytes + i + j)); }
-				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(short*)(mainGui->decompParams.fileBytes + i + j)); }
-				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(unsigned short*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%04X", *(uint16_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(int16_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(uint16_t*)(mainGui->decompParams.fileBytes + i + j)); }
 				break;
 			}
 			case FOUR_BYTE_INT_TYPE:
 			{
 				if (isHex && isSigned)
 				{
-					int val = *(int*)(mainGui->decompParams.fileBytes + i + j);
+					int32_t val = *(int32_t*)(mainGui->decompParams.fileBytes + i + j);
 					if (val < 0) { sprintf(lineBuffer + strlen(lineBuffer), "-0x%08X", -val); }
 					else { sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", val); }
 				}
-				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(unsigned int*)(mainGui->decompParams.fileBytes + i + j)); }
-				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(int*)(mainGui->decompParams.fileBytes + i + j)); }
-				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(unsigned int*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%08X", *(uint32_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%d", *(int32_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%u", *(uint32_t*)(mainGui->decompParams.fileBytes + i + j)); }
 				break;
 			}
 			case EIGHT_BYTE_INT_TYPE:
 			{
 				if (isHex && isSigned)
 				{
-					long long val = *(long long*)(mainGui->decompParams.fileBytes + i + j);
+					int64_t val = *(int64_t*)(mainGui->decompParams.fileBytes + i + j);
 					if (val < 0) { sprintf(lineBuffer + strlen(lineBuffer), "-0x%016llX", -val); }
 					else { sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", val); }
 				}
-				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(unsigned long long*)(mainGui->decompParams.fileBytes + i + j)); }
-				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(long long*)(mainGui->decompParams.fileBytes + i + j)); }
-				else { sprintf(lineBuffer + strlen(lineBuffer), "%llu", *(unsigned long long*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (isHex && !isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "0x%016llX", *(uint64_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else if (!isHex && isSigned) { sprintf(lineBuffer + strlen(lineBuffer), "%lld", *(int64_t*)(mainGui->decompParams.fileBytes + i + j)); }
+				else { sprintf(lineBuffer + strlen(lineBuffer), "%llu", *(uint64_t*)(mainGui->decompParams.fileBytes + i + j)); }
 				break;
 			}
 			case FLOAT_TYPE:
@@ -318,7 +318,7 @@ void DataTextCtrl::UpdateTextCtrl()
 			case ASCII_CHAR_TYPE:
 			{
 				char c = *(char*)(mainGui->decompParams.fileBytes + i + j);
-				if(c > 31 && c < 127)
+				if(c >= ' ' && c <= '~')
 				{
 					sprintf(lineBuffer + strlen(lineBuffer), "'%c'", c);
 				}
@@ -341,13 +341,13 @@ void DataTextCtrl::UpdateTextCtrl()
 
 void DataTextCtrl::ApplyDataHighlighting()
 {
-	for (int i = 0; i < NUM_OF_DATA_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
 	{
 		StyleSetForeground(i, mainGui->colorsMenu->dataColors[i]);
 	}
 
-	int firstLine = GetFirstVisibleLine();
-	int lastLine = firstLine + LinesOnScreen();
+	int32_t firstLine = GetFirstVisibleLine();
+	int32_t lastLine = firstLine + LinesOnScreen();
 
 	firstLine -= 99;
 	if (firstLine < 0)
@@ -361,13 +361,13 @@ void DataTextCtrl::ApplyDataHighlighting()
 		lastLine = numOfLines;
 	}
 
-	int lineStart = PositionFromLine(firstLine) + 1;
-	int end = PositionFromLine(lastLine);
+	int32_t lineStart = PositionFromLine(firstLine) + 1;
+	int32_t end = PositionFromLine(lastLine);
 	wxString dataText = GetValue();
 	while (lineStart < end)
 	{
-		int dataStart = dataText.find("\t", lineStart);
-		int lineEnd = dataText.find("\n", dataStart);
+		int32_t dataStart = dataText.find("\t", lineStart);
+		int32_t lineEnd = dataText.find("\n", dataStart);
 		if (dataStart != wxNOT_FOUND && lineEnd != wxNOT_FOUND)
 		{
 			StartStyling(dataStart);
@@ -382,24 +382,24 @@ void DataTextCtrl::ApplyDataHighlighting()
 	}
 }
 
-void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, unsigned int numOfBytes, enum IndicatorColor color)
+void DataTextCtrl::HighlightBytes(uint64_t fileOffset, uint32_t numOfBytes, enum IndicatorColor color)
 {
 	ClearIndicators();
 	SetIndicatorCurrent(color);
 
 	if (fileOffset < mainGui->decompParams.numOfFileBytes)
 	{
-		int row = fileOffset / bytesPerLine;
+		int32_t row = fileOffset / bytesPerLine;
 		CenterLine(row);
 		UpdateTextCtrl();
 
-		int rowStart = PositionFromLine(row);
-		int dataStart = FindText(rowStart, rowStart + 50, "\t") + 1;
+		int32_t rowStart = PositionFromLine(row);
+		int32_t dataStart = FindText(rowStart, rowStart + 50, "\t") + 1;
 
 		if (selectedType == ONE_BYTE_INT_TYPE && isHex && !isSigned)
 		{
-			unsigned int remainder = fileOffset % bytesPerLine;
-			int start = dataStart + (remainder * 5);
+			uint32_t remainder = fileOffset % bytesPerLine;
+			int32_t start = dataStart + (remainder * 5);
 			if (numOfBytes + remainder > bytesPerLine) 
 			{
 				IndicatorFillRange(start, (5 * (bytesPerLine - remainder)) - 1);
@@ -415,7 +415,7 @@ void DataTextCtrl::HighlightBytes(unsigned long long fileOffset, unsigned int nu
 		}
 		else 
 		{
-			int dataEnd = FindText(rowStart, rowStart + 50, "\n");
+			int32_t dataEnd = FindText(rowStart, rowStart + 50, "\n");
 			IndicatorFillRange(rowStart, dataEnd - rowStart);
 		}
 	}

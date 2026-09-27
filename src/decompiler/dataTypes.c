@@ -29,7 +29,7 @@ void dataTypeToStr(struct DataType dataType, struct JdcStr* result)
 		sprintfJdc(result, false, "unsigned %s", primitiveTypeStrs[dataType.primitiveType]);
 	}
 
-	for (int i = 0; i < dataType.pointerLevel; i++)
+	for (int32_t i = 0; i < dataType.pointerLevel; i++)
 	{
 		strcatJdc(result, "*");
 	}
@@ -51,7 +51,7 @@ bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64
 	return t1.primitiveType != t2.primitiveType || t1.isUnsigned != t2.isUnsigned;
 }
 
-unsigned char getDataTypeSize(struct DataType type, bool is64Bit) 
+uint8_t getDataTypeSize(struct DataType type, bool is64Bit) 
 {
 	if (type.pointerLevel > 0 || type.arrayLen > 1)
 	{
@@ -61,7 +61,7 @@ unsigned char getDataTypeSize(struct DataType type, bool is64Bit)
 	return getPrimitiveTypeSize(type.primitiveType);
 }
 
-unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType)
+uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 {
 	switch (primitiveType)
 	{
@@ -86,7 +86,7 @@ unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 	return 0;
 }
 
-struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, unsigned char operandNum, enum Register reg)
+struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg)
 {	
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER;
@@ -148,7 +148,7 @@ struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand
 		return result;
 	}
 
-	unsigned char size = getSizeOfOperand(operand);
+	uint8_t size = getSizeOfOperand(operand);
 	switch (size)
 	{
 	case 1:

@@ -46,8 +46,8 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent) : wxWindow(pa
 
 void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 {
-	unsigned char bytes[15] = { 0 };
-	int numOfBytes = ParseStringBytes(bytesTextCtrl->GetValue(), bytes, 15);
+	uint8_t bytes[15] = { 0 };
+	int32_t numOfBytes = ParseStringBytes(bytesTextCtrl->GetValue(), bytes, 15);
 	if (numOfBytes == 0)
 	{
 		wxMessageBox("Failed to parse bytes", "Can't disassemble");
@@ -87,7 +87,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	Layout(); // recenters disassemblyStaticText
 }
 
-int BytesDisassemblerWindow::ParseStringBytes(wxString str, unsigned char* bytesBuffer, unsigned char bytesBufferLen)
+int32_t BytesDisassemblerWindow::ParseStringBytes(wxString str, uint8_t* bytesBuffer, uint8_t bytesBufferLen)
 {
 	str.Replace(" ", "", true);
 	str.Replace("\\", "", true);
@@ -96,27 +96,27 @@ int BytesDisassemblerWindow::ParseStringBytes(wxString str, unsigned char* bytes
 	str.Replace("x", "", true);
 	str.Replace("X", "", true);
 
-	int strLen = str.Length();
+	int32_t strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0)
 	{
 		return 0;
 	}
 
-	int currentByte = 0;
-	for (int i = 0; i < strLen; i += 2)
+	int32_t currentByte = 0;
+	for (int32_t i = 0; i < strLen; i += 2)
 	{
 		if (currentByte > bytesBufferLen - 1)
 		{
 			return 0;
 		}
 
-		unsigned int byte = 0;
+		uint32_t byte = 0;
 		if (!str.SubString(i, i + 1).ToUInt(&byte, 16))
 		{
 			return 0;
 		}
 
-		bytesBuffer[currentByte] = (unsigned char)byte;
+		bytesBuffer[currentByte] = (uint8_t)byte;
 
 		currentByte++;
 	}

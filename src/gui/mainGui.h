@@ -34,19 +34,19 @@ public:
 	wxString currentFilePath = "";
 	enum FileFormat fileFormat = UNKNOWN_FF;
 	bool is64Bit = false;
-	unsigned long long imageBase = 0;
-	unsigned long long entryPoint = 0;
+	uint64_t imageBase = 0;
+	uint64_t entryPoint = 0;
 
-	unsigned char* fileBytes = nullptr;
-	unsigned int numOfFileBytes = 0;
+	uint8_t* fileBytes = nullptr;
+	uint32_t numOfFileBytes = 0;
 
 	FileSection* sections = nullptr;
-	int numOfSections = 0;
+	int32_t numOfSections = 0;
 
 	ImportedFunction* imports = nullptr;
-	int numOfImports = 0;
+	int32_t numOfImports = 0;
 	JdcStr* libraryNames = nullptr;
-	int numOfLibraries = 0;
+	int32_t numOfLibraries = 0;
 
 	std::vector<DisassembledInstruction> disassembledInstructions;
 	std::vector<JumpTable> jumpTables;
@@ -83,7 +83,7 @@ public:
 
 	void AddFloatingPane(wxWindow* window, wxString caption);
 
-	void OpenLog(int direction);
+	void OpenLog(int32_t direction);
 
 	DisassemblyTextCtrl* AddDisassemblyTextCtrl();
 
@@ -107,9 +107,9 @@ public:
 
 	void RemoveTextCtrl(wxWindow* window);
 
-	void RefreshVarNames(int functionIndex);
+	void RefreshVarNames(int32_t functionIndex);
 
-	void AddMenuItem(wxMenu* menu, int id, const char* name, const std::function<void(wxCommandEvent&)>& function);
+	void AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
 	void OpenFile();
 
@@ -123,9 +123,9 @@ public:
 
 	void ClearData();
 
-	enum JdcStatus DisassembleTakingJumps(unsigned long long startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, unsigned long long* errorAddress);
+	enum JdcStatus DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress);
 
-	enum JdcStatus DisassembleBetweenBounds(unsigned long long startVA, unsigned long long endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
+	enum JdcStatus DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
 
 	enum JdcStatus HandleJmpTables();
 

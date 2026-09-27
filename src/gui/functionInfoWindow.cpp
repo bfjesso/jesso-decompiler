@@ -87,7 +87,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	returnedVarsGrid->SetColSize(4, 100);
 	returnedVarsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	for (int32_t i = 0; i < function->numOfReturnedVars; i++)
 	{
 		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
 		returnedVarsGrid->AppendRows(1);
@@ -125,7 +125,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 
 	vSizer->Add(regVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
 		struct RegisterVariable* regVar = &function->regVars[i];
 		regVarsGrid->AppendRows(1);
@@ -158,7 +158,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 
 	vSizer->Add(stackVarsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
@@ -209,7 +209,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 
 	vSizer->Add(conditionsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
 
-	for (int i = 0; i < function->numOfConditions; i++)
+	for (int32_t i = 0; i < function->numOfConditions; i++)
 	{
 		struct Condition* condition = &function->conditions[i];
 		conditionsGrid->AppendRows(1);
@@ -251,7 +251,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 		conditionsGrid->SetCellValue(i, 5, wxString(std::to_string(condition->exitIndex)) + " (" + wxString(hexNumStr) + ")");
 
 		wxString combinedJccsStr = "";
-		for (int j = 0; j < condition->numOfCombinedJccs; j++)
+		for (int32_t j = 0; j < condition->numOfCombinedJccs; j++)
 		{
 			sprintf(hexNumStr, "0x%llX", instructions[condition->combinedJccIndexes[j]].address);
 			combinedJccsStr += wxString(std::to_string(condition->combinedJccIndexes[j]) + " (" + wxString(hexNumStr) + ")");
@@ -284,7 +284,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 
 	vSizer->Add(directJmpsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
 
-	for (int i = 0; i < function->numOfDirectJmps; i++)
+	for (int32_t i = 0; i < function->numOfDirectJmps; i++)
 	{
 		struct DirectJmp* directJmp = &function->directJmps[i];
 		directJmpsGrid->AppendRows(1);
@@ -305,11 +305,11 @@ void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 
 	wxGrid* grid = (wxGrid*)(e.GetEventObject());
 
-	int row = e.GetRow();
-	int col = e.GetCol();
+	int32_t row = e.GetRow();
+	int32_t col = e.GetCol();
 
-	const int ID_COPY = 100;
-	const int ID_SHOW_SCOPES = 101;
+	const int32_t ID_COPY = 100;
+	const int32_t ID_SHOW_SCOPES = 101;
 	
 	menu.Append(ID_COPY, "Copy");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(grid->GetCellValue(row, col)); }, ID_COPY);
@@ -359,7 +359,7 @@ ScopesDialog::ScopesDialog(wxWindow* parent, DisassembledInstruction* instructio
 	grid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
 	char hexNumStr[10] = { 0 };
-	for (int i = 0; i < regVar->numOfScopes; i++)
+	for (int32_t i = 0; i < regVar->numOfScopes; i++)
 	{
 		grid->AppendRows(1);
 

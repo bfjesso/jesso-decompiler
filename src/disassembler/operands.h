@@ -3,6 +3,6 @@
 
 enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct DisassembledInstruction* result);
 
-unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize);
+uint64_t getUIntFromBytes(uint8_t** bytesPtr, uint8_t resultSize);
 
-unsigned char getVectorLength(struct DisassemblyParameters* params);
+uint8_t getVectorLength(struct DisassemblyParameters* params);

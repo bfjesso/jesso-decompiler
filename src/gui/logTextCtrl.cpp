@@ -15,7 +15,7 @@ void LogTextCtrl::Log(wxString text, bool isError)
 	SetReadOnly(false);
 	AppendText(wxDateTime::Now().Format(wxT("%X")) + ": ");
 
-	int textStart = GetLength();
+	int32_t textStart = GetLength();
 	AppendText(text + "\n");
 
 	if (isError)
@@ -29,7 +29,7 @@ void LogTextCtrl::Log(wxString text, bool isError)
 	Update();
 }
 
-void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, bool isError)
+void LogTextCtrl::LogHexNum(wxString label, uint64_t num, bool isError)
 {
 	char numStr[20] = { 0 };
 	sprintf(numStr, "0x%llX", num);
@@ -37,7 +37,7 @@ void LogTextCtrl::LogHexNum(wxString label, unsigned long long num, bool isError
 	Log(label + ": " + wxString(numStr), isError);
 }
 
-void LogTextCtrl::LogProgress(unsigned long long current, unsigned long long max)
+void LogTextCtrl::LogProgress(uint64_t current, uint64_t max)
 {
 	SetReadOnly(false);
 
@@ -46,7 +46,7 @@ void LogTextCtrl::LogProgress(unsigned long long current, unsigned long long max
 	{
 		sprintf(numStr, "0x%llX", current);
 
-		int endPos = GetText().find('/', progressPos);
+		int32_t endPos = GetText().find('/', progressPos);
 		Replace(progressPos, endPos, numStr);
 		Refresh();
 		Update();
@@ -69,7 +69,7 @@ void LogTextCtrl::LogRightClickOptions(wxContextMenuEvent& e)
 
 	AddDefaultRightClickOptions(&menu);
 
-	const int ID_CLEAR = 100;
+	const int32_t ID_CLEAR = 100;
 
 	menu.Append(ID_CLEAR, "Clear");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -86,7 +86,7 @@ void LogTextCtrl::OnUpdateLogUI(wxStyledTextEvent& e)
 		return;
 	}
 
-	for (int i = 0; i < NUM_OF_INDICATORS; i++)
+	for (int32_t i = 0; i < NUM_OF_INDICATORS; i++)
 	{
 		if (i != RED_INDICATOR)
 		{

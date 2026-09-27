@@ -42,8 +42,8 @@ static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction,
 
 bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction, struct Intrinsic** intrinsicRef);
 
-enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result);
+enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic* intrinsic, bool getAssignment, struct JdcStr* result);
 
-bool checkForVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic** intrinsicRef);
+bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic** intrinsicRef);
 
-enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result);
+enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic* intrinsic, struct JdcStr* result);

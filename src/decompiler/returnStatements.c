@@ -4,7 +4,7 @@
 #include "functionCalls.h"
 #include "expressions.h"
 
-bool checkForReturnStatement(struct DecompilationParameters* params, int instructionIndex)
+bool checkForReturnStatement(struct DecompilationParameters* params, int32_t instructionIndex)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -28,8 +28,8 @@ bool checkForReturnStatement(struct DecompilationParameters* params, int instruc
 	// check if jump to a return. this only counts if the jump goes to a location that leads directly to a return with nothing but stack clean up before
 	if (isOpcodeJmp(instruction->opcode))
 	{
-		unsigned long long jmpDstAddr = resolveJmpChain(params, instructionIndex);
-		int jmpDstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpDstAddr);
+		uint64_t jmpDstAddr = resolveJmpChain(params, instructionIndex);
+		int32_t jmpDstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpDstAddr);
 
 		if (jmpDstIndex == -1)
 		{
@@ -56,10 +56,10 @@ bool checkForReturnStatement(struct DecompilationParameters* params, int instruc
 	return false;
 }
 
-bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int startInstructionIndex) // checks if the function leads to a return without doing anything in between
+bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params, int32_t startInstructionIndex) // checks if the function leads to a return without doing anything in between
 {
-	int lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
-	for (int i = startInstructionIndex; i <= lastInstruction; i++)
+	int32_t lastInstruction = params->currentFunc && params->currentFunc->lastInstructionIndex != 0 ? params->currentFunc->lastInstructionIndex : params->numOfInstructions - 1;
+	for (int32_t i = startInstructionIndex; i <= lastInstruction; i++)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (isOpcodeReturn(instruction->opcode))
@@ -79,7 +79,7 @@ bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params,
 	return false;
 }
 
-enum JdcStatus decompileReturnStatement(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileReturnStatement(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
 	if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
 

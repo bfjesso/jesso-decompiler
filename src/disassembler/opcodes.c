@@ -11,11 +11,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	unsigned char prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
-	unsigned char opcodeByte = 0;
-	unsigned char escapeToCoprocessor = 0;
+	uint8_t prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
+	uint8_t opcodeByte = 0;
+	uint8_t escapeToCoprocessor = 0;
 
-	int mmm = params->vexPrefix.m_mmmm != 0 ? params->vexPrefix.m_mmmm : params->evexPrefix.mmm;
+	int32_t mmm = params->vexPrefix.m_mmmm != 0 ? params->vexPrefix.m_mmmm : params->evexPrefix.mmm;
 	if (params->bytes[0] == 0x0F || mmm != 0)
 	{
 		if ((params->bytes + 2) <= params->maxBytesAddr && ((params->bytes[1] == 0x38 && mmm == 0) || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
@@ -293,7 +293,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 		params->opcode.mnemonic = extendedOpcode->mnemonic;
 
-		for (int i = 0; i < 4; i++)
+		for (int32_t i = 0; i < 4; i++)
 		{
 			if (extendedOpcode->operands[i] != NO_OPERAND_CODE)
 			{

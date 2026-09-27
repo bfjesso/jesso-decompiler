@@ -88,8 +88,8 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 	decResultTxt->SetLabelText("Dec Result: ");
 	decResultStr = "";
 	
-	long long firstValue = 0;
-	long long secondValue = 0;
+	int64_t firstValue = 0;
+	int64_t secondValue = 0;
 
 	if (firstHexCheckBox->IsChecked()) 
 	{
@@ -121,13 +121,13 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 		}
 	}
 
-	int operation = selectOperation->GetSelection();
+	int32_t operation = selectOperation->GetSelection();
 	if(operation == 3 && secondValue == 0) // division by zero check
 	{
 		return;
 	}
 
-	long long result = 0;
+	int64_t result = 0;
 	switch (operation)
 	{
 	case 0: // +

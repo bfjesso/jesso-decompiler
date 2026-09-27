@@ -5,7 +5,7 @@ enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 	if (jdcStr && jdcStr->buffer && jdcStr->bufferSize >= 3)
 	{
 		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-		int len = (int)strlen(jdcStr->buffer);
+		int32_t len = (int32_t)strlen(jdcStr->buffer);
 
 		if (len >= jdcStr->bufferSize - 2)
 		{
@@ -15,7 +15,7 @@ enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 			}
 		}
 
-		for (int i = len; i > 0; i--)
+		for (int32_t i = len; i > 0; i--)
 		{
 			jdcStr->buffer[i] = jdcStr->buffer[i - 1];
 		}
@@ -36,13 +36,13 @@ enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char*
 		struct JdcStr result = initializeJdcStr();
 
 		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-		int jdcStrLen = (int)strlen(jdcStr->buffer);
+		int32_t jdcStrLen = (int32_t)strlen(jdcStr->buffer);
 
-		int oldLen = (int)strlen(oldStr);
-		for (int i = 0; i < jdcStrLen; i++)
+		int32_t oldLen = (int32_t)strlen(oldStr);
+		for (int32_t i = 0; i < jdcStrLen; i++)
 		{
 			bool foundStr = true;
-			for (int j = 0; j < oldLen; j++)
+			for (int32_t j = 0; j < oldLen; j++)
 			{
 				if (i + j >= jdcStrLen || jdcStr->buffer[i + j] != oldStr[j])
 				{
@@ -75,7 +75,7 @@ enum JdcStatus strcpyJdc(struct JdcStr* jdcStr, const char* src)
 {
 	if (jdcStr && jdcStr->buffer && src)
 	{
-		int srcLen = (int)strlen(src);
+		int32_t srcLen = (int32_t)strlen(src);
 		if (srcLen >= jdcStr->bufferSize)
 		{
 			if (SUCCESS_JDC == resizeJdcStr(jdcStr, srcLen + 1))
@@ -101,7 +101,7 @@ enum JdcStatus strcatJdc(struct JdcStr* jdcStr, const char* src)
 	if (jdcStr && jdcStr->buffer && src)
 	{
 		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-		int newLen = (int)strlen(src) + (int)strlen(jdcStr->buffer);
+		int32_t newLen = (int32_t)strlen(src) + (int32_t)strlen(jdcStr->buffer);
 		if (newLen >= jdcStr->bufferSize)
 		{
 			if (SUCCESS_JDC == resizeJdcStr(jdcStr, newLen + 1))
@@ -125,8 +125,8 @@ enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 	if (jdcStr && jdcStr->buffer && src)
 	{
 		jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-		int currentLen = (int)strlen(jdcStr->buffer);
-		int srcLen = (int)strlen(src);
+		int32_t currentLen = (int32_t)strlen(jdcStr->buffer);
+		int32_t srcLen = (int32_t)strlen(src);
 		if (currentLen + srcLen >= jdcStr->bufferSize)
 		{
 			if (SUCCESS_JDC == resizeJdcStr(jdcStr, currentLen + srcLen + 1))
@@ -173,8 +173,8 @@ enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* forma
 		if (cat)
 		{
 			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-			int ogLen = (int)strlen(jdcStr->buffer);
-			int result = vsnprintf(jdcStr->buffer + ogLen, jdcStr->bufferSize - ogLen, format, args);
+			int32_t ogLen = (int32_t)strlen(jdcStr->buffer);
+			int32_t result = vsnprintf(jdcStr->buffer + ogLen, jdcStr->bufferSize - ogLen, format, args);
 			if (result < 0)
 			{
 				va_end(copy);
@@ -198,7 +198,7 @@ enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* forma
 		{
 			memset(jdcStr->buffer, 0, jdcStr->bufferSize);
 
-			int result = vsnprintf(jdcStr->buffer, jdcStr->bufferSize, format, args);
+			int32_t result = vsnprintf(jdcStr->buffer, jdcStr->bufferSize, format, args);
 			if (result < 0)
 			{
 				va_end(copy);
@@ -248,7 +248,7 @@ struct JdcStr initializeJdcStr()
 	return initializeJdcStrWithSize(25);
 }
 
-struct JdcStr initializeJdcStrWithSize(int size)
+struct JdcStr initializeJdcStrWithSize(int32_t size)
 {
 	struct JdcStr result = { 0 };
 
@@ -270,7 +270,7 @@ struct JdcStr initializeJdcStrWithVal(const char* initStr)
 
 	if(initStr)
 	{
-		int len = (int)strlen(initStr);
+		int32_t len = (int32_t)strlen(initStr);
 		result.buffer = (char*)calloc(len + 1, sizeof(char));
 		if (result.buffer)
 		{
@@ -296,7 +296,7 @@ enum JdcStatus freeJdcStr(struct JdcStr* jdcStr)
 	return ERROR_JDC;
 }
 
-static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int newSize)
+static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int32_t newSize)
 {
 	if (jdcStr && jdcStr->buffer && newSize > 0)
 	{
@@ -307,7 +307,7 @@ static enum JdcStatus resizeJdcStr(struct JdcStr* jdcStr, int newSize)
 			jdcStr->bufferSize = newSize;
 
 			jdcStr->buffer[jdcStr->bufferSize - 1] = 0;
-			int len = (int)strlen(jdcStr->buffer);
+			int32_t len = (int32_t)strlen(jdcStr->buffer);
 			memset(jdcStr->buffer + len, 0, jdcStr->bufferSize - len);
 			return SUCCESS_JDC;
 		}

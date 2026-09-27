@@ -5,7 +5,7 @@ wxBEGIN_EVENT_TABLE(SectionsGrid, wxGrid)
 EVT_GRID_CELL_RIGHT_CLICK(SectionsGrid::RightClickOptions)
 wxEND_EVENT_TABLE()
 
-SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSections) : wxGrid(parent, wxID_ANY)
+SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int32_t numOfSections) : wxGrid(parent, wxID_ANY)
 {
 	SetMinSize(wxSize(100, 100));
 	SetOwnBackgroundColour(backgroundColor);
@@ -39,7 +39,7 @@ SectionsGrid::SectionsGrid(wxWindow* parent, FileSection* sections, int numOfSec
 
 	if (sections)
 	{
-		for (int i = 0; i < numOfSections; i++)
+		for (int32_t i = 0; i < numOfSections; i++)
 		{
 			AppendRows(1);
 
@@ -72,13 +72,13 @@ void SectionsGrid::RightClickOptions(wxGridEvent& e)
 {
 	wxMenu menu;
 
-	int row = e.GetRow(); // row right-clicked on
+	int32_t row = e.GetRow(); // row right-clicked on
 
-	const int ID_COPY_VIRTUAL_ADDRESS = 100;
-	const int ID_COPY_FILE_OFFSET = 101;
-	const int ID_COPY_SIZE = 102;
-	const int ID_COPY_NAME = 103;
-	const int ID_FIND = 104;
+	const int32_t ID_COPY_VIRTUAL_ADDRESS = 100;
+	const int32_t ID_COPY_FILE_OFFSET = 101;
+	const int32_t ID_COPY_SIZE = 102;
+	const int32_t ID_COPY_NAME = 103;
+	const int32_t ID_FIND = 104;
 
 	menu.Append(ID_COPY_VIRTUAL_ADDRESS, "Copy virtual address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(GetCellValue(row, 3)); }, ID_COPY_VIRTUAL_ADDRESS);
@@ -101,8 +101,8 @@ void SectionsGrid::RightClickOptions(wxGridEvent& e)
 			wxString txt = dlg.GetValue();
 			if (!txt.IsEmpty())
 			{
-				int numOfImports = GetNumberRows();
-				for (int i = 0; i < numOfImports; i++)
+				int32_t numOfImports = GetNumberRows();
+				for (int32_t i = 0; i < numOfImports; i++)
 				{
 					if (GetCellValue(i, 0).Contains(txt) || GetCellValue(i, 1).Contains(txt))
 					{

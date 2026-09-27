@@ -6,7 +6,7 @@
 class ImportsGrid : public wxGrid
 {
 public:
-	ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfImports, JdcStr* libraryNames, int numOfLibraries);
+	ImportsGrid(wxWindow* parent, ImportedFunction* imports, int32_t numOfImports, JdcStr* libraryNames, int32_t numOfLibraries);
 
 	void RightClickOptions(wxGridEvent& e);
 

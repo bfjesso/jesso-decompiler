@@ -9,7 +9,7 @@
 #include "dataTypes.h"
 #include "intrinsics.h"
 
-enum JdcStatus decompileOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, bool defaultToReg, struct JdcStr* result)
+enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum, bool defaultToReg, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	if (operandNum >= instruction->numOfOperands)
@@ -33,7 +33,7 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int inst
 			return sprintfJdc(result, false, "-0x%llX", -operand->immediate.value);
 		}
 
-		int calleeIndex = findFunctionByAddress(params, (unsigned long long)(operand->immediate.value));
+		int32_t calleeIndex = findFunctionByAddress(params, (uint64_t)(operand->immediate.value));
 		if (calleeIndex != -1)
 		{
 			return strcpyJdc(result, params->functions[calleeIndex].name.buffer);
@@ -62,12 +62,12 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int inst
 	return ERROR_JDC;
 }
 
-static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, struct JdcStr* result)
+static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
 	
-	long long offsetFromInitSP = 0;
+	int64_t offsetFromInitSP = 0;
 	if (isMemAddressStackVar(params, instructionIndex, memAddress, &offsetFromInitSP))
 	{
 		return decompileStackVar(params, instructionIndex, operandNum, offsetFromInitSP, result);
@@ -78,7 +78,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	struct JdcStr memAddrStr = initializeJdcStr();
 	bool hasGotFirstTerm = false;
 
-	unsigned long long baseRegVal = 0;
+	uint64_t baseRegVal = 0;
 	if (compareRegisters(memAddress->reg, IP)) 
 	{
 		baseRegVal = (instruction->address + instruction->numOfBytes) * memAddress->scale;
@@ -123,7 +123,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 
 	bool addedDisplacement = false;
 
-	unsigned long long displacementRegVal = 0;
+	uint64_t displacementRegVal = 0;
 	if (compareRegisters(memAddress->regDisplacement, IP))
 	{
 		displacementRegVal = instruction->address + instruction->numOfBytes;
@@ -153,10 +153,10 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 
 	if (!hasGotFirstTerm)
 	{
-		unsigned long long totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
+		uint64_t totalDisplacement = baseRegVal + displacementRegVal + memAddress->constDisplacement;
 
-		int calleeIndex = findFunctionByAddress(params, totalDisplacement);
-		int importIndex = getImportIndexByAddress(params, totalDisplacement);
+		int32_t calleeIndex = findFunctionByAddress(params, totalDisplacement);
+		int32_t importIndex = getImportIndexByAddress(params, totalDisplacement);
 		if (calleeIndex != -1)
 		{
 			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);
@@ -221,7 +221,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, long long offsetFromInitSP, struct JdcStr* result)
+static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum, int64_t offsetFromInitSP, struct JdcStr* result)
 {
 	struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 	if (!stackVar)
@@ -308,7 +308,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		strcpyJdc(result, stackVar->name.buffer);
 		if (memAddress->regDisplacement != NO_REG)
 		{
-			unsigned char typeSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
+			uint8_t typeSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
 			if (typeSize > 1)
 			{
 				sprintfJdc(result, true, "[%s / %u]", displacementRegStr.buffer, typeSize);
@@ -340,7 +340,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileRegister(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, enum Register targetReg, bool defaultToReg, bool notStatusFlag, struct JdcStr* result, struct RegisterVariable** regVarRef)
+enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum, enum Register targetReg, bool defaultToReg, bool notStatusFlag, struct JdcStr* result, struct RegisterVariable** regVarRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
@@ -401,13 +401,13 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 		return ERROR_JDC;
 	}
 
-	int expressionsBufferSize = 5;
-	int expressionIndex = 0;
+	int32_t expressionsBufferSize = 5;
+	int32_t expressionIndex = 0;
 
-	int ogInstructionIndex = instructionIndex;
+	int32_t ogInstructionIndex = instructionIndex;
 
 	bool finished = false;
-	for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int32_t i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		
@@ -435,7 +435,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
 			if (ERROR_JDC == decompileOperation(params, i, targetReg, 0, notStatusFlag, &expressions[expressionIndex].jdcStr, &expressions[expressionIndex].placeOperatorInfront))
 			{
-				for (int j = 0; j < expressionIndex; j++)
+				for (int32_t j = 0; j < expressionIndex; j++)
 				{
 					freeJdcStr(&expressions[j].jdcStr);
 				}
@@ -460,7 +460,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 			}
 			else
 			{
-				for (int j = 0; j < expressionIndex; j++)
+				for (int32_t j = 0; j < expressionIndex; j++)
 				{
 					freeJdcStr(&expressions[j].jdcStr);
 				}
@@ -501,7 +501,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 		}
 		else
 		{
-			for (int i = 0; i < expressionIndex; i++)
+			for (int32_t i = 0; i < expressionIndex; i++)
 			{
 				freeJdcStr(&expressions[i].jdcStr);
 			}
@@ -517,7 +517,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 		}
 	}
 
-	for (int i = expressionIndex - 1; i >= 0; i--)
+	for (int32_t i = expressionIndex - 1; i >= 0; i--)
 	{
 		if (i < expressionIndex - 2 || expressions[i].placeOperatorInfront)
 		{
@@ -546,7 +546,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int ins
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileComparison(struct DecompilationParameters* params, int conditionalInstructionIndex, bool invertOperator, struct JdcStr* result)
+enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32_t conditionalInstructionIndex, bool invertOperator, struct JdcStr* result)
 {
 	struct DisassembledInstruction* currentInstruction = &(params->instructions[conditionalInstructionIndex]);
 	enum Mnemonic cc = currentInstruction->opcode;
@@ -612,7 +612,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int c
 	// looking for TEST/AND or CMP/SUB instruction first before resorting to decompiling the status flags individually
 	if (compOperator[0] != 0) 
 	{
-		for (int i = conditionalInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+		for (int32_t i = conditionalInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 		{
 			currentInstruction = &(params->instructions[i]);
 			if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
@@ -690,7 +690,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int c
 			}
 
 			bool stop = false;
-			for (int j = CF; j <= OF; j++)
+			for (int32_t j = CF; j <= OF; j++)
 			{
 				if (doesInstructionAccessRegister(params, conditionalInstructionIndex, j, 0, 0) && doesInstructionModifyRegister(params, i, j, 0, 0))
 				{
@@ -741,7 +741,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int c
 	return ERROR_JDC;
 }
 
-static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* params, struct DataType dataType, unsigned long long address, struct JdcStr* result)
+static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* params, struct DataType dataType, uint64_t address, struct JdcStr* result)
 {
 	if (address < params->imageBase)
 	{
@@ -749,7 +749,7 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 	}
 
 	struct FileSection* section = 0;
-	unsigned long long fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{
@@ -774,16 +774,16 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 		switch (dataType.primitiveType)
 		{
 		case CHAR_TYPE:
-			sprintfJdc(result, false, "0x%X", *(unsigned char*)(params->fileBytes + fileOffset));
+			sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
 			break;
 		case SHORT_TYPE:
-			sprintfJdc(result, false, "0x%X", *(unsigned short*)(params->fileBytes + fileOffset));
+			sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
 			break;
 		case INT_TYPE:
-			sprintfJdc(result, false, "0x%X", *(unsigned int*)(params->fileBytes + fileOffset));
+			sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
 			break;
 		case LONG_LONG_TYPE:
-			sprintfJdc(result, false, "0x%llX", *(unsigned long long*)(params->fileBytes + fileOffset));
+			sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
 			break;
 		}
 	}
@@ -791,7 +791,7 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* params, unsigned long long address, struct JdcStr* result)
+static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* params, uint64_t address, struct JdcStr* result)
 {
 	if (address < params->imageBase)
 	{
@@ -799,7 +799,7 @@ static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* p
 	}
 
 	struct FileSection* section = 0;
-	unsigned long long fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{
@@ -809,7 +809,7 @@ static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* p
 	bool isString = true;
 
 	struct JdcStr tmp = initializeJdcStr();
-	int len = 0;
+	int32_t len = 0;
 	char byte = 0;
 	while (1)
 	{
@@ -819,7 +819,7 @@ static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* p
 		{
 			break;
 		}
-		else if (len > 100 || (byte < 32 && (byte < 7 || byte > 13)) || byte > 126) // checking if len isn't too long, and the byte is either an escape char or a character
+		else if (len > 100 || (byte < ' ' && (byte < '\a' || byte > '\r')) || byte > '~') // checking if len isn't too long, and the byte is either an escape char or a character
 		{
 			isString = false;
 			break;

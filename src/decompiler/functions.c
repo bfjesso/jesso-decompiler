@@ -3,17 +3,17 @@
 #include "conditions.h"
 #include "returnStatements.h"
 
-enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct Function* result, int* instructionIndexRef)
+enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct Function* result, int32_t* instructionIndexRef)
 {
-	int indexToJumpTo = 0;
+	int32_t indexToJumpTo = 0;
 
 	params->currentFunc = result;
 
-	int startInstructionIndex = *instructionIndexRef;
+	int32_t startInstructionIndex = *instructionIndexRef;
 
-	unsigned long long currentSectionEndAddress = 0;
+	uint64_t currentSectionEndAddress = 0;
 	bool foundFirstInstruction = false;
-	for (int i = startInstructionIndex; i < params->numOfInstructions; i++)
+	for (int32_t i = startInstructionIndex; i < params->numOfInstructions; i++)
 	{
 		(*instructionIndexRef)++;
 
@@ -21,7 +21,7 @@ enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct F
 
 		if (!foundFirstInstruction)
 		{
-			for (int j = 0; j < params->numOfSections; j++)
+			for (int32_t j = 0; j < params->numOfSections; j++)
 			{
 				if (currentInstruction->address >= params->sections[j].rva + params->imageBase && 
 					currentInstruction->address < params->sections[j].rva + params->sections[j].physicalSize + params->imageBase)
@@ -45,11 +45,11 @@ enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct F
 
 		if (isOpcodeJcc(currentInstruction->opcode) || isOpcodeJmp(currentInstruction->opcode))
 		{
-			unsigned long long jumpDst = getJmpDst(params, i);
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpDst);
+			uint64_t jumpDst = getJmpDst(params, i);
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jumpDst);
 			if (dstIndex > indexToJumpTo && dstIndex > i && jumpDst < currentSectionEndAddress)
 			{
-				for (int j = i + 1; j < dstIndex; j++) 
+				for (int32_t j = i + 1; j < dstIndex; j++) 
 				{
 					if (params->instructions[j].isCalled) 
 					{
@@ -112,7 +112,7 @@ static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct Decompilatio
 	do
 	{
 		setAReturnType = false;
-		for (int i = 0; i < params->numOfFunctions; i++)
+		for (int32_t i = 0; i < params->numOfFunctions; i++)
 		{
 			params->currentFunc = &params->functions[i];
 			if (getConditions && ERROR_JDC == getAllConditions(params))
@@ -132,7 +132,7 @@ static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct Decompilatio
 			bool canBeST0 = true;
 
 			bool wasZero = !setAReturnType;
-			for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+			for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 			{
 				if (checkForReturnStatement(params, j) || checkForConditionalReturn(params, j))
 				{
@@ -226,15 +226,15 @@ static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct Decompilatio
 
 static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < params->numOfFunctions; i++) 
+	for (int32_t i = 0; i < params->numOfFunctions; i++) 
 	{
 		params->currentFunc = &params->functions[i];
-		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[j];
 
 			// checking for reg args
-			for (int k = RAX; k < ST0; k++)
+			for (int32_t k = RAX; k < ST0; k++)
 			{
 				if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
 				{
@@ -261,10 +261,10 @@ static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationPara
 			}
 
 			// checking for stack vars
-			for (int k = 0; k < instruction->numOfOperands; k++)
+			for (int32_t k = 0; k < instruction->numOfOperands; k++)
 			{
 				struct Operand* currentOperand = &instruction->operands[k];
-				long long offsetFromInitSP = 0;
+				int64_t offsetFromInitSP = 0;
 				if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &currentOperand->memoryAddress, &offsetFromInitSP))
 				{
 					struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
@@ -280,7 +280,7 @@ static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationPara
 	return SUCCESS_JDC;
 }
 
-static bool isRegInitialized(struct DecompilationParameters* params, int startInstructionIndex, int minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType)
+static bool isRegInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType)
 {
 	struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, reg);
 	if (regArg)
@@ -290,7 +290,7 @@ static bool isRegInitialized(struct DecompilationParameters* params, int startIn
 		return true;
 	}
 	
-	for (int i = startInstructionIndex; i >= minInstructionIndex; i--)
+	for (int32_t i = startInstructionIndex; i >= minInstructionIndex; i--)
 	{
 		struct Condition* cond = getConditionFromLastBodyInstruction(params, i);
 		if (cond && i != startInstructionIndex)
@@ -333,15 +333,15 @@ static bool isRegInitialized(struct DecompilationParameters* params, int startIn
 
 static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
-	for (int i = 0; i < params->numOfFunctions; i++)
+	for (int32_t i = 0; i < params->numOfFunctions; i++)
 	{
 		params->currentFunc = &params->functions[i];
-		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
-			unsigned long long calleeAddress = resolveJmpChain(params, j);
+			uint64_t calleeAddress = resolveJmpChain(params, j);
 			if (calleeAddress != 0)
 			{
-				int calleeIndex = findFunctionByAddress(params, calleeAddress);
+				int32_t calleeIndex = findFunctionByAddress(params, calleeAddress);
 				if (calleeIndex == -1 || calleeIndex == i)
 				{
 					continue;
@@ -353,7 +353,7 @@ static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params)
 					continue;
 				}
 
-				for (int k = 0; k < callee->numOfRegVars; k++)
+				for (int32_t k = 0; k < callee->numOfRegVars; k++)
 				{
 					struct RegisterVariable* regArg = &callee->regVars[k];
 					if (regArg->isArgument && !isRegInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, regArg->reg, 0, 0))
@@ -365,10 +365,10 @@ static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params)
 					}
 				}
 
-				for (int k = 0; k < callee->numOfStackVars; k++)
+				for (int32_t k = 0; k < callee->numOfStackVars; k++)
 				{
 					struct StackVariable* stackArg = &callee->stackVars[k];
-					long long stackFrameSize = 0;
+					int64_t stackFrameSize = 0;
 					if (stackArg->isArgument && !getStackArgInitializer(params, j, stackArg->offsetFromInitSP, 0, 0, &stackFrameSize))
 					{
 						if (ERROR_JDC == addStackVar(params->currentFunc, stackArg->offsetFromInitSP - stackFrameSize, &stackArg->dataType))
@@ -384,12 +384,12 @@ static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params)
 	return SUCCESS_JDC;
 }
 
-bool getStackArgInitializer(struct DecompilationParameters* params, int callInstructionIndex, long long stackArgOffset, struct StackVariable** stackVarRef, int* pushInstructionRef, long long* stackFrameSizeRef)
+bool getStackArgInitializer(struct DecompilationParameters* params, int32_t callInstructionIndex, int64_t stackArgOffset, struct StackVariable** stackVarRef, int32_t* pushInstructionRef, int64_t* stackFrameSizeRef)
 {
 	if (stackVarRef) { *stackVarRef = 0; }
 	if (pushInstructionRef) { *pushInstructionRef = -1; }
 
-	long long initialStackFrameSize = getStackFrameSizeAtInstruction(params, callInstructionIndex);
+	int64_t initialStackFrameSize = getStackFrameSizeAtInstruction(params, callInstructionIndex);
 	if (params->instructions[callInstructionIndex].opcode == CALL_NEAR) 
 	{
 		initialStackFrameSize += params->is64Bit ? 8 : 4; // instruction ptr is pushed
@@ -397,7 +397,7 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int callInst
 
 	if (stackFrameSizeRef) { *stackFrameSizeRef = initialStackFrameSize; }
 
-	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
 		if (stackArgOffset - initialStackFrameSize == stackVar->offsetFromInitSP)
@@ -407,8 +407,8 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int callInst
 		}
 	}
 
-	long long currentStackFrameSize = initialStackFrameSize;
-	for (int i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	int64_t currentStackFrameSize = initialStackFrameSize;
+	for (int32_t i = callInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
 		if (condition)
@@ -433,7 +433,7 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int callInst
 
 static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params)
 {
-	for (int i = 0; i < params->numOfFunctions; i++) 
+	for (int32_t i = 0; i < params->numOfFunctions; i++) 
 	{
 		params->currentFunc = &params->functions[i];
 
@@ -442,7 +442,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 		while (keepSorting)
 		{
 			keepSorting = false;
-			for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
+			for (int32_t j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
 			{
 				if (params->currentFunc->stackVars[j].offsetFromInitSP > params->currentFunc->stackVars[j + 1].offsetFromInitSP)
 				{
@@ -454,13 +454,13 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 			}
 		}
 
-		for (int j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[j];
-			for (int k = 0; k < instruction->numOfOperands; k++)
+			for (int32_t k = 0; k < instruction->numOfOperands; k++)
 			{
 				struct Operand* operand = &instruction->operands[k];
-				long long offsetFromInitSP = 0;
+				int64_t offsetFromInitSP = 0;
 				if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &operand->memoryAddress, &offsetFromInitSP))
 				{
 					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
@@ -482,7 +482,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 			}
 		}
 
-		for (int j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
+		for (int32_t j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
 		{
 			struct StackVariable* var1 = &params->currentFunc->stackVars[j];
 			struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
@@ -491,8 +491,8 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 				return ERROR_JDC; // they should be sorted at this point
 			}
 
-			unsigned short offsetDif = (unsigned short)(var2->offsetFromInitSP - var1->offsetFromInitSP);
-			unsigned char primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
+			uint16_t offsetDif = (uint16_t)(var2->offsetFromInitSP - var1->offsetFromInitSP);
+			uint8_t primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
 			if (!var1->isArgument && offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
 			{
 				if (offsetDif % primitiveTypeSize == 0) 
@@ -517,17 +517,17 @@ void freeFunction(struct Function* function)
 {
 	freeJdcStr(&function->name);
 
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
 		freeJdcStr(&function->regVars[i].name);
 	}
 
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
 		freeJdcStr(&function->stackVars[i].name);
 	}
 
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	for (int32_t i = 0; i < function->numOfReturnedVars; i++)
 	{
 		freeJdcStr(&function->returnedVars[i].name);
 	}
@@ -536,21 +536,21 @@ void freeFunction(struct Function* function)
 	free(function->stackVars);
 	free(function->returnedVars);
 
-	for (int i = 0; i < function->numOfConditions; i++)
+	for (int32_t i = 0; i < function->numOfConditions; i++)
 	{
 		free(function->conditions[i].combinedJccIndexes);
 	}
 	free(function->conditions);
 	free(function->directJmps);
 
-	for (int i = 0; i < function->numOfLines; i++) 
+	for (int32_t i = 0; i < function->numOfLines; i++) 
 	{
 		free(function->associatedInstructions[i].indexes);
 	}
 	free(function->associatedInstructions);
 }
 
-static long long getStackFrameChange(struct DisassembledInstruction* instruction) 
+static int64_t getStackFrameChange(struct DisassembledInstruction* instruction) 
 {	
 	if (instruction->numOfOperands == 0)
 	{
@@ -580,15 +580,15 @@ static long long getStackFrameChange(struct DisassembledInstruction* instruction
 	return 0;
 }
 
-long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int instructionIndex)
+int64_t getStackFrameSizeAtInstruction(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	long long result = 0;
-	for (int i = params->currentFunc->firstInstructionIndex; i < instructionIndex; i++)
+	int64_t result = 0;
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i < instructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (isOpcodeJcc(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 		{
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 			if (dstIndex > i && dstIndex <= instructionIndex && !doesInstructionLeadStraightToReturn(params, dstIndex))
 			{
 				i = dstIndex - 1;
@@ -604,13 +604,13 @@ long long getStackFrameSizeAtInstruction(struct DecompilationParameters* params,
 }
 
 // returns index of function, -1 if not found
-int findFunctionByAddress(struct DecompilationParameters* params, unsigned long long address)
+int32_t findFunctionByAddress(struct DecompilationParameters* params, uint64_t address)
 {
-	int low = 0;
-	int high = params->numOfFunctions - 1;
+	int32_t low = 0;
+	int32_t high = params->numOfFunctions - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (params->instructions[params->functions[mid].firstInstructionIndex].address == address) { return mid; }
 
@@ -621,16 +621,16 @@ int findFunctionByAddress(struct DecompilationParameters* params, unsigned long 
 	return -1;
 }
 
-int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsigned long long address)
+int32_t findFunctionByAddressInclusive(struct DecompilationParameters* params, uint64_t address)
 {
-	int low = 0;
-	int high = params->numOfFunctions - 1;
+	int32_t low = 0;
+	int32_t high = params->numOfFunctions - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
-		unsigned long long firstAddress = params->instructions[params->functions[mid].firstInstructionIndex].address;
-		unsigned long long lastAddress = params->instructions[params->functions[mid].lastInstructionIndex].address;
+		uint64_t firstAddress = params->instructions[params->functions[mid].firstInstructionIndex].address;
+		uint64_t lastAddress = params->instructions[params->functions[mid].lastInstructionIndex].address;
 
 		if (address >= firstAddress && address <= lastAddress) { return mid; }
 
@@ -641,7 +641,7 @@ int findFunctionByAddressInclusive(struct DecompilationParameters* params, unsig
 	return -1;
 }
 
-bool isMemAddressStackVar(struct DecompilationParameters* params, int instructionIndex, struct MemoryAddress* memAddress, long long* offsetFromInitSP)
+bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instructionIndex, struct MemoryAddress* memAddress, int64_t* offsetFromInitSP)
 {
 	if (!memAddress)
 	{
@@ -655,7 +655,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int instructio
 	}
 
 	// this is a simple check for other registers that are set to the SP, usually the BP
-	for (int i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int32_t i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (instruction->opcode == MOV && instruction->numOfOperands == 2 &&
@@ -686,9 +686,9 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int instructio
 	return false;
 }
 
-struct StackVariable* getStackVarByOffset(struct Function* function, long long offsetFromInitSP)
+struct StackVariable* getStackVarByOffset(struct Function* function, int64_t offsetFromInitSP)
 {
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
 		if (function->stackVars[i].offsetFromInitSP == offsetFromInitSP)
 		{
@@ -699,10 +699,10 @@ struct StackVariable* getStackVarByOffset(struct Function* function, long long o
 	return 0;
 }
 
-int getNumOfStackArgs(struct Function* function)
+int32_t getNumOfStackArgs(struct Function* function)
 {
-	int result = 0;
-	for (int i = 0; i < function->numOfStackVars; i++) 
+	int32_t result = 0;
+	for (int32_t i = 0; i < function->numOfStackVars; i++) 
 	{
 		if (function->stackVars[i].isArgument) 
 		{
@@ -713,10 +713,10 @@ int getNumOfStackArgs(struct Function* function)
 	return result;
 }
 
-int getNumOfRegArgs(struct Function* function)
+int32_t getNumOfRegArgs(struct Function* function)
 {
-	int result = 0;
-	for (int i = 0; i < function->numOfRegVars; i++)
+	int32_t result = 0;
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
 		if (function->regVars[i].isArgument)
 		{
@@ -729,7 +729,7 @@ int getNumOfRegArgs(struct Function* function)
 
 struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register reg)
 {
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
 		if (function->regVars[i].isArgument && compareRegisters(function->regVars[i].reg, reg))
 		{
@@ -742,7 +742,7 @@ struct RegisterVariable* getRegArgByReg(struct Function* function, enum Register
 
 struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Register reg)
 {
-	for (int i = 0; i < function->numOfRegVars; i++)
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
 		if (!function->regVars[i].isArgument && compareRegisters(function->regVars[i].reg, reg))
 		{
@@ -753,9 +753,9 @@ struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Reg
 	return 0;
 }
 
-struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned long long callInstructionAddress)
+struct ReturnedVariable* findReturnedVar(struct Function* function, uint64_t callInstructionAddress)
 {
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	for (int32_t i = 0; i < function->numOfReturnedVars; i++)
 	{
 		if (function->returnedVars[i].callInstructionAddress == callInstructionAddress)
 		{
@@ -766,7 +766,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, unsigned lon
 	return 0;
 }
 
-static enum JdcStatus addStackVar(struct Function* function, long long offsetFromInitSP, struct DataType* dataTypeRef)
+static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromInitSP, struct DataType* dataTypeRef)
 {
 	if (getStackVarByOffset(function, offsetFromInitSP))
 	{
@@ -836,14 +836,14 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 
 	if (isArgument) 
 	{
-		int numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
+		int32_t numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
 		const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
 		const enum Register* altPlatformRegArgs = getAltPlatformRegArgs(params->fileFormat);
 
 		// sorting
-		for (int i = 0; i < params->currentFunc->numOfRegVars; i++) // all reg vars in the buffer should be args
+		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++) // all reg vars in the buffer should be args
 		{
-			for (int j = 0; j < numOfPlatformRegArgs; j++)
+			for (int32_t j = 0; j < numOfPlatformRegArgs; j++)
 			{
 				if ((compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[j]) || compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[j])) && params->currentFunc->numOfRegVars > j)
 				{
@@ -868,7 +868,7 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 			else
 			{
 				params->currentFunc->callingConvention = __FASTCALL;
-				for (int i = 0; i < params->currentFunc->numOfRegVars && i < numOfPlatformRegArgs; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
+				for (int32_t i = 0; i < params->currentFunc->numOfRegVars && i < numOfPlatformRegArgs; i++) // this checks that all reg args are present that should be. if platformRegArgs[1] is there but platformRegArgs[0] isn't then its wrong
 				{
 					if (!compareRegisters(params->currentFunc->regVars[i].reg, platformRegArgs[i]) && !compareRegisters(params->currentFunc->regVars[i].reg, altPlatformRegArgs[i]))
 					{
@@ -882,7 +882,7 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int startIndex, int endIndex)
+enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int32_t startIndex, int32_t endIndex)
 {
 	struct RegVarScope* newScopes = (struct RegVarScope*)realloc(regVar->scopes, (regVar->numOfScopes + 1) * sizeof(struct RegVarScope));
 	if(!newScopes)
@@ -902,10 +902,10 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 {
 	bool foundFirstInstance = false;
 	regVar->dataType = getRegisterDataType(0, -1, regVar->reg);
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
-		for (int j = 0; j < instruction->numOfOperands; j++) 
+		for (int32_t j = 0; j < instruction->numOfOperands; j++) 
 		{
 			struct Operand* operand = &instruction->operands[j];
 			enum Register reg = NO_REG;
@@ -949,7 +949,7 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 	}
 }
 
-enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataType, unsigned long long calleeAddress, unsigned long long callInstructionAddress, enum Register returnReg, const char* calleeName)
+enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataType, uint64_t calleeAddress, uint64_t callInstructionAddress, enum Register returnReg, const char* calleeName)
 {
 	if (findReturnedVar(function, callInstructionAddress))
 	{
@@ -964,8 +964,8 @@ enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataTyp
 
 	function->returnedVars = newReturnedVars;
 
-	int callNum = 0;
-	for (int i = 0; i < function->numOfReturnedVars; i++)
+	int32_t callNum = 0;
+	for (int32_t i = 0; i < function->numOfReturnedVars; i++)
 	{
 		if (function->returnedVars[i].calleeAddress == calleeAddress)
 		{
@@ -987,7 +987,7 @@ enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataTyp
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus addAssociatedInstruction(struct Function* function, int instructionIndex)
+enum JdcStatus addAssociatedInstruction(struct Function* function, int32_t instructionIndex)
 {
 	if (instructionIndex == -1) 
 	{
@@ -996,7 +996,7 @@ enum JdcStatus addAssociatedInstruction(struct Function* function, int instructi
 	
 	if (function->numOfLines >= function->associatedInstructionsBufferLen) 
 	{
-		int ogBufferLen = function->associatedInstructionsBufferLen;
+		int32_t ogBufferLen = function->associatedInstructionsBufferLen;
 		function->associatedInstructionsBufferLen = function->numOfLines + 10;
 		struct AssociatedInstructions* newAssociatedInstructions = (struct AssociatedInstructions*)realloc(function->associatedInstructions, function->associatedInstructionsBufferLen * sizeof(struct AssociatedInstructions));
 		if (!newAssociatedInstructions) 
@@ -1014,7 +1014,7 @@ enum JdcStatus addAssociatedInstruction(struct Function* function, int instructi
 		return ERROR_JDC;
 	}
 
-	int* newIndexes = (int*)realloc(a->indexes, (a->numOfIndexes + 1) * sizeof(int));
+	int32_t* newIndexes = (int32_t*)realloc(a->indexes, (a->numOfIndexes + 1) * sizeof(int32_t));
 	if (!newIndexes)
 	{
 		return ERROR_JDC;

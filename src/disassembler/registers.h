@@ -68,7 +68,7 @@ extern "C"
 }
 #endif
 
-int getNumOfPlatformRegArgs(enum FileFormat fileFormat);
+int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat);
 
 const enum Register* getPlatformRegArgs(enum FileFormat fileFormat);
 
@@ -80,7 +80,7 @@ bool isRegisterStatusFlag(enum Register reg);
 
 bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
 
-unsigned char getSizeOfRegister(enum Register reg);
+uint8_t getSizeOfRegister(enum Register reg);
 
 enum Register extendRegister(enum Register reg);
 

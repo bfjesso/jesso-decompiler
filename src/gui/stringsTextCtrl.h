@@ -6,7 +6,7 @@ class StringsTextCtrl : public JdcTextCtrl
 public:
 	StringsTextCtrl(wxWindow* parent, MainGui* mainGuiRef);
 
-	std::vector<unsigned long long> foundAddresses;
+	std::vector<uint64_t> foundAddresses;
 
 	void ShowFindAddressDialog();
 

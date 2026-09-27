@@ -26,8 +26,8 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath, enum F
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	int headerStartPos = 0;
-	int headerEndPos = fileHeadersInfoStr.find("\n\n", 0);
+	int32_t headerStartPos = 0;
+	int32_t headerEndPos = fileHeadersInfoStr.find("\n\n", 0);
 	while (headerEndPos != -1)
 	{
 		wxStaticText* headerNameLabel = new wxStaticText(this, wxID_ANY, fileHeadersInfoStr.SubString(headerStartPos, headerEndPos));
@@ -58,10 +58,10 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath, enum F
 		grid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 		vSizer->Add(grid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
-		int rowIndex = 0;
+		int32_t rowIndex = 0;
 
-		int rowStartPos = headerEndPos + 2;
-		int rowEndPos = fileHeadersInfoStr.find("\n", rowStartPos);
+		int32_t rowStartPos = headerEndPos + 2;
+		int32_t rowEndPos = fileHeadersInfoStr.find("\n", rowStartPos);
 
 		headerEndPos = fileHeadersInfoStr.find("\n\n", rowStartPos);
 
@@ -69,13 +69,13 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath, enum F
 		{
 			grid->AppendRows(1);
 
-			int offsetEndPos = fileHeadersInfoStr.find("\t", rowStartPos);
+			int32_t offsetEndPos = fileHeadersInfoStr.find("\t", rowStartPos);
 			grid->SetCellValue(rowIndex, 0, fileHeadersInfoStr.SubString(rowStartPos, offsetEndPos - 1));
 
-			int fieldEndPos = fileHeadersInfoStr.find("\t", offsetEndPos + 1);
+			int32_t fieldEndPos = fileHeadersInfoStr.find("\t", offsetEndPos + 1);
 			grid->SetCellValue(rowIndex, 1, fileHeadersInfoStr.SubString(offsetEndPos + 1, fieldEndPos - 1));
 
-			int valueEndPos = fileHeadersInfoStr.find("\t", fieldEndPos + 1);
+			int32_t valueEndPos = fileHeadersInfoStr.find("\t", fieldEndPos + 1);
 			grid->SetCellValue(rowIndex, 2, fileHeadersInfoStr.SubString(fieldEndPos + 1, valueEndPos - 1));
 
 			grid->SetCellValue(rowIndex, 3, fileHeadersInfoStr.SubString(valueEndPos + 1, rowEndPos - 1));

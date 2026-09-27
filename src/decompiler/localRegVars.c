@@ -27,9 +27,9 @@ enum JdcStatus getAllLocalRegVars(struct DecompilationParameters* params)
 static enum JdcStatus getLocalRegVarsFromConditionalInstructions(struct DecompilationParameters* params)
 {
 	// checking for individual instructions that conditionally modify a reg
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
+		for (int32_t modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
 		{
 			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
 			if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
@@ -60,14 +60,14 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 {
 	// checking for registers that are modified in a condition
 	bool modifiedRegs[NUM_OF_REGISTERS] = { 0 };
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		memset(modifiedRegs, false, NUM_OF_REGISTERS);
 
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType != CONDITIONAL_RETURN_CT)
 		{
-			for (int j = condition->firstBodyIndex; j <= condition->lastBodyIndex; j++)
+			for (int32_t j = condition->firstBodyIndex; j <= condition->lastBodyIndex; j++)
 			{
 				struct Condition* cond = getConditionFromFirstBodyInstruction(params, j);
 				if (cond && cond != condition && cond->lastBodyIndex > j && cond->lastBodyIndex <= condition->lastBodyIndex)
@@ -82,7 +82,7 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 					break;
 				}
 
-				for (int k = RAX; k < ST0; k++)
+				for (int32_t k = RAX; k < ST0; k++)
 				{
 					if (k == RBP || k == RSP || k == RIP)
 					{
@@ -97,7 +97,7 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int j = RAX; j < ST0; j++)
+			for (int32_t j = RAX; j < ST0; j++)
 			{
 				if (!modifiedRegs[j])
 				{
@@ -131,8 +131,8 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 					}
 				}
 
-				int firstChainBodyIndex = getConditionChainFirstBodyInstruction(params, condition);
-				int lastChainBodyIndex = getConditionChainLastBodyInstruction(params, condition);
+				int32_t firstChainBodyIndex = getConditionChainFirstBodyInstruction(params, condition);
+				int32_t lastChainBodyIndex = getConditionChainLastBodyInstruction(params, condition);
 				if (isRegisterAccessedBeforeInit(params, lastChainBodyIndex + 1, params->currentFunc->lastInstructionIndex, j, 0, 0))
 				{
 					if (existingRegVar)
@@ -164,12 +164,12 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 	do
 	{
 		addedNewRegVar = false;
-		for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+		for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 		{
 			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
 			if (checkForAnyAssignments(params, i))
 			{
-				for (int statusFlag = CF; statusFlag <= OF; statusFlag++)
+				for (int32_t statusFlag = CF; statusFlag <= OF; statusFlag++)
 				{
 					enum Mnemonic opcode = params->instructions[i].opcode;
 					if (opcode == ADD || opcode == SUB || opcode == CMPXCHG ||
@@ -197,7 +197,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 			}
 
 			// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
-			for (int modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
+			for (int32_t modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
 			{
 				struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
 				if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
@@ -206,7 +206,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 					continue;
 				}
 
-				for (int accessedReg = RAX; accessedReg < ST0; accessedReg++)
+				for (int32_t accessedReg = RAX; accessedReg < ST0; accessedReg++)
 				{
 					struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
 					if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP ||
@@ -216,7 +216,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 					}
 
 					bool doesAccessedRegVarChange = false;
-					for (int j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
+					for (int32_t j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 					{
 						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
 						{
@@ -261,12 +261,12 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 	return SUCCESS_JDC;
 }
 
-static void getLocalRegVarScope(struct DecompilationParameters* params, int upperStart, int lowerStart, struct RegisterVariable* regVar)
+static void getLocalRegVarScope(struct DecompilationParameters* params, int32_t upperStart, int32_t lowerStart, struct RegisterVariable* regVar)
 {
-	int startIndex = params->currentFunc->firstInstructionIndex - 1;
-	int endIndex = params->currentFunc->lastInstructionIndex + 1;
+	int32_t startIndex = params->currentFunc->firstInstructionIndex - 1;
+	int32_t endIndex = params->currentFunc->lastInstructionIndex + 1;
 
-	for (int i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
+	for (int32_t i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
 		if (condition)
@@ -283,7 +283,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 		}
 	}
 
-	for (int i = lowerStart; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int32_t i = lowerStart; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct Condition* condition = getConditionFromFirstBodyInstruction(params, i);
 		if (condition)
@@ -307,7 +307,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int uppe
 	addRegVarScope(regVar, startIndex, endIndex);
 }
 
-bool isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int startInstructionIndex, int lastInstructionIndex, enum Register reg, bool ignoreInitialization, int callNum)
+bool isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t lastInstructionIndex, enum Register reg, bool ignoreInitialization, int32_t callNum)
 {
 	// preventing recursive loop. this assumes it is accessed
 	if (callNum > 9)
@@ -321,7 +321,7 @@ bool isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int st
 		return true;
 	}
 
-	for (int i = startInstructionIndex; i <= lastInstructionIndex; i++)
+	for (int32_t i = startInstructionIndex; i <= lastInstructionIndex; i++)
 	{
 		if (doesInstructionAccessRegister(params, i, reg, 1, 0))
 		{
@@ -350,7 +350,7 @@ bool isRegisterAccessedBeforeInit(struct DecompilationParameters* params, int st
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJmp(instruction->opcode) || isOpcodeJcc(instruction->opcode))
 		{
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 			if (dstIndex > i)
 			{
 				if (isOpcodeJcc(instruction->opcode))

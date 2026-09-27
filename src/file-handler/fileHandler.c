@@ -8,7 +8,7 @@
 #endif
 
 #ifdef linux
-extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int* status);
+extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int32_t* status);
 #endif
 
 FILE* openFile(const wchar_t* filePath)
@@ -24,17 +24,17 @@ FILE* openFile(const wchar_t* filePath)
 #endif
 }
 
-enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
+enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int32_t bufferLen)
 {
 #ifdef _WIN32
 	if (UnDecorateSymbolName(mangledStr, buffer, bufferLen, UNDNAME_NAME_ONLY))
 	{
 		// removing template parameters
 		size_t nameLen = strlen(buffer);
-		int k = 0;
-		int openIndex = -1;
-		int openNum = 0;
-		int closeNum = 0;
+		int32_t k = 0;
+		int32_t openIndex = -1;
+		int32_t openNum = 0;
+		int32_t closeNum = 0;
 		while (buffer[k] != 0)
 		{
 			if (buffer[k] == '<')
@@ -69,7 +69,7 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 #endif
 
 #ifdef linux
-	int status = 0;
+	int32_t status = 0;
 	char* demangleResult = __cxa_demangle(mangledStr, 0, 0, &status);
 	if (status == 0)
 	{
@@ -79,8 +79,8 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 			return ERROR_JDC;
 		}
 
-		int startIndex = 0;
-		int i = 0;
+		int32_t startIndex = 0;
+		int32_t i = 0;
 		while (demangleResult[i] != 0)
 		{
 			if (demangleResult[i] == ' ') // this is looking for the return type
@@ -96,8 +96,8 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, int bufferLen)
 			i++;
 		}
 
-		int numOfBrakets = 0;
-		int bufferIndex = 0;
+		int32_t numOfBrakets = 0;
+		int32_t bufferIndex = 0;
 		i = startIndex;
 		while (demangleResult[i] != 0)
 		{
@@ -208,7 +208,7 @@ enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, 
 	return ERROR_JDC;
 }
 
-enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned long long* imageBaseRef)
+enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, uint64_t* imageBaseRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -223,7 +223,7 @@ enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned long long* entryPointRef)
+enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, uint64_t* entryPointRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -237,7 +237,7 @@ enum JdcStatus getFileEntryPoint(const wchar_t* filePath, enum FileFormat fileFo
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int* numOfSectionsRef)
+enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int32_t* numOfSectionsRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -251,7 +251,7 @@ enum JdcStatus getNumOfSections(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct FileSection* buffer, int bufferLen)
+enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct FileSection* buffer, int32_t bufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -265,13 +265,13 @@ enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, unsigned int* numOfBytesRef)
+enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint32_t* numOfBytesRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfBytesRef)
 	{
 		fseek(file, 0, SEEK_END);
-		unsigned int result = ftell(file);
+		uint32_t result = ftell(file);
 		fclose(file);
 
 		*numOfBytesRef = result;
@@ -281,13 +281,13 @@ enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, unsigned int* numOfByt
 	return ERROR_JDC;
 }
 
-enum JdcStatus readFileBytes(const wchar_t* filePath, unsigned char* buffer, unsigned int bufferSize)
+enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint32_t bufferSize)
 {
 	FILE* file = openFile(filePath);
 	if (file)
 	{
 		fseek(file, 0, SEEK_SET);
-		unsigned int bytesRead = fread(buffer, 1, bufferSize, file);
+		uint32_t bytesRead = fread(buffer, 1, bufferSize, file);
 		fclose(file);
 
 		if (bytesRead == bufferSize) 
@@ -299,7 +299,7 @@ enum JdcStatus readFileBytes(const wchar_t* filePath, unsigned char* buffer, uns
 	return ERROR_JDC;
 }
 
-enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, unsigned int value, struct JdcStr* result)
+enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, uint32_t value, struct JdcStr* result)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -313,7 +313,7 @@ enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFor
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef)
+enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, int32_t* numOfImportsRef, int32_t* numOfLibrariesRef)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -327,7 +327,7 @@ enum JdcStatus getNumOfImports(const wchar_t* filePath, enum FileFormat fileForm
 	return ERROR_JDC;
 }
 
-enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen)
+enum JdcStatus getAllImports(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen)
 {
 	if (fileFormat == PE_FF)
 	{
@@ -355,12 +355,12 @@ enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileForm
 	return ERROR_JDC;
 }
 
-unsigned long long rvaToFileOffset(struct FileSection* sections, int numOfSections, unsigned long long rva, struct FileSection** section)
+uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint64_t rva, struct FileSection** section)
 {
 	if (section) { *section = 0; }
 	
-	unsigned long long maybeResult = 0;
-	for (int i = 0; i < numOfSections; i++)
+	uint64_t maybeResult = 0;
+	for (int32_t i = 0; i < numOfSections; i++)
 	{
 		if (rva >= sections[i].rva && rva < sections[i].rva + sections[i].physicalSize)
 		{

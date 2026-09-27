@@ -3,23 +3,23 @@
 // this is mostly taken from https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 
 /* 32-bit ELF base types. */
-typedef unsigned int	Elf32_Addr;
-typedef unsigned short	Elf32_Half;
-typedef unsigned int	Elf32_Off;
-typedef int	Elf32_Sword;
-typedef unsigned int	Elf32_Word;
-typedef unsigned short	Elf32_Versym;
+typedef uint32_t	Elf32_Addr;
+typedef uint16_t	Elf32_Half;
+typedef uint32_t	Elf32_Off;
+typedef int32_t	Elf32_Sword;
+typedef uint32_t	Elf32_Word;
+typedef uint16_t	Elf32_Versym;
 
 /* 64-bit ELF base types. */
-typedef unsigned long long	Elf64_Addr;
-typedef unsigned short	Elf64_Half;
-typedef short	Elf64_SHalf;
-typedef unsigned long long	Elf64_Off;
-typedef int	Elf64_Sword;
-typedef unsigned int	Elf64_Word;
-typedef unsigned long long	Elf64_Xword;
-typedef long long	Elf64_Sxword;
-typedef unsigned short	Elf64_Versym;
+typedef uint64_t	Elf64_Addr;
+typedef uint16_t	Elf64_Half;
+typedef int16_t	Elf64_SHalf;
+typedef uint64_t	Elf64_Off;
+typedef int32_t	Elf64_Sword;
+typedef uint32_t	Elf64_Word;
+typedef uint64_t	Elf64_Xword;
+typedef int64_t	Elf64_Sxword;
+typedef uint16_t	Elf64_Versym;
 
 /* These constants are for the segment types stored in the image headers */
 #define PT_NULL    0
@@ -194,15 +194,15 @@ typedef struct elf32_sym {
     Elf32_Word	st_name;
     Elf32_Addr	st_value;
     Elf32_Word	st_size;
-    unsigned char	st_info;
-    unsigned char	st_other;
+    uint8_t	st_info;
+    uint8_t	st_other;
     Elf32_Half	st_shndx;
 } Elf32_Sym;
 
 typedef struct elf64_sym {
     Elf64_Word st_name;		/* Symbol name, index in string tbl */
-    unsigned char	st_info;	/* Type and binding attributes */
-    unsigned char	st_other;	/* No defined meaning, 0 */
+    uint8_t	st_info;	/* Type and binding attributes */
+    uint8_t	st_other;	/* No defined meaning, 0 */
     Elf64_Half st_shndx;		/* Associated section index */
     Elf64_Addr st_value;		/* Value of the symbol */
     Elf64_Xword st_size;		/* Associated symbol size */
@@ -212,7 +212,7 @@ typedef struct elf64_sym {
 #define EI_NIDENT	16
 
 typedef struct elf32_hdr {
-    unsigned char	e_ident[EI_NIDENT];
+    uint8_t	e_ident[EI_NIDENT];
     Elf32_Half	e_type;
     Elf32_Half	e_machine;
     Elf32_Word	e_version;
@@ -229,7 +229,7 @@ typedef struct elf32_hdr {
 } Elf32_Ehdr;
 
 typedef struct elf64_hdr {
-    unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
+    uint8_t	e_ident[EI_NIDENT];	/* ELF "magic number" */
     Elf64_Half e_type;
     Elf64_Half e_machine;
     Elf64_Word e_version;

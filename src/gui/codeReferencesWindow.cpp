@@ -42,7 +42,7 @@ CodeReferencesWindow::CodeReferencesWindow(MainGui* parent) : wxWindow(parent, w
 
 void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 {
-	long long value = 0;
+	int64_t value = 0;
 	if (hexCheckBox->IsChecked())
 	{
 		if (!valueTextCtrl->GetValue().ToLongLong(&value, 16))
@@ -61,7 +61,7 @@ void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 	FindCodeReferences(value, hexCheckBox->IsChecked());
 }
 
-void CodeReferencesWindow::FindCodeReferences(long long value, bool isHex)
+void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 {
 	if (isHex)
 	{
@@ -78,7 +78,7 @@ void CodeReferencesWindow::FindCodeReferences(long long value, bool isHex)
 	
 	foundInstructions.clear();
 	foundInstructions.shrink_to_fit();
-	for (int i = 0; i < mainGui->decompParams.numOfInstructions; i++) 
+	for (int32_t i = 0; i < mainGui->decompParams.numOfInstructions; i++) 
 	{
 		struct DisassembledInstruction* instruction = &mainGui->decompParams.instructions[i];
 		
@@ -88,7 +88,7 @@ void CodeReferencesWindow::FindCodeReferences(long long value, bool isHex)
 			continue;
 		}
 
-		for (int j = 0; j < instruction->numOfOperands; j++)
+		for (int32_t j = 0; j < instruction->numOfOperands; j++)
 		{
 			struct Operand* operand = &instruction->operands[j];
 			if (operand->type == IMMEDIATE)

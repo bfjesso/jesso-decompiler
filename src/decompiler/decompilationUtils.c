@@ -20,9 +20,9 @@ extern const char* keywordStrs[NUM_OF_KEYWORDS] =
 	"return" 
 };
 
-enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int associatedInstruction, const char* format, ...)
+enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int32_t associatedInstruction, const char* format, ...)
 {
-	for (int i = 0; i < params->numOfIndents; i++)
+	for (int32_t i = 0; i < params->numOfIndents; i++)
 	{
 		strcatJdc(decompiledFunction, "\t");
 	}
@@ -39,7 +39,7 @@ enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct 
 	return result;
 }
 
-unsigned long long getJmpDst(struct DecompilationParameters* params, int startInstructionIndex)
+uint64_t getJmpDst(struct DecompilationParameters* params, int32_t startInstructionIndex)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[startInstructionIndex];
 	if (!isOpcodeJmp(instruction->opcode) && !isOpcodeJcc(instruction->opcode) && !isOpcodeCall(instruction->opcode))
@@ -47,7 +47,7 @@ unsigned long long getJmpDst(struct DecompilationParameters* params, int startIn
 		return 0;
 	}
 
-	unsigned long long dst = 0;
+	uint64_t dst = 0;
 	if (!operandToValue(params, startInstructionIndex, &instruction->operands[0], &dst))
 	{
 		return 0;
@@ -61,7 +61,7 @@ unsigned long long getJmpDst(struct DecompilationParameters* params, int startIn
 	return dst;
 }
 
-static enum JdcStatus operandToValue(struct DecompilationParameters* params, int startInstructionIndex, struct Operand* operand, unsigned long long* result)
+static enum JdcStatus operandToValue(struct DecompilationParameters* params, int32_t startInstructionIndex, struct Operand* operand, uint64_t* result)
 {
 	if (operand->type == IMMEDIATE)
 	{
@@ -70,14 +70,14 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 	}
 	else if (operand->type == MEM_ADDRESS)
 	{
-		unsigned long long address = 0;
+		uint64_t address = 0;
 		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
 			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
 		else if(operand->memoryAddress.reg != NO_REG)
 		{
-			unsigned long long baseRegVal = 0;
+			uint64_t baseRegVal = 0;
 			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
 			{
 				return ERROR_JDC;
@@ -94,7 +94,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		}
 		else if(operand->memoryAddress.regDisplacement != NO_REG)
 		{
-			unsigned long long displacementRegVal = 0;
+			uint64_t displacementRegVal = 0;
 			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
 			{
 				return ERROR_JDC;
@@ -113,7 +113,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		else 
 		{
 			struct FileSection* section = 0;
-			unsigned long long fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+			uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
 
 			if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 			{
@@ -123,16 +123,16 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 			switch (operand->memoryAddress.ptrSize) 
 			{
 			case 1:
-				*result = *(unsigned char*)(params->fileBytes + fileOffset);
+				*result = *(uint8_t*)(params->fileBytes + fileOffset);
 				break;
 			case 2:
-				*result = *(unsigned short*)(params->fileBytes + fileOffset);
+				*result = *(uint16_t*)(params->fileBytes + fileOffset);
 				break;
 			case 4:
-				*result = *(unsigned int*)(params->fileBytes + fileOffset);
+				*result = *(uint32_t*)(params->fileBytes + fileOffset);
 				break;
 			case 8:
-				*result = *(unsigned long long*)(params->fileBytes + fileOffset);
+				*result = *(uint64_t*)(params->fileBytes + fileOffset);
 				break;
 			}
 		}
@@ -147,7 +147,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 	return ERROR_JDC;
 }
 
-static enum JdcStatus regToValue(struct DecompilationParameters* params, int startInstructionIndex, enum Register reg, unsigned long long* result)
+static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t startInstructionIndex, enum Register reg, uint64_t* result)
 {
 	if (reg == NO_REG)
 	{
@@ -160,13 +160,13 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int sta
 		return SUCCESS_JDC;
 	}
 
-	int minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
-	for (int i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
+	int32_t minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
+	for (int32_t i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
 		if ((params->instructions[i].opcode == MOV || params->instructions[i].opcode == LEA) && 
 			params->instructions[i].operands[0].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, reg))
 		{
-			int start = i;
+			int32_t start = i;
 			if (params->instructions[i].operands[1].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, params->instructions[i].operands[1].reg))
 			{
 				start--;
@@ -179,21 +179,21 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int sta
 	return ERROR_JDC;
 }
 
-unsigned long long resolveJmpChain(struct DecompilationParameters* params, int startInstructionIndex)
+uint64_t resolveJmpChain(struct DecompilationParameters* params, int32_t startInstructionIndex)
 {
-	unsigned long long jmpAddress = getJmpDst(params, startInstructionIndex);
+	uint64_t jmpAddress = getJmpDst(params, startInstructionIndex);
 	if (jmpAddress == 0)
 	{
 		return 0;
 	}
 
-	int instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpAddress);
+	int32_t instructionIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, jmpAddress);
 	if (instructionIndex != -1)
 	{
 		struct DisassembledInstruction* jmpInstruction = &(params->instructions[instructionIndex]);
 		if (instructionIndex != startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
 		{
-			unsigned long long nextJmpAddress = resolveJmpChain(params, instructionIndex);
+			uint64_t nextJmpAddress = resolveJmpChain(params, instructionIndex);
 			if (nextJmpAddress != 0) 
 			{
 				return nextJmpAddress;
@@ -204,7 +204,7 @@ unsigned long long resolveJmpChain(struct DecompilationParameters* params, int s
 	return jmpAddress;
 }
 
-enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instructionIndex, struct JumpTable* result)
+enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t instructionIndex, struct JumpTable* result)
 {
 	struct DisassembledInstruction* jmpInstruction = &params->instructions[instructionIndex];
 
@@ -216,7 +216,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instruct
 	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
 	{
 		enum Register targetReg = jmpInstruction->operands[0].reg;
-		for(int i = instructionIndex - 1; i >= 0; i--)
+		for(int32_t i = instructionIndex - 1; i >= 0; i--)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[i];
 			
@@ -225,9 +225,9 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instruct
 				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
 				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
 			{
-				unsigned long long jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
+				uint64_t jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
 
-				unsigned long long regDisplacementVal = 0;
+				uint64_t regDisplacementVal = 0;
 				if (ERROR_JDC == regToValue(params, i, instruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
 				{
 					return ERROR_JDC;
@@ -245,7 +245,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instruct
 					prevInstruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[1].memoryAddress.reg, prevInstruction->operands[0].reg) &&
 					prevInstruction->operands[1].type == MEM_ADDRESS)
 				{
-					unsigned long long indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
+					uint64_t indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
 
 					regDisplacementVal = 0;
 					if (ERROR_JDC == regToValue(params, i - 1, prevInstruction->operands[1].memoryAddress.regDisplacement, &regDisplacementVal))
@@ -268,9 +268,9 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instruct
 	}
 	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
 	{
-		unsigned long long jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
+		uint64_t jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
 
-		unsigned long long regDisplacementVal = 0;
+		uint64_t regDisplacementVal = 0;
 		if (ERROR_JDC == regToValue(params, instructionIndex, jmpInstruction->operands[0].memoryAddress.regDisplacement, &regDisplacementVal))
 		{
 			return ERROR_JDC;
@@ -289,13 +289,13 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int instruct
 	return ERROR_JDC;
 }
 
-int findInstructionByAddress(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
+int32_t findInstructionByAddress(struct DisassembledInstruction* instructions, int32_t numOfInstructions, uint64_t address)
 {
-	int low = 0;
-	int high = numOfInstructions - 1;
+	int32_t low = 0;
+	int32_t high = numOfInstructions - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (instructions[mid].address == address) { return mid; }
 
@@ -306,13 +306,13 @@ int findInstructionByAddress(struct DisassembledInstruction* instructions, int n
 	return -1;
 }
 
-int findInstructionByAddressInclusive(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
+int32_t findInstructionByAddressInclusive(struct DisassembledInstruction* instructions, int32_t numOfInstructions, uint64_t address)
 {
-	int low = 0;
-	int high = numOfInstructions - 1;
+	int32_t low = 0;
+	int32_t high = numOfInstructions - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (instructions[mid].address <= address && instructions[mid].address + instructions[mid].numOfBytes > address) { return mid; }
 
@@ -323,13 +323,13 @@ int findInstructionByAddressInclusive(struct DisassembledInstruction* instructio
 	return -1;
 }
 
-int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int numOfInstructions, unsigned long long address)
+int32_t findInstructionInsertPoint(struct DisassembledInstruction* instructions, int32_t numOfInstructions, uint64_t address)
 {
-	int low = 0;
-	int high = numOfInstructions - 1;
+	int32_t low = 0;
+	int32_t high = numOfInstructions - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (instructions[mid].address < address && (mid == high || instructions[mid + 1].address > address)) { return mid + 1; }
 
@@ -340,13 +340,13 @@ int findInstructionInsertPoint(struct DisassembledInstruction* instructions, int
 	return 0;
 }
 
-int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned long long address)
+int32_t findAddressInArr(uint64_t* addresses, int32_t numOfAddresses, uint64_t address)
 {
-	int low = 0;
-	int high = numOfAddresses - 1;
+	int32_t low = 0;
+	int32_t high = numOfAddresses - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (addresses[mid] == address) { return mid; }
 
@@ -357,13 +357,13 @@ int findAddressInArr(unsigned long long* addresses, int numOfAddresses, unsigned
 	return -1;
 }
 
-int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, unsigned long long address, bool* foundIndirectTable)
+int32_t findJumpTableByAddress(struct JumpTable* jumpTables, int32_t numOfJumpTables, uint64_t address, bool* foundIndirectTable)
 {
-	int low = 0;
-	int high = numOfJumpTables - 1;
+	int32_t low = 0;
+	int32_t high = numOfJumpTables - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (jumpTables[mid].jmpTableAddress == address) 
 		{ 
@@ -383,13 +383,13 @@ int findJumpTableByAddress(struct JumpTable* jumpTables, int numOfJumpTables, un
 	return -1;
 }
 
-bool checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddresses, unsigned long long minAddress, unsigned long long maxAddress)
+bool checkForAddressInArrInRange(uint64_t* addresses, int32_t numOfAddresses, uint64_t minAddress, uint64_t maxAddress)
 {
-	int low = 0;
-	int high = numOfAddresses - 1;
+	int32_t low = 0;
+	int32_t high = numOfAddresses - 1;
 	while (low <= high)
 	{
-		int mid = low + (high - low) / 2;
+		int32_t mid = low + (high - low) / 2;
 
 		if (addresses[mid] >= minAddress && addresses[mid] <= maxAddress) { return true; }
 
@@ -400,7 +400,7 @@ bool checkForAddressInArrInRange(unsigned long long* addresses, int numOfAddress
 	return false;
 }
 
-bool doesInstructionModifyOperand(struct DecompilationParameters* params, int instructionIndex, unsigned char operandNum, bool* overwrites)
+bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_t instructionIndex, uint8_t operandNum, bool* overwrites)
 {
 	if (overwrites != 0)
 	{
@@ -482,7 +482,7 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int in
 	return false;
 }
 
-bool doesInstructionAccessRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, bool checkUnknownCalls, enum Register* specificReg)
+bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg, bool checkUnknownCalls, enum Register* specificReg)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -569,9 +569,9 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int i
 	}
 	else if (checkUnknownCalls && checkForUnknownFunctionCall(params, instructionIndex))
 	{
-		int numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
+		int32_t numOfPlatformRegArgs = getNumOfPlatformRegArgs(params->fileFormat);
 		const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
-		for (int i = 0; i < numOfPlatformRegArgs; i++)
+		for (int32_t i = 0; i < numOfPlatformRegArgs; i++)
 		{
 			if (compareRegisters(reg, platformRegArgs[i])) 
 			{
@@ -585,7 +585,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int i
 		}
 	}
 	
-	for (int i = 0; i < instruction->numOfOperands; i++)
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		bool overwrites = false;
 		struct Operand* op = &(instruction->operands[i]);
@@ -624,7 +624,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int i
 	return false;
 }
 
-bool doesInstructionModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg, enum Register* specificReg, bool* overwrites)
+bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg, enum Register* specificReg, bool* overwrites)
 {
 	if (specificReg) { *specificReg = NO_REG; }
 	if (overwrites) { *overwrites = false; }
@@ -688,7 +688,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 		{
 			if (specificReg)
 			{
-				int size = getSizeOfRegister(instruction->operands[1].reg);
+				int32_t size = getSizeOfRegister(instruction->operands[1].reg);
 				switch (size)
 				{
 				case 1:
@@ -713,7 +713,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 		{
 			if (specificReg) 
 			{
-				int size = getSizeOfRegister(instruction->operands[0].reg);
+				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
 				if (instruction->operands[0].type == MEM_ADDRESS)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
@@ -743,7 +743,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 		{
 			if (specificReg)
 			{
-				int size = getSizeOfRegister(instruction->operands[0].reg);
+				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
 				if (instruction->operands[0].type == MEM_ADDRESS)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
@@ -773,7 +773,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 		{
 			if (specificReg) 
 			{ 
-				int size = getSizeOfRegister(instruction->operands[0].reg);
+				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
 				if (instruction->operands[0].type == MEM_ADDRESS) 
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
@@ -808,7 +808,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 		}
 	}
 
-	for (int i = 0; i < instruction->numOfOperands; i++)
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
 		if (op->type == REGISTER && compareRegisters(op->reg, reg))
@@ -824,7 +824,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int i
 	return false;
 }
 
-bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int instructionIndex, enum Register reg) 
+bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg) 
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -927,7 +927,7 @@ bool compareOperands(struct Operand* op1, struct Operand* op2)
 	return false;
 }
 
-unsigned char getSizeOfOperand(struct Operand* operand)
+uint8_t getSizeOfOperand(struct Operand* operand)
 {
 	if (operand->type == MEM_ADDRESS)
 	{
@@ -947,7 +947,7 @@ unsigned char getSizeOfOperand(struct Operand* operand)
 
 bool validateName(struct DecompilationParameters* params, const char* name) 
 {
-	int nameLen = (int)strlen(name);
+	int32_t nameLen = (int32_t)strlen(name);
 	if (nameLen == 0) 
 	{
 		return false;
@@ -958,7 +958,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		return false;
 	}
 
-	for (int i = 1; i < nameLen; i++) 
+	for (int32_t i = 1; i < nameLen; i++) 
 	{
 		if (name[i] != '_' && 
 			(name[i] < 'a' || name[i] > 'z') && 
@@ -969,7 +969,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 	
-	for (int i = 0; i < NUM_OF_KEYWORDS; i++) 
+	for (int32_t i = 0; i < NUM_OF_KEYWORDS; i++) 
 	{
 		if (strcmp(keywordStrs[i], name) == 0)
 		{
@@ -977,7 +977,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
+	for (int32_t i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
 		if (strcmp(primitiveTypeStrs[i], name) == 0)
 		{
@@ -985,7 +985,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
 		if (strcmp(returningIntrinsics[i].name, name) == 0)
 		{
@@ -993,7 +993,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
+	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (strcmp(voidIntrinsics[i].name, name) == 0)
 		{
@@ -1001,7 +1001,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
+	for (int32_t i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
 	{
 		if (strcmp(callingConventionStrs[i], name) == 0)
 		{
@@ -1009,7 +1009,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 	
-	for (int i = 0; i < params->numOfFunctions; i++) 
+	for (int32_t i = 0; i < params->numOfFunctions; i++) 
 	{
 		if (strcmp(params->functions[i].name.buffer, name) == 0) 
 		{
@@ -1017,7 +1017,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int i = 0; i < params->numOfImports; i++)
+	for (int32_t i = 0; i < params->numOfImports; i++)
 	{
 		if (strcmp(params->imports[i].name.buffer, name) == 0)
 		{
@@ -1027,7 +1027,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 
 	if (params->currentFunc) 
 	{
-		for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			if (strcmp(params->currentFunc->regVars[i].name.buffer, name) == 0)
 			{
@@ -1035,7 +1035,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 			}
 		}
 
-		for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+		for (int32_t i = 0; i < params->currentFunc->numOfStackVars; i++)
 		{
 			if (strcmp(params->currentFunc->stackVars[i].name.buffer, name) == 0)
 			{
@@ -1043,7 +1043,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 			}
 		}
 
-		for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+		for (int32_t i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 		{
 			if (strcmp(params->currentFunc->returnedVars[i].name.buffer, name) == 0)
 			{
@@ -1055,14 +1055,14 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 	return true;
 }
 
-bool checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int instructionIndex)
+bool checkRegVarScope(struct DecompilationParameters* params, struct RegisterVariable* regVar, int32_t instructionIndex)
 {
 	// the scope startIndex is when the reg is initialized, so the reg var needs to be decompiled when it is the dst but not as a src
 	// the scope endIndex is the last time the reg is accessed before it is initialized again, so as a src it still needs to be the reg var but not as the dst if the instruction also initializes the reg
 	bool isRegOverwritten = 0;
 	doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, &isRegOverwritten);
 	
-	for (int i = 0; i < regVar->numOfScopes; i++)
+	for (int32_t i = 0; i < regVar->numOfScopes; i++)
 	{
 		if (isRegOverwritten)
 		{

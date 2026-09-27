@@ -11,7 +11,7 @@
 #include "dataTypes.h"
 #include "localRegVars.h"
 
-enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int* errorInstructionIndex)
+enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int32_t* errorInstructionIndex)
 {
 	params->currentFunc->numOfLines = 0;
 	
@@ -69,8 +69,8 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 	}
 
 	bool isInUnreachableState = false;
-	int numOfSkippedInstructions = 0;
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	int32_t numOfSkippedInstructions = 0;
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* currentInstruction = &(params->instructions[i]);
 
@@ -95,7 +95,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 			{
 				if(numOfSkippedInstructions > 0)
 				{
-					for (int j = numOfSkippedInstructions; j > 0; j--)
+					for (int32_t j = numOfSkippedInstructions; j > 0; j--)
 					{
 						addAssociatedInstruction(params->currentFunc, i - j);
 					}
@@ -211,7 +211,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 {
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct Function* callee = 0;
 		if ((checkForKnownFunctionCall(params, i, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params, i))
@@ -220,7 +220,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, 0) || 
 				(checkForReturnStatement(params, i) && params->currentFunc->returnReg == returnReg)) // this is if it is an unknown call that also returns
 			{
-				unsigned long long calleeAddress = resolveJmpChain(params, i);
+				uint64_t calleeAddress = resolveJmpChain(params, i);
 				struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
 				
 				if (callee)
@@ -235,7 +235,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 					struct DataType guessedReturnType = { 0 };
 					guessedReturnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
 
-					int importIndex = getImportIndexByAddress(params, calleeAddress);
+					int32_t importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
 					{
 						if (ERROR_JDC == addReturnedVar(params->currentFunc, guessedReturnType, calleeAddress, callInstruction->address, returnReg, params->imports[importIndex].name.buffer))
@@ -265,7 +265,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 	dataTypeToStr(function->returnType, &typeStr);
 	sprintfJdc(result, false, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
-	for (int i = 0; i < function->numOfRegVars; i++) 
+	for (int32_t i = 0; i < function->numOfRegVars; i++) 
 	{
 		if (function->regVars[i].isArgument) 
 		{
@@ -274,7 +274,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 		}
 	}
 
-	for (int i = 0; i < function->numOfStackVars; i++)
+	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
 		if (function->stackVars[i].isArgument) 
 		{
@@ -283,7 +283,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 		}
 	}
 
-	int len = (int)strlen(result->buffer);
+	int32_t len = (int32_t)strlen(result->buffer);
 	if (result->buffer[len - 1] != '(')
 	{
 		result->buffer[len - 2] = ')';
@@ -303,7 +303,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 	struct JdcStr typeStr = initializeJdcStr();
 	bool declaredAVar = false;
 	
-	for (int i = 0; i < params->currentFunc->numOfStackVars; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
 		if (!stackVar->isArgument) 
@@ -323,7 +323,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfRegVars; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
 		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
 		if (!localRegVar->isArgument)
@@ -351,10 +351,10 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		}
 	}
 
-	for (int i = 0; i < params->currentFunc->numOfReturnedVars; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 	{
 		bool isReturnRegVar = false;
-		for (int j = 0; j < params->currentFunc->numOfRegVars; j++) 
+		for (int32_t j = 0; j < params->currentFunc->numOfRegVars; j++) 
 		{
 			if (!params->currentFunc->regVars[j].isArgument && compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg))
 			{

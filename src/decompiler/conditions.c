@@ -7,29 +7,29 @@
 
 enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 {
-	int combinationCount = 0;
+	int32_t combinationCount = 0;
 	bool stopCombination = false;
-	for (int i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			unsigned long long dstAddress = instruction->address + instruction->numOfBytes + instruction->operands[0].immediate.value;
-			int dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
+			uint64_t dstAddress = instruction->address + instruction->numOfBytes + instruction->operands[0].immediate.value;
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
 			if (dstIndex == -1 || dstIndex == i || dstIndex == i + 1)
 			{
 				continue;
 			}
 
 			// the jmp chain result should only be used for conditional gotos and conditional returns
-			int dstJmpChainIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
+			int32_t dstJmpChainIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
 			if (dstJmpChainIndex == -1)
 			{
 				dstJmpChainIndex = dstIndex;
 			}
 
 			// if the conditions ends with a jmp, this will get the index of the instruction jumped to by that jmp
-			int exitIndex = -1;
+			int32_t exitIndex = -1;
 			if (dstIndex > 0 && isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
 			{
 				exitIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, dstIndex - 1));
@@ -130,14 +130,14 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 	}
 	
 	// handling else ifs and elses
-	int ogNumOfConditions = params->currentFunc->numOfConditions;
-	for (int i = 0; i < ogNumOfConditions; i++) 
+	int32_t ogNumOfConditions = params->currentFunc->numOfConditions;
+	for (int32_t i = 0; i < ogNumOfConditions; i++) 
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
 		if ((cond1->conditionType == IF_CT || cond1->conditionType == ELSE_IF_CT) && cond1->exitIndex > cond1->dstIndex)
 		{
 			bool foundElseIf = false;
-			for (int j = i + 1; j < ogNumOfConditions; j++)
+			for (int32_t j = i + 1; j < ogNumOfConditions; j++)
 			{
 				struct Condition* cond2 = &params->currentFunc->conditions[j];
 				if (cond2->conditionType == IF_CT &&
@@ -181,13 +181,13 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 	}
 
 	// checking for overlapping conditions which need to be handled as go to
-	int conditionToMakeGoToIndex = -1;
+	int32_t conditionToMakeGoToIndex = -1;
 	do
 	{
 		// the conditions that overlap with the most conditions are set to gotos first because this minimizes the total amount of conditional gotos.
 		conditionToMakeGoToIndex = -1;
-		int maxNumOfOverlapping = 0;
-		for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+		int32_t maxNumOfOverlapping = 0;
+		for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 		{
 			struct Condition* cond = &params->currentFunc->conditions[i];
 			if (isConditionDirectJmp(cond))
@@ -195,7 +195,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				continue;
 			}
 
-			int numOfOverlappingConditions = getNumOfOverlappingConditions(params, cond); // this is how many conditions cond overlaps with
+			int32_t numOfOverlappingConditions = getNumOfOverlappingConditions(params, cond); // this is how many conditions cond overlaps with
 			if (numOfOverlappingConditions > maxNumOfOverlapping)
 			{
 				maxNumOfOverlapping = numOfOverlappingConditions;
@@ -244,10 +244,10 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 	return SUCCESS_JDC;
 }
 
-static int getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1)
+static int32_t getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1)
 {
-	int result = 0;
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++) 
+	int32_t result = 0;
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++) 
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
 		if (cond1 == cond2 || cond1->connectedUpperConditionIndex == i || cond1->connectedLowerConditionIndex == i || isConditionDirectJmp(cond2))
@@ -288,14 +288,14 @@ static enum JdcStatus handleConditionsResize(struct DecompilationParameters* par
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus removeCondition(struct DecompilationParameters* params, int conditionIndex)
+static enum JdcStatus removeCondition(struct DecompilationParameters* params, int32_t conditionIndex)
 {
 	if (conditionIndex < 0 || conditionIndex >= params->currentFunc->numOfConditions) 
 	{
 		return ERROR_JDC;
 	}
 
-	for(int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for(int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
 
@@ -341,7 +341,7 @@ static enum JdcStatus handleCombinedJccResize(struct Condition* condition)
 {
 	if (condition->numOfCombinedJccs % 5 == 0)
 	{
-		int* newCombinedJccIndexes = (int*)realloc(condition->combinedJccIndexes, (condition->numOfCombinedJccs + 5) * sizeof(int));
+		int32_t* newCombinedJccIndexes = (int32_t*)realloc(condition->combinedJccIndexes, (condition->numOfCombinedJccs + 5) * sizeof(int32_t));
 		if (!newCombinedJccIndexes)
 		{
 			return ERROR_JDC;
@@ -353,9 +353,9 @@ static enum JdcStatus handleCombinedJccResize(struct Condition* condition)
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
+enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (isConditionDirectJmp(condition) || condition->indentLevel != params->numOfIndents)
@@ -379,9 +379,9 @@ enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, in
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int instructionIndex, struct JdcStr* result)
+enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int32_t instructionIndex, struct JdcStr* result)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (isConditionDirectJmp(condition))
@@ -410,7 +410,7 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int conditionIndex, bool decompileStart, struct JdcStr* result)
+static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int32_t conditionIndex, bool decompileStart, struct JdcStr* result)
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
@@ -450,7 +450,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 			return ERROR_JDC;
 		}
 
-		for (int i = 0; i < condition->numOfCombinedJccs; i++)
+		for (int32_t i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			bool invertOperator = i == (condition->numOfCombinedJccs - 1);
 			if (!invertCondition)
@@ -481,7 +481,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 			return ERROR_JDC;
 		}
 
-		for (int i = 0; i < condition->numOfCombinedJccs; i++)
+		for (int32_t i = 0; i < condition->numOfCombinedJccs; i++)
 		{
 			struct JdcStr currentConditionExpression = initializeJdcStr();
 			if (ERROR_JDC == decompileComparison(params, condition->combinedJccIndexes[i], invertCondition, &currentConditionExpression))
@@ -546,9 +546,9 @@ bool isConditionDirectJmp(struct Condition* condition)
 	return condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT;
 }
 
-struct Condition* getConditionFromDstInstruction(struct DecompilationParameters* params, int instructionIndex)
+struct Condition* getConditionFromDstInstruction(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (instructionIndex == params->currentFunc->conditions[i].dstIndex)
 		{
@@ -559,9 +559,9 @@ struct Condition* getConditionFromDstInstruction(struct DecompilationParameters*
 	return 0;
 }
 
-struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
+struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
 		if (!isConditionDirectJmp(cond) && instructionIndex == cond->firstBodyIndex)
@@ -573,9 +573,9 @@ struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParam
 	return 0;
 }
 
-struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int instructionIndex)
+struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
 		if (!isConditionDirectJmp(cond) && instructionIndex == params->currentFunc->conditions[i].lastBodyIndex)
@@ -587,7 +587,7 @@ struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParame
 	return 0;
 }
 
-int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
+int32_t getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
 {
 	while (condition->connectedUpperConditionIndex != -1) 
 	{
@@ -597,7 +597,7 @@ int getConditionChainFirstBodyInstruction(struct DecompilationParameters* params
 	return condition->firstBodyIndex;
 }
 
-int getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
+int32_t getConditionChainLastBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
 {
 	while (condition->connectedLowerConditionIndex != -1)
 	{
@@ -607,9 +607,9 @@ int getConditionChainLastBodyInstruction(struct DecompilationParameters* params,
 	return condition->lastBodyIndex;
 }
 
-bool checkForConditionalReturn(struct DecompilationParameters* params, int instructionIndex)
+bool checkForConditionalReturn(struct DecompilationParameters* params, int32_t instructionIndex)
 {
-	for (int i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		if (instructionIndex == params->currentFunc->conditions[i].jccIndex && params->currentFunc->conditions[i].conditionType == CONDITIONAL_RETURN_CT)
 		{

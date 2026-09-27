@@ -30,19 +30,19 @@ enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef);
 
 static enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
 
-enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, unsigned long long* imageBaseRef);
+enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, uint64_t* imageBaseRef);
 
-enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, unsigned long long* entryPointRef);
+enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* entryPointRef);
 
-enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int* numOfSectionsRef);
+enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int32_t* numOfSectionsRef);
 
-enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int bufferLen);
+enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int32_t bufferLen);
 
 enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD value, struct JdcStr* result);
 
-enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int* numOfImportsRef, int* numOfLibrariesRef);
+enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t* numOfImportsRef, int32_t* numOfLibrariesRef);
 
-enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int importsBufferLen, struct JdcStr* libraryNamesBuffer, int libraryNamesBufferLen);
+enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen);
 
 static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWORD* fileOffsetRef);
 

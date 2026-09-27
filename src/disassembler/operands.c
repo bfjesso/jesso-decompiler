@@ -33,10 +33,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		result->operandSizeAttribute = 8;
 	}
 
-	unsigned char vectorLength = getVectorLength(params);
+	uint8_t vectorLength = getVectorLength(params);
 	
-	int operandIndex = 0;
-	for (int i = 0; i < 4; i++)
+	int32_t operandIndex = 0;
+	for (int32_t i = 0; i < 4; i++)
 	{
 		enum OperandCode currentOperandCode = params->opcode.operands[i];
 		struct Operand* currentOperand = &(operands[operandIndex]);
@@ -46,7 +46,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		}
 
-		unsigned char operandSize;
+		uint8_t operandSize;
 		switch (currentOperandCode)
 		{
 		case ONE:
@@ -372,14 +372,14 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Jb:
 			if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate.value = (char)getUIntFromBytes(&params->bytes, 1);
+			currentOperand->immediate.value = (int8_t)getUIntFromBytes(&params->bytes, 1);
 			currentOperand->immediate.size = 1;
 			break;
 		case Jz:
 			operandSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			if ((params->bytes + operandSize - 1) > params->maxBytesAddr) { return ERROR_JDC; }
 			currentOperand->type = IMMEDIATE;
-			currentOperand->immediate.value = (int)getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->immediate.value = (int32_t)getUIntFromBytes(&params->bytes, operandSize);
 			currentOperand->immediate.size = operandSize;
 			break;
 		case Ob:
@@ -389,7 +389,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
-			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->memoryAddress.constDisplacement = (int64_t)getUIntFromBytes(&params->bytes, operandSize);
 			break;
 		case Ov:
 			operandSize = params->legPrefixes.group3 == ASO ? 2 : 4;
@@ -398,7 +398,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.ptrSize = OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
-			currentOperand->memoryAddress.constDisplacement = (long long)getUIntFromBytes(&params->bytes, operandSize);
+			currentOperand->memoryAddress.constDisplacement = (int64_t)getUIntFromBytes(&params->bytes, operandSize);
 			break;
 		case Rd:
 			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return ERROR_JDC; }
@@ -422,8 +422,8 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if ((params->bytes + 5) > params->maxBytesAddr) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.constDisplacement = (int)getUIntFromBytes(&params->bytes, 4);
-			currentOperand->memoryAddress.constSegment = (unsigned short)getUIntFromBytes(&params->bytes, 2);
+			currentOperand->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4);
+			currentOperand->memoryAddress.constSegment = (uint16_t)getUIntFromBytes(&params->bytes, 2);
 			break;
 		case Pd:
 		case Ppi:
@@ -494,7 +494,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Lx:
 			currentOperand->type = REGISTER;
-			char immediate = (char)getUIntFromBytes(&params->bytes, 1) & 0b11110000; // upper 4 bits
+			int8_t immediate = (int8_t)getUIntFromBytes(&params->bytes, 1) & 0b11110000; // upper 4 bits
 			currentOperand->reg = vectorLength == 32 ? (YMM0 + immediate) : (XMM0 + immediate);
 			break;
 		case EVEXvvvv:
@@ -539,7 +539,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			return ERROR_JDC;
 		}
 
-		for (int i = 0; i < operandIndex; i++)
+		for (int32_t i = 0; i < operandIndex; i++)
 		{
 			result->operands[i] = operands[i];
 		}
@@ -549,20 +549,20 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	return SUCCESS_JDC;
 }
 
-unsigned long long getUIntFromBytes(unsigned char** bytesPtr, unsigned char resultSize)
+uint64_t getUIntFromBytes(uint8_t** bytesPtr, uint8_t resultSize)
 {
-	unsigned long long result = 0;
+	uint64_t result = 0;
 
-	for (int i = 0; i < resultSize; i++)
+	for (int32_t i = 0; i < resultSize; i++)
 	{
-		result += ((unsigned long long)(*bytesPtr)[0] << (8 * i));
+		result += ((uint64_t)(*bytesPtr)[0] << (8 * i));
 		(*bytesPtr)++;
 	}
 
 	return result;
 }
 
-unsigned char getVectorLength(struct DisassemblyParameters* params)
+uint8_t getVectorLength(struct DisassemblyParameters* params)
 {
 	if (params->evexPrefix.LL == 0b10) 
 	{ 

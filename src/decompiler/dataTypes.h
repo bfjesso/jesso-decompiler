@@ -25,7 +25,7 @@ struct DataType
 {
 	bool isUnsigned;
 	bool pointerLevel;
-	unsigned short arrayLen;
+	uint16_t arrayLen;
 	enum PrimitiveType primitiveType;
 };
 
@@ -44,11 +44,11 @@ extern "C"
 
 bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit);
 
-unsigned char getDataTypeSize(struct DataType type, bool is64Bit);
+uint8_t getDataTypeSize(struct DataType type, bool is64Bit);
 
-unsigned char getPrimitiveTypeSize(enum PrimitiveType primitiveType);
+uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 
-struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, unsigned char operandNum, enum Register reg);
+struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg);
 
 struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress);
 

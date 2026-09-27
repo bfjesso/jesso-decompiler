@@ -4,7 +4,7 @@ wxBEGIN_EVENT_TABLE(ImportsGrid, wxGrid)
 EVT_GRID_CELL_RIGHT_CLICK(ImportsGrid::RightClickOptions)
 wxEND_EVENT_TABLE()
 
-ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfImports, JdcStr* libraryNames, int numOfLibraries) : wxGrid(parent, wxID_ANY)
+ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int32_t numOfImports, JdcStr* libraryNames, int32_t numOfLibraries) : wxGrid(parent, wxID_ANY)
 {
 	SetMinSize(wxSize(100, 100));
 	SetOwnBackgroundColour(backgroundColor);
@@ -32,7 +32,7 @@ ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int numOfI
 
 	if (imports ) 
 	{
-		for (int i = 0; i < numOfImports; i++)
+		for (int32_t i = 0; i < numOfImports; i++)
 		{
 			AppendRows(1);
 
@@ -49,12 +49,12 @@ void ImportsGrid::RightClickOptions(wxGridEvent& e)
 {
 	wxMenu menu;
 
-	int row = e.GetRow(); // row right-clicked on
+	int32_t row = e.GetRow(); // row right-clicked on
 
-	const int ID_COPY_ADDRESS = 100;
-	const int ID_COPY_LIBRARY = 101;
-	const int ID_COPY_NAME = 102;
-	const int ID_FIND = 103;
+	const int32_t ID_COPY_ADDRESS = 100;
+	const int32_t ID_COPY_LIBRARY = 101;
+	const int32_t ID_COPY_NAME = 102;
+	const int32_t ID_FIND = 103;
 
 	menu.Append(ID_COPY_ADDRESS, "Copy address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(GetCellValue(row, 0)); }, ID_COPY_ADDRESS);
@@ -74,8 +74,8 @@ void ImportsGrid::RightClickOptions(wxGridEvent& e)
 			wxString txt = dlg.GetValue();
 			if (!txt.IsEmpty())
 			{
-				int numOfImports = GetNumberRows();
-				for (int i = 0; i < numOfImports; i++)
+				int32_t numOfImports = GetNumberRows();
+				for (int32_t i = 0; i < numOfImports; i++)
 				{
 					if (GetCellValue(i, 0).Contains(txt) || GetCellValue(i, 1).Contains(txt) || GetCellValue(i, 2).Contains(txt))
 					{

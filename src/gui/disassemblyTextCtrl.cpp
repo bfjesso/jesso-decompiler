@@ -5,7 +5,7 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions) : JdcTextCtrl(parent, mainGuiRef, name)
+DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions) : JdcTextCtrl(parent, mainGuiRef, name)
 {
 	Bind(wxEVT_CONTEXT_MENU, &DisassemblyTextCtrl::DisassemblyRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
@@ -22,7 +22,7 @@ void DisassemblyTextCtrl::ClearData()
 	ClearText();
 }
 
-void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int amountOfInstructions, unsigned long long errorAddress)
+void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, uint64_t errorAddress)
 {
 	instructions = disassembledInstructions;
 	numOfInstructions = amountOfInstructions;
@@ -35,7 +35,7 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 	ClearText();
 
 	wxString newLines = "";
-	for (int i = 0; i < numOfInstructions; i++)
+	for (int32_t i = 0; i < numOfInstructions; i++)
 	{
 		newLines += "\n";
 	}
@@ -46,14 +46,14 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 
 	if (errorAddress != 0)
 	{
-		int errorIndex = findInstructionByAddress(instructions, numOfInstructions, errorAddress);
+		int32_t errorIndex = findInstructionByAddress(instructions, numOfInstructions, errorAddress);
 		CenterLine(errorIndex);
 		UpdateTextCtrl();
 		HighlightLine(errorIndex, RED_INDICATOR, 0);
 	}
 	else
 	{
-		int entryPointIndex = findInstructionByAddress(instructions, numOfInstructions, mainGui->entryPoint + mainGui->decompParams.imageBase);
+		int32_t entryPointIndex = findInstructionByAddress(instructions, numOfInstructions, mainGui->entryPoint + mainGui->decompParams.imageBase);
 		if (entryPointIndex != -1)
 		{
 			CenterLine(entryPointIndex);
@@ -81,10 +81,10 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 		}
 
 		wxString txt = dlg.GetValue();
-		unsigned long long address = 0;
+		uint64_t address = 0;
 		if (txt.ToULongLong(&address, 16))
 		{
-			int index = findInstructionByAddressInclusive(instructions, numOfInstructions, address);
+			int32_t index = findInstructionByAddressInclusive(instructions, numOfInstructions, address);
 			if (index == -1)
 			{
 				wxMessageBox("Address not found", "Failed to find address");
@@ -105,7 +105,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 	}
 }
 
-void DisassemblyTextCtrl::HighlightLine(int line, enum IndicatorColor color, bool gotoLine)
+void DisassemblyTextCtrl::HighlightLine(int32_t line, enum IndicatorColor color, bool gotoLine)
 {
 	if (gotoLine) 
 	{
@@ -122,14 +122,14 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 
 	AddDefaultRightClickOptions(&menu);
 
-	const int ID_GO_TO_ADDRESS = 100;
-	const int ID_SET_ASSOCIATED_DECOMPILATION = 101;
-	const int ID_UNASSOCIATE_DECOMPILATION = 102;
-	const int ID_SET_ASSOCIATED_FUNCTIONS = 103;
-	const int ID_UNASSOCIATE_FUNCTIONS = 104;
-	const int ID_SET_ASSOCIATED_DATA = 105;
-	const int ID_UNASSOCIATE_DATA = 106;
-	const int ID_SHOW_UNHANDLED_OPCODES = 107;
+	const int32_t ID_GO_TO_ADDRESS = 100;
+	const int32_t ID_SET_ASSOCIATED_DECOMPILATION = 101;
+	const int32_t ID_UNASSOCIATE_DECOMPILATION = 102;
+	const int32_t ID_SET_ASSOCIATED_FUNCTIONS = 103;
+	const int32_t ID_UNASSOCIATE_FUNCTIONS = 104;
+	const int32_t ID_SET_ASSOCIATED_DATA = 105;
+	const int32_t ID_UNASSOCIATE_DATA = 106;
+	const int32_t ID_SHOW_UNHANDLED_OPCODES = 107;
 
 	menu.Append(ID_GO_TO_ADDRESS, "Go to address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -139,7 +139,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
+		for (int32_t i = 0; i < mainGui->decompilationTextCtrls.size(); i++)
 		{
 			windowCaptions.push_back(mainGui->decompilationTextCtrls[i]->GetName());
 		}
@@ -147,7 +147,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			int selection = choiceDialog.GetSelection();
+			int32_t selection = choiceDialog.GetSelection();
 			if (selection == mainGui->decompilationTextCtrls.size())
 			{
 				decompilationTextCtrl = mainGui->AddDecompilationTextCtrl();
@@ -171,7 +171,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_SET_ASSOCIATED_FUNCTIONS, "Set associated functions");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->functionsTextCtrls.size(); i++)
+		for (int32_t i = 0; i < mainGui->functionsTextCtrls.size(); i++)
 		{
 			windowCaptions.push_back(mainGui->functionsTextCtrls[i]->GetName());
 		}
@@ -179,7 +179,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			int selection = choiceDialog.GetSelection();
+			int32_t selection = choiceDialog.GetSelection();
 			if (selection == mainGui->functionsTextCtrls.size())
 			{
 				functionsTextCtrl = mainGui->AddFunctionsTextCtrl();
@@ -203,7 +203,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_SET_ASSOCIATED_DATA, "Set associated data");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		wxArrayString windowCaptions;
-		for (int i = 0; i < mainGui->dataTextCtrls.size(); i++)
+		for (int32_t i = 0; i < mainGui->dataTextCtrls.size(); i++)
 		{
 			windowCaptions.push_back(mainGui->dataTextCtrls[i]->GetName());
 		}
@@ -211,7 +211,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		wxSingleChoiceDialog choiceDialog(this, "", "Choose a window", windowCaptions);
 		if (choiceDialog.ShowModal() != wxID_CANCEL)
 		{
-			int selection = choiceDialog.GetSelection();
+			int32_t selection = choiceDialog.GetSelection();
 			if (selection == mainGui->dataTextCtrls.size())
 			{
 				dataTextCtrl = mainGui->AddDataTextCtrl();
@@ -237,7 +237,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		mainGui->OpenLog(wxAUI_DOCK_NONE);
 		struct JdcStr errorBuffer = initializeJdcStr();
 		mainGui->logTextCtrl->Freeze();
-		for (int i = 0; i < numOfInstructions; i++) 
+		for (int32_t i = 0; i < numOfInstructions; i++) 
 		{
 			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode)) 
 			{
@@ -254,7 +254,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 
 void DisassemblyTextCtrl::OnDisassemblyKeyDown(wxKeyEvent& e)
 {
-	int key = e.GetKeyCode();
+	int32_t key = e.GetKeyCode();
 	if ((e.GetModifiers() & wxMOD_CONTROL) != 0 && key != 0)
 	{
 		if (key == 'G')
@@ -278,7 +278,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 
 	ClearIndicators();
 
-	int instructionIndex = GetCurrentLine();
+	int32_t instructionIndex = GetCurrentLine();
 	bool isLineHighlighted = false;
 
 	if (decompilationTextCtrl)
@@ -287,10 +287,10 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 		if (decompilationTextCtrl->currentDecompiledFunc != -1 &&
 			instructionIndex >= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].firstInstructionIndex && instructionIndex <= mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].lastInstructionIndex)
 		{
-			for (int i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
+			for (int32_t i = 0; i < mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].numOfLines; i++)
 			{
 				struct AssociatedInstructions* a = &mainGui->decompParams.functions[decompilationTextCtrl->currentDecompiledFunc].associatedInstructions[i];
-				for (int j = 0; j < a->numOfIndexes; j++)
+				for (int32_t j = 0; j < a->numOfIndexes; j++)
 				{
 					if (a->indexes[j] == instructionIndex)
 					{
@@ -309,7 +309,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 	if (functionsTextCtrl && instructionIndex < numOfInstructions)
 	{
 		functionsTextCtrl->ClearIndicators();
-		int funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, instructions[instructionIndex].address);
+		int32_t funcIndex = findFunctionByAddressInclusive(&mainGui->decompParams, instructions[instructionIndex].address);
 		if (funcIndex != -1)
 		{
 			functionsTextCtrl->HighlightLine(funcIndex, PURPLE_INDICATOR, 1);
@@ -321,9 +321,9 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 
 	if (dataTextCtrl && numOfInstructions > 0)
 	{
-		unsigned long long address = instructions[instructionIndex].address;
+		uint64_t address = instructions[instructionIndex].address;
 		FileSection* section = 0;
-		unsigned long long fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
 		if (section)
 		{
 			dataTextCtrl->HighlightBytes(fileOffset, instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
@@ -349,8 +349,8 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		return;
 	}
 
-	int firstLine = GetFirstVisibleLine();
-	int lastLine = firstLine + LinesOnScreen();
+	int32_t firstLine = GetFirstVisibleLine();
+	int32_t lastLine = firstLine + LinesOnScreen();
 	if (GetLineLength(firstLine) != 0 && GetLineLength(lastLine) != 0)
 	{
 		return;
@@ -371,17 +371,17 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 	SetReadOnly(false);
 	Freeze();
 
-	int sectionIndex = -1;
+	int32_t sectionIndex = -1;
 	struct JdcStr instructionStrBuffer = initializeJdcStr();
-	for (int i = firstLine; i < lastLine; i++)
+	for (int32_t i = firstLine; i < lastLine; i++)
 	{
-		int lineLen = GetLineLength(i);
+		int32_t lineLen = GetLineLength(i);
 		if (lineLen != 0)
 		{
 			continue;
 		}
 		
-		for (int j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
+		for (int32_t j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
 		{
 			if (mainGui->decompParams.sections[j].type == CODE_FST && instructions[i].address >= mainGui->decompParams.sections[j].rva + mainGui->decompParams.imageBase)
 			{
@@ -415,7 +415,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		else if (instructions[i].opcode == DATA) 
 		{
 			bool foundIndirectTable = false;
-			int jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
+			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
 			if (jumpTableIndex != -1)
 			{
 				char jmpInstructionAddressStr[20] = { 0 };
@@ -426,7 +426,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 
 		if (mainGui->decompParams.instructions == instructions) 
 		{
-			unsigned long long dst = getJmpDst(&mainGui->decompParams, i);
+			uint64_t dst = getJmpDst(&mainGui->decompParams, i);
 			if (dst != 0)
 			{
 				char dstStr[20] = { 0 };
@@ -448,13 +448,13 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 
 void DisassemblyTextCtrl::ApplyAsmHighlighting()
 {
-	for (int i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		StyleSetForeground(i, mainGui->colorsMenu->disassemblyColors[i]);
 	}
 
-	int firstLine = GetFirstVisibleLine();
-	int lastLine = firstLine + LinesOnScreen();
+	int32_t firstLine = GetFirstVisibleLine();
+	int32_t lastLine = firstLine + LinesOnScreen();
 
 	firstLine -= 100;
 	if (firstLine < 0)
@@ -468,13 +468,13 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		lastLine = numOfInstructions;
 	}
 
-	int pos = PositionFromLine(firstLine) + 1;
+	int32_t pos = PositionFromLine(firstLine) + 1;
 	wxString disassemblyText = GetValue();
-	for (int i = firstLine; i < lastLine; i++)
+	for (int32_t i = firstLine; i < lastLine; i++)
 	{
 		struct DisassembledInstruction* instruction = &(instructions[i]);
 
-		int tabPos = disassemblyText.find('\t', pos);
+		int32_t tabPos = disassemblyText.find('\t', pos);
 		wxString addressInfoStr = disassemblyText.substr(pos, tabPos - pos);
 		wxString asmStr = disassemblyText.substr(tabPos + 1, disassemblyText.find('\n', tabPos) - (tabPos + 1));
 
@@ -488,7 +488,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 
 		StartStyling(pos);
 
-		int opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
+		int32_t opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
 		if (instruction->group1Prefix != NO_PREFIX)
 		{
 			opcodeLen += strlen(getGroup1PrefixStr(instruction)) + 1;
@@ -496,15 +496,15 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		SetStyling(opcodeLen, OPCODE_ASM_COLOR);
 
 		// operands
-		int regStart = 0;
-		int segStart = 0;
-		int ptrSizeStart = 0;
-		for (int i = 0; i < instruction->numOfOperands; i++)
+		int32_t regStart = 0;
+		int32_t segStart = 0;
+		int32_t ptrSizeStart = 0;
+		for (int32_t i = 0; i < instruction->numOfOperands; i++)
 		{
 			if (instruction->operands[i].type == REGISTER)
 			{
 				wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
-				int loc = asmStr.find(regStr, regStart);
+				int32_t loc = asmStr.find(regStr, regStart);
 				StartStyling(pos + loc);
 				SetStyling(regStr.length(), REGISTER_ASM_COLOR);
 				regStart = loc + regStr.length();
@@ -514,7 +514,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 				if (instruction->operands[i].memoryAddress.reg != NO_REG)
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
-					int loc = asmStr.find(regStr, regStart);
+					int32_t loc = asmStr.find(regStr, regStart);
 					StartStyling(pos + loc);
 					SetStyling(regStr.length(), REGISTER_ASM_COLOR);
 					regStart = loc + regStr.length();
@@ -523,7 +523,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
-					int loc = asmStr.find(regStr, regStart);
+					int32_t loc = asmStr.find(regStr, regStart);
 					StartStyling(pos + loc);
 					SetStyling(regStr.length(), REGISTER_ASM_COLOR);
 					regStart = loc + regStr.length();
@@ -532,17 +532,17 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 				if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT)
 				{
 					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
-					int loc = asmStr.find(segStr, segStart);
+					int32_t loc = asmStr.find(segStr, segStart);
 					StartStyling(pos + loc);
 					SetStyling(segStr.length() - 1, SEGMENT_ASM_COLOR);
 					segStart = loc + segStr.length();
 				}
 
-				int ptrSize = instruction->operands[i].memoryAddress.ptrSize;
+				int32_t ptrSize = instruction->operands[i].memoryAddress.ptrSize;
 				if (ptrSize != 0)
 				{
 					wxString sizeStr = wxString(getPtrSizeStr(ptrSize));
-					int loc = asmStr.find(sizeStr, ptrSizeStart);
+					int32_t loc = asmStr.find(sizeStr, ptrSizeStart);
 					StartStyling(pos + loc);
 					SetStyling(sizeStr.length(), PTR_SIZE_ASM_COLOR);
 					ptrSizeStart = loc + sizeStr.length();
@@ -551,7 +551,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 			else if (instruction->operands[i].type == SEGMENT)
 			{
 				wxString segStr = wxString(segmentStrs[instruction->operands[i].segment]);
-				int loc = asmStr.find(segStr, segStart);
+				int32_t loc = asmStr.find(segStr, segStart);
 				StartStyling(pos + loc);
 				SetStyling(segStr.length(), SEGMENT_ASM_COLOR);
 				segStart = loc + segStr.length();
@@ -559,14 +559,14 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		}
 
 		// numbers
-		int start = 0;
+		int32_t start = 0;
 		while (start < asmStr.length())
 		{
-			int num = asmStr.find("0x", start);
+			int32_t num = asmStr.find("0x", start);
 			if (num != wxNOT_FOUND)
 			{
-				int end = asmStr.length();
-				for (int i = num + 2; i < end; i++)
+				int32_t end = asmStr.length();
+				for (int32_t i = num + 2; i < end; i++)
 				{
 					if ((asmStr[i] < '0' || asmStr[i] > '9') && (asmStr[i] < 'A' || asmStr[i] > 'F'))
 					{
@@ -587,7 +587,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		}
 
 		// comments
-		int commentStart = asmStr.find(";", 0);
+		int32_t commentStart = asmStr.find(";", 0);
 		if (commentStart != wxNOT_FOUND)
 		{
 			StartStyling(pos + commentStart);

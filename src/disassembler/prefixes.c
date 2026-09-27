@@ -81,7 +81,7 @@ enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	unsigned char rexByte = params->bytes[0];
+	uint8_t rexByte = params->bytes[0];
 
 	if (rexByte < 0x40 || rexByte > 0x4F) { return SUCCESS_JDC; }
 
@@ -100,9 +100,9 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	unsigned char byte0 = params->bytes[0];
-	unsigned char byte1 = params->bytes[1];
-	unsigned char byte2 = params->bytes[2];
+	uint8_t byte0 = params->bytes[0];
+	uint8_t byte1 = params->bytes[1];
+	uint8_t byte2 = params->bytes[2];
 
 	if (byte0 == 0xC5) // two-byte form
 	{
@@ -155,10 +155,10 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	unsigned char firstByte = params->bytes[0];
-	unsigned char p0 = params->bytes[1];
-	unsigned char p1 = params->bytes[2];
-	unsigned char p2 = params->bytes[3];
+	uint8_t firstByte = params->bytes[0];
+	uint8_t p0 = params->bytes[1];
+	uint8_t p1 = params->bytes[2];
+	uint8_t p2 = params->bytes[3];
 
 	if (firstByte == 0x62)
 	{
