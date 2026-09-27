@@ -699,9 +699,15 @@ void MainGui::DisassembleFile()
 	struct DisassembledInstruction instructionBuffer;
 	uint64_t errorAddress = 0;
 	bool didErrorOccur = false;
-	if (!DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
+	if (ERROR_JDC == DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
 	{
 		didErrorOccur = true;
+	}
+
+	if (disassembledInstructions.size() == 0)
+	{
+		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+		return;
 	}
 
 	uint64_t firstAddress = disassembledInstructions[0].address;
@@ -714,7 +720,7 @@ void MainGui::DisassembleFile()
 			uint64_t sectionEnd = sections[i].rva + sections[i].physicalSize + imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
-				if (!DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
+				if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
 				{
 					didErrorOccur = true;
 				}
@@ -723,7 +729,7 @@ void MainGui::DisassembleFile()
 			{
 				if (sectionStart < firstAddress && sectionEnd > firstAddress)
 				{
-					if (!DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
+					if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
 					{
 						didErrorOccur = true;
 					}
@@ -731,7 +737,7 @@ void MainGui::DisassembleFile()
 
 				if (sectionStart < lastAddress && sectionEnd > lastAddress)
 				{
-					if (!DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
+					if (ERROR_JDC == DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
 					{
 						didErrorOccur = true;
 					}
@@ -749,7 +755,7 @@ void MainGui::DisassembleFile()
 		uint64_t endVA = disassembledInstructions[i + 1].address;
 		if (startVA != endVA)
 		{
-			if (!DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
+			if (ERROR_JDC == DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
 			{
 				didErrorOccur = true;
 			}
