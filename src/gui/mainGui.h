@@ -38,7 +38,7 @@ public:
 	uint64_t entryPoint = 0;
 
 	uint8_t* fileBytes = nullptr;
-	uint32_t numOfFileBytes = 0;
+	uint64_t numOfFileBytes = 0;
 
 	FileSection* sections = nullptr;
 	int32_t numOfSections = 0;

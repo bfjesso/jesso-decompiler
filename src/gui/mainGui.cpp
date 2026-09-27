@@ -508,7 +508,7 @@ void MainGui::OpenFile()
 			SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
 			char hexStr[20] = { 0 };
-			sprintf(hexStr, "0x%X", numOfFileBytes);
+			sprintf(hexStr, "0x%llX", numOfFileBytes);
 			logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
 			logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
 			logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);

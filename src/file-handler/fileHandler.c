@@ -280,15 +280,24 @@ enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat
 	return ERROR_JDC;
 }
 
-enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint32_t* numOfBytesRef)
+enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint64_t* numOfBytesRef)
 {
 	FILE* file = openFile(filePath);
 	if (file && numOfBytesRef)
 	{
-		seek64(file, 0);
-		uint32_t result = ftell(file);
-		fclose(file);
+		uint64_t result = 0;
 
+#ifdef _WIN32
+		_fseeki64(file, 0, SEEK_END);
+		result = _ftelli64(file);
+#endif
+
+#ifdef linux
+		fseeko(file, 0, SEEK_END);
+		result = ftello(file);
+#endif
+
+		fclose(file);
 		*numOfBytesRef = result;
 		return SUCCESS_JDC;
 	}
@@ -296,7 +305,7 @@ enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint32_t* numOfBytesRe
 	return ERROR_JDC;
 }
 
-enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint32_t bufferSize)
+enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint64_t bufferSize)
 {
 	FILE* file = openFile(filePath);
 	if (file)

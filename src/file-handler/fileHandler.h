@@ -30,9 +30,9 @@ extern "C"
 
 	enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, struct FileSection* buffer, int32_t bufferLen);
 
-	enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint32_t* numOfBytesRef);
+	enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint64_t* numOfBytesRef);
 
-	enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint32_t bufferSize);
+	enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint64_t bufferSize);
 
 	enum JdcStatus getSymbolByValue(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, uint32_t value, struct JdcStr* result);
 
