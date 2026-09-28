@@ -93,14 +93,14 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 
 	if (firstHexCheckBox->IsChecked()) 
 	{
-		if (!firstValueInput->GetValue().ToLongLong(&firstValue, 16))
+		if (!firstValueInput->GetValue().ToLongLong((wxLongLong_t*)(&firstValue), 16))
 		{
 			return;
 		}
 	}
 	else 
 	{
-		if (!firstValueInput->GetValue().ToLongLong(&firstValue, 10))
+		if (!firstValueInput->GetValue().ToLongLong((wxLongLong_t*)(&firstValue), 10))
 		{
 			return;
 		}
@@ -108,14 +108,14 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 
 	if (secondHexCheckBox->IsChecked())
 	{
-		if (!secondValueInput->GetValue().ToLongLong(&secondValue, 16))
+		if (!secondValueInput->GetValue().ToLongLong((wxLongLong_t*)(&secondValue), 16))
 		{
 			return;
 		}
 	}
 	else
 	{
-		if (!secondValueInput->GetValue().ToLongLong(&secondValue, 10))
+		if (!secondValueInput->GetValue().ToLongLong((wxLongLong_t*)(&secondValue), 10))
 		{
 			return;
 		}

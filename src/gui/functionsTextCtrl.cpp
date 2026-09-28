@@ -21,7 +21,7 @@ void FunctionsTextCtrl::ShowFindAddressDialog()
 	{
 		wxString txt = dlg.GetValue();
 		uint64_t address = 0;
-		if (txt.ToULongLong(&address, 16))
+		if (txt.ToULongLong((wxULongLong_t*)(&address), 16))
 		{
 			int32_t index = findFunctionByAddressInclusive(&mainGui->decompParams, address);
 			if (index == -1)

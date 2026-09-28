@@ -50,7 +50,7 @@ void DataTextCtrl::ShowGoToVirtualAddressDialog()
 	{
 		wxString txt = dlg.GetValue();
 		uint64_t address = 0;
-		if (txt.ToULongLong(&address, 16))
+		if (txt.ToULongLong((wxULongLong_t*)(&address), 16))
 		{
 			if (address < mainGui->decompParams.imageBase)
 			{
@@ -81,7 +81,7 @@ void DataTextCtrl::ShowGoToFileOffsetDialog()
 	{
 		wxString txt = dlg.GetValue();
 		uint64_t fileOffset = 0;
-		if (txt.ToULongLong(&fileOffset, 16))
+		if (txt.ToULongLong((wxULongLong_t*)(&fileOffset), 16))
 		{
 			if (fileOffset >= mainGui->decompParams.numOfFileBytes)
 			{

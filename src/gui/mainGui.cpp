@@ -609,7 +609,7 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 		if (dlg.ShowModal() == wxID_OK)
 		{
 			wxString txt = dlg.GetValue();
-			if (!txt.ToULongLong(&entryPoint, 16))
+			if (!txt.ToULongLong((wxULongLong_t*)(&entryPoint), 16))
 			{
 				wxMessageBox("Not a valid hex number", "Failed to set entry point");
 			}

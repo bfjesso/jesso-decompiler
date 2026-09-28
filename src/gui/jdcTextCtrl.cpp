@@ -289,14 +289,14 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 
 		if (word.substr(0, 2) == "0x" || word.substr(0, 3) == "-0x")
 		{
-			isSigned = word.ToLongLong(&num, 16);
-			isUnsigned = word.ToULongLong((uint64_t*)(&num), 16);
+			isSigned = word.ToLongLong((wxLongLong_t*)(&num), 16);
+			isUnsigned = word.ToULongLong((wxULongLong_t*)(&num), 16);
 			isHex = isSigned || isUnsigned;
 		}
 		else
 		{
-			isSigned = word.ToLongLong(&num, 10);
-			isUnsigned = word.ToULongLong((uint64_t*)(&num), 10);
+			isSigned = word.ToLongLong((wxLongLong_t*)(&num), 10);
+			isUnsigned = word.ToULongLong((wxULongLong_t*)(&num), 10);
 			isDec = isSigned || isUnsigned;
 		}
 

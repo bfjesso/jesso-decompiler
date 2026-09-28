@@ -45,14 +45,14 @@ void CodeReferencesWindow::OnFindCodeReferencesButton(wxCommandEvent& e)
 	int64_t value = 0;
 	if (hexCheckBox->IsChecked())
 	{
-		if (!valueTextCtrl->GetValue().ToLongLong(&value, 16))
+		if (!valueTextCtrl->GetValue().ToLongLong((wxLongLong_t*)(&value), 16))
 		{
 			return;
 		}
 	}
 	else
 	{
-		if (!valueTextCtrl->GetValue().ToLongLong(&value, 10))
+		if (!valueTextCtrl->GetValue().ToLongLong((wxLongLong_t*)(&value), 10))
 		{
 			return;
 		}

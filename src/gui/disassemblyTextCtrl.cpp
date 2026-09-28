@@ -82,7 +82,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 
 		wxString txt = dlg.GetValue();
 		uint64_t address = 0;
-		if (txt.ToULongLong(&address, 16))
+		if (txt.ToULongLong((wxULongLong_t*)(&address), 16))
 		{
 			int32_t index = findInstructionByAddressInclusive(instructions, numOfInstructions, address);
 			if (index == -1)
