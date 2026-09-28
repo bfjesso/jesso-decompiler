@@ -318,7 +318,6 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	{
 		ColorAllStrs(text, primitiveTypeToStr((enum PrimitiveType)i, false), PRIMITIVE_DECOMP_COLOR, false);
 	}
-	ColorAllStrs(text, "unsigned", PRIMITIVE_DECOMP_COLOR, false);
 	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, false);
 
 	// keywords
