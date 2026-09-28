@@ -8,7 +8,7 @@ extern "C"
 
 	enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int32_t* errorInstructionIndex);
 
-	enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* result);
+	enum JdcStatus generateFunctionHeader(struct Function* function, bool useStdInt, struct JdcStr* result);
 
 #ifdef __cplusplus
 }

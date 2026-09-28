@@ -501,7 +501,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 				}
 				else
 				{
-					var1->dataType.primitiveType = CHAR_TYPE;
+					var1->dataType.primitiveType = INT8_TYPE;
 					var1->dataType.arrayLen = offsetDif;
 				}
 				

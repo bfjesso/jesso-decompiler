@@ -10,7 +10,7 @@ const wxColour darkerTextColor = wxColour(154, 154, 154);
 const wxFont codeFont = wxFontInfo(10).FaceName("Cascadia Mono").Bold();
 
 #define NUM_OF_DISASSEMBLY_COLORS 8
-#define NUM_OF_DECOMP_COLORS 13
+#define NUM_OF_DECOMP_COLORS 14
 #define NUM_OF_DATA_COLORS 3
 
 enum DisassemblyColor
@@ -34,6 +34,7 @@ enum DecompilationColor
 	IMPORT_DECOMP_COLOR,
 	INTRINSIC_DECOMP_COLOR,
 	PRIMITIVE_DECOMP_COLOR,
+	USER_TYPE_DECOMP_COLOR,
 	KEYWORD_DECOMP_COLOR,
 	STRING_DECOMP_COLOR,
 	NUMBER_DECOMP_COLOR,

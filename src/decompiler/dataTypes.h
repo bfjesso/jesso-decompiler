@@ -8,17 +8,16 @@ enum PrimitiveType
 {
 	VOID_TYPE,
 
-	CHAR_TYPE,
-	SHORT_TYPE,
-	INT_TYPE,
-	LONG_LONG_TYPE,
+	INT8_TYPE,
+	INT16_TYPE,
+	INT32_TYPE,
+	INT64_TYPE,
+	INT128_TYPE,
+	INT256_TYPE,
+	INT512_TYPE,
 
 	FLOAT_TYPE,
 	DOUBLE_TYPE,
-
-	INT_128_TPYE,
-	INT_256_TPYE,
-	INT_512_TPYE
 };
 
 struct DataType
@@ -34,9 +33,9 @@ extern "C"
 {
 #endif
 
-	extern const char* primitiveTypeStrs[];
+	const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt);
 
-	void dataTypeToStr(struct DataType dataType, struct JdcStr* result);
+	void dataTypeToStr(struct DataType dataType, bool useStdInt, struct JdcStr* result);
 
 #ifdef __cplusplus
 }

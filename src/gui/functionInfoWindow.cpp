@@ -1,4 +1,5 @@
 #include "functionInfoWindow.h"
+#include "mainGui.h"
 #include "../decompiler/dataTypes.h"
 #include "../disassembler/registers.h"
 #include "../jdc-str/jdcStr.h"
@@ -7,8 +8,10 @@ wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxScrolledWindow)
 EVT_GRID_CELL_RIGHT_CLICK(FunctionInfoWindow::GridRightClickOptions)
 wxEND_EVENT_TABLE()
 
-FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructionsPtr, Function* theFunction) : wxScrolledWindow(parent, wxID_ANY)
+FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, DisassembledInstruction* instructionsPtr, Function* theFunction) : wxScrolledWindow(parent, wxID_ANY)
 {
+	mainGui = mainGuiRef;
+	
 	SetOwnBackgroundColour(backgroundColor);
 	SetScrollRate(10, 10);
 
@@ -35,7 +38,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	infoGrid->AppendRows(8);
 
 	struct JdcStr dataTypeStr = initializeJdcStr();
-	dataTypeToStr(function->returnType, &dataTypeStr);
+	dataTypeToStr(function->returnType, mainGui->decompParams.useStdInt, &dataTypeStr);
 	infoGrid->SetCellValue(0, 0, "Return type");
 	infoGrid->SetCellValue(0, 1, dataTypeStr.buffer);
 
@@ -91,7 +94,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	{
 		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
 		returnedVarsGrid->AppendRows(1);
-		dataTypeToStr(returnedVar->dataType, &dataTypeStr);
+		dataTypeToStr(returnedVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
 		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
 		sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
@@ -129,7 +132,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	{
 		struct RegisterVariable* regVar = &function->regVars[i];
 		regVarsGrid->AppendRows(1);
-		dataTypeToStr(regVar->dataType, &dataTypeStr);
+		dataTypeToStr(regVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
 		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		regVarsGrid->SetCellValue(i, 1, wxString(regVar->name.buffer));
 		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regVar->reg]));
@@ -162,7 +165,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, DisassembledInstruction
 	{
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
-		dataTypeToStr(stackVar->dataType, &dataTypeStr);
+		dataTypeToStr(stackVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
 		if (stackVar->offsetFromInitSP > 0)
 		{
 			sprintf(hexNumStr, "0x%llX", stackVar->offsetFromInitSP);

@@ -264,16 +264,16 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 		switch (instruction->operands[0].memoryAddress.ptrSize)
 		{
 		case 1:
-			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[CHAR_TYPE]);
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeToStr(INT8_TYPE, params->useStdInt));
 			break;
 		case 2:
-			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[SHORT_TYPE]);
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeToStr(INT16_TYPE, params->useStdInt));
 			break;
 		case 4:
-			sprintfJdc(&count, false, " * sizeof(%)", primitiveTypeStrs[INT_TYPE]);
+			sprintfJdc(&count, false, " * sizeof(%)", primitiveTypeToStr(INT32_TYPE, params->useStdInt));
 			break;
 		case 8:
-			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeStrs[LONG_LONG_TYPE]);
+			sprintfJdc(&count, false, " * sizeof(%s)", primitiveTypeToStr(INT64_TYPE, params->useStdInt));
 			break;
 		}
 

@@ -22,3 +22,7 @@ public:
 
 	void ApplyFunctionsHighlighting(int32_t start, int32_t end);
 };
+
+enum DecompilationColor GetPrimitiveTypeColor(enum PrimitiveType primitive, bool useStdInt);
+
+enum PrimitiveType GetArgPrimitiveByName(struct Function* func, const char* name);

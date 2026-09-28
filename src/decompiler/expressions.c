@@ -208,7 +208,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	if (instruction->opcode != LEA)
 	{
 		struct JdcStr typeStr = initializeJdcStr();
-		dataTypeToStr(memAddrType, &typeStr);
+		dataTypeToStr(memAddrType, params->useStdInt, &typeStr);
 		sprintfJdc(result, false, "*(%s*)(%s)", typeStr.buffer, memAddrStr.buffer);
 		freeJdcStr(&typeStr);
 	}
@@ -273,7 +273,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 	if (memAddrType.primitiveType != stackVar->dataType.primitiveType)
 	{
 		struct JdcStr newTypeStr = initializeJdcStr();
-		dataTypeToStr(memAddrType, &newTypeStr);
+		dataTypeToStr(memAddrType, params->useStdInt, &newTypeStr);
 
 		if (memAddress->regDisplacement != NO_REG)
 		{
@@ -384,7 +384,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
-				dataTypeToStr(targetType, &targetTypeStr);
+				dataTypeToStr(targetType, params->useStdInt, &targetTypeStr);
 
 				sprintfJdc(result, false, "(%s)%s", targetTypeStr.buffer, localRegVar->name.buffer);
 				freeJdcStr(&targetTypeStr);
@@ -482,7 +482,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
-				dataTypeToStr(targetType, &targetTypeStr);
+				dataTypeToStr(targetType, params->useStdInt, &targetTypeStr);
 
 				sprintfJdc(&expressions[expressionIndex].jdcStr, false, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
 				freeJdcStr(&targetTypeStr);
@@ -773,16 +773,16 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 
 		switch (dataType.primitiveType)
 		{
-		case CHAR_TYPE:
+		case INT8_TYPE:
 			sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
 			break;
-		case SHORT_TYPE:
+		case INT16_TYPE:
 			sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
 			break;
-		case INT_TYPE:
+		case INT32_TYPE:
 			sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
 			break;
-		case LONG_LONG_TYPE:
+		case INT64_TYPE:
 			sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
 			break;
 		}

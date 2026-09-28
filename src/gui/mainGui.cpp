@@ -273,7 +273,7 @@ CodeReferencesWindow* MainGui::AddCodeReferencesWindow()
 
 FunctionInfoWindow* MainGui::AddFunctionInfoWindow(struct Function* function)
 {
-	FunctionInfoWindow* functionInfoWindow = new FunctionInfoWindow(this, disassembledInstructions.data(), function);
+	FunctionInfoWindow* functionInfoWindow = new FunctionInfoWindow(this, this, disassembledInstructions.data(), function);
 
 	auiManager.AddPane(functionInfoWindow, wxAuiPaneInfo()
 		.Name(function->name.buffer)
@@ -810,6 +810,8 @@ void MainGui::AnalyzeFile()
 		wxMessageBox("File already analyzed", "Can't analyze");
 		return;
 	}
+
+	decompParams.useStdInt = true;
 
 	logTextCtrl->Log("finding all functions...", 0);
 

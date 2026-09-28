@@ -1,11 +1,16 @@
+#pragma once
 #include "guiUtils.h"
 #include <wx/grid.h>
 #include "../decompiler/decompilationStructs.h"
 
+class MainGui;
+
 class FunctionInfoWindow : public wxScrolledWindow
 {
 public:
-	FunctionInfoWindow(wxWindow* parent, DisassembledInstruction* instructionsPtr, Function* theFunction);
+	FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, DisassembledInstruction* instructionsPtr, Function* theFunction);
+
+	MainGui* mainGui = nullptr;
 
 	Function* function = nullptr;
 	DisassembledInstruction* instructions = nullptr;

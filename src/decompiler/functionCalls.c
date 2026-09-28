@@ -98,7 +98,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 			{
 				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP] : registerStrs[ESP]);
 				struct JdcStr dataTypeStr = initializeJdcStr();
-				dataTypeToStr(callee->stackVars[i].dataType, &dataTypeStr);
+				dataTypeToStr(callee->stackVars[i].dataType, params->useStdInt, &dataTypeStr);
 				if (callee->stackVars[i].dataType.pointerLevel > 0) 
 				{
 					sprintfJdc(&decompiledCall, true, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
@@ -227,11 +227,11 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		regArgTypeStrs[i] = initializeJdcStr();
 		if (regVar) 
 		{
-			dataTypeToStr(regVar->dataType, &regArgTypeStrs[i]);
+			dataTypeToStr(regVar->dataType, params->useStdInt, &regArgTypeStrs[i]);
 		}
 		else 
 		{
-			dataTypeToStr(getRegisterDataType(0, -1, platformRegArgs[i]), &regArgTypeStrs[i]);
+			dataTypeToStr(getRegisterDataType(0, -1, platformRegArgs[i]), params->useStdInt, &regArgTypeStrs[i]);
 		}
 
 		numOfRegArgs++;
@@ -277,7 +277,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			if (decompileOperand(params, i, 0, 0, &decompiledStackArgs[numOfStackArgs]))
 			{
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), &stackArgTypeStrs[numOfStackArgs]);
+				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), params->useStdInt, &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
 				addAssociatedInstruction(params->currentFunc, i);
 			}
@@ -296,7 +296,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		if (returnedVar != 0) 
 		{
 			struct JdcStr returnTypeStr = initializeJdcStr();
-			dataTypeToStr(returnedVar->dataType, &returnTypeStr);
+			dataTypeToStr(returnedVar->dataType, params->useStdInt, &returnTypeStr);
 			strcatJdc(&decompiledCall, returnTypeStr.buffer);
 			freeJdcStr(&returnTypeStr);
 		}

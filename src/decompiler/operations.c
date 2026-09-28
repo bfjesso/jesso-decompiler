@@ -245,7 +245,7 @@ static enum JdcStatus decompileSumStatusFlags(struct DecompilationParameters* pa
 	struct DataType uintType = getOperandDataType(opcode, &instruction->operands[0]);
 	uintType.isUnsigned = 1;
 	struct JdcStr uintTypeStr = initializeJdcStr();
-	dataTypeToStr(uintType, &uintTypeStr);
+	dataTypeToStr(uintType, params->useStdInt, &uintTypeStr);
 	sprintfJdc(&cfExpression, false, "((%s)(%s) + (%s)(%s)) %s (%s)(%s)", uintTypeStr.buffer, decompiledFirstOperand.buffer, uintTypeStr.buffer, decompiledSecondOperand.buffer, notStatusFlag ? ">=" : "<", uintTypeStr.buffer, decompiledFirstOperand.buffer);
 	freeJdcStr(&uintTypeStr);
 
@@ -253,7 +253,7 @@ static enum JdcStatus decompileSumStatusFlags(struct DecompilationParameters* pa
 	sprintfJdc(&pfExpression, false, "__popcnt((%s + %s) & 0xFF) % 2 %s 0", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, notStatusFlag ? "!=" : "==");
 	
 	struct JdcStr afExpression = initializeJdcStr();
-	sprintfJdc(&afExpression, false, "((%s)(%s & 0xF) + (%s)(%s & 0xF)) %s 0x10", primitiveTypeStrs[CHAR_TYPE], decompiledFirstOperand.buffer, primitiveTypeStrs[CHAR_TYPE], decompiledSecondOperand.buffer, notStatusFlag ? "<" : ">=");
+	sprintfJdc(&afExpression, false, "((%s)(%s & 0xF) + (%s)(%s & 0xF)) %s 0x10", primitiveTypeToStr(INT8_TYPE, params->useStdInt), decompiledFirstOperand.buffer, primitiveTypeToStr(INT8_TYPE, params->useStdInt), decompiledSecondOperand.buffer, notStatusFlag ? "<" : ">=");
 
 	struct JdcStr zfExpression = initializeJdcStr();
 	sprintfJdc(&zfExpression, false, "(%s + %s) %s 0", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, notStatusFlag ? "!=" : "==");

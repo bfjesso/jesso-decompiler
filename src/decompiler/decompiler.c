@@ -45,7 +45,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		params->currentFunc->hasDoneInitialAnalysis = 1;
 	}
 	
-	if (ERROR_JDC == generateFunctionHeader(params->currentFunc, result))
+	if (ERROR_JDC == generateFunctionHeader(params->currentFunc, params->useStdInt, result))
 	{
 		strcpyJdc(statusMessage, "Error generating function header.");
 		if (errorInstructionIndex) { *errorInstructionIndex = params->currentFunc->firstInstructionIndex; }
@@ -233,7 +233,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 				else
 				{
 					struct DataType guessedReturnType = { 0 };
-					guessedReturnType.primitiveType = params->is64Bit ? LONG_LONG_TYPE : INT_TYPE;
+					guessedReturnType.primitiveType = params->is64Bit ? INT64_TYPE : INT32_TYPE;
 
 					int32_t importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
@@ -258,18 +258,18 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* result)
+enum JdcStatus generateFunctionHeader(struct Function* function, bool useStdInt, struct JdcStr* result)
 {
 	struct JdcStr typeStr = initializeJdcStr();
 
-	dataTypeToStr(function->returnType, &typeStr);
+	dataTypeToStr(function->returnType, useStdInt, &typeStr);
 	sprintfJdc(result, false, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
 	for (int32_t i = 0; i < function->numOfRegVars; i++) 
 	{
 		if (function->regVars[i].isArgument) 
 		{
-			dataTypeToStr(function->regVars[i].dataType, &typeStr);
+			dataTypeToStr(function->regVars[i].dataType, useStdInt, &typeStr);
 			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->regVars[i].name.buffer);
 		}
 	}
@@ -278,7 +278,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, struct JdcStr* 
 	{
 		if (function->stackVars[i].isArgument) 
 		{
-			dataTypeToStr(function->stackVars[i].dataType, &typeStr);
+			dataTypeToStr(function->stackVars[i].dataType, useStdInt, &typeStr);
 			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->stackVars[i].name.buffer);
 		}
 	}
@@ -308,7 +308,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
 		if (!stackVar->isArgument) 
 		{
-			dataTypeToStr(stackVar->dataType, &typeStr);
+			dataTypeToStr(stackVar->dataType, params->useStdInt, &typeStr);
 
 			struct JdcStr varNameTmp = copyJdcStr(&stackVar->name);
 			if (stackVar->dataType.arrayLen > 1)
@@ -328,7 +328,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		struct RegisterVariable* localRegVar = &params->currentFunc->regVars[i];
 		if (!localRegVar->isArgument)
 		{
-			dataTypeToStr(localRegVar->dataType, &typeStr);
+			dataTypeToStr(localRegVar->dataType, params->useStdInt, &typeStr);
 
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
 			if (regArg && checkRegVarScope(params, localRegVar, params->currentFunc->firstInstructionIndex))
@@ -365,7 +365,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 
 		if (!isReturnRegVar) 
 		{
-			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, &typeStr);
+			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, params->useStdInt, &typeStr);
 			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
 			declaredAVar = true;
 		}

@@ -171,7 +171,7 @@ void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 wxString FunctionsTextCtrl::GenerateFunctionDefinition(int32_t functionIndex, struct JdcStr* functionHeaderBuffer)
 {
 	struct Function* function = &mainGui->decompParams.functions[functionIndex];
-	if (!generateFunctionHeader(function, functionHeaderBuffer))
+	if (!generateFunctionHeader(function, mainGui->decompParams.useStdInt, functionHeaderBuffer))
 	{
 		return "";
 	}
@@ -262,9 +262,11 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 
 	StartStyling(start);
 
+	int32_t funcIndex = 0;
 	int32_t lineStart = start;
 	while (lineStart < end)
 	{
+		struct Function* func = &mainGui->decompParams.functions[funcIndex];
 		int32_t argsStartPos = text.find("(", lineStart);
 		int32_t functionNamePos = text.rfind(" ", argsStartPos);
 		int32_t callingConventionPos = text.rfind(" ", functionNamePos - 1);
@@ -279,7 +281,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 			}
 
 			StartStyling(lineStart);
-			SetStyling(callingConventionPos - lineStart - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
+			SetStyling(callingConventionPos - lineStart - numOfPtrs, GetPrimitiveTypeColor(func->returnType.primitiveType, mainGui->decompParams.useStdInt));
 
 			StartStyling(callingConventionPos);
 			SetStyling(functionNamePos - callingConventionPos, PRIMITIVE_DECOMP_COLOR);
@@ -301,8 +303,10 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 						numOfPtrs++;
 					}
 
+					wxString argName = text.substr(argNamePos + 1, argEndPos - argNamePos - 1);
+
 					StartStyling(argTypePos);
-					SetStyling(argNamePos - argTypePos - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
+					SetStyling(argNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, argName.c_str().AsChar()), mainGui->decompParams.useStdInt));
 
 					StartStyling(argNamePos);
 					SetStyling(argEndPos - argNamePos, ARGUMENT_DECOMP_COLOR);
@@ -322,8 +326,10 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 					numOfPtrs++;
 				}
 
+				wxString lastArgName = text.substr(lastArgNamePos + 1, argsEndPos - lastArgNamePos - 1);
+
 				StartStyling(argTypePos);
-				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, PRIMITIVE_DECOMP_COLOR);
+				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, lastArgName.c_str().AsChar()), mainGui->decompParams.useStdInt));
 			}
 
 			int32_t commentStartPos = text.find(";", lineStart) + 1;
@@ -337,10 +343,43 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 			}
 
 			SetStyling(lineStart - commentStartPos + 1, COMMENT_DECOMP_COLOR);
+			funcIndex++;
 		}
 		else
 		{
 			break;
 		}
 	}
+}
+
+enum DecompilationColor GetPrimitiveTypeColor(enum PrimitiveType primitive, bool useStdInt)
+{
+	if (useStdInt &&
+		(primitive == INT8_TYPE || primitive == INT16_TYPE || primitive == INT32_TYPE || primitive == INT64_TYPE))
+	{
+		return USER_TYPE_DECOMP_COLOR;
+	}
+
+	return PRIMITIVE_DECOMP_COLOR;
+}
+
+enum PrimitiveType GetArgPrimitiveByName(struct Function* func, const char* name) 
+{
+	for (int32_t i = 0; i < func->numOfRegVars; i++) 
+	{
+		if (func->regVars[i].isArgument && strcmp(func->regVars[i].name.buffer, name) == 0) 
+		{
+			return func->regVars[i].dataType.primitiveType;
+		}
+	}
+
+	for (int32_t i = 0; i < func->numOfStackVars; i++)
+	{
+		if (func->stackVars[i].isArgument && strcmp(func->stackVars[i].name.buffer, name) == 0)
+		{
+			return func->stackVars[i].dataType.primitiveType;
+		}
+	}
+
+	return VOID_TYPE;
 }

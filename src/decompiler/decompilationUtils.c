@@ -977,9 +977,10 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	for (int32_t i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
+	for (enum PrimitiveType i = VOID_TYPE; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
-		if (strcmp(primitiveTypeStrs[i], name) == 0)
+		if (strcmp(primitiveTypeToStr(i, false), name) == 0 ||
+			strcmp(primitiveTypeToStr(i, true), name) == 0)
 		{
 			return false;
 		}

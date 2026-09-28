@@ -262,63 +262,69 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &mainGui->decompParams.currentFunc->stackVars[i];
-		ColorAllStrs(text, stackVar->name.buffer, stackVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, stackVar->name.buffer, stackVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, true);
 	}
 
 	// reg vars
 	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfRegVars; i++)
 	{
 		struct RegisterVariable* regVar = &mainGui->decompParams.currentFunc->regVars[i];
-		ColorAllStrs(text, regVar->name.buffer, regVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, regVar->name.buffer, regVar->isArgument ? ARGUMENT_DECOMP_COLOR : LOCAL_VAR_DECOMP_COLOR, true);
 	}
 
 	// returned vars
 	for (int32_t i = 0; i < mainGui->decompParams.currentFunc->numOfReturnedVars; i++)
 	{
-		ColorAllStrs(text, mainGui->decompParams.currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, 1);
+		ColorAllStrs(text, mainGui->decompParams.currentFunc->returnedVars[i].name.buffer, LOCAL_VAR_DECOMP_COLOR, true);
 	}
 
 	// imports
 	for (int32_t i = 0; i < mainGui->decompParams.numOfImports; i++)
 	{
-		ColorAllStrs(text, mainGui->decompParams.imports[i].name.buffer, IMPORT_DECOMP_COLOR, 0);
+		ColorAllStrs(text, mainGui->decompParams.imports[i].name.buffer, IMPORT_DECOMP_COLOR, false);
 	}
 
 	// intrinsic functions
 	for (int32_t i = 0; i < NUM_OF_RETURNING_INTRINSICS; i++)
 	{
-		ColorAllStrs(text, returningIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, 0);
+		ColorAllStrs(text, returningIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, false);
 	}
 	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (voidIntrinsics[i].opcode == DATA) 
 		{
-			ColorAllStrs(text, voidIntrinsics[i].name, ERROR_DECOMP_COLOR, 0);
+			ColorAllStrs(text, voidIntrinsics[i].name, ERROR_DECOMP_COLOR, false);
 		}
 		else 
 		{
-			ColorAllStrs(text, voidIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, 0);
+			ColorAllStrs(text, voidIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, false);
 		}
 	}
 
 	// calling conventions
 	for (int32_t i = 0; i < NUM_OF_CALLING_CONVENTIONS; i++)
 	{
-		ColorAllStrs(text, callingConventionStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
+		ColorAllStrs(text, callingConventionStrs[i], PRIMITIVE_DECOMP_COLOR, false);
 	}
+
+	// stdint
+	ColorAllStrs(text, primitiveTypeToStr(INT8_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
+	ColorAllStrs(text, primitiveTypeToStr(INT16_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
+	ColorAllStrs(text, primitiveTypeToStr(INT32_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
+	ColorAllStrs(text, primitiveTypeToStr(INT64_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
 
 	// primitive data types
 	for (int32_t i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)
 	{
-		ColorAllStrs(text, primitiveTypeStrs[i], PRIMITIVE_DECOMP_COLOR, 0);
+		ColorAllStrs(text, primitiveTypeToStr((enum PrimitiveType)i, false), PRIMITIVE_DECOMP_COLOR, false);
 	}
-	ColorAllStrs(text, "unsigned", PRIMITIVE_DECOMP_COLOR, 0);
-	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, 0);
+	ColorAllStrs(text, "unsigned", PRIMITIVE_DECOMP_COLOR, false);
+	ColorAllStrs(text, "sizeof", PRIMITIVE_DECOMP_COLOR, false);
 
 	// keywords
 	for (int32_t i = 0; i < NUM_OF_KEYWORDS; i++)
 	{
-		ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, 0);
+		ColorAllStrs(text, keywordStrs[i], KEYWORD_DECOMP_COLOR, false);
 	}
 
 	// strings
@@ -363,11 +369,11 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	// functions
 	for (int32_t i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
-		ColorAllStrs(text, mainGui->decompParams.functions[i].name.buffer, FUNCTION_DECOMP_COLOR, 0);
+		ColorAllStrs(text, mainGui->decompParams.functions[i].name.buffer, FUNCTION_DECOMP_COLOR, false);
 	}
 
 	// this is for when :: is part of a function name
-	ColorAllStrs(text, ":", OPERATOR_DECOMP_COLOR, 1);
+	ColorAllStrs(text, ":", OPERATOR_DECOMP_COLOR, true);
 
 	// comments
 	start = 0;
@@ -424,20 +430,20 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	// regs/segs that arent variables/arguments
 	for (int32_t i = 0; i < NUM_OF_REGISTERS; i++)
 	{
-		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, 0);
+		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, false);
 	}
 	for (int32_t i = 0; i < NUM_OF_SEGMENTS; i++)
 	{
-		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, 0);
+		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, false);
 	}
-	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, 0);
-	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, 0);
+	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, false);
+	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, false);
 
 	// decimal numbers
 	const char* numberChars[10] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 	for (int32_t i = 0; i < 10; i++)
 	{
-		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, 0);
+		ColorAllStrs(text, numberChars[i], NUMBER_DECOMP_COLOR, false);
 	}
 }
 
