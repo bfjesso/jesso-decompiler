@@ -94,7 +94,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 			return ERROR_JDC;
 		}
 
-		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && regArgVar->dataType.isUnsigned == memAddrType.isUnsigned && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
+		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
 		{
 			if (instruction->opcode == LEA)
 			{

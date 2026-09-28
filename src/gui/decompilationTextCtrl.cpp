@@ -308,10 +308,10 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 
 	// stdint
-	ColorAllStrs(text, primitiveTypeToStr(INT8_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
-	ColorAllStrs(text, primitiveTypeToStr(INT16_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
-	ColorAllStrs(text, primitiveTypeToStr(INT32_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
-	ColorAllStrs(text, primitiveTypeToStr(INT64_TYPE, true), USER_TYPE_DECOMP_COLOR, false);
+	for (int32_t i = INT8_TYPE; i <= UINT64_TYPE; i++)
+	{
+		ColorAllStrs(text, primitiveTypeToStr((enum PrimitiveType)i, true), USER_TYPE_DECOMP_COLOR, false);
+	}
 
 	// primitive data types
 	for (int32_t i = 0; i < NUM_OF_PRIMITIVE_TYPES; i++)

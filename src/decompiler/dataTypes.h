@@ -2,16 +2,24 @@
 #include "../jdc-str/jdcStr.h"
 #include "../disassembler/disassemblyStructs.h"
 
-#define NUM_OF_PRIMITIVE_TYPES 10
+#define NUM_OF_PRIMITIVE_TYPES 14
 
 enum PrimitiveType
 {
 	VOID_TYPE,
 
 	INT8_TYPE,
+	UINT8_TYPE,
+
 	INT16_TYPE,
+	UINT16_TYPE,
+
 	INT32_TYPE,
+	UINT32_TYPE,
+
 	INT64_TYPE,
+	UINT64_TYPE,
+
 	INT128_TYPE,
 	INT256_TYPE,
 	INT512_TYPE,
@@ -22,7 +30,6 @@ enum PrimitiveType
 
 struct DataType
 {
-	bool isUnsigned;
 	bool pointerLevel;
 	uint16_t arrayLen;
 	enum PrimitiveType primitiveType;
@@ -40,6 +47,10 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+bool isPrimitiveUnsigned(enum PrimitiveType primitive);
+
+enum PrimitiveType getIntType(uint8_t size, bool isSigned);
 
 bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit);
 

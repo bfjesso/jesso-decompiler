@@ -25,12 +25,20 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 		{
 		case INT8_TYPE:
 			return "int8_t";
+		case UINT8_TYPE:
+			return "uint8_t";
 		case INT16_TYPE:
 			return "int16_t";
+		case UINT16_TYPE:
+			return "uint16_t";
 		case INT32_TYPE:
 			return "int32_t";
+		case UINT32_TYPE:
+			return "uint32_t";
 		case INT64_TYPE:
 			return "int64_t";
+		case UINT64_TYPE:
+			return "uint64_t";
 		}
 	}
 	else 
@@ -39,12 +47,20 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 		{
 		case INT8_TYPE:
 			return "char";
+		case UINT8_TYPE:
+			return "unsigned char";
 		case INT16_TYPE:
 			return "short";
+		case UINT16_TYPE:
+			return "unsigned short";
 		case INT32_TYPE:
 			return "int";
+		case UINT32_TYPE:
+			return "unsigned int";
 		case INT64_TYPE:
 			return "long long";
+		case UINT64_TYPE:
+			return "unsigned long long";
 		}
 	}
 
@@ -53,19 +69,51 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 
 void dataTypeToStr(struct DataType dataType, bool useStdInt, struct JdcStr* result)
 {
-	if (!dataType.isUnsigned || dataType.primitiveType == FLOAT_TYPE || dataType.primitiveType == DOUBLE_TYPE || dataType.primitiveType == VOID_TYPE)
-	{
-		sprintfJdc(result, false, "%s", primitiveTypeToStr(dataType.primitiveType, useStdInt));
-	}
-	else 
-	{
-		sprintfJdc(result, false, "%s%s", useStdInt ? "u" : "unsigned ", primitiveTypeToStr(dataType.primitiveType, useStdInt));
-	}
+	strcpyJdc(result, primitiveTypeToStr(dataType.primitiveType, useStdInt));
 
 	for (int32_t i = 0; i < dataType.pointerLevel; i++)
 	{
 		strcatJdc(result, "*");
 	}
+}
+
+bool isPrimitiveUnsigned(enum PrimitiveType primitive)
+{
+	return primitive == UINT8_TYPE || primitive == UINT16_TYPE || primitive == UINT32_TYPE || primitive == UINT64_TYPE;
+}
+
+enum PrimitiveType getIntType(uint8_t size, bool isSigned)
+{
+	if (isSigned) 
+	{
+		switch (size) 
+		{
+		case 1:
+			return INT8_TYPE;
+		case 2:
+			return INT16_TYPE;
+		case 4:
+			return INT32_TYPE;
+		case 8:
+			return INT64_TYPE;
+		}
+	}
+	else 
+	{
+		switch (size)
+		{
+		case 1:
+			return UINT8_TYPE;
+		case 2:
+			return UINT16_TYPE;
+		case 4:
+			return UINT32_TYPE;
+		case 8:
+			return UINT64_TYPE;
+		}
+	}
+
+	return VOID_TYPE;
 }
 
 bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit)
@@ -81,7 +129,7 @@ bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64
 		return false;
 	}
 
-	return t1.primitiveType != t2.primitiveType || t1.isUnsigned != t2.isUnsigned;
+	return t1.primitiveType != t2.primitiveType;
 }
 
 uint8_t getDataTypeSize(struct DataType type, bool is64Bit) 
@@ -207,7 +255,11 @@ struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand
 		break;
 	}
 
-	result.isUnsigned = doesOpcodeUseUnsignedInt(opcode);
+	if (doesOpcodeUseUnsignedInt(opcode)) 
+	{
+		result.primitiveType = getIntType(getPrimitiveTypeSize(result.primitiveType), false);
+		
+	}
 
 	return result;
 }

@@ -242,12 +242,8 @@ static enum JdcStatus decompileSumStatusFlags(struct DecompilationParameters* pa
 	int32_t operandSize = getSizeOfOperand(&instruction->operands[0]);
 
 	struct JdcStr cfExpression = initializeJdcStr();
-	struct DataType uintType = getOperandDataType(opcode, &instruction->operands[0]);
-	uintType.isUnsigned = 1;
-	struct JdcStr uintTypeStr = initializeJdcStr();
-	dataTypeToStr(uintType, params->useStdInt, &uintTypeStr);
-	sprintfJdc(&cfExpression, false, "((%s)(%s) + (%s)(%s)) %s (%s)(%s)", uintTypeStr.buffer, decompiledFirstOperand.buffer, uintTypeStr.buffer, decompiledSecondOperand.buffer, notStatusFlag ? ">=" : "<", uintTypeStr.buffer, decompiledFirstOperand.buffer);
-	freeJdcStr(&uintTypeStr);
+	enum PrimitiveType uintType = getIntType(getSizeOfOperand(&instruction->operands[0]), false);
+	sprintfJdc(&cfExpression, false, "((%s)(%s) + (%s)(%s)) %s (%s)(%s)", primitiveTypeToStr(uintType, params->useStdInt), decompiledFirstOperand.buffer, primitiveTypeToStr(uintType, params->useStdInt), decompiledSecondOperand.buffer, notStatusFlag ? ">=" : "<", primitiveTypeToStr(uintType, params->useStdInt), decompiledFirstOperand.buffer);
 
 	struct JdcStr pfExpression = initializeJdcStr();
 	sprintfJdc(&pfExpression, false, "__popcnt((%s + %s) & 0xFF) % 2 %s 0", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, notStatusFlag ? "!=" : "==");

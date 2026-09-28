@@ -935,14 +935,14 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 				struct DataType dataType = getRegisterDataType(instruction, j, reg);
 				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
-					regVar->dataType.primitiveType = dataType.primitiveType;
+					regVar->dataType.primitiveType = getIntType(getPrimitiveTypeSize(dataType.primitiveType), !isPrimitiveUnsigned(regVar->dataType.primitiveType));
 					regVar->reg = reg;
 					foundFirstInstance = true;
 				}
 
-				if (dataType.isUnsigned)
+				if (isPrimitiveUnsigned(dataType.primitiveType))
 				{
-					regVar->dataType.isUnsigned = true;
+					regVar->dataType.primitiveType = getIntType(getPrimitiveTypeSize(dataType.primitiveType), false);
 				}
 			}
 		}
