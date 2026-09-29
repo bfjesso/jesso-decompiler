@@ -40,9 +40,9 @@ enum JdcStatus decompileOperation(struct DecompilationParameters* params, int32_
 	{
 		return decompileArithmetic(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result);
 	}
-	else if (isOpcodeAnd(instruction->opcode))
+	else if (isOpcodeAnd(instruction->opcode) || instruction->opcode == TEST)
 	{
-		return decompileBinaryOperation(params, instructionIndex, getAssignment, " & ", " &= ", result);
+		return decompileAnd(params, instructionIndex, targetReg, getAssignment, notStatusFlag, result);
 	}
 	else if (isOpcodeOr(instruction->opcode))
 	{
@@ -252,6 +252,7 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 		freeJdcStr(&decompiledSecondOperand);
 		freeJdcStr(&sumExpression);
 
+		bool finished = false;
 		if (getAssignment)
 		{
 			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
@@ -289,13 +290,6 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", ofVar->name.buffer, ofExpression.buffer);
 			}
-
-			freeJdcStr(&cfExpression);
-			freeJdcStr(&pfExpression);
-			freeJdcStr(&afExpression);
-			freeJdcStr(&zfExpression);
-			freeJdcStr(&sfExpression);
-			freeJdcStr(&ofExpression);
 		}
 		else
 		{
@@ -303,41 +297,187 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 			{
 			case CF:
 				strcpyJdc(result, cfExpression.buffer);
+				finished = true;
 				break;
 			case PF:
 				strcpyJdc(result, pfExpression.buffer);
+				finished = true;
 				break;
 			case AF:
 				strcpyJdc(result, afExpression.buffer);
+				finished = true;
 				break;
 			case ZF:
 				strcpyJdc(result, zfExpression.buffer);
+				finished = true;
 				break;
 			case SF:
 				strcpyJdc(result, sfExpression.buffer);
+				finished = true;
 				break;
 			case OF:
 				strcpyJdc(result, ofExpression.buffer);
+				finished = true;
 				break;
 			}
+		}
 
-			freeJdcStr(&cfExpression);
-			freeJdcStr(&pfExpression);
-			freeJdcStr(&afExpression);
-			freeJdcStr(&zfExpression);
-			freeJdcStr(&sfExpression);
-			freeJdcStr(&ofExpression);
+		freeJdcStr(&cfExpression);
+		freeJdcStr(&pfExpression);
+		freeJdcStr(&afExpression);
+		freeJdcStr(&zfExpression);
+		freeJdcStr(&sfExpression);
+		freeJdcStr(&ofExpression);
+
+		if (finished)
+		{
 			return SUCCESS_JDC;
+		}
+		else if (!getAssignment && isOpcodeCmp(opcode)) 
+		{
+			return ERROR_JDC;
 		}
 	}
 
-	if (isOpcodeAdd(opcode)) 
+	if (isOpcodeAdd(opcode))
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " + ", " += ", result);
 	}
 	else if (isOpcodeSub(opcode)) 
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " - ", " -= ", result);
+	}
+	else if (isOpcodeCmp(opcode)) 
+	{
+		return SUCCESS_JDC;
+	}
+
+	return ERROR_JDC;
+}
+
+static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result) 
+{
+	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
+	enum Mnemonic opcode = instruction->opcode;
+
+	if (opcode == AND || opcode == TEST) 
+	{
+		struct JdcStr decompiledFirstOperand = initializeJdcStr();
+		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr decompiledSecondOperand = initializeJdcStr();
+		if (ERROR_JDC == decompileOperand(params, instructionIndex, 1, 1, &decompiledSecondOperand))
+		{
+			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&decompiledSecondOperand);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr andExpression = initializeJdcStr();
+		if (compareOperands(&instruction->operands[0], &instruction->operands[1])) 
+		{
+			strcpyJdc(&andExpression, decompiledFirstOperand.buffer);
+		}
+		else 
+		{
+			sprintfJdc(&andExpression, false, "%s & %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
+		}
+
+		struct JdcStr pfExpression = initializeJdcStr();
+		decompilePF(params, notStatusFlag, andExpression.buffer, &pfExpression);
+
+		struct JdcStr zfExpression = initializeJdcStr();
+		decompileZF(params, notStatusFlag, andExpression.buffer, &zfExpression);
+
+		struct JdcStr sfExpression = initializeJdcStr();
+		decompileSF(params, notStatusFlag, andExpression.buffer, getSizeOfOperand(&instruction->operands[0]), &sfExpression);
+
+		freeJdcStr(&decompiledFirstOperand);
+		freeJdcStr(&decompiledSecondOperand);
+		freeJdcStr(&andExpression);
+		
+		bool finished = false;
+		if (getAssignment) 
+		{
+			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+			if (cfVar)
+			{
+				addDecompiledLine(params, result, instructionIndex, "%s = %d;", cfVar->name.buffer, notStatusFlag ? 1 : 0);
+			}
+
+			struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF);
+			if (ofVar)
+			{
+				addDecompiledLine(params, result, instructionIndex, "%s = %d;", ofVar->name.buffer, notStatusFlag ? 1 : 0);
+			}
+
+			struct RegisterVariable* pfVar = doesInstructionAssignToRegVar(params, instructionIndex, PF);
+			if (pfVar)
+			{
+				addDecompiledLine(params, result, instructionIndex, "%s = %s;", pfVar->name.buffer, pfExpression.buffer);
+			}
+
+			struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+			if (zfVar)
+			{
+				addDecompiledLine(params, result, instructionIndex, "%s = %s;", zfVar->name.buffer, zfExpression.buffer);
+			}
+
+			struct RegisterVariable* sfVar = doesInstructionAssignToRegVar(params, instructionIndex, SF);
+			if (sfVar)
+			{
+				addDecompiledLine(params, result, instructionIndex, "%s = %s;", sfVar->name.buffer, sfExpression.buffer);
+			}
+		}
+		else
+		{
+			switch (targetReg)
+			{
+			case CF:
+			case OF:
+				strcpyJdc(result, notStatusFlag ? "1" : "0");
+				finished = true;
+				break;
+			case PF:
+				strcpyJdc(result, pfExpression.buffer);
+				finished = true;
+				break;
+			case ZF:
+				strcpyJdc(result, zfExpression.buffer);
+				finished = true;
+				break;
+			case SF:
+				strcpyJdc(result, sfExpression.buffer);
+				finished = true;
+				break;
+			}
+		}
+
+		freeJdcStr(&pfExpression);
+		freeJdcStr(&zfExpression);
+		freeJdcStr(&sfExpression);
+
+		if (finished) 
+		{
+			return SUCCESS_JDC;
+		}
+		else if (!getAssignment && opcode == TEST) 
+		{
+			return ERROR_JDC;
+		}
+	}
+
+	if (isOpcodeAnd(opcode))
+	{
+		return decompileBinaryOperation(params, instructionIndex, getAssignment, " & ", " &= ", result);
+	}
+	else if (opcode == TEST) 
+	{
+		return SUCCESS_JDC;
 	}
 
 	return ERROR_JDC;
