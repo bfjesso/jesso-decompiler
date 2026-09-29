@@ -5,7 +5,13 @@ enum JdcStatus decompileOperation(struct DecompilationParameters* params, int32_
 
 static enum JdcStatus decompileBinaryOperation(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, const char* regularOperator, const char* assignmentOperator, struct JdcStr* result);
 
-static enum JdcStatus decompileSumStatusFlags(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
+static enum JdcStatus decompilePF(struct DecompilationParameters* params, bool notStatusFlag, const char* instructionResult, struct JdcStr* flagExpression);
+
+static enum JdcStatus decompileZF(struct DecompilationParameters* params, bool notStatusFlag, const char* instructionResult, struct JdcStr* flagExpression);
+
+static enum JdcStatus decompileSF(struct DecompilationParameters* params, bool notStatusFlag, const char* instructionResult, uint8_t operandSize, struct JdcStr* flagExpression);
+
+static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
 
 static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
 
