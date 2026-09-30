@@ -160,18 +160,21 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params)
 {
 	// these are reg vars that contain the value of another variable before it changes
+
 	bool addedNewRegVar = false;
 	do
 	{
 		addedNewRegVar = false;
 		for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 		{
+			struct DisassembledInstruction* instruction = &params->instructions[i];
+			
 			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
 			if (checkForAnyAssignments(params, i))
 			{
 				for (int32_t statusFlag = CF; statusFlag <= OF; statusFlag++)
 				{
-					enum Mnemonic opcode = params->instructions[i].opcode;
+					enum Mnemonic opcode = instruction->opcode;
 					if (opcode == ADD || opcode == SUB || opcode == CMPXCHG ||
 						(opcode == NEG && statusFlag == OF))
 					{
@@ -269,7 +272,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int32_t 
 	for (int32_t i = upperStart; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
-		if (condition)
+		if (condition && i != upperStart && condition->conditionType != DO_WHILE_CT) // a do while loop will run atleast once
 		{
 			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
@@ -286,7 +289,7 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int32_t 
 	for (int32_t i = lowerStart; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct Condition* condition = getConditionFromFirstBodyInstruction(params, i);
-		if (condition)
+		if (condition && i != lowerStart && condition->conditionType != DO_WHILE_CT)
 		{
 			i = getConditionChainLastBodyInstruction(params, condition);
 			continue;
