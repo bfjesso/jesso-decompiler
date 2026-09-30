@@ -167,13 +167,13 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode == LEA && getStringFromDataSection(params, totalDisplacement, &memAddrStr))
+		else if (instruction->opcode == LEA && SUCCESS_JDC == getStringFromDataSection(params, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode != LEA && getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		else if (instruction->opcode != LEA && SUCCESS_JDC == getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
@@ -758,37 +758,28 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 
 	if (dataType.primitiveType == FLOAT_TYPE)
 	{
-		sprintfJdc(result, false, "%0.8g", *(float*)(params->fileBytes + fileOffset));
+		return sprintfJdc(result, false, "%0.8g", *(float*)(params->fileBytes + fileOffset));
 	}
 	else if (dataType.primitiveType == DOUBLE_TYPE)
 	{
-		sprintfJdc(result, false, "%0.16g", *(double*)(params->fileBytes + fileOffset));
+		return sprintfJdc(result, false, "%0.16g", *(double*)(params->fileBytes + fileOffset));
 	}
 	else
 	{
-		if (getStringFromDataSection(params, address, result))
-		{
-			return SUCCESS_JDC;
-		}
-
 		switch (dataType.primitiveType)
 		{
 		case INT8_TYPE:
-			sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
-			break;
+			return sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
 		case INT16_TYPE:
-			sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
-			break;
+			return sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
 		case INT32_TYPE:
-			sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
-			break;
+			return sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
 		case INT64_TYPE:
-			sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
-			break;
+			return sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
 		}
 	}
 
-	return SUCCESS_JDC;
+	return ERROR_JDC;
 }
 
 static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* params, uint64_t address, struct JdcStr* result)
