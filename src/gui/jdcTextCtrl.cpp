@@ -172,8 +172,8 @@ void JdcTextCtrl::OnFindDialog(wxFindDialogEvent& e)
 		lastFindText = text;
 	}
 
-	long selStart = GetSelectionStart();
-	long selEnd = GetSelectionEnd();
+	int32_t selStart = GetSelectionStart();
+	int32_t selEnd = GetSelectionEnd();
 	bool forward = (e.GetFlags() & wxFR_DOWN) != 0;
 
 	int32_t start = forward ? selEnd : 0;
