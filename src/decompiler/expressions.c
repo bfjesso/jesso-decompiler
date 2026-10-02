@@ -737,6 +737,14 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, !invertOperator, result, 0);
 	}
+	else if (cc == JP_SHORT || cc == SETP || cc == CMOVP)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, invertOperator, result, 0);
+	}
+	else if (cc == JNP_SHORT || cc == SETNP || cc == CMOVNP)
+	{
+		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, !invertOperator, result, 0);
+	}
 
 	return ERROR_JDC;
 }
