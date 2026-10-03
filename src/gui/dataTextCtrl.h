@@ -13,10 +13,10 @@ public:
 
 	const char* dataTypeStrs[NUM_OF_DATA_TEXT_CTRL_TYPES] =
 	{
-		"1-byte int32_t",
-		"2-byte int32_t",
-		"4-byte int32_t",
-		"8-byte int32_t",
+		"1-byte int",
+		"2-byte int",
+		"4-byte int",
+		"8-byte int",
 		"float",
 		"double",
 		"ASCII character"
