@@ -548,8 +548,8 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 
 enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32_t conditionalInstructionIndex, bool invertOperator, struct JdcStr* result)
 {
-	struct DisassembledInstruction* currentInstruction = &(params->instructions[conditionalInstructionIndex]);
-	enum Mnemonic cc = currentInstruction->opcode;
+	struct DisassembledInstruction* conditionalInstruction = &(params->instructions[conditionalInstructionIndex]);
+	enum Mnemonic cc = conditionalInstruction->opcode;
 
 	char compOperator[3] = { 0 };
 	switch (cc)
@@ -609,68 +609,19 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 		break;
 	}
 
-	// looking for TEST/AND or CMP/SUB instruction first before resorting to decompiling the status flags individually
-	if (compOperator[0] != 0) 
+	// looking for CMP instruction first before resorting to decompiling the status flags individually
+	if (compOperator[0] != 0)
 	{
 		for (int32_t i = conditionalInstructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 		{
-			currentInstruction = &(params->instructions[i]);
-			if (currentInstruction->opcode == TEST || currentInstruction->opcode == AND)
+			struct DisassembledInstruction* instruction = &(params->instructions[i]);
+			if (isOpcodeCmp(instruction->opcode))
 			{
 				struct JdcStr operand1Str = initializeJdcStr();
 				if (ERROR_JDC == decompileOperand(params, i, 0, 1, &operand1Str))
 				{
 					freeJdcStr(&operand1Str);
 					return ERROR_JDC;
-				}
-
-				if (compareOperands(&currentInstruction->operands[0], &currentInstruction->operands[1]) || (currentInstruction->opcode == AND && doesInstructionAssignToOperand(params, i, 0)))
-				{
-					if (params->instructions[i - 1].opcode == SETNZ) // redundant pattern ?
-					{
-						i--;
-						freeJdcStr(&operand1Str);
-						continue;
-					}
-
-					sprintfJdc(result, false, "%s %s 0", operand1Str.buffer, compOperator);
-					freeJdcStr(&operand1Str);
-
-					addAssociatedInstruction(params->currentFunc, i);
-					return SUCCESS_JDC;
-				}
-
-				struct JdcStr operand2Str = initializeJdcStr();
-				if (ERROR_JDC == decompileOperand(params, i, 1, 1, &operand2Str))
-				{
-					freeJdcStr(&operand1Str);
-					freeJdcStr(&operand2Str);
-					return ERROR_JDC;
-				}
-
-				sprintfJdc(result, false, "(%s & %s) %s 0", operand1Str.buffer, operand2Str.buffer, compOperator);
-				freeJdcStr(&operand1Str);
-				freeJdcStr(&operand2Str);
-
-				addAssociatedInstruction(params->currentFunc, i);
-				return SUCCESS_JDC;
-			}
-			else if (isOpcodeCmp(currentInstruction->opcode) || currentInstruction->opcode == SUB)
-			{
-				struct JdcStr operand1Str = initializeJdcStr();
-				if (ERROR_JDC == decompileOperand(params, i, 0, 1, &operand1Str))
-				{
-					freeJdcStr(&operand1Str);
-					return ERROR_JDC;
-				}
-
-				if (currentInstruction->opcode == SUB && doesInstructionAssignToOperand(params, i, 0))
-				{
-					sprintfJdc(result, false, "%s %s 0", operand1Str.buffer, compOperator);
-					freeJdcStr(&operand1Str);
-
-					addAssociatedInstruction(params->currentFunc, i);
-					return SUCCESS_JDC;
 				}
 
 				struct JdcStr operand2Str = initializeJdcStr();
