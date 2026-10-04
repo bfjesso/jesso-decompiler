@@ -138,12 +138,12 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 
 	if (memAddr->scale > 1) 
 	{
-		sprintfJdc(result, true, "*0x%X", memAddr->scale);
+		sprintfJdc(result, true, " * 0x%X", memAddr->scale);
 	}
 
 	if (memAddr->regDisplacement != NO_REG)
 	{
-		strcatJdc(result, "+");
+		strcatJdc(result, " + ");
 		strcatJdc(result, registerStrs[memAddr->regDisplacement]);
 	}
 
@@ -151,11 +151,11 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 	{
 		if (memAddr->constDisplacement > 0)
 		{
-			sprintfJdc(result, true, "+0x%llX", memAddr->constDisplacement);
+			sprintfJdc(result, true, " + 0x%llX", memAddr->constDisplacement);
 		}
 		else if (memAddr->constDisplacement < 0)
 		{
-			sprintfJdc(result, true, "-0x%llX", -memAddr->constDisplacement);
+			sprintfJdc(result, true, " - 0x%llX", -memAddr->constDisplacement);
 		}
 	}
 	else
