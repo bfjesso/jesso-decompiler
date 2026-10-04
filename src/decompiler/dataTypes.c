@@ -84,35 +84,24 @@ bool isPrimitiveUnsigned(enum PrimitiveType primitive)
 
 enum PrimitiveType getIntType(uint8_t size, bool isSigned)
 {
-	if (isSigned) 
+	switch (size)
 	{
-		switch (size) 
-		{
-		case 1:
-			return INT8_TYPE;
-		case 2:
-			return INT16_TYPE;
-		case 4:
-			return INT32_TYPE;
-		case 8:
-			return INT64_TYPE;
-		}
+	case 1:
+		return (isSigned ? INT8_TYPE : UINT8_TYPE);
+	case 2:
+		return (isSigned ? INT16_TYPE : UINT16_TYPE);
+	case 4:
+		return (isSigned ? INT32_TYPE : UINT32_TYPE);
+	case 8:
+		return (isSigned ? INT64_TYPE : UINT64_TYPE);
+	case 16:
+		return INT128_TYPE;
+	case 32:
+		return INT256_TYPE;
+	case 64:
+		return INT512_TYPE;
 	}
-	else 
-	{
-		switch (size)
-		{
-		case 1:
-			return UINT8_TYPE;
-		case 2:
-			return UINT16_TYPE;
-		case 4:
-			return UINT32_TYPE;
-		case 8:
-			return UINT64_TYPE;
-		}
-	}
-
+	
 	return VOID_TYPE;
 }
 
@@ -160,13 +149,17 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 	switch (primitiveType)
 	{
 	case INT8_TYPE:
+	case UINT8_TYPE:
 		return 1;
 	case INT16_TYPE:
+	case UINT16_TYPE:
 		return 2;
 	case INT32_TYPE:
+	case UINT32_TYPE:
 	case FLOAT_TYPE:
 		return 4;
 	case INT64_TYPE:
+	case UINT64_TYPE:
 	case DOUBLE_TYPE:
 		return 8;
 	case INT128_TYPE:

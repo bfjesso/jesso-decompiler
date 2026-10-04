@@ -727,27 +727,24 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 		return ERROR_JDC;
 	}
 
-	if (dataType.primitiveType == FLOAT_TYPE)
+	switch (dataType.primitiveType)
 	{
+	case INT8_TYPE:
+	case UINT8_TYPE:
+		return sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
+	case INT16_TYPE:
+	case UINT16_TYPE:
+		return sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
+	case INT32_TYPE:
+	case UINT32_TYPE:
+		return sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
+	case INT64_TYPE:
+	case UINT64_TYPE:
+		return sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
+	case FLOAT_TYPE:
 		return sprintfJdc(result, false, "%0.8g", *(float*)(params->fileBytes + fileOffset));
-	}
-	else if (dataType.primitiveType == DOUBLE_TYPE)
-	{
+	case DOUBLE_TYPE:
 		return sprintfJdc(result, false, "%0.16g", *(double*)(params->fileBytes + fileOffset));
-	}
-	else
-	{
-		switch (dataType.primitiveType)
-		{
-		case INT8_TYPE:
-			return sprintfJdc(result, false, "0x%X", *(uint8_t*)(params->fileBytes + fileOffset));
-		case INT16_TYPE:
-			return sprintfJdc(result, false, "0x%X", *(uint16_t*)(params->fileBytes + fileOffset));
-		case INT32_TYPE:
-			return sprintfJdc(result, false, "0x%X", *(uint32_t*)(params->fileBytes + fileOffset));
-		case INT64_TYPE:
-			return sprintfJdc(result, false, "0x%llX", *(uint64_t*)(params->fileBytes + fileOffset));
-		}
 	}
 
 	return ERROR_JDC;
