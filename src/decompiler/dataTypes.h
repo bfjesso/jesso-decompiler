@@ -30,7 +30,7 @@ enum PrimitiveType
 
 struct DataType
 {
-	bool pointerLevel;
+	uint8_t pointerLevel;
 	uint16_t arrayLen;
 	enum PrimitiveType primitiveType;
 };
@@ -52,9 +52,13 @@ bool isPrimitiveUnsigned(enum PrimitiveType primitive);
 
 enum PrimitiveType getIntType(uint8_t size, bool isSigned);
 
+enum PrimitiveType getAddressPrimitive(bool is64Bit);
+
+bool isDataTypePtr(struct DataType dataType);
+
 bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit);
 
-uint8_t getDataTypeSize(struct DataType type, bool is64Bit);
+uint8_t getDataTypeSize(struct DataType dataType, bool is64Bit);
 
 uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 

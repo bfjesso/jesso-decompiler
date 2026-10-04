@@ -243,7 +243,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 
 	if (instruction->opcode == LEA) 
 	{
-		if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1) 
+		if (isDataTypePtr(stackVar->dataType))
 		{
 			if (memAddress->regDisplacement != NO_REG)
 			{
@@ -277,7 +277,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 
 		if (memAddress->regDisplacement != NO_REG)
 		{
-			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
+			if (isDataTypePtr(stackVar->dataType))
 			{
 				sprintfJdc(result, true, "(%s*)(%s + %s)", newTypeStr.buffer, stackVar->name.buffer, displacementRegStr.buffer);
 			}
@@ -288,7 +288,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		}
 		else
 		{
-			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1)
+			if (isDataTypePtr(stackVar->dataType))
 			{
 				sprintfJdc(result, false, "(%s*)%s", newTypeStr.buffer, stackVar->name.buffer);
 			}
@@ -353,7 +353,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, -getStackFrameSizeAtInstruction(params, instructionIndex));
 		if (stackVar)
 		{
-			if (stackVar->dataType.pointerLevel > 0 || stackVar->dataType.arrayLen > 1) 
+			if (isDataTypePtr(stackVar->dataType))
 			{
 				return strcpyJdc(result, stackVar->name.buffer);
 			}

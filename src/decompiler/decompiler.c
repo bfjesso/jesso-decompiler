@@ -233,7 +233,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 				else
 				{
 					struct DataType guessedReturnType = { 0 };
-					guessedReturnType.primitiveType = params->is64Bit ? INT64_TYPE : INT32_TYPE;
+					guessedReturnType.primitiveType = getAddressPrimitive(params->is64Bit);
 
 					int32_t importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
