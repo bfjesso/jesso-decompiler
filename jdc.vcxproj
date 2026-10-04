@@ -229,6 +229,7 @@
     <ClInclude Include="src\decompiler\operations.h" />
     <ClInclude Include="src\decompiler\returnStatements.h" />
     <ClInclude Include="src\disassembler\disassembler.h" />
+    <ClInclude Include="src\disassembler\disassemblyStructs.h" />
     <ClInclude Include="src\disassembler\escapeOpcodeMaps.h" />
     <ClInclude Include="src\disassembler\extendedOpcodeMap.h" />
     <ClInclude Include="src\disassembler\mnemonics.h" />

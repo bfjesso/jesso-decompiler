@@ -41,27 +41,27 @@ struct REXPrefix
 {
 	bool isValidREX;
 
-	unsigned char W; // 64 bit operand size if 1
-	unsigned char R; // extension of the ModR/M reg field
-	unsigned char X; // extension of the SIB index field
-	unsigned char B; // extension of the ModR/M r/m field, SIB base field, or opcode reg field
+	uint8_t W; // 64 bit operand size if 1
+	uint8_t R; // extension of the ModR/M reg field
+	uint8_t X; // extension of the SIB index field
+	uint8_t B; // extension of the ModR/M r/m field, SIB base field, or opcode reg field
 };
 
 struct VEXPrefix
 {
 	bool isValidVEX;
 
-	unsigned char R; // inverted REX.R
+	uint8_t R; // inverted REX.R
 
 	// only in 3 byte VEX
-	unsigned char X; // inverted REX.X
-	unsigned char B; // inverted REX.B
-	unsigned char m_mmmm; // implied opcode map
-	unsigned char W; // same as REX.W
+	uint8_t X; // inverted REX.X
+	uint8_t B; // inverted REX.B
+	uint8_t m_mmmm; // implied opcode map
+	uint8_t W; // same as REX.W
 
-	unsigned char vvvv; // register specifier encoded in 1's compliment (inverted)
-	unsigned char L; // vector length
-	unsigned char pp; // implied legacy prefix for opcode extension
+	uint8_t vvvv; // register specifier encoded in 1's compliment (inverted)
+	uint8_t L; // vector length
+	uint8_t pp; // implied legacy prefix for opcode extension
 };
 
 struct EVEXPrefix
@@ -69,23 +69,23 @@ struct EVEXPrefix
 	bool isValidEVEX;
 
 	// P0
-	unsigned char R; // combine with ModR/M.reg
-	unsigned char X; // combine with EVEX.B and ModR/M.rm, when SIB/VSIB absent
-	unsigned char B; // combine with ModR/M.rm
-	unsigned char R_prime; // high 16 register specifier modifier
-	unsigned char mmm; // implied opcode map
+	uint8_t R; // combine with ModR/M.reg
+	uint8_t X; // combine with EVEX.B and ModR/M.rm, when SIB/VSIB absent
+	uint8_t B; // combine with ModR/M.rm
+	uint8_t R_prime; // high 16 register specifier modifier
+	uint8_t mmm; // implied opcode map
 
 	// P1
-	unsigned char W; // operand size promotion/opcode extension
-	unsigned char vvvv; // same as VEX.vvvv
-	unsigned char pp; // same as VEX.pp
+	uint8_t W; // operand size promotion/opcode extension
+	uint8_t vvvv; // same as VEX.vvvv
+	uint8_t pp; // same as VEX.pp
 
 	// P2
-	unsigned char z; // zeroing/merging
-	unsigned char LL; // vector length/RC
-	unsigned char b; // broadcast/RC/SAE context
-	unsigned char V_prime; // high 16 VVVV/VIDX register specifier
-	unsigned char aaa; // embedded opmask register specifier
+	uint8_t z; // zeroing/merging
+	uint8_t LL; // vector length/RC
+	uint8_t b; // broadcast/RC/SAE context
+	uint8_t V_prime; // high 16 VVVV/VIDX register specifier
+	uint8_t aaa; // embedded opmask register specifier
 };
 
 // Appendix A: A.2
@@ -158,7 +158,7 @@ enum OpcodeSuperscript
 struct Opcode
 {
 	enum Mnemonic mnemonic;
-	char extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
+	int8_t extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
 	enum OperandCode operands[4];
 	enum OpcodeSuperscript opcodeSuperscript;
 };
@@ -177,27 +177,27 @@ struct ModRM
 {
 	bool hasGotModRM;
 
-	unsigned char mod;
-	unsigned char reg;
-	unsigned char rm;
+	uint8_t mod;
+	uint8_t reg;
+	uint8_t rm;
 };
 
 struct MemoryAddress
 {
-	unsigned char ptrSize;
+	uint8_t ptrSize;
 	enum Segment segment;
-	unsigned short constSegment;
+	uint16_t constSegment;
 
 	enum Register reg;
-	unsigned char scale; // if SIB byte
+	uint8_t scale; // if SIB byte
 	enum Register regDisplacement;
-	long long constDisplacement;
+	int64_t constDisplacement;
 };
 
 struct Immediate 
 {
-	long long value;
-	unsigned char size;
+	int64_t value;
+	uint8_t size;
 };
 
 struct Operand
@@ -215,9 +215,9 @@ struct Operand
 
 struct DisassemblyParameters 
 {
-	unsigned char* bytes;
-	unsigned char* maxBytesAddr;
-	unsigned char* startBytePtr;
+	uint8_t* bytes;
+	uint8_t* maxBytesAddr;
+	uint8_t* startBytePtr;
 	
 	bool is64BitMode;
 	
@@ -235,21 +235,21 @@ struct DisassembledInstruction
 	enum Mnemonic opcode;
 
 	struct Operand* operands;
-	unsigned char numOfOperands;
-	unsigned char operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
+	uint8_t numOfOperands;
+	uint8_t operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
 	
-	unsigned char numOfBytes;
+	uint8_t numOfBytes;
 	bool isInvalid;
 	bool isCalled;
 	bool isJmpDst;
 
-	unsigned long long address;
+	uint64_t address;
 };
 
 struct JumpTable 
 {
-	unsigned long long jmpTableAddress;
-	unsigned long long indirectTableAddress;
-	unsigned long long jmpInstructionAddress;
-	unsigned char addressSize;
+	uint64_t jmpTableAddress;
+	uint64_t indirectTableAddress;
+	uint64_t jmpInstructionAddress;
+	uint8_t addressSize;
 };
