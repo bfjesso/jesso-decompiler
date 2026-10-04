@@ -112,18 +112,38 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 {
 	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)
 	{
+		if ((reg1 == AL && reg2 == AH) || (reg1 == AH && reg2 == AL)) 
+		{
+			return 0;
+		}
+
 		return (reg2 == AL || reg2 == AH || reg2 == AX || reg2 == EAX || reg2 == RAX);
 	}
 	else if (reg1 == CL || reg1 == CH || reg1 == CX || reg1 == ECX || reg1 == RCX)
 	{
+		if ((reg1 == CL && reg2 == CH) || (reg1 == CH && reg2 == CL))
+		{
+			return 0;
+		}
+		
 		return (reg2 == CL || reg2 == CH || reg2 == CX || reg2 == ECX || reg2 == RCX);
 	}
 	else if (reg1 == DL || reg1 == DH || reg1 == DX || reg1 == EDX || reg1 == RDX)
 	{
+		if ((reg1 == DL && reg2 == DH) || (reg1 == DH && reg2 == DL))
+		{
+			return 0;
+		}
+		
 		return (reg2 == DL || reg2 == DH || reg2 == DX || reg2 == EDX || reg2 == RDX);
 	}
 	else if (reg1 == BL || reg1 == BH || reg1 == BX || reg1 == EBX || reg1 == RBX)
 	{
+		if ((reg1 == BL && reg2 == BH) || (reg1 == BH && reg2 == BL))
+		{
+			return 0;
+		}
+		
 		return (reg2 == BL || reg2 == BH || reg2 == BX || reg2 == EBX || reg2 == RBX);
 	}
 	else if (reg1 == SP || reg1 == ESP || reg1 == RSP)
@@ -190,6 +210,11 @@ bool isRegisterPointer(enum Register reg)
 bool isRegisterStatusFlag(enum Register reg)
 {
 	return reg >= CF && reg <= OF;
+}
+
+bool isRegisterHighByte(enum Register reg)
+{
+	return reg == AH || reg == CH || reg == DH || reg == BH;
 }
 
 bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)

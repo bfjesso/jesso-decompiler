@@ -78,6 +78,8 @@ bool isRegisterPointer(enum Register reg);
 
 bool isRegisterStatusFlag(enum Register reg);
 
+bool isRegisterHighByte(enum Register reg);
+
 bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat);
 
 uint8_t getSizeOfRegister(enum Register reg);

@@ -379,6 +379,11 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 				return sprintfJdc(result, false, "%s%s", notStatusFlag ? "!" : "", localRegVar->name.buffer);
 			}
 
+			if (isRegisterHighByte(targetReg) && !isRegisterHighByte(localRegVar->reg)) 
+			{
+				return sprintfJdc(result, false, "(%s & 0xF0)", localRegVar->name.buffer);
+			}
+
 			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
 			if (doDataTypesRequireCasting(targetType, localRegVar->dataType, params->is64Bit) &&
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
@@ -478,18 +483,25 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 		{
 			expressions[expressionIndex].jdcStr = initializeJdcStr();
 
-			struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
-			if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
+			if (isRegisterHighByte(targetReg) && !isRegisterHighByte(regArg->reg))
 			{
-				struct JdcStr targetTypeStr = initializeJdcStr();
-				dataTypeToStr(targetType, params->useStdInt, &targetTypeStr);
-
-				sprintfJdc(&expressions[expressionIndex].jdcStr, false, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
-				freeJdcStr(&targetTypeStr);
+				sprintfJdc(&expressions[expressionIndex].jdcStr, false, "(%s & 0xF0)", regArg->name.buffer);
 			}
 			else 
 			{
-				strcpyJdc(&expressions[expressionIndex].jdcStr, regArg->name.buffer);
+				struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
+				if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
+				{
+					struct JdcStr targetTypeStr = initializeJdcStr();
+					dataTypeToStr(targetType, params->useStdInt, &targetTypeStr);
+
+					sprintfJdc(&expressions[expressionIndex].jdcStr, false, "(%s)%s", targetTypeStr.buffer, regArg->name.buffer);
+					freeJdcStr(&targetTypeStr);
+				}
+				else
+				{
+					strcpyJdc(&expressions[expressionIndex].jdcStr, regArg->name.buffer);
+				}
 			}
 			
 			expressionIndex++;
