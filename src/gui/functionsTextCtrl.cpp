@@ -354,8 +354,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 
 enum DecompilationColor GetPrimitiveTypeColor(enum PrimitiveType primitive, bool useStdInt)
 {
-	if (useStdInt &&
-		(primitive == INT8_TYPE || primitive == INT16_TYPE || primitive == INT32_TYPE || primitive == INT64_TYPE))
+	if (useStdInt && primitive >= INT8_TYPE && primitive <= UINT64_TYPE)
 	{
 		return USER_TYPE_DECOMP_COLOR;
 	}
