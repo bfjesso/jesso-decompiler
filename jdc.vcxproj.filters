@@ -147,7 +147,7 @@
     <ClCompile Include="src\gui\settingsWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gui\JdcTabArt.cpp">
+    <ClCompile Include="src\gui\jdcTabArt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

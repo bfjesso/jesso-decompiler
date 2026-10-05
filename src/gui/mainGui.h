@@ -114,6 +114,8 @@ public:
 
 	void RefreshVarNames(int32_t functionIndex);
 
+	void UpdateSettings();
+
 	void AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
 	void OpenFile();

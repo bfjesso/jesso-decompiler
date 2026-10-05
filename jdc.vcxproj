@@ -204,7 +204,7 @@
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\calculatorWindow.cpp" />
     <ClCompile Include="src\gui\importsGrid.cpp" />
-    <ClCompile Include="src\gui\JdcTabArt.cpp" />
+    <ClCompile Include="src\gui\jdcTabArt.cpp" />
     <ClCompile Include="src\gui\jdcTextCtrl.cpp" />
     <ClCompile Include="src\gui\logTextCtrl.cpp" />
     <ClCompile Include="src\gui\main.cpp" />

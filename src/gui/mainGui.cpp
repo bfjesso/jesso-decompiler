@@ -237,6 +237,7 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 		auiManager.DetachPane(window);
 		auiManager.Update();
 		window->Hide();
+		UpdateSettings();
 		return;
 	}
 
@@ -248,10 +249,11 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 {
 	wxWindow* window = auiNotebook->GetPage(e.GetSelection());
-	if (window == logTextCtrl)
+	if (window == logTextCtrl || window == settingsWindow)
 	{
 		auiNotebook->RemovePage(e.GetSelection());
-		logTextCtrl->Hide();
+		window->Hide();
+		UpdateSettings();
 		return;
 	}
 	
@@ -379,6 +381,11 @@ void MainGui::RefreshVarNames(int32_t functionIndex)
 	{
 		functionsTextCtrls[i]->UpdateFunctionHeader(functionIndex);
 	}
+}
+
+void MainGui::UpdateSettings()
+{
+	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
 }
 
 void MainGui::AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function)
