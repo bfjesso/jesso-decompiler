@@ -395,7 +395,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		wxString addressInfoStr = wxString(addressStr) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
 
 		wxString asmStr = "";
-		if (instructionToStr(&instructions[i], &instructionStrBuffer))
+		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue(), &instructionStrBuffer))
 		{
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}

@@ -1,10 +1,13 @@
 #pragma once
 #include "guiUtils.h"
+#include "settingsWindow.h"
 
 class BytesDisassemblerWindow : public wxWindow
 {
 public:
-	BytesDisassemblerWindow(wxWindow* parent);
+	BytesDisassemblerWindow(wxWindow* parent, SettingsWindow* settings);
+
+	SettingsWindow* settingsWindow = nullptr;
 
 	wxTextCtrl* bytesTextCtrl = nullptr;
 	wxButton* disassembleButton = nullptr;

@@ -9,7 +9,7 @@ extern "C"
 
 	enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 	
-	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result);
+	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, struct JdcStr* result);
 
 	const char* getPtrSizeStr(int32_t ptrSize);
 
@@ -19,4 +19,4 @@ extern "C"
 }
 #endif
 
-static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result);
+static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, struct JdcStr* result);

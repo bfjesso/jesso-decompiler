@@ -66,7 +66,7 @@ enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, str
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, struct JdcStr* result) // this will be in intel syntax
+enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, struct JdcStr* result) // this will be in intel syntax
 {
 	strcpyJdc(result, "");
 
@@ -90,27 +90,38 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, str
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
-		switch (currentOperand->type)
+		if (currentOperand->type == SEGMENT) 
 		{
-		case SEGMENT:
 			strcatJdc(result, segmentStrs[currentOperand->segment]);
-			break;
-		case REGISTER:
-			strcatJdc(result, registerStrs[currentOperand->reg]);
-			break;
-		case MEM_ADDRESS:
-			if (memAddressToStr(&currentOperand->memoryAddress, result) == ERROR_JDC) { return ERROR_JDC; }
-			break;
-		case IMMEDIATE:
+		}
+		else if (currentOperand->type == REGISTER) 
+		{
+			if (evaluateIP && compareRegisters(currentOperand->reg, IP)) 
+			{ 
+				sprintfJdc(result, true, "0x%llX", instruction->address + instruction->numOfBytes); 
+			}
+			else 
+			{
+				strcatJdc(result, registerStrs[currentOperand->reg]);
+			}
+		}
+		else if (currentOperand->type == MEM_ADDRESS) 
+		{
+			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, result) == ERROR_JDC) 
+			{ 
+				return ERROR_JDC; 
+			}
+		}
+		else if (currentOperand->type == IMMEDIATE) 
+		{
 			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
-			break;
 		}
 	}
 
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcStr* result)
+static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, struct JdcStr* result)
 {
 	if (memAddr->ptrSize != 0)
 	{
@@ -131,27 +142,44 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 
 	strcatJdc(result, "[");
 
-	if (memAddr->reg != NO_REG) 
+	uint64_t totalDisplacement = 0;
+	bool gotFirstTerm = false;
+
+	if (evaluateIP && compareRegisters(memAddr->reg, IP)) 
+	{
+		totalDisplacement = (instruction->address + instruction->numOfBytes) * memAddr->scale;
+	}
+	else if (memAddr->reg != NO_REG)
 	{
 		strcatJdc(result, registerStrs[memAddr->reg]);
-	}
-
-	if (memAddr->scale > 1) 
-	{
-		sprintfJdc(result, true, " * 0x%X", memAddr->scale);
-	}
-
-	if (memAddr->regDisplacement != NO_REG)
-	{
-		strcatJdc(result, " + ");
-		strcatJdc(result, registerStrs[memAddr->regDisplacement]);
-	}
-
-	if (memAddr->reg != NO_REG)
-	{
-		if (memAddr->constDisplacement > 0)
+		if (memAddr->scale > 1)
 		{
-			sprintfJdc(result, true, " + 0x%llX", memAddr->constDisplacement);
+			sprintfJdc(result, true, " * 0x%X", memAddr->scale);
+		}
+
+		gotFirstTerm = true;
+	}
+
+	if (evaluateIP && compareRegisters(memAddr->regDisplacement, IP)) 
+	{
+		totalDisplacement += instruction->address + instruction->numOfBytes;
+	}
+	else if (memAddr->regDisplacement != NO_REG)
+	{
+		if (gotFirstTerm)
+		{
+			strcatJdc(result, " + ");
+		}
+
+		strcatJdc(result, registerStrs[memAddr->regDisplacement]);
+		gotFirstTerm = true;
+	}
+
+	if (gotFirstTerm)
+	{
+		if (totalDisplacement != 0 || memAddr->constDisplacement > 0)
+		{
+			sprintfJdc(result, true, " + 0x%llX", totalDisplacement + memAddr->constDisplacement);
 		}
 		else if (memAddr->constDisplacement < 0)
 		{
@@ -160,7 +188,7 @@ static enum JdcStatus memAddressToStr(struct MemoryAddress* memAddr, struct JdcS
 	}
 	else
 	{
-		sprintfJdc(result, true, "0x%llX", memAddr->constDisplacement);
+		sprintfJdc(result, true, "0x%llX", totalDisplacement + memAddr->constDisplacement);
 	}
 
 	strcatJdc(result, "]");

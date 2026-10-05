@@ -5,10 +5,12 @@ wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)
 EVT_BUTTON(DisassembleButtonID, BytesDisassemblerWindow::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
-BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
+BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, SettingsWindow* settings) : wxWindow(parent, wxID_ANY)
 {
 	SetMinSize(wxSize(150, 100));
 	SetOwnBackgroundColour(backgroundColor);
+
+	settingsWindow = settings;
 	
 	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(400, 25));
 	bytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
@@ -61,7 +63,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result))
 	{
 		struct JdcStr instructionStrBuffer = initializeJdcStr();
-		if (instructionToStr(&result, &instructionStrBuffer))
+		if (instructionToStr(&result, settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue(), &instructionStrBuffer))
 		{
 			if (result.isInvalid)
 			{
