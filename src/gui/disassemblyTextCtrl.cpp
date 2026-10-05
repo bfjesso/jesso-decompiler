@@ -495,6 +495,8 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		}
 		SetStyling(opcodeLen, OPCODE_ASM_COLOR);
 
+		bool evaluateIP = mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue();
+
 		// operands
 		int32_t regStart = 0;
 		int32_t segStart = 0;
@@ -503,15 +505,19 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		{
 			if (instruction->operands[i].type == REGISTER)
 			{
-				wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
-				int32_t loc = asmStr.find(regStr, regStart);
-				StartStyling(pos + loc);
-				SetStyling(regStr.length(), REGISTER_ASM_COLOR);
-				regStart = loc + regStr.length();
+				if (!evaluateIP || !compareRegisters(instruction->operands[i].reg, IP)) 
+				{
+					wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
+					int32_t loc = asmStr.find(regStr, regStart);
+					StartStyling(pos + loc);
+					SetStyling(regStr.length(), REGISTER_ASM_COLOR);
+					regStart = loc + regStr.length();
+				}
 			}
 			else if (instruction->operands[i].type == MEM_ADDRESS)
 			{
-				if (instruction->operands[i].memoryAddress.reg != NO_REG)
+				if (instruction->operands[i].memoryAddress.reg != NO_REG && 
+					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.reg, IP)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
 					int32_t loc = asmStr.find(regStr, regStart);
@@ -520,7 +526,8 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 					regStart = loc + regStr.length();
 				}
 
-				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG)
+				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG && 
+					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.regDisplacement, IP)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
 					int32_t loc = asmStr.find(regStr, regStart);
