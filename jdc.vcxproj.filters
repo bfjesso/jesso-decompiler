@@ -144,6 +144,12 @@
     <ClCompile Include="src\decompiler\localRegVars.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\settingsWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\JdcTabArt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -300,6 +306,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\jdcTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\disassemblyStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\settingsWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\jdcTabArt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

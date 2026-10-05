@@ -234,7 +234,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 
 	menu.Append(ID_SHOW_UNHANDLED_OPCODES, "Show all opcodes not handled in the decopliler");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		mainGui->OpenLog(wxAUI_DOCK_NONE);
+		mainGui->ShowWindowInAUI(wxAUI_DOCK_NONE, mainGui->logTextCtrl);
 		struct JdcStr errorBuffer = initializeJdcStr();
 		mainGui->logTextCtrl->Freeze();
 		for (int32_t i = 0; i < numOfInstructions; i++) 

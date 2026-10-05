@@ -18,64 +18,6 @@ EVT_AUINOTEBOOK_TAB_RIGHT_DOWN(NotebookID, MainGui::OnTabRightClick)
 EVT_RIGHT_DOWN(MainGui::OnMouseRightClick)
 wxEND_EVENT_TABLE()
 
-class ColoredTabArt final : public wxAuiDefaultTabArt
-{
-public:
-	ColoredTabArt() {}
-
-	wxAuiTabArt* Clone() override
-	{
-		return new ColoredTabArt(*this);
-	}
-
-	void DrawBackground(wxDC& dc, wxWindow* wnd, const wxRect& rect) override
-	{
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(foregroundColor));
-		dc.DrawRectangle(rect);
-	}
-
-	void DrawTab(wxDC& dc, wxWindow* wnd, const wxAuiNotebookPage& page, const wxRect& in_rect, int32_t closeButtonState, wxRect* outTabRect, wxRect* outButtonRect, int32_t* xExtent) override
-	{
-		int32_t textWidth = 0;
-		int32_t textHeight = 0;
-		dc.GetTextExtent(page.caption, &textWidth, &textHeight);
-
-		const int32_t tabWidth = textWidth + 32;
-		wxRect rect = in_rect;
-		rect.width = tabWidth;
-		rect.Deflate(1, 2);
-
-		const wxColour fill = page.active ? backgroundColor : foregroundColor;
-		const wxColour border = fill.ChangeLightness(page.active ? 85 : 70);
-
-		dc.SetPen(wxPen(border));
-		dc.SetBrush(wxBrush(fill));
-		dc.DrawRoundedRectangle(rect, 2);
-
-		dc.SetFont(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT));
-		dc.SetTextForeground(textColor);
-
-		dc.DrawText(page.caption, rect.x + 8, rect.y + (rect.height - dc.GetCharHeight()) / 2);
-
-		if (outTabRect) { *outTabRect = rect; }
-		if (xExtent) { *xExtent = tabWidth; }
-		if (outButtonRect)
-		{
-			wxRect btn(rect.GetRight() - 16, rect.y + 4, 12, 12);
-			*outButtonRect = btn;
-
-			wxColour btnColor = textColor;
-			if (closeButtonState == wxAUI_BUTTON_STATE_HOVER) { btnColor = wxColour(255, 255, 255); }
-			else if (closeButtonState == wxAUI_BUTTON_STATE_PRESSED) { btnColor = wxColour(255, 50, 50); }
-
-			dc.SetPen(wxPen(btnColor, 2));
-			dc.DrawLine(btn.x + 1, btn.y + 1, btn.x + 9, btn.y + 9);
-			dc.DrawLine(btn.x + 9, btn.y + 1, btn.x + 1, btn.y + 9);
-		}
-	}
-};
-
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 {
 	SetMinSize(wxSize(800, 600));
@@ -83,6 +25,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	
 	SetOwnBackgroundColour(backgroundColor);
 
+	settingsWindow = new SettingsWindow(this);
 	colorsMenu = new ColorsMenu();
 
 	menuBar = new wxMenuBar();
@@ -104,13 +47,14 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddCodeReferencesWindow(); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
 	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this), "Bytes disassembler"); });
-	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { OpenLog(wxAUI_DOCK_NONE); });
+	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { ShowWindowInAUI(wxAUI_DOCK_NONE, logTextCtrl); });
 
 	wxMenu* windowMenu = new wxMenu();
 	AddMenuItem(windowMenu, ResetWindowLayoutID, "Reset window layout", [&](wxCommandEvent& ce) -> void { ResetWindowLayout(); });
 
 	wxMenu* optionsMenu = new wxMenu();
 	AddMenuItem(optionsMenu, OpenColorsMenuID, "Colors", [&](wxCommandEvent& ce) -> void { colorsMenu->OpenMenu(GetPosition()); });
+	AddMenuItem(optionsMenu, OpenSettingsID, "Settings", [&](wxCommandEvent& ce) -> void { ShowWindowInAUI(wxAUI_DOCK_NONE, settingsWindow); });
 
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(toolMenu, "Tools");
@@ -125,7 +69,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	auiManager.GetArtProvider()->SetMetric(wxAUI_DOCKART_GRADIENT_TYPE, wxAUI_GRADIENT_NONE);
 
 	auiNotebook = new wxAuiNotebook(this, NotebookID, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_CLOSE_ON_ALL_TABS | wxAUI_NB_MIDDLE_CLICK_CLOSE);
-	auiNotebook->SetArtProvider(new ColoredTabArt());
+	auiNotebook->SetArtProvider(new JdcTabArt());
 
 	logTextCtrl = new LogTextCtrl(this, this);
 
@@ -155,7 +99,7 @@ void MainGui::ResetWindowLayout()
 		.CaptionVisible(false)
 		.MinSize(100, 100));
 
-	OpenLog(wxAUI_DOCK_LEFT);
+	ShowWindowInAUI(wxAUI_DOCK_LEFT, logTextCtrl);
 	AddDisassemblyTextCtrl();
 	AddFunctionsTextCtrl();
 	auiManager.Update();
@@ -171,16 +115,16 @@ void MainGui::AddFloatingPane(wxWindow* window, wxString caption)
 	auiManager.Update();
 }
 
-void MainGui::OpenLog(int32_t direction)
+void MainGui::ShowWindowInAUI(int32_t direction, wxWindow* window)
 {
-	if (!logTextCtrl->IsShown())
+	if (!window->IsShown())
 	{
 		wxAuiPaneInfo pane = wxAuiPaneInfo()
-			.Name(logTextCtrl->GetName()
+			.Name(window->GetName()
 				.Lower())
-			.Caption(logTextCtrl->GetName())
+			.Caption(window->GetName())
 			.BestSize(500, -1)
-			.MinSize(logTextCtrl->GetMinSize());
+			.MinSize(window->GetMinSize());
 		if (direction == wxAUI_DOCK_NONE) 
 		{
 			pane.Float();
@@ -190,9 +134,9 @@ void MainGui::OpenLog(int32_t direction)
 			pane.Direction(direction);
 		}
 		
-		auiManager.AddPane(logTextCtrl, pane);
+		auiManager.AddPane(window, pane);
 		auiManager.Update();
-		logTextCtrl->Show();
+		window->Show();
 	}
 }
 
@@ -288,11 +232,11 @@ FunctionInfoWindow* MainGui::AddFunctionInfoWindow(struct Function* function)
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 {
 	wxWindow* window = e.GetPane()->window;
-	if (window == logTextCtrl)
+	if (window == logTextCtrl || window == settingsWindow)
 	{
 		auiManager.DetachPane(window);
 		auiManager.Update();
-		logTextCtrl->Hide();
+		window->Hide();
 		return;
 	}
 
@@ -811,7 +755,7 @@ void MainGui::AnalyzeFile()
 		return;
 	}
 
-	decompParams.useStdInt = true;
+	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
 
 	logTextCtrl->Log("finding all functions...", 0);
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
-#include <wx/aui/aui.h>
+#include "jdcTabArt.h"
+#include "settingsWindow.h"
 #include "disassemblyTextCtrl.h"
 #include "decompilationTextCtrl.h"
 #include "functionsTextCtrl.h"
@@ -19,6 +20,7 @@ public:
 	MainGui();
 
 	wxMenuBar* menuBar = nullptr;
+	SettingsWindow* settingsWindow = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
 
 	LogTextCtrl* logTextCtrl = nullptr;
@@ -70,6 +72,7 @@ public:
 		OpenCalculatorMenuID,
 		OpenBytesDisassemblerID,
 		OpenLogID,
+		OpenSettingsID,
 		ResetWindowLayoutID,
 		OpenColorsMenuID,
 		OpenFileID,
@@ -83,7 +86,9 @@ public:
 
 	void AddFloatingPane(wxWindow* window, wxString caption);
 
-	void OpenLog(int32_t direction);
+	void OpenSettings(int32_t direction);
+
+	void ShowWindowInAUI(int32_t direction, wxWindow* window);
 
 	DisassemblyTextCtrl* AddDisassemblyTextCtrl();
 
