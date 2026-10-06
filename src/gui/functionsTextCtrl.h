@@ -20,6 +20,8 @@ public:
 
 	void ShowAllFunctions(int32_t highlightIndex);
 
+	void ResetFunctionsList();
+
 	void ApplyFunctionsHighlighting(int32_t start, int32_t end);
 };
 

@@ -19,7 +19,9 @@ public:
 
 	void ClearData();
 
-	void Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, uint64_t errorAddress);
+	void Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress);
+
+	void ResetDisassembly();
 
 	void ShowGoToAddressDialog();
 

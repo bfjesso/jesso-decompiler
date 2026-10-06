@@ -251,6 +251,11 @@ void FunctionsTextCtrl::ShowAllFunctions(int32_t highlightIndex)
 	}
 }
 
+void FunctionsTextCtrl::ResetFunctionsList() 
+{
+	ShowAllFunctions(-1);
+}
+
 void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 {
 	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)

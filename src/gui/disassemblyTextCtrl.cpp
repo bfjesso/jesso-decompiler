@@ -11,7 +11,7 @@ DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, 
 	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
 
-	Initialize(disassembledInstructions, amountOfInstructions, 0);
+	Initialize(disassembledInstructions, amountOfInstructions, -1, 0);
 }
 
 void DisassemblyTextCtrl::ClearData()
@@ -22,7 +22,7 @@ void DisassemblyTextCtrl::ClearData()
 	ClearText();
 }
 
-void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, uint64_t errorAddress)
+void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress)
 {
 	instructions = disassembledInstructions;
 	numOfInstructions = amountOfInstructions;
@@ -47,26 +47,34 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 	if (errorAddress != 0)
 	{
 		int32_t errorIndex = findInstructionByAddress(instructions, numOfInstructions, errorAddress);
-		CenterLine(errorIndex);
-		UpdateTextCtrl();
-		HighlightLine(errorIndex, RED_INDICATOR, 0);
+		if (errorIndex != -1) 
+		{
+			CenterLine(errorIndex);
+			UpdateTextCtrl();
+			HighlightLine(errorIndex, RED_INDICATOR, 0);
+		}
 	}
-	else
+	else if(centerInstructionIndex != -1)
+	{
+		CenterLine(centerInstructionIndex);
+		UpdateTextCtrl();
+		HighlightLine(centerInstructionIndex, YELLOW_INDICATOR, 0);
+	}
+	else 
 	{
 		int32_t entryPointIndex = findInstructionByAddress(instructions, numOfInstructions, mainGui->entryPoint + mainGui->decompParams.imageBase);
-		if (entryPointIndex != -1)
+		if (entryPointIndex != -1) 
 		{
 			CenterLine(entryPointIndex);
 			UpdateTextCtrl();
 			HighlightLine(entryPointIndex, YELLOW_INDICATOR, 0);
 		}
-		else
-		{
-			CenterLine(0);
-			UpdateTextCtrl();
-			HighlightLine(0, YELLOW_INDICATOR, 0);
-		}
 	}
+}
+
+void DisassemblyTextCtrl::ResetDisassembly()
+{
+	Initialize(instructions, numOfInstructions, GetCurrentLine(), 0);
 }
 
 void DisassemblyTextCtrl::ShowGoToAddressDialog() 

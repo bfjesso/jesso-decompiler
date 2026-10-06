@@ -25,7 +25,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	
 	SetOwnBackgroundColour(backgroundColor);
 
-	settingsWindow = new SettingsWindow(this);
+	settingsWindow = new SettingsWindow(this, this);
 	colorsMenu = new ColorsMenu();
 
 	menuBar = new wxMenuBar();
@@ -237,7 +237,6 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 		auiManager.DetachPane(window);
 		auiManager.Update();
 		window->Hide();
-		UpdateSettings();
 		return;
 	}
 
@@ -253,7 +252,6 @@ void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 	{
 		auiNotebook->RemovePage(e.GetSelection());
 		window->Hide();
-		UpdateSettings();
 		return;
 	}
 	
@@ -386,6 +384,24 @@ void MainGui::RefreshVarNames(int32_t functionIndex)
 void MainGui::UpdateSettings()
 {
 	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
+
+	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
+	{
+		disassemblyTextCtrls[i]->ResetDisassembly();
+	}
+
+	for (int32_t i = 0; i < decompilationTextCtrls.size(); i++)
+	{
+		if (decompilationTextCtrls[i]->currentDecompiledFunc != -1)
+		{
+			decompilationTextCtrls[i]->DecompileFunction(decompilationTextCtrls[i]->currentDecompiledFunc);
+		}
+	}
+
+	for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
+	{
+		functionsTextCtrls[i]->ResetFunctionsList();
+	}
 }
 
 void MainGui::AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function)
@@ -732,7 +748,7 @@ void MainGui::DisassembleFile()
 
 	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
-		disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), errorAddress);
+		disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
 	}
 
 	logTextCtrl->Log("finished disassembling", 0);
