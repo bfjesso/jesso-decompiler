@@ -864,7 +864,7 @@ static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromI
 	stackVar->offsetFromInitSP = offsetFromInitSP;
 	stackVar->isArgument = isArgument;
 	stackVar->name = initializeJdcStr();
-	sprintfJdc(&(stackVar->name), false, "%s%X", isArgument ? "arg" : "var", offsetFromInitSP < 0 ? -offsetFromInitSP : offsetFromInitSP);
+	sprintfJdc(&(stackVar->name), false, "%s%c%X", isArgument ? "arg" : "var", offsetFromInitSP < 0 ? 'N' : 'P', offsetFromInitSP < 0 ? -offsetFromInitSP : offsetFromInitSP);
 
 	if (dataTypeRef)
 	{
