@@ -32,6 +32,13 @@ bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int3
 	{
 		if (operand->type == MEM_ADDRESS) 
 		{
+			int64_t offsetFromInitSP = 0;
+			if (isMemAddressStackVar(params, instructionIndex, &operand->memoryAddress, &offsetFromInitSP) && 
+				!getStackVarByOffset(params->currentFunc, offsetFromInitSP))
+			{
+				return false;
+			}
+
 			return true;
 		}
 		else if (operand->type == REGISTER)

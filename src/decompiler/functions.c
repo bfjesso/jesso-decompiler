@@ -229,18 +229,53 @@ static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationPara
 	for (int32_t i = 0; i < params->numOfFunctions; i++) 
 	{
 		params->currentFunc = &params->functions[i];
+
+		// stack vars
+		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
+		{
+			struct DisassembledInstruction* instruction = &params->instructions[j];
+			for (int32_t k = 0; k < instruction->numOfOperands; k++)
+			{
+				struct Operand* currentOperand = &instruction->operands[k];
+				int64_t offsetFromInitSP = 0;
+				if (currentOperand->type == MEM_ADDRESS && !doesInstructionModifyOperand(params, j, k, 0) &&
+					isMemAddressStackVar(params, j, &currentOperand->memoryAddress, &offsetFromInitSP))
+				{
+					bool isArgument = offsetFromInitSP > 0;
+					if (isArgument && isStackVarInitialized(params, j - 1, params->currentFunc->firstInstructionIndex, offsetFromInitSP))
+					{
+						isArgument = false;
+					}
+
+					struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
+					if (ERROR_JDC == addStackVar(params->currentFunc, offsetFromInitSP, isArgument, &dataType))
+					{
+						return ERROR_JDC;
+					}
+				}
+			}
+		}
+
+		// reg args, this is a separate loop becaues of the PUSH stack var check
 		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[j];
 
-			// checking for reg args
+			int64_t offsetFromInitSP = 0;
+			if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
+			{
+				continue;
+			}
+			else if (instruction->numOfOperands > 0 && // checking for stack var that is used as a "PUSH" only to save the reg
+				instruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(params, j, 0, 0) &&
+				isMemAddressStackVar(params, j, &instruction->operands[0].memoryAddress, &offsetFromInitSP) &&
+				!getStackVarByOffset(params->currentFunc, offsetFromInitSP))
+			{
+				continue;
+			}
+
 			for (int32_t k = RAX; k < ST0; k++)
 			{
-				if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
-				{
-					break;
-				}
-
 				if (k == RBP || k == RSP || k == RIP)
 				{
 					continue;
@@ -256,21 +291,6 @@ static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationPara
 						{
 							return ERROR_JDC;
 						}
-					}
-				}
-			}
-
-			// checking for stack vars
-			for (int32_t k = 0; k < instruction->numOfOperands; k++)
-			{
-				struct Operand* currentOperand = &instruction->operands[k];
-				int64_t offsetFromInitSP = 0;
-				if (currentOperand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &currentOperand->memoryAddress, &offsetFromInitSP))
-				{
-					struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
-					if (ERROR_JDC == addStackVar(params->currentFunc, offsetFromInitSP, &dataType))
-					{
-						return ERROR_JDC;
 					}
 				}
 			}
@@ -331,6 +351,63 @@ static bool isRegInitialized(struct DecompilationParameters* params, int32_t sta
 	return false;
 }
 
+static bool isStackVarInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, int64_t offsetFromInitSP)
+{
+	struct StackVariable* stackArg = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
+	if (stackArg)
+	{
+		return true;
+	}
+
+	for (int32_t i = startInstructionIndex; i >= minInstructionIndex; i--)
+	{
+		struct Condition* cond = getConditionFromLastBodyInstruction(params, i);
+		if (cond && i != startInstructionIndex)
+		{
+			if (cond->conditionType == ELSE_CT)
+			{
+				struct Condition* currentCond = cond;
+				bool isVarInitializedInAllCases = true;
+				while (currentCond->connectedUpperConditionIndex != -1)
+				{
+					if (!isStackVarInitialized(params, currentCond->lastBodyIndex, currentCond->firstBodyIndex, offsetFromInitSP))
+					{
+						isVarInitializedInAllCases = false;
+						break;
+					}
+
+					currentCond = &params->currentFunc->conditions[currentCond->connectedUpperConditionIndex];
+				}
+
+				if (isVarInitializedInAllCases)
+				{
+					return true;
+				}
+			}
+
+			i = getConditionChainFirstBodyInstruction(params, cond);
+			continue;
+		}
+
+		struct DisassembledInstruction* instruction = &params->instructions[i];
+		for (int32_t j = 0; j < instruction->numOfOperands; j++)
+		{
+			struct Operand* currentOperand = &instruction->operands[j];
+			int64_t currentOffsetFromInitSP = 0;
+			bool overwrites = false;
+			if (currentOperand->type == MEM_ADDRESS &&
+				doesInstructionModifyOperand(params, i, j, &overwrites) && overwrites &&
+				isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &currentOffsetFromInitSP) && 
+				currentOffsetFromInitSP == offsetFromInitSP)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params) // checks for arguments that aren't used in the function but are just passed to another function call
 {
 	for (int32_t i = 0; i < params->numOfFunctions; i++)
@@ -371,7 +448,8 @@ static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params)
 					int64_t stackFrameSize = 0;
 					if (stackArg->isArgument && !getStackArgInitializer(params, j, stackArg->offsetFromInitSP, 0, 0, &stackFrameSize))
 					{
-						if (ERROR_JDC == addStackVar(params->currentFunc, stackArg->offsetFromInitSP - stackFrameSize, &stackArg->dataType))
+						bool isArgument = (stackArg->offsetFromInitSP - stackFrameSize) > 0;
+						if (ERROR_JDC == addStackVar(params->currentFunc, stackArg->offsetFromInitSP - stackFrameSize, isArgument, &stackArg->dataType))
 						{
 							return ERROR_JDC;
 						}
@@ -466,7 +544,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 					if (!stackVar)
 					{
-						return ERROR_JDC;
+						continue;
 					}
 
 					if (operand->memoryAddress.ptrSize < getPrimitiveTypeSize(stackVar->dataType.primitiveType)) // the smallest ptr size is used incase this is an array
@@ -766,7 +844,7 @@ struct ReturnedVariable* findReturnedVar(struct Function* function, uint64_t cal
 	return 0;
 }
 
-static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromInitSP, struct DataType* dataTypeRef)
+static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromInitSP, bool isArgument, struct DataType* dataTypeRef)
 {
 	if (getStackVarByOffset(function, offsetFromInitSP))
 	{
@@ -778,8 +856,6 @@ static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromI
 	{
 		return ERROR_JDC;
 	}
-
-	bool isArgument = offsetFromInitSP > 0;
 
 	function->stackVars = newStackVars;
 	struct StackVariable* stackVar = &function->stackVars[function->numOfStackVars];

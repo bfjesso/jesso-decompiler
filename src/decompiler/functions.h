@@ -27,6 +27,8 @@ static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationPara
 
 static bool isRegInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
+static bool isStackVarInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, int64_t offsetFromInitSP);
+
 static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params);
 
 bool getStackArgInitializer(struct DecompilationParameters* params, int32_t callInstructionIndex, int64_t stackArgOffset, struct StackVariable** stackVarRef, int32_t* pushInstructionRef, int64_t* stackFrameSizeRef);
@@ -51,7 +53,7 @@ struct RegisterVariable* getLocalRegVarByReg(struct Function* function, enum Reg
 
 struct ReturnedVariable* findReturnedVar(struct Function* function, uint64_t callInstructionAddress);
 
-static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromInitSP, struct DataType* dataTypeRef);
+static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromInitSP, bool isArgument, struct DataType* dataTypeRef);
 
 enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, bool isArgument, enum Register reg);
 
