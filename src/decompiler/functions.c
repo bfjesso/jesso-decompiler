@@ -532,6 +532,8 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 			}
 		}
 
+		uint64_t functionStackFrameSize = 0;
+
 		for (int32_t j = params->currentFunc->firstInstructionIndex; j <= params->currentFunc->lastInstructionIndex; j++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[j];
@@ -541,6 +543,8 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 				int64_t offsetFromInitSP = 0;
 				if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, j, &operand->memoryAddress, &offsetFromInitSP))
 				{
+					functionStackFrameSize = getStackFrameSizeAtInstruction(params, j);
+					
 					struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, offsetFromInitSP);
 					if (!stackVar)
 					{
@@ -560,16 +564,30 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 			}
 		}
 
-		for (int32_t j = 0; j < params->currentFunc->numOfStackVars - 1; j++)
+		for (int32_t j = 0; j < params->currentFunc->numOfStackVars; j++)
 		{
 			struct StackVariable* var1 = &params->currentFunc->stackVars[j];
-			struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
-			if (var2->offsetFromInitSP < var1->offsetFromInitSP) 
+			
+			uint16_t offsetDif = 0;
+			if (j != params->currentFunc->numOfStackVars - 1) 
 			{
-				return ERROR_JDC; // they should be sorted at this point
-			}
+				struct StackVariable* var2 = &params->currentFunc->stackVars[j + 1];
+				if (var2->offsetFromInitSP < var1->offsetFromInitSP)
+				{
+					return ERROR_JDC; // they should be sorted at this point
+				}
 
-			uint16_t offsetDif = (uint16_t)(var2->offsetFromInitSP - var1->offsetFromInitSP);
+				offsetDif = (uint16_t)(var2->offsetFromInitSP - var1->offsetFromInitSP);
+			}
+			else if(functionStackFrameSize >= var1->offsetFromInitSP)
+			{
+				offsetDif = (uint16_t)(functionStackFrameSize - var1->offsetFromInitSP);
+			}
+			else 
+			{
+				break;
+			}
+			
 			uint8_t primitiveTypeSize = getPrimitiveTypeSize(var1->dataType.primitiveType);
 			if (!var1->isArgument && offsetDif > primitiveTypeSize && primitiveTypeSize != 0)
 			{
@@ -768,9 +786,18 @@ struct StackVariable* getStackVarByOffset(struct Function* function, int64_t off
 {
 	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
-		if (function->stackVars[i].offsetFromInitSP == offsetFromInitSP)
+		struct StackVariable* var = &function->stackVars[i];
+		if (var->offsetFromInitSP == offsetFromInitSP)
 		{
 			return &function->stackVars[i];
+		}
+		else if((offsetFromInitSP - var->offsetFromInitSP) % getPrimitiveTypeSize(var->dataType.primitiveType) == 0)
+		{
+			uint16_t arrayIndex = (offsetFromInitSP - var->offsetFromInitSP) / getPrimitiveTypeSize(var->dataType.primitiveType);
+			if (arrayIndex > 0 && var->dataType.arrayLen > arrayIndex)
+			{
+				return &function->stackVars[i];
+			}
 		}
 	}
 

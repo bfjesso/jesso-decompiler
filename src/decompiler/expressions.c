@@ -305,22 +305,39 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 
 	if (stackVar->dataType.arrayLen > 1)
 	{
+		uint16_t arrayIndex = (offsetFromInitSP - stackVar->offsetFromInitSP) / getPrimitiveTypeSize(stackVar->dataType.primitiveType);
+		
 		strcpyJdc(result, stackVar->name.buffer);
 		if (memAddress->regDisplacement != NO_REG)
 		{
 			uint8_t typeSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
-			if (typeSize > 1)
+
+			if (arrayIndex > 0) 
 			{
-				sprintfJdc(result, true, "[%s / %u]", displacementRegStr.buffer, typeSize);
+				if (typeSize > 1)
+				{
+					sprintfJdc(result, true, "[%u + (%s / %u)]", arrayIndex, displacementRegStr.buffer, typeSize);
+				}
+				else
+				{
+					sprintfJdc(result, true, "[%u + %s]", arrayIndex, displacementRegStr.buffer);
+				}
 			}
-			else
+			else 
 			{
-				sprintfJdc(result, true, "[%s]", displacementRegStr.buffer);
+				if (typeSize > 1)
+				{
+					sprintfJdc(result, true, "[%s / %u]", displacementRegStr.buffer, typeSize);
+				}
+				else
+				{
+					sprintfJdc(result, true, "[%s]", displacementRegStr.buffer);
+				}
 			}
 		}
 		else
 		{
-			strcatJdc(result, "[0]");
+			sprintfJdc(result, true, "[%u]", arrayIndex);
 		}
 
 		freeJdcStr(&displacementRegStr);
