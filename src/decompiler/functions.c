@@ -579,9 +579,9 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 
 				offsetDif = (uint16_t)(var2->offsetFromInitSP - var1->offsetFromInitSP);
 			}
-			else if(functionStackFrameSize >= var1->offsetFromInitSP)
+			else if(var1->offsetFromInitSP <= 0 && functionStackFrameSize >= -var1->offsetFromInitSP)
 			{
-				offsetDif = (uint16_t)(functionStackFrameSize - var1->offsetFromInitSP);
+				offsetDif = (uint16_t)(functionStackFrameSize + var1->offsetFromInitSP);
 			}
 			else 
 			{
