@@ -219,42 +219,41 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 					}
 
 					bool doesAccessedRegVarChange = false;
+					int32_t scopeEndIndex = 0;
 					for (int32_t j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 					{
-						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]))
+						bool overwrites = false;
+						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]) || 
+							(doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites))
 						{
 							break;
 						}
 
-						bool overwrites = false;
 						if (!doesAccessedRegVarChange)
 						{
-							if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
-							{
-								break;
-							}
-
-							if (doesInstructionModifyRegister(params, j, accessedReg, 0, 0))
-							{
-								doesAccessedRegVarChange = true;
-							}
+							doesAccessedRegVarChange = doesInstructionModifyRegister(params, j, accessedReg, 0, 0);
 						}
-						else if (doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites)
+						else if (doesInstructionAccessRegister(params, j, modifiedReg, 1, 0))
 						{
-							if (!modifiedRegVar)
-							{
-								if (ERROR_JDC == addRegVar(params, 0, 0, modifiedReg))
-								{
-									return ERROR_JDC;
-								}
+							scopeEndIndex = j;
+						}
+					}
 
-								modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
-								addedNewRegVar = true;
+					if (scopeEndIndex != 0) 
+					{
+						if (!modifiedRegVar)
+						{
+							if (ERROR_JDC == addRegVar(params, 0, 0, modifiedReg))
+							{
+								return ERROR_JDC;
 							}
 
-							addRegVarScope(modifiedRegVar, i, j);
-							break;
+							modifiedRegVar = &params->currentFunc->regVars[params->currentFunc->numOfRegVars - 1];
+							addedNewRegVar = true;
 						}
+
+						addRegVarScope(modifiedRegVar, i, scopeEndIndex);
+						break;
 					}
 				}
 			}
