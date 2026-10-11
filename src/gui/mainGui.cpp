@@ -142,7 +142,8 @@ void MainGui::ShowWindowInAUI(int32_t direction, wxWindow* window)
 
 DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 {
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + std::to_string(disassemblyTextCtrls.size() + 1), disassembledInstructions.data(), disassembledInstructions.size());
+	highestDisassemblyTextCtrlNum++;
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + std::to_string(highestDisassemblyTextCtrlNum), disassembledInstructions.data(), disassembledInstructions.size());
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 	
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
@@ -155,7 +156,8 @@ DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 
 DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 {
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, this, "Decompilation " + std::to_string(decompilationTextCtrls.size() + 1));
+	highestDecompilationTextCtrlNum++;
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, this, "Decompilation " + std::to_string(highestDecompilationTextCtrlNum));
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
@@ -168,7 +170,8 @@ DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 
 FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 {
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, this, "Functions " + std::to_string(functionsTextCtrls.size() + 1));
+	highestFunctionsTextCtrlNum++;
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, this, "Functions " + std::to_string(highestFunctionsTextCtrlNum));
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
@@ -186,7 +189,8 @@ FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 
 DataTextCtrl* MainGui::AddDataTextCtrl()
 {
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, this, "Data " + std::to_string(dataTextCtrls.size() + 1));
+	highestDataTextCtrlNum++;
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, this, "Data " + std::to_string(highestDataTextCtrlNum));
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);
@@ -313,6 +317,10 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (disassemblyTextCtrls[i] == window)
 		{
 			disassemblyTextCtrls.erase(disassemblyTextCtrls.begin() + i);
+			if(disassemblyTextCtrls.size() == 0)
+			{
+				highestDisassemblyTextCtrlNum = 0;
+			}
 			break;
 		}
 		else if (disassemblyTextCtrls[i]->decompilationTextCtrl == window) 
@@ -337,6 +345,10 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (decompilationTextCtrls[i] == window)
 		{
 			decompilationTextCtrls.erase(decompilationTextCtrls.begin() + i);
+			if (decompilationTextCtrls.size() == 0)
+			{
+				highestDecompilationTextCtrlNum = 0;
+			}
 			break;
 		}
 		else if (decompilationTextCtrls[i]->disassemblyTextCtrl == window)
@@ -351,6 +363,10 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (functionsTextCtrls[i] == window)
 		{
 			functionsTextCtrls.erase(functionsTextCtrls.begin() + i);
+			if (functionsTextCtrls.size() == 0)
+			{
+				highestFunctionsTextCtrlNum = 0;
+			}
 			return;
 		}
 	}
@@ -360,6 +376,10 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (dataTextCtrls[i] == window)
 		{
 			dataTextCtrls.erase(dataTextCtrls.begin() + i);
+			if (dataTextCtrls.size() == 0)
+			{
+				highestDataTextCtrlNum = 0;
+			}
 			return;
 		}
 	}

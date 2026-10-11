@@ -26,9 +26,16 @@ public:
 	LogTextCtrl* logTextCtrl = nullptr;
 
 	std::vector<DisassemblyTextCtrl*> disassemblyTextCtrls;
+	int32_t highestDisassemblyTextCtrlNum = 0; // these are used for naming
+
 	std::vector<DecompilationTextCtrl*> decompilationTextCtrls;
+	int32_t highestDecompilationTextCtrlNum = 0;
+
 	std::vector<FunctionsTextCtrl*> functionsTextCtrls;
+	int32_t highestFunctionsTextCtrlNum = 0;
+
 	std::vector<DataTextCtrl*> dataTextCtrls;
+	int32_t highestDataTextCtrlNum = 0;
 
 	wxAuiManager auiManager;
 	wxAuiNotebook* auiNotebook;
