@@ -302,6 +302,11 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int32_t 
 		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
+			if (endIndex == params->currentFunc->lastInstructionIndex + 1) 
+			{
+				endIndex = i;
+			}
+			
 			break;
 		}
 	}
