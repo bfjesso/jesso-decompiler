@@ -120,8 +120,7 @@ static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct Decompilatio
 				return ERROR_JDC;
 			}
 
-			if (params->currentFunc->returnReg != NO_REG || 
-				params->currentFunc->callingConvention == __UNKNOWNCALL) // __UNKNOWNCALL will only be set at this point if the function ends without a return instruction
+			if (params->currentFunc->returnReg != NO_REG)
 			{
 				continue;
 			}
