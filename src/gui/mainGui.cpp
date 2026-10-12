@@ -686,7 +686,7 @@ void MainGui::DisassembleFile()
 	struct DisassembledInstruction instructionBuffer;
 	uint64_t errorAddress = 0;
 	bool didErrorOccur = false;
-	if (ERROR_JDC == DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress))
+	if (ERROR_JDC == DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress, 0))
 	{
 		didErrorOccur = true;
 	}
@@ -913,7 +913,7 @@ void MainGui::ClearData()
 	fileFormat = UNKNOWN_FF;
 }
 
-enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress)
+enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress, int32_t callNum)
 {
 	struct FileSection* currentSection = 0;
 	uint64_t currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
@@ -995,11 +995,15 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 			uint64_t jmpDst = getJmpDst(&decompParams, 0);
 			if (jmpDst != 0)
 			{
-				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress))
+				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress, callNum + 1))
 				{
 					return ERROR_JDC;
 				}
 			}
+		}
+		else if (callNum > 2000)
+		{
+			return SUCCESS_JDC;
 		}
 	}
 
