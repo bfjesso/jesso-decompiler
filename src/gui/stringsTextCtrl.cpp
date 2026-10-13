@@ -85,10 +85,16 @@ void StringsTextCtrl::LoadStrings()
 
     for (int32_t i = 0; i < mainGui->decompParams.numOfSections; i++)
     {
-        int32_t startIndex = -1;
-        for (uint32_t j = 0; j < mainGui->decompParams.sections[i].physicalSize; j++)
+        struct FileSection* section = &mainGui->decompParams.sections[i];
+        if (section->type != INIT_DATA_FST) 
         {
-            char c = *(char*)(mainGui->decompParams.fileBytes + mainGui->decompParams.sections[i].fileOffset + j);
+            continue;
+        }
+        
+        int32_t startIndex = -1;
+        for (uint32_t j = 0; j <section->physicalSize; j++)
+        {
+            char c = *(char*)(mainGui->decompParams.fileBytes + section->fileOffset + j);
             if (c >= ' ' && c <= '~')
             {
                 if (startIndex == -1)
@@ -101,15 +107,15 @@ void StringsTextCtrl::LoadStrings()
             }
             else
             {
-                if (startIndex != -1 && c == 0 && currentStr.length() > 1)
+                if (startIndex != -1 && currentStr.length() > 1)
                 {
-                    uint64_t address = mainGui->decompParams.imageBase + mainGui->decompParams.sections[i].rva + startIndex;
+                    uint64_t address = mainGui->decompParams.imageBase + section->rva + startIndex;
                     foundAddresses.push_back(address);
 
                     char addressStr[50] = { 0 };
                     sprintf(addressStr, "0x%llX", address);
 
-                    stringsText += wxString(addressStr) + wxString(mainGui->decompParams.sections[i].name.buffer) + "\t\"" + currentStr + "\"\n";
+                    stringsText += wxString(addressStr) + wxString(section->name.buffer) + "\t\"" + currentStr + "\"\n";
                     numOfStrings++;
                 }
 
