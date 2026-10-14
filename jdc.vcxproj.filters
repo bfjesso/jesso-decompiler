@@ -150,6 +150,9 @@
     <ClCompile Include="src\gui\jdcTabArt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\save-handler\saveHandler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -315,6 +318,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\jdcTabArt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\save-handler\saveHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

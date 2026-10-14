@@ -11,19 +11,42 @@
 extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int32_t* status);
 #endif
 
-FILE* openFile(const wchar_t* filePath)
+FILE* openFile(const wchar_t* filePath, const wchar_t* mode)
 {
 #ifdef _WIN32
-	return _wfopen(filePath, L"rb");
+	return _wfopen(filePath, mode);
 #endif
 
 #ifdef linux
-	char filePathChar[255] = { 0 };
-	wcstombs(filePathChar, filePath, 254);
-	return fopen(filePathChar, "rb");
+	char filePathChar[1024] = { 0 };
+	char modeChar[50] = { 0 };
+
+	wcstombs(filePathChar, filePath, sizeof(filePathChar));
+	wcstombs(modeChar, mode, sizeof(modeChar));
+
+	return fopen(filePathChar, modeChar);
 #endif
 
 	return 0;
+}
+
+enum JdcStatus renameFile(const wchar_t* oldPath, const wchar_t* newPath)
+{
+#ifdef _WIN32
+	return _wrename(oldPath, newPath) == 0 ? SUCCESS_JDC : ERROR_JDC;
+#endif
+
+#ifdef linux
+	char oldPathChar[1024] = { 0 };
+	char newPathChar[1024] = { 0 };
+
+	wcstombs(oldPathChar, oldPath, sizeof(oldPathChar));
+	wcstombs(newPathChar, newPath, sizeof(newPathChar));
+
+	return rename(oldPathChar, newPathChar) == 0 ? SUCCESS_JDC : ERROR_JDC;
+#endif
+
+	return ERROR_JDC;
 }
 
 int32_t seek64(FILE* file, uint64_t fileOffset) 
@@ -282,7 +305,7 @@ enum JdcStatus getAllFileSectionHeaders(const wchar_t* filePath, enum FileFormat
 
 enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint64_t* numOfBytesRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && numOfBytesRef)
 	{
 		uint64_t result = 0;
@@ -307,7 +330,7 @@ enum JdcStatus getNumOfFileBytes(const wchar_t* filePath, uint64_t* numOfBytesRe
 
 enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint64_t bufferSize)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file)
 	{
 		seek64(file, 0);

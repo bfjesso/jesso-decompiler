@@ -3,7 +3,7 @@
 
 enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && isPERef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
@@ -20,7 +20,7 @@ enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef)
 
 enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && is64BitRef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
@@ -88,7 +88,7 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_H
 
 enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, uint64_t* imageBaseRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && imageBaseRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -108,7 +108,7 @@ enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, uint64_t* i
 
 enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* entryPointRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && entryPointRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -128,7 +128,7 @@ enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* 
 
 enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int32_t* numOfSectionsRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && numOfSectionsRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -148,7 +148,7 @@ enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int32_t
 
 enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int32_t bufferLen)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -205,7 +205,7 @@ enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, str
 
 enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD value, struct JdcStr* result)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -256,7 +256,7 @@ enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD v
 
 enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t* numOfImportsRef, int32_t* numOfLibrariesRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && numOfImportsRef && numOfLibrariesRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -347,7 +347,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 
 enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file) 
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
@@ -485,7 +485,7 @@ static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWO
 
 enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file) 
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };

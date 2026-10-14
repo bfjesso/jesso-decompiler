@@ -83,6 +83,7 @@ public:
 		ResetWindowLayoutID,
 		OpenColorsMenuID,
 		OpenFileID,
+		SaveFileID,
 		DisassembleFileID,
 		AnalyzeFileID,
 		DisassembleFileButtonID,
@@ -126,6 +127,8 @@ public:
 	void AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function);
 
 	void OpenFile();
+
+	void SaveFile();
 
 	enum JdcStatus LoadKnownFile(wxString filePath);
 

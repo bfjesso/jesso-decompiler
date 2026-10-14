@@ -3,7 +3,9 @@
 #include "../fileStructs.h"
 #include <wchar.h>
 
-FILE* openFile(const wchar_t* filePath);
+FILE* openFile(const wchar_t* filePath, const wchar_t* mode);
+
+enum JdcStatus renameFile(const wchar_t* oldPath, const wchar_t* newPath);
 
 int32_t seek64(FILE* file, uint64_t fileOffset);
 

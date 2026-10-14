@@ -3,7 +3,7 @@
 
 enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file)
 	{
 		uint8_t e_ident[5];
@@ -19,7 +19,7 @@ enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef)
 
 enum JdcStatus isELFX64(const wchar_t* filePath, bool* is64BitRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if(file)
 	{
 		uint8_t e_ident[5];
@@ -94,7 +94,7 @@ static enum JdcStatus readElfShdr(FILE* file, bool is64Bit, uint64_t fileOffset,
 
 enum JdcStatus getELFEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* entryPointRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && entryPointRef)
 	{
 		Elf64_Ehdr elfHeader;
@@ -182,7 +182,7 @@ enum JdcStatus getELFSymbolByValue(const wchar_t* filePath, bool is64Bit, uint64
 
 enum JdcStatus getNumOfELFSections(const wchar_t* filePath, bool is64Bit, int32_t* numOfSectionsRef)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file && numOfSectionsRef)
 	{
 		Elf64_Ehdr elfHeader;
@@ -217,7 +217,7 @@ enum JdcStatus getAllELFSectionHeaders(const wchar_t* filePath, bool is64Bit, st
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 
 	if (file)
 	{
@@ -284,7 +284,7 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 
 	if (file)
 	{
@@ -326,7 +326,7 @@ enum JdcStatus getSectionHeaderByName(const wchar_t* filePath, bool is64Bit, con
 
 enum JdcStatus readSectionBytes(const wchar_t* filePath, Elf64_Shdr* section, uint8_t* buffer, uint64_t bufferSize)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file)
 	{
 		seek64(file, section->sh_offset);
@@ -342,7 +342,7 @@ enum JdcStatus getSectionHeaderByType(const wchar_t* filePath, bool is64Bit, uin
 {
 	Elf64_Ehdr elfHeader;
 	Elf64_Shdr sectionHeader;
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 
 	if (file)
 	{
@@ -571,7 +571,7 @@ enum JdcStatus getAllELFImports(const wchar_t* filePath, bool is64Bit, struct Im
 
 enum JdcStatus generateELFHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
 {
-	FILE* file = openFile(filePath);
+	FILE* file = openFile(filePath, L"rb");
 	if (file)
 	{
 		Elf64_Ehdr elfHeader;

@@ -9,6 +9,7 @@
 #include "../decompiler/decompilationUtils.h"
 #include "../disassembler/mnemonics.h"
 #include "../decompiler/functions.h"
+#include "../save-handler/saveHandler.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
@@ -32,6 +33,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	wxMenu* fileMenu = new wxMenu();
 	AddMenuItem(fileMenu, OpenFileID, "Open file", [&](wxCommandEvent& ce) -> void { OpenFile(); });
+	AddMenuItem(fileMenu, SaveFileID, "Save file", [&](wxCommandEvent& ce) -> void { SaveFile(); });
 	AddMenuItem(fileMenu, DisassembleFileID, "Disassemble file", [&](wxCommandEvent& ce) -> void { DisassembleFile(); });
 	AddMenuItem(fileMenu, AnalyzeFileID, "Analyze file", [&](wxCommandEvent& ce) -> void { AnalyzeFile(); });
 
@@ -521,6 +523,24 @@ void MainGui::OpenFile()
 	}
 
 	openFileDialog.Close(true);
+}
+
+void MainGui::SaveFile() 
+{
+	if (functions.size() == 0) 
+	{
+		wxMessageBox("No file has been analyzed", "Nothing to save");
+		return;
+	}
+
+	if (saveToFile(currentFilePath.c_str().AsWChar(), functions.data(), functions.size()) == ERROR_JDC)
+	{
+		wxMessageBox("Error saving to file", "Failed to save to file");
+		return;
+	}
+
+	wxMessageBox("Analysis data has been saved to file", "Saved to file");
+	return;
 }
 
 enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
