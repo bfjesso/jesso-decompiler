@@ -49,6 +49,23 @@ enum JdcStatus renameFile(const wchar_t* oldPath, const wchar_t* newPath)
 	return ERROR_JDC;
 }
 
+enum JdcStatus removeFile(const wchar_t* filePath)
+{
+#ifdef _WIN32
+	return _wremove(filePath) == 0 ? SUCCESS_JDC : ERROR_JDC;
+#endif
+
+#ifdef linux
+	char filePathChar[1024] = { 0 };
+
+	wcstombs(filePathChar, filePath, sizeof(filePathChar));
+
+	return remove(filePathChar) == 0 ? SUCCESS_JDC : ERROR_JDC;
+#endif
+
+	return ERROR_JDC;
+}
+
 int32_t seek64(FILE* file, uint64_t fileOffset) 
 {
 #ifdef _WIN32

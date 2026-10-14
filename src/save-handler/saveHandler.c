@@ -16,10 +16,10 @@ enum JdcStatus saveToFile(const wchar_t* filePath, struct Function* functions, i
     }
 
     size_t filePathLen = wcslen(filePath);
-    if (fwrite(filePath, 1, filePathLen, file) != filePathLen)
+    if (fwrite(filePath, sizeof(wchar_t), filePathLen, file) != filePathLen)
     {
         fclose(file);
-        remove(tempPath);
+        removeFile(tempPath);
         return ERROR_JDC;
     }
 
@@ -27,14 +27,14 @@ enum JdcStatus saveToFile(const wchar_t* filePath, struct Function* functions, i
     if (fwrite(&version, sizeof(version), 1, file) != 1)
     {
         fclose(file);
-        remove(tempPath);
+        removeFile(tempPath);
         return ERROR_JDC;
     }
 
     if (fwrite(&numOfFunctions, sizeof(numOfFunctions), 1, file) != 1)
     {
         fclose(file);
-        remove(tempPath);
+        removeFile(tempPath);
         return ERROR_JDC;
     }
 
@@ -43,7 +43,7 @@ enum JdcStatus saveToFile(const wchar_t* filePath, struct Function* functions, i
         if (writeFunction(file, &functions[i]) != SUCCESS_JDC)
         {
             fclose(file);
-            remove(tempPath);
+            removeFile(tempPath);
             return ERROR_JDC;
         }
     }
@@ -59,6 +59,7 @@ enum JdcStatus saveToFile(const wchar_t* filePath, struct Function* functions, i
         return ERROR_JDC;
     }
 
+    removeFile(savePath);
     if (renameFile(tempPath, savePath) == ERROR_JDC)
     {
         return ERROR_JDC;

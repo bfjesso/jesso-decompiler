@@ -7,6 +7,8 @@ FILE* openFile(const wchar_t* filePath, const wchar_t* mode);
 
 enum JdcStatus renameFile(const wchar_t* oldPath, const wchar_t* newPath);
 
+enum JdcStatus removeFile(const wchar_t* filePath);
+
 int32_t seek64(FILE* file, uint64_t fileOffset);
 
 enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, size_t bufferLen);
