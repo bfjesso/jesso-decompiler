@@ -214,6 +214,7 @@
     <ClCompile Include="src\gui\stringsTextCtrl.cpp" />
     <ClCompile Include="src\jdc-str\jdcStr.c" />
     <ClCompile Include="src\pe-handler\peHandler.c" />
+    <ClCompile Include="src\save-handler\loadHandler.c" />
     <ClCompile Include="src\save-handler\saveHandler.c" />
   </ItemGroup>
   <ItemGroup>
@@ -277,6 +278,7 @@
     <ClInclude Include="src\jdcTypes.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />
     <ClInclude Include="src\pe-handler\windowsStructs.h" />
+    <ClInclude Include="src\save-handler\loadHandler.h" />
     <ClInclude Include="src\save-handler\saveHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

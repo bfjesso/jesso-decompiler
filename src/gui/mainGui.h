@@ -138,6 +138,8 @@ public:
 
 	void AnalyzeFile();
 
+	void UpdateDecompParams();
+
 	void ClearData();
 
 	enum JdcStatus DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress, int32_t callNum);

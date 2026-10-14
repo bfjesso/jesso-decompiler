@@ -10,6 +10,7 @@
 #include "../disassembler/mnemonics.h"
 #include "../decompiler/functions.h"
 #include "../save-handler/saveHandler.h"
+#include "../save-handler/loadHandler.h"
 
 wxBEGIN_EVENT_TABLE(MainGui, wxFrame)
 EVT_CLOSE(MainGui::CloseApp)
@@ -405,7 +406,7 @@ void MainGui::RefreshVarNames(int32_t functionIndex)
 
 void MainGui::UpdateSettings()
 {
-	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
+	UpdateDecompParams();
 
 	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
@@ -444,14 +445,70 @@ void MainGui::OpenFile()
 
 	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
-		wxString fileName = openFileDialog.GetPath().Mid(openFileDialog.GetPath().Last('\\') + 1);
-		
 		ClearData();
 		SetTitle("Jesso Decompiler x64");
 
 		wxString filePath = openFileDialog.GetPath();
 		if (!filePath.empty())
 		{
+			bool isJdcSave = false;
+			if (ERROR_JDC == isFileJdcSave(filePath.c_str().AsWChar(), &isJdcSave))
+			{
+				wxMessageBox("Error checking if file is a JDC save", "Can't load file");
+				return;
+			}
+
+			if (isJdcSave) 
+			{
+				uint32_t saveVersion = 0;
+				if (ERROR_JDC == getJdcSaveVersion(filePath.c_str().AsWChar(), &saveVersion)) 
+				{
+					wxMessageBox("Error getting save file version", "Can't load file");
+					return;
+				}
+
+				if (saveVersion != CURRENT_SAVE_FILE_VERSION) 
+				{
+					wxMessageBox("This save file is a different version than the current", "Can't load file");
+					return;
+				}
+
+				int32_t numOfFunctions = 0;
+				if (ERROR_JDC == getNumOfFuncsFromJdcSaveFile(filePath.c_str().AsWChar(), &numOfFunctions))
+				{
+					wxMessageBox("Error getting number of functions from save", "Can't load file");
+					return;
+				}
+
+				functions.resize(numOfFunctions);
+				if (ERROR_JDC == getAllFunctionsFromJdcSaveFile(filePath.c_str().AsWChar(), functions.data()))
+				{
+					wxMessageBox("Error getting functions from save", "Can't load file");
+					return;
+				}
+
+				UpdateDecompParams();
+
+				logTextCtrl->Log("loaded analyzed functions from save at " + filePath, 0);
+
+				size_t filePathLen = 0;
+				if (ERROR_JDC == getJdcSaveFilePathLen(filePath.c_str().AsWChar(), &filePathLen))
+				{
+					wxMessageBox("Error getting path length of analyzed file", "Can't load file");
+					return;
+				}
+
+				wchar_t* analyzedFilePath = new wchar_t[filePathLen];
+				if (ERROR_JDC == getJdcSaveFilePath(filePath.c_str().AsWChar(), analyzedFilePath, filePathLen))
+				{
+					wxMessageBox("Error getting path of analyzed file", "Can't load file");
+					return;
+				}
+
+				filePath = wxString(analyzedFilePath);
+				delete[] analyzedFilePath;
+			}
+			
 			if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes) || numOfFileBytes == 0)
 			{
 				wxMessageBox("Error getting number of bytes in file", "Can't load data");
@@ -463,6 +520,8 @@ void MainGui::OpenFile()
 				wxMessageBox("Error identifying file format", "Failed to open file");
 				return;
 			}
+
+			wxString fileName = filePath.Mid(openFileDialog.GetPath().Last('\\') + 1);
 
 			if (fileFormat != UNKNOWN_FF)
 			{
@@ -509,11 +568,24 @@ void MainGui::OpenFile()
 				dataTextCtrls[i]->Initialize();
 			}
 
-			int32_t disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
-			if (disassembleAnswer == wxYES)
+			if (isJdcSave) 
 			{
 				DisassembleFile();
+
+				for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
+				{
+					functionsTextCtrls[i]->ShowAllFunctions(-1);
+				}
 			}
+			else 
+			{
+				int32_t disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
+				if (disassembleAnswer == wxYES)
+				{
+					DisassembleFile();
+				}
+			}
+			
 		}
 		else
 		{
@@ -687,18 +759,7 @@ void MainGui::DisassembleFile()
 
 	logTextCtrl->Log("disassembling...", 0);
 
-	decompParams.imports = imports;
-	decompParams.numOfImports = numOfImports;
-
-	decompParams.imageBase = imageBase;
-	decompParams.sections = sections;
-	decompParams.numOfSections = numOfSections;
-
-	decompParams.fileBytes = fileBytes;
-	decompParams.numOfFileBytes = numOfFileBytes;
-
-	decompParams.is64Bit = is64Bit;
-	decompParams.fileFormat = fileFormat;
+	UpdateDecompParams();
 
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	struct DisassemblerOptions options = { 0 };
@@ -776,8 +837,7 @@ void MainGui::DisassembleFile()
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
 
-	decompParams.instructions = disassembledInstructions.data();
-	decompParams.numOfInstructions = disassembledInstructions.size();
+	UpdateDecompParams();
 
 	if (!HandleJmpTables()) 
 	{
@@ -793,10 +853,13 @@ void MainGui::DisassembleFile()
 
 	logTextCtrl->Log("finished disassembling", 0);
 
-	int32_t answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
-	if (answer == wxYES)
+	if (functions.size() == 0)
 	{
-		AnalyzeFile();
+		int32_t answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+		if (answer == wxYES)
+		{
+			AnalyzeFile();
+		}
 	}
 }
 
@@ -818,7 +881,7 @@ void MainGui::AnalyzeFile()
 		return;
 	}
 
-	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
+	UpdateDecompParams();
 
 	logTextCtrl->Log("finding all functions...", 0);
 
@@ -845,6 +908,32 @@ void MainGui::AnalyzeFile()
 	}
 
 	logTextCtrl->Log("finished analyzing file", 0);
+
+	decompParams.currentFunc = 0;
+}
+
+void MainGui::UpdateDecompParams()
+{
+	decompParams.imports = imports;
+	decompParams.numOfImports = numOfImports;
+
+	decompParams.imageBase = imageBase;
+	decompParams.sections = sections;
+	decompParams.numOfSections = numOfSections;
+
+	decompParams.fileBytes = fileBytes;
+	decompParams.numOfFileBytes = numOfFileBytes;
+
+	decompParams.is64Bit = is64Bit;
+	decompParams.fileFormat = fileFormat;
+	
+	decompParams.instructions = disassembledInstructions.data();
+	decompParams.numOfInstructions = disassembledInstructions.size();
+
+	decompParams.functions = functions.data();
+	decompParams.numOfFunctions = functions.size();
+	
+	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
 
 	decompParams.currentFunc = 0;
 }
@@ -1262,9 +1351,7 @@ void MainGui::FindAllFunctions(bool getSymbols)
 		numOfFunctions++;
 	}
 
-	decompParams.functions = functions.data();
-	decompParams.numOfFunctions = numOfFunctions;
-	decompParams.currentFunc = 0;
+	UpdateDecompParams();
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)

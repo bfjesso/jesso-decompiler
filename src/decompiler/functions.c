@@ -578,7 +578,7 @@ static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params
 
 				offsetDif = (uint16_t)(var2->offsetFromInitSP - var1->offsetFromInitSP);
 			}
-			else if(var1->offsetFromInitSP <= 0 && functionStackFrameSize >= -var1->offsetFromInitSP)
+			else if(var1->offsetFromInitSP <= 0 && functionStackFrameSize >= (uint64_t)(-var1->offsetFromInitSP))
 			{
 				offsetDif = (uint16_t)(functionStackFrameSize + var1->offsetFromInitSP);
 			}
@@ -792,7 +792,7 @@ struct StackVariable* getStackVarByOffset(struct Function* function, int64_t off
 		}
 		else if((offsetFromInitSP - var->offsetFromInitSP) % getPrimitiveTypeSize(var->dataType.primitiveType) == 0)
 		{
-			uint16_t arrayIndex = (offsetFromInitSP - var->offsetFromInitSP) / getPrimitiveTypeSize(var->dataType.primitiveType);
+			int64_t arrayIndex = (offsetFromInitSP - var->offsetFromInitSP) / getPrimitiveTypeSize(var->dataType.primitiveType);
 			if (arrayIndex > 0 && var->dataType.arrayLen > arrayIndex)
 			{
 				return &function->stackVars[i];

@@ -2,6 +2,12 @@
 #include "../decompiler/decompilationStructs.h"
 
 #define CURRENT_SAVE_FILE_VERSION 1
+#define JDC_SIG 0x4A444300 // JDC
+
+#define JDC_SIG_FILE_OFFSET 0 // sig is uint32_t
+#define SAVE_VERSION_FILE_OFFSET JDC_SIG_FILE_OFFSET + sizeof(uint32_t) // version is uint32_t
+#define FILE_PATH_LEN_FILE_OFFSET SAVE_VERSION_FILE_OFFSET + sizeof(uint32_t) // path len is size_t
+#define FILE_PATH_FILE_OFFSET FILE_PATH_LEN_FILE_OFFSET + sizeof(size_t)
 
 #ifdef __cplusplus
 extern "C"
@@ -13,6 +19,8 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+static enum JdcStatus writeFunction(FILE* file, const struct Function* func);
 
 static enum JdcStatus writeStackVar(FILE* file, const struct StackVariable* stackVar);
 

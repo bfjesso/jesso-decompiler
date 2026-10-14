@@ -248,7 +248,7 @@ struct JdcStr initializeJdcStr()
 	return initializeJdcStrWithSize(25);
 }
 
-struct JdcStr initializeJdcStrWithSize(int32_t size)
+struct JdcStr initializeJdcStrWithSize(size_t size)
 {
 	struct JdcStr result = { 0 };
 
