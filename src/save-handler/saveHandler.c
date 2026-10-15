@@ -31,7 +31,7 @@ enum JdcStatus saveToFile(const wchar_t* filePath, struct Function* functions, i
         return ERROR_JDC;
     }
 
-    size_t filePathLen = wcslen(filePath);
+    size_t filePathLen = wcslen(filePath) + 1;
     if (fwrite(&filePathLen, sizeof(filePathLen), 1, file) != 1)
     {
         fclose(file);
