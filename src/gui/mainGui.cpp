@@ -28,6 +28,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	colorsMenu = new ColorsMenu();
 	settingsWindow = new SettingsWindow(this, this);
+	settingsWindow->LoadPreferences();
 
 	menuBar = new wxMenuBar();
 
@@ -240,6 +241,11 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 	wxWindow* window = e.GetPane()->window;
 	if (window == logTextCtrl || window == settingsWindow)
 	{
+		if (window == settingsWindow)
+		{
+			settingsWindow->CheckUnappliedChanges();
+		}
+		
 		auiManager.DetachPane(window);
 		auiManager.Update();
 		window->Hide();
@@ -256,6 +262,11 @@ void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 	wxWindow* window = auiNotebook->GetPage(e.GetSelection());
 	if (window == logTextCtrl || window == settingsWindow)
 	{
+		if (window == settingsWindow)
+		{
+			settingsWindow->CheckUnappliedChanges();
+		}
+		
 		auiNotebook->RemovePage(e.GetSelection());
 		window->Hide();
 		return;
@@ -932,7 +943,7 @@ void MainGui::UpdateDecompParams()
 	decompParams.functions = functions.data();
 	decompParams.numOfFunctions = functions.size();
 	
-	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt->GetValue();
+	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt;
 
 	decompParams.currentFunc = 0;
 }

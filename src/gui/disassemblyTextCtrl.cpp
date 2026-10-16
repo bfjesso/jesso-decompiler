@@ -403,7 +403,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		wxString addressInfoStr = wxString(addressStr) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
 
 		wxString asmStr = "";
-		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue(), &instructionStrBuffer))
+		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
 		{
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}
@@ -503,7 +503,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		}
 		SetStyling(opcodeLen, OPCODE_ASM_COLOR);
 
-		bool evaluateIP = mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue();
+		bool evaluateIP = mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP;
 
 		// operands
 		int32_t regStart = 0;

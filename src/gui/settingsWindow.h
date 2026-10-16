@@ -8,7 +8,8 @@ class DisassemblerSettingsWindow : public wxWindow
 public:
 	DisassemblerSettingsWindow(wxWindow* parent);
 
-	wxCheckBox* evaluateIP = nullptr;
+	wxCheckBox* evaluateIPCheckBox = nullptr;
+	bool evaluateIP = false;
 
 	wxBoxSizer* vSizer = nullptr;
 };
@@ -18,7 +19,8 @@ class DecompilerSettingsWindow : public wxWindow
 public:
 	DecompilerSettingsWindow(wxWindow* parent);
 
-	wxCheckBox* useStdInt = nullptr;
+	wxCheckBox* useStdIntCheckBox = nullptr;
+	bool useStdInt = false;
 
 	wxBoxSizer* vSizer = nullptr;
 };
@@ -45,11 +47,11 @@ public:
 		ApplyButtonID
 	};
 
-	void ApplySettings(wxCommandEvent& e);
+	void CheckUnappliedChanges();
+
+	void ApplySettings();
 
 	void SavePreferences();
 
 	void LoadPreferences();
-
-	wxDECLARE_EVENT_TABLE();
 };

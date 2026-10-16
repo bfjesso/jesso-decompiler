@@ -6,10 +6,6 @@
 #include <wx/fileconf.h>
 #include <wx/filefn.h>
 
-wxBEGIN_EVENT_TABLE(SettingsWindow, wxWindow)
-EVT_BUTTON(ApplyButtonID, SettingsWindow::ApplySettings)
-wxEND_EVENT_TABLE()
-
 SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow(parent, wxID_ANY)
 {
 	SetName("Settings");
@@ -25,9 +21,10 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 	auiNotebook->AddPage(disassemblerSettingsWindow, "Disassembler");
 	auiNotebook->AddPage(decompilerSettingsWindow, "Decompiler");
 
-	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(75, 35));
+	applyButton = new wxButton(this, ApplyButtonID, "Apply and save", wxPoint(0, 0), wxSize(75, 35));
 	applyButton->SetOwnBackgroundColour(foregroundColor);
 	applyButton->SetOwnForegroundColour(textColor);
+	applyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { ApplySettings(); });
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 	vSizer->Add(auiNotebook, 1, wxEXPAND);
@@ -37,11 +34,30 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 	SetMinSize(wxSize(200, 200));
 
 	Hide();
-	LoadPreferences();
 }
 
-void SettingsWindow::ApplySettings(wxCommandEvent& e)
+void SettingsWindow::CheckUnappliedChanges()
 {
+	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() || 
+		decompilerSettingsWindow->useStdInt != decompilerSettingsWindow->useStdIntCheckBox->GetValue())
+	{
+		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to apply them?", "Save changes?", wxYES_NO, this);
+		if (saveAnswer == wxYES)
+		{
+			ApplySettings();
+		}
+		else 
+		{
+			disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(disassemblerSettingsWindow->evaluateIP);
+			decompilerSettingsWindow->useStdIntCheckBox->SetValue(decompilerSettingsWindow->useStdInt);
+		}
+	}
+}
+
+void SettingsWindow::ApplySettings()
+{
+	disassemblerSettingsWindow->evaluateIP = disassemblerSettingsWindow->evaluateIPCheckBox->GetValue();
+	decompilerSettingsWindow->useStdInt = decompilerSettingsWindow->useStdIntCheckBox->GetValue();
 	mainGui->UpdateSettings();
 	SavePreferences();
 }
@@ -64,9 +80,9 @@ void SettingsWindow::SavePreferences()
 	cfg.Write("/gui/window-width", mainGui->GetSize().GetWidth());
 	cfg.Write("/gui/window-height", mainGui->GetSize().GetHeight());
 
-	cfg.Write("/disassembler/evaluate-instruction-pointer", disassemblerSettingsWindow->evaluateIP->GetValue());
+	cfg.Write("/disassembler/evaluate-instruction-pointer", disassemblerSettingsWindow->evaluateIP);
 
-	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt->GetValue());
+	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt);
 
 	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++) 
 	{
@@ -120,11 +136,11 @@ void SettingsWindow::LoadPreferences()
 
 	bool evaluateIP = false;
 	cfg.Read("/disassembler/evaluate-instruction-pointer", &evaluateIP, true);
-	disassemblerSettingsWindow->evaluateIP->SetValue(evaluateIP);
+	disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(evaluateIP);
 
 	bool useStdInt = false;
 	cfg.Read("/decompiler/use-stdint", &useStdInt, true);
-	decompilerSettingsWindow->useStdInt->SetValue(useStdInt);
+	decompilerSettingsWindow->useStdIntCheckBox->SetValue(useStdInt);
 
 	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
@@ -163,17 +179,19 @@ void SettingsWindow::LoadPreferences()
 	{
 		wxMessageBox("Preferences may not have been loaded correctly", "Outdated config version");
 	}
+
+	ApplySettings();
 }
 
 DisassemblerSettingsWindow::DisassemblerSettingsWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	evaluateIP = new wxCheckBox(this, wxID_ANY, "Evaluate instruction pointer");
-	evaluateIP->SetOwnForegroundColour(textColor);
+	evaluateIPCheckBox = new wxCheckBox(this, wxID_ANY, "Evaluate instruction pointer");
+	evaluateIPCheckBox->SetOwnForegroundColour(textColor);
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
-	vSizer->Add(evaluateIP, 0, wxALL, 10);
+	vSizer->Add(evaluateIPCheckBox, 0, wxALL, 10);
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
@@ -183,12 +201,12 @@ DecompilerSettingsWindow::DecompilerSettingsWindow(wxWindow* parent) : wxWindow(
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	useStdInt = new wxCheckBox(this, wxID_ANY, "Use stdint.h types");
-	useStdInt->SetOwnForegroundColour(textColor);
-	useStdInt->SetValue(true);
+	useStdIntCheckBox = new wxCheckBox(this, wxID_ANY, "Use stdint.h types");
+	useStdIntCheckBox->SetOwnForegroundColour(textColor);
+	useStdIntCheckBox->SetValue(true);
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
-	vSizer->Add(useStdInt, 0, wxALL, 10);
+	vSizer->Add(useStdIntCheckBox, 0, wxALL, 10);
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));

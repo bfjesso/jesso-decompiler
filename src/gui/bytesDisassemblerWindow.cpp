@@ -63,7 +63,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result))
 	{
 		struct JdcStr instructionStrBuffer = initializeJdcStr();
-		if (instructionToStr(&result, settingsWindow->disassemblerSettingsWindow->evaluateIP->GetValue(), &instructionStrBuffer))
+		if (instructionToStr(&result, settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
 		{
 			if (result.isInvalid)
 			{
