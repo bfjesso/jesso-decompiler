@@ -20,6 +20,7 @@ public:
 	std::vector<wxColourPickerCtrl*> dataColorPickerCtrls;
 
 	wxButton* applyButton;
+	wxButton* restoreDefaultsButton;
 
 	wxBoxSizer* disassemblySizer = nullptr;
 	wxBoxSizer* decompilationSizer = nullptr;
@@ -31,7 +32,7 @@ public:
 	wxScrolledWindow* decompilationScrollWindow = nullptr;
 	wxScrolledWindow* dataScrollWindow = nullptr;
 
-	wxColour disassemblyColors[NUM_OF_DISASSEMBLY_COLORS] =
+	const wxColour defaultDisassemblyColors[NUM_OF_DISASSEMBLY_COLORS] =
 	{
 		wxColour(180, 180, 180),
 		wxColour(154, 154, 154),
@@ -42,6 +43,7 @@ public:
 		wxColour(87, 166, 74),
 		wxColour(181, 206, 168)
 	};
+	wxColour disassemblyColors[NUM_OF_DISASSEMBLY_COLORS];
 
 	const char* disassemblyColorNames[NUM_OF_DISASSEMBLY_COLORS] =
 	{
@@ -55,7 +57,7 @@ public:
 		"Numbers"
 	};
 
-	wxColour decompColors[NUM_OF_DECOMP_COLORS] =
+	const wxColour defaultDecompColors[NUM_OF_DECOMP_COLORS] =
 	{
 		wxColour(180, 180, 180),
 		wxColour(156, 220, 254),
@@ -72,6 +74,7 @@ public:
 		wxColour(200, 200, 200),
 		wxColour(250, 50, 50)
 	};
+	wxColour decompColors[NUM_OF_DECOMP_COLORS];
 
 	const char* decompColorNames[NUM_OF_DECOMP_COLORS] =
 	{ 
@@ -91,12 +94,13 @@ public:
 		"Errors"
 	};
 
-	wxColour dataColors[NUM_OF_DATA_COLORS] =
+	const wxColour defaultDataColors[NUM_OF_DATA_COLORS] =
 	{
 		wxColour(154, 154, 154),
 		wxColour(181, 206, 168),
 		wxColour(232, 201, 187)
 	};
+	wxColour dataColors[NUM_OF_DATA_COLORS];
 
 	const char* dataColorNames[NUM_OF_DATA_COLORS] =
 	{
@@ -108,7 +112,8 @@ public:
 	enum ids
 	{
 		MainWindowID,
-		ApplyButtonID
+		ApplyButtonID,
+		RestoreDefaultsButtonID
 	};
 
 	void AddDisassemblyTextCtrl(JdcTextCtrl* ctrl);
