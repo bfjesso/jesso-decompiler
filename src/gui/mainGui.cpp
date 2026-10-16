@@ -23,12 +23,11 @@ wxEND_EVENT_TABLE()
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 {
 	SetMinSize(wxSize(800, 600));
-	Maximize();
 	
 	SetOwnBackgroundColour(backgroundColor);
 
-	settingsWindow = new SettingsWindow(this, this);
 	colorsMenu = new ColorsMenu();
+	settingsWindow = new SettingsWindow(this, this);
 
 	menuBar = new wxMenuBar();
 
@@ -1356,6 +1355,7 @@ void MainGui::FindAllFunctions(bool getSymbols)
 
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	settingsWindow->SavePreferences();
 	auiManager.UnInit();
 	colorsMenu->Destroy();
 	Destroy();

@@ -1,6 +1,8 @@
 #pragma once
 #include "jdcTabArt.h"
 
+#define JDC_CONFIG_VERSION 1
+
 class DisassemblerSettingsWindow : public wxWindow
 {
 public:
@@ -44,6 +46,10 @@ public:
 	};
 
 	void ApplySettings(wxCommandEvent& e);
+
+	void SavePreferences();
+
+	void LoadPreferences();
 
 	wxDECLARE_EVENT_TABLE();
 };

@@ -1,6 +1,11 @@
 #include "settingsWindow.h"
 #include "mainGui.h"
 
+#include <wx/stdpaths.h>
+#include <wx/filename.h>
+#include <wx/fileconf.h>
+#include <wx/filefn.h>
+
 wxBEGIN_EVENT_TABLE(SettingsWindow, wxWindow)
 EVT_BUTTON(ApplyButtonID, SettingsWindow::ApplySettings)
 wxEND_EVENT_TABLE()
@@ -32,11 +37,132 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 	SetMinSize(wxSize(200, 200));
 
 	Hide();
+	LoadPreferences();
 }
 
 void SettingsWindow::ApplySettings(wxCommandEvent& e)
 {
 	mainGui->UpdateSettings();
+	SavePreferences();
+}
+
+static wxString GetConfigPath()
+{
+	wxString cfgDir = wxStandardPaths::Get().GetUserConfigDir() + wxFileName::GetPathSeparator() + "jesso-decompiler";
+	wxFileName::Mkdir(cfgDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
+	return cfgDir + wxFileName::GetPathSeparator() + "jdc-config.ini";
+}
+
+void SettingsWindow::SavePreferences()
+{
+	wxString path = GetConfigPath();
+	wxString tmp = path + ".tmp";
+
+	wxFileConfig cfg("Jesso Decompiler", "bfjesso", tmp, wxEmptyString, wxCONFIG_USE_LOCAL_FILE);
+
+	cfg.Write("/gui/fullscreen", mainGui->IsMaximized());
+	cfg.Write("/gui/window-width", mainGui->GetSize().GetWidth());
+	cfg.Write("/gui/window-height", mainGui->GetSize().GetHeight());
+
+	cfg.Write("/disassembler/evaluate-instruction-pointer", disassemblerSettingsWindow->evaluateIP->GetValue());
+
+	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt->GetValue());
+
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++) 
+	{
+		wxString colorName = wxString(mainGui->colorsMenu->disassemblyColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+
+		cfg.Write("/colors/disassembly/" + colorName, mainGui->colorsMenu->disassemblyColors[i]);
+	}
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		wxString colorName = wxString(mainGui->colorsMenu->decompColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+
+		cfg.Write("/colors/decompilation/" + colorName, mainGui->colorsMenu->decompColors[i]);
+	}
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
+	{
+		wxString colorName = wxString(mainGui->colorsMenu->dataColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+		
+		cfg.Write("/colors/data/" + colorName, mainGui->colorsMenu->dataColors[i]);
+	}
+
+	cfg.Write("/config-version", 1);
+	cfg.Flush();
+
+	if (!wxRenameFile(tmp, path, true))
+	{
+		wxRemoveFile(tmp);
+		wxMessageBox("An error occured when attempting to overwrite config file", "Error saving preferences");
+	}
+}
+
+void SettingsWindow::LoadPreferences()
+{
+	wxString path = GetConfigPath();
+	wxFileConfig cfg("Jesso Decompiler", "bfjesso", path, wxEmptyString, wxCONFIG_USE_LOCAL_FILE);
+
+	int32_t w = 1980;
+	int32_t h = 1080;
+	bool fullscreen = true;
+	cfg.Read("/gui/fullscreen", &fullscreen, true);
+	cfg.Read("/gui/window-width", &w, 1980);
+	cfg.Read("/gui/window-height", &h, 1080);
+
+	mainGui->SetSize(w, h);
+	if (fullscreen)
+	{
+		mainGui->Maximize();
+	}
+
+	bool evaluateIP = false;
+	cfg.Read("/disassembler/evaluate-instruction-pointer", &evaluateIP, true);
+	disassemblerSettingsWindow->evaluateIP->SetValue(evaluateIP);
+
+	bool useStdInt = false;
+	cfg.Read("/decompiler/use-stdint", &useStdInt, true);
+	decompilerSettingsWindow->useStdInt->SetValue(useStdInt);
+
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	{
+		wxColour color;
+		wxString colorName = wxString(mainGui->colorsMenu->disassemblyColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+
+		cfg.Read("/colors/disassembly/" + colorName, &color, mainGui->colorsMenu->disassemblyColors[i]);
+		mainGui->colorsMenu->disassemblyColorPickerCtrls[i]->SetColour(color);
+	}
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		wxColour color;
+		wxString colorName = wxString(mainGui->colorsMenu->decompColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+
+		cfg.Read("/colors/decompilation/" + colorName, &color, mainGui->colorsMenu->decompColors[i]);
+		mainGui->colorsMenu->decompilationColorPickerCtrls[i]->SetColour(color);
+	}
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
+	{
+		wxColour color;
+		wxString colorName = wxString(mainGui->colorsMenu->dataColorNames[i]);
+		colorName.MakeLower().Replace(" ", "-");
+
+		cfg.Read("/colors/data/" + colorName, &color, mainGui->colorsMenu->dataColors[i]);
+		mainGui->colorsMenu->dataColorPickerCtrls[i]->SetColour(color);
+	}
+
+	mainGui->colorsMenu->ApplyColors();
+
+	int32_t configVersion = 1;
+	cfg.Read("/config-version", &configVersion, 1);
+
+	if (configVersion != JDC_CONFIG_VERSION)
+	{
+		wxMessageBox("Preferences may not have been loaded correctly", "Outdated config version");
+	}
 }
 
 DisassemblerSettingsWindow::DisassemblerSettingsWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
