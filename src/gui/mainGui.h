@@ -128,6 +128,8 @@ public:
 
 	void OpenFile();
 
+	void OpenFileFromPath(wxString path);
+
 	void SaveFile();
 
 	enum JdcStatus LoadKnownFile(wxString filePath);

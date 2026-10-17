@@ -453,158 +453,168 @@ void MainGui::OpenFile()
 {
 	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
 
-	if (openFileDialog.ShowModal() != wxID_CANCEL)
+	if (openFileDialog.ShowModal() != wxID_CANCEL) 
 	{
-		ClearData();
-		SetTitle("Jesso Decompiler x64");
+		OpenFileFromPath(openFileDialog.GetPath());
+	}
 
-		wxString filePath = openFileDialog.GetPath();
-		if (!filePath.empty())
+	openFileDialog.Close(true);
+}
+
+void MainGui::OpenFileFromPath(wxString filePath)
+{
+	ClearData();
+	SetTitle("Jesso Decompiler x64");
+
+	if (!wxFileExists(filePath)) 
+	{
+		wxMessageBox("\"" + filePath + "\" does not exist", "Can't load file");
+		return;
+	}
+
+	if (!filePath.empty())
+	{
+		bool isJdcSave = false;
+		if (ERROR_JDC == isFileJdcSave(filePath.c_str().AsWChar(), &isJdcSave))
 		{
-			bool isJdcSave = false;
-			if (ERROR_JDC == isFileJdcSave(filePath.c_str().AsWChar(), &isJdcSave))
+			wxMessageBox("Error checking if file is a JDC save", "Can't load file");
+			return;
+		}
+
+		if (isJdcSave)
+		{
+			uint32_t saveVersion = 0;
+			if (ERROR_JDC == getJdcSaveVersion(filePath.c_str().AsWChar(), &saveVersion))
 			{
-				wxMessageBox("Error checking if file is a JDC save", "Can't load file");
+				wxMessageBox("Error getting save file version", "Can't load file");
 				return;
 			}
 
-			if (isJdcSave) 
+			if (saveVersion != CURRENT_SAVE_FILE_VERSION)
 			{
-				uint32_t saveVersion = 0;
-				if (ERROR_JDC == getJdcSaveVersion(filePath.c_str().AsWChar(), &saveVersion)) 
-				{
-					wxMessageBox("Error getting save file version", "Can't load file");
-					return;
-				}
-
-				if (saveVersion != CURRENT_SAVE_FILE_VERSION) 
-				{
-					wxMessageBox("This save file is a different version than the current", "Can't load file");
-					return;
-				}
-
-				int32_t numOfFunctions = 0;
-				if (ERROR_JDC == getNumOfFuncsFromJdcSaveFile(filePath.c_str().AsWChar(), &numOfFunctions))
-				{
-					wxMessageBox("Error getting number of functions from save", "Can't load file");
-					return;
-				}
-
-				functions.resize(numOfFunctions);
-				if (ERROR_JDC == getAllFunctionsFromJdcSaveFile(filePath.c_str().AsWChar(), functions.data()))
-				{
-					wxMessageBox("Error getting functions from save", "Can't load file");
-					return;
-				}
-
-				UpdateDecompParams();
-
-				logTextCtrl->Log("loaded analyzed functions from save at " + filePath, 0);
-
-				size_t filePathLen = 0;
-				if (ERROR_JDC == getJdcSaveFilePathLen(filePath.c_str().AsWChar(), &filePathLen))
-				{
-					wxMessageBox("Error getting path length of analyzed file", "Can't load file");
-					return;
-				}
-
-				wchar_t* analyzedFilePath = new wchar_t[filePathLen];
-				if (ERROR_JDC == getJdcSaveFilePath(filePath.c_str().AsWChar(), analyzedFilePath, filePathLen))
-				{
-					wxMessageBox("Error getting path of analyzed file", "Can't load file");
-					return;
-				}
-
-				filePath = wxString(analyzedFilePath);
-				delete[] analyzedFilePath;
-			}
-			
-			if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes) || numOfFileBytes == 0)
-			{
-				wxMessageBox("Error getting number of bytes in file", "Can't load data");
+				wxMessageBox("This save file is a different version than the current", "Can't load file");
 				return;
 			}
 
-			if (ERROR_JDC == identifyFileFormat(filePath.c_str().AsWChar(), &fileFormat)) 
+			int32_t numOfFunctions = 0;
+			if (ERROR_JDC == getNumOfFuncsFromJdcSaveFile(filePath.c_str().AsWChar(), &numOfFunctions))
 			{
-				wxMessageBox("Error identifying file format", "Failed to open file");
+				wxMessageBox("Error getting number of functions from save", "Can't load file");
 				return;
 			}
 
-			wxString fileName = filePath.Mid(openFileDialog.GetPath().Last('\\') + 1);
+			functions.resize(numOfFunctions);
+			if (ERROR_JDC == getAllFunctionsFromJdcSaveFile(filePath.c_str().AsWChar(), functions.data()))
+			{
+				wxMessageBox("Error getting functions from save", "Can't load file");
+				return;
+			}
 
-			if (fileFormat != UNKNOWN_FF)
+			UpdateDecompParams();
+
+			logTextCtrl->Log("loaded analyzed functions from save at " + filePath, 0);
+
+			size_t filePathLen = 0;
+			if (ERROR_JDC == getJdcSaveFilePathLen(filePath.c_str().AsWChar(), &filePathLen))
+			{
+				wxMessageBox("Error getting path length of analyzed file", "Can't load file");
+				return;
+			}
+
+			wchar_t* analyzedFilePath = new wchar_t[filePathLen];
+			if (ERROR_JDC == getJdcSaveFilePath(filePath.c_str().AsWChar(), analyzedFilePath, filePathLen))
+			{
+				wxMessageBox("Error getting path of analyzed file", "Can't load file");
+				return;
+			}
+
+			filePath = wxString(analyzedFilePath);
+			delete[] analyzedFilePath;
+		}
+
+		if (ERROR_JDC == getNumOfFileBytes(filePath.c_str().AsWChar(), &numOfFileBytes) || numOfFileBytes == 0)
+		{
+			wxMessageBox("Error getting number of bytes in file", "Can't load data");
+			return;
+		}
+
+		if (ERROR_JDC == identifyFileFormat(filePath.c_str().AsWChar(), &fileFormat))
+		{
+			wxMessageBox("Error identifying file format", "Failed to open file");
+			return;
+		}
+
+		wxString fileName = filePath.Mid(filePath.Last('\\') + 1);
+
+		if (fileFormat != UNKNOWN_FF)
+		{
+			logTextCtrl->Log("opened " + fileName, 0);
+			if (ERROR_JDC == LoadKnownFile(filePath))
+			{
+				ClearData();
+				logTextCtrl->Log("closed " + fileName, 0);
+				return;
+			}
+		}
+		else
+		{
+			int32_t loadAnyway = wxMessageBox("The file is in an unknown format. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
+			if (loadAnyway == wxYES)
 			{
 				logTextCtrl->Log("opened " + fileName, 0);
-				if (ERROR_JDC == LoadKnownFile(filePath))
+				if (ERROR_JDC == LoadUnknownFile(filePath))
 				{
 					ClearData();
 					logTextCtrl->Log("closed " + fileName, 0);
 					return;
 				}
 			}
-			else 
+			else
 			{
-				int32_t loadAnyway = wxMessageBox("The file is in an unknown format. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
-				if (loadAnyway == wxYES)
-				{
-					logTextCtrl->Log("opened " + fileName, 0);
-					if (ERROR_JDC == LoadUnknownFile(filePath))
-					{
-						ClearData();
-						logTextCtrl->Log("closed " + fileName, 0);
-						return;
-					}
-				}
-				else
-				{
-					return;
-				}
+				return;
 			}
+		}
 
-			currentFilePath = filePath;
-			SetTitle("Jesso Decompiler x64 - opened file " + fileName);
+		currentFilePath = filePath;
+		SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
-			char hexStr[20] = { 0 };
-			sprintf(hexStr, "0x%llX", numOfFileBytes);
-			logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
-			logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
-			logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
-			logTextCtrl->LogHexNum("image base", imageBase, 0);
-			logTextCtrl->LogHexNum("entry point", entryPoint + imageBase, 0);
+		char hexStr[20] = { 0 };
+		sprintf(hexStr, "0x%llX", numOfFileBytes);
+		logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
+		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
+		logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
+		logTextCtrl->LogHexNum("image base", imageBase, 0);
+		logTextCtrl->LogHexNum("entry point", entryPoint + imageBase, 0);
 
-			for (int32_t i = 0; i < dataTextCtrls.size(); i++)
+		for (int32_t i = 0; i < dataTextCtrls.size(); i++)
+		{
+			dataTextCtrls[i]->Initialize();
+		}
+
+		if (isJdcSave)
+		{
+			DisassembleFile();
+
+			for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
 			{
-				dataTextCtrls[i]->Initialize();
+				functionsTextCtrls[i]->ShowAllFunctions(-1);
 			}
-
-			if (isJdcSave) 
-			{
-				DisassembleFile();
-
-				for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
-				{
-					functionsTextCtrls[i]->ShowAllFunctions(-1);
-				}
-			}
-			else 
-			{
-				int32_t disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
-				if (disassembleAnswer == wxYES)
-				{
-					DisassembleFile();
-				}
-			}
-			
 		}
 		else
 		{
-			wxMessageBox("Error opening the file", "Failed to open file");
-			return;
+			int32_t disassembleAnswer = wxMessageBox("Do you want to disassemble the code sections?", "Disassemble code sections", wxYES_NO, this);
+			if (disassembleAnswer == wxYES)
+			{
+				DisassembleFile();
+			}
 		}
-	}
 
-	openFileDialog.Close(true);
+	}
+	else
+	{
+		wxMessageBox("Error opening the file", "Failed to open file");
+		return;
+	}
 }
 
 void MainGui::SaveFile() 
