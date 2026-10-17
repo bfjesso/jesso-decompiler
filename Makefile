@@ -20,6 +20,7 @@ jdc-gui:
 	gcc -c -w ./src/decompiler/*.c
 	gcc -c -w ./src/elf-handler/*.c
 	gcc -c -w ./src/pe-handler/*.c
+	gcc -c -w ./src/save-handler/*.c
 	gcc -c -w ./src/file-handler/*.c
 	gcc -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/jdc *.o `../wxWidgets-3.2.10/gtk-build/wx-config --static --libs core,base,stc,aui`
@@ -30,6 +31,7 @@ debug-jdc-gui:
 	gcc -g -O0 -c -w ./src/decompiler/*.c
 	gcc -g -O0 -c -w ./src/elf-handler/*.c
 	gcc -g -O0 -c -w ./src/pe-handler/*.c
+	gcc -g -O0 -c -w ./src/save-handler/*.c
 	gcc -g -O0 -c -w ./src/file-handler/*.c
 	gcc -g -O0 -c -w ./src/jdc-str/*.c
 	g++ -o ./bin/linux/x64/gui/debug-jdc *.o `../wxWidgets-3.2.10/gtk-build/wx-config --static --libs core,base,stc,aui`
