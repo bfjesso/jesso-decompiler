@@ -146,7 +146,7 @@ void MainGui::ShowWindowInAUI(int32_t direction, wxWindow* window)
 DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 {
 	highestDisassemblyTextCtrlNum++;
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + std::to_string(highestDisassemblyTextCtrlNum), disassembledInstructions.data(), disassembledInstructions.size());
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + wxString::Format("%d", highestDisassemblyTextCtrlNum), disassembledInstructions.data(), disassembledInstructions.size());
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
@@ -160,7 +160,7 @@ DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 {
 	highestDecompilationTextCtrlNum++;
-	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, this, "Decompilation " + std::to_string(highestDecompilationTextCtrlNum));
+	DecompilationTextCtrl* decompilationTextCtrl = new DecompilationTextCtrl(this, this, "Decompilation " + wxString::Format("%d", highestDecompilationTextCtrlNum));
 	decompilationTextCtrls.push_back(decompilationTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(decompilationTextCtrl);
@@ -174,7 +174,7 @@ DecompilationTextCtrl* MainGui::AddDecompilationTextCtrl()
 FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 {
 	highestFunctionsTextCtrlNum++;
-	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, this, "Functions " + std::to_string(highestFunctionsTextCtrlNum));
+	FunctionsTextCtrl* functionsTextCtrl = new FunctionsTextCtrl(this, this, "Functions " + wxString::Format("%d", highestFunctionsTextCtrlNum));
 	functionsTextCtrls.push_back(functionsTextCtrl);
 
 	colorsMenu->AddDecompilationTextCtrl(functionsTextCtrl);
@@ -193,7 +193,7 @@ FunctionsTextCtrl* MainGui::AddFunctionsTextCtrl()
 DataTextCtrl* MainGui::AddDataTextCtrl()
 {
 	highestDataTextCtrlNum++;
-	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, this, "Data " + std::to_string(highestDataTextCtrlNum));
+	DataTextCtrl* dataTextCtrl = new DataTextCtrl(this, this, "Data " + wxString::Format("%d", highestDataTextCtrlNum));
 	dataTextCtrls.push_back(dataTextCtrl);
 
 	colorsMenu->AddDataTextCtrl(dataTextCtrl);
@@ -578,13 +578,11 @@ void MainGui::OpenFileFromPath(wxString filePath)
 		currentFilePath = filePath;
 		SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
-		char hexStr[20] = { 0 };
-		sprintf(hexStr, "0x%llX", numOfFileBytes);
-		logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes");
+		logTextCtrl->Log(wxString::Format("file size: %lld (0x%llX) bytes", numOfFileBytes, numOfFileBytes));
 		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)));
 		logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"));
-		logTextCtrl->LogHexNum("image base", imageBase);
-		logTextCtrl->LogHexNum("entry point", entryPoint + imageBase);
+		logTextCtrl->Log(wxString::Format("image base: 0x%llX", imageBase));
+		logTextCtrl->Log(wxString::Format("entry point: 0x%llX", entryPoint + imageBase));
 
 		for (int32_t i = 0; i < dataTextCtrls.size(); i++)
 		{
@@ -1062,7 +1060,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 	}
 	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
 	{
-		logTextCtrl->LogHexNum("instruction jumps outside file", instructionBuffer->address, true);
+		logTextCtrl->Log(wxString::Format("instruction jumps outside file: 0x%llX", instructionBuffer->address), true);
 		return ERROR_JDC;
 	}
 
@@ -1081,14 +1079,14 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
 			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
 		{
-			logTextCtrl->LogHexNum("instruction overlaps with existing instruction", currentVirtualAddress, true);
+			logTextCtrl->Log(wxString::Format("instruction overlaps with existing instruction: 0x%llX", currentVirtualAddress), true);
 			return ERROR_JDC;
 		}
 
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
-			logTextCtrl->LogHexNum("bad instruction at", currentVirtualAddress, true);
+			logTextCtrl->Log(wxString::Format("bad instruction at 0x%llX", currentVirtualAddress), true);
 			return ERROR_JDC;
 		}
 

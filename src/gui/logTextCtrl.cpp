@@ -35,14 +35,6 @@ void LogTextCtrl::Log(wxString text, bool isError, bool addNewLine)
 	Update();
 }
 
-void LogTextCtrl::LogHexNum(wxString label, uint64_t num, bool isError)
-{
-	char numStr[20] = { 0 };
-	sprintf(numStr, "0x%llX", num);
-
-	Log(label + ": " + wxString(numStr), isError);
-}
-
 void LogTextCtrl::LogProgress(uint64_t value, bool updateCurrentProgress)
 {
 	int64_t now = wxGetLocalTimeMillis().GetValue();

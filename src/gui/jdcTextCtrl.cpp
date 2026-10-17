@@ -6,7 +6,7 @@
 JdcTextCtrl::JdcTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) : wxStyledTextCtrl(parent)
 {
 	mainGui = mainGuiRef;
-	
+
 	SetName(name);
 	SetMinSize(wxSize(100, 100));
 
@@ -31,7 +31,7 @@ JdcTextCtrl::JdcTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name) :
 
 	Bind(wxEVT_SET_CURSOR, [](wxSetCursorEvent& e) {
 		e.SetCursor(wxCursor(wxCURSOR_ARROW));
-	});
+		});
 
 	IndicatorSetStyle(PURPLE_INDICATOR, wxSTC_INDIC_ROUNDBOX);
 	IndicatorSetForeground(PURPLE_INDICATOR, wxColour(255, 0, 255));
@@ -98,8 +98,8 @@ void JdcTextCtrl::HighlightLine(int32_t line, enum IndicatorColor color, bool go
 }
 
 void JdcTextCtrl::ClearIndicators()
-{	
-	for (int32_t i = 0; i < NUM_OF_INDICATORS; i++) 
+{
+	for (int32_t i = 0; i < NUM_OF_INDICATORS; i++)
 	{
 		SetIndicatorCurrent(i);
 		IndicatorClearRange(0, GetTextLength());
@@ -273,7 +273,7 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 	int32_t end = WordEndPosition(pos, true);
 	if (start != end)
 	{
-		if (start > 0 && GetText()[start - 1] == '-') 
+		if (start > 0 && GetText()[start - 1] == '-')
 		{
 			start--;
 		}
@@ -310,12 +310,12 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Append(ID_CONVERT_TO_UNSIGNED_DEC, "Convert to unsigned decimal");
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
-				wxString numStr = std::to_string((uint64_t)num);
+				wxString numStr = wxString::Format("%llu", (uint64_t)num);
 				Replace(start, end, numStr);
 				StartStyling(start);
-				SetStyling(strlen(numStr), numColor);
+				SetStyling(numStr.Length(), numColor);
 				SetReadOnly(true);
-			}, ID_CONVERT_TO_UNSIGNED_DEC);
+				}, ID_CONVERT_TO_UNSIGNED_DEC);
 		}
 
 		if (isHex || (!isSigned && isDec))
@@ -323,12 +323,12 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Append(ID_CONVERT_TO_SIGNED_DEC, "Convert to signed decimal");
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
-				wxString numStr = std::to_string(num);
+				wxString numStr = wxString::Format("%lld", num);
 				Replace(start, end, numStr);
 				StartStyling(start);
-				SetStyling(strlen(numStr), numColor);
+				SetStyling(numStr.Length(), numColor);
 				SetReadOnly(true);
-			}, ID_CONVERT_TO_SIGNED_DEC);
+				}, ID_CONVERT_TO_SIGNED_DEC);
 		}
 
 		if (isDec || (!isUnsigned && isHex))
@@ -336,13 +336,12 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Append(ID_CONVERT_TO_UNSIGNED_HEX, "Convert to unsigned hexadecimal");
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
-				char numStr[50] = { 0 };
-				sprintf(numStr, "0x%llX", (uint64_t)num);
+				wxString numStr = wxString::Format("0x%llX", (uint64_t)num);
 				Replace(start, end, numStr);
 				StartStyling(start);
-				SetStyling(strlen(numStr), numColor);
+				SetStyling(numStr.Length(), numColor);
 				SetReadOnly(true);
-			}, ID_CONVERT_TO_UNSIGNED_HEX);
+				}, ID_CONVERT_TO_UNSIGNED_HEX);
 		}
 
 		if (isDec || (!isSigned && isHex))
@@ -350,29 +349,29 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 			menu->Append(ID_CONVERT_TO_SIGNED_HEX, "Convert to signed hexadecimal");
 			menu->Bind(wxEVT_MENU, [this, num, start, end, numColor](wxCommandEvent&) {
 				SetReadOnly(false);
-				char numStr[50] = { 0 };
+				wxString numStr = "";
 				if (num < 0)
 				{
-					sprintf(numStr, "-0x%llX", -num);
+					numStr = wxString::Format("-0x%llX", -num);
 				}
 				else
 				{
-					sprintf(numStr, "0x%llX", num);
+					numStr = wxString::Format("0x%llX", num);
 				}
 
 				Replace(start, end, numStr);
 				StartStyling(start);
-				SetStyling(strlen(numStr), numColor);
+				SetStyling(numStr.Length(), numColor);
 				SetReadOnly(true);
-			}, ID_CONVERT_TO_SIGNED_HEX);
+				}, ID_CONVERT_TO_SIGNED_HEX);
 		}
 
-		if (isHex || isDec) 
+		if (isHex || isDec)
 		{
 			menu->Append(ID_FIND_CODE_REFERENCES, "Find code references to value");
 			menu->Bind(wxEVT_MENU, [this, num, isHex](wxCommandEvent&) {
 				mainGui->AddCodeReferencesWindow()->FindCodeReferences(num, isHex);
-			}, ID_FIND_CODE_REFERENCES);
+				}, ID_FIND_CODE_REFERENCES);
 		}
 	}
 
@@ -380,19 +379,19 @@ void JdcTextCtrl::AddDefaultRightClickOptions(wxMenu* menu)
 	menu->Bind(wxEVT_MENU, [this](wxCommandEvent&) {
 		SetSelection(0, GetLastPosition());
 		SetFocus();
-	}, ID_SELECT_ALL);
+		}, ID_SELECT_ALL);
 
 	menu->Append(ID_FIND, "Find");
 	menu->Bind(wxEVT_MENU, [this](wxCommandEvent&) {
 		ShowFindDialog();
-	}, ID_FIND);
+		}, ID_FIND);
 
 	menu->AppendCheckItem(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, "Highlight selected lines");
 	menu->Check(ID_HIGHLIGHT_SELECTED_INSTRUCTIONS, highlightSelectedLines);
 	menu->Bind(wxEVT_MENU, [this](wxCommandEvent& e) {
 		highlightSelectedLines = e.IsChecked();
 		ClearIndicators();
-	}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
+		}, ID_HIGHLIGHT_SELECTED_INSTRUCTIONS);
 }
 
 void JdcTextCtrl::RightClickOptions(wxContextMenuEvent& e)
@@ -467,13 +466,13 @@ void JdcTextCtrl::HighlightSelectedBraces()
 void JdcTextCtrl::HighlightSelectionInstances()
 {
 	wxString selection = GetSelectedText();
-	if (selection == "") 
+	if (selection == "")
 	{
 		int32_t pos = GetCurrentPos();
 		int32_t start = WordStartPosition(pos, true);
 		int32_t end = WordEndPosition(pos, true);
 		wxString word = GetTextRange(start, end);
-		if (word == "") 
+		if (word == "")
 		{
 			return;
 		}

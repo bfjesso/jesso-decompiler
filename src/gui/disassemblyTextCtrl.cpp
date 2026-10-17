@@ -398,9 +398,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		char addressStr[20] = { 0 };
-		sprintf(addressStr, "0x%llX", instructions[i].address);
-		wxString addressInfoStr = wxString(addressStr) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
+		wxString addressInfoStr = wxString::Format("0x%llX", instructions[i].address) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
 
 		wxString asmStr = "";
 		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
@@ -426,9 +424,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
 			if (jumpTableIndex != -1)
 			{
-				char jmpInstructionAddressStr[20] = { 0 };
-				sprintf(jmpInstructionAddressStr, "0x%llX", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
-				asmStr += " ; start of " + wxString(foundIndirectTable ? "indirect" : "jump") + " table. jmp instruction: " + wxString(jmpInstructionAddressStr);
+				asmStr += " ; start of " + wxString(foundIndirectTable ? "indirect" : "jump") + " table. jmp instruction: " + wxString::Format("0x%llX", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
 			}
 		}
 
@@ -437,9 +433,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			uint64_t dst = getJmpDst(&mainGui->decompParams, i);
 			if (dst != 0)
 			{
-				char dstStr[20] = { 0 };
-				sprintf(dstStr, "0x%llX", dst);
-				asmStr += " ; dst: " + wxString(dstStr);
+				asmStr += " ; dst: " + wxString::Format("0x%llX", dst);
 			}
 		}
 

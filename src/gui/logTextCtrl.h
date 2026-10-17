@@ -12,8 +12,6 @@ public:
 
 	void Log(wxString text, bool isError = false, bool addNewLine = true);
 
-	void LogHexNum(wxString label, uint64_t num, bool isError = false);
-
 	void LogProgress(uint64_t value, bool updateCurrentProgress);
 
 	void LogRightClickOptions(wxContextMenuEvent& e);

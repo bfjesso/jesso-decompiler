@@ -87,18 +87,18 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 
 	decResultTxt->SetLabelText("Dec Result: ");
 	decResultStr = "";
-	
+
 	int64_t firstValue = 0;
 	int64_t secondValue = 0;
 
-	if (firstHexCheckBox->IsChecked()) 
+	if (firstHexCheckBox->IsChecked())
 	{
 		if (!firstValueInput->GetValue().ToLongLong((wxLongLong_t*)(&firstValue), 16))
 		{
 			return;
 		}
 	}
-	else 
+	else
 	{
 		if (!firstValueInput->GetValue().ToLongLong((wxLongLong_t*)(&firstValue), 10))
 		{
@@ -122,7 +122,7 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 	}
 
 	int32_t operation = selectOperation->GetSelection();
-	if(operation == 3 && secondValue == 0) // division by zero check
+	if (operation == 3 && secondValue == 0) // division by zero check
 	{
 		return;
 	}
@@ -144,12 +144,10 @@ void CalculatorWindow::CalculateResult(wxCommandEvent& e)
 		break;
 	}
 
-	char hexStr[50] = { 0 };
-	sprintf(hexStr, "0x%llX", result);
-	hexResultStr = wxString(hexStr);
+	hexResultStr = wxString::Format("0x%llX", result);
 	hexResultTxt->SetLabelText("Hex Result: " + hexResultStr);
 
-	decResultStr = std::to_string(result);
+	decResultStr = wxString::Format("%lld", result);
 	decResultTxt->SetLabelText("Dec Result: " + decResultStr);
 }
 

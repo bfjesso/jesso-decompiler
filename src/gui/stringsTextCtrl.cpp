@@ -4,8 +4,8 @@
 
 StringsTextCtrl::StringsTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(parent, mainGuiRef, "Strings")
 {
-    Bind(wxEVT_CONTEXT_MENU, &StringsTextCtrl::StringsRightClickOptions, this);
-    Bind(wxEVT_CHAR_HOOK, &StringsTextCtrl::OnStringsKeyDown, this);
+	Bind(wxEVT_CONTEXT_MENU, &StringsTextCtrl::StringsRightClickOptions, this);
+	Bind(wxEVT_CHAR_HOOK, &StringsTextCtrl::OnStringsKeyDown, this);
 
 	LoadStrings();
 }
@@ -43,7 +43,7 @@ void StringsTextCtrl::StringsRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_FIND_ADDRESS, "Find string by address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ShowFindAddressDialog();
-	}, ID_FIND_ADDRESS);
+		}, ID_FIND_ADDRESS);
 
 	AddDefaultRightClickOptions(&menu);
 
@@ -67,93 +67,90 @@ void StringsTextCtrl::OnStringsKeyDown(wxKeyEvent& e)
 
 void StringsTextCtrl::LoadStrings()
 {
-    if (mainGui->decompParams.numOfFileBytes == 0)
-    {
-        wxMessageBox("No file bytes", "Can't load strings");
-        return;
-    }
+	if (mainGui->decompParams.numOfFileBytes == 0)
+	{
+		wxMessageBox("No file bytes", "Can't load strings");
+		return;
+	}
 
-    foundAddresses.clear();
-    foundAddresses.shrink_to_fit();
+	foundAddresses.clear();
+	foundAddresses.shrink_to_fit();
 
-    SetReadOnly(false);
-    Freeze();
+	SetReadOnly(false);
+	Freeze();
 
-    wxString stringsText = "";
-    wxString currentStr = "";
-    int32_t numOfStrings = 0;
+	wxString stringsText = "";
+	wxString currentStr = "";
+	int32_t numOfStrings = 0;
 
-    for (int32_t i = 0; i < mainGui->decompParams.numOfSections; i++)
-    {
-        struct FileSection* section = &mainGui->decompParams.sections[i];
-        if (section->type != INIT_DATA_FST) 
-        {
-            continue;
-        }
-        
-        int32_t startIndex = -1;
-        for (uint32_t j = 0; j <section->physicalSize; j++)
-        {
-            char c = *(char*)(mainGui->decompParams.fileBytes + section->fileOffset + j);
-            if (c >= ' ' && c <= '~')
-            {
-                if (startIndex == -1)
-                {
-                    currentStr = "";
-                    startIndex = j;
-                }
+	for (int32_t i = 0; i < mainGui->decompParams.numOfSections; i++)
+	{
+		struct FileSection* section = &mainGui->decompParams.sections[i];
+		if (section->type != INIT_DATA_FST)
+		{
+			continue;
+		}
 
-                currentStr += c;
-            }
-            else
-            {
-                if (startIndex != -1 && currentStr.length() > 1)
-                {
-                    uint64_t address = mainGui->decompParams.imageBase + section->rva + startIndex;
-                    foundAddresses.push_back(address);
+		int32_t startIndex = -1;
+		for (uint32_t j = 0; j < section->physicalSize; j++)
+		{
+			char c = *(char*)(mainGui->decompParams.fileBytes + section->fileOffset + j);
+			if (c >= ' ' && c <= '~')
+			{
+				if (startIndex == -1)
+				{
+					currentStr = "";
+					startIndex = j;
+				}
 
-                    char addressStr[50] = { 0 };
-                    sprintf(addressStr, "0x%llX", address);
+				currentStr += c;
+			}
+			else
+			{
+				if (startIndex != -1 && currentStr.length() > 1)
+				{
+					uint64_t address = mainGui->decompParams.imageBase + section->rva + startIndex;
+					foundAddresses.push_back(address);
 
-                    stringsText += wxString(addressStr) + wxString(section->name.buffer) + "\t\"" + currentStr + "\"\n";
-                    numOfStrings++;
-                }
+					stringsText += wxString::Format("0x%llX\t\"%s\"", address, currentStr);
+					numOfStrings++;
+				}
 
-                startIndex = -1;
-            }
-        }
-    }
+				startIndex = -1;
+			}
+		}
+	}
 
-    SetText(stringsText);
-    ApplyStringsHighlighting();
-    Thaw();
-    SetReadOnly(true);
+	SetText(stringsText);
+	ApplyStringsHighlighting();
+	Thaw();
+	SetReadOnly(true);
 }
 
 void StringsTextCtrl::ApplyStringsHighlighting()
 {
-    for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
-    {
-        StyleSetForeground(i, mainGui->colorsMenu->dataColors[i]);
-    }
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
+	{
+		StyleSetForeground(i, mainGui->colorsMenu->dataColors[i]);
+	}
 
-    int32_t lineStart = 0;
-    wxString dataText = GetValue();
-    int32_t end = dataText.length();
-    while (lineStart < end)
-    {
-        int32_t stringStart = dataText.find("\t", lineStart);
-        int32_t lineEnd = dataText.find("\n", stringStart);
-        if (stringStart != wxNOT_FOUND && lineEnd != wxNOT_FOUND)
-        {
-            StartStyling(stringStart);
-            SetStyling(lineEnd - stringStart + 1, STRING_DATA_COLOR);
+	int32_t lineStart = 0;
+	wxString dataText = GetValue();
+	int32_t end = dataText.length();
+	while (lineStart < end)
+	{
+		int32_t stringStart = dataText.find("\t", lineStart);
+		int32_t lineEnd = dataText.find("\n", stringStart);
+		if (stringStart != wxNOT_FOUND && lineEnd != wxNOT_FOUND)
+		{
+			StartStyling(stringStart);
+			SetStyling(lineEnd - stringStart + 1, STRING_DATA_COLOR);
 
-            lineStart = lineEnd + 1;
-        }
-        else
-        {
-            break;
-        }
-    }
+			lineStart = lineEnd + 1;
+		}
+		else
+		{
+			break;
+		}
+	}
 }

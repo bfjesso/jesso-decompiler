@@ -9,7 +9,7 @@ wxEND_EVENT_TABLE()
 CodeReferencesWindow::CodeReferencesWindow(MainGui* parent) : wxWindow(parent, wxID_ANY)
 {
 	mainGui = parent;
-	
+
 	SetMinSize(wxSize(200, 100));
 	SetOwnBackgroundColour(backgroundColor);
 
@@ -65,23 +65,21 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 {
 	if (isHex)
 	{
-		char hexNumStr[10] = { 0 };
-		sprintf(hexNumStr, "0x%llX", value);
-		valueTextCtrl->SetValue(hexNumStr);
+		valueTextCtrl->SetValue(wxString::Format("0x%llX", value));
 	}
 	else
 	{
-		valueTextCtrl->SetValue(std::to_string(value));
+		valueTextCtrl->SetValue(wxString::Format("%lld", value));
 	}
-	
+
 	hexCheckBox->SetValue(isHex);
-	
+
 	foundInstructions.clear();
 	foundInstructions.shrink_to_fit();
-	for (int32_t i = 0; i < mainGui->decompParams.numOfInstructions; i++) 
+	for (int32_t i = 0; i < mainGui->decompParams.numOfInstructions; i++)
 	{
 		struct DisassembledInstruction* instruction = &mainGui->decompParams.instructions[i];
-		
+
 		if (getJmpDst(&mainGui->decompParams, i) == value)
 		{
 			foundInstructions.push_back(*instruction);
@@ -93,7 +91,7 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 			struct Operand* operand = &instruction->operands[j];
 			if (operand->type == IMMEDIATE)
 			{
-				if (operand->immediate.value == value) 
+				if (operand->immediate.value == value)
 				{
 					foundInstructions.push_back(*instruction);
 					break;
@@ -101,13 +99,13 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 			}
 			else if (operand->type == MEM_ADDRESS)
 			{
-				if (operand->memoryAddress.constDisplacement == value) 
+				if (operand->memoryAddress.constDisplacement == value)
 				{
 					foundInstructions.push_back(*instruction);
 					break;
 				}
 				else if (compareRegisters(operand->memoryAddress.reg, IP) &&
-					instruction->address + instruction->numOfBytes + operand->memoryAddress.constDisplacement == value) 
+					instruction->address + instruction->numOfBytes + operand->memoryAddress.constDisplacement == value)
 				{
 					foundInstructions.push_back(*instruction);
 					break;
@@ -121,7 +119,7 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 		disassemblyTextCtrl->ClearData();
 		wxMessageBox("No instructions found", "Failed to find code references");
 	}
-	else 
+	else
 	{
 		disassemblyTextCtrl->Initialize(foundInstructions.data(), foundInstructions.size(), -1, 0);
 	}

@@ -30,15 +30,12 @@ ImportsGrid::ImportsGrid(wxWindow* parent, ImportedFunction* imports, int32_t nu
 	SetColSize(2, 300);
 	SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
 
-	if (imports ) 
+	if (imports)
 	{
 		for (int32_t i = 0; i < numOfImports; i++)
 		{
 			AppendRows(1);
-
-			char addressStr[10];
-			sprintf(addressStr, "%llX", imports[i].address);
-			SetCellValue(i, 0, wxString(addressStr));
+			SetCellValue(i, 0, wxString::Format("0x%llX", imports[i].address));
 			SetCellValue(i, 1, libraryNames[imports[i].libraryNameIndex].buffer);
 			SetCellValue(i, 2, imports[i].name.buffer);
 		}
@@ -92,7 +89,7 @@ void ImportsGrid::RightClickOptions(wxGridEvent& e)
 				wxMessageBox("Text not found", "Failed to find text");
 			}
 		}
-	}, ID_FIND);
+		}, ID_FIND);
 
 	PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 	e.Skip();

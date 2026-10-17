@@ -11,7 +11,7 @@ wxEND_EVENT_TABLE()
 FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, DisassembledInstruction* instructionsPtr, Function* theFunction) : wxScrolledWindow(parent, wxID_ANY)
 {
 	mainGui = mainGuiRef;
-	
+
 	SetOwnBackgroundColour(backgroundColor);
 	SetScrollRate(10, 10);
 
@@ -52,19 +52,16 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 	infoGrid->SetCellValue(3, 1, function->name.buffer);
 
 	infoGrid->SetCellValue(4, 0, "Number of instructions");
-	infoGrid->SetCellValue(4, 1, std::to_string(function->lastInstructionIndex - function->firstInstructionIndex + 1));
+	infoGrid->SetCellValue(4, 1, wxString::Format("%d", function->lastInstructionIndex - function->firstInstructionIndex + 1));
 
-	char hexNumStr[10] = { 0 };
-	sprintf(hexNumStr, "0x%llX", instructions[function->firstInstructionIndex].address);
 	infoGrid->SetCellValue(5, 0, "First instruction index");
-	infoGrid->SetCellValue(5, 1, wxString(std::to_string(function->firstInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
+	infoGrid->SetCellValue(5, 1, wxString::Format("%d (0x%llX)", function->firstInstructionIndex, instructions[function->firstInstructionIndex].address));
 
-	sprintf(hexNumStr, "0x%llX", instructions[function->lastInstructionIndex].address);
 	infoGrid->SetCellValue(6, 0, "Last instruction index");
-	infoGrid->SetCellValue(6, 1, wxString(std::to_string(function->lastInstructionIndex)) + " (" + wxString(hexNumStr) + ")");
+	infoGrid->SetCellValue(6, 1, wxString::Format("%d (0x%llX)", function->lastInstructionIndex, instructions[function->lastInstructionIndex].address));
 
 	infoGrid->SetCellValue(7, 0, "Number of lines");
-	infoGrid->SetCellValue(7, 1, std::to_string(function->numOfLines));
+	infoGrid->SetCellValue(7, 1, wxString::Format("%d", function->numOfLines));
 
 	vSizer->Add(infoGrid, 1, wxEXPAND | wxALL, 10);
 
@@ -97,10 +94,8 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		dataTypeToStr(returnedVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
 		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
-		sprintf(hexNumStr, "0x%llX", returnedVar->calleeAddress);
-		returnedVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
-		sprintf(hexNumStr, "0x%llX", returnedVar->callInstructionAddress);
-		returnedVarsGrid->SetCellValue(i, 3, wxString(hexNumStr));
+		returnedVarsGrid->SetCellValue(i, 2, wxString::Format("0x%llX", returnedVar->calleeAddress));
+		returnedVarsGrid->SetCellValue(i, 3, wxString::Format("0x%llX", returnedVar->callInstructionAddress));
 		returnedVarsGrid->SetCellValue(i, 4, wxString(registerStrs[returnedVar->returnReg]));
 	}
 
@@ -136,7 +131,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		regVarsGrid->SetCellValue(i, 1, wxString(regVar->name.buffer));
 		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regVar->reg]));
-		regVarsGrid->SetCellValue(i, 3, regVar->isArgument ? "Yes" : "No");
+		regVarsGrid->SetCellValue(i, 3, wxString(regVar->isArgument ? "Yes" : "No"));
 	}
 
 	stackVarsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(400, 200));
@@ -166,18 +161,19 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
 		dataTypeToStr(stackVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
+		wxString offsetStr = "";
 		if (stackVar->offsetFromInitSP > 0)
 		{
-			sprintf(hexNumStr, "0x%llX", stackVar->offsetFromInitSP);
+			offsetStr = wxString::Format("0x%llX", stackVar->offsetFromInitSP);
 		}
 		else
 		{
-			sprintf(hexNumStr, "-0x%llX", -stackVar->offsetFromInitSP);
+			offsetStr = wxString::Format("-0x%llX", -stackVar->offsetFromInitSP);
 		}
 		stackVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		stackVarsGrid->SetCellValue(i, 1, wxString(stackVar->name.buffer));
-		stackVarsGrid->SetCellValue(i, 2, wxString(hexNumStr));
-		stackVarsGrid->SetCellValue(i, 3, stackVar->isArgument ? "Yes" : "No");
+		stackVarsGrid->SetCellValue(i, 2, offsetStr);
+		stackVarsGrid->SetCellValue(i, 3, wxString(stackVar->isArgument ? "Yes" : "No"));
 	}
 
 	freeJdcStr(&dataTypeStr);
@@ -218,46 +214,34 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		conditionsGrid->AppendRows(1);
 		conditionsGrid->SetCellValue(i, 0, wxString(conditionTypeStrs[condition->conditionType]));
 
-		if (condition->firstBodyIndex == -1)
+		wxString firstBodyAddressStr = "none";
+		if (condition->firstBodyIndex != -1)
 		{
-			strcpy(hexNumStr, "none");
+			firstBodyAddressStr = wxString::Format("0x%llX", instructions[condition->firstBodyIndex].address);
 		}
-		else
-		{
-			sprintf(hexNumStr, "0x%llX", instructions[condition->firstBodyIndex].address);
-		}
-		conditionsGrid->SetCellValue(i, 1, wxString(std::to_string(condition->firstBodyIndex)) + " (" + wxString(hexNumStr) + ")");
+		conditionsGrid->SetCellValue(i, 1, wxString::Format("%d (%s)", condition->firstBodyIndex, firstBodyAddressStr));
 
-		if (condition->lastBodyIndex == -1)
+		wxString lastBodyAddressStr = "none";
+		if (condition->lastBodyIndex != -1)
 		{
-			strcpy(hexNumStr, "none");
+			lastBodyAddressStr = wxString::Format("0x%llX", instructions[condition->lastBodyIndex].address);
 		}
-		else
-		{
-			sprintf(hexNumStr, "0x%llX", instructions[condition->lastBodyIndex].address);
-		}
-		conditionsGrid->SetCellValue(i, 2, wxString(std::to_string(condition->lastBodyIndex)) + " (" + wxString(hexNumStr) + ")");
+		conditionsGrid->SetCellValue(i, 2, wxString::Format("%d (%s)", condition->lastBodyIndex, lastBodyAddressStr));
 
-		sprintf(hexNumStr, "0x%llX", instructions[condition->jccIndex].address);
-		conditionsGrid->SetCellValue(i, 3, wxString(std::to_string(condition->jccIndex)) + " (" + wxString(hexNumStr) + ")");
-		sprintf(hexNumStr, "0x%llX", instructions[condition->dstIndex].address);
-		conditionsGrid->SetCellValue(i, 4, wxString(std::to_string(condition->dstIndex)) + " (" + wxString(hexNumStr) + ")");
+		conditionsGrid->SetCellValue(i, 3, wxString::Format("%d (0x%llX)", condition->jccIndex, instructions[condition->jccIndex].address));
+		conditionsGrid->SetCellValue(i, 4, wxString::Format("%d (0x%llX)", condition->dstIndex, instructions[condition->dstIndex].address));
 
-		if (condition->exitIndex == -1)
+		wxString exitAddressStr = "none";
+		if (condition->exitIndex != -1)
 		{
-			strcpy(hexNumStr, "none");
+			exitAddressStr = wxString::Format("0x%llX", instructions[condition->exitIndex].address);
 		}
-		else
-		{
-			sprintf(hexNumStr, "0x%llX", instructions[condition->exitIndex].address);
-		}
-		conditionsGrid->SetCellValue(i, 5, wxString(std::to_string(condition->exitIndex)) + " (" + wxString(hexNumStr) + ")");
+		conditionsGrid->SetCellValue(i, 5, wxString::Format("%d (%s)", condition->exitIndex, exitAddressStr));
 
 		wxString combinedJccsStr = "";
 		for (int32_t j = 0; j < condition->numOfCombinedJccs; j++)
 		{
-			sprintf(hexNumStr, "0x%llX", instructions[condition->combinedJccIndexes[j]].address);
-			combinedJccsStr += wxString(std::to_string(condition->combinedJccIndexes[j]) + " (" + wxString(hexNumStr) + ")");
+			combinedJccsStr += wxString::Format("%d (0x%llX)", condition->combinedJccIndexes[j], instructions[condition->combinedJccIndexes[j]].address);
 			if (j != condition->numOfCombinedJccs - 1)
 			{
 				combinedJccsStr += ", ";
@@ -292,10 +276,8 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		struct DirectJmp* directJmp = &function->directJmps[i];
 		directJmpsGrid->AppendRows(1);
 		directJmpsGrid->SetCellValue(i, 0, wxString(directJmpTypeStrs[directJmp->type]));
-		sprintf(hexNumStr, "0x%llX", instructions[directJmp->jmpIndex].address);
-		directJmpsGrid->SetCellValue(i, 1, wxString(std::to_string(directJmp->jmpIndex)) + " (" + wxString(hexNumStr) + ")");
-		sprintf(hexNumStr, "0x%llX", instructions[directJmp->dstIndex].address);
-		directJmpsGrid->SetCellValue(i, 2, wxString(std::to_string(directJmp->dstIndex)) + " (" + wxString(hexNumStr) + ")");
+		directJmpsGrid->SetCellValue(i, 1, wxString::Format("%d (0x%llX)", directJmp->jmpIndex, instructions[directJmp->jmpIndex].address));
+		directJmpsGrid->SetCellValue(i, 2, wxString::Format("%d (0x%llX)", directJmp->dstIndex, instructions[directJmp->dstIndex].address));
 	}
 
 	SetSizerAndFit(vSizer);
@@ -313,14 +295,14 @@ void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 
 	const int32_t ID_COPY = 100;
 	const int32_t ID_SHOW_SCOPES = 101;
-	
+
 	menu.Append(ID_COPY, "Copy");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void { CopyToClipboard(grid->GetCellValue(row, col)); }, ID_COPY);
 
-	if (grid == regVarsGrid) 
+	if (grid == regVarsGrid)
 	{
 		struct RegisterVariable* regVar = &function->regVars[row];
-		if (regVar->numOfScopes > 0) 
+		if (regVar->numOfScopes > 0)
 		{
 			menu.Append(ID_SHOW_SCOPES, "Show scopes");
 			menu.Bind(wxEVT_MENU, [&](wxCommandEvent& bs) -> void {
@@ -328,10 +310,10 @@ void FunctionInfoWindow::GridRightClickOptions(wxGridEvent& e)
 				dlg->Bind(wxEVT_CLOSE_WINDOW, [dlg](wxCloseEvent& evt) {
 					dlg->Destroy();
 					evt.Skip();
-				});
+					});
 
 				dlg->Show();
-			}, ID_SHOW_SCOPES);
+				}, ID_SHOW_SCOPES);
 		}
 	}
 
@@ -365,14 +347,9 @@ ScopesDialog::ScopesDialog(wxWindow* parent, DisassembledInstruction* instructio
 	for (int32_t i = 0; i < regVar->numOfScopes; i++)
 	{
 		grid->AppendRows(1);
-
-		grid->SetCellValue(i, 0, std::to_string(i));
-
-		sprintf(hexNumStr, "0x%llX", instructions[regVar->scopes[i].startIndex].address);
-		grid->SetCellValue(i, 1, std::to_string(regVar->scopes[i].startIndex) + " (" + wxString(hexNumStr) + ")");
-
-		sprintf(hexNumStr, "0x%llX", instructions[regVar->scopes[i].endIndex].address);
-		grid->SetCellValue(i, 2, std::to_string(regVar->scopes[i].endIndex) + " (" + wxString(hexNumStr) + ")");
+		grid->SetCellValue(i, 0, wxString::Format("%d", i));
+		grid->SetCellValue(i, 1, wxString::Format("%d (0x%llX)", regVar->scopes[i].startIndex, instructions[regVar->scopes[i].startIndex].address));
+		grid->SetCellValue(i, 2, wxString::Format("%d (0x%llX)", regVar->scopes[i].endIndex, instructions[regVar->scopes[i].endIndex].address));
 	}
 
 	sizer->Add(grid, 1, wxEXPAND | wxALL, 10);
