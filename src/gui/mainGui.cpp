@@ -23,7 +23,7 @@ wxEND_EVENT_TABLE()
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 {
 	SetMinSize(wxSize(800, 600));
-	
+
 	SetOwnBackgroundColour(backgroundColor);
 
 	colorsMenu = new ColorsMenu();
@@ -82,7 +82,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 void MainGui::ResetWindowLayout()
 {
 	wxAuiPaneInfoArray& panes = auiManager.GetAllPanes();
-	for (int32_t i = 0; i < panes.size(); i++) 
+	for (int32_t i = 0; i < panes.size(); i++)
 	{
 		auiManager.ClosePane(panes.Item(i));
 		auiManager.Update();
@@ -128,15 +128,15 @@ void MainGui::ShowWindowInAUI(int32_t direction, wxWindow* window)
 			.Caption(window->GetName())
 			.BestSize(500, -1)
 			.MinSize(window->GetMinSize());
-		if (direction == wxAUI_DOCK_NONE) 
+		if (direction == wxAUI_DOCK_NONE)
 		{
 			pane.Float();
 		}
-		else 
+		else
 		{
 			pane.Direction(direction);
 		}
-		
+
 		auiManager.AddPane(window, pane);
 		auiManager.Update();
 		window->Show();
@@ -148,9 +148,9 @@ DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 	highestDisassemblyTextCtrlNum++;
 	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + std::to_string(highestDisassemblyTextCtrlNum), disassembledInstructions.data(), disassembledInstructions.size());
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
-	
+
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
-	
+
 	auiNotebook->AddPage(disassemblyTextCtrl, disassemblyTextCtrl->GetName());
 	auiNotebook->SetSelection(auiNotebook->GetPageIndex(disassemblyTextCtrl));
 
@@ -245,7 +245,7 @@ void MainGui::OnPaneClose(wxAuiManagerEvent& e)
 		{
 			settingsWindow->CheckUnappliedChanges();
 		}
-		
+
 		auiManager.DetachPane(window);
 		auiManager.Update();
 		window->Hide();
@@ -266,12 +266,12 @@ void MainGui::OnPageClose(wxAuiNotebookEvent& e)
 		{
 			settingsWindow->CheckUnappliedChanges();
 		}
-		
+
 		auiNotebook->RemovePage(e.GetSelection());
 		window->Hide();
 		return;
 	}
-	
+
 	RemoveTextCtrl(window);
 }
 
@@ -315,7 +315,7 @@ void MainGui::OnMouseRightClick(wxMouseEvent& e)
 				auiManager.DetachPane(window);
 				auiManager.Update();
 				auiNotebook->AddPage(window, caption);
-			}, ID_MAKE_TAB);
+				}, ID_MAKE_TAB);
 
 			PopupMenu(&menu, ScreenToClient(wxGetMousePosition()));
 			break;
@@ -330,13 +330,13 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 		if (disassemblyTextCtrls[i] == window)
 		{
 			disassemblyTextCtrls.erase(disassemblyTextCtrls.begin() + i);
-			if(disassemblyTextCtrls.size() == 0)
+			if (disassemblyTextCtrls.size() == 0)
 			{
 				highestDisassemblyTextCtrlNum = 0;
 			}
 			break;
 		}
-		else if (disassemblyTextCtrls[i]->decompilationTextCtrl == window) 
+		else if (disassemblyTextCtrls[i]->decompilationTextCtrl == window)
 		{
 			disassemblyTextCtrls[i]->decompilationTextCtrl = nullptr;
 			break;
@@ -400,9 +400,9 @@ void MainGui::RemoveTextCtrl(wxWindow* window)
 
 void MainGui::RefreshVarNames(int32_t functionIndex)
 {
-	for (int32_t i = 0; i < decompilationTextCtrls.size(); i++) 
+	for (int32_t i = 0; i < decompilationTextCtrls.size(); i++)
 	{
-		if (decompilationTextCtrls[i]->currentDecompiledFunc != -1) 
+		if (decompilationTextCtrls[i]->currentDecompiledFunc != -1)
 		{
 			decompilationTextCtrls[i]->DecompileFunction(decompilationTextCtrls[i]->currentDecompiledFunc);
 		}
@@ -444,7 +444,7 @@ void MainGui::AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std:
 	// this does not work on linux
 	//menuItem->SetBackgroundColour(foregroundColor);
 	//menuItem->SetTextColour(textColor);
-	
+
 	menu->Append(menuItem);
 	menu->Bind(wxEVT_MENU, function, id);
 }
@@ -453,7 +453,7 @@ void MainGui::OpenFile()
 {
 	wxFileDialog openFileDialog(this, "Choose file", "", "", "", wxFD_FILE_MUST_EXIST);
 
-	if (openFileDialog.ShowModal() != wxID_CANCEL) 
+	if (openFileDialog.ShowModal() != wxID_CANCEL)
 	{
 		OpenFileFromPath(openFileDialog.GetPath());
 	}
@@ -466,7 +466,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 	ClearData();
 	SetTitle("Jesso Decompiler x64");
 
-	if (!wxFileExists(filePath)) 
+	if (!wxFileExists(filePath))
 	{
 		wxMessageBox("\"" + filePath + "\" does not exist", "Can't load file");
 		return;
@@ -512,7 +512,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 
 			UpdateDecompParams();
 
-			logTextCtrl->Log("loaded analyzed functions from save at " + filePath, 0);
+			logTextCtrl->Log("loaded analyzed functions from save at " + filePath);
 
 			size_t filePathLen = 0;
 			if (ERROR_JDC == getJdcSaveFilePathLen(filePath.c_str().AsWChar(), &filePathLen))
@@ -548,11 +548,11 @@ void MainGui::OpenFileFromPath(wxString filePath)
 
 		if (fileFormat != UNKNOWN_FF)
 		{
-			logTextCtrl->Log("opened " + fileName, 0);
+			logTextCtrl->Log("opened " + fileName);
 			if (ERROR_JDC == LoadKnownFile(filePath))
 			{
 				ClearData();
-				logTextCtrl->Log("closed " + fileName, 0);
+				logTextCtrl->Log("closed " + fileName);
 				return;
 			}
 		}
@@ -561,11 +561,11 @@ void MainGui::OpenFileFromPath(wxString filePath)
 			int32_t loadAnyway = wxMessageBox("The file is in an unknown format. Do you still want to load the file?", "Failed to open file", wxYES_NO, this);
 			if (loadAnyway == wxYES)
 			{
-				logTextCtrl->Log("opened " + fileName, 0);
+				logTextCtrl->Log("opened " + fileName);
 				if (ERROR_JDC == LoadUnknownFile(filePath))
 				{
 					ClearData();
-					logTextCtrl->Log("closed " + fileName, 0);
+					logTextCtrl->Log("closed " + fileName);
 					return;
 				}
 			}
@@ -580,11 +580,11 @@ void MainGui::OpenFileFromPath(wxString filePath)
 
 		char hexStr[20] = { 0 };
 		sprintf(hexStr, "0x%llX", numOfFileBytes);
-		logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes", 0);
-		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)), 0);
-		logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"), 0);
-		logTextCtrl->LogHexNum("image base", imageBase, 0);
-		logTextCtrl->LogHexNum("entry point", entryPoint + imageBase, 0);
+		logTextCtrl->Log("file size: " + wxString(hexStr) + " (" + std::to_string(numOfFileBytes) + ") bytes");
+		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)));
+		logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"));
+		logTextCtrl->LogHexNum("image base", imageBase);
+		logTextCtrl->LogHexNum("entry point", entryPoint + imageBase);
 
 		for (int32_t i = 0; i < dataTextCtrls.size(); i++)
 		{
@@ -617,9 +617,9 @@ void MainGui::OpenFileFromPath(wxString filePath)
 	}
 }
 
-void MainGui::SaveFile() 
+void MainGui::SaveFile()
 {
-	if (functions.size() == 0) 
+	if (functions.size() == 0)
 	{
 		wxMessageBox("No file has been analyzed", "Nothing to save");
 		return;
@@ -642,27 +642,27 @@ enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 		wxMessageBox("Error determining file architecture", "Can't load file");
 		return ERROR_JDC;
 	}
-	
+
 	fileBytes = new uint8_t[numOfFileBytes];
 	if (ERROR_JDC == readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
 	{
 		wxMessageBox("Error reading bytes from file", "Can't load file");
 		return ERROR_JDC;
 	}
-	
-	if (ERROR_JDC == getFileImageBase(filePath.c_str().AsWChar(), fileFormat, is64Bit, &imageBase)) 
+
+	if (ERROR_JDC == getFileImageBase(filePath.c_str().AsWChar(), fileFormat, is64Bit, &imageBase))
 	{
 		wxMessageBox("Error getting image base", "Can't load file");
 		return ERROR_JDC;
 	}
-	
-	if (ERROR_JDC == getFileEntryPoint(filePath.c_str().AsWChar(), fileFormat, is64Bit, &entryPoint)) 
+
+	if (ERROR_JDC == getFileEntryPoint(filePath.c_str().AsWChar(), fileFormat, is64Bit, &entryPoint))
 	{
 		wxMessageBox("Error getting entry point", "Can't load file");
 		return ERROR_JDC;
 	}
 
-	if (ERROR_JDC == getNumOfSections(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfSections)) 
+	if (ERROR_JDC == getNumOfSections(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfSections))
 	{
 		wxMessageBox("Error getting number of file sections", "Can't load file");
 		return ERROR_JDC;
@@ -675,7 +675,7 @@ enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 		return ERROR_JDC;
 	}
 
-	if (ERROR_JDC == getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfImports, &numOfLibraries)) 
+	if (ERROR_JDC == getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfImports, &numOfLibraries))
 	{
 		wxMessageBox("Error getting number of imports", "Failed to open file");
 		return ERROR_JDC;
@@ -726,7 +726,7 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 			return ERROR_JDC;
 		}
 	}
-	
+
 	int32_t ask64Bit = wxMessageBox("Do you want to treat the file as 64-bit?", "Specify architecture", wxYES_NO, this);
 	is64Bit = ask64Bit == wxYES;
 
@@ -754,7 +754,7 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 	return SUCCESS_JDC;
 }
 
-bool CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b) 
+bool CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b)
 {
 	return a.address < b.address;
 }
@@ -777,11 +777,13 @@ void MainGui::DisassembleFile()
 		return;
 	}
 
-	logTextCtrl->Log("disassembling...", 0);
-
 	UpdateDecompParams();
 
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
+	logTextCtrl->Log("disassembling jumped to instructions...");
+	logTextCtrl->Log("\tCurrent instruction: ", false, false);
+	logTextCtrl->LogProgress(0, false);
+
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
 	struct DisassembledInstruction instructionBuffer;
@@ -797,6 +799,10 @@ void MainGui::DisassembleFile()
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 		return;
 	}
+
+	logTextCtrl->Log("disassembling all other instructions...");
+	logTextCtrl->Log("\tCurrent instruction: ", false, false);
+	logTextCtrl->LogProgress(0, false);
 
 	uint64_t firstAddress = disassembledInstructions[0].address;
 	uint64_t lastAddress = disassembledInstructions[disassembledInstructions.size() - 1].address + disassembledInstructions[disassembledInstructions.size() - 1].numOfBytes;
@@ -852,26 +858,30 @@ void MainGui::DisassembleFile()
 
 	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
 
-	if (didErrorOccur) 
+	if (didErrorOccur)
 	{
 		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
 	}
 
 	UpdateDecompParams();
 
-	if (!HandleJmpTables()) 
+	logTextCtrl->Log("handling jump tables...");
+	logTextCtrl->Log("\tCurrent instruction: ", false, false);
+	logTextCtrl->LogProgress(0, false);
+
+	if (!HandleJmpTables())
 	{
 		wxMessageBox("An error occured while handling jump tables", "Disassembly not fully completed");
 	}
 
-	logTextCtrl->Log("updating disassembly GUI...", 0);
+	logTextCtrl->Log("updating disassembly GUI...");
 
 	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
 	{
 		disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
 	}
 
-	logTextCtrl->Log("finished disassembling", 0);
+	logTextCtrl->Log("finished disassembling");
 
 	if (functions.size() == 0)
 	{
@@ -883,14 +893,14 @@ void MainGui::DisassembleFile()
 	}
 }
 
-void MainGui::AnalyzeFile() 
+void MainGui::AnalyzeFile()
 {
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
 		return;
 	}
-	if (disassembledInstructions.size() == 0) 
+	if (disassembledInstructions.size() == 0)
 	{
 		wxMessageBox("File not disassembled", "Can't analyze");
 		return;
@@ -903,31 +913,31 @@ void MainGui::AnalyzeFile()
 
 	UpdateDecompParams();
 
-	logTextCtrl->Log("finding all functions...", 0);
+	logTextCtrl->Log("finding all functions...");
 
 	int32_t getSymbols = wxNO;
-	if (fileFormat != UNKNOWN_FF) 
+	if (fileFormat != UNKNOWN_FF)
 	{
 		getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	}
 
 	FindAllFunctions(getSymbols == wxYES);
 
-	logTextCtrl->Log("analyzing functions...", 0);
+	logTextCtrl->Log("analyzing functions...");
 
 	if (!analyzeAllFunctions(&decompParams))
 	{
 		wxMessageBox("Error analyzing functions", "Failed to analyze functions");
 	}
-	
-	logTextCtrl->Log("updating functions GUI...", 0);
+
+	logTextCtrl->Log("updating functions GUI...");
 
 	for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
 	{
 		functionsTextCtrls[i]->ShowAllFunctions(-1);
 	}
 
-	logTextCtrl->Log("finished analyzing file", 0);
+	logTextCtrl->Log("finished analyzing file");
 
 	decompParams.currentFunc = 0;
 }
@@ -946,13 +956,13 @@ void MainGui::UpdateDecompParams()
 
 	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;
-	
+
 	decompParams.instructions = disassembledInstructions.data();
 	decompParams.numOfInstructions = disassembledInstructions.size();
 
 	decompParams.functions = functions.data();
 	decompParams.numOfFunctions = functions.size();
-	
+
 	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt;
 
 	decompParams.currentFunc = 0;
@@ -968,7 +978,7 @@ void MainGui::ClearData()
 
 	memset(&decompParams, 0, sizeof(decompParams));
 
-	for (int32_t i = 0; i < dataTextCtrls.size(); i++) 
+	for (int32_t i = 0; i < dataTextCtrls.size(); i++)
 	{
 		dataTextCtrls[i]->ClearText();
 	}
@@ -996,25 +1006,25 @@ void MainGui::ClearData()
 
 	jumpTables.clear();
 	jumpTables.shrink_to_fit();
-	
+
 	if (sections)
 	{
 		for (int32_t i = 0; i < numOfSections; i++)
 		{
 			freeJdcStr(&sections[i].name);
 		}
-		
+
 		delete[] sections;
 		sections = 0;
 	}
-	
+
 	if (imports)
 	{
 		for (int32_t i = 0; i < numOfImports; i++)
 		{
 			freeJdcStr(&imports[i].name);
 		}
-		
+
 		delete[] imports;
 		imports = 0;
 	}
@@ -1025,11 +1035,11 @@ void MainGui::ClearData()
 		{
 			freeJdcStr(&libraryNames[i]);
 		}
-		
+
 		delete[] libraryNames;
 		numOfLibraries = 0;
 	}
-	
+
 	for (int32_t i = 0; i < functions.size(); i++)
 	{
 		freeFunction(&functions[i]);
@@ -1052,7 +1062,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 	}
 	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
 	{
-		logTextCtrl->LogHexNum("instruction jumps outside file", instructionBuffer->address, 1);
+		logTextCtrl->LogHexNum("instruction jumps outside file", instructionBuffer->address, true);
 		return ERROR_JDC;
 	}
 
@@ -1071,14 +1081,14 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
 			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
 		{
-			logTextCtrl->LogHexNum("instruction overlaps with existing instruction", currentVirtualAddress, 1);
+			logTextCtrl->LogHexNum("instruction overlaps with existing instruction", currentVirtualAddress, true);
 			return ERROR_JDC;
 		}
 
 		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			if (errorAddress) { *errorAddress = currentVirtualAddress; }
-			logTextCtrl->LogHexNum("bad instruction at", currentVirtualAddress, 1);
+			logTextCtrl->LogHexNum("bad instruction at", currentVirtualAddress, true);
 			return ERROR_JDC;
 		}
 
@@ -1094,6 +1104,8 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 			storeInstruction = false;
 		}
 
+		logTextCtrl->LogProgress(currentVirtualAddress, true);
+
 		decompParams.instructions = instructionBuffer;
 		if (isOpcodeReturn(instructionBuffer->opcode))
 		{
@@ -1102,7 +1114,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 		else if (isOpcodeJmp(instructionBuffer->opcode))
 		{
 			uint64_t jmpDst = getJmpDst(&decompParams, 0);
-			if (jmpDst != 0) 
+			if (jmpDst != 0)
 			{
 				struct FileSection* section = 0;
 				currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
@@ -1114,7 +1126,7 @@ enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct Disassem
 				currentVirtualAddress = jmpDst;
 				storeInstruction = true;
 			}
-			else 
+			else
 			{
 				return SUCCESS_JDC;
 			}
@@ -1161,11 +1173,11 @@ enum JdcStatus MainGui::DisassembleBetweenBounds(uint64_t startVA, uint64_t endV
 	uint64_t currentVirtualAddress = startVA;
 	while (currentFileOffset < endFileOffset)
 	{
-		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + endFileOffset - 1, options, instructionBuffer) || 
+		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + endFileOffset - 1, options, instructionBuffer) ||
 			currentFileOffset + instructionBuffer->numOfBytes > endFileOffset)
 		{
 			int32_t numOfBytes = instructionBuffer->numOfBytes;
-			if (numOfBytes == 0) 
+			if (numOfBytes == 0)
 			{
 				return ERROR_JDC;
 			}
@@ -1174,16 +1186,18 @@ enum JdcStatus MainGui::DisassembleBetweenBounds(uint64_t startVA, uint64_t endV
 			instructionBuffer->opcode = DATA;
 			instructionBuffer->numOfBytes = 1;
 
-			for (int32_t i = 0; i < numOfBytes; i++) 
+			logTextCtrl->LogProgress(currentVirtualAddress, true);
+
+			for (int32_t i = 0; i < numOfBytes; i++)
 			{
 				if (currentFileOffset >= endFileOffset)
 				{
 					return SUCCESS_JDC;
 				}
-				
+
 				instructionBuffer->address = currentVirtualAddress;
 				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
-				if (!instructionBuffer->operands) 
+				if (!instructionBuffer->operands)
 				{
 					return ERROR_JDC;
 				}
@@ -1192,16 +1206,16 @@ enum JdcStatus MainGui::DisassembleBetweenBounds(uint64_t startVA, uint64_t endV
 				instructionBuffer->operands[0].type = IMMEDIATE;
 				instructionBuffer->operands[0].immediate.size = 1;
 				instructionBuffer->numOfOperands = 1;
-				
+
 				currentFileOffset++;
 				currentVirtualAddress++;
 				disassembledInstructions.push_back(*instructionBuffer);
 			}
 		}
-		else 
+		else
 		{
 			instructionBuffer->address = currentVirtualAddress;
-			
+
 			currentFileOffset += instructionBuffer->numOfBytes;
 			currentVirtualAddress += instructionBuffer->numOfBytes;
 			disassembledInstructions.push_back(*instructionBuffer);
@@ -1211,20 +1225,20 @@ enum JdcStatus MainGui::DisassembleBetweenBounds(uint64_t startVA, uint64_t endV
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus MainGui::HandleJmpTables() 
+enum JdcStatus MainGui::HandleJmpTables()
 {
 	// this is setting called instructions from the RUNTIME_FUNCTION structs in .pdata
 	if (fileFormat == PE_FF && is64Bit) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
 	{
-		for (int32_t i = 0; i < numOfSections; i++) 
+		for (int32_t i = 0; i < numOfSections; i++)
 		{
-			if (strcmp(sections[i].name.buffer, ".pdata") == 0) 
+			if (strcmp(sections[i].name.buffer, ".pdata") == 0)
 			{
 				int32_t j = 0;
 				while (j < sections[i].physicalSize)
 				{
 					uint64_t beginAddress = imageBase + *(uint32_t*)(fileBytes + sections[i].fileOffset + j);
-					if (beginAddress == 0) 
+					if (beginAddress == 0)
 					{
 						break;
 					}
@@ -1237,7 +1251,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 
 					j += 0xC;
 				}
-				
+
 				break;
 			}
 		}
@@ -1246,6 +1260,8 @@ enum JdcStatus MainGui::HandleJmpTables()
 	int32_t numOfInstructions = disassembledInstructions.size();
 	for (int32_t i = 0; i < numOfInstructions; i++)
 	{
+		logTextCtrl->LogProgress(disassembledInstructions[i].address, true);
+
 		if (disassembledInstructions[i].address == imageBase + entryPoint)
 		{
 			disassembledInstructions[i].isCalled = 1;
@@ -1294,11 +1310,11 @@ enum JdcStatus MainGui::HandleJmpTables()
 
 			uint64_t lastAddress = disassembledInstructions[lastInstructionIndex].address;
 			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
-			
+
 			bool isInIndirectTable = false;
 			uint64_t currentAddress = jumpTables[i].jmpTableAddress;
 			uint64_t initialAddress = currentAddress;
-			while(currentAddress < lastAddress)
+			while (currentAddress < lastAddress)
 			{
 				if (currentAddress == jumpTables[i].indirectTableAddress)
 				{
@@ -1309,7 +1325,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 					i++;
 					isInIndirectTable = false;
 				}
-				
+
 				struct DisassembledInstruction instruction;
 				memset(&instruction, 0, sizeof(struct DisassembledInstruction));
 				instruction.opcode = DATA;
@@ -1324,7 +1340,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 				instruction.numOfBytes = isInIndirectTable ? 1 : jumpTables[i].addressSize;
 				instruction.address = currentAddress;
 
-				if (isInIndirectTable) 
+				if (isInIndirectTable)
 				{
 					instruction.operands[0].immediate.value = *(uint8_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
@@ -1332,7 +1348,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 				{
 					instruction.operands[0].immediate.value = *(uint32_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
-				else 
+				else
 				{
 					instruction.operands[0].immediate.value = *(uint64_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
@@ -1350,8 +1366,11 @@ enum JdcStatus MainGui::HandleJmpTables()
 	return SUCCESS_JDC;
 }
 
-void MainGui::FindAllFunctions(bool getSymbols) 
+void MainGui::FindAllFunctions(bool getSymbols)
 {
+	logTextCtrl->Log("\tCurrent function: ", false, false);
+	logTextCtrl->LogProgress(0, false);
+
 	int32_t numOfInstructions = disassembledInstructions.size();
 	int32_t instructionIndex = 0;
 
@@ -1365,6 +1384,8 @@ void MainGui::FindAllFunctions(bool getSymbols)
 		{
 			sprintfJdc(&currentFunction.name, false, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
 		}
+
+		logTextCtrl->LogProgress(disassembledInstructions[currentFunction.firstInstructionIndex].address, true);
 
 		functions.push_back(currentFunction);
 		memset(&currentFunction, 0, sizeof(struct Function));

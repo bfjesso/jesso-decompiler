@@ -7,12 +7,14 @@ public:
 	LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef);
 
 	int32_t progressPos = 0;
+	int32_t progressLen = 0;
+	int64_t lastProgressUpdateMs = 0;
 
-	void Log(wxString text, bool isError);
+	void Log(wxString text, bool isError = false, bool addNewLine = true);
 
-	void LogHexNum(wxString label, uint64_t num, bool isError);
+	void LogHexNum(wxString label, uint64_t num, bool isError = false);
 
-	void LogProgress(uint64_t current, uint64_t max);
+	void LogProgress(uint64_t value, bool updateCurrentProgress);
 
 	void LogRightClickOptions(wxContextMenuEvent& e);
 

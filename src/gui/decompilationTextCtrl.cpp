@@ -35,29 +35,29 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		for (int32_t i = 0; i < numOfFunctions; i++)
 		{
 			struct Function* func = &mainGui->decompParams.functions[i];
-			if(strcmp(func->name.buffer, word.c_str()) == 0)
+			if (strcmp(func->name.buffer, word.c_str()) == 0)
 			{
-				if (i != currentDecompiledFunc) 
+				if (i != currentDecompiledFunc)
 				{
 					menu.Append(ID_DECOMPILE, "Decompile");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						DecompilationTextCtrl* newDecompTextCtrl = mainGui->AddDecompilationTextCtrl();
 						newDecompTextCtrl->DecompileFunction(i);
 						newDecompTextCtrl->disassemblyTextCtrl = disassemblyTextCtrl;
-					}, ID_DECOMPILE);
+						}, ID_DECOMPILE);
 				}
 
 				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ShowRenameDialog(i, &func->name);
-				}, ID_RENAME);
+					}, ID_RENAME);
 
 				menu.Append(ID_FIND_CODE_REFERENCES, "Find code references to function");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					uint64_t functionAddress = mainGui->decompParams.instructions[func->firstInstructionIndex].address;
 					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
-				}, ID_FIND_CODE_REFERENCES);
-				
+					}, ID_FIND_CODE_REFERENCES);
+
 				foundName = true;
 				break;
 			}
@@ -74,7 +74,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(currentDecompiledFunc, &func->regVars[i].name);
-					}, ID_RENAME);
+						}, ID_RENAME);
 
 					foundName = true;
 					break;
@@ -88,7 +88,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(currentDecompiledFunc, &func->stackVars[i].name);
-					}, ID_RENAME);
+						}, ID_RENAME);
 
 					foundName = true;
 					break;
@@ -102,7 +102,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(currentDecompiledFunc, &func->returnedVars[i].name);
-					}, ID_RENAME);
+						}, ID_RENAME);
 
 					foundName = true;
 					break;
@@ -134,7 +134,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 				disassemblyTextCtrl = mainGui->disassemblyTextCtrls[selection];
 			}
 		}
-	}, ID_SET_ASSOCIATED_DISASSEMBLY);
+		}, ID_SET_ASSOCIATED_DISASSEMBLY);
 
 	if (disassemblyTextCtrl)
 	{
@@ -142,7 +142,7 @@ void DecompilationTextCtrl::DecompilationRightClickOptions(wxContextMenuEvent& e
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			disassemblyTextCtrl->ClearIndicators();
 			disassemblyTextCtrl = nullptr;
-		}, ID_UNASSOCIATE_DISASSEMBLY);
+			}, ID_UNASSOCIATE_DISASSEMBLY);
 	}
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
@@ -156,7 +156,7 @@ void DecompilationTextCtrl::OnUpdateDecompilationUI(wxStyledTextEvent& e)
 	}
 
 	ClearIndicators();
-	
+
 	bool isLineHighlighted = false;
 
 	if (disassemblyTextCtrl && HasFocus())
@@ -221,7 +221,7 @@ void DecompilationTextCtrl::DecompileFunction(int32_t functionIndex)
 			disassemblyTextCtrl->HighlightLine(errorInstructionIndex, RED_INDICATOR, 1);
 		}
 
-		mainGui->logTextCtrl->Log(statusMessage.buffer, 1);
+		mainGui->logTextCtrl->Log(statusMessage.buffer, true);
 		wxMessageBox(statusMessage.buffer, "Can't decompile");
 		freeJdcStr(&statusMessage);
 
@@ -291,11 +291,11 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		if (voidIntrinsics[i].opcode == DATA) 
+		if (voidIntrinsics[i].opcode == DATA)
 		{
 			ColorAllStrs(text, voidIntrinsics[i].name, ERROR_DECOMP_COLOR, false);
 		}
-		else 
+		else
 		{
 			ColorAllStrs(text, voidIntrinsics[i].name, INTRINSIC_DECOMP_COLOR, false);
 		}

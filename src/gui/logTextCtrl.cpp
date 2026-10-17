@@ -10,13 +10,19 @@ LogTextCtrl::LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(pa
 	Log("JDC started", 0);
 }
 
-void LogTextCtrl::Log(wxString text, bool isError)
+void LogTextCtrl::Log(wxString text, bool isError, bool addNewLine)
 {
 	SetReadOnly(false);
 	AppendText(wxDateTime::Now().Format(wxT("%X")) + ": ");
 
 	int32_t textStart = GetLength();
-	AppendText(text + "\n");
+
+	if (addNewLine)
+	{
+		text += "\n";
+	}
+
+	AppendText(text);
 
 	if (isError)
 	{
@@ -37,30 +43,35 @@ void LogTextCtrl::LogHexNum(wxString label, uint64_t num, bool isError)
 	Log(label + ": " + wxString(numStr), isError);
 }
 
-void LogTextCtrl::LogProgress(uint64_t current, uint64_t max)
+void LogTextCtrl::LogProgress(uint64_t value, bool updateCurrentProgress)
 {
-	SetReadOnly(false);
-
-	char numStr[20] = { 0 };
-	if (max == 0) // update existing progress
+	int64_t now = wxGetLocalTimeMillis().GetValue();
+	if (!updateCurrentProgress)
 	{
-		sprintf(numStr, "0x%llX", current);
+		SetReadOnly(false);
+		progressPos = GetLength();
+		wxString numStr = wxString::Format("0x%llX\n", value);
+		progressLen = (int32_t)(numStr.Length() - 1);
+		AppendText(numStr);
+		SetReadOnly(true);
+	}
+	else if (now - lastProgressUpdateMs > 250)
+	{
+		SetReadOnly(false);
 
-		int32_t endPos = GetText().find('/', progressPos);
-		Replace(progressPos, endPos, numStr);
+		wxString numStr = wxString::Format("0x%llX", value);
+		SetTargetStart(progressPos);
+		SetTargetEnd(progressPos + progressLen);
+		ReplaceTarget(numStr);
+
+		progressLen = (int32_t)numStr.Length();
+
+		lastProgressUpdateMs = now;
 		Refresh();
 		Update();
-	}
-	else 
-	{
-		progressPos = GetLength() + 1;
-		sprintf(numStr, "0x%llX", current);
-		AppendText("\t" + wxString(numStr) + "/");
-		sprintf(numStr, "0x%llX", max);
-		AppendText(wxString(numStr) + "\n");
-	}
 
-	SetReadOnly(true);
+		SetReadOnly(true);
+	}
 }
 
 void LogTextCtrl::LogRightClickOptions(wxContextMenuEvent& e)
@@ -74,12 +85,12 @@ void LogTextCtrl::LogRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_CLEAR, "Clear");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ClearText();
-	}, ID_CLEAR);
+		}, ID_CLEAR);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
 
-void LogTextCtrl::OnUpdateLogUI(wxStyledTextEvent& e) 
+void LogTextCtrl::OnUpdateLogUI(wxStyledTextEvent& e)
 {
 	if (!HasFocus())
 	{

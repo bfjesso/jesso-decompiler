@@ -27,7 +27,7 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 	instructions = disassembledInstructions;
 	numOfInstructions = amountOfInstructions;
 
-	if (!instructions || numOfInstructions == 0) 
+	if (!instructions || numOfInstructions == 0)
 	{
 		return;
 	}
@@ -47,23 +47,23 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 	if (errorAddress != 0)
 	{
 		int32_t errorIndex = findInstructionByAddress(instructions, numOfInstructions, errorAddress);
-		if (errorIndex != -1) 
+		if (errorIndex != -1)
 		{
 			CenterLine(errorIndex);
 			UpdateTextCtrl();
 			HighlightLine(errorIndex, RED_INDICATOR, 0);
 		}
 	}
-	else if(centerInstructionIndex != -1)
+	else if (centerInstructionIndex != -1)
 	{
 		CenterLine(centerInstructionIndex);
 		UpdateTextCtrl();
 		HighlightLine(centerInstructionIndex, YELLOW_INDICATOR, 0);
 	}
-	else 
+	else
 	{
 		int32_t entryPointIndex = findInstructionByAddress(instructions, numOfInstructions, mainGui->entryPoint + mainGui->decompParams.imageBase);
-		if (entryPointIndex != -1) 
+		if (entryPointIndex != -1)
 		{
 			CenterLine(entryPointIndex);
 			UpdateTextCtrl();
@@ -77,7 +77,7 @@ void DisassemblyTextCtrl::ResetDisassembly()
 	Initialize(instructions, numOfInstructions, GetCurrentLine(), 0);
 }
 
-void DisassemblyTextCtrl::ShowGoToAddressDialog() 
+void DisassemblyTextCtrl::ShowGoToAddressDialog()
 {
 	wxTextEntryDialog dlg(this, "", "Go to address");
 	if (dlg.ShowModal() == wxID_OK)
@@ -101,11 +101,11 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 
 			CenterLine(index);
 
-			if (address != instructions[index].address) 
+			if (address != instructions[index].address)
 			{
 				wxMessageBox("Exact address not found", "Failed to find address");
 			}
-			
+
 			return;
 		}
 
@@ -115,7 +115,7 @@ void DisassemblyTextCtrl::ShowGoToAddressDialog()
 
 void DisassemblyTextCtrl::HighlightLine(int32_t line, enum IndicatorColor color, bool gotoLine)
 {
-	if (gotoLine) 
+	if (gotoLine)
 	{
 		CenterLine(line);
 		UpdateTextCtrl();
@@ -142,7 +142,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_GO_TO_ADDRESS, "Go to address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ShowGoToAddressDialog();
-	}, ID_GO_TO_ADDRESS);
+		}, ID_GO_TO_ADDRESS);
 
 	menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -165,7 +165,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 				decompilationTextCtrl = mainGui->decompilationTextCtrls[selection];
 			}
 		}
-	}, ID_SET_ASSOCIATED_DECOMPILATION);
+		}, ID_SET_ASSOCIATED_DECOMPILATION);
 
 	if (decompilationTextCtrl)
 	{
@@ -173,7 +173,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			decompilationTextCtrl->ClearIndicators();
 			decompilationTextCtrl = nullptr;
-		}, ID_UNASSOCIATE_DECOMPILATION);
+			}, ID_UNASSOCIATE_DECOMPILATION);
 	}
 
 	menu.Append(ID_SET_ASSOCIATED_FUNCTIONS, "Set associated functions");
@@ -197,7 +197,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 				functionsTextCtrl = mainGui->functionsTextCtrls[selection];
 			}
 		}
-	}, ID_SET_ASSOCIATED_FUNCTIONS);
+		}, ID_SET_ASSOCIATED_FUNCTIONS);
 
 	if (functionsTextCtrl)
 	{
@@ -205,7 +205,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			functionsTextCtrl->ClearIndicators();
 			functionsTextCtrl = nullptr;
-		}, ID_UNASSOCIATE_FUNCTIONS);
+			}, ID_UNASSOCIATE_FUNCTIONS);
 	}
 
 	menu.Append(ID_SET_ASSOCIATED_DATA, "Set associated data");
@@ -229,7 +229,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 				dataTextCtrl = mainGui->dataTextCtrls[selection];
 			}
 		}
-	}, ID_SET_ASSOCIATED_DATA);
+		}, ID_SET_ASSOCIATED_DATA);
 
 	if (dataTextCtrl)
 	{
@@ -237,7 +237,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 			dataTextCtrl->ClearIndicators();
 			dataTextCtrl = nullptr;
-		}, ID_UNASSOCIATE_DATA);
+			}, ID_UNASSOCIATE_DATA);
 	}
 
 	menu.Append(ID_SHOW_UNHANDLED_OPCODES, "Show all opcodes not handled in the decopliler");
@@ -245,17 +245,17 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		mainGui->ShowWindowInAUI(wxAUI_DOCK_NONE, mainGui->logTextCtrl);
 		struct JdcStr errorBuffer = initializeJdcStr();
 		mainGui->logTextCtrl->Freeze();
-		for (int32_t i = 0; i < numOfInstructions; i++) 
+		for (int32_t i = 0; i < numOfInstructions; i++)
 		{
-			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode)) 
+			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode))
 			{
 				sprintfJdc(&errorBuffer, false, "%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address);
-				mainGui->logTextCtrl->Log(errorBuffer.buffer, 1);
+				mainGui->logTextCtrl->Log(errorBuffer.buffer, true);
 			}
 		}
 		mainGui->logTextCtrl->Thaw();
 		freeJdcStr(&errorBuffer);
-	}, ID_SHOW_UNHANDLED_OPCODES);
+		}, ID_SHOW_UNHANDLED_OPCODES);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }
@@ -388,7 +388,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			continue;
 		}
-		
+
 		for (int32_t j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
 		{
 			if (mainGui->decompParams.sections[j].type == CODE_FST && instructions[i].address >= mainGui->decompParams.sections[j].rva + mainGui->decompParams.imageBase)
@@ -420,7 +420,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			asmStr += " ; entry point";
 		}
-		else if (instructions[i].opcode == DATA) 
+		else if (instructions[i].opcode == DATA)
 		{
 			bool foundIndirectTable = false;
 			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
@@ -432,7 +432,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		if (mainGui->decompParams.instructions == instructions) 
+		if (mainGui->decompParams.instructions == instructions)
 		{
 			uint64_t dst = getJmpDst(&mainGui->decompParams, i);
 			if (dst != 0)
@@ -513,7 +513,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		{
 			if (instruction->operands[i].type == REGISTER)
 			{
-				if (!evaluateIP || !compareRegisters(instruction->operands[i].reg, IP)) 
+				if (!evaluateIP || !compareRegisters(instruction->operands[i].reg, IP))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
 					int32_t loc = asmStr.find(regStr, regStart);
@@ -524,7 +524,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 			}
 			else if (instruction->operands[i].type == MEM_ADDRESS)
 			{
-				if (instruction->operands[i].memoryAddress.reg != NO_REG && 
+				if (instruction->operands[i].memoryAddress.reg != NO_REG &&
 					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.reg, IP)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
@@ -534,7 +534,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 					regStart = loc + regStr.length();
 				}
 
-				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG && 
+				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG &&
 					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.regDisplacement, IP)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
