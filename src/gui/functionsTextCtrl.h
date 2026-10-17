@@ -1,5 +1,6 @@
 #pragma once
 #include "jdcTextCtrl.h"
+#include "../decompiler/dataTypes.h"
 
 class FunctionsTextCtrl : public JdcTextCtrl
 {
