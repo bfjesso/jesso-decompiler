@@ -780,7 +780,7 @@ void MainGui::DisassembleFile()
 	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
 	logTextCtrl->Log("disassembling jumped to instructions...");
 	logTextCtrl->Log("\tCurrent instruction: ", false, false);
-	logTextCtrl->LogProgress(0, false);
+	logTextCtrl->LogProgress(entryPoint + imageBase, false);
 
 	struct DisassemblerOptions options = { 0 };
 	options.is64BitMode = is64Bit;
@@ -800,7 +800,7 @@ void MainGui::DisassembleFile()
 
 	logTextCtrl->Log("disassembling all other instructions...");
 	logTextCtrl->Log("\tCurrent instruction: ", false, false);
-	logTextCtrl->LogProgress(0, false);
+	logTextCtrl->LogProgress(disassembledInstructions[0].address, false);
 
 	uint64_t firstAddress = disassembledInstructions[0].address;
 	uint64_t lastAddress = disassembledInstructions[disassembledInstructions.size() - 1].address + disassembledInstructions[disassembledInstructions.size() - 1].numOfBytes;
@@ -911,21 +911,91 @@ void MainGui::AnalyzeFile()
 
 	UpdateDecompParams();
 
-	logTextCtrl->Log("finding all functions...");
-
 	int32_t getSymbols = wxNO;
 	if (fileFormat != UNKNOWN_FF)
 	{
 		getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	}
 
+	logTextCtrl->Log("finding all functions...");
+
 	FindAllFunctions(getSymbols == wxYES);
 
-	logTextCtrl->Log("analyzing functions...");
+	int32_t numOfFunctions = functions.size();
 
-	if (!analyzeAllFunctions(&decompParams))
+	logTextCtrl->Log("analyzing function return types and conditions...");
+	logTextCtrl->Log("\tCurrent function: ", false, false);
+	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
+
+	bool getConditions = true;
+	bool setAnyReturnType = false;
+	do
 	{
-		wxMessageBox("Error analyzing functions", "Failed to analyze functions");
+		setAnyReturnType = false;
+		for (int32_t i = 0; i < numOfFunctions; i++)
+		{
+			bool setReturnType = false;
+			if (ERROR_JDC == getFunctionReturnTypeAndConditions(&decompParams, &functions[i], getConditions, &setReturnType))
+			{
+				logTextCtrl->Log(wxString::Format("error getting return type or conditions of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
+				return;
+			}
+
+			if (setReturnType)
+			{
+				setAnyReturnType = true;
+			}
+
+			logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
+		}
+
+		getConditions = false;
+
+	} while (setAnyReturnType);
+
+	logTextCtrl->Log("analyzing function arguments and stack...");
+	logTextCtrl->Log("\tCurrent function: ", false, false);
+	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
+
+	for (int32_t i = 0; i < numOfFunctions; i++)
+	{
+		if (ERROR_JDC == getFunctionRegArgsAndStackVars(&decompParams, &functions[i]))
+		{
+			logTextCtrl->Log(wxString::Format("error getting arguments and stack vars of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
+			return;
+		}
+
+		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
+	}
+
+	logTextCtrl->Log("fixing function arguments and stack...");
+	logTextCtrl->Log("\tCurrent function: ", false, false);
+	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
+
+	for (int32_t i = 0; i < numOfFunctions; i++)
+	{
+		if (ERROR_JDC == fixFunctionArgs(&decompParams, &functions[i]))
+		{
+			logTextCtrl->Log(wxString::Format("error fixing arguments and stack vars of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
+			return;
+		}
+
+		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
+	}
+
+	logTextCtrl->Log("setting stack var data types...");
+	logTextCtrl->Log("\tCurrent function: ", false, false);
+	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
+
+	for (int32_t i = 0; i < numOfFunctions; i++)
+	{
+		if (ERROR_JDC == setFunctionStackVarTypes(&decompParams, &functions[i]))
+		{
+			logTextCtrl->Log(wxString::Format("error setting stack var data types of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
+			return;
+		}
+
+		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
 	}
 
 	logTextCtrl->Log("updating functions GUI...");
@@ -1367,7 +1437,7 @@ enum JdcStatus MainGui::HandleJmpTables()
 void MainGui::FindAllFunctions(bool getSymbols)
 {
 	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(0, false);
+	logTextCtrl->LogProgress(disassembledInstructions[0].address, false);
 
 	int32_t numOfInstructions = disassembledInstructions.size();
 	int32_t instructionIndex = 0;

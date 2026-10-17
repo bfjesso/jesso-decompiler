@@ -9,7 +9,13 @@ extern "C"
 
 	enum JdcStatus findNextFunction(struct DecompilationParameters* params, struct Function* result, int32_t* instructionIndex);
 
-	enum JdcStatus analyzeAllFunctions(struct DecompilationParameters* params);
+	enum JdcStatus getFunctionReturnTypeAndConditions(struct DecompilationParameters* params, struct Function* func, bool getConditions, bool* setReturnType);
+
+	enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* params, struct Function* func);
+
+	enum JdcStatus fixFunctionArgs(struct DecompilationParameters* params, struct Function* func); // checks for arguments that aren't used in the function but are just passed to another function call
+
+	enum JdcStatus setFunctionStackVarTypes(struct DecompilationParameters* params, struct Function* func);
 
 	void freeFunction(struct Function* function);
 
@@ -21,19 +27,11 @@ extern "C"
 }
 #endif
 
-static enum JdcStatus getAllFunctionReturnTypesAndConditions(struct DecompilationParameters* params);
-
-static enum JdcStatus getAllFunctionRegArgsAndStackVars(struct DecompilationParameters* params);
-
 static bool isRegInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, enum Register reg, enum Register* specificReg, struct DataType* dataType);
 
 static bool isStackVarInitialized(struct DecompilationParameters* params, int32_t startInstructionIndex, int32_t minInstructionIndex, int64_t offsetFromInitSP);
 
-static enum JdcStatus fixAllFunctionArgs(struct DecompilationParameters* params);
-
 bool getStackArgInitializer(struct DecompilationParameters* params, int32_t callInstructionIndex, int64_t stackArgOffset, struct StackVariable** stackVarRef, int32_t* pushInstructionRef, int64_t* stackFrameSizeRef);
-
-static enum JdcStatus setAllStackVarTypes(struct DecompilationParameters* params);
 
 static int64_t getStackFrameChange(struct DisassembledInstruction* instruction);
 

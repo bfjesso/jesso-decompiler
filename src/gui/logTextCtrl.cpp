@@ -47,7 +47,7 @@ void LogTextCtrl::LogProgress(uint64_t value, bool updateCurrentProgress)
 		AppendText(numStr);
 		SetReadOnly(true);
 	}
-	else if (now - lastProgressUpdateMs > 250)
+	else if (now - lastProgressUpdateMs > 1000)
 	{
 		SetReadOnly(false);
 
