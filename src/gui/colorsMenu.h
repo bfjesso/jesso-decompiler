@@ -77,7 +77,7 @@ public:
 	wxColour decompColors[NUM_OF_DECOMP_COLORS];
 
 	const char* decompColorNames[NUM_OF_DECOMP_COLORS] =
-	{ 
+	{
 		"Operators",
 		"Local variables",
 		"Arguments",
@@ -108,7 +108,7 @@ public:
 		"Values",
 		"Strings"
 	};
-	
+
 	enum ids
 	{
 		MainWindowID,

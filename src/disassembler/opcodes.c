@@ -22,7 +22,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
 			params->bytes += mmm != 0 ? 1 : 3;
-			
+
 			if (prefixIndex != 0)
 			{
 				params->legPrefixes.group1 = NO_PREFIX;
@@ -85,23 +85,23 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 				if (params->modRM.mod == 0b11)
 				{
-					if (opcodeByte == 0x12) 
+					if (opcodeByte == 0x12)
 					{
 						params->opcode = alternateX12;
 					}
-					else 
+					else
 					{
 						params->opcode = alternateX16;
 					}
 				}
 			}
-			else if (opcodeByte == 0x1E) 
+			else if (opcodeByte == 0x1E)
 			{
 				if (params->bytes[0] == 0xFA)
 				{
 					params->opcode.mnemonic = ENDBR64;
 				}
-				else if(params->bytes[0] != 0xFB)
+				else if (params->bytes[0] != 0xFB)
 				{
 					return ERROR_JDC;
 				}
@@ -156,7 +156,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			{
 				extendedOpcode = &extendedOpcodeMapGroup711B[params->modRM.reg][params->modRM.rm];
 			}
-			else 
+			else
 			{
 				extendedOpcode = &extendedOpcodeMapGroup7[params->modRM.reg];
 			}
@@ -178,7 +178,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 					extendedOpcode = &extendedOpcodeMapGroup911B[params->modRM.reg];
 				}
 			}
-			else 
+			else
 			{
 				if (params->legPrefixes.group3 == OSO)
 				{
@@ -188,18 +188,18 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F3[params->modRM.reg];
 				}
-				else 
+				else
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9[params->modRM.reg];
 
-					if(extendedOpcode->mnemonic == CMPXCH8B && params->rexPrefix.W)
+					if (extendedOpcode->mnemonic == CMPXCH8B && params->rexPrefix.W)
 					{
 						extendedOpcode = &alternateCMPXCH;
 					}
 				}
 			}
 		}
-		else if (params->opcode.extensionGroup == 10) 
+		else if (params->opcode.extensionGroup == 10)
 		{
 			extendedOpcode = &extendedOpcodeGroup10;
 		}
@@ -362,7 +362,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 static void handleAlternateMnemonics(struct DisassemblyParameters* params) // this should only be for when the alternate mnemonic represents a different instruction
 {
-	switch (params->opcode.mnemonic) 
+	switch (params->opcode.mnemonic)
 	{
 	case CWDE:
 		params->opcode.mnemonic = params->rexPrefix.W ? CDQE : params->legPrefixes.group1 == OSO ? CBW : CWDE;

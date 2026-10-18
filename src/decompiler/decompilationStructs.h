@@ -186,7 +186,7 @@ struct DecompilationParameters
 	int32_t numOfSections;
 
 	uint64_t imageBase;
-	
+
 	uint8_t* fileBytes;
 	uint64_t numOfFileBytes;
 

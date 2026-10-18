@@ -36,7 +36,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 			}
 
 			struct Condition* lastCondition = 0;
-			if (params->currentFunc->numOfConditions > 0) 
+			if (params->currentFunc->numOfConditions > 0)
 			{
 				lastCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions - 1];
 			}
@@ -53,21 +53,21 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				{
 					return ERROR_JDC;
 				}
-				
+
 				lastCondition->combinedJccIndexes[combinationCount] = i;
 				lastCondition->combinedJccsLogicType = AND_LT;
 				combinationCount++;
 
 				lastCondition->numOfCombinedJccs = combinationCount;
 			}
-			else if (lastCondition && lastCondition->conditionType != CONDITIONAL_RETURN_CT && 
+			else if (lastCondition && lastCondition->conditionType != CONDITIONAL_RETURN_CT &&
 				lastCondition->dstIndex - 1 == i && dstIndex > i && !stopCombination)
 			{
 				if (ERROR_JDC == handleCombinedJccResize(lastCondition))
 				{
 					return ERROR_JDC;
 				}
-				
+
 				lastCondition->combinedJccIndexes[combinationCount] = i;
 				lastCondition->combinedJccsLogicType = OR_LT;
 				lastCondition->dstIndex = dstIndex;
@@ -123,15 +123,15 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				params->currentFunc->numOfConditions++;
 			}
 		}
-		else if(params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
+		else if (params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
 			stopCombination = true;
 		}
 	}
-	
+
 	// handling else ifs and elses
 	int32_t ogNumOfConditions = params->currentFunc->numOfConditions;
-	for (int32_t i = 0; i < ogNumOfConditions; i++) 
+	for (int32_t i = 0; i < ogNumOfConditions; i++)
 	{
 		struct Condition* cond1 = &params->currentFunc->conditions[i];
 		if ((cond1->conditionType == IF_CT || cond1->conditionType == ELSE_IF_CT) && cond1->exitIndex > cond1->dstIndex)
@@ -230,7 +230,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				conditionToMakeGoTo->connectedUpperConditionIndex = -1;
 			}
 
-			if (conditionToMakeGoTo->conditionType == ELSE_CT) 
+			if (conditionToMakeGoTo->conditionType == ELSE_CT)
 			{
 				removeCondition(params, conditionToMakeGoToIndex); // the jmp will be handled as a direct jmp later
 			}
@@ -240,14 +240,14 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 			}
 		}
 	} while (conditionToMakeGoToIndex != -1);
-	
+
 	return SUCCESS_JDC;
 }
 
 static int32_t getNumOfOverlappingConditions(struct DecompilationParameters* params, struct Condition* cond1)
 {
 	int32_t result = 0;
-	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++) 
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond2 = &params->currentFunc->conditions[i];
 		if (cond1 == cond2 || cond1->connectedUpperConditionIndex == i || cond1->connectedLowerConditionIndex == i || isConditionDirectJmp(cond2))
@@ -256,7 +256,7 @@ static int32_t getNumOfOverlappingConditions(struct DecompilationParameters* par
 		}
 
 		if ((cond1->jccIndex < cond2->firstBodyIndex || cond1->jccIndex > cond2->lastBodyIndex) &&
-			cond1->dstIndex >= cond2->firstBodyIndex && cond1->dstIndex <= cond2->lastBodyIndex) 
+			cond1->dstIndex >= cond2->firstBodyIndex && cond1->dstIndex <= cond2->lastBodyIndex)
 		{
 			result++;
 		}
@@ -266,7 +266,7 @@ static int32_t getNumOfOverlappingConditions(struct DecompilationParameters* par
 			result++;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -278,7 +278,7 @@ static enum JdcStatus handleConditionsResize(struct DecompilationParameters* par
 		if (!newConditions)
 		{
 			return ERROR_JDC;
-			
+
 		}
 
 		params->currentFunc->conditions = newConditions;
@@ -290,12 +290,12 @@ static enum JdcStatus handleConditionsResize(struct DecompilationParameters* par
 
 static enum JdcStatus removeCondition(struct DecompilationParameters* params, int32_t conditionIndex)
 {
-	if (conditionIndex < 0 || conditionIndex >= params->currentFunc->numOfConditions) 
+	if (conditionIndex < 0 || conditionIndex >= params->currentFunc->numOfConditions)
 	{
 		return ERROR_JDC;
 	}
 
-	for(int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
 
@@ -308,7 +308,7 @@ static enum JdcStatus removeCondition(struct DecompilationParameters* params, in
 			cond->connectedUpperConditionIndex = -1;
 		}
 
-		if (cond->connectedLowerConditionIndex > conditionIndex) 
+		if (cond->connectedLowerConditionIndex > conditionIndex)
 		{
 			cond->connectedLowerConditionIndex--;
 		}
@@ -386,7 +386,7 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (isConditionDirectJmp(condition))
 		{
-			if (instructionIndex == condition->jccIndex) 
+			if (instructionIndex == condition->jccIndex)
 			{
 				if (ERROR_JDC == decompileCondition(params, i, 1, result))
 				{
@@ -414,7 +414,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 {
 	struct Condition* condition = &params->currentFunc->conditions[conditionIndex];
 
-	if (decompileStart) 
+	if (decompileStart)
 	{
 		if (condition->conditionType == DO_WHILE_CT)
 		{
@@ -589,11 +589,11 @@ struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParame
 
 int32_t getConditionChainFirstBodyInstruction(struct DecompilationParameters* params, struct Condition* condition)
 {
-	while (condition->connectedUpperConditionIndex != -1) 
+	while (condition->connectedUpperConditionIndex != -1)
 	{
 		condition = &params->currentFunc->conditions[condition->connectedUpperConditionIndex];
 	}
-	
+
 	return condition->firstBodyIndex;
 }
 

@@ -19,7 +19,7 @@ bool checkForKnownFunctionCall(struct DecompilationParameters* params, int32_t i
 	{
 		calleeAddress = params->instructions[instructionIndex + 1].address; // this is the case where the current function ends without a ret instruction and the following instruction is the begining of a new function
 	}
-	else 
+	else
 	{
 		return false;
 	}
@@ -30,7 +30,7 @@ bool checkForKnownFunctionCall(struct DecompilationParameters* params, int32_t i
 		return false;
 	}
 
-	if (calleeRef) 
+	if (calleeRef)
 	{
 		*calleeRef = &(params->functions[calleeIndex]);
 	}
@@ -41,7 +41,7 @@ bool checkForKnownFunctionCall(struct DecompilationParameters* params, int32_t i
 enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params, int32_t callInstructionIndex, struct Function* callee, struct JdcStr* result)
 {
 	struct DisassembledInstruction* callInstruction = &(params->instructions[callInstructionIndex]);
-	if (!isOpcodeCall(callInstruction->opcode) && !isOpcodeJmp(callInstruction->opcode)) 
+	if (!isOpcodeCall(callInstruction->opcode) && !isOpcodeJmp(callInstruction->opcode))
 	{
 		// this is when the called function is just the next instruction
 		callInstructionIndex++; // this instruction could pass an argument so callInstructionIndex needs to incremented
@@ -53,7 +53,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 	if (returnedVar != 0)
 	{
 		bool isReturnRegLocalVar = false;
-		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++) 
+		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
 			if (!regVar->isArgument && compareRegisters(regVar->reg, callee->returnReg) && checkRegVarScope(params, regVar, callInstructionIndex))
@@ -63,8 +63,8 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 				break;
 			}
 		}
-		
-		if(!isReturnRegLocalVar)
+
+		if (!isReturnRegLocalVar)
 		{
 			sprintfJdc(&decompiledCall, false, "%s = ", returnedVar->name.buffer);
 		}
@@ -74,7 +74,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 
 	for (int32_t i = 0; i < callee->numOfRegVars; i++)
 	{
-		if (callee->regVars[i].isArgument) 
+		if (callee->regVars[i].isArgument)
 		{
 			struct JdcStr argStr = initializeJdcStr();
 			if (ERROR_JDC == decompileRegister(params, callInstructionIndex, -1, callee->regVars[i].reg, 1, 0, &argStr, 0))
@@ -88,7 +88,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 		}
 	}
 
-	for (int32_t i = 0; i < callee->numOfStackVars; i++) 
+	for (int32_t i = 0; i < callee->numOfStackVars; i++)
 	{
 		if (callee->stackVars[i].isArgument)
 		{
@@ -99,7 +99,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP] : registerStrs[ESP]);
 				struct JdcStr dataTypeStr = initializeJdcStr();
 				dataTypeToStr(callee->stackVars[i].dataType, params->useStdInt, &dataTypeStr);
-				if (callee->stackVars[i].dataType.pointerLevel > 0) 
+				if (callee->stackVars[i].dataType.pointerLevel > 0)
 				{
 					sprintfJdc(&decompiledCall, true, "(%s)(%s + 0x%llX), ", dataTypeStr.buffer, spStr.buffer, callee->stackVars[i].offsetFromInitSP);
 				}
@@ -115,7 +115,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 
 			if (stackArgContainer)
 			{
-				if (callee->stackVars[i].dataType.pointerLevel > 0 && stackArgContainer->dataType.pointerLevel == 0) 
+				if (callee->stackVars[i].dataType.pointerLevel > 0 && stackArgContainer->dataType.pointerLevel == 0)
 				{
 					strcatJdc(&decompiledCall, "&");
 				}
@@ -125,7 +125,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 			else if (pushInstructionIndex != -1)
 			{
 				addAssociatedInstruction(params->currentFunc, pushInstructionIndex);
-				
+
 				struct JdcStr argStr = initializeJdcStr();
 				if (ERROR_JDC == decompileOperand(params, pushInstructionIndex, 0, 1, &argStr))
 				{
@@ -143,7 +143,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 		}
 	}
 
-	if (decompiledCall.buffer[strlen(decompiledCall.buffer)-1] != '(')
+	if (decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] != '(')
 	{
 		decompiledCall.buffer[strlen(decompiledCall.buffer) - 2] = ')';
 		decompiledCall.buffer[strlen(decompiledCall.buffer) - 1] = 0;
@@ -164,10 +164,10 @@ bool checkForUnknownFunctionCall(struct DecompilationParameters* params, int32_t
 	{
 		return false;
 	}
-	
+
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
-	if (isOpcodeCall(instruction->opcode)) 
+	if (isOpcodeCall(instruction->opcode))
 	{
 		return true;
 	}
@@ -225,11 +225,11 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		}
 
 		regArgTypeStrs[i] = initializeJdcStr();
-		if (regVar) 
+		if (regVar)
 		{
 			dataTypeToStr(regVar->dataType, params->useStdInt, &regArgTypeStrs[i]);
 		}
-		else 
+		else
 		{
 			dataTypeToStr(getRegisterDataType(0, -1, platformRegArgs[i]), params->useStdInt, &regArgTypeStrs[i]);
 		}
@@ -249,9 +249,9 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			i = getConditionChainFirstBodyInstruction(params, condition);
 			continue;
 		}
-		
+
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
-		if (doesInstructionDoNothing(instruction)) 
+		if (doesInstructionDoNothing(instruction))
 		{
 			continue;
 		}
@@ -268,7 +268,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 
 		if (numOfStackArgs < maxStackArgs && instruction->opcode == PUSH)
 		{
-			if (instruction->operands[0].type == REGISTER && isRegisterPointer(instruction->operands[0].reg)) 
+			if (instruction->operands[0].type == REGISTER && isRegisterPointer(instruction->operands[0].reg))
 			{
 				continue;
 			}
@@ -285,7 +285,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 	}
 
 	int32_t importIndex = getImportIndexByAddress(params, unknownFuncAddress);
-	if (importIndex != -1) 
+	if (importIndex != -1)
 	{
 		sprintfJdc(&decompiledCall, true, "%s(", params->imports[importIndex].name.buffer);
 	}
@@ -293,14 +293,14 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 	{
 		strcatJdc(&decompiledCall, "((");
 
-		if (returnedVar != 0) 
+		if (returnedVar != 0)
 		{
 			struct JdcStr returnTypeStr = initializeJdcStr();
 			dataTypeToStr(returnedVar->dataType, params->useStdInt, &returnTypeStr);
 			strcatJdc(&decompiledCall, returnTypeStr.buffer);
 			freeJdcStr(&returnTypeStr);
 		}
-		else 
+		else
 		{
 			strcatJdc(&decompiledCall, "void");
 		}
@@ -349,23 +349,23 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			return ERROR_JDC;
 		}
 
-		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE) 
+		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE)
 		{
 			sprintfJdc(&decompiledCall, true, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
 		}
-		else 
+		else
 		{
 			sprintfJdc(&decompiledCall, true, "(%s)", functionPointer.buffer);
 		}
-		
+
 		freeJdcStr(&functionPointer);
 
 		strcatJdc(&decompiledCall, ")(");
 	}
 
-	for(int32_t i = 0; i < numOfPlatformRegArgs; i++)
+	for (int32_t i = 0; i < numOfPlatformRegArgs; i++)
 	{
-		if(decompiledRegArgs[i].buffer)
+		if (decompiledRegArgs[i].buffer)
 		{
 			sprintfJdc(&decompiledCall, true, "%s, ", decompiledRegArgs[i].buffer);
 			freeJdcStr(&regArgTypeStrs[i]);
@@ -373,7 +373,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		}
 	}
 
-	for(int32_t i = 0; i < numOfStackArgs; i++)
+	for (int32_t i = 0; i < numOfStackArgs; i++)
 	{
 		sprintfJdc(&decompiledCall, true, "%s, ", decompiledStackArgs[i].buffer);
 		freeJdcStr(&stackArgTypeStrs[i]);
@@ -398,11 +398,11 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 
 int32_t getImportIndexByAddress(struct DecompilationParameters* params, uint64_t calleeAddress)
 {
-	if (calleeAddress == 0) 
+	if (calleeAddress == 0)
 	{
 		return -1;
 	}
-	
+
 	for (int32_t i = 0; i < params->numOfImports; i++)
 	{
 		if (params->imports[i].address == calleeAddress)

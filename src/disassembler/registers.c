@@ -3,7 +3,7 @@
 extern const char* segmentStrs[NUM_OF_SEGMENTS] =
 {
 	"NO SEGMENT",
-	
+
 	"ES",
 	"CS",
 	"SS",
@@ -15,7 +15,7 @@ extern const char* segmentStrs[NUM_OF_SEGMENTS] =
 extern const char* registerStrs[NUM_OF_REGISTERS] =
 {
 	"NO REG",
-	
+
 	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH",
 	"R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
 	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", "IP",
@@ -27,7 +27,7 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
 	"XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7", "XMM8", "XMM9", "XMM10", "XMM11", "XMM12", "XMM13", "XMM14", "XMM15",
 	"YMM0", "YMM1", "YMM2", "YMM3", "YMM4", "YMM5", "YMM6", "YMM7", "YMM8", "YMM9", "YMM10", "YMM11", "YMM12", "YMM13", "YMM14", "YMM15",
-	"ZMM0", "ZMM1", "ZMM2", "ZMM3", "ZMM4", "ZMM5", "ZMM6", "ZMM7", "ZMM8", "ZMM9", "ZMM10", "ZMM11", "ZMM12", "ZMM13", "ZMM14", "ZMM15", 
+	"ZMM0", "ZMM1", "ZMM2", "ZMM3", "ZMM4", "ZMM5", "ZMM6", "ZMM7", "ZMM8", "ZMM9", "ZMM10", "ZMM11", "ZMM12", "ZMM13", "ZMM14", "ZMM15",
 	"ZMM16", "ZMM17", "ZMM18", "ZMM19", "ZMM20", "ZMM21", "ZMM22", "ZMM23", "ZMM24", "ZMM25", "ZMM26", "ZMM27", "ZMM28", "ZMM29", "ZMM30", "ZMM31",
 
 	"ST(0)", "ST(1)", "ST(2)", "ST(3)", "ST(4)", "ST(5)", "ST(6)", "ST(7)",
@@ -66,7 +66,7 @@ int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat)
 	return 0;
 }
 
-const enum Register* getPlatformRegArgs(enum FileFormat fileFormat) 
+const enum Register* getPlatformRegArgs(enum FileFormat fileFormat)
 {
 	switch (fileFormat)
 	{
@@ -112,7 +112,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 {
 	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)
 	{
-		if ((reg1 == AL && reg2 == AH) || (reg1 == AH && reg2 == AL)) 
+		if ((reg1 == AL && reg2 == AH) || (reg1 == AH && reg2 == AL))
 		{
 			return 0;
 		}
@@ -125,7 +125,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 		{
 			return 0;
 		}
-		
+
 		return (reg2 == CL || reg2 == CH || reg2 == CX || reg2 == ECX || reg2 == RCX);
 	}
 	else if (reg1 == DL || reg1 == DH || reg1 == DX || reg1 == EDX || reg1 == RDX)
@@ -134,7 +134,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 		{
 			return 0;
 		}
-		
+
 		return (reg2 == DL || reg2 == DH || reg2 == DX || reg2 == EDX || reg2 == RDX);
 	}
 	else if (reg1 == BL || reg1 == BH || reg1 == BX || reg1 == EBX || reg1 == RBX)
@@ -143,7 +143,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 		{
 			return 0;
 		}
-		
+
 		return (reg2 == BL || reg2 == BH || reg2 == BX || reg2 == EBX || reg2 == RBX);
 	}
 	else if (reg1 == SP || reg1 == ESP || reg1 == RSP)
@@ -166,7 +166,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 	{
 		return (reg2 == DI || reg2 == EDI || reg2 == RDI);
 	}
-	else if (reg1 == R8B || reg1 == R8W || reg1 == R8D || reg1 == R8) 
+	else if (reg1 == R8B || reg1 == R8W || reg1 == R8D || reg1 == R8)
 	{
 		return (reg2 == R8B || reg2 == R8W || reg2 == R8D || reg2 == R8);
 	}
@@ -202,7 +202,7 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 	return reg1 == reg2;
 }
 
-bool isRegisterPointer(enum Register reg) 
+bool isRegisterPointer(enum Register reg)
 {
 	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
 }
@@ -256,11 +256,11 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 	{
 		return 10;
 	}
-	else if (reg >= XMM0 && reg <= XMM15) 
+	else if (reg >= XMM0 && reg <= XMM15)
 	{
 		return 16;
 	}
-	else if (reg >= YMM0 && reg <= YMM15) 
+	else if (reg >= YMM0 && reg <= YMM15)
 	{
 		return 32;
 	}
@@ -274,15 +274,15 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 
 enum Register extendRegister(enum Register reg)
 {
-	if (reg >= AL && reg <= BH) 
+	if (reg >= AL && reg <= BH)
 	{
 		return (enum Register)(reg + (R8B - AL));
 	}
-	else if((reg >= XMM0 && reg <= XMM7) || (reg >= YMM0 && reg <= YMM7) || (reg >= ZMM0 && reg <= ZMM7) || (reg >= ZMM16 && reg <= ZMM23))
+	else if ((reg >= XMM0 && reg <= XMM7) || (reg >= YMM0 && reg <= YMM7) || (reg >= ZMM0 && reg <= ZMM7) || (reg >= ZMM16 && reg <= ZMM23))
 	{
 		return (enum Register)(reg + (XMM8 - XMM0));
 	}
-	else 
+	else
 	{
 		return (enum Register)(reg + (R8 - RAX));
 	}

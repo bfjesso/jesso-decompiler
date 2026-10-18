@@ -11,7 +11,7 @@ struct DisassemblerOptions
 enum LegacyPrefix
 {
 	NO_PREFIX,
-	
+
 	// group 1
 	LOCK,      // 0xF0
 	REPNZ_BND, // 0xF2
@@ -94,7 +94,7 @@ struct EVEXPrefix
 enum OperandCode
 {
 	NO_OPERAND_CODE,
-	
+
 	ONE,
 	AL_CODE, CL_CODE, AX_CODE, DX_CODE,
 	ES_CODE, CS_CODE, SS_CODE, DS_CODE, FS_CODE, GS_CODE,
@@ -131,7 +131,7 @@ enum OperandCode
 enum OpcodeSuperscript
 {
 	NO_SUPERSCRIPT,
-	
+
 	i64,  // invalid in 64-bit mode
 	o64,  // only available in 64-bit mode
 	d64,  // operand size defaults to 64-bit size
@@ -194,7 +194,7 @@ struct MemoryAddress
 	int64_t constDisplacement;
 };
 
-struct Immediate 
+struct Immediate
 {
 	int64_t value;
 	uint8_t size;
@@ -213,14 +213,14 @@ struct Operand
 	enum OperandType type;
 };
 
-struct DisassemblyParameters 
+struct DisassemblyParameters
 {
 	uint8_t* bytes;
 	uint8_t* maxBytesAddr;
 	uint8_t* startBytePtr;
-	
+
 	bool is64BitMode;
-	
+
 	struct LegacyPrefixes legPrefixes;
 	struct REXPrefix rexPrefix;
 	struct VEXPrefix vexPrefix;
@@ -237,7 +237,7 @@ struct DisassembledInstruction
 	struct Operand* operands;
 	uint8_t numOfOperands;
 	uint8_t operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
-	
+
 	uint8_t numOfBytes;
 	bool isInvalid;
 	bool isCalled;
@@ -246,7 +246,7 @@ struct DisassembledInstruction
 	uint64_t address;
 };
 
-struct JumpTable 
+struct JumpTable
 {
 	uint64_t jmpTableAddress;
 	uint64_t indirectTableAddress;

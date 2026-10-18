@@ -14,7 +14,7 @@
 enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct JdcStr* result, struct JdcStr* statusMessage, int32_t* errorInstructionIndex)
 {
 	params->currentFunc->numOfLines = 0;
-	
+
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
 		if (ERROR_JDC == getAllDirectJmps(params))
@@ -22,7 +22,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 			strcpyJdc(statusMessage, "Error getting all direct jumps.");
 			return ERROR_JDC;
 		}
-		
+
 		if (ERROR_JDC == getAllLocalRegVars(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all local reg vars.");
@@ -37,14 +37,14 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 		params->currentFunc->associatedInstructionsBufferLen = params->currentFunc->lastInstructionIndex - params->currentFunc->firstInstructionIndex;
 		params->currentFunc->associatedInstructions = (struct AssociatedInstructions*)calloc(params->currentFunc->associatedInstructionsBufferLen, sizeof(struct AssociatedInstructions));
-		if (!params->currentFunc->associatedInstructions) 
+		if (!params->currentFunc->associatedInstructions)
 		{
 			return ERROR_JDC;
 		}
 
 		params->currentFunc->hasDoneInitialAnalysis = 1;
 	}
-	
+
 	if (ERROR_JDC == generateFunctionHeader(params->currentFunc, params->useStdInt, result))
 	{
 		strcpyJdc(statusMessage, "Error generating function header.");
@@ -80,7 +80,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}
-		
+
 		if (ERROR_JDC == isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
 		{
 			sprintfJdc(statusMessage, false, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
@@ -93,7 +93,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 			struct Condition* cond = getConditionFromDstInstruction(params, i);
 			if (checkForDirectJmpDst(params, i) || cond)
 			{
-				if(numOfSkippedInstructions > 0)
+				if (numOfSkippedInstructions > 0)
 				{
 					for (int32_t j = numOfSkippedInstructions; j > 0; j--)
 					{
@@ -119,7 +119,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 					continue;
 				}
 			}
-			else 
+			else
 			{
 				numOfSkippedInstructions++;
 				continue;
@@ -217,12 +217,12 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 		if ((checkForKnownFunctionCall(params, i, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params, i))
 		{
 			enum Register returnReg = callee ? callee->returnReg : AX;
-			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, 0) || 
+			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, 0) ||
 				(checkForReturnStatement(params, i) && params->currentFunc->returnReg == returnReg)) // this is if it is an unknown call that also returns
 			{
 				uint64_t calleeAddress = resolveJmpChain(params, i);
 				struct DisassembledInstruction* callInstruction = &(params->instructions[i]);
-				
+
 				if (callee)
 				{
 					if (ERROR_JDC == addReturnedVar(params->currentFunc, callee->returnType, calleeAddress, callInstruction->address, returnReg, callee->name.buffer))
@@ -265,9 +265,9 @@ enum JdcStatus generateFunctionHeader(struct Function* function, bool useStdInt,
 	dataTypeToStr(function->returnType, useStdInt, &typeStr);
 	sprintfJdc(result, false, "%s %s %s(", typeStr.buffer, callingConventionStrs[function->callingConvention], function->name.buffer);
 
-	for (int32_t i = 0; i < function->numOfRegVars; i++) 
+	for (int32_t i = 0; i < function->numOfRegVars; i++)
 	{
-		if (function->regVars[i].isArgument) 
+		if (function->regVars[i].isArgument)
 		{
 			dataTypeToStr(function->regVars[i].dataType, useStdInt, &typeStr);
 			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->regVars[i].name.buffer);
@@ -276,7 +276,7 @@ enum JdcStatus generateFunctionHeader(struct Function* function, bool useStdInt,
 
 	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
-		if (function->stackVars[i].isArgument) 
+		if (function->stackVars[i].isArgument)
 		{
 			dataTypeToStr(function->stackVars[i].dataType, useStdInt, &typeStr);
 			sprintfJdc(result, true, "%s %s, ", typeStr.buffer, function->stackVars[i].name.buffer);
@@ -302,11 +302,11 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 {
 	struct JdcStr typeStr = initializeJdcStr();
 	bool declaredAVar = false;
-	
+
 	for (int32_t i = 0; i < params->currentFunc->numOfStackVars; i++)
 	{
 		struct StackVariable* stackVar = &params->currentFunc->stackVars[i];
-		if (!stackVar->isArgument) 
+		if (!stackVar->isArgument)
 		{
 			dataTypeToStr(stackVar->dataType, params->useStdInt, &typeStr);
 
@@ -354,7 +354,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 	for (int32_t i = 0; i < params->currentFunc->numOfReturnedVars; i++)
 	{
 		bool isReturnRegVar = false;
-		for (int32_t j = 0; j < params->currentFunc->numOfRegVars; j++) 
+		for (int32_t j = 0; j < params->currentFunc->numOfRegVars; j++)
 		{
 			if (!params->currentFunc->regVars[j].isArgument && compareRegisters(params->currentFunc->regVars[j].reg, params->currentFunc->returnedVars[i].returnReg))
 			{
@@ -363,7 +363,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 			}
 		}
 
-		if (!isReturnRegVar) 
+		if (!isReturnRegVar)
 		{
 			dataTypeToStr(params->currentFunc->returnedVars[i].dataType, params->useStdInt, &typeStr);
 			addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s;", typeStr.buffer, params->currentFunc->returnedVars[i].name.buffer);
@@ -371,7 +371,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 		}
 	}
 
-	if (declaredAVar) 
+	if (declaredAVar)
 	{
 		addDecompiledLine(params, result, -1, "");
 	}

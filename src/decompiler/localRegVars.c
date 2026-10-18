@@ -6,7 +6,7 @@
 
 enum JdcStatus getAllLocalRegVars(struct DecompilationParameters* params)
 {
-	if (ERROR_JDC == getLocalRegVarsFromConditionalInstructions(params)) 
+	if (ERROR_JDC == getLocalRegVarsFromConditionalInstructions(params))
 	{
 		return ERROR_JDC;
 	}
@@ -168,7 +168,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 		for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[i];
-			
+
 			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
 			if (checkForAnyAssignments(params, i))
 			{
@@ -223,7 +223,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 					for (int32_t j = i + 1; j <= params->currentFunc->lastInstructionIndex; j++)
 					{
 						bool overwrites = false;
-						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]) || 
+						if (checkForReturnStatement(params, j) || doesInstructionGenerateInterruptOrException(&params->instructions[j]) ||
 							(doesInstructionModifyRegister(params, j, modifiedReg, 0, &overwrites) && overwrites))
 						{
 							break;
@@ -239,7 +239,7 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 						}
 					}
 
-					if (scopeEndIndex != 0) 
+					if (scopeEndIndex != 0)
 					{
 						if (!modifiedRegVar)
 						{
@@ -302,11 +302,11 @@ static void getLocalRegVarScope(struct DecompilationParameters* params, int32_t 
 		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, regVar->reg, 0, &overwrites) && overwrites)
 		{
-			if (endIndex == params->currentFunc->lastInstructionIndex + 1) 
+			if (endIndex == params->currentFunc->lastInstructionIndex + 1)
 			{
 				endIndex = i;
 			}
-			
+
 			break;
 		}
 	}

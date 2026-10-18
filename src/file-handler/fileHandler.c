@@ -66,7 +66,7 @@ enum JdcStatus removeFile(const wchar_t* filePath)
 	return ERROR_JDC;
 }
 
-int32_t seek64(FILE* file, uint64_t fileOffset) 
+int32_t seek64(FILE* file, uint64_t fileOffset)
 {
 #ifdef _WIN32
 	return _fseeki64(file, fileOffset, SEEK_SET);
@@ -128,7 +128,7 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, size_t bufferLe
 	char* demangleResult = __cxa_demangle(mangledStr, 0, 0, &status);
 	if (status == 0)
 	{
-		if (bufferLen <= strlen(demangleResult)) 
+		if (bufferLen <= strlen(demangleResult))
 		{
 			free(demangleResult);
 			return ERROR_JDC;
@@ -184,18 +184,18 @@ enum JdcStatus demangleCppSymbol(char* mangledStr, char* buffer, size_t bufferLe
 
 enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat)
 {
-	if (!fileFormat) 
-	{
-		return ERROR_JDC;
-	}
-	
-	bool isPE = false;
-	if (ERROR_JDC == isFilePE(filePath, &isPE)) 
+	if (!fileFormat)
 	{
 		return ERROR_JDC;
 	}
 
-	if (isPE) 
+	bool isPE = false;
+	if (ERROR_JDC == isFilePE(filePath, &isPE))
+	{
+		return ERROR_JDC;
+	}
+
+	if (isPE)
 	{
 		*fileFormat = PE_FF;
 		return SUCCESS_JDC;
@@ -217,9 +217,9 @@ enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* file
 	return SUCCESS_JDC;
 }
 
-const char* fileFormatToStr(enum FileFormat fileFormat) 
+const char* fileFormatToStr(enum FileFormat fileFormat)
 {
-	switch (fileFormat) 
+	switch (fileFormat)
 	{
 	case UNKNOWN_FF:
 		return "Unknown format";
@@ -232,7 +232,7 @@ const char* fileFormatToStr(enum FileFormat fileFormat)
 	return "";
 }
 
-const char* fileSectionTypeToStr(enum FileSectionType fileSectionType) 
+const char* fileSectionTypeToStr(enum FileSectionType fileSectionType)
 {
 	switch (fileSectionType)
 	{
@@ -251,11 +251,11 @@ const char* fileSectionTypeToStr(enum FileSectionType fileSectionType)
 
 enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, bool* is64BitRef)
 {
-	if (fileFormat == PE_FF) 
+	if (fileFormat == PE_FF)
 	{
 		return isPEX64(filePath, is64BitRef);
 	}
-	else if (fileFormat == ELF_FF) 
+	else if (fileFormat == ELF_FF)
 	{
 		return isELFX64(filePath, is64BitRef);
 	}
@@ -354,7 +354,7 @@ enum JdcStatus readFileBytes(const wchar_t* filePath, uint8_t* buffer, uint64_t 
 		size_t bytesRead = fread(buffer, 1, bufferSize, file);
 		fclose(file);
 
-		if (bytesRead == bufferSize) 
+		if (bytesRead == bufferSize)
 		{
 			return SUCCESS_JDC;
 		}
@@ -422,7 +422,7 @@ enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileForm
 uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint64_t rva, struct FileSection** section)
 {
 	if (section) { *section = 0; }
-	
+
 	uint64_t maybeResult = 0;
 	for (int32_t i = 0; i < numOfSections; i++)
 	{

@@ -19,7 +19,7 @@ extern "C"
 	enum JdcStatus strcpyJdc(struct JdcStr* jdcStr, const char* src);
 
 	enum JdcStatus sprintfJdc(struct JdcStr* jdcStr, bool cat, const char* format, ...);
-	
+
 	struct JdcStr initializeJdcStr();
 
 	struct JdcStr initializeJdcStrWithVal(const char* initStr);

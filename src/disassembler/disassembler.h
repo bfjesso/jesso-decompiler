@@ -8,7 +8,7 @@ extern "C"
 #endif
 
 	enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
-	
+
 	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, struct JdcStr* result);
 
 	const char* getPtrSizeStr(int32_t ptrSize);

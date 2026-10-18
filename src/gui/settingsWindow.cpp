@@ -38,7 +38,7 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 
 void SettingsWindow::CheckUnappliedChanges()
 {
-	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() || 
+	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() ||
 		decompilerSettingsWindow->useStdInt != decompilerSettingsWindow->useStdIntCheckBox->GetValue())
 	{
 		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to apply them?", "Save changes?", wxYES_NO, this);
@@ -46,7 +46,7 @@ void SettingsWindow::CheckUnappliedChanges()
 		{
 			ApplySettings();
 		}
-		else 
+		else
 		{
 			disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(disassemblerSettingsWindow->evaluateIP);
 			decompilerSettingsWindow->useStdIntCheckBox->SetValue(decompilerSettingsWindow->useStdInt);
@@ -84,7 +84,7 @@ void SettingsWindow::SavePreferences()
 
 	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt);
 
-	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++) 
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
 		wxString colorName = wxString(mainGui->colorsMenu->disassemblyColorNames[i]);
 		colorName.MakeLower().Replace(" ", "-");
@@ -102,7 +102,7 @@ void SettingsWindow::SavePreferences()
 	{
 		wxString colorName = wxString(mainGui->colorsMenu->dataColorNames[i]);
 		colorName.MakeLower().Replace(" ", "-");
-		
+
 		cfg.Write("/colors/data/" + colorName, mainGui->colorsMenu->dataColors[i]);
 	}
 

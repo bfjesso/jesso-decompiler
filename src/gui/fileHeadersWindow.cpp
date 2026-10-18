@@ -33,7 +33,7 @@ FileHeadersWindow::FileHeadersWindow(wxWindow* parent, wxString filePath, enum F
 		wxStaticText* headerNameLabel = new wxStaticText(this, wxID_ANY, fileHeadersInfoStr.SubString(headerStartPos, headerEndPos));
 		headerNameLabel->SetOwnForegroundColour(textColor);
 		vSizer->Add(headerNameLabel, 0, wxLEFT | wxTOP, 10);
-		
+
 		wxGrid* grid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 150));
 		grid->SetLabelBackgroundColour(foregroundColor);
 		grid->SetLabelTextColour(textColor);

@@ -25,7 +25,7 @@ enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 		jdcStr->buffer[len + 2] = 0;
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
@@ -140,7 +140,7 @@ enum JdcStatus strcatStartJdc(struct JdcStr* jdcStr, const char* src)
 		}
 
 		char* tmp = (char*)calloc(currentLen + 1, 1);
-		if (tmp) 
+		if (tmp)
 		{
 			strcpy(tmp, jdcStr->buffer);
 			strcpy(jdcStr->buffer, src);
@@ -229,7 +229,7 @@ enum JdcStatus sprintfJdcArgs(struct JdcStr* jdcStr, bool cat, const char* forma
 struct JdcStr copyJdcStr(struct JdcStr* strToCpy)
 {
 	struct JdcStr result = { 0 };
-	
+
 	if (strToCpy && strToCpy->buffer)
 	{
 		result.buffer = (char*)calloc(strToCpy->bufferSize, sizeof(char));
@@ -252,7 +252,7 @@ struct JdcStr initializeJdcStrWithSize(size_t size)
 {
 	struct JdcStr result = { 0 };
 
-	if (size > 0) 
+	if (size > 0)
 	{
 		result.buffer = (char*)calloc(size, sizeof(char));
 		if (result.buffer)
@@ -260,7 +260,7 @@ struct JdcStr initializeJdcStrWithSize(size_t size)
 			result.bufferSize = size;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -268,7 +268,7 @@ struct JdcStr initializeJdcStrWithVal(const char* initStr)
 {
 	struct JdcStr result = { 0 };
 
-	if(initStr)
+	if (initStr)
 	{
 		size_t len = strlen(initStr);
 		result.buffer = (char*)calloc(len + 1, sizeof(char));

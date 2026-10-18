@@ -1,9 +1,9 @@
 #include "dataTypes.h"
 #include "decompilationUtils.h"
 
-const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt) 
+const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 {
-	switch (primitive) 
+	switch (primitive)
 	{
 	case VOID_TYPE:
 		return "void";
@@ -19,9 +19,9 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 		return "__int512";
 	}
 
-	if (useStdInt) 
+	if (useStdInt)
 	{
-		switch (primitive) 
+		switch (primitive)
 		{
 		case INT8_TYPE:
 			return "int8_t";
@@ -41,7 +41,7 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 			return "uint64_t";
 		}
 	}
-	else 
+	else
 	{
 		switch (primitive)
 		{
@@ -101,7 +101,7 @@ enum PrimitiveType getIntType(uint8_t size, bool isSigned)
 	case 64:
 		return INT512_TYPE;
 	}
-	
+
 	return VOID_TYPE;
 }
 
@@ -119,12 +119,12 @@ bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64
 {
 	bool isT1Ptr = isDataTypePtr(t1);
 	bool isT2Ptr = isDataTypePtr(t2);
-	
+
 	if (isT1Ptr && isT2Ptr)
 	{
 		return false;
 	}
-	
+
 	enum PrimitiveType addressPrimitive = getAddressPrimitive(is64Bit);
 	if ((isT1Ptr && t2.primitiveType == addressPrimitive) || (isT2Ptr && t1.primitiveType == addressPrimitive))
 	{
@@ -174,7 +174,7 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 }
 
 struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg)
-{	
+{
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER;
 	regOperand.reg = reg;
@@ -193,7 +193,7 @@ struct DataType getRegisterDataType(struct DisassembledInstruction* instruction,
 
 		return result;
 	}
-	
+
 	return getOperandDataType(NO_MNEMONIC, &regOperand);
 }
 
@@ -261,10 +261,10 @@ struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand
 		break;
 	}
 
-	if (doesOpcodeUseUnsignedInt(opcode)) 
+	if (doesOpcodeUseUnsignedInt(opcode))
 	{
 		result.primitiveType = getIntType(getPrimitiveTypeSize(result.primitiveType), false);
-		
+
 	}
 
 	return result;

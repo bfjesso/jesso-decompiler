@@ -11,7 +11,7 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, SettingsWindo
 	SetOwnBackgroundColour(backgroundColor);
 
 	settingsWindow = settings;
-	
+
 	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(400, 25));
 	bytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
 	bytesTextCtrl->SetOwnForegroundColour(textColor);
@@ -69,7 +69,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 			{
 				disassemblyStaticText->SetLabel(wxString(instructionStrBuffer.buffer) + wxString(" ; invalid opcode"));
 			}
-			else 
+			else
 			{
 				disassemblyStaticText->SetLabel(instructionStrBuffer.buffer);
 			}

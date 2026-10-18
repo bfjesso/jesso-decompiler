@@ -6,13 +6,13 @@
 
 enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 {
-	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++) 
+	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJmp(instruction->opcode))
 		{
 			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, i));
-			if (dstIndex == -1 || dstIndex == i + 1) 
+			if (dstIndex == -1 || dstIndex == i + 1)
 			{
 				continue;
 			}
@@ -36,13 +36,13 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 
 			int32_t start = i;
 			int32_t end = dstIndex;
-			if (start > end) 
+			if (start > end)
 			{
 				start = dstIndex;
 				end = i;
 			}
 			bool doesJmpSkipNothing = true;
-			for (int32_t j = start + 1; j < end; j++) 
+			for (int32_t j = start + 1; j < end; j++)
 			{
 				if (!doesInstructionDoNothing(&params->instructions[j]))
 				{
@@ -50,11 +50,11 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 					break;
 				}
 			}
-			if (doesJmpSkipNothing) 
+			if (doesJmpSkipNothing)
 			{
 				continue;
 			}
-			
+
 			enum DirectJmpType directJmpType = GO_TO_DJT;
 			for (int32_t j = 0; j < params->currentFunc->numOfConditions; j++)
 			{
@@ -70,8 +70,8 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 				{
 					int32_t loopStart = cond->firstBodyIndex;
 					int32_t loopEnd = cond->lastBodyIndex;
-					
-					if (i >= loopStart && i <= loopEnd) 
+
+					if (i >= loopStart && i <= loopEnd)
 					{
 						if (dstIndex == loopStart)
 						{
@@ -93,7 +93,7 @@ enum JdcStatus getAllDirectJmps(struct DecompilationParameters* params)
 				{
 					return ERROR_JDC;
 				}
-				
+
 				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].dstIndex = dstIndex;
 				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].jmpIndex = i;
 				params->currentFunc->directJmps[params->currentFunc->numOfDirectJmps].type = directJmpType;

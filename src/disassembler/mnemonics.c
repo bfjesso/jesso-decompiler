@@ -6,7 +6,7 @@ extern const char* mnemonicStrs[] =
 
 	// these opcodes overwrite the first operand
 	"MOV", "STOS", "VMOVUPS", "MOVUPS", "VMOVUPD", "MOVUPD", "VMOVSS", "MOVSS", "VMOVSD", "MOVSD", "MOVSX", "VMOVD", "MOVD", "VMOVAPS", "MOVAPS", "VMOVAPD", "MOVAPD", "VMOVLPS", "MOVLPS", "VMOVHLPS", "MOVHLPS", "VMOVLPD", "MOVLPD", "VMOVSLDUP", "MOVSLDUP", "VMOVDDUP", "MOVDDUP", "VMOVHPS", "MOVHPS", "VMOVLHPS", "MOVLHPS", "VMOVHPD", "MOVHPD", "VMOVSHDUP", "MOVSHDUP", "VMOVNTPS", "MOVNTPS", "VMOVNTPD", "MOVNTPD", "VMOVMSKPS", "MOVMSKPS", "VMOVMSKPD", "MOVMSKPD", "MOVS", "MOVSXD", "MOVZX", "VMOVQ", "MOVQ", "VMOVDQA", "MOVDQA", "VMOVDQU", "VMOVDQU8", "VMOVDQU16", "VMOVDQU32", "VMOVDQU64", "MOVDQU", "MOVNTI", "VMOVQ2DQ", "MOVQ2DQ", "VMOVDQ2Q", "MOVDQ2Q", "VPMOVMSKB", "PMOVMSKB", "MOVNTQ", "VMOVNTDQ", "MOVNTDQ", "MASKMOVQ", "VMASKMOVDQU", "MASKMOVDQU",
-	
+
 	"POP",
 
 	"LEA",
@@ -25,7 +25,7 @@ extern const char* mnemonicStrs[] =
 	// end of opcodes that overwrite first operand
 
 	// these opcodes modify the first operand
-	"ADD", "VADDPS", "ADDPS", "VADDPD", "ADDPD", "VADDSS", "ADDSS", "VADDSD", "ADDSD", "VHADDPD", "HADDPD", "VHADDPS", "HADDPS", "XADD", "VPADDQ", "PADDQ", 
+	"ADD", "VADDPS", "ADDPS", "VADDPD", "ADDPD", "VADDSS", "ADDSS", "VADDSD", "ADDSD", "VHADDPD", "HADDPD", "VHADDPS", "HADDPS", "XADD", "VPADDQ", "PADDQ",
 	"ADC",
 	"PADDD",
 	"SUB", "VSUBPS", "SUBPS", "VSUBPD", "SUBPD", "VSUBSS", "SUBSS", "VSUBSD", "SUBSD", "VHSUBPD", "HSUBPD", "VHSUBPS", "HSUBPS",
@@ -57,7 +57,7 @@ extern const char* mnemonicStrs[] =
 
 	"AESENC", "AESENCLAST", "AESDEC", "AESDECLAST",
 	// end of opcodes that modify first operand
-	
+
 	// other opcodes that are handled in the decompiler
 	"IMUL", "MUL",
 	"IDIV", "DIV",
@@ -85,7 +85,7 @@ extern const char* mnemonicStrs[] =
 
 	"HLT",
 
-	"ENTER", "LEAVE", 
+	"ENTER", "LEAVE",
 	"ENDBR32", "ENDBR64",
 
 	"UD2",
@@ -243,12 +243,12 @@ extern const char* mnemonicStrs[] =
 	"UD0", "UD1"
 };
 
-bool isOpcodeImplementedInDecompiler(enum Mnemonic opcode) 
+bool isOpcodeImplementedInDecompiler(enum Mnemonic opcode)
 {
 	return opcode >= MOV && opcode <= DATA;
 }
 
-bool doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode) 
+bool doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode)
 {
 	return opcode >= MOV && opcode <= AESKEYGENASSIST;
 }

@@ -442,9 +442,9 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	if (params->evexPrefix.isValidEVEX && disp >= -128 && disp <= 127 && disp != 0)
 	{
 		uint8_t vectorLength = getVectorLength(params);
-		
+
 		uint8_t N = 1;
-		switch (params->opcode.opcodeSuperscript) 
+		switch (params->opcode.opcodeSuperscript)
 		{
 		case FULL_32_TT:
 			N = params->evexPrefix.b == 0 ? vectorLength : 4;

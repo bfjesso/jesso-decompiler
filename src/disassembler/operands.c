@@ -14,7 +14,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	{
 		if ((params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) ||
 			params->opcode.opcodeSuperscript == f64 ||
-			params->rexPrefix.W) 
+			params->rexPrefix.W)
 		{
 			is64BitOperandSize = true;
 		}
@@ -34,14 +34,14 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	}
 
 	uint8_t vectorLength = getVectorLength(params);
-	
+
 	int32_t operandIndex = 0;
 	for (int32_t i = 0; i < 4; i++)
 	{
 		enum OperandCode currentOperandCode = params->opcode.operands[i];
 		struct Operand* currentOperand = &(operands[operandIndex]);
 
-		if (currentOperandCode == NO_OPERAND_CODE) 
+		if (currentOperandCode == NO_OPERAND_CODE)
 		{
 			break;
 		}
@@ -504,10 +504,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		}
 
-		if (currentOperandCode != NO_OPERAND_CODE) 
+		if (currentOperandCode != NO_OPERAND_CODE)
 		{
 			currentOperand = &(operands[operandIndex]); // operandIndex may have been decremented
-			if (currentOperand->type == NO_OPERAND) 
+			if (currentOperand->type == NO_OPERAND)
 			{
 				return ERROR_JDC;
 			}
@@ -519,10 +519,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			{
 				return ERROR_JDC;
 			}
-			else if (currentOperand->type == MEM_ADDRESS && 
-				(currentOperand->memoryAddress.reg < 0 || currentOperand->memoryAddress.reg >= NUM_OF_REGISTERS || 
-				currentOperand->memoryAddress.regDisplacement < 0 || currentOperand->memoryAddress.regDisplacement >= NUM_OF_REGISTERS || 
-				currentOperand->memoryAddress.segment < 0 || currentOperand->memoryAddress.segment >= NUM_OF_SEGMENTS))
+			else if (currentOperand->type == MEM_ADDRESS &&
+				(currentOperand->memoryAddress.reg < 0 || currentOperand->memoryAddress.reg >= NUM_OF_REGISTERS ||
+					currentOperand->memoryAddress.regDisplacement < 0 || currentOperand->memoryAddress.regDisplacement >= NUM_OF_REGISTERS ||
+					currentOperand->memoryAddress.segment < 0 || currentOperand->memoryAddress.segment >= NUM_OF_SEGMENTS))
 			{
 				return ERROR_JDC;
 			}
@@ -531,7 +531,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		operandIndex++;
 	}
 
-	if (operandIndex > 0) 
+	if (operandIndex > 0)
 	{
 		result->operands = (struct Operand*)calloc(operandIndex, sizeof(struct Operand));
 		if (!result->operands)
@@ -544,7 +544,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			result->operands[i] = operands[i];
 		}
 	}
-	
+
 	result->numOfOperands = operandIndex;
 	return SUCCESS_JDC;
 }
@@ -564,11 +564,11 @@ uint64_t getUIntFromBytes(uint8_t** bytesPtr, uint8_t resultSize)
 
 uint8_t getVectorLength(struct DisassemblyParameters* params)
 {
-	if (params->evexPrefix.LL == 0b10) 
-	{ 
+	if (params->evexPrefix.LL == 0b10)
+	{
 		return 64;
 	}
-	else if (params->vexPrefix.L || params->evexPrefix.LL == 0b01) 
+	else if (params->vexPrefix.L || params->evexPrefix.LL == 0b01)
 	{
 		return 32;
 	}

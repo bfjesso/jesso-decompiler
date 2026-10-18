@@ -15,7 +15,7 @@ enum IndicatorColor
 
 class MainGui;
 
-class JdcTextCtrl : public wxStyledTextCtrl 
+class JdcTextCtrl : public wxStyledTextCtrl
 {
 private:
 	char IsCharDigit(char c);

@@ -16,7 +16,7 @@ struct ImportedFunction
 	int32_t libraryNameIndex;
 };
 
-enum FileSectionType 
+enum FileSectionType
 {
 	OTHER_FST,
 	CODE_FST,

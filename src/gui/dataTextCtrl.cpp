@@ -16,7 +16,7 @@ DataTextCtrl::DataTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name)
 void DataTextCtrl::Initialize()
 {
 	numOfLines = mainGui->decompParams.numOfFileBytes / bytesPerLine;
-	if (mainGui->decompParams.numOfFileBytes % bytesPerLine != 0) 
+	if (mainGui->decompParams.numOfFileBytes % bytesPerLine != 0)
 	{
 		numOfLines++;
 	}
@@ -60,7 +60,7 @@ void DataTextCtrl::ShowGoToVirtualAddressDialog()
 
 			FileSection* section = 0;
 			uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
-			if (!section) 
+			if (!section)
 			{
 				wxMessageBox("Address is not within a section", "Failed to find address");
 				return;
@@ -115,34 +115,34 @@ void DataTextCtrl::DataRightClickOptions(wxContextMenuEvent& e)
 			selectedType = (enum DataTextCtrlTypes)(choiceDialog.GetSelection());
 			ResetTextCtrl();
 		}
-	}, ID_CHANGE_DISPLAY_TYPE);
+		}, ID_CHANGE_DISPLAY_TYPE);
 
-	if (selectedType >= ONE_BYTE_INT_TYPE && selectedType <= EIGHT_BYTE_INT_TYPE) 
+	if (selectedType >= ONE_BYTE_INT_TYPE && selectedType <= EIGHT_BYTE_INT_TYPE)
 	{
 		menu.AppendCheckItem(ID_HEX, "Hex");
 		menu.Check(ID_HEX, isHex);
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
 			isHex = e.IsChecked();
 			ResetTextCtrl();
-		}, ID_HEX);
+			}, ID_HEX);
 
 		menu.AppendCheckItem(ID_SIGNED, "Signed");
 		menu.Check(ID_SIGNED, isSigned);
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
 			isSigned = e.IsChecked();
 			ResetTextCtrl();
-		}, ID_SIGNED);
+			}, ID_SIGNED);
 	}
 
 	menu.Append(ID_GO_TO_VIRTUAL_ADDRESS, "Go to virtual address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
 		ShowGoToVirtualAddressDialog();
-	}, ID_GO_TO_VIRTUAL_ADDRESS);
+		}, ID_GO_TO_VIRTUAL_ADDRESS);
 
 	menu.Append(ID_GO_TO_FILE_OFFSET, "Go to file offset");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent& e) {
 		ShowGoToFileOffsetDialog();
-	}, ID_GO_TO_FILE_OFFSET);
+		}, ID_GO_TO_FILE_OFFSET);
 
 	AddDefaultRightClickOptions(&menu);
 
@@ -158,12 +158,12 @@ void DataTextCtrl::OnDataKeyDown(wxKeyEvent& e)
 		{
 			ShowGoToVirtualAddressDialog();
 		}
-		else 
+		else
 		{
 			ShowGoToFileOffsetDialog();
 		}
 	}
-	
+
 
 	OnKeyDown(e);
 	e.Skip();
@@ -214,7 +214,7 @@ void DataTextCtrl::UpdateTextCtrl()
 		{
 			continue;
 		}
-		
+
 		struct FileSection* section = 0;
 		for (int32_t j = 0; j < mainGui->decompParams.numOfSections; j++)
 		{
@@ -225,11 +225,11 @@ void DataTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		if (section) 
+		if (section)
 		{
 			sprintf(lineBuffer, "0x%llX%s (0x%llX)\t", mainGui->decompParams.imageBase + section->rva + (i - section->fileOffset), section->name.buffer, i);
 		}
-		else 
+		else
 		{
 			sprintf(lineBuffer, "no section (0x%llX)\t", i);
 		}
@@ -250,13 +250,13 @@ void DataTextCtrl::UpdateTextCtrl()
 			{
 				strcat(lineBuffer, " ");
 			}
-			
+
 			switch (selectedType)
 			{
 			case ONE_BYTE_INT_TYPE:
 			{
-				if (isHex && isSigned) 
-				{ 
+				if (isHex && isSigned)
+				{
 					int8_t val = (int8_t)mainGui->decompParams.fileBytes[i + j];
 					if (val < 0) { sprintf(lineBuffer + strlen(lineBuffer), "-0x%02X", -val); }
 					else { sprintf(lineBuffer + strlen(lineBuffer), "0x%02X", val); }
@@ -318,7 +318,7 @@ void DataTextCtrl::UpdateTextCtrl()
 			case ASCII_CHAR_TYPE:
 			{
 				char c = *(char*)(mainGui->decompParams.fileBytes + i + j);
-				if(c >= ' ' && c <= '~')
+				if (c >= ' ' && c <= '~')
 				{
 					sprintf(lineBuffer + strlen(lineBuffer), "'%c'", c);
 				}
@@ -400,20 +400,20 @@ void DataTextCtrl::HighlightBytes(uint64_t fileOffset, uint32_t numOfBytes, enum
 		{
 			uint32_t remainder = fileOffset % bytesPerLine;
 			int32_t start = dataStart + (remainder * 5);
-			if (numOfBytes + remainder > bytesPerLine) 
+			if (numOfBytes + remainder > bytesPerLine)
 			{
 				IndicatorFillRange(start, (5 * (bytesPerLine - remainder)) - 1);
 
 				rowStart = PositionFromLine(row + 1);
-				dataStart = FindText(rowStart, rowStart + 50, "\t") + 1; 
+				dataStart = FindText(rowStart, rowStart + 50, "\t") + 1;
 				IndicatorFillRange(dataStart, (5 * (numOfBytes - (bytesPerLine - remainder))) - 1);
 			}
-			else 
+			else
 			{
 				IndicatorFillRange(start, (5 * numOfBytes) - 1);
 			}
 		}
-		else 
+		else
 		{
 			int32_t dataEnd = FindText(rowStart, rowStart + 50, "\n");
 			IndicatorFillRange(rowStart, dataEnd - rowStart);

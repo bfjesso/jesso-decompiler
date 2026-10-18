@@ -5,19 +5,19 @@
 #include "../file-handler/fileHandler.h"
 
 // this is used for name validation and syntax highlighting
-extern const char* keywordStrs[NUM_OF_KEYWORDS] = 
-{ 
-	"if", 
-	"else", 
-	"for", 
-	"while", 
-	"do", 
-	"break", 
-	"continue", 
-	"switch", 
-	"case", 
-	"goto", 
-	"return" 
+extern const char* keywordStrs[NUM_OF_KEYWORDS] =
+{
+	"if",
+	"else",
+	"for",
+	"while",
+	"do",
+	"break",
+	"continue",
+	"switch",
+	"case",
+	"goto",
+	"return"
 };
 
 enum JdcStatus addDecompiledLine(struct DecompilationParameters* params, struct JdcStr* decompiledFunction, int32_t associatedInstruction, const char* format, ...)
@@ -75,7 +75,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		{
 			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
-		else if(operand->memoryAddress.reg != NO_REG)
+		else if (operand->memoryAddress.reg != NO_REG)
 		{
 			uint64_t baseRegVal = 0;
 			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.reg, &baseRegVal))
@@ -92,7 +92,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		{
 			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
-		else if(operand->memoryAddress.regDisplacement != NO_REG)
+		else if (operand->memoryAddress.regDisplacement != NO_REG)
 		{
 			uint64_t displacementRegVal = 0;
 			if (ERROR_JDC == regToValue(params, startInstructionIndex - 1, operand->memoryAddress.regDisplacement, &displacementRegVal))
@@ -105,12 +105,12 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		address += operand->memoryAddress.constDisplacement;
 
-		if (params->instructions[startInstructionIndex].opcode == LEA || 
+		if (params->instructions[startInstructionIndex].opcode == LEA ||
 			getImportIndexByAddress(params, address) != -1) // the address that I store for imports is the table entry. when decompiling a function call, this table entry address is needed to check for the import
 		{
 			*result = address;
 		}
-		else 
+		else
 		{
 			struct FileSection* section = 0;
 			uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
@@ -120,7 +120,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 				return ERROR_JDC;
 			}
 
-			switch (operand->memoryAddress.ptrSize) 
+			switch (operand->memoryAddress.ptrSize)
 			{
 			case 1:
 				*result = *(uint8_t*)(params->fileBytes + fileOffset);
@@ -163,7 +163,7 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 	int32_t minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
 	for (int32_t i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
-		if ((params->instructions[i].opcode == MOV || params->instructions[i].opcode == LEA) && 
+		if ((params->instructions[i].opcode == MOV || params->instructions[i].opcode == LEA) &&
 			params->instructions[i].operands[0].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, reg))
 		{
 			int32_t start = i;
@@ -194,7 +194,7 @@ uint64_t resolveJmpChain(struct DecompilationParameters* params, int32_t startIn
 		if (instructionIndex != startInstructionIndex && isOpcodeJmp(jmpInstruction->opcode))
 		{
 			uint64_t nextJmpAddress = resolveJmpChain(params, instructionIndex);
-			if (nextJmpAddress != 0) 
+			if (nextJmpAddress != 0)
 			{
 				return nextJmpAddress;
 			}
@@ -216,10 +216,10 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
 	{
 		enum Register targetReg = jmpInstruction->operands[0].reg;
-		for(int32_t i = instructionIndex - 1; i >= 0; i--)
+		for (int32_t i = instructionIndex - 1; i >= 0; i--)
 		{
 			struct DisassembledInstruction* instruction = &params->instructions[i];
-			
+
 			// the actual value of targetReg will be an address of some instruction to jmp to, but this code is just looking for the address of the jmp table and not the value of targetReg
 			if (instruction->opcode == MOV &&
 				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
@@ -365,10 +365,10 @@ int32_t findJumpTableByAddress(struct JumpTable* jumpTables, int32_t numOfJumpTa
 	{
 		int32_t mid = low + (high - low) / 2;
 
-		if (jumpTables[mid].jmpTableAddress == address) 
-		{ 
+		if (jumpTables[mid].jmpTableAddress == address)
+		{
 			if (foundIndirectTable) { *foundIndirectTable = false; }
-			return mid; 
+			return mid;
 		}
 		else if (jumpTables[mid].indirectTableAddress == address)
 		{
@@ -486,10 +486,10 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
-	
-	if (isRegisterStatusFlag(reg)) 
+
+	if (isRegisterStatusFlag(reg))
 	{
-		switch (opcode) 
+		switch (opcode)
 		{
 		case JA_SHORT:
 		case JBE_SHORT:
@@ -515,7 +515,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 		case SETLE:
 			return reg == ZF || reg == SF || reg == OF;
 		case JGE_SHORT:
-		case JL_SHORT: 
+		case JL_SHORT:
 		case CMOVGE:
 		case CMOVL:
 		case SETL:
@@ -552,7 +552,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 
 		return false;
 	}
-	
+
 	struct Function* callee;
 	if (checkForKnownFunctionCall(params, instructionIndex, &callee) && callee)
 	{
@@ -573,7 +573,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 		const enum Register* platformRegArgs = getPlatformRegArgs(params->fileFormat);
 		for (int32_t i = 0; i < numOfPlatformRegArgs; i++)
 		{
-			if (compareRegisters(reg, platformRegArgs[i])) 
+			if (compareRegisters(reg, platformRegArgs[i]))
 			{
 				if (specificReg)
 				{
@@ -584,7 +584,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 			}
 		}
 	}
-	
+
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		bool overwrites = false;
@@ -632,7 +632,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
 
-	if (isRegisterStatusFlag(reg)) 
+	if (isRegisterStatusFlag(reg))
 	{
 		if (overwrites) { *overwrites = true; }
 
@@ -667,14 +667,14 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 		if (overwrites) { *overwrites = false; }
 		return false;
 	}
-	
+
 	struct Function* callee = 0;
 	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
 		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
 	{
 		if (overwrites) { *overwrites = true; }
-		if (specificReg) 
-		{ 
+		if (specificReg)
+		{
 			if (callee) { *specificReg = callee->returnReg; }
 			else { *specificReg = params->is64Bit ? RAX : EAX; }
 		}
@@ -684,7 +684,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
-		if (opcode == CMPXCHG) 
+		if (opcode == CMPXCHG)
 		{
 			if (specificReg)
 			{
@@ -705,13 +705,13 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 					break;
 				}
 			}
-			
+
 			return true;
 		}
-		
+
 		if (opcode == IDIV || opcode == DIV)
 		{
-			if (specificReg) 
+			if (specificReg)
 			{
 				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
 				if (instruction->operands[0].type == MEM_ADDRESS)
@@ -735,7 +735,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 					break;
 				}
 			}
-			
+
 			return true;
 		}
 
@@ -771,10 +771,10 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	{
 		if ((opcode == IMUL || opcode == MUL || opcode == IDIV || opcode == DIV) && instruction->numOfOperands == 1)
 		{
-			if (specificReg) 
-			{ 
+			if (specificReg)
+			{
 				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
-				if (instruction->operands[0].type == MEM_ADDRESS) 
+				if (instruction->operands[0].type == MEM_ADDRESS)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
 				}
@@ -824,7 +824,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	return false;
 }
 
-bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg) 
+bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -945,10 +945,10 @@ uint8_t getSizeOfOperand(struct Operand* operand)
 	return 0;
 }
 
-bool validateName(struct DecompilationParameters* params, const char* name) 
+bool validateName(struct DecompilationParameters* params, const char* name)
 {
 	size_t nameLen = strlen(name);
-	if (nameLen == 0) 
+	if (nameLen == 0)
 	{
 		return false;
 	}
@@ -958,18 +958,18 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		return false;
 	}
 
-	for (int32_t i = 1; i < nameLen; i++) 
+	for (int32_t i = 1; i < nameLen; i++)
 	{
-		if (name[i] != '_' && 
-			(name[i] < 'a' || name[i] > 'z') && 
+		if (name[i] != '_' &&
+			(name[i] < 'a' || name[i] > 'z') &&
 			(name[i] < 'A' || name[i] > 'Z') &&
 			(name[i] < '0' || name[i] > '9'))
 		{
 			return false;
 		}
 	}
-	
-	for (int32_t i = 0; i < NUM_OF_KEYWORDS; i++) 
+
+	for (int32_t i = 0; i < NUM_OF_KEYWORDS; i++)
 	{
 		if (strcmp(keywordStrs[i], name) == 0)
 		{
@@ -1009,10 +1009,10 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 			return false;
 		}
 	}
-	
-	for (int32_t i = 0; i < params->numOfFunctions; i++) 
+
+	for (int32_t i = 0; i < params->numOfFunctions; i++)
 	{
-		if (strcmp(params->functions[i].name.buffer, name) == 0) 
+		if (strcmp(params->functions[i].name.buffer, name) == 0)
 		{
 			return false;
 		}
@@ -1026,7 +1026,7 @@ bool validateName(struct DecompilationParameters* params, const char* name)
 		}
 	}
 
-	if (params->currentFunc) 
+	if (params->currentFunc)
 	{
 		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
@@ -1062,7 +1062,7 @@ bool checkRegVarScope(struct DecompilationParameters* params, struct RegisterVar
 	// the scope endIndex is the last time the reg is accessed before it is initialized again, so as a src it still needs to be the reg var but not as the dst if the instruction also initializes the reg
 	bool isRegOverwritten = 0;
 	doesInstructionModifyRegister(params, instructionIndex, regVar->reg, 0, &isRegOverwritten);
-	
+
 	for (int32_t i = 0; i < regVar->numOfScopes; i++)
 	{
 		if (isRegOverwritten)

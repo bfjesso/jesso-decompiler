@@ -21,7 +21,7 @@ bool checkForReturnStatement(struct DecompilationParameters* params, int32_t ins
 				params->currentFunc->callingConvention = __CDECL;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -66,8 +66,8 @@ bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params,
 		{
 			return true;
 		}
-		
-		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE || 
+
+		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE ||
 			(instruction->opcode == ADD && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP)))
 		{
 			continue;

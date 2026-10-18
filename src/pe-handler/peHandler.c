@@ -43,11 +43,11 @@ enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
 
 enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_HEADERS_INFO* result)
 {
-	if (!result) 
+	if (!result)
 	{
 		return ERROR_JDC;
 	}
-	
+
 	IMAGE_DOS_HEADER dosHeader = { 0 };
 	seek64(file, 0);
 	fread(&dosHeader, 1, sizeof(dosHeader), file);
@@ -67,7 +67,7 @@ enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_H
 		result->NumberOfRvaAndSizes = imageNtHeaders.OptionalHeader.NumberOfRvaAndSizes;
 		memcpy(result->DataDirectory, imageNtHeaders.OptionalHeader.DataDirectory, sizeof(IMAGE_DATA_DIRECTORY) * IMAGE_NUMBEROF_DIRECTORY_ENTRIES);
 	}
-	else 
+	else
 	{
 		IMAGE_NT_HEADERS32 imageNtHeaders = { 0 };
 		LONG imageNtHeadersAddress = dosHeader.e_lfanew;
@@ -92,17 +92,17 @@ enum JdcStatus getPEImageBase(const wchar_t* filePath, bool is64Bit, uint64_t* i
 	if (file && imageBaseRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
+		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
+		{
 			fclose(file);
-			return 0; 
+			return 0;
 		}
 
 		fclose(file);
 		*imageBaseRef = imageNtHeaders.ImageBase;
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
@@ -112,17 +112,17 @@ enum JdcStatus getPEEntryPoint(const wchar_t* filePath, bool is64Bit, uint64_t* 
 	if (file && entryPointRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
+		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
+		{
 			fclose(file);
-			return 0; 
+			return 0;
 		}
 
 		fclose(file);
 		*entryPointRef = imageNtHeaders.AddressOfEntryPoint;
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
@@ -132,28 +132,28 @@ enum JdcStatus getNumOfPESections(const wchar_t* filePath, bool is64Bit, int32_t
 	if (file && numOfSectionsRef)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
+		if (!getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
+		{
 			fclose(file);
-			return 0; 
+			return 0;
 		}
 
 		fclose(file);
 		*numOfSectionsRef = imageNtHeaders.FileHeader.NumberOfSections;
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
 enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, struct FileSection* buffer, int32_t bufferLen)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file) 
+	if (file)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
+		{
 			fclose(file);
 			return ERROR_JDC;
 		}
@@ -199,18 +199,18 @@ enum JdcStatus getAllPESectionHeaders(const wchar_t* filePath, bool is64Bit, str
 		fclose(file);
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
 enum JdcStatus getPESymbolByValue(const wchar_t* filePath, bool is64Bit, DWORD value, struct JdcStr* result)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file) 
+	if (file)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
-		{ 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
+		{
 			fclose(file);
 			return ERROR_JDC;
 		}
@@ -261,7 +261,7 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
 		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
-		{ 
+		{
 			fclose(file);
 			return ERROR_JDC;
 		}
@@ -341,17 +341,17 @@ enum JdcStatus getNumOfPEImports(const wchar_t* filePath, bool is64Bit, int32_t*
 		*numOfLibrariesRef = numOfLibraries;
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
 enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct ImportedFunction* importsBuffer, int32_t importsBufferLen, struct JdcStr* libraryNamesBuffer, int32_t libraryNamesBufferLen)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file) 
+	if (file)
 	{
 		struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+		if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
 		{
 			fclose(file);
 			return ERROR_JDC;
@@ -459,7 +459,7 @@ enum JdcStatus getAllPEImports(const wchar_t* filePath, bool is64Bit, struct Imp
 static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWORD* fileOffsetRef)
 {
 	struct IMAGE_NT_HEADERS_INFO imageNtHeaders = { 0 };
-	if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders)) 
+	if (ERROR_JDC == getImageNTHeadersInfo(file, is64Bit, &imageNtHeaders))
 	{
 		return ERROR_JDC;
 	}
@@ -486,7 +486,7 @@ static enum JdcStatus rvaToFileOffsetPE(FILE* file, bool is64Bit, DWORD rva, DWO
 enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* result)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file) 
+	if (file)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		seek64(file, 0);
@@ -505,7 +505,7 @@ enum JdcStatus generatePEHeadersInfoStr(const wchar_t* filePath, struct JdcStr* 
 		fclose(file);
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
@@ -679,7 +679,7 @@ static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcS
 
 	sprintfJdc(result, true, "0x12\tCharacteristics\t0x%llX", fileHeader->Characteristics);
 	bool gotFirstFlag = false;
-	if (fileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED) 
+	if (fileHeader->Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
 	{
 		strcatJdc(result, " (IMAGE_FILE_RELOCS_STRIPPED");
 		gotFirstFlag = true;
@@ -755,19 +755,19 @@ static void generateFileHeaderInfoStr(IMAGE_FILE_HEADER* fileHeader, struct JdcS
 		gotFirstFlag = true;
 	}
 
-	if(gotFirstFlag)
+	if (gotFirstFlag)
 	{
 		strcatJdc(result, ")");
 	}
 	strcatJdc(result, "\tFlags that indicate the attributes of the file\n");
 }
 
-static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeader, struct JdcStr* result) 
+static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeader, struct JdcStr* result)
 {
 	strcatJdc(result, "IMAGE_OPTIONAL_HEADER\n\n");
 
 	sprintfJdc(result, true, "0x0\tMagic\t0x%llX\t", optionalHeader->Magic);
-	switch (optionalHeader->Magic) 
+	switch (optionalHeader->Magic)
 	{
 	case 0x10B:
 		strcatJdc(result, "PE32\n");
@@ -790,11 +790,11 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 
 	// after this point there are differenences between 32 and 64 bit versions
 	bool x64 = optionalHeader->Magic == 0x20b;
-	if (x64) 
+	if (x64)
 	{
 		sprintfJdc(result, true, "0x18\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", optionalHeader->ImageBase);
 	}
-	else 
+	else
 	{
 		sprintfJdc(result, true, "0x18\tBaseOfData\t0x%llX\tAddress that is relative to the image base of the beginning-of-data section when it is loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->BaseOfData);
 		sprintfJdc(result, true, "0x1C\tImageBase\t0x%llX\tPreferred address of the first byte of image when loaded into memory\n", ((IMAGE_OPTIONAL_HEADER32*)optionalHeader)->ImageBase);
@@ -815,7 +815,7 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 	sprintfJdc(result, true, "0x40\tCheckSum\t0x%llX\tImage file checksum\n", optionalHeader->CheckSum);
 
 	strcatJdc(result, "0x44\tSubsystem\t");
-	switch (optionalHeader->Subsystem) 
+	switch (optionalHeader->Subsystem)
 	{
 	case IMAGE_SUBSYSTEM_UNKNOWN:
 		strcatJdc(result, "IMAGE_SUBSYSTEM_UNKNOWN (0)\tAn unknown subsystem\n");
@@ -927,7 +927,7 @@ static void generateOptionalHeaderInfoStr(IMAGE_OPTIONAL_HEADER64* optionalHeade
 
 	sprintfJdc(result, true, "0x48\tSizeOfStackReserve\t0x%llX\tSize of the stack to reserve\n", optionalHeader->SizeOfStackReserve);
 
-	if (x64) 
+	if (x64)
 	{
 		sprintfJdc(result, true, "0x50\tSizeOfStackCommit\t0x%llX\tSize of the stack to commit\n", optionalHeader->SizeOfStackCommit);
 		sprintfJdc(result, true, "0x58\tSizeOfHeapReserve\t0x%llX\tSize of the local heap space to reserve\n", optionalHeader->SizeOfHeapReserve);;

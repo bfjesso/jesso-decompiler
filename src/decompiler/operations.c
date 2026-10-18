@@ -8,17 +8,17 @@
 enum JdcStatus decompileOperation(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result, bool* placeOperatorInfront)
 {
 	if (placeOperatorInfront) { *placeOperatorInfront = false; }
-	
-	if (!getAssignment) 
+
+	if (!getAssignment)
 	{
 		addAssociatedInstruction(params->currentFunc, instructionIndex);
 	}
-	
+
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 	if (isOpcodeCall(instruction->opcode) || isOpcodeJmp(instruction->opcode))
 	{
 		struct ReturnedVariable* returnedVar = findReturnedVar(params->currentFunc, instruction->address);
-		if (!returnedVar) 
+		if (!returnedVar)
 		{
 			return ERROR_JDC;
 		}
@@ -103,7 +103,7 @@ enum JdcStatus decompileOperation(struct DecompilationParameters* params, int32_
 	else if (instruction->opcode == ADC)
 	{
 		return decompileADC(params, instructionIndex, getAssignment, result);
-		}
+	}
 	else if (instruction->opcode == SBB)
 	{
 		return decompileSBB(params, instructionIndex, getAssignment, result);
@@ -124,7 +124,7 @@ enum JdcStatus decompileOperation(struct DecompilationParameters* params, int32_
 	{
 		return decompilePop(params, instructionIndex, getAssignment, result);
 	}
-	else if (isOpcodeCMOVcc(instruction->opcode)) 
+	else if (isOpcodeCMOVcc(instruction->opcode))
 	{
 		return decompileCMOVcc(params, instructionIndex, getAssignment, result);
 	}
@@ -155,12 +155,12 @@ static enum JdcStatus decompileBinaryOperation(struct DecompilationParameters* p
 
 	if (getAssignment)
 	{
-		if (!doesInstructionAssignToOperand(params, instructionIndex, 0)) 
+		if (!doesInstructionAssignToOperand(params, instructionIndex, 0))
 		{
 			freeJdcStr(&decompiledSecondOperand);
 			return ERROR_JDC;
 		}
-		
+
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 		{
@@ -196,7 +196,7 @@ static enum JdcStatus decompileSF(struct DecompilationParameters* params, bool n
 	return sprintfJdc(flagExpression, false, "%s(((%s) >> %d) & 1)", notStatusFlag ? "!" : "", instructionResult, (operandSize * 8) - 1);
 }
 
-static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result) 
+static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
@@ -333,7 +333,7 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 		{
 			return SUCCESS_JDC;
 		}
-		else if (!getAssignment && isOpcodeCmp(opcode)) 
+		else if (!getAssignment && isOpcodeCmp(opcode))
 		{
 			return ERROR_JDC;
 		}
@@ -343,11 +343,11 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " + ", " += ", result);
 	}
-	else if (isOpcodeSub(opcode)) 
+	else if (isOpcodeSub(opcode))
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " - ", " -= ", result);
 	}
-	else if (isOpcodeCmp(opcode)) 
+	else if (isOpcodeCmp(opcode))
 	{
 		return SUCCESS_JDC;
 	}
@@ -355,12 +355,12 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 	return ERROR_JDC;
 }
 
-static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result) 
+static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum Mnemonic opcode = instruction->opcode;
 
-	if (opcode == AND || opcode == TEST) 
+	if (opcode == AND || opcode == TEST)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -378,11 +378,11 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		}
 
 		struct JdcStr andExpression = initializeJdcStr();
-		if (compareOperands(&instruction->operands[0], &instruction->operands[1])) 
+		if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			strcpyJdc(&andExpression, decompiledFirstOperand.buffer);
 		}
-		else 
+		else
 		{
 			sprintfJdc(&andExpression, false, "%s & %s", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
@@ -399,9 +399,9 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&decompiledSecondOperand);
 		freeJdcStr(&andExpression);
-		
+
 		bool finished = false;
-		if (getAssignment) 
+		if (getAssignment)
 		{
 			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
 			if (cfVar)
@@ -461,11 +461,11 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		freeJdcStr(&zfExpression);
 		freeJdcStr(&sfExpression);
 
-		if (finished) 
+		if (finished)
 		{
 			return SUCCESS_JDC;
 		}
-		else if (!getAssignment && opcode == TEST) 
+		else if (!getAssignment && opcode == TEST)
 		{
 			return ERROR_JDC;
 		}
@@ -475,7 +475,7 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " & ", " &= ", result);
 	}
-	else if (opcode == TEST) 
+	else if (opcode == TEST)
 	{
 		return SUCCESS_JDC;
 	}
@@ -495,7 +495,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 			return ERROR_JDC;
 		}
 
-		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
+		if (doesInstructionAssignToOperand(params, instructionIndex, 0))
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s%s;", decompiledFirstOperand.buffer, isInc ? "++" : "--");
 		}
@@ -510,7 +510,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 		return SUCCESS_JDC;
 	}
 
-	if (targetReg == ZF) 
+	if (targetReg == ZF)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -519,7 +519,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(result, false, "%s %s 0",  decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
+		sprintfJdc(result, false, "%s %s 0", decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
 		freeJdcStr(&decompiledFirstOperand);
 		return SUCCESS_JDC;
 	}
@@ -553,11 +553,11 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 			addDecompiledLine(params, result, instructionIndex, "%s = (%s) %s -(1 << %d);", ofVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==", ((operandSize * 8) - 1));
 		}
 
-		if (doesInstructionAssignToOperand(params, instructionIndex, 0)) 
+		if (doesInstructionAssignToOperand(params, instructionIndex, 0))
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = -(%s);", decompiledFirstOperand.buffer, decompiledFirstOperand.buffer);
 		}
-		
+
 		freeJdcStr(&decompiledFirstOperand);
 		return SUCCESS_JDC;
 	}
@@ -571,11 +571,11 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 			return ERROR_JDC;
 		}
 
-		if (targetReg == CF) 
+		if (targetReg == CF)
 		{
 			sprintfJdc(result, false, "%s %s 0", decompiledFirstOperand.buffer, notStatusFlag ? "==" : "!=");
 		}
-		else 
+		else
 		{
 			uint8_t operandSize = getSizeOfOperand(&params->instructions[instructionIndex].operands[0]);
 			sprintfJdc(result, false, "%s %s -(1 << %d)", decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==", ((operandSize * 8) - 1));
@@ -583,12 +583,12 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 
 		freeJdcStr(&decompiledFirstOperand);
 	}
-	else 
+	else
 	{
 		if (placeOperatorInfront) { *placeOperatorInfront = true; }
 		strcpyJdc(result, "-");
 	}
-	
+
 	return SUCCESS_JDC;
 }
 
@@ -627,7 +627,7 @@ static enum JdcStatus decompileOr(struct DecompilationParameters* params, int32_
 				freeJdcStr(&decompiledFirstOperand);
 				return ERROR_JDC;
 			}
-			
+
 			addDecompiledLine(params, result, instructionIndex, "%s = 0x%llX;", decompiledFirstOperand.buffer, secondOperand->immediate.value);
 
 			freeJdcStr(&decompiledFirstOperand);
@@ -647,7 +647,7 @@ static enum JdcStatus decompileXor(struct DecompilationParameters* params, int32
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
 	if (compareOperands(firstOperand, secondOperand))
 	{
-		if (getAssignment) 
+		if (getAssignment)
 		{
 			struct JdcStr decompiledFirstOperand = initializeJdcStr();
 			if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -655,17 +655,17 @@ static enum JdcStatus decompileXor(struct DecompilationParameters* params, int32
 				freeJdcStr(&decompiledFirstOperand);
 				return ERROR_JDC;
 			}
-			
+
 			addDecompiledLine(params, result, instructionIndex, "%s = 0;", decompiledFirstOperand.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
 			return SUCCESS_JDC;
 		}
-		
+
 		strcpyJdc(result, "0");
 		return SUCCESS_JDC;
 	}
-	
+
 	return decompileBinaryOperation(params, instructionIndex, getAssignment, " ^ ", " ^= ", result);
 }
 
@@ -710,7 +710,7 @@ static enum JdcStatus decompileBitTest(struct DecompilationParameters* params, i
 		strcatJdc(&expression, " != 0");
 	}
 
-	if (getAssignment) 
+	if (getAssignment)
 	{
 		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
 		if (!cfVar)
@@ -720,7 +720,7 @@ static enum JdcStatus decompileBitTest(struct DecompilationParameters* params, i
 
 		addDecompiledLine(params, result, instructionIndex, "%s = %s;", cfVar->name.buffer, expression.buffer);
 	}
-	else 
+	else
 	{
 		strcatJdc(result, expression.buffer);
 	}
@@ -739,7 +739,7 @@ static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, in
 	{
 		return decompileBitTest(params, instructionIndex, 0, notStatusFlag, result);
 	}
-	
+
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 	{
@@ -751,11 +751,11 @@ static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, in
 	if (secondOperand->type == IMMEDIATE)
 	{
 		uint64_t bitMask = (uint64_t)(1) << (uint8_t)(secondOperand->immediate.value);
-		if (getAssignment) 
+		if (getAssignment)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s |= 0x%llX;", decompiledFirstOperand.buffer, bitMask);
 		}
-		else 
+		else
 		{
 			sprintfJdc(result, false, " | 0x%llX", bitMask);
 		}
@@ -770,11 +770,11 @@ static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, in
 			return ERROR_JDC;
 		}
 
-		if (getAssignment) 
+		if (getAssignment)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s |= (1 << %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
-		else 
+		else
 		{
 			sprintfJdc(result, false, " | (1 << %s)", decompiledSecondOperand.buffer);
 		}
@@ -796,7 +796,7 @@ static enum JdcStatus decompileBitReset(struct DecompilationParameters* params, 
 	{
 		return decompileBitTest(params, instructionIndex, 0, notStatusFlag, result);
 	}
-	
+
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 	{
@@ -919,10 +919,10 @@ static enum JdcStatus decompileSBB(struct DecompilationParameters* params, int32
 		freeJdcStr(&decompiledCF);
 		return ERROR_JDC;
 	}
-	
+
 	struct Operand* firstOperand = &params->instructions[instructionIndex].operands[0];
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (compareOperands(firstOperand, secondOperand)) 
+	if (compareOperands(firstOperand, secondOperand))
 	{
 		if (getAssignment)
 		{
@@ -933,7 +933,7 @@ static enum JdcStatus decompileSBB(struct DecompilationParameters* params, int32
 				freeJdcStr(&decompiledFirstOperand);
 				return ERROR_JDC;
 			}
-			
+
 			addDecompiledLine(params, result, instructionIndex, "%s = -(%s);", decompiledFirstOperand.buffer, decompiledCF.buffer);
 
 			freeJdcStr(&decompiledFirstOperand);
@@ -955,7 +955,7 @@ static enum JdcStatus decompileSBB(struct DecompilationParameters* params, int32
 		return ERROR_JDC;
 	}
 
-	if (getAssignment) 
+	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -965,12 +965,12 @@ static enum JdcStatus decompileSBB(struct DecompilationParameters* params, int32
 			freeJdcStr(&decompiledCF);
 			return ERROR_JDC;
 		}
-		
+
 		addDecompiledLine(params, result, instructionIndex, "%s -= (%s + %s);", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer, decompiledCF.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
 	}
-	else 
+	else
 	{
 		sprintfJdc(result, false, " - (%s + %s)", decompiledSecondOperand.buffer, decompiledCF.buffer);
 	}
@@ -988,9 +988,9 @@ static enum JdcStatus decompileFLD(struct DecompilationParameters* params, int32
 		freeJdcStr(&decompiledFirstOperand);
 		return ERROR_JDC;
 	}
-	
-	if (getAssignment) 
-	{ 
+
+	if (getAssignment)
+	{
 		struct JdcStr decompiledST0 = initializeJdcStr();
 		if (!decompileRegister(params, instructionIndex, -1, ST0, 1, 0, &decompiledST0, 0))
 		{
@@ -998,7 +998,7 @@ static enum JdcStatus decompileFLD(struct DecompilationParameters* params, int32
 			freeJdcStr(&decompiledST0);
 			return ERROR_JDC;
 		}
-		
+
 		addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledST0.buffer, decompiledFirstOperand.buffer);
 
 		freeJdcStr(&decompiledFirstOperand);
@@ -1020,10 +1020,10 @@ static enum JdcStatus decompileIDIV(struct DecompilationParameters* params, int3
 		return ERROR_JDC;
 	}
 
-	if (getAssignment) 
+	if (getAssignment)
 	{
 		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
-		if (axVar) 
+		if (axVar)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s /= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
@@ -1063,13 +1063,13 @@ static enum JdcStatus decompileIDIV(struct DecompilationParameters* params, int3
 			freeJdcStr(&decompiledAX);
 			return ERROR_JDC;
 		}
-		
+
 		sprintfJdc(result, false, "%s % %s", decompiledAX.buffer, decompiledFirstOperand.buffer);
 		freeJdcStr(&decompiledAX);
 		freeJdcStr(&decompiledFirstOperand);
 		return SUCCESS_JDC;
 	}
-	
+
 	return ERROR_JDC;
 }
 
@@ -1077,12 +1077,12 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct Operand* firstOperand = &instruction->operands[0];
-	
+
 	if (instruction->numOfOperands == 3)
 	{
 		struct Operand* secondOperand = &instruction->operands[1];
 		struct Operand* thirdOperand = &instruction->operands[2];
-		
+
 		struct JdcStr decompiledThirdOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 2, 1, &decompiledThirdOperand))
 		{
@@ -1090,7 +1090,7 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 			return ERROR_JDC;
 		}
 
-		if (getAssignment) 
+		if (getAssignment)
 		{
 			struct JdcStr decompiledFirstOperand = initializeJdcStr();
 			if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -1146,13 +1146,13 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 		freeJdcStr(&decompiledThirdOperand);
 		return SUCCESS_JDC;
 	}
-	else if (instruction->numOfOperands == 2) 
+	else if (instruction->numOfOperands == 2)
 	{
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " * ", " *= ", result);
 	}
 
 	// one operand form
-	
+
 	struct JdcStr decompiledFirstOperand = initializeJdcStr();
 	if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 	{
@@ -1167,7 +1167,7 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s *= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
-		
+
 		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX);
 		if (dxVar)
 		{
@@ -1178,7 +1178,7 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 				freeJdcStr(&decompiledFirstOperand);
 				return ERROR_JDC;
 			}
-			
+
 			addDecompiledLine(params, result, instructionIndex, "%s = %s >> %d;", dxVar->name.buffer, decompiledAX.buffer, decompiledFirstOperand.buffer, 8 * getSizeOfOperand(firstOperand));
 
 			freeJdcStr(&decompiledAX);
@@ -1242,11 +1242,11 @@ static enum JdcStatus decompileCMOVcc(struct DecompilationParameters* params, in
 		return ERROR_JDC;
 	}
 
-	if (getAssignment) 
-	{ 
+	if (getAssignment)
+	{
 		addDecompiledLine(params, result, instructionIndex, "%s = (%s ? %s : %s);", decompiledFirstOperand.buffer, comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
 	}
-	else 
+	else
 	{
 		sprintfJdc(result, false, "(%s ? %s : %s)", comparisonStr.buffer, decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
 	}
@@ -1266,8 +1266,8 @@ static enum JdcStatus decompileSETcc(struct DecompilationParameters* params, int
 		return ERROR_JDC;
 	}
 
-	if (getAssignment) 
-	{ 
+	if (getAssignment)
+	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 		{
@@ -1340,7 +1340,7 @@ static enum JdcStatus decompilePop(struct DecompilationParameters* params, int32
 			return ERROR_JDC;
 		}
 
-		if (gotValue) 
+		if (gotValue)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, value.buffer);
 
@@ -1356,7 +1356,7 @@ static enum JdcStatus decompilePop(struct DecompilationParameters* params, int32
 			freeJdcStr(&value);
 			return SUCCESS_JDC;
 		}
-		
+
 		freeJdcStr(&decompiledFirstOperand);
 		freeJdcStr(&value);
 		return ERROR_JDC;
@@ -1382,8 +1382,8 @@ static enum JdcStatus decompilePop(struct DecompilationParameters* params, int32
 static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, struct JdcStr* result)
 {
 	struct Operand* firstOperand = &params->instructions[instructionIndex].operands[0];
-	
-	if (getAssignment) 
+
+	if (getAssignment)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -1399,12 +1399,12 @@ static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int3
 			freeJdcStr(&decompiledSecondOperand);
 			return ERROR_JDC;
 		}
-		
+
 		if ((firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg)) || firstOperand->type == MEM_ADDRESS)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
-		else 
+		else
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledSecondOperand.buffer, decompiledFirstOperand.buffer);
 		}
@@ -1421,7 +1421,7 @@ static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int3
 			return ERROR_JDC;
 		}
 	}
-	else 
+	else
 	{
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, result))
 		{
@@ -1432,15 +1432,15 @@ static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int3
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus decompileCMPXCHG(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result) 
+static enum JdcStatus decompileCMPXCHG(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result)
 {
-	if (!getAssignment) 
+	if (!getAssignment)
 	{
 		return ERROR_JDC;
 	}
 
 	struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
-	if (!axVar) 
+	if (!axVar)
 	{
 		return ERROR_JDC;
 	}
@@ -1465,7 +1465,7 @@ static enum JdcStatus decompileCMPXCHG(struct DecompilationParameters* params, i
 	params->numOfIndents++;
 
 	struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
-	if (zfVar) 
+	if (zfVar)
 	{
 		addDecompiledLine(params, result, instructionIndex, "%s = 1;", zfVar->name.buffer);
 	}

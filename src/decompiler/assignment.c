@@ -6,17 +6,17 @@ bool checkForAnyAssignments(struct DecompilationParameters* params, int32_t inst
 {
 	struct DisassembledInstruction* instruction = &(params->instructions[instructionIndex]);
 
-	for (int32_t i = 0; i < instruction->numOfOperands; i++) 
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (doesInstructionAssignToOperand(params, instructionIndex, i)) 
+		if (doesInstructionAssignToOperand(params, instructionIndex, i))
 		{
 			return true;
 		}
 	}
 
-	for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++) 
+	for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 	{
-		if (doesInstructionAssignToRegVar(params, instructionIndex, params->currentFunc->regVars[i].reg)) 
+		if (doesInstructionAssignToRegVar(params, instructionIndex, params->currentFunc->regVars[i].reg))
 		{
 			return true;
 		}
@@ -30,10 +30,10 @@ bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int3
 	struct Operand* operand = &params->instructions[instructionIndex].operands[operandNum];
 	if (doesInstructionModifyOperand(params, instructionIndex, operandNum, 0))
 	{
-		if (operand->type == MEM_ADDRESS) 
+		if (operand->type == MEM_ADDRESS)
 		{
 			int64_t offsetFromInitSP = 0;
-			if (isMemAddressStackVar(params, instructionIndex, &operand->memoryAddress, &offsetFromInitSP) && 
+			if (isMemAddressStackVar(params, instructionIndex, &operand->memoryAddress, &offsetFromInitSP) &&
 				!getStackVarByOffset(params->currentFunc, offsetFromInitSP))
 			{
 				return false;

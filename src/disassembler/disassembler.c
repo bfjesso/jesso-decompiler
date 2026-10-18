@@ -12,14 +12,14 @@ enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, str
 	params.is64BitMode = disassemblerOptions->is64BitMode;
 
 	memset(result, 0, sizeof(struct DisassembledInstruction));
-	
+
 	if (ERROR_JDC == handleLegacyPrefixes(&params))
 	{
 		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 		return ERROR_JDC;
 	}
 
-	if (params.is64BitMode) 
+	if (params.is64BitMode)
 	{
 		if (ERROR_JDC == handleREXPrefix(&params))
 		{
@@ -58,7 +58,7 @@ enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, str
 	result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
 	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
 
-	if (result->numOfBytes == 0) 
+	if (result->numOfBytes == 0)
 	{
 		return ERROR_JDC;
 	}
@@ -70,7 +70,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 {
 	strcpyJdc(result, "");
 
-	if (instruction->group1Prefix != NO_PREFIX) 
+	if (instruction->group1Prefix != NO_PREFIX)
 	{
 		strcatJdc(result, getGroup1PrefixStr(instruction));
 		strcatJdc(result, " ");
@@ -80,39 +80,39 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (i != 0) 
+		if (i != 0)
 		{
 			strcatJdc(result, ", ");
 		}
-		else 
+		else
 		{
 			strcatJdc(result, " ");
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
-		if (currentOperand->type == SEGMENT) 
+		if (currentOperand->type == SEGMENT)
 		{
 			strcatJdc(result, segmentStrs[currentOperand->segment]);
 		}
-		else if (currentOperand->type == REGISTER) 
+		else if (currentOperand->type == REGISTER)
 		{
-			if (evaluateIP && compareRegisters(currentOperand->reg, IP)) 
-			{ 
-				sprintfJdc(result, true, "0x%llX", instruction->address + instruction->numOfBytes); 
+			if (evaluateIP && compareRegisters(currentOperand->reg, IP))
+			{
+				sprintfJdc(result, true, "0x%llX", instruction->address + instruction->numOfBytes);
 			}
-			else 
+			else
 			{
 				strcatJdc(result, registerStrs[currentOperand->reg]);
 			}
 		}
-		else if (currentOperand->type == MEM_ADDRESS) 
+		else if (currentOperand->type == MEM_ADDRESS)
 		{
-			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, result) == ERROR_JDC) 
-			{ 
-				return ERROR_JDC; 
+			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, result) == ERROR_JDC)
+			{
+				return ERROR_JDC;
 			}
 		}
-		else if (currentOperand->type == IMMEDIATE) 
+		else if (currentOperand->type == IMMEDIATE)
 		{
 			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
 		}
@@ -128,13 +128,13 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 		strcatJdc(result, getPtrSizeStr(memAddr->ptrSize));
 		strcatJdc(result, " ");
 	}
-	
-	if (memAddr->segment != NO_SEGMENT) 
+
+	if (memAddr->segment != NO_SEGMENT)
 	{
 		strcatJdc(result, segmentStrs[memAddr->segment]);
 		strcatJdc(result, ":");
 	}
-	else if (memAddr->constSegment != 0) 
+	else if (memAddr->constSegment != 0)
 	{
 		sprintfJdc(result, true, "0x%X", memAddr->constSegment);
 		strcatJdc(result, ":");
@@ -145,7 +145,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 	uint64_t totalDisplacement = 0;
 	bool gotFirstTerm = false;
 
-	if (evaluateIP && compareRegisters(memAddr->reg, IP)) 
+	if (evaluateIP && compareRegisters(memAddr->reg, IP))
 	{
 		totalDisplacement = (instruction->address + instruction->numOfBytes) * memAddr->scale;
 	}
@@ -160,7 +160,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 		gotFirstTerm = true;
 	}
 
-	if (evaluateIP && compareRegisters(memAddr->regDisplacement, IP)) 
+	if (evaluateIP && compareRegisters(memAddr->regDisplacement, IP))
 	{
 		totalDisplacement += instruction->address + instruction->numOfBytes;
 	}
@@ -197,7 +197,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 
 const char* getPtrSizeStr(int32_t ptrSize)
 {
-	switch (ptrSize) 
+	switch (ptrSize)
 	{
 	case 1:
 		return "BYTE PTR";
@@ -218,19 +218,19 @@ const char* getPtrSizeStr(int32_t ptrSize)
 	case 64:
 		return "ZMMWORD PTR";
 	}
-	
+
 	return "";
 }
 
 const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 {
 	if (instruction->group1Prefix == REPNZ_BND &&
-		(instruction->opcode == CALL_NEAR || instruction->opcode == RET_NEAR || instruction->opcode == JMP_NEAR || isOpcodeJcc(instruction->opcode))) 
+		(instruction->opcode == CALL_NEAR || instruction->opcode == RET_NEAR || instruction->opcode == JMP_NEAR || isOpcodeJcc(instruction->opcode)))
 	{
 		return "BND";
 	}
 
-	switch (instruction->group1Prefix) 
+	switch (instruction->group1Prefix)
 	{
 	case LOCK:
 		return "LOCK";
@@ -239,6 +239,6 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 	case REPZ:
 		return "REP";
 	}
-	
+
 	return "";
 }

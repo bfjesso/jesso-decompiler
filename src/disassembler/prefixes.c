@@ -132,9 +132,9 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 		params->bytes += 3;
 	}
 
-	if(params->vexPrefix.isValidVEX)
+	if (params->vexPrefix.isValidVEX)
 	{
-		switch(params->vexPrefix.pp)
+		switch (params->vexPrefix.pp)
 		{
 		case 0b01:
 			params->legPrefixes.group3 = OSO; // 0x66

@@ -57,7 +57,7 @@ static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction,
 	{
 		return true;
 	}
-	else if (intrinsic->type == REP_IT) 
+	else if (intrinsic->type == REP_IT)
 	{
 		return instruction->group1Prefix == REPZ;
 	}
@@ -98,11 +98,11 @@ bool isInstructionReturningIntrinsic(struct DisassembledInstruction* instruction
 	{
 		if (instruction->opcode == returningIntrinsics[i].opcode)
 		{
-			if (!checkValidIntrinsicType(instruction, &returningIntrinsics[i])) 
+			if (!checkValidIntrinsicType(instruction, &returningIntrinsics[i]))
 			{
 				continue;
 			}
-			
+
 			if (intrinsicRef) { *intrinsicRef = &returningIntrinsics[i]; }
 			return true;
 		}
@@ -134,11 +134,11 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsic->opcode)) 
+		if (i == 0 && doesOpcodeOverwriteFirstOperand(intrinsic->opcode))
 		{
 			continue;
 		}
-		
+
 		struct JdcStr decompiledOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, i, 1, &decompiledOperand))
 		{
@@ -162,18 +162,18 @@ enum JdcStatus decompileReturningIntrinsic(struct DecompilationParameters* param
 bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instructionIndex, struct Intrinsic** intrinsicRef)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	
+
 	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
 		if (instruction->opcode == voidIntrinsics[i].opcode)
 		{
-			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29)) 
+			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29))
 			{
 				return false;
 			}
 			else if (instruction->opcode == XCHG)
 			{
-				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg))
 				{
 					return false;
 				}
@@ -181,7 +181,7 @@ bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instr
 				{
 					return false;
 				}
-				else if (!getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg)) 
+				else if (!getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg) && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg))
 				{
 					return false;
 				}
@@ -207,7 +207,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 	struct JdcStr decompiledCall = initializeJdcStrWithVal(intrinsic->name);
 	strcatJdc(&decompiledCall, "(");
 
-	for(int32_t i = 0; i < instruction->numOfOperands; i++)
+	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		if (intrinsic->opcode == _INT) // the operand identifies the function
 		{

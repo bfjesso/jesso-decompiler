@@ -51,7 +51,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		disassemblyColorPickerCtrls.push_back(ctrl);
 	}
 
-	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++) 
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
 	{
 		decompColors[i] = defaultDecompColors[i];
 		wxStaticText* label = new wxStaticText(decompilationScrollWindow, wxID_ANY, decompColorNames[i]);
@@ -98,7 +98,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	restoreDefaultsButton = new wxButton(this, RestoreDefaultsButtonID, "Restore default colors", wxPoint(0, 0), wxSize(250, 25));
 	restoreDefaultsButton->SetOwnBackgroundColour(foregroundColor);
 	restoreDefaultsButton->SetOwnForegroundColour(textColor);
-	restoreDefaultsButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { 
+	restoreDefaultsButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void {
 		for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 		{
 			disassemblyColorPickerCtrls[i]->SetColour(defaultDisassemblyColors[i]);
@@ -111,8 +111,8 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		{
 			dataColorPickerCtrls[i]->SetColour(defaultDataColors[i]);
 		}
-		ApplyColors(); 
-	});
+		ApplyColors();
+		});
 
 	vSizer->Add(applyButton, 0, wxCENTER | wxALL, 10);
 	vSizer->Add(restoreDefaultsButton, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
@@ -120,7 +120,7 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 	SetSizerAndFit(vSizer);
 }
 
-void ColorsMenu::AddDisassemblyTextCtrl(JdcTextCtrl* ctrl) 
+void ColorsMenu::AddDisassemblyTextCtrl(JdcTextCtrl* ctrl)
 {
 	disassemblyTextCtrls.push_back(ctrl);
 }
