@@ -100,10 +100,17 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	Bind(EVT_DISASSEMBLY_DONE, [this](wxThreadEvent&) {
 		isDisassembling = false;
-		for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
+
+		if (disassemblyTextCtrls.size() > 0)
 		{
-			disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
+			logTextCtrl->Log("updating disassembly gui...");
+			for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
+			{
+				disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
+			}
+			logTextCtrl->Log("finished updating disassembly gui");
 		}
+
 
 		if (functions.size() == 0)
 		{
@@ -117,9 +124,15 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	Bind(EVT_ANALYSIS_DONE, [this](wxThreadEvent&) {
 		isAnalyzing = false;
-		for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
+
+		if (functionsTextCtrls.size() > 0)
 		{
-			functionsTextCtrls[i]->ShowAllFunctions(-1);
+			logTextCtrl->Log("updating functions gui...");
+			for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
+			{
+				functionsTextCtrls[i]->ShowAllFunctions(-1);
+			}
+			logTextCtrl->Log("finished updating functions gui");
 		}
 		});
 
