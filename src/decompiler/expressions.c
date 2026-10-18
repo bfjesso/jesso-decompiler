@@ -54,7 +54,7 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t 
 	{
 		return decompileRegister(params, instructionIndex, operandNum, operand->reg, defaultToReg, 0, result, 0);
 	}
-	else if (operand->type == SEGMENT) 
+	else if (operand->type == SEGMENT)
 	{
 		return strcpyJdc(result, segmentStrs[operand->segment]);
 	}
@@ -66,24 +66,24 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
-	
+
 	int64_t offsetFromInitSP = 0;
 	if (isMemAddressStackVar(params, instructionIndex, memAddress, &offsetFromInitSP))
 	{
 		return decompileStackVar(params, instructionIndex, operandNum, offsetFromInitSP, result);
 	}
-	
+
 	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
 
 	struct JdcStr memAddrStr = initializeJdcStr();
 	bool hasGotFirstTerm = false;
 
 	uint64_t baseRegVal = 0;
-	if (compareRegisters(memAddress->reg, IP)) 
+	if (compareRegisters(memAddress->reg, IP))
 	{
 		baseRegVal = (instruction->address + instruction->numOfBytes) * memAddress->scale;
 	}
-	else if (memAddress->reg != NO_REG) 
+	else if (memAddress->reg != NO_REG)
 	{
 		struct RegisterVariable* regArgVar = 0; // will be set if the register is decompiled to only a regVar or regArg. this is so it can be just dereferenced if it is a pointer type
 		struct JdcStr baseRegStr = initializeJdcStr();
@@ -112,7 +112,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		{
 			sprintfJdc(&memAddrStr, false, "(%s * %d)", baseRegStr.buffer, memAddress->scale);
 		}
-		else 
+		else
 		{
 			strcpyJdc(&memAddrStr, baseRegStr.buffer);
 		}
@@ -137,16 +137,16 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 			return ERROR_JDC;
 		}
 
-		if (hasGotFirstTerm) 
+		if (hasGotFirstTerm)
 		{
 			sprintfJdc(&memAddrStr, true, " + %s", displacementRegStr.buffer);
 			addedDisplacement = true;
 		}
-		else 
+		else
 		{
 			strcpyJdc(&memAddrStr, displacementRegStr.buffer);
 		}
-		
+
 		freeJdcStr(&displacementRegStr);
 		hasGotFirstTerm = true;
 	}
@@ -179,12 +179,12 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else 
+		else
 		{
 			sprintfJdc(&memAddrStr, false, "0x%llX", totalDisplacement);
 		}
 	}
-	else if (baseRegVal != 0 || displacementRegVal != 0) 
+	else if (baseRegVal != 0 || displacementRegVal != 0)
 	{
 		sprintfJdc(&memAddrStr, true, " + 0x%llX", baseRegVal + displacementRegVal + memAddress->constDisplacement); // this has to be positive because baseRegVal and displacementRegVal are either zero or the IP
 		addedDisplacement = true;
@@ -200,7 +200,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		addedDisplacement = true;
 	}
 
-	if (addedDisplacement) 
+	if (addedDisplacement)
 	{
 		wrapJdcStrInParentheses(&memAddrStr);
 	}
@@ -216,7 +216,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	{
 		strcatJdc(result, memAddrStr.buffer);
 	}
-	
+
 	freeJdcStr(&memAddrStr);
 	return SUCCESS_JDC;
 }
@@ -241,7 +241,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		return ERROR_JDC;
 	}
 
-	if (instruction->opcode == LEA) 
+	if (instruction->opcode == LEA)
 	{
 		if (isDataTypePtr(stackVar->dataType))
 		{
@@ -249,12 +249,12 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 			{
 				sprintfJdc(result, false, "(%s + %s)", stackVar->name.buffer, displacementRegStr.buffer);
 			}
-			else 
+			else
 			{
 				strcpyJdc(result, stackVar->name.buffer);
 			}
 		}
-		else 
+		else
 		{
 			if (memAddress->regDisplacement != NO_REG)
 			{
@@ -265,7 +265,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 				sprintfJdc(result, false, "&%s", stackVar->name.buffer);
 			}
 		}
-		
+
 		freeJdcStr(&displacementRegStr);
 		return SUCCESS_JDC;
 	}
@@ -303,31 +303,30 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		return SUCCESS_JDC;
 	}
 
-	if (stackVar->dataType.arrayLen > 1)
+	uint8_t primitiveSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
+	if (stackVar->dataType.arrayLen > 1 && primitiveSize > 0)
 	{
-		int64_t arrayIndex = (offsetFromInitSP - stackVar->offsetFromInitSP) / getPrimitiveTypeSize(stackVar->dataType.primitiveType);
-		
+		int64_t arrayIndex = (offsetFromInitSP - stackVar->offsetFromInitSP) / primitiveSize;
+
 		strcpyJdc(result, stackVar->name.buffer);
 		if (memAddress->regDisplacement != NO_REG)
 		{
-			uint8_t typeSize = getPrimitiveTypeSize(stackVar->dataType.primitiveType);
-
-			if (arrayIndex > 0) 
+			if (arrayIndex > 0)
 			{
-				if (typeSize > 1)
+				if (primitiveSize > 1)
 				{
-					sprintfJdc(result, true, "[%llu + (%s / %u)]", arrayIndex, displacementRegStr.buffer, typeSize);
+					sprintfJdc(result, true, "[%llu + (%s / %u)]", arrayIndex, displacementRegStr.buffer, primitiveSize);
 				}
 				else
 				{
 					sprintfJdc(result, true, "[%llu + %s]", arrayIndex, displacementRegStr.buffer);
 				}
 			}
-			else 
+			else
 			{
-				if (typeSize > 1)
+				if (primitiveSize > 1)
 				{
-					sprintfJdc(result, true, "[%s / %u]", displacementRegStr.buffer, typeSize);
+					sprintfJdc(result, true, "[%s / %u]", displacementRegStr.buffer, primitiveSize);
 				}
 				else
 				{
@@ -365,7 +364,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 	{
 		return sprintfJdc(result, false, "0x%llX", instruction->address + instruction->numOfBytes);
 	}
-	else if (compareRegisters(targetReg, SP)) 
+	else if (compareRegisters(targetReg, SP))
 	{
 		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, -getStackFrameSizeAtInstruction(params, instructionIndex));
 		if (stackVar)
@@ -374,7 +373,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			{
 				return strcpyJdc(result, stackVar->name.buffer);
 			}
-			else 
+			else
 			{
 				return sprintfJdc(result, false, "&%s", stackVar->name.buffer);
 			}
@@ -391,12 +390,12 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 				*regVarRef = localRegVar;
 			}
 
-			if(isRegisterStatusFlag(targetReg))
+			if (isRegisterStatusFlag(targetReg))
 			{
 				return sprintfJdc(result, false, "%s%s", notStatusFlag ? "!" : "", localRegVar->name.buffer);
 			}
 
-			if (isRegisterHighByte(targetReg) && !isRegisterHighByte(localRegVar->reg)) 
+			if (isRegisterHighByte(targetReg) && !isRegisterHighByte(localRegVar->reg))
 			{
 				return sprintfJdc(result, false, "(%s & 0xF0)", localRegVar->name.buffer);
 			}
@@ -416,7 +415,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			return strcpyJdc(result, localRegVar->name.buffer);
 		}
 	}
-	
+
 	struct Expression* expressions = (struct Expression*)calloc(5, sizeof(struct Expression));
 	if (!expressions)
 	{
@@ -432,14 +431,14 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 	for (int32_t i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
-		
+
 		if (finished)
 		{
 			break;
 		}
 
 		struct Condition* condition = getConditionFromLastBodyInstruction(params, i);
-		if (condition && 
+		if (condition &&
 			(i != instructionIndex - 1 || condition->conditionType != DO_WHILE_CT)) // this is if decompileReg is called from decompileComparison
 		{
 			i = getConditionChainFirstBodyInstruction(params, condition);
@@ -504,7 +503,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			{
 				sprintfJdc(&expressions[expressionIndex].jdcStr, false, "(%s & 0xF0)", regArg->name.buffer);
 			}
-			else 
+			else
 			{
 				struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
 				if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
@@ -520,7 +519,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 					strcpyJdc(&expressions[expressionIndex].jdcStr, regArg->name.buffer);
 				}
 			}
-			
+
 			expressionIndex++;
 
 			if (regVarRef && expressionIndex == 1)
@@ -553,11 +552,11 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			wrapJdcStrInParentheses(result);
 		}
 
-		if (expressions[i].placeOperatorInfront) 
+		if (expressions[i].placeOperatorInfront)
 		{
 			strcatStartJdc(result, expressions[i].jdcStr.buffer);
 		}
-		else 
+		else
 		{
 			strcatJdc(result, expressions[i].jdcStr.buffer);
 		}
@@ -684,8 +683,8 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 			}
 		}
 	}
-	
-	if (cc == JZ_SHORT || cc == SETZ || cc == CMOVZ) 
+
+	if (cc == JZ_SHORT || cc == SETZ || cc == CMOVZ)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, invertOperator, result, 0);
 	}

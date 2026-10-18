@@ -746,11 +746,13 @@ struct StackVariable* getStackVarByOffset(struct Function* function, int64_t off
 	for (int32_t i = 0; i < function->numOfStackVars; i++)
 	{
 		struct StackVariable* var = &function->stackVars[i];
+		uint8_t primitiveSize = getPrimitiveTypeSize(var->dataType.primitiveType);
 		if (var->offsetFromInitSP == offsetFromInitSP)
 		{
 			return &function->stackVars[i];
 		}
-		else if ((offsetFromInitSP - var->offsetFromInitSP) % getPrimitiveTypeSize(var->dataType.primitiveType) == 0)
+		else if (var->dataType.arrayLen > 1 && primitiveSize > 0 &&
+			(offsetFromInitSP - var->offsetFromInitSP) % getPrimitiveTypeSize(var->dataType.primitiveType) == 0)
 		{
 			int64_t arrayIndex = (offsetFromInitSP - var->offsetFromInitSP) / getPrimitiveTypeSize(var->dataType.primitiveType);
 			if (arrayIndex > 0 && var->dataType.arrayLen > arrayIndex)
