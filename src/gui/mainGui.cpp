@@ -726,11 +726,14 @@ enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 		return ERROR_JDC;
 	}
 
-	sections = new FileSection[numOfSections];
-	if (ERROR_JDC == getAllFileSectionHeaders(filePath.c_str().AsWChar(), fileFormat, is64Bit, sections, numOfSections))
+	if (numOfSections > 0)
 	{
-		wxMessageBox("Error getting all file sections", "Failed to open file");
-		return ERROR_JDC;
+		sections = new FileSection[numOfSections];
+		if (ERROR_JDC == getAllFileSectionHeaders(filePath.c_str().AsWChar(), fileFormat, is64Bit, sections, numOfSections))
+		{
+			wxMessageBox("Error getting all file sections", "Failed to open file");
+			return ERROR_JDC;
+		}
 	}
 
 	if (ERROR_JDC == getNumOfImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, &numOfImports, &numOfLibraries))
@@ -739,12 +742,15 @@ enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 		return ERROR_JDC;
 	}
 
-	imports = new ImportedFunction[numOfImports];
-	libraryNames = new JdcStr[numOfLibraries];
-	if (ERROR_JDC == getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports, libraryNames, numOfLibraries))
+	if (numOfImports > 0)
 	{
-		wxMessageBox("Error getting all imports", "Failed to open file");
-		return ERROR_JDC;
+		imports = new ImportedFunction[numOfImports];
+		libraryNames = new JdcStr[numOfLibraries];
+		if (ERROR_JDC == getAllImports(filePath.c_str().AsWChar(), fileFormat, is64Bit, imports, numOfImports, libraryNames, numOfLibraries))
+		{
+			wxMessageBox("Error getting all imports", "Failed to open file");
+			return ERROR_JDC;
+		}
 	}
 
 	return SUCCESS_JDC;
