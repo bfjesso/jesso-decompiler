@@ -95,7 +95,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 		}
 		});
 	Bind(EVT_WORKER_LOG_PROGRESS, [this](wxThreadEvent& e) {
-		logTextCtrl->LogProgress(e.GetExtraLong(), e.GetInt() == 1);
+		logTextCtrl->LogProgress(e.GetPayload<uint64_t>(), e.GetInt() == 1);
 		});
 
 	Bind(EVT_DISASSEMBLY_DONE, [this](wxThreadEvent&) {

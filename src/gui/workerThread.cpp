@@ -51,7 +51,7 @@ void WorkerThread::PostLog(const wxString& text, enum LogParams logParam)
 void WorkerThread::PostLogProgress(uint64_t value, bool updateCurrentProgress)
 {
 	wxThreadEvent* e = new wxThreadEvent(EVT_WORKER_LOG_PROGRESS);
-	e->SetExtraLong(value);
+	e->SetPayload(value);
 	e->SetInt(updateCurrentProgress ? 1 : 0);
 	wxQueueEvent(mainGui, e);
 }
