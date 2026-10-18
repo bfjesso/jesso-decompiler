@@ -260,7 +260,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 				}
 			}
 		}
-		else if (callNum > 2000)
+		else if (callNum > 100)
 		{
 			return SUCCESS_JDC;
 		}
