@@ -1,6 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include "jdcTabArt.h"
+#include "workerThread.h"
 #include "settingsWindow.h"
 #include "disassemblyTextCtrl.h"
 #include "decompilationTextCtrl.h"
@@ -11,7 +12,6 @@
 #include "codeReferencesWindow.h"
 #include "functionInfoWindow.h"
 #include "../file-handler/fileHandler.h"
-#include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationStructs.h"
 
 class MainGui : public wxFrame
@@ -22,6 +22,8 @@ public:
 	wxMenuBar* menuBar = nullptr;
 	SettingsWindow* settingsWindow = nullptr;
 	ColorsMenu* colorsMenu = nullptr;
+
+	WorkerThread* workerThread = nullptr;
 
 	LogTextCtrl* logTextCtrl = nullptr;
 
@@ -63,8 +65,12 @@ public:
 	std::vector<Function> functions;
 
 	DecompilationParameters decompParams = { 0 };
-	
-	enum ids 
+
+	bool isDisassembling = false;
+	uint64_t errorAddress = 0;
+	bool isAnalyzing = false;
+
+	enum ids
 	{
 		NotebookID,
 		OpenDisassemblyID,
@@ -143,14 +149,6 @@ public:
 	void UpdateDecompParams();
 
 	void ClearData();
-
-	enum JdcStatus DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress, int32_t callNum);
-
-	enum JdcStatus DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options);
-
-	enum JdcStatus HandleJmpTables();
-
-	void FindAllFunctions(bool getSymbols);
 
 	void CloseApp(wxCloseEvent& e);
 

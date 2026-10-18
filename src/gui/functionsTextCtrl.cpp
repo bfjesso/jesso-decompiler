@@ -49,7 +49,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 	const int32_t ID_FIND_ADDRESS = 104;
 
 	int32_t selectedLine = GetCurrentLine();
-	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions) 
+	if (selectedLine >= 0 && selectedLine < mainGui->decompParams.numOfFunctions)
 	{
 		struct Function* function = &mainGui->decompParams.functions[selectedLine];
 
@@ -81,7 +81,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 					}
 				}
 			}
-		}, ID_DECOMPILE);
+			}, ID_DECOMPILE);
 
 		menu.Append(ID_VIEW_INFO, "View info");
 		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { mainGui->AddFunctionInfoWindow(function); }, ID_VIEW_INFO);
@@ -99,7 +99,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 				menu.Append(ID_RENAME, "Rename");
 				menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 					ShowRenameDialog(selectedLine, &function->name);
-				}, ID_RENAME);
+					}, ID_RENAME);
 
 				foundName = true;
 
@@ -108,7 +108,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 					ShowRenameDialog(selectedLine, &function->name);
 					uint64_t functionAddress = mainGui->decompParams.instructions[function->firstInstructionIndex].address;
 					mainGui->AddCodeReferencesWindow()->FindCodeReferences(functionAddress, 1);
-				}, ID_FIND_CODE_REFERENCES);
+					}, ID_FIND_CODE_REFERENCES);
 			}
 
 			for (int32_t i = 0; i < function->numOfRegVars && !foundName; i++)
@@ -119,7 +119,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(selectedLine, &regVar->name);
-					}, ID_RENAME);
+						}, ID_RENAME);
 
 					foundName = true;
 					break;
@@ -134,7 +134,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 					menu.Append(ID_RENAME, "Rename");
 					menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 						ShowRenameDialog(selectedLine, &stackVar->name);
-					}, ID_RENAME);
+						}, ID_RENAME);
 
 					foundName = true;
 					break;
@@ -146,7 +146,7 @@ void FunctionsTextCtrl::FunctionsRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_FIND_ADDRESS, "Find function by address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ShowFindAddressDialog();
-	}, ID_FIND_ADDRESS);
+		}, ID_FIND_ADDRESS);
 
 	AddDefaultRightClickOptions(&menu);
 
@@ -177,7 +177,7 @@ wxString FunctionsTextCtrl::GenerateFunctionDefinition(int32_t functionIndex, st
 	}
 
 	sprintfJdc(functionHeaderBuffer, true, "; // address: 0x%llX; num of instructions: %d", mainGui->decompParams.instructions[function->firstInstructionIndex].address, function->lastInstructionIndex - function->firstInstructionIndex + 1);
-	
+
 	wxString result = wxString(functionHeaderBuffer->buffer);
 
 	if (functionIndex == entryFunctionIndex)
@@ -190,7 +190,7 @@ wxString FunctionsTextCtrl::GenerateFunctionDefinition(int32_t functionIndex, st
 
 void FunctionsTextCtrl::UpdateFunctionHeader(int32_t functionIndex)
 {
-	if (functionIndex < 0 || functionIndex >= GetNumberOfLines()) 
+	if (functionIndex < 0 || functionIndex >= GetNumberOfLines())
 	{
 		return;
 	}
@@ -199,11 +199,11 @@ void FunctionsTextCtrl::UpdateFunctionHeader(int32_t functionIndex)
 	wxString functionDefinition = GenerateFunctionDefinition(functionIndex, &functionHeaderBuffer);
 	freeJdcStr(&functionHeaderBuffer);
 
-	if (functionDefinition == "") 
+	if (functionDefinition == "")
 	{
 		return;
 	}
-	
+
 	int32_t lineStart = PositionFromLine(functionIndex);
 	int32_t lineLen = GetLineLength(functionIndex);
 
@@ -215,6 +215,12 @@ void FunctionsTextCtrl::UpdateFunctionHeader(int32_t functionIndex)
 
 void FunctionsTextCtrl::ShowAllFunctions(int32_t highlightIndex)
 {
+	if (mainGui->isAnalyzing)
+	{
+		wxMessageBox("The file is currently being analyzed", "Can't show functions");
+		return;
+	}
+
 	ClearText();
 	SetReadOnly(false);
 	Freeze();
@@ -225,7 +231,7 @@ void FunctionsTextCtrl::ShowAllFunctions(int32_t highlightIndex)
 	for (int32_t i = 0; i < mainGui->decompParams.numOfFunctions; i++)
 	{
 		wxString functionDefinition = GenerateFunctionDefinition(i, &functionHeaderBuffer);
-		if (functionDefinition == "") 
+		if (functionDefinition == "")
 		{
 			freeJdcStr(&functionHeaderBuffer);
 			return;
@@ -241,17 +247,17 @@ void FunctionsTextCtrl::ShowAllFunctions(int32_t highlightIndex)
 	Thaw();
 	SetReadOnly(true);
 
-	if (highlightIndex != -1) 
+	if (highlightIndex != -1)
 	{
 		HighlightLine(highlightIndex, YELLOW_INDICATOR, 1);
 	}
-	else 
+	else
 	{
 		HighlightLine(entryFunctionIndex, YELLOW_INDICATOR, 1);
 	}
 }
 
-void FunctionsTextCtrl::ResetFunctionsList() 
+void FunctionsTextCtrl::ResetFunctionsList()
 {
 	ShowAllFunctions(-1);
 }
@@ -367,11 +373,11 @@ enum DecompilationColor GetPrimitiveTypeColor(enum PrimitiveType primitive, bool
 	return PRIMITIVE_DECOMP_COLOR;
 }
 
-enum PrimitiveType GetArgPrimitiveByName(struct Function* func, const char* name) 
+enum PrimitiveType GetArgPrimitiveByName(struct Function* func, const char* name)
 {
-	for (int32_t i = 0; i < func->numOfRegVars; i++) 
+	for (int32_t i = 0; i < func->numOfRegVars; i++)
 	{
-		if (func->regVars[i].isArgument && strcmp(func->regVars[i].name.buffer, name) == 0) 
+		if (func->regVars[i].isArgument && strcmp(func->regVars[i].name.buffer, name) == 0)
 		{
 			return func->regVars[i].dataType.primitiveType;
 		}

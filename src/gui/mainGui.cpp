@@ -6,8 +6,6 @@
 #include "importsGrid.h"
 #include "fileHeadersWindow.h"
 #include "calculatorWindow.h"
-#include "../decompiler/decompilationUtils.h"
-#include "../disassembler/mnemonics.h"
 #include "../decompiler/functions.h"
 #include "../save-handler/saveHandler.h"
 #include "../save-handler/loadHandler.h"
@@ -19,6 +17,11 @@ EVT_AUINOTEBOOK_PAGE_CLOSE(NotebookID, MainGui::OnPageClose)
 EVT_AUINOTEBOOK_TAB_RIGHT_DOWN(NotebookID, MainGui::OnTabRightClick)
 EVT_RIGHT_DOWN(MainGui::OnMouseRightClick)
 wxEND_EVENT_TABLE()
+
+wxDEFINE_EVENT(EVT_WORKER_LOG, wxThreadEvent);
+wxDEFINE_EVENT(EVT_WORKER_LOG_PROGRESS, wxThreadEvent);
+wxDEFINE_EVENT(EVT_ANALYSIS_DONE, wxThreadEvent);
+wxDEFINE_EVENT(EVT_DISASSEMBLY_DONE, wxThreadEvent);
 
 MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 {
@@ -75,6 +78,50 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	auiNotebook->SetArtProvider(new JdcTabArt());
 
 	logTextCtrl = new LogTextCtrl(this, this);
+
+	Bind(EVT_WORKER_LOG, [this](wxThreadEvent& e) {
+		enum WorkerThread::LogParams logParam = (enum WorkerThread::LogParams)(e.GetInt());
+		switch (logParam)
+		{
+		case WorkerThread::LogParams::LOG_PARAM_ERROR:
+			logTextCtrl->Log(e.GetString(), true);
+			break;
+		case WorkerThread::LogParams::LOG_PARAM_ADD_NEW_LINE:
+			logTextCtrl->Log(e.GetString());
+			break;
+		case WorkerThread::LogParams::LOG_PARAM_NONE:
+			logTextCtrl->Log(e.GetString(), false, false);
+			break;
+		}
+		});
+	Bind(EVT_WORKER_LOG_PROGRESS, [this](wxThreadEvent& e) {
+		logTextCtrl->LogProgress(e.GetExtraLong(), e.GetInt() == 1);
+		});
+
+	Bind(EVT_DISASSEMBLY_DONE, [this](wxThreadEvent&) {
+		isDisassembling = false;
+		for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
+		{
+			disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
+		}
+
+		if (functions.size() == 0)
+		{
+			int32_t answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
+			if (answer == wxYES)
+			{
+				AnalyzeFile();
+			}
+		}
+		});
+
+	Bind(EVT_ANALYSIS_DONE, [this](wxThreadEvent&) {
+		isAnalyzing = false;
+		for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
+		{
+			functionsTextCtrls[i]->ShowAllFunctions(-1);
+		}
+		});
 
 	ResetWindowLayout();
 }
@@ -752,16 +799,6 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 	return SUCCESS_JDC;
 }
 
-bool CompareInstructions(const DisassembledInstruction& a, const DisassembledInstruction& b)
-{
-	return a.address < b.address;
-}
-
-bool CompareJumpTables(const JumpTable& a, const JumpTable& b)
-{
-	return a.jmpTableAddress < b.jmpTableAddress;
-}
-
 void MainGui::DisassembleFile()
 {
 	if (currentFilePath == "")
@@ -777,118 +814,15 @@ void MainGui::DisassembleFile()
 
 	UpdateDecompParams();
 
-	// first the instructions that are definitely executed are disassembled, then the other code sections bytes or bytes inbetween instructions are disassembled
-	logTextCtrl->Log("disassembling jumped to instructions...");
-	logTextCtrl->Log("\tCurrent instruction: ", false, false);
-	logTextCtrl->LogProgress(entryPoint + imageBase, false);
-
-	struct DisassemblerOptions options = { 0 };
-	options.is64BitMode = is64Bit;
-	struct DisassembledInstruction instructionBuffer;
-	uint64_t errorAddress = 0;
-	bool didErrorOccur = false;
-	if (ERROR_JDC == DisassembleTakingJumps(entryPoint + imageBase, &instructionBuffer, &options, &errorAddress, 0))
+	workerThread = new WorkerThread(this, WorkerThread::DISASSEMBLE_WORKER_THREAD, false);
+	if (workerThread->Run() != wxTHREAD_NO_ERROR)
 	{
-		didErrorOccur = true;
-	}
-
-	if (disassembledInstructions.size() == 0)
-	{
-		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
+		delete workerThread;
+		wxMessageBox("Error starting disassembly thread", "Can't disassemble");
 		return;
 	}
 
-	logTextCtrl->Log("disassembling all other instructions...");
-	logTextCtrl->Log("\tCurrent instruction: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[0].address, false);
-
-	uint64_t firstAddress = disassembledInstructions[0].address;
-	uint64_t lastAddress = disassembledInstructions[disassembledInstructions.size() - 1].address + disassembledInstructions[disassembledInstructions.size() - 1].numOfBytes;
-	for (int32_t i = 0; i < numOfSections; i++)
-	{
-		if (sections[i].type == CODE_FST)
-		{
-			uint64_t sectionStart = sections[i].rva + imageBase;
-			uint64_t sectionEnd = sections[i].rva + sections[i].physicalSize + imageBase;
-			if (sectionEnd < firstAddress || sectionStart > lastAddress)
-			{
-				if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
-				{
-					didErrorOccur = true;
-				}
-			}
-			else
-			{
-				if (sectionStart < firstAddress && sectionEnd > firstAddress)
-				{
-					if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
-					{
-						didErrorOccur = true;
-					}
-				}
-
-				if (sectionStart < lastAddress && sectionEnd > lastAddress)
-				{
-					if (ERROR_JDC == DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
-					{
-						didErrorOccur = true;
-					}
-				}
-			}
-		}
-	}
-
-	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
-
-	int32_t numOfInstructions = disassembledInstructions.size();
-	for (int32_t i = 0; i < numOfInstructions - 1; i++)
-	{
-		uint64_t startVA = disassembledInstructions[i].address + disassembledInstructions[i].numOfBytes;
-		uint64_t endVA = disassembledInstructions[i + 1].address;
-		if (startVA != endVA)
-		{
-			if (ERROR_JDC == DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
-			{
-				didErrorOccur = true;
-			}
-		}
-	}
-
-	std::sort(disassembledInstructions.begin(), disassembledInstructions.end(), CompareInstructions);
-
-	if (didErrorOccur)
-	{
-		wxMessageBox("An error occured while disassembling", "Disassembly not fully completed");
-	}
-
-	UpdateDecompParams();
-
-	logTextCtrl->Log("handling jump tables...");
-	logTextCtrl->Log("\tCurrent instruction: ", false, false);
-	logTextCtrl->LogProgress(0, false);
-
-	if (!HandleJmpTables())
-	{
-		wxMessageBox("An error occured while handling jump tables", "Disassembly not fully completed");
-	}
-
-	logTextCtrl->Log("updating disassembly GUI...");
-
-	for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
-	{
-		disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
-	}
-
-	logTextCtrl->Log("finished disassembling");
-
-	if (functions.size() == 0)
-	{
-		int32_t answer = wxMessageBox("Do you want to analyze the file?", "Analyze file", wxYES_NO, this);
-		if (answer == wxYES)
-		{
-			AnalyzeFile();
-		}
-	}
+	isDisassembling = true;
 }
 
 void MainGui::AnalyzeFile()
@@ -896,6 +830,11 @@ void MainGui::AnalyzeFile()
 	if (currentFilePath == "")
 	{
 		wxMessageBox("No file opened", "Can't analyze");
+		return;
+	}
+	if (isDisassembling)
+	{
+		wxMessageBox("File has not finished being disassembled", "Can't analyze");
 		return;
 	}
 	if (disassembledInstructions.size() == 0)
@@ -917,97 +856,15 @@ void MainGui::AnalyzeFile()
 		getSymbols = wxMessageBox("Do you want to look for function name symbols? This could take some time.", "Get function name symbols", wxYES_NO, this);
 	}
 
-	logTextCtrl->Log("finding all functions...");
-
-	FindAllFunctions(getSymbols == wxYES);
-
-	int32_t numOfFunctions = functions.size();
-
-	logTextCtrl->Log("analyzing function return types and conditions...");
-	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
-
-	bool getConditions = true;
-	bool setAnyReturnType = false;
-	do
+	workerThread = new WorkerThread(this, WorkerThread::ANALYZE_WORKER_THREAD, getSymbols == wxYES);
+	if (workerThread->Run() != wxTHREAD_NO_ERROR)
 	{
-		setAnyReturnType = false;
-		for (int32_t i = 0; i < numOfFunctions; i++)
-		{
-			bool setReturnType = false;
-			if (ERROR_JDC == getFunctionReturnTypeAndConditions(&decompParams, &functions[i], getConditions, &setReturnType))
-			{
-				logTextCtrl->Log(wxString::Format("error getting return type or conditions of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
-				return;
-			}
-
-			if (setReturnType)
-			{
-				setAnyReturnType = true;
-			}
-
-			logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
-		}
-
-		getConditions = false;
-
-	} while (setAnyReturnType);
-
-	logTextCtrl->Log("analyzing function arguments and stack...");
-	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
-
-	for (int32_t i = 0; i < numOfFunctions; i++)
-	{
-		if (ERROR_JDC == getFunctionRegArgsAndStackVars(&decompParams, &functions[i]))
-		{
-			logTextCtrl->Log(wxString::Format("error getting arguments and stack vars of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
-			return;
-		}
-
-		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
+		delete workerThread;
+		wxMessageBox("Error starting analysis thread", "Can't analyze");
+		return;
 	}
 
-	logTextCtrl->Log("fixing function arguments and stack...");
-	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
-
-	for (int32_t i = 0; i < numOfFunctions; i++)
-	{
-		if (ERROR_JDC == fixFunctionArgs(&decompParams, &functions[i]))
-		{
-			logTextCtrl->Log(wxString::Format("error fixing arguments and stack vars of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
-			return;
-		}
-
-		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
-	}
-
-	logTextCtrl->Log("setting stack var data types...");
-	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[functions[0].firstInstructionIndex].address, false);
-
-	for (int32_t i = 0; i < numOfFunctions; i++)
-	{
-		if (ERROR_JDC == setFunctionStackVarTypes(&decompParams, &functions[i]))
-		{
-			logTextCtrl->Log(wxString::Format("error setting stack var data types of %s (0x%llX)", functions[i].name.buffer, disassembledInstructions[functions[i].firstInstructionIndex].address));
-			return;
-		}
-
-		logTextCtrl->LogProgress(disassembledInstructions[functions[i].firstInstructionIndex].address, true);
-	}
-
-	logTextCtrl->Log("updating functions GUI...");
-
-	for (int32_t i = 0; i < functionsTextCtrls.size(); i++)
-	{
-		functionsTextCtrls[i]->ShowAllFunctions(-1);
-	}
-
-	logTextCtrl->Log("finished analyzing file");
-
-	decompParams.currentFunc = 0;
+	isAnalyzing = true;
 }
 
 void MainGui::UpdateDecompParams()
@@ -1120,351 +977,15 @@ void MainGui::ClearData()
 	fileFormat = UNKNOWN_FF;
 }
 
-enum JdcStatus MainGui::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, uint64_t* errorAddress, int32_t callNum)
-{
-	struct FileSection* currentSection = 0;
-	uint64_t currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
-	if (!currentSection || currentSection->type != CODE_FST)
-	{
-		return SUCCESS_JDC;
-	}
-	else if (currentFileOffset >= numOfFileBytes || currentSection->fileOffset + currentSection->physicalSize > numOfFileBytes)
-	{
-		logTextCtrl->Log(wxString::Format("instruction jumps outside file: 0x%llX", instructionBuffer->address), true);
-		return ERROR_JDC;
-	}
-
-	bool storeInstruction = true;
-
-	uint64_t currentVirtualAddress = startVA;
-	while (currentFileOffset < currentSection->fileOffset + currentSection->physicalSize)
-	{
-		if (findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress) != -1)
-		{
-			return SUCCESS_JDC;
-		}
-
-		int32_t instructionIndex = findInstructionInsertPoint(disassembledInstructions.data(), disassembledInstructions.size(), currentVirtualAddress);
-		if (instructionIndex > 0 && instructionIndex < disassembledInstructions.size() &&
-			currentVirtualAddress > disassembledInstructions[instructionIndex - 1].address &&
-			currentVirtualAddress < disassembledInstructions[instructionIndex - 1].address + disassembledInstructions[instructionIndex - 1].numOfBytes)
-		{
-			logTextCtrl->Log(wxString::Format("instruction overlaps with existing instruction: 0x%llX", currentVirtualAddress), true);
-			return ERROR_JDC;
-		}
-
-		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
-		{
-			if (errorAddress) { *errorAddress = currentVirtualAddress; }
-			logTextCtrl->Log(wxString::Format("bad instruction at 0x%llX", currentVirtualAddress), true);
-			return ERROR_JDC;
-		}
-
-		instructionBuffer->address = currentVirtualAddress;
-
-		currentFileOffset += instructionBuffer->numOfBytes;
-		currentVirtualAddress += instructionBuffer->numOfBytes;
-
-		if (storeInstruction) // only the instructions that are jumped to are stored because inserting into the vector takes too much time
-		{
-			// this needs to be sorted here because the find instruction functions use a binary search
-			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, *instructionBuffer);
-			storeInstruction = false;
-		}
-
-		logTextCtrl->LogProgress(currentVirtualAddress, true);
-
-		decompParams.instructions = instructionBuffer;
-		if (isOpcodeReturn(instructionBuffer->opcode))
-		{
-			return SUCCESS_JDC;
-		}
-		else if (isOpcodeJmp(instructionBuffer->opcode))
-		{
-			uint64_t jmpDst = getJmpDst(&decompParams, 0);
-			if (jmpDst != 0)
-			{
-				struct FileSection* section = 0;
-				currentFileOffset = rvaToFileOffset(sections, numOfSections, jmpDst - imageBase, &section);
-				if (!section || section->type != CODE_FST)
-				{
-					return SUCCESS_JDC;
-				}
-
-				currentVirtualAddress = jmpDst;
-				storeInstruction = true;
-			}
-			else
-			{
-				return SUCCESS_JDC;
-			}
-		}
-		else if (isOpcodeJcc(instructionBuffer->opcode) || isOpcodeCall(instructionBuffer->opcode))
-		{
-			uint64_t jmpDst = getJmpDst(&decompParams, 0);
-			if (jmpDst != 0)
-			{
-				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, options, errorAddress, callNum + 1))
-				{
-					return ERROR_JDC;
-				}
-			}
-		}
-		else if (callNum > 2000)
-		{
-			return SUCCESS_JDC;
-		}
-	}
-
-	return SUCCESS_JDC;
-}
-
-enum JdcStatus MainGui::DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
-{
-	struct FileSection* currentSection = 0;
-	uint64_t currentFileOffset = rvaToFileOffset(sections, numOfSections, startVA - imageBase, &currentSection);
-	if (!currentSection || currentSection->type != CODE_FST)
-	{
-		return SUCCESS_JDC;
-	}
-	else if (currentFileOffset >= numOfFileBytes)
-	{
-		return ERROR_JDC;
-	}
-
-	uint64_t endFileOffset = rvaToFileOffset(sections, numOfSections, endVA - imageBase, 0);
-	if (endFileOffset > numOfFileBytes || endFileOffset == 0)
-	{
-		return ERROR_JDC;
-	}
-
-	uint64_t currentVirtualAddress = startVA;
-	while (currentFileOffset < endFileOffset)
-	{
-		if (!disassembleInstruction(&fileBytes[currentFileOffset], fileBytes + endFileOffset - 1, options, instructionBuffer) ||
-			currentFileOffset + instructionBuffer->numOfBytes > endFileOffset)
-		{
-			int32_t numOfBytes = instructionBuffer->numOfBytes;
-			if (numOfBytes == 0)
-			{
-				return ERROR_JDC;
-			}
-
-			memset(instructionBuffer, 0, sizeof(struct DisassembledInstruction));
-			instructionBuffer->opcode = DATA;
-			instructionBuffer->numOfBytes = 1;
-
-			logTextCtrl->LogProgress(currentVirtualAddress, true);
-
-			for (int32_t i = 0; i < numOfBytes; i++)
-			{
-				if (currentFileOffset >= endFileOffset)
-				{
-					return SUCCESS_JDC;
-				}
-
-				instructionBuffer->address = currentVirtualAddress;
-				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
-				if (!instructionBuffer->operands)
-				{
-					return ERROR_JDC;
-				}
-
-				instructionBuffer->operands[0].immediate.value = fileBytes[currentFileOffset];
-				instructionBuffer->operands[0].type = IMMEDIATE;
-				instructionBuffer->operands[0].immediate.size = 1;
-				instructionBuffer->numOfOperands = 1;
-
-				currentFileOffset++;
-				currentVirtualAddress++;
-				disassembledInstructions.push_back(*instructionBuffer);
-			}
-		}
-		else
-		{
-			instructionBuffer->address = currentVirtualAddress;
-
-			currentFileOffset += instructionBuffer->numOfBytes;
-			currentVirtualAddress += instructionBuffer->numOfBytes;
-			disassembledInstructions.push_back(*instructionBuffer);
-		}
-	}
-
-	return SUCCESS_JDC;
-}
-
-enum JdcStatus MainGui::HandleJmpTables()
-{
-	// this is setting called instructions from the RUNTIME_FUNCTION structs in .pdata
-	if (fileFormat == PE_FF && is64Bit) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
-	{
-		for (int32_t i = 0; i < numOfSections; i++)
-		{
-			if (strcmp(sections[i].name.buffer, ".pdata") == 0)
-			{
-				int32_t j = 0;
-				while (j < sections[i].physicalSize)
-				{
-					uint64_t beginAddress = imageBase + *(uint32_t*)(fileBytes + sections[i].fileOffset + j);
-					if (beginAddress == 0)
-					{
-						break;
-					}
-
-					int32_t calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), beginAddress);
-					if (calledInstructionIndex != -1)
-					{
-						disassembledInstructions[calledInstructionIndex].isCalled = 1;
-					}
-
-					j += 0xC;
-				}
-
-				break;
-			}
-		}
-	}
-
-	int32_t numOfInstructions = disassembledInstructions.size();
-	for (int32_t i = 0; i < numOfInstructions; i++)
-	{
-		logTextCtrl->LogProgress(disassembledInstructions[i].address, true);
-
-		if (disassembledInstructions[i].address == imageBase + entryPoint)
-		{
-			disassembledInstructions[i].isCalled = 1;
-		}
-
-		struct JumpTable jumpTable = { 0 };
-		if (getJumpTable(&decompParams, i, &jumpTable))
-		{
-			jumpTables.push_back(jumpTable);
-		}
-		else if (disassembledInstructions[i].opcode == CALL_NEAR)
-		{
-			int32_t calledInstructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(&decompParams, i));
-			if (calledInstructionIndex != -1)
-			{
-				disassembledInstructions[calledInstructionIndex].isCalled = 1;
-			}
-		}
-		else if (disassembledInstructions[i].opcode == JMP_NEAR)
-		{
-			int32_t dstIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), getJmpDst(&decompParams, i));
-			if (dstIndex != -1)
-			{
-				disassembledInstructions[dstIndex].isJmpDst = 1;
-			}
-		}
-	}
-
-	std::sort(jumpTables.begin(), jumpTables.end(), CompareJumpTables);
-
-	std::vector<struct DisassembledInstruction> dataInstructions; // this buffer is used so that only one insert call is needed
-	int32_t numOfJmpTables = jumpTables.size();
-	for (int32_t i = 0; i < numOfJmpTables; i++)
-	{
-		uint64_t fileOffest = rvaToFileOffset(sections, numOfSections, jumpTables[i].jmpTableAddress - imageBase, 0);
-		int32_t instructionIndex = findInstructionByAddress(disassembledInstructions.data(), disassembledInstructions.size(), jumpTables[i].jmpTableAddress);
-		if (instructionIndex != -1)
-		{
-			int32_t lastInstructionIndex = instructionIndex;
-			while (!disassembledInstructions[lastInstructionIndex].isCalled &&
-				!disassembledInstructions[lastInstructionIndex].isJmpDst)
-			{
-				free(disassembledInstructions[lastInstructionIndex].operands);
-				lastInstructionIndex++;
-			}
-
-			uint64_t lastAddress = disassembledInstructions[lastInstructionIndex].address;
-			disassembledInstructions.erase(disassembledInstructions.begin() + instructionIndex, disassembledInstructions.begin() + lastInstructionIndex);
-
-			bool isInIndirectTable = false;
-			uint64_t currentAddress = jumpTables[i].jmpTableAddress;
-			uint64_t initialAddress = currentAddress;
-			while (currentAddress < lastAddress)
-			{
-				if (currentAddress == jumpTables[i].indirectTableAddress)
-				{
-					isInIndirectTable = true;
-				}
-				else if (i + 1 < numOfJmpTables && currentAddress == jumpTables[i + 1].jmpTableAddress)
-				{
-					i++;
-					isInIndirectTable = false;
-				}
-
-				struct DisassembledInstruction instruction;
-				memset(&instruction, 0, sizeof(struct DisassembledInstruction));
-				instruction.opcode = DATA;
-				instruction.numOfOperands = 1;
-				instruction.operands = (struct Operand*)calloc(1, sizeof(struct Operand));
-				if (!instruction.operands)
-				{
-					return ERROR_JDC;
-				}
-				instruction.operands[0].type = IMMEDIATE;
-				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : jumpTables[i].addressSize;
-				instruction.numOfBytes = isInIndirectTable ? 1 : jumpTables[i].addressSize;
-				instruction.address = currentAddress;
-
-				if (isInIndirectTable)
-				{
-					instruction.operands[0].immediate.value = *(uint8_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-				else if (jumpTables[i].addressSize == 4)
-				{
-					instruction.operands[0].immediate.value = *(uint32_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-				else
-				{
-					instruction.operands[0].immediate.value = *(uint64_t*)(fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-
-				dataInstructions.push_back(instruction);
-				currentAddress += isInIndirectTable ? 1 : jumpTables[i].addressSize;
-			}
-
-			disassembledInstructions.insert(disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());
-			decompParams.numOfInstructions = disassembledInstructions.size();
-			dataInstructions.clear();
-		}
-	}
-
-	return SUCCESS_JDC;
-}
-
-void MainGui::FindAllFunctions(bool getSymbols)
-{
-	logTextCtrl->Log("\tCurrent function: ", false, false);
-	logTextCtrl->LogProgress(disassembledInstructions[0].address, false);
-
-	int32_t numOfInstructions = disassembledInstructions.size();
-	int32_t instructionIndex = 0;
-
-	struct Function currentFunction;
-	memset(&currentFunction, 0, sizeof(struct Function));
-	int32_t numOfFunctions = 0;
-	while (instructionIndex < numOfInstructions && findNextFunction(&decompParams, &currentFunction, &instructionIndex))
-	{
-		currentFunction.name = initializeJdcStr();
-		if (!getSymbols || !getSymbolByValue(currentFilePath.c_str().AsWChar(), fileFormat, is64Bit, disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
-		{
-			sprintfJdc(&currentFunction.name, false, "func%llX", disassembledInstructions[currentFunction.firstInstructionIndex].address - imageBase);
-		}
-
-		logTextCtrl->LogProgress(disassembledInstructions[currentFunction.firstInstructionIndex].address, true);
-
-		functions.push_back(currentFunction);
-		memset(&currentFunction, 0, sizeof(struct Function));
-		numOfFunctions++;
-	}
-
-	UpdateDecompParams();
-}
-
 void MainGui::CloseApp(wxCloseEvent& e)
 {
+	if (workerThread)
+	{
+		workerThread->Stop();
+		delete workerThread;
+		workerThread = nullptr;
+	}
+
 	settingsWindow->SavePreferences();
 	auiManager.UnInit();
 	colorsMenu->Destroy();

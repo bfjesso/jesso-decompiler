@@ -1,4 +1,5 @@
 #include "logTextCtrl.h"
+#include "mainGui.h"
 
 LogTextCtrl::LogTextCtrl(wxWindow* parent, MainGui* mainGuiRef) : JdcTextCtrl(parent, mainGuiRef, "Log")
 {
@@ -74,10 +75,14 @@ void LogTextCtrl::LogRightClickOptions(wxContextMenuEvent& e)
 
 	const int32_t ID_CLEAR = 100;
 
-	menu.Append(ID_CLEAR, "Clear");
-	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
-		ClearText();
-		}, ID_CLEAR);
+	if (!mainGui->isDisassembling && !mainGui->isAnalyzing)
+	{
+		menu.Append(ID_CLEAR, "Clear");
+		menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
+			ClearText();
+			}, ID_CLEAR);
+	}
+
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
 }

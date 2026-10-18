@@ -212,6 +212,7 @@
     <ClCompile Include="src\gui\sectionsGrid.cpp" />
     <ClCompile Include="src\gui\settingsWindow.cpp" />
     <ClCompile Include="src\gui\stringsTextCtrl.cpp" />
+    <ClCompile Include="src\gui\workerThread.cpp" />
     <ClCompile Include="src\jdc-str\jdcStr.c" />
     <ClCompile Include="src\pe-handler\peHandler.c" />
     <ClCompile Include="src\save-handler\loadHandler.c" />
@@ -274,6 +275,7 @@
     <ClInclude Include="src\gui\sectionsGrid.h" />
     <ClInclude Include="src\gui\settingsWindow.h" />
     <ClInclude Include="src\gui\stringsTextCtrl.h" />
+    <ClInclude Include="src\gui\workerThread.h" />
     <ClInclude Include="src\jdc-str\jdcStr.h" />
     <ClInclude Include="src\jdcTypes.h" />
     <ClInclude Include="src\pe-handler\peHandler.h" />

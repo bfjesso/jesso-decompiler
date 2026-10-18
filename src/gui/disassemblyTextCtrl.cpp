@@ -24,6 +24,12 @@ void DisassemblyTextCtrl::ClearData()
 
 void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress)
 {
+	if (mainGui->isDisassembling)
+	{
+		wxMessageBox("The file is currently being disassembled", "Can't show disassembly");
+		return;
+	}
+
 	instructions = disassembledInstructions;
 	numOfInstructions = amountOfInstructions;
 

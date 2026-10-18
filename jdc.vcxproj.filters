@@ -156,6 +156,9 @@
     <ClCompile Include="src\save-handler\loadHandler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\workerThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -327,6 +330,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\save-handler\loadHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\workerThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
