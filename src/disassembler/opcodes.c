@@ -1,4 +1,5 @@
 #include "opcodes.h"
+#include "modRM.h"
 #include "mnemonics.h"
 
 #include "oneByteOpcodeMap.h"
@@ -13,7 +14,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 	uint8_t prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
 	uint8_t opcodeByte = 0;
-	uint8_t escapeToCoprocessor = 0;
+	bool escapeToCoprocessor = false;
 
 	int32_t mmm = params->vexPrefix.m_mmmm != 0 ? params->vexPrefix.m_mmmm : params->evexPrefix.mmm;
 	if (params->bytes[0] == 0x0F || mmm != 0)
@@ -77,11 +78,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 			if (opcodeByte == 0x12 || opcodeByte == 0x16)
 			{
-				params->modRM.hasGotModRM = 1;
-				params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
-				params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
-				params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
-				params->bytes++;
+				if (ERROR_JDC == getModRM(params))
+				{
+					return ERROR_JDC;
+				}
 
 				if (params->modRM.mod == 0b11)
 				{
@@ -136,13 +136,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 	// handle extended opcodes or escape opcodes
 	if (params->opcode.mnemonic == EXTENDED_OPCODE)
 	{
-		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
-
-		params->modRM.hasGotModRM = 1;
-		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
-		params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
-		params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
-		params->bytes++;
+		if (ERROR_JDC == getModRM(params))
+		{
+			return ERROR_JDC;
+		}
 
 		const struct Opcode* extendedOpcode = 0;
 
@@ -313,42 +310,39 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 	}
 	else if (escapeToCoprocessor) // escape to coprocessor instruction set
 	{
-		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
-
-		params->modRM.hasGotModRM = 1;
-		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
-		params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
-		params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
+		uint8_t modRMByte = params->bytes[0];
+		if (ERROR_JDC == getModRM(params))
+		{
+			return ERROR_JDC;
+		}
 
 		switch (opcodeByte)
 		{
 		case 0xD8:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeD8OpcodeMapBits[params->modRM.reg] : escapeD8OpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeD8OpcodeMapBits[params->modRM.reg] : escapeD8OpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xD9:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeD9OpcodeMapBits[params->modRM.reg] : escapeD9OpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeD9OpcodeMapBits[params->modRM.reg] : escapeD9OpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDA:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDAOpcodeMapBits[params->modRM.reg] : escapeDAOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDAOpcodeMapBits[params->modRM.reg] : escapeDAOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDB:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDBOpcodeMapBits[params->modRM.reg] : escapeDBOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDBOpcodeMapBits[params->modRM.reg] : escapeDBOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDC:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDCOpcodeMapBits[params->modRM.reg] : escapeDCOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDCOpcodeMapBits[params->modRM.reg] : escapeDCOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDD:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDDOpcodeMapBits[params->modRM.reg] : escapeDDOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDDOpcodeMapBits[params->modRM.reg] : escapeDDOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDE:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDEOpcodeMapBits[params->modRM.reg] : escapeDEOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDEOpcodeMapBits[params->modRM.reg] : escapeDEOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		case 0xDF:
-			params->opcode = params->bytes[0] < 0xC0 ? escapeDFOpcodeMapBits[params->modRM.reg] : escapeDFOpcodeMapByte[params->bytes[0] - 0xC0];
+			params->opcode = modRMByte < 0xC0 ? escapeDFOpcodeMapBits[params->modRM.reg] : escapeDFOpcodeMapByte[modRMByte - 0xC0];
 			break;
 		}
-
-		params->bytes++;
 	}
 
 	if (params->opcode.mnemonic == NO_MNEMONIC)

@@ -3,6 +3,26 @@
 #include "operands.h"
 #include"prefixes.h"
 
+enum JdcStatus getModRM(struct DisassemblyParameters* params)
+{
+	if (params->bytes > params->maxBytesAddr)
+	{
+		return ERROR_JDC;
+	}
+
+	if (!params->modRM.hasGotModRM)
+	{
+		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
+		params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
+		params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
+
+		params->modRM.hasGotModRM = true;
+		params->bytes++;
+	}
+
+	return SUCCESS_JDC;
+}
+
 enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, uint8_t operandSize, struct Operand* result)
 {
 	if (!params->modRM.hasGotModRM)

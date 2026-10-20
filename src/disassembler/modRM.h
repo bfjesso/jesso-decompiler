@@ -12,6 +12,8 @@ enum ModRMSelection
 	GET_MEM_ADDRESS_MMX,
 };
 
+enum JdcStatus getModRM(struct DisassemblyParameters* params);
+
 enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, uint8_t operandSize, struct Operand* result);
 
 static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotDisp, struct Operand* result);
