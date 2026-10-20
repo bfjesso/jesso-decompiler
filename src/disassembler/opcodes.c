@@ -100,13 +100,26 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->bytes[0] == 0xFA)
 				{
 					params->opcode.mnemonic = ENDBR64;
+					params->bytes++;
 				}
-				else if (params->bytes[0] != 0xFB)
+				else if (params->bytes[0] == 0xFB)
 				{
-					return ERROR_JDC;
+					params->opcode.mnemonic = ENDBR32;
+					params->bytes++;
 				}
+				else
+				{
+					if (ERROR_JDC == getModRM(params) || params->modRM.mod != 0b11)
+					{
+						return ERROR_JDC;
+					}
 
-				params->bytes++;
+					params->opcode = alternateX1E;
+					if (params->rexPrefix.W)
+					{
+						params->opcode.mnemonic = RDSSPQ;
+					}
+				}
 			}
 		}
 		else

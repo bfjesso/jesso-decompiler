@@ -824,5 +824,6 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	},
 	{ UD0, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }              // 0xFF; UD0
 };
-const struct Opcode alternateX12 = { VMOVHLPS, -1, Vq, Hq, Uq, NO_OPERAND_CODE, NO_SUPERSCRIPT };                // no prefix 0x12 when ModRM.mod == 0b11
-const struct Opcode alternateX16 = { VMOVLHPS, -1, Vdq, Hq, Uq, NO_OPERAND_CODE, NO_SUPERSCRIPT };               // no prefix 0x16 when ModRM.mod == 0b11
+const struct Opcode alternateX12 = { VMOVHLPS, -1, Vq, Hq, Uq, NO_OPERAND_CODE, NO_SUPERSCRIPT };                                       // no prefix 0x12 when ModRM.mod == 0b11
+const struct Opcode alternateX16 = { VMOVLHPS, -1, Vdq, Hq, Uq, NO_OPERAND_CODE, NO_SUPERSCRIPT };                                      // no prefix 0x16 when ModRM.mod == 0b11
+const struct Opcode alternateX1E = { RDSSPD, -1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT };               // if ModRM.mod == 0b11. RDSSPQ if REX.W
