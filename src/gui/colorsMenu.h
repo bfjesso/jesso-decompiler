@@ -1,11 +1,14 @@
 #pragma once
 #include "jdcTextCtrl.h"
+#include "settingsWindow.h"
 #include <wx/clrpicker.h>
 
 class ColorsMenu : public wxFrame
 {
 public:
-	ColorsMenu();
+	ColorsMenu(SettingsWindow* settingsWin);
+
+	SettingsWindow* settingsWindow = nullptr;
 
 	std::vector<JdcTextCtrl*> disassemblyTextCtrls;
 	std::vector<JdcTextCtrl*> decompilationTextCtrls;
@@ -19,7 +22,7 @@ public:
 	std::vector<wxColourPickerCtrl*> decompilationColorPickerCtrls;
 	std::vector<wxColourPickerCtrl*> dataColorPickerCtrls;
 
-	wxButton* applyButton;
+	wxButton* saveAndApplyButton;
 	wxButton* restoreDefaultsButton;
 
 	wxBoxSizer* disassemblySizer = nullptr;
@@ -112,7 +115,7 @@ public:
 	enum ids
 	{
 		MainWindowID,
-		ApplyButtonID,
+		SaveAndApplyButtonID,
 		RestoreDefaultsButtonID
 	};
 
@@ -122,7 +125,9 @@ public:
 
 	void AddDataTextCtrl(JdcTextCtrl* ctrl);
 
-	void ApplyColors();
+	void SaveAndApplyColors();
+
+	void ResetColorPickers();
 
 	void OpenMenu(wxPoint position);
 

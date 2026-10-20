@@ -38,18 +38,18 @@ public:
 	DecompilerSettingsWindow* decompilerSettingsWindow = nullptr;
 
 	wxAuiNotebook* auiNotebook = nullptr;
-	wxButton* applyButton = nullptr;
+	wxButton* saveAndApplyButton = nullptr;
 
 	wxBoxSizer* vSizer = nullptr;
 
 	enum ids
 	{
-		ApplyButtonID
+		SaveAndApplyButtonID
 	};
 
 	void CheckUnappliedChanges();
 
-	void ApplySettings();
+	void SaveAndApplySettings();
 
 	void SavePreferences();
 

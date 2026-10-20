@@ -4,8 +4,10 @@ wxBEGIN_EVENT_TABLE(ColorsMenu, wxFrame)
 EVT_CLOSE(ColorsMenu::CloseMenu)
 wxEND_EVENT_TABLE()
 
-ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
+ColorsMenu::ColorsMenu(SettingsWindow* settingsWin) : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint(50, 50), wxSize(400, 600))
 {
+	settingsWindow = settingsWin;
+
 	SetOwnBackgroundColour(backgroundColor);
 
 	disassemblySizer = new wxBoxSizer(wxVERTICAL);
@@ -90,10 +92,10 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 
 	vSizer->Add(hSizer, 1, wxEXPAND);
 
-	applyButton = new wxButton(this, ApplyButtonID, "Apply", wxPoint(0, 0), wxSize(250, 25));
-	applyButton->SetOwnBackgroundColour(foregroundColor);
-	applyButton->SetOwnForegroundColour(textColor);
-	applyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { ApplyColors(); });
+	saveAndApplyButton = new wxButton(this, SaveAndApplyButtonID, "Save and apply", wxPoint(0, 0), wxSize(250, 25));
+	saveAndApplyButton->SetOwnBackgroundColour(foregroundColor);
+	saveAndApplyButton->SetOwnForegroundColour(textColor);
+	saveAndApplyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { SaveAndApplyColors(); });
 
 	restoreDefaultsButton = new wxButton(this, RestoreDefaultsButtonID, "Restore default colors", wxPoint(0, 0), wxSize(250, 25));
 	restoreDefaultsButton->SetOwnBackgroundColour(foregroundColor);
@@ -111,10 +113,9 @@ ColorsMenu::ColorsMenu() : wxFrame(nullptr, MainWindowID, "Colors Menu", wxPoint
 		{
 			dataColorPickerCtrls[i]->SetColour(defaultDataColors[i]);
 		}
-		ApplyColors();
 		});
 
-	vSizer->Add(applyButton, 0, wxCENTER | wxALL, 10);
+	vSizer->Add(saveAndApplyButton, 0, wxCENTER | wxALL, 10);
 	vSizer->Add(restoreDefaultsButton, 0, wxCENTER | wxLEFT | wxRIGHT | wxDOWN, 10);
 
 	SetSizerAndFit(vSizer);
@@ -135,7 +136,7 @@ void ColorsMenu::AddDataTextCtrl(JdcTextCtrl* ctrl)
 	dataTextCtrls.push_back(ctrl);
 }
 
-void ColorsMenu::ApplyColors()
+void ColorsMenu::SaveAndApplyColors()
 {
 	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
@@ -163,6 +164,26 @@ void ColorsMenu::ApplyColors()
 			dataTextCtrls[j]->StyleSetForeground(i, dataColors[i]);
 		}
 	}
+
+	settingsWindow->SavePreferences();
+}
+
+void ColorsMenu::ResetColorPickers()
+{
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	{
+		disassemblyColorPickerCtrls[i]->SetColour(disassemblyColors[i]);
+	}
+
+	for (int32_t i = 0; i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		decompilationColorPickerCtrls[i]->SetColour(decompColors[i]);
+	}
+
+	for (int32_t i = 0; i < NUM_OF_DATA_COLORS; i++)
+	{
+		dataColorPickerCtrls[i]->SetColour(dataColors[i]);
+	}
 }
 
 void ColorsMenu::OpenMenu(wxPoint position)
@@ -174,7 +195,49 @@ void ColorsMenu::OpenMenu(wxPoint position)
 	Raise();
 }
 
-void ColorsMenu::CloseMenu(wxCloseEvent& e) // stops this frame from being destroyed and the data being lost
+void ColorsMenu::CloseMenu(wxCloseEvent& e)
 {
+	bool isThereUnsavedChanges = false;
+
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
+	{
+		if (disassemblyColors[i] != disassemblyColorPickerCtrls[i]->GetColour())
+		{
+			isThereUnsavedChanges = true;
+			break;
+		}
+	}
+
+	for (int32_t i = 0; !isThereUnsavedChanges && i < NUM_OF_DECOMP_COLORS; i++)
+	{
+		if (decompColors[i] != decompilationColorPickerCtrls[i]->GetColour())
+		{
+			isThereUnsavedChanges = true;
+			break;
+		}
+	}
+
+	for (int32_t i = 0; !isThereUnsavedChanges && i < NUM_OF_DATA_COLORS; i++)
+	{
+		if (dataColors[i] != dataColorPickerCtrls[i]->GetColour())
+		{
+			isThereUnsavedChanges = true;
+			break;
+		}
+	}
+
+	if (isThereUnsavedChanges)
+	{
+		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to save and apply them?", "Save changes?", wxYES_NO, this);
+		if (saveAnswer == wxYES)
+		{
+			SaveAndApplyColors();
+		}
+		else
+		{
+			ResetColorPickers();
+		}
+	}
+
 	Hide();
 }

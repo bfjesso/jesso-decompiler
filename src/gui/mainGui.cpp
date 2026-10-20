@@ -29,8 +29,9 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 
 	SetOwnBackgroundColour(backgroundColor);
 
-	colorsMenu = new ColorsMenu();
 	settingsWindow = new SettingsWindow(this, this);
+	colorsMenu = new ColorsMenu(settingsWindow);
+
 	settingsWindow->LoadPreferences();
 
 	menuBar = new wxMenuBar();

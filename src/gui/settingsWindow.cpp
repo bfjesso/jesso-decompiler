@@ -21,14 +21,14 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 	auiNotebook->AddPage(disassemblerSettingsWindow, "Disassembler");
 	auiNotebook->AddPage(decompilerSettingsWindow, "Decompiler");
 
-	applyButton = new wxButton(this, ApplyButtonID, "Apply and save", wxPoint(0, 0), wxSize(75, 35));
-	applyButton->SetOwnBackgroundColour(foregroundColor);
-	applyButton->SetOwnForegroundColour(textColor);
-	applyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { ApplySettings(); });
+	saveAndApplyButton = new wxButton(this, SaveAndApplyButtonID, "Save and apply", wxPoint(0, 0), wxSize(75, 35));
+	saveAndApplyButton->SetOwnBackgroundColour(foregroundColor);
+	saveAndApplyButton->SetOwnForegroundColour(textColor);
+	saveAndApplyButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent& e) -> void { SaveAndApplySettings(); });
 
 	vSizer = new wxBoxSizer(wxVERTICAL);
 	vSizer->Add(auiNotebook, 1, wxEXPAND);
-	vSizer->Add(applyButton, 0, wxEXPAND);
+	vSizer->Add(saveAndApplyButton, 0, wxEXPAND);
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
@@ -41,10 +41,10 @@ void SettingsWindow::CheckUnappliedChanges()
 	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() ||
 		decompilerSettingsWindow->useStdInt != decompilerSettingsWindow->useStdIntCheckBox->GetValue())
 	{
-		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to apply them?", "Save changes?", wxYES_NO, this);
+		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to save and apply them?", "Save changes?", wxYES_NO, this);
 		if (saveAnswer == wxYES)
 		{
-			ApplySettings();
+			SaveAndApplySettings();
 		}
 		else
 		{
@@ -54,7 +54,7 @@ void SettingsWindow::CheckUnappliedChanges()
 	}
 }
 
-void SettingsWindow::ApplySettings()
+void SettingsWindow::SaveAndApplySettings()
 {
 	disassemblerSettingsWindow->evaluateIP = disassemblerSettingsWindow->evaluateIPCheckBox->GetValue();
 	decompilerSettingsWindow->useStdInt = decompilerSettingsWindow->useStdIntCheckBox->GetValue();
@@ -170,8 +170,6 @@ void SettingsWindow::LoadPreferences()
 		mainGui->colorsMenu->dataColorPickerCtrls[i]->SetColour(color);
 	}
 
-	mainGui->colorsMenu->ApplyColors();
-
 	int32_t configVersion = 1;
 	cfg.Read("/config-version", &configVersion, 1);
 
@@ -180,7 +178,8 @@ void SettingsWindow::LoadPreferences()
 		wxMessageBox("Preferences may not have been loaded correctly", "Outdated config version");
 	}
 
-	ApplySettings();
+	mainGui->colorsMenu->SaveAndApplyColors();
+	SaveAndApplySettings();
 }
 
 DisassemblerSettingsWindow::DisassemblerSettingsWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY)
