@@ -112,7 +112,7 @@ void StringsTextCtrl::LoadStrings()
 					uint64_t address = mainGui->decompParams.imageBase + section->rva + startIndex;
 					foundAddresses.push_back(address);
 
-					stringsText += wxString::Format("0x%llX\t\"%s\"", address, currentStr);
+					stringsText += wxString::Format("0x%llX\t\"%s\"\n", address, currentStr);
 					numOfStrings++;
 				}
 
