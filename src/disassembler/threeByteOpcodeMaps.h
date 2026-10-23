@@ -806,7 +806,7 @@ const struct Opcode threeByteOpcodeMap38[0x100][4] = // [byte][prefix] 0 - no pr
 	{                                                                                                            // 0xDD
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ VAESENCLAST, -1, Vdq, Hdq, Wdq, NO_OPERAND_CODE, NO_SUPERSCRIPT },
-		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
+		{ AESDEC128KL, -1, Vdq, Wdq, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT }
 	},
 	{                                                                                                            // 0xDE
