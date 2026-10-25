@@ -42,6 +42,7 @@ public:
 	wxAuiManager auiManager;
 	wxAuiNotebook* auiNotebook;
 
+	bool hasLoadedFile = false;
 	wxString currentFilePath = "";
 	enum FileFormat fileFormat = UNKNOWN_FF;
 	bool is64Bit = false;

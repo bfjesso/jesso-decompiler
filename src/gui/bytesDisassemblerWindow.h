@@ -1,23 +1,27 @@
 #pragma once
 #include "guiUtils.h"
-#include "settingsWindow.h"
+#include "disassemblyTextCtrl.h"
+#include "../disassembler/disassemblyStructs.h"
+
+class MainGui;
 
 class BytesDisassemblerWindow : public wxWindow
 {
 public:
-	BytesDisassemblerWindow(wxWindow* parent, SettingsWindow* settings);
+	BytesDisassemblerWindow(wxWindow* parent, MainGui* mainGuiRef);
 
-	SettingsWindow* settingsWindow = nullptr;
+	MainGui* mainGui = nullptr;
 
 	wxTextCtrl* bytesTextCtrl = nullptr;
 	wxButton* disassembleButton = nullptr;
 	wxCheckBox* is64BitModeCheckBox = nullptr;
-	wxStaticText* disassemblyStaticText = nullptr;
+	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
 	wxBoxSizer* row2Sizer = nullptr;
-	wxBoxSizer* row3Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
+
+	struct DisassembledInstruction currentInstruction;
 
 	enum ids
 	{

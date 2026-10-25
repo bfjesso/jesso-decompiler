@@ -25,7 +25,7 @@ CodeReferencesWindow::CodeReferencesWindow(MainGui* parent) : wxWindow(parent, w
 	findReferencesButton->SetOwnBackgroundColour(foregroundColor);
 	findReferencesButton->SetOwnForegroundColour(textColor);
 
-	disassemblyTextCtrl = new DisassemblyTextCtrl(this, mainGui, "disassembly", 0, 0);
+	disassemblyTextCtrl = new DisassemblyTextCtrl(this, mainGui);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);

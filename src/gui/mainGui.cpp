@@ -53,7 +53,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 	AddMenuItem(toolMenu, OpenFileHeadersMenuID, "File headers", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new FileHeadersWindow(this, currentFilePath, fileFormat), "File headers"); });
 	AddMenuItem(toolMenu, OpenCodeReferencesWindowID, "Find code references", [&](wxCommandEvent& ce) -> void { AddCodeReferencesWindow(); });
 	AddMenuItem(toolMenu, OpenCalculatorMenuID, "Calculator", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new CalculatorWindow(this), "Calculator"); });
-	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this, settingsWindow), "Bytes disassembler"); });
+	AddMenuItem(toolMenu, OpenBytesDisassemblerID, "Bytes disassembler", [&](wxCommandEvent& ce) -> void { AddFloatingPane(new BytesDisassemblerWindow(this, this), "Bytes disassembler"); });
 	AddMenuItem(toolMenu, OpenLogID, "Log", [&](wxCommandEvent& ce) -> void { ShowWindowInAUI(wxAUI_DOCK_NONE, logTextCtrl); });
 
 	wxMenu* windowMenu = new wxMenu();
@@ -636,6 +636,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 			}
 		}
 
+		hasLoadedFile = true;
 		currentFilePath = filePath;
 		SetTitle("Jesso Decompiler x64 - opened file " + fileName);
 
@@ -995,6 +996,7 @@ void MainGui::ClearData()
 
 	currentFilePath = "";
 	fileFormat = UNKNOWN_FF;
+	hasLoadedFile = false;
 }
 
 void MainGui::CloseApp(wxCloseEvent& e)

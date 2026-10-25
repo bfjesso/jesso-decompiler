@@ -1,16 +1,17 @@
 #include "bytesDisassemblerWindow.h"
 #include "../disassembler/disassembler.h"
+#include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)
 EVT_BUTTON(DisassembleButtonID, BytesDisassemblerWindow::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
-BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, SettingsWindow* settings) : wxWindow(parent, wxID_ANY)
+BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow(parent, wxID_ANY)
 {
 	SetMinSize(wxSize(150, 100));
 	SetOwnBackgroundColour(backgroundColor);
 
-	settingsWindow = settings;
+	mainGui = mainGuiRef;
 
 	bytesTextCtrl = new wxTextCtrl(this, wxID_ANY, "00", wxPoint(0, 0), wxSize(400, 25));
 	bytesTextCtrl->SetOwnBackgroundColour(foregroundColor);
@@ -24,12 +25,10 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, SettingsWindo
 	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
 	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
 
-	disassemblyStaticText = new wxStaticText(this, wxID_ANY, "Disassebled bytes");
-	disassemblyStaticText->SetOwnForegroundColour(textColor);
+	disassemblyTextCtrl = new DisassemblyTextCtrl(this, mainGui);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
-	row3Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
 	row1Sizer->Add(bytesTextCtrl, 1, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
@@ -37,13 +36,13 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, SettingsWindo
 	row2Sizer->Add(disassembleButton, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
 	row2Sizer->Add(is64BitModeCheckBox, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
 
-	row3Sizer->Add(disassemblyStaticText, 1, wxLEFT | wxBOTTOM | wxRIGHT | wxCENTER, 10);
-
 	vSizer->Add(row1Sizer, 0, wxCENTER);
 	vSizer->Add(row2Sizer, 0, wxCENTER);
-	vSizer->Add(row3Sizer, 0, wxCENTER);
+	vSizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxALL, 10);
 
 	SetSizerAndFit(vSizer);
+
+	memset(&currentInstruction, 0, sizeof(struct DisassembledInstruction));
 }
 
 void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
@@ -59,34 +58,16 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
-	struct DisassembledInstruction result;
-	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &result))
+	memset(&currentInstruction, 0, sizeof(struct DisassembledInstruction));
+	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &currentInstruction))
 	{
-		struct JdcStr instructionStrBuffer = initializeJdcStr();
-		if (instructionToStr(&result, settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
-		{
-			if (result.isInvalid)
-			{
-				disassemblyStaticText->SetLabel(wxString(instructionStrBuffer.buffer) + wxString(" ; invalid opcode"));
-			}
-			else
-			{
-				disassemblyStaticText->SetLabel(instructionStrBuffer.buffer);
-			}
-		}
-		else
-		{
-			disassemblyStaticText->SetLabel("Error converting disassembled instruction to string");
-		}
-
-		freeJdcStr(&instructionStrBuffer);
+		disassemblyTextCtrl->Initialize(&currentInstruction, 1, 0, -1);
 	}
 	else
 	{
-		disassemblyStaticText->SetLabel("Error disassembling instruction");
+		wxMessageBox("Error disassembling bytes", "Can't disassemble");
+		disassemblyTextCtrl->Clear();
 	}
-
-	Layout(); // recenters disassemblyStaticText
 }
 
 int32_t BytesDisassemblerWindow::ParseStringBytes(wxString str, uint8_t* bytesBuffer, uint8_t bytesBufferLen)

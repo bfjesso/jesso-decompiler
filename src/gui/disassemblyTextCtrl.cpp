@@ -24,7 +24,7 @@ void DisassemblyTextCtrl::ClearData()
 
 void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress)
 {
-	if (mainGui->isDisassembling)
+	if (mainGui->isDisassembling && mainGui->decompParams.instructions == instructions)
 	{
 		wxMessageBox("The file is currently being disassembled", "Can't show disassembly");
 		return;
@@ -149,6 +149,12 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ShowGoToAddressDialog();
 		}, ID_GO_TO_ADDRESS);
+
+	if (mainGui->decompParams.instructions != instructions)
+	{
+		PopupMenu(&menu, ScreenToClient(e.GetPosition()));
+		return;
+	}
 
 	menu.Append(ID_SET_ASSOCIATED_DECOMPILATION, "Set associated decompilation");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
@@ -404,7 +410,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			}
 		}
 
-		wxString addressInfoStr = wxString::Format("0x%llX", instructions[i].address) + wxString(mainGui->decompParams.sections[sectionIndex].name.buffer) + "\t";
+		wxString addressInfoStr = wxString::Format("0x%llX %s\t", instructions[i].address, sectionIndex != -1 ? mainGui->decompParams.sections[sectionIndex].name.buffer : "");
 
 		wxString asmStr = "";
 		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
@@ -420,17 +426,17 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			asmStr += " ; unrecognized opcode";
 		}
-		else if (instructions[i].address == mainGui->entryPoint + mainGui->decompParams.imageBase)
+		else if (mainGui->hasLoadedFile && instructions[i].address == mainGui->entryPoint + mainGui->decompParams.imageBase)
 		{
 			asmStr += " ; entry point";
 		}
-		else if (instructions[i].opcode == DATA)
+		else if (mainGui->jumpTables.size() > 0 && instructions[i].opcode == DATA)
 		{
 			bool foundIndirectTable = false;
 			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
 			if (jumpTableIndex != -1)
 			{
-				asmStr += " ; start of " + wxString(foundIndirectTable ? "indirect" : "jump") + " table. jmp instruction: " + wxString::Format("0x%llX", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
+				asmStr += wxString::Format(" ; start of %s table. jmp instruction: 0x%llX", foundIndirectTable ? "indirect" : "jump", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
 			}
 		}
 
@@ -439,7 +445,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			uint64_t dst = getJmpDst(&mainGui->decompParams, i);
 			if (dst != 0)
 			{
-				asmStr += " ; dst: " + wxString::Format("0x%llX", dst);
+				asmStr += wxString::Format(" ; dst: 0x%llX", dst);
 			}
 		}
 

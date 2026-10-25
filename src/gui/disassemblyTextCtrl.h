@@ -8,7 +8,7 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions);
+	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name = "", struct DisassembledInstruction* disassembledInstructions = 0, int32_t amountOfInstructions = 0);
 
 	struct DisassembledInstruction* instructions;
 	int32_t numOfInstructions;
