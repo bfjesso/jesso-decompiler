@@ -255,18 +255,22 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	menu.Append(ID_SHOW_UNHANDLED_OPCODES, "Show all opcodes not handled in the decopliler");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		mainGui->ShowWindowInAUI(wxAUI_DOCK_NONE, mainGui->logTextCtrl);
-		struct JdcStr errorBuffer = initializeJdcStr();
 		mainGui->logTextCtrl->Freeze();
+		bool areAllHandled = true;
 		for (int32_t i = 0; i < numOfInstructions; i++)
 		{
 			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode))
 			{
-				sprintfJdc(&errorBuffer, false, "%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address);
-				mainGui->logTextCtrl->Log(errorBuffer.buffer, true);
+				mainGui->logTextCtrl->Log(wxString::Format("%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address), true);
+				areAllHandled = false;
 			}
 		}
+
+		if (areAllHandled)
+		{
+			mainGui->logTextCtrl->Log("All opcodes are handled in the decompiler.");
+		}
 		mainGui->logTextCtrl->Thaw();
-		freeJdcStr(&errorBuffer);
 		}, ID_SHOW_UNHANDLED_OPCODES);
 
 	PopupMenu(&menu, ScreenToClient(e.GetPosition()));
