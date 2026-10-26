@@ -3,13 +3,14 @@
 
 enum ModRMSelection
 {
-	GET_MEM_ADDRESS,
-	GET_REGISTER,
-	GET_SEGMENT,
-	GET_MMX_REG,
-	GET_CONTROL_REG,
-	GET_DEBUG_REG,
-	GET_MEM_ADDRESS_MMX,
+	REG_MODRM,
+	SEG_REG_MODRM,
+	MMX_REG_MODRM,
+	CONTROL_REG_MODRM,
+	DEBUG_REG_MODRM,
+
+	RM_MODRM,
+	RM_MMX_MODRM,
 };
 
 enum JdcStatus getModRM(struct DisassemblyParameters* params);

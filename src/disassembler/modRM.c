@@ -25,19 +25,12 @@ enum JdcStatus getModRM(struct DisassemblyParameters* params)
 
 enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelection selection, uint8_t operandSize, struct Operand* result)
 {
-	if (!params->modRM.hasGotModRM)
+	if (ERROR_JDC == getModRM(params))
 	{
-		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
-
-		params->modRM.hasGotModRM = 1;
-		params->modRM.mod = (((params->bytes[0] >> 7) & 0x01) * 2) + ((params->bytes[0] >> 6) & 0x01);
-		params->modRM.reg = (((params->bytes[0] >> 5) & 0x01) * 4) + (((params->bytes[0] >> 4) & 0x01) * 2) + ((params->bytes[0] >> 3) & 0x01);
-		params->modRM.rm = (((params->bytes[0] >> 2) & 0x01) * 4) + (((params->bytes[0] >> 1) & 0x01) * 2) + ((params->bytes[0] >> 0) & 0x01);
-
-		params->bytes++;
+		return ERROR_JDC;
 	}
 
-	if (selection == GET_REGISTER)
+	if (selection == REG_MODRM)
 	{
 		result->type = REGISTER;
 
@@ -73,19 +66,19 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		return SUCCESS_JDC;
 	}
-	else if (selection == GET_SEGMENT)
+	else if (selection == SEG_REG_MODRM)
 	{
 		result->type = SEGMENT;
 		result->segment = (params->modRM.reg + ES);
 
 		return SUCCESS_JDC;
 	}
-	else if (selection == GET_MMX_REG)
+	else if (selection == MMX_REG_MODRM)
 	{
 		result->reg = (params->modRM.reg + MM0);
 		return SUCCESS_JDC;
 	}
-	else if (selection == GET_CONTROL_REG)
+	else if (selection == CONTROL_REG_MODRM)
 	{
 		if (params->rexPrefix.R)
 		{
@@ -95,9 +88,10 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		{
 			result->reg = (params->modRM.reg + CR0);
 		}
+
 		return SUCCESS_JDC;
 	}
-	else if (selection == GET_DEBUG_REG)
+	else if (selection == DEBUG_REG_MODRM)
 	{
 		if (params->rexPrefix.R)
 		{
@@ -107,37 +101,44 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		{
 			result->reg = (params->modRM.reg + DR0);
 		}
+
 		return SUCCESS_JDC;
 	}
-	else if (params->modRM.mod == 3)
+
+	if (selection != RM_MODRM)
+	{
+		return ERROR_JDC;
+	}
+
+	if (params->modRM.mod == 3)
 	{
 		result->type = REGISTER;
 
 		switch (params->modRM.rm)
 		{
 		case 0:
-			result->reg = operandSize == 64 ? ZMM0 : operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM0 : RAX) : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
+			result->reg = operandSize == 64 ? ZMM0 : operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM0 : RAX) : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
 			break;
 		case 1:
-			result->reg = operandSize == 64 ? ZMM1 : operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM1 : RCX) : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
+			result->reg = operandSize == 64 ? ZMM1 : operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM1 : RCX) : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
 			break;
 		case 2:
-			result->reg = operandSize == 64 ? ZMM2 : operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM2 : RDX) : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
+			result->reg = operandSize == 64 ? ZMM2 : operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM2 : RDX) : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
 			break;
 		case 3:
-			result->reg = operandSize == 64 ? ZMM3 : operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM3 : RBX) : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
+			result->reg = operandSize == 64 ? ZMM3 : operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM3 : RBX) : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
 			break;
 		case 4:
-			result->reg = operandSize == 64 ? ZMM4 : operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM4 : RSP) : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
+			result->reg = operandSize == 64 ? ZMM4 : operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM4 : RSP) : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
 			break;
 		case 5:
-			result->reg = operandSize == 64 ? ZMM5 : operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM5 : RBP) : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
+			result->reg = operandSize == 64 ? ZMM5 : operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM5 : RBP) : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
 			break;
 		case 6:
-			result->reg = operandSize == 64 ? ZMM6 : operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM6 : RSI) : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
+			result->reg = operandSize == 64 ? ZMM6 : operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM6 : RSI) : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
 			break;
 		case 7:
-			result->reg = operandSize == 64 ? ZMM7 : operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? (selection == GET_MEM_ADDRESS_MMX ? MM7 : RDI) : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
+			result->reg = operandSize == 64 ? ZMM7 : operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM7 : RDI) : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
 			break;
 		}
 

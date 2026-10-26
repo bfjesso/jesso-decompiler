@@ -223,40 +223,40 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->reg = ST7;
 			break;
 		case Eb:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 1, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 1, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ed:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ev:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ew:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ep:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ey:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gb:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, 1, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, 1, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gd:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gv:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gz:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gw:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gy:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case By:
 			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
@@ -264,42 +264,42 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->reg = ((params->legPrefixes.group3 != OSO && params->is64BitMode ? RAX : EAX) + params->vexPrefix.vvvv);
 			break;
 		case M:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mb:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 1, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 1, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mw:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Md:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mv:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ma:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 4 : 8, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 4 : 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mp:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 8, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mt:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 10, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 10, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mps:
 		case Mpd:
 		case Mx:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mdq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 16, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case My:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ib:
 			if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
@@ -401,22 +401,22 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.constDisplacement = (int64_t)getUIntFromBytes(&params->bytes, operandSize);
 			break;
 		case Rd:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ry:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Rv:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Cd:
-			if (ERROR_JDC == handleModRM(params, GET_CONTROL_REG, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, CONTROL_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Dd:
-			if (ERROR_JDC == handleModRM(params, GET_DEBUG_REG, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, DEBUG_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Sw:
-			if (ERROR_JDC == handleModRM(params, GET_SEGMENT, 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, SEG_REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ap:
 			if ((params->bytes + 5) > params->maxBytesAddr) { return ERROR_JDC; }
@@ -428,52 +428,52 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Pd:
 		case Ppi:
 		case Pq:
-			if (ERROR_JDC == handleModRM(params, GET_MMX_REG, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, MMX_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Qd:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS_MMX, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MMX_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Qpi:
 		case Qq:
 		case Nq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS_MMX, 8, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MMX_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ups:
 		case Upd:
 		case Uq:
 		case Ux:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Udq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 16, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Vps:
 		case Vpd:
 		case Vx:
 		case Vy:
 		case Vq:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Vss:
 		case Vsd:
 		case Vdq:
 		case Vqq:
-			if (ERROR_JDC == handleModRM(params, GET_REGISTER, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Wps:
 		case Wpd:
 		case Wx:
 		case Wq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Wd:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Wss:
 		case Wsd:
 		case Wdq:
 		case Wqq:
-			if (ERROR_JDC == handleModRM(params, GET_MEM_ADDRESS, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Hps:
 		case Hpd:
