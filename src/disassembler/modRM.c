@@ -107,7 +107,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		return SUCCESS_JDC;
 	}
 
-	if (selection != RM_MODRM)
+	if (selection != RM_MODRM && selection != RM_MMX_MODRM)
 	{
 		return ERROR_JDC;
 	}
