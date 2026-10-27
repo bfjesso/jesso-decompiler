@@ -428,11 +428,9 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Pd:
 		case Ppi:
 		case Pq:
-			if (ERROR_JDC == handleModRM(params, REG_MMX_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MMX_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Qd:
-			if (ERROR_JDC == handleModRM(params, RM_MMX_MODRM, 4, currentOperand)) { return ERROR_JDC; }
-			break;
 		case Qpi:
 		case Qq:
 		case Nq:
