@@ -66,19 +66,19 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		return SUCCESS_JDC;
 	}
-	else if (selection == SEG_REG_MODRM)
+	else if (selection == REG_SEG_MODRM)
 	{
 		result->type = SEGMENT;
 		result->segment = (params->modRM.reg + ES);
 		return SUCCESS_JDC;
 	}
-	else if (selection == MMX_REG_MODRM)
+	else if (selection == REG_MMX_MODRM)
 	{
 		result->type = REGISTER;
 		result->reg = (params->modRM.reg + MM0);
 		return SUCCESS_JDC;
 	}
-	else if (selection == CONTROL_REG_MODRM)
+	else if (selection == REG_CONTROL_MODRM)
 	{
 		result->type = REGISTER;
 		if (params->rexPrefix.R)
@@ -92,7 +92,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		return SUCCESS_JDC;
 	}
-	else if (selection == DEBUG_REG_MODRM)
+	else if (selection == REG_DEBUG_MODRM)
 	{
 		result->type = REGISTER;
 		if (params->rexPrefix.R)

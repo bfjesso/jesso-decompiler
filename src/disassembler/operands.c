@@ -410,13 +410,13 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Cd:
-			if (ERROR_JDC == handleModRM(params, CONTROL_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Dd:
-			if (ERROR_JDC == handleModRM(params, DEBUG_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_DEBUG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Sw:
-			if (ERROR_JDC == handleModRM(params, SEG_REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_SEG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ap:
 			if ((params->bytes + 5) > params->maxBytesAddr) { return ERROR_JDC; }
@@ -428,7 +428,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Pd:
 		case Ppi:
 		case Pq:
-			if (ERROR_JDC == handleModRM(params, MMX_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MMX_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Qd:
 			if (ERROR_JDC == handleModRM(params, RM_MMX_MODRM, 4, currentOperand)) { return ERROR_JDC; }
