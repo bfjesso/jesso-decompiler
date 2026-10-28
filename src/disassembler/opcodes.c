@@ -16,8 +16,9 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 	uint8_t opcodeByte = 0;
 	bool escapeToCoprocessor = false;
 
-	int32_t mmm = params->vexPrefix.m_mmmm != 0 ? params->vexPrefix.m_mmmm : params->evexPrefix.mmm;
-	if (params->bytes[0] == 0x0F || mmm != 0)
+	int32_t mmm = params->vexPrefix.isValidVEX ? params->vexPrefix.m_mmmm : params->evexPrefix.isValidEVEX ? params->evexPrefix.mmm : 0;
+	bool mmmIsValid = mmm == 1 || mmm == 2 || mmm == 3; // 1: 0x0F; 2: 0x0F 0x38; 3: 0x0F 0x3A
+	if (params->bytes[0] == 0x0F || mmmIsValid)
 	{
 		if (prefixIndex == 3 || prefixIndex == 2)
 		{
@@ -28,10 +29,12 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			params->legPrefixes.group3 = NO_PREFIX;
 		}
 
-		if ((params->bytes + 2) <= params->maxBytesAddr && ((params->bytes[1] == 0x38 && mmm == 0) || mmm == 0b00010)) // sequence: 0x0F 0x38 opcode
+		uint8_t opcodeByteIndex = mmmIsValid ? 0 : 2;
+		if ((params->bytes + opcodeByteIndex) <= params->maxBytesAddr &&
+			((!mmmIsValid && params->bytes[1] == 0x38) || mmm == 2)) // sequence: 0x0F 0x38 opcode
 		{
-			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
-			params->bytes += mmm != 0 ? 1 : 3;
+			opcodeByte = params->bytes[opcodeByteIndex];
+			params->bytes += opcodeByteIndex + 1;
 
 			if (threeByteOpcodeMap38[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
 			{
@@ -42,10 +45,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				params->opcode = threeByteOpcodeMap38[opcodeByte][prefixIndex];
 			}
 		}
-		else if ((params->bytes + 2) <= params->maxBytesAddr && ((params->bytes[1] == 0x3A && mmm == 0) || mmm == 0b00011)) // sequence: 0x0F 0x3A opcode
+		else if ((params->bytes + opcodeByteIndex) <= params->maxBytesAddr &&
+			((!mmmIsValid && params->bytes[1] == 0x3A) || mmm == 3)) // sequence: 0x0F 0x3A opcode
 		{
-			opcodeByte = params->bytes[mmm != 0 ? 0 : 2];
-			params->bytes += mmm != 0 ? 1 : 3;
+			opcodeByte = params->bytes[opcodeByteIndex];
+			params->bytes += opcodeByteIndex + 1;
 
 			if (threeByteOpcodeMap3A[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
 			{
@@ -56,10 +60,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				params->opcode = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
 			}
 		}
-		else if ((params->bytes + 1) <= params->maxBytesAddr) // sequence: 0x0F opcode
+		else if (mmmIsValid || (params->bytes + 1) <= params->maxBytesAddr) // sequence: 0x0F opcode
 		{
-			opcodeByte = params->bytes[mmm != 0 ? 0 : 1];
-			params->bytes += mmm != 0 ? 1 : 2;
+			opcodeByteIndex = mmmIsValid ? 0 : 1;
+			opcodeByte = params->bytes[opcodeByteIndex];
+			params->bytes += opcodeByteIndex + 1;;
 
 			if (twoByteOpcodeMap[opcodeByte][prefixIndex].mnemonic == NO_MNEMONIC)
 			{
