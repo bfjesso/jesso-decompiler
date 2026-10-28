@@ -256,7 +256,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gy:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case By:
 			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
