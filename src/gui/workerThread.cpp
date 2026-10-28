@@ -305,10 +305,6 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 				return ERROR_JDC;
 			}
 
-			memset(instructionBuffer, 0, sizeof(struct DisassembledInstruction));
-			instructionBuffer->opcode = DATA;
-			instructionBuffer->numOfBytes = 1;
-
 			PostLogProgress(currentVirtualAddress, true);
 
 			for (int32_t i = 0; i < numOfBytes; i++)
@@ -318,17 +314,10 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 					return SUCCESS_JDC;
 				}
 
-				instructionBuffer->address = currentVirtualAddress;
-				instructionBuffer->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
-				if (!instructionBuffer->operands)
+				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes[currentFileOffset], 1))
 				{
 					return ERROR_JDC;
 				}
-
-				instructionBuffer->operands[0].immediate.value = mainGui->fileBytes[currentFileOffset];
-				instructionBuffer->operands[0].type = IMMEDIATE;
-				instructionBuffer->operands[0].immediate.size = 1;
-				instructionBuffer->numOfOperands = 1;
 
 				currentFileOffset++;
 				currentVirtualAddress++;
@@ -459,35 +448,29 @@ enum JdcStatus WorkerThread::HandleJmpTables()
 					isInIndirectTable = false;
 				}
 
-				struct DisassembledInstruction instruction;
-				memset(&instruction, 0, sizeof(struct DisassembledInstruction));
-				instruction.opcode = DATA;
-				instruction.numOfOperands = 1;
-				instruction.operands = (struct Operand*)calloc(1, sizeof(struct Operand));
-				if (!instruction.operands)
-				{
-					return ERROR_JDC;
-				}
-				instruction.operands[0].type = IMMEDIATE;
-				instruction.operands[0].immediate.size = isInIndirectTable ? 1 : mainGui->jumpTables[i].addressSize;
-				instruction.numOfBytes = isInIndirectTable ? 1 : mainGui->jumpTables[i].addressSize;
-				instruction.address = currentAddress;
-
+				uint64_t dataValue = 0;
 				if (isInIndirectTable)
 				{
-					instruction.operands[0].immediate.value = *(uint8_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
+					dataValue = *(uint8_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
 				else if (mainGui->jumpTables[i].addressSize == 4)
 				{
-					instruction.operands[0].immediate.value = *(uint32_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
+					dataValue = *(uint32_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
 				}
 				else
 				{
-					instruction.operands[0].immediate.value = *(uint64_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
+					dataValue = *(uint64_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
+				}
+
+				uint64_t dataSize = isInIndirectTable ? 1 : mainGui->jumpTables[i].addressSize;
+				struct DisassembledInstruction instruction;
+				if (ERROR_JDC == generateDataInstruction(&instruction, currentAddress, dataValue, dataSize))
+				{
+					return ERROR_JDC;
 				}
 
 				dataInstructions.push_back(instruction);
-				currentAddress += isInIndirectTable ? 1 : mainGui->jumpTables[i].addressSize;
+				currentAddress += dataSize;
 			}
 
 			mainGui->disassembledInstructions.insert(mainGui->disassembledInstructions.begin() + instructionIndex, dataInstructions.begin(), dataInstructions.end());

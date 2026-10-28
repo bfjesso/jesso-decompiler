@@ -242,3 +242,24 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 
 	return "";
 }
+
+enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint64_t data, uint8_t dataSize)
+{
+	memset(instruction, 0, sizeof(struct DisassembledInstruction));
+	instruction->opcode = DATA;
+	instruction->numOfBytes = dataSize;
+
+	instruction->address = address;
+	instruction->operands = (struct Operand*)calloc(1, sizeof(struct Operand));
+	if (!instruction->operands)
+	{
+		return ERROR_JDC;
+	}
+
+	instruction->operands[0].type = IMMEDIATE;
+	instruction->operands[0].immediate.value = data;
+	instruction->operands[0].immediate.size = dataSize;
+	instruction->numOfOperands = 1;
+
+	return SUCCESS_JDC;
+}

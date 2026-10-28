@@ -70,9 +70,14 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		}
 		else
 		{
-			wxMessageBox("Error disassembling bytes", "Can't disassemble");
-			disassemblyTextCtrl->Clear();
-			return;
+			if (ERROR_JDC == generateDataInstruction(&currentInstruction, currentOffset, bytes[currentOffset], 1))
+			{
+				wxMessageBox("Error disassembling bytes", "Can't disassemble");
+				return;
+			}
+
+			instructions.push_back(currentInstruction);
+			currentOffset++;
 		}
 	}
 

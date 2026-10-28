@@ -15,6 +15,8 @@ extern "C"
 
 	const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction);
 
+	enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint64_t data, uint8_t dataSize);
+
 #ifdef __cplusplus
 }
 #endif
