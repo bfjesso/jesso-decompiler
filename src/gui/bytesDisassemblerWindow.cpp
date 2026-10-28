@@ -41,15 +41,15 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	vSizer->Add(disassemblyTextCtrl, 1, wxEXPAND | wxALL, 10);
 
 	SetSizerAndFit(vSizer);
-
-	memset(&currentInstruction, 0, sizeof(struct DisassembledInstruction));
 }
 
 void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 {
-	uint8_t bytes[15] = { 0 };
-	int32_t numOfBytes = ParseStringBytes(bytesTextCtrl->GetValue(), bytes, 15);
-	if (numOfBytes == 0)
+	instructions.clear();
+	instructions.shrink_to_fit();
+
+	std::vector<uint8_t> bytes;
+	if (ERROR_JDC == ParseStringBytes(bytesTextCtrl->GetValue(), bytes))
 	{
 		wxMessageBox("Failed to parse bytes", "Can't disassemble");
 		return;
@@ -58,19 +58,28 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
-	memset(&currentInstruction, 0, sizeof(struct DisassembledInstruction));
-	if (disassembleInstruction(bytes, bytes + numOfBytes, &options, &currentInstruction))
+	uint64_t currentOffset = 0;
+	while (currentOffset < bytes.size())
 	{
-		disassemblyTextCtrl->Initialize(&currentInstruction, 1, 0, -1);
+		struct DisassembledInstruction currentInstruction;
+		if (disassembleInstruction(bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &options, &currentInstruction))
+		{
+			currentInstruction.address = currentOffset;
+			instructions.push_back(currentInstruction);
+			currentOffset += currentInstruction.numOfBytes;
+		}
+		else
+		{
+			wxMessageBox("Error disassembling bytes", "Can't disassemble");
+			disassemblyTextCtrl->Clear();
+			return;
+		}
 	}
-	else
-	{
-		wxMessageBox("Error disassembling bytes", "Can't disassemble");
-		disassemblyTextCtrl->Clear();
-	}
+
+	disassemblyTextCtrl->Initialize(instructions.data(), instructions.size(), 0, -1);
 }
 
-int32_t BytesDisassemblerWindow::ParseStringBytes(wxString str, uint8_t* bytesBuffer, uint8_t bytesBufferLen)
+enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer)
 {
 	str.Replace(" ", "", true);
 	str.Replace("\\", "", true);
@@ -82,27 +91,19 @@ int32_t BytesDisassemblerWindow::ParseStringBytes(wxString str, uint8_t* bytesBu
 	size_t strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0)
 	{
-		return 0;
+		return ERROR_JDC;
 	}
 
-	int32_t currentByte = 0;
 	for (int32_t i = 0; i < strLen; i += 2)
 	{
-		if (currentByte > bytesBufferLen - 1)
-		{
-			return 0;
-		}
-
 		uint32_t byte = 0;
 		if (!str.SubString(i, i + 1).ToUInt(&byte, 16))
 		{
-			return 0;
+			return ERROR_JDC;
 		}
 
-		bytesBuffer[currentByte] = (uint8_t)byte;
-
-		currentByte++;
+		bytesBuffer.push_back((uint8_t)byte);
 	}
 
-	return currentByte;
+	return SUCCESS_JDC;
 }

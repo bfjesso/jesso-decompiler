@@ -21,7 +21,7 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
-	struct DisassembledInstruction currentInstruction;
+	std::vector<struct DisassembledInstruction> instructions;
 
 	enum ids
 	{
@@ -30,7 +30,7 @@ public:
 
 	void DisassembleBytes(wxCommandEvent& e);
 
-	int32_t ParseStringBytes(wxString str, uint8_t* bytesBuffer, uint8_t bytesBufferLen);
+	enum JdcStatus ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer);
 
 	wxDECLARE_EVENT_TABLE();
 };
