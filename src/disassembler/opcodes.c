@@ -12,7 +12,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	uint8_t prefixIndex = params->legPrefixes.group3 == OSO ? 1 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group1 == REPNZ_BND ? 3 : 0;
+	uint8_t prefixIndex = params->legPrefixes.group1 == REPNZ_BND ? 3 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group3 == OSO ? 1 : 0;
 	uint8_t opcodeByte = 0;
 	bool escapeToCoprocessor = false;
 
