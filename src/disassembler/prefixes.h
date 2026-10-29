@@ -15,4 +15,6 @@ bool checkFlagW(struct DisassemblyParameters* params);
 
 bool checkFlagR(struct DisassemblyParameters* params);
 
+bool checkFlagX(struct DisassemblyParameters* params);
+
 bool checkFlagB(struct DisassemblyParameters* params);

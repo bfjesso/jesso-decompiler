@@ -539,7 +539,7 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 		result->memoryAddress.scale *= 2;
 	}
 
-	if (index != 4 || params->rexPrefix.X) // ESP cant be the index, but if rex.X is used it can encode R12
+	if (index != 4 || checkFlagX(params)) // ESP cant be the index, but if X is used it can encode R12
 	{
 		result->memoryAddress.reg = (enum Register)(index + EAX);
 		result->memoryAddress.regDisplacement = (enum Register)(base + EAX);
@@ -557,11 +557,11 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 			result->memoryAddress.regDisplacement = increaseRegisterSize(result->memoryAddress.regDisplacement);
 		}
 
-		if (params->rexPrefix.X)
+		if (checkFlagX(params))
 		{
 			result->memoryAddress.reg = extendRegister(result->memoryAddress.reg);
 		}
-		if (params->rexPrefix.B && result->memoryAddress.regDisplacement != NO_REG)
+		if (checkFlagB(params) && result->memoryAddress.regDisplacement != NO_REG)
 		{
 			result->memoryAddress.regDisplacement = extendRegister(result->memoryAddress.regDisplacement);
 		}
@@ -572,7 +572,7 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 		switch (params->modRM.mod)
 		{
 		case 0:
-			if (index != 4 || params->rexPrefix.X) { result->memoryAddress.regDisplacement = NO_REG; }
+			if (index != 4 || checkFlagX(params)) { result->memoryAddress.regDisplacement = NO_REG; }
 			else { result->memoryAddress.reg = NO_REG; }
 			result->memoryAddress.constDisplacement = (int32_t)getUIntFromBytes(&params->bytes, 4); // disp32
 			break;

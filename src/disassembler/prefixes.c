@@ -209,6 +209,11 @@ bool checkFlagR(struct DisassemblyParameters* params)
 	return params->rexPrefix.R || (params->vexPrefix.isValidVEX && !params->vexPrefix.R) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.R);
 }
 
+bool checkFlagX(struct DisassemblyParameters* params)
+{
+	return params->rexPrefix.X || (params->vexPrefix.isValidVEX && !params->vexPrefix.X) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.X);
+}
+
 bool checkFlagB(struct DisassemblyParameters* params)
 {
 	return params->rexPrefix.B || (params->vexPrefix.isValidVEX && !params->vexPrefix.B) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.B);
