@@ -19,25 +19,22 @@ enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, str
 		return ERROR_JDC;
 	}
 
-	if (params.is64BitMode)
+	if (params.is64BitMode && ERROR_JDC == handleREXPrefix(&params))
 	{
-		if (ERROR_JDC == handleREXPrefix(&params))
-		{
-			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
-			return ERROR_JDC;
-		}
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
+		return ERROR_JDC;
+	}
 
-		if (!params.rexPrefix.isValidREX && ERROR_JDC == handleVEXPrefix(&params))
-		{
-			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
-			return ERROR_JDC;
-		}
+	if (!params.rexPrefix.isValidREX && ERROR_JDC == handleVEXPrefix(&params))
+	{
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
+		return ERROR_JDC;
+	}
 
-		if (!params.rexPrefix.isValidREX && !params.vexPrefix.isValidVEX && ERROR_JDC == handleEVEXPrefix(&params))
-		{
-			result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
-			return ERROR_JDC;
-		}
+	if (!params.rexPrefix.isValidREX && !params.vexPrefix.isValidVEX && ERROR_JDC == handleEVEXPrefix(&params))
+	{
+		result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
+		return ERROR_JDC;
 	}
 
 	// if the opcode is an extended one then modRM will be retrieved
