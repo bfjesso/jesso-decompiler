@@ -263,9 +263,6 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->type = REGISTER;
 			currentOperand->reg = ((params->legPrefixes.group3 != OSO && is64BitOperandSize ? RAX : EAX) + (0x0F & (~params->vexPrefix.vvvv)));
 			break;
-		case M:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
-			break;
 		case Mb:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 1, currentOperand)) { return ERROR_JDC; }
 			break;
@@ -276,6 +273,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mv:
+		case M:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ma:
