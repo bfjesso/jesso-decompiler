@@ -199,6 +199,11 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 	return SUCCESS_JDC;
 }
 
+bool checkFlagW(struct DisassemblyParameters* params)
+{
+	return params->rexPrefix.W || params->vexPrefix.W || params->evexPrefix.W;
+}
+
 bool checkFlagR(struct DisassemblyParameters* params)
 {
 	return params->rexPrefix.R || (params->vexPrefix.isValidVEX && !params->vexPrefix.R) || (params->evexPrefix.isValidEVEX && !params->evexPrefix.R);

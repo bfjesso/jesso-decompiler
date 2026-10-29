@@ -14,7 +14,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	{
 		if ((params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) ||
 			params->opcode.opcodeSuperscript == f64 ||
-			params->rexPrefix.W)
+			checkFlagW(params))
 		{
 			is64BitOperandSize = true;
 		}
