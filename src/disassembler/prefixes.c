@@ -106,21 +106,30 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 
 	if (byte0 == 0xC5) // two-byte form
 	{
-		params->vexPrefix.isValidVEX = true;
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
+		if (!params->is64BitMode && !params->vexPrefix.R)
+		{
+			return SUCCESS_JDC;
+		}
+
 		params->vexPrefix.vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
 		params->vexPrefix.L = (byte1 >> 2) & 0x01;
 		params->vexPrefix.pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
 		params->vexPrefix.m_mmmm = 0b00001;
 
+		params->vexPrefix.isValidVEX = true;
 		params->bytes += 2;
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
-		params->vexPrefix.isValidVEX = true;
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
 		params->vexPrefix.X = (byte1 >> 6) & 0x01;
+		if (!params->is64BitMode && (!params->vexPrefix.R || !params->vexPrefix.X))
+		{
+			return SUCCESS_JDC;
+		}
+
 		params->vexPrefix.B = (byte1 >> 5) & 0x01;
 		params->vexPrefix.m_mmmm = (((byte1 >> 4) & 0x01) * 16) + (((byte1 >> 3) & 0x01) * 8) + (((byte1 >> 2) & 0x01) * 4) + (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
 
@@ -129,6 +138,7 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 		params->vexPrefix.L = (byte2 >> 2) & 0x01;
 		params->vexPrefix.pp = (((byte2 >> 1) & 0x01) * 2) + ((byte2 >> 0) & 0x01);
 
+		params->vexPrefix.isValidVEX = true;
 		params->bytes += 3;
 	}
 
