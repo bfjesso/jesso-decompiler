@@ -240,6 +240,9 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Ey:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
+		case RM_64MODE_OC:
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Gb:
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 1, currentOperand)) { return ERROR_JDC; }
 			break;
@@ -257,6 +260,9 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Gy:
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			break;
+		case REG_64MODE_OC:
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case By:
 			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }

@@ -397,8 +397,8 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 		{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },
 	},
 	{ EMMS, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x77; vzeroupper if VEX.L = 0, vzeroall if VEX.L = 1
-	{ VMREAD, -1, Ey, Gy, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0x78
-	{ VMWRITE, -1, Gy, Ey, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                   // 0x79
+	{ VMREAD, -1, RM_64MODE_OC, REG_64MODE_OC, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },               // 0x78
+	{ VMWRITE, -1, REG_64MODE_OC, RM_64MODE_OC, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },              // 0x79
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x7A; not defined
 	{ NO_MNEMONIC, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },     // 0x7B; not defined
 	{                                                                                                            // 0x7C
