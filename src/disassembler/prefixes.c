@@ -99,6 +99,7 @@ enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params)
 enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
+	if ((params->bytes + 2) > params->maxBytesAddr) { return SUCCESS_JDC; }
 
 	uint8_t byte0 = params->bytes[0];
 	uint8_t byte1 = params->bytes[1];
@@ -164,6 +165,7 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
+	if ((params->bytes + 3) > params->maxBytesAddr) { return SUCCESS_JDC; }
 
 	uint8_t firstByte = params->bytes[0];
 	uint8_t p0 = params->bytes[1];
