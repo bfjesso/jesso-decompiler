@@ -20,15 +20,6 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 	bool mmmIsValid = mmm == 1 || mmm == 2 || mmm == 3; // 1: 0x0F; 2: 0x0F 0x38; 3: 0x0F 0x3A
 	if (params->bytes[0] == 0x0F || mmmIsValid)
 	{
-		if (prefixIndex == 3 || prefixIndex == 2)
-		{
-			params->legPrefixes.group1 = NO_PREFIX;
-		}
-		else if (prefixIndex == 1)
-		{
-			params->legPrefixes.group3 = NO_PREFIX;
-		}
-
 		uint8_t opcodeByteIndex = mmmIsValid ? 0 : 2;
 		if ((params->bytes + opcodeByteIndex) <= params->maxBytesAddr &&
 			((!mmmIsValid && params->bytes[1] == 0x38) || mmm == 2)) // sequence: 0x0F 0x38 opcode
@@ -43,6 +34,15 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			else
 			{
 				params->opcode = threeByteOpcodeMap38[opcodeByte][prefixIndex];
+
+				if (prefixIndex == 3 || prefixIndex == 2)
+				{
+					params->legPrefixes.group1 = NO_PREFIX;
+				}
+				else if (prefixIndex == 1)
+				{
+					params->legPrefixes.group3 = NO_PREFIX;
+				}
 			}
 		}
 		else if ((params->bytes + opcodeByteIndex) <= params->maxBytesAddr &&
@@ -58,6 +58,15 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			else
 			{
 				params->opcode = threeByteOpcodeMap3A[opcodeByte][prefixIndex];
+
+				if (prefixIndex == 3 || prefixIndex == 2)
+				{
+					params->legPrefixes.group1 = NO_PREFIX;
+				}
+				else if (prefixIndex == 1)
+				{
+					params->legPrefixes.group3 = NO_PREFIX;
+				}
 			}
 		}
 		else if (mmmIsValid || (params->bytes + 1) <= params->maxBytesAddr) // sequence: 0x0F opcode
@@ -73,6 +82,15 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			else
 			{
 				params->opcode = twoByteOpcodeMap[opcodeByte][prefixIndex];
+
+				if (prefixIndex == 3 || prefixIndex == 2)
+				{
+					params->legPrefixes.group1 = NO_PREFIX;
+				}
+				else if (prefixIndex == 1)
+				{
+					params->legPrefixes.group3 = NO_PREFIX;
+				}
 			}
 
 			if (opcodeByte == 0x12 || opcodeByte == 0x16)
