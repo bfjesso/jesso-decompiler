@@ -113,11 +113,14 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 			return SUCCESS_JDC;
 		}
 
+		params->vexPrefix.X = 1;
+		params->vexPrefix.B = 1;
+		params->vexPrefix.m_mmmm = 0b00001;
+		params->vexPrefix.W = 0;
+
 		params->vexPrefix.vvvv = (((byte1 >> 6) & 0x01) * 8) + (((byte1 >> 5) & 0x01) * 4) + (((byte1 >> 4) & 0x01) * 2) + ((byte1 >> 3) & 0x01);
 		params->vexPrefix.L = (byte1 >> 2) & 0x01;
 		params->vexPrefix.pp = (((byte1 >> 1) & 0x01) * 2) + ((byte1 >> 0) & 0x01);
-
-		params->vexPrefix.m_mmmm = 0b00001;
 
 		params->vexPrefix.isValidVEX = true;
 		params->bytes += 2;
