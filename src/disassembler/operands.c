@@ -303,7 +303,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case My:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 != OSO && params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ib:
 			if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
