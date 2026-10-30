@@ -115,10 +115,10 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ IMUL, -1, Gv, Ev, Iz, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                                  // 0x69
 	{ PUSH, -1, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                                   // 0x6A
 	{ IMUL, -1, Gv, Ev, Ib, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                                  // 0x6B
-	{ INS, -1, Yb, rDX, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0x6C; alternate mnemonics: INSB
-	{ INS, -1, Yz, rDX, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                     // 0x6D; alternate mnemonics: INSW, INSD
-	{ OUTS, -1, rDX, Xb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0x6E; alternate mnemonics: OUTSB
-	{ OUTS, -1, rDX, Xz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0x6F; alternate mnemonics: OUTSW, OUTSD
+	{ INS, -1, Yb, DX_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0x6C; alternate mnemonics: INSB
+	{ INS, -1, Yz, DX_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                 // 0x6D; alternate mnemonics: INSW, INSD
+	{ OUTS, -1, DX_CODE, Xb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                // 0x6E; alternate mnemonics: OUTSB
+	{ OUTS, -1, DX_CODE, Xz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                // 0x6F; alternate mnemonics: OUTSW, OUTSD
 	{ JO_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                               // 0x70
 	{ JNO_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                              // 0x71
 	{ JB_SHORT, -1, Jb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                               // 0x72; alternate mnemonics: JNAE, JC
