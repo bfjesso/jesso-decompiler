@@ -205,8 +205,8 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ RET_NEAR, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, f64 },                  // 0xC3
 	{ LES, -1, Gz, Mp, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                                 // 0xC4; not an opcode if in 64-bit mode: VEX prefix starter +2 bytes
 	{ LDS, -1, Gz, Mp, NO_OPERAND_CODE, NO_OPERAND_CODE, i64 },                                                 // 0xC5; not an opcode if in 64-bit mode: VEX prefix starter +1 bytes
-	{ EXTENDED_OPCODE, 11, Eb, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                          // 0xC6; an extended opcode
-	{ EXTENDED_OPCODE, 11, Ev, Iz, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                          // 0xC7; an extended opcode
+	{ EXTENDED_OPCODE, 11, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },// 0xC6; an extended opcode
+	{ EXTENDED_OPCODE, 11, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },// 0xC7; an extended opcode
 	{ ENTER, -1, Iw, Ib, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                    // 0xC8
 	{ LEAVE, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                     // 0xC9
 	{ RET_FAR, -1, Iw, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                     // 0xCA
