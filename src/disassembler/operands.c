@@ -322,42 +322,42 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yz:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xb:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xz:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == ASO ? 2 : 4;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group3 != OSO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Jb:
 			if (ERROR_JDC == getImmediate(params, 1, currentOperand)) { return ERROR_JDC; }
