@@ -128,35 +128,35 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case rAX_r8:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8 : R8D) : (params->legPrefixes.group3 == OSO ? AX : (is64BitOperandSize ? RAX : EAX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8 : R8D) : (is64BitOperandSize ? RAX : (params->legPrefixes.group3 != OSO ? EAX : AX));
 			break;
 		case rCX_r9:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9 : R9D) : (params->legPrefixes.group3 == OSO ? CX : (is64BitOperandSize ? RCX : ECX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9 : R9D) : (is64BitOperandSize ? RCX : (params->legPrefixes.group3 != OSO ? ECX : CX));
 			break;
 		case rDX_r10:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10 : R10D) : (params->legPrefixes.group3 == OSO ? DX : (is64BitOperandSize ? RDX : EDX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10 : R10D) : (is64BitOperandSize ? RDX : (params->legPrefixes.group3 != OSO ? EDX : DX));
 			break;
 		case rBX_r11:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11 : R11D) : (params->legPrefixes.group3 == OSO ? BX : (is64BitOperandSize ? RBX : EBX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11 : R11D) : (is64BitOperandSize ? RBX : (params->legPrefixes.group3 != OSO ? EBX : BX));
 			break;
 		case rSP_r12:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12 : R12D) : (params->legPrefixes.group3 == OSO ? SP : (is64BitOperandSize ? RSP : ESP));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12 : R12D) : (is64BitOperandSize ? RSP : (params->legPrefixes.group3 != OSO ? ESP : SP));
 			break;
 		case rBP_r13:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13 : R13D) : (params->legPrefixes.group3 == OSO ? BP : (is64BitOperandSize ? RBP : EBP));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13 : R13D) : (is64BitOperandSize ? RBP : (params->legPrefixes.group3 != OSO ? EBP : BP));
 			break;
 		case rSI_r14:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14 : R14D) : (params->legPrefixes.group3 == OSO ? SI : (is64BitOperandSize ? RSI : ESI));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14 : R14D) : (is64BitOperandSize ? RSI : (params->legPrefixes.group3 != OSO ? ESI : SI));
 			break;
 		case rDI_r15:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15 : R15D) : (params->legPrefixes.group3 == OSO ? DI : (is64BitOperandSize ? RDI : EDI));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15 : R15D) : (is64BitOperandSize ? RDI : (params->legPrefixes.group3 != OSO ? EDI : DI));
 			break;
 		case AL_R8B:
 			currentOperand->type = REGISTER;
@@ -229,7 +229,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ev:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ew:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 2, currentOperand)) { return ERROR_JDC; }
@@ -238,7 +238,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ey:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_64MODE_OC:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -250,7 +250,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gv:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gz:
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
@@ -259,7 +259,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Gy:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_64MODE_OC:
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -267,7 +267,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case By:
 			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ((params->legPrefixes.group3 != OSO && is64BitOperandSize ? RAX : EAX) + (0x0F & (~params->vexPrefix.vvvv)));
+			currentOperand->reg = ((is64BitOperandSize ? RAX : EAX) + (0x0F & (~params->vexPrefix.vvvv)));
 			break;
 		case Mb:
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 1, currentOperand)) { return ERROR_JDC; }
@@ -280,7 +280,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Mv:
 		case M:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ma:
 			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO ? 4 : 8, currentOperand)) { return ERROR_JDC; }
@@ -303,13 +303,13 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case My:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ib:
 			if (ERROR_JDC == getImmediate(params, 1, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Iv:
-			if (ERROR_JDC == getImmediate(params, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == getImmediate(params, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Iz:
 			if (ERROR_JDC == getImmediate(params, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
@@ -326,7 +326,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
@@ -347,7 +347,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
@@ -375,7 +375,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Ov:
 			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
@@ -383,10 +383,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ry:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 != OSO && is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Rv:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 2 : is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Cd:
 			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, 4, currentOperand)) { return ERROR_JDC; }
