@@ -87,11 +87,10 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer)
 {
 	str.Replace(" ", "", true);
-	str.Replace("\\", "", true);
+	str.Replace("\\x", "", true);
+	str.Replace("\\X", "", true);
 	str.Replace("0x", "", true);
 	str.Replace("0X", "", true);
-	str.Replace("x", "", true);
-	str.Replace("X", "", true);
 
 	size_t strLen = str.Length();
 	if (strLen < 2 || strLen % 2 != 0)
