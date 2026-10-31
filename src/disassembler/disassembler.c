@@ -133,7 +133,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 	}
 	else if (memAddr->constSegment != 0)
 	{
-		sprintfJdc(result, true, "0x%X", memAddr->constSegment);
+		sprintfJdc(result, true, "0x%llX", memAddr->constSegment);
 		strcatJdc(result, ":");
 	}
 

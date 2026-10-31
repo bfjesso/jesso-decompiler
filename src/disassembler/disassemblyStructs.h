@@ -184,14 +184,13 @@ struct ModRM
 
 struct MemoryAddress
 {
-	uint8_t ptrSize;
-	enum Segment segment;
-	uint16_t constSegment;
-
-	enum Register reg;
-	uint8_t scale; // if SIB byte
-	enum Register regDisplacement;
 	int64_t constDisplacement;
+	int64_t constSegment;
+	enum Segment segment;
+	enum Register reg;
+	enum Register regDisplacement;
+	uint8_t ptrSize;
+	uint8_t scale; // if SIB byte
 };
 
 struct Immediate

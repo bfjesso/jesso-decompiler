@@ -46,7 +46,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		}
 
-		int8_t immediateTmp = 0; // used for Lx
+		int64_t immediateTmp = 0; // used for Lx
 		switch (currentOperandCode)
 		{
 		case ONE:
