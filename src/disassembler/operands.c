@@ -401,7 +401,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_SEG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ap:
-			if (ERROR_JDC == readIntFromBytes(params, 4, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group3 != OSO ? 4 : 2, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			if (ERROR_JDC == readIntFromBytes(params, 2, &currentOperand->memoryAddress.constSegment)) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.scale = 1;
