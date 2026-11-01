@@ -81,13 +81,14 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	else if (selection == REG_CONTROL_MODRM)
 	{
 		result->type = REGISTER;
-		if (params->rexPrefix.R)
+		switch (operandSize)
 		{
-			result->reg = (params->modRM.reg + CR8);
-		}
-		else
-		{
-			result->reg = (params->modRM.reg + CR0);
+		case 4:
+			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8D : CR0D));
+			break;
+		case 8:
+			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8 : CR0));
+			break;
 		}
 
 		return SUCCESS_JDC;

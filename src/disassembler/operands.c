@@ -380,7 +380,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Rd:
-			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ry:
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -389,10 +389,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Cd:
-			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Dd:
-			if (ERROR_JDC == handleModRM(params, REG_DEBUG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_DEBUG_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Sw:
 			if (ERROR_JDC == handleModRM(params, REG_SEG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
