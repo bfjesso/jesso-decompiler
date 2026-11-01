@@ -199,6 +199,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F311B[params->modRM.reg];
+					params->legPrefixes.group1 = NO_PREFIX;
 				}
 				else
 				{
@@ -210,10 +211,12 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup966[params->modRM.reg];
+					params->legPrefixes.group3 = NO_PREFIX;
 				}
 				else if (params->legPrefixes.group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F3[params->modRM.reg];
+					params->legPrefixes.group1 = NO_PREFIX;
 				}
 				else
 				{
@@ -248,6 +251,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup126611B[params->modRM.reg];
+					params->legPrefixes.group3 = NO_PREFIX;
 				}
 				else
 				{
@@ -262,6 +266,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup136611B[params->modRM.reg];
+					params->legPrefixes.group3 = NO_PREFIX;
 				}
 				else
 				{
@@ -276,6 +281,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group3 == OSO)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup146611B[params->modRM.reg];
+					params->legPrefixes.group3 = NO_PREFIX;
 				}
 				else
 				{
@@ -290,6 +296,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				if (params->legPrefixes.group1 == REPZ)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup15F311B[params->modRM.reg];
+					params->legPrefixes.group1 = NO_PREFIX;
 				}
 				else
 				{
