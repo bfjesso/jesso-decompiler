@@ -380,13 +380,13 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Rd:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ry:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Rv:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Cd:
 			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, 4, currentOperand)) { return ERROR_JDC; }

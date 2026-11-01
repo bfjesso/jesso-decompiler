@@ -13,6 +13,8 @@ enum ModRMSelection
 	RM_MMX_MODRM,
 
 	M_MODRM,
+
+	RM_REG_MODRM,
 };
 
 enum JdcStatus getModRM(struct DisassemblyParameters* params);
