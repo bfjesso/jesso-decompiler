@@ -382,7 +382,9 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		}
 	}
 
-	if (params->opcode.mnemonic == NO_MNEMONIC)
+	if (params->opcode.mnemonic == NO_MNEMONIC ||
+		(params->is64BitMode && params->opcode.opcodeSuperscript == i64) ||
+		(!params->is64BitMode && params->opcode.opcodeSuperscript == o64))
 	{
 		return ERROR_JDC;
 	}

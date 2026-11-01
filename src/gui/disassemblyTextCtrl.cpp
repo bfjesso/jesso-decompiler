@@ -422,11 +422,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}
 
-		if (instructions[i].isInvalid)
-		{
-			asmStr += " ; invalid instruction";
-		}
-		else if (instructions[i].opcode == NO_MNEMONIC)
+		if (instructions[i].opcode == NO_MNEMONIC)
 		{
 			asmStr += " ; unrecognized opcode";
 		}

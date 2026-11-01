@@ -882,7 +882,7 @@ bool doesInstructionGenerateInterruptOrException(struct DisassembledInstruction*
 		return true;
 	}
 
-	return instruction->isInvalid;
+	return false;
 }
 
 bool isImmediateAllOnes(struct Immediate* immediate)

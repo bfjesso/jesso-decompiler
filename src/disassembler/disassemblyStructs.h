@@ -238,7 +238,6 @@ struct DisassembledInstruction
 	uint8_t operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
 
 	uint8_t numOfBytes;
-	bool isInvalid;
 	bool isCalled;
 	bool isJmpDst;
 

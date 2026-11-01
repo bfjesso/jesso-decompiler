@@ -53,7 +53,6 @@ enum JdcStatus disassembleInstruction(uint8_t* bytes, uint8_t* maxBytesAddr, str
 	result->opcode = params.opcode.mnemonic;
 	result->group1Prefix = params.legPrefixes.group1;
 	result->numOfBytes = (uint8_t)(params.bytes - params.startBytePtr);
-	result->isInvalid = (disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == i64) || (!disassemblerOptions->is64BitMode && params.opcode.opcodeSuperscript == o64);
 
 	if (result->numOfBytes == 0)
 	{
