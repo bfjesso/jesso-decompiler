@@ -394,6 +394,9 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Dd:
 			if (ERROR_JDC == handleModRM(params, REG_DEBUG_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
+		case MW_RWDQ_OC:
+			if (ERROR_JDC == handleModRM(params, RM_MW_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Sw:
 			if (ERROR_JDC == handleModRM(params, REG_SEG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;

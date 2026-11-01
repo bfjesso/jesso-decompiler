@@ -147,9 +147,9 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ MOV, -1, Ev, Gv, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x89
 	{ MOV, -1, Gb, Eb, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x8A
 	{ MOV, -1, Gv, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x8B
-	{ MOV, -1, Ev, Sw, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x8C
+	{ MOV, -1, MW_RWDQ_OC, Sw, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                              // 0x8C
 	{ LEA, -1, Gv, M, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                       // 0x8D
-	{ MOV, -1, Sw, Ew, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                                      // 0x8E
+	{ MOV, -1, Sw, MW_RWDQ_OC, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                              // 0x8E
 	{ EXTENDED_OPCODE, 1, Ev, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, d64 },                         // 0x8F; an extended opcode
 	{ NOP, -1, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },            // 0x90; this instruction is technically XCHG rAX, rAX, but it functions as NOP due to not chaning state
 	{ XCHG, -1, rCX_r9, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_OPERAND_CODE, NO_SUPERSCRIPT },                    // 0x91
