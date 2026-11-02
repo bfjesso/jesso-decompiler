@@ -442,14 +442,20 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Vps:
 		case Vpd:
 		case Vx:
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Vy:
 		case Vq:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (vectorLength != 16) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Vss:
 		case Vsd:
 		case Vdq:
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, 16, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Vqq:
+			if (vectorLength == 16) { return ERROR_JDC; }
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Wps:
