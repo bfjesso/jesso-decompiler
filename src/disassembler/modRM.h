@@ -15,6 +15,7 @@ enum ModRMSelection
 	M_MODRM,
 
 	RM_REG_MODRM,
+	RM_REG_MMX_MODRM,
 	RM_MW_MODRM
 };
 

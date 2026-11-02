@@ -135,31 +135,34 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		result->type = REGISTER;
 
-		switch (params->modRM.rm)
+		if (selection == RM_MMX_MODRM || selection == RM_REG_MMX_MODRM)
 		{
-		case 0:
-			result->reg = operandSize == 64 ? ZMM0 : operandSize == 32 ? YMM0 : operandSize == 16 ? XMM0 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM0 : RAX) : operandSize == 4 ? EAX : operandSize == 2 ? AX : AL;
-			break;
+			result->reg = (params->modRM.rm + MM0);
+			return SUCCESS_JDC;
+		}
+
+		switch (operandSize)
+		{
 		case 1:
-			result->reg = operandSize == 64 ? ZMM1 : operandSize == 32 ? YMM1 : operandSize == 16 ? XMM1 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM1 : RCX) : operandSize == 4 ? ECX : operandSize == 2 ? CX : CL;
+			result->reg = (params->modRM.rm + AL);
 			break;
 		case 2:
-			result->reg = operandSize == 64 ? ZMM2 : operandSize == 32 ? YMM2 : operandSize == 16 ? XMM2 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM2 : RDX) : operandSize == 4 ? EDX : operandSize == 2 ? DX : DL;
-			break;
-		case 3:
-			result->reg = operandSize == 64 ? ZMM3 : operandSize == 32 ? YMM3 : operandSize == 16 ? XMM3 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM3 : RBX) : operandSize == 4 ? EBX : operandSize == 2 ? BX : BL;
+			result->reg = (params->modRM.rm + AX);
 			break;
 		case 4:
-			result->reg = operandSize == 64 ? ZMM4 : operandSize == 32 ? YMM4 : operandSize == 16 ? XMM4 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM4 : RSP) : operandSize == 4 ? ESP : operandSize == 2 ? SP : AH;
+			result->reg = (params->modRM.rm + EAX);
 			break;
-		case 5:
-			result->reg = operandSize == 64 ? ZMM5 : operandSize == 32 ? YMM5 : operandSize == 16 ? XMM5 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM5 : RBP) : operandSize == 4 ? EBP : operandSize == 2 ? BP : CH;
+		case 8:
+			result->reg = (params->modRM.rm + RAX);
 			break;
-		case 6:
-			result->reg = operandSize == 64 ? ZMM6 : operandSize == 32 ? YMM6 : operandSize == 16 ? XMM6 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM6 : RSI) : operandSize == 4 ? ESI : operandSize == 2 ? SI : DH;
+		case 16:
+			result->reg = (params->modRM.rm + XMM0);
 			break;
-		case 7:
-			result->reg = operandSize == 64 ? ZMM7 : operandSize == 32 ? YMM7 : operandSize == 16 ? XMM7 : operandSize == 8 ? (selection == RM_MMX_MODRM ? MM7 : RDI) : operandSize == 4 ? EDI : operandSize == 2 ? DI : BH;
+		case 32:
+			result->reg = (params->modRM.rm + YMM0);
+			break;
+		case 64:
+			result->reg = (params->modRM.rm + ZMM0);
 			break;
 		}
 
@@ -169,6 +172,10 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		}
 
 		return SUCCESS_JDC;
+	}
+	else if (selection == RM_REG_MMX_MODRM)
+	{
+		return ERROR_JDC;
 	}
 
 	if (selection == RM_MW_MODRM)
