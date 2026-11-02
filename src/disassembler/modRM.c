@@ -135,7 +135,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		result->type = REGISTER;
 
-		if (selection == RM_MMX_MODRM || selection == RM_REG_MMX_MODRM)
+		if (selection == RM_MMX_MODRM || selection == RM_MOD11_MMX_MODRM)
 		{
 			result->reg = (params->modRM.rm + MM0);
 			return SUCCESS_JDC;
@@ -173,7 +173,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		return SUCCESS_JDC;
 	}
-	else if (selection == RM_REG_MMX_MODRM)
+	else if (selection == RM_MOD11_MMX_MODRM || selection == RM_MOD11_REG_MODRM)
 	{
 		return ERROR_JDC;
 	}

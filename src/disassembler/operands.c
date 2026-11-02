@@ -419,16 +419,19 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MMX_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Nq:
-			if (ERROR_JDC == handleModRM(params, RM_REG_MMX_MODRM, 8, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MOD11_MMX_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Ups:
 		case Upd:
-		case Uq:
 		case Ux:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MOD11_REG_MODRM, vectorLength, currentOperand)) { return ERROR_JDC; }
+			break;
+		case Uq:
+			if (ERROR_JDC == handleModRM(params, RM_MOD11_REG_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Udq:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, 16, currentOperand)) { return ERROR_JDC; }
+			if (vectorLength != 16) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MOD11_REG_MODRM, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Vps:
 		case Vpd:
