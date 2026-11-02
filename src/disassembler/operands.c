@@ -9,6 +9,12 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 {
 	struct Operand operands[4] = { 0 };
 
+	if (params->evexPrefix.isValidEVEX && params->evexPrefix.aaa != 0)
+	{
+		result->opmask = (params->evexPrefix.aaa + K0);
+		result->zeroMasking = params->evexPrefix.z;
+	}
+
 	bool is64BitOperandSize = false;
 	if (params->is64BitMode)
 	{

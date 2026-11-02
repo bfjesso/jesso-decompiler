@@ -234,6 +234,9 @@ struct DisassembledInstruction
 	enum Mnemonic opcode;
 
 	struct Operand* operands;
+	enum Register opmask;
+	bool zeroMasking; // EVEX.z
+
 	uint8_t numOfOperands;
 	uint8_t operandSizeAttribute; // this is only used when decompiling PUSH/POP instructions to determine by how much the SP is changed
 

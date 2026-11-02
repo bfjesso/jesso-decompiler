@@ -36,6 +36,8 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
 	"DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7", "DR8", "DR9", "DR10", "DR11", "DR12", "DR13", "DR14", "DR15",
 
+	"K0", "K1", "K2", "K3", "K4", "K5", "K6", "K7",
+
 	"CF", "PF", "AF", "ZF", "SF", "OF",
 };
 
@@ -252,7 +254,8 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 	else if ((reg >= RAX && reg <= R15) ||
 		(reg >= MM0 && reg <= MM7) ||
 		(reg >= CR0 && reg <= CR15) ||
-		(reg >= DR0 && reg <= DR15))
+		(reg >= DR0 && reg <= DR15) ||
+		(reg >= K0 && reg <= K7))
 	{
 		return 8;
 	}

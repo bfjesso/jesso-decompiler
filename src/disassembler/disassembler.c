@@ -112,6 +112,15 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		{
 			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
 		}
+
+		if (i == 0 && instruction->opmask != NO_REG)
+		{
+			sprintfJdc(result, true, " {%s}", registerStrs[instruction->opmask]);
+			if (instruction->zeroMasking)
+			{
+				strcatJdc(result, "{Z}");
+			}
+		}
 	}
 
 	return SUCCESS_JDC;

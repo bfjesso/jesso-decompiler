@@ -577,6 +577,20 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 				SetStyling(segStr.length(), SEGMENT_ASM_COLOR);
 				segStart = loc + segStr.length();
 			}
+
+			if (i == 0 && instruction->opmask != NO_REG)
+			{
+				wxString regStr = wxString(registerStrs[instruction->opmask]);
+				int32_t loc = asmStr.find(regStr, regStart);
+				StartStyling(pos + loc);
+				SetStyling(regStr.length(), REGISTER_ASM_COLOR);
+				if (instruction->zeroMasking)
+				{
+					loc = asmStr.find("Z", loc + 1);
+					StartStyling(pos + loc);
+					SetStyling(1, REGISTER_ASM_COLOR);
+				}
+			}
 		}
 
 		// numbers
