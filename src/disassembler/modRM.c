@@ -162,7 +162,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			result->reg = (params->modRM.rm + YMM0);
 			break;
 		case 64:
-			result->reg = (params->modRM.rm + ZMM0);
+			result->reg = (params->is64BitMode && params->evexPrefix.isValidEVEX && !params->evexPrefix.X) ? (params->modRM.rm + ZMM16) : (params->modRM.rm + ZMM0);
 			break;
 		}
 
