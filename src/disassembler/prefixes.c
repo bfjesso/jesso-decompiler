@@ -177,10 +177,13 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 
 	if (firstByte == 0x62)
 	{
-		params->evexPrefix.isValidEVEX = true;
-
 		params->evexPrefix.R = ((p0 >> 7) & 0x01);
 		params->evexPrefix.X = ((p0 >> 6) & 0x01);
+		if (!params->is64BitMode && (!params->evexPrefix.R || !params->evexPrefix.X))
+		{
+			return SUCCESS_JDC;
+		}
+
 		params->evexPrefix.B = ((p0 >> 5) & 0x01);
 		params->evexPrefix.R_prime = ((p0 >> 4) & 0x01);
 		params->evexPrefix.mmm = (((p0 >> 2) & 0x01) * 4) + (((p0 >> 1) & 0x01) * 2) + ((p0 >> 0) & 0x01);
@@ -208,6 +211,7 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 			break;
 		}
 
+		params->evexPrefix.isValidEVEX = true;
 		params->bytes += 4;
 	}
 
