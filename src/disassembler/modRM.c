@@ -182,6 +182,14 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	{
 		operandSize = 2;
 	}
+	else if (selection == RM_MD_MODRM)
+	{
+		operandSize = 4;
+	}
+	else if (selection == RM_MQ_MODRM)
+	{
+		operandSize = 8;
+	}
 
 	result->type = MEM_ADDRESS;
 	result->memoryAddress.scale = 1;
