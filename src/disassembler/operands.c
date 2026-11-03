@@ -271,9 +271,8 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case By:
-			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
-			currentOperand->type = REGISTER;
-			currentOperand->reg = ((is64BitOperandSize ? RAX : EAX) + (0x0F & (~params->vexPrefix.vvvv)));
+			if (!params->vexPrefix.isValidVEX) { return ERROR_JDC; }
+			if (ERROR_JDC == getRegFromVVVV(params, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Mb:
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 1, currentOperand)) { return ERROR_JDC; }
@@ -482,30 +481,34 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case Hps:
 		case Hpd:
 		case Hx:
+			if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX) { operandIndex--; break; }
+			if (ERROR_JDC == getRegFromVVVV(params, vectorLength, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Hq:
+			if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX) { operandIndex--; break; }
+			if (vectorLength != 16) { return ERROR_JDC; }
+			if (ERROR_JDC == getRegFromVVVV(params, 16, currentOperand)) { return ERROR_JDC; }
+			break;
 		case Hss:
 		case Hsd:
 		case Hdq:
 			if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX) { operandIndex--; break; }
-			currentOperand->type = REGISTER;
-			if (params->vexPrefix.isValidVEX) { currentOperand->reg = vectorLength == 32 ? (YMM15 - params->vexPrefix.vvvv) : (XMM15 - params->vexPrefix.vvvv); }
-			else { currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : params->evexPrefix.V_prime ? (ZMM15 - params->evexPrefix.vvvv) : (ZMM31 - params->evexPrefix.vvvv); }
+			if (ERROR_JDC == getRegFromVVVV(params, 16, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Hqq:
-			if (!params->vexPrefix.isValidVEX) { operandIndex--; break; }
-			currentOperand->type = REGISTER;
-			currentOperand->reg = (YMM15 - params->vexPrefix.vvvv);
+			if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX) { operandIndex--; break; }
+			if (vectorLength == 16) { return ERROR_JDC; }
+			if (ERROR_JDC == getRegFromVVVV(params, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		case Lx:
 			if (ERROR_JDC == readIntFromBytes(params, 1, &immediateTmp)) { return ERROR_JDC; }
-			immediateTmp &= 0xF0; // upper 4 bits
+			immediateTmp = (immediateTmp >> 4) & 0xF; // upper 4 bits
 			currentOperand->type = REGISTER;
 			currentOperand->reg = vectorLength == 32 ? (YMM0 + immediateTmp) : (XMM0 + immediateTmp);
 			break;
 		case EVEXvvvv:
-			if (!params->evexPrefix.isValidEVEX) { operandIndex--; break; }
-			currentOperand->type = REGISTER;
-			currentOperand->reg = vectorLength == 16 ? (XMM15 - params->evexPrefix.vvvv) : vectorLength == 32 ? (YMM15 - params->evexPrefix.vvvv) : params->evexPrefix.V_prime ? (ZMM15 - params->evexPrefix.vvvv) : (ZMM31 - params->evexPrefix.vvvv);
+			if (!params->evexPrefix.isValidEVEX) { return ERROR_JDC; }
+			if (ERROR_JDC == getRegFromVVVV(params, vectorLength, currentOperand)) { return ERROR_JDC; }
 			break;
 		}
 
@@ -595,4 +598,53 @@ uint8_t getVectorLength(struct DisassemblyParameters* params)
 	}
 
 	return 16;
+}
+
+static enum JdcStatus getRegFromVVVV(struct DisassemblyParameters* params, uint8_t regSize, struct Operand* result)
+{
+	if (!params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX)
+	{
+		return ERROR_JDC;
+	}
+
+	uint8_t vvvv = params->vexPrefix.isValidVEX ? params->vexPrefix.vvvv : params->evexPrefix.vvvv;
+	if (!params->is64BitMode)
+	{
+		if (params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime)
+		{
+			return ERROR_JDC;
+		}
+
+		// the extended registers are not accesible outside 64 bit mode
+		if (regSize > 8 && params->vexPrefix.isValidVEX && (vvvv & 0b1000) == 0)
+		{
+			return ERROR_JDC;
+		}
+
+		vvvv |= 0b1000; // the most significant bit is ignored if the reg size is 4 or 8, or if EVEX is used
+	}
+
+	result->type = REGISTER;
+	switch (regSize)
+	{
+	case 4:
+		result->reg = (R15D - vvvv);
+		if (result->reg <= EIP) { result->reg--; } // the instruction pointer cannot be encoded by vvvv
+		break;
+	case 8:
+		result->reg = (R15 - vvvv);
+		if (result->reg <= RIP) { result->reg--; }
+		break;
+	case 16:
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (XMM31 - vvvv) : (XMM15 - vvvv);
+		break;
+	case 32:
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (YMM31 - vvvv) : (YMM15 - vvvv);
+		break;
+	case 64:
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (ZMM31 - vvvv) : (ZMM15 - vvvv);
+		break;
+	}
+
+	return SUCCESS_JDC;
 }

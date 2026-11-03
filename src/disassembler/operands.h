@@ -8,3 +8,5 @@ static enum JdcStatus getImmediate(struct DisassemblyParameters* params, uint8_t
 enum JdcStatus readIntFromBytes(struct DisassemblyParameters* params, uint8_t sizeOfInt, int64_t* result);
 
 uint8_t getVectorLength(struct DisassemblyParameters* params);
+
+static enum JdcStatus getRegFromVVVV(struct DisassemblyParameters* params, uint8_t regSize, struct Operand* result);

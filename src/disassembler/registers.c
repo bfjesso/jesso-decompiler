@@ -25,8 +25,13 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "RIP",
 	"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
 	"MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
+
 	"XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7", "XMM8", "XMM9", "XMM10", "XMM11", "XMM12", "XMM13", "XMM14", "XMM15",
+	"XMM16", "XMM17", "XMM18", "XMM19", "XMM20", "XMM21", "XMM22", "XMM23", "XMM24", "XMM25", "XMM26", "XMM27", "XMM28", "XMM29", "XMM30", "XMM31",
+
 	"YMM0", "YMM1", "YMM2", "YMM3", "YMM4", "YMM5", "YMM6", "YMM7", "YMM8", "YMM9", "YMM10", "YMM11", "YMM12", "YMM13", "YMM14", "YMM15",
+	"YMM16", "YMM17", "YMM18", "YMM19", "YMM20", "YMM21", "YMM22", "YMM23", "YMM24", "YMM25", "YMM26", "YMM27", "YMM28", "YMM29", "YMM30", "YMM31",
+
 	"ZMM0", "ZMM1", "ZMM2", "ZMM3", "ZMM4", "ZMM5", "ZMM6", "ZMM7", "ZMM8", "ZMM9", "ZMM10", "ZMM11", "ZMM12", "ZMM13", "ZMM14", "ZMM15",
 	"ZMM16", "ZMM17", "ZMM18", "ZMM19", "ZMM20", "ZMM21", "ZMM22", "ZMM23", "ZMM24", "ZMM25", "ZMM26", "ZMM27", "ZMM28", "ZMM29", "ZMM30", "ZMM31",
 
@@ -263,11 +268,11 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 	{
 		return 10;
 	}
-	else if (reg >= XMM0 && reg <= XMM15)
+	else if (reg >= XMM0 && reg <= XMM31)
 	{
 		return 16;
 	}
-	else if (reg >= YMM0 && reg <= YMM15)
+	else if (reg >= YMM0 && reg <= YMM31)
 	{
 		return 32;
 	}
