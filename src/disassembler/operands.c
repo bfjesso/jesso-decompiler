@@ -52,7 +52,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		}
 
-		int64_t immediateTmp = 0; // used for Lx
+		int64_t immediateTmp = 0; // used for Lx and Ap
 		switch (currentOperandCode)
 		{
 		case ONE:
@@ -407,9 +407,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case Ap:
 			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group3 != OSO ? 4 : 2, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
-			if (ERROR_JDC == readIntFromBytes(params, 2, &currentOperand->memoryAddress.constSegment)) { return ERROR_JDC; }
+			if (ERROR_JDC == readIntFromBytes(params, 2, &immediateTmp)) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.scale = 1;
+			currentOperand->memoryAddress.constSegment = (uint16_t)immediateTmp;
 			break;
 		case Pd:
 		case Ppi:

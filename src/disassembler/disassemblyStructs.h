@@ -185,10 +185,10 @@ struct ModRM
 struct MemoryAddress
 {
 	int64_t constDisplacement;
-	int64_t constSegment;
 	enum Segment segment;
 	enum Register reg;
 	enum Register regDisplacement;
+	uint16_t constSegment;
 	uint8_t ptrSize;
 	uint8_t scale; // if SIB byte
 };
