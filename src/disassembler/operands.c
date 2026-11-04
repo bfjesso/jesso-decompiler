@@ -26,17 +26,17 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		}
 	}
 
-	if (params->legPrefixes.group3 == OSO)
+	if (is64BitOperandSize)
 	{
-		result->operandSizeAttribute = 2;
+		result->operandSizeAttribute = 8;
 	}
-	else if (!is64BitOperandSize)
+	else if (params->legPrefixes.group3 != OSO)
 	{
 		result->operandSizeAttribute = 4;
 	}
 	else
 	{
-		result->operandSizeAttribute = 8;
+		result->operandSizeAttribute = 2;
 	}
 
 	uint8_t vectorLength = getVectorLength(params);
