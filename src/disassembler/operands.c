@@ -579,7 +579,7 @@ enum JdcStatus readIntFromBytes(struct DisassemblyParameters* params, uint8_t si
 	*result = 0;
 	for (int32_t i = 0; i < sizeOfInt; i++)
 	{
-		*result += ((int64_t)(params->bytes[0]) << (8 * i));
+		*result += (int64_t)(params->bytes[0] << (8 * i));
 		params->bytes++;
 	}
 
