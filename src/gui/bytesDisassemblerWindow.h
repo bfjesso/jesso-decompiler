@@ -1,7 +1,7 @@
 #pragma once
 #include "guiUtils.h"
 #include "disassemblyTextCtrl.h"
-#include "../disassembler/disassemblyStructs.h"
+#include "../disassembler/x86/disassemblyStructs.h"
 
 class MainGui;
 

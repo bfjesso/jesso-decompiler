@@ -3,7 +3,7 @@
 #include "guiUtils.h"
 #include <wx/thread.h>
 #include <wx/event.h>
-#include "../disassembler/disassemblyStructs.h"
+#include "../disassembler/x86/disassemblyStructs.h"
 
 wxDECLARE_EVENT(EVT_WORKER_LOG, wxThreadEvent);
 wxDECLARE_EVENT(EVT_WORKER_LOG_PROGRESS, wxThreadEvent);

@@ -1,5 +1,5 @@
 #pragma once
-#include "../jdcTypes.h"
+#include "../../jdcTypes.h"
 #include "mnemonics.h"
 #include "registers.h"
 

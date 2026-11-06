@@ -1,5 +1,5 @@
 #pragma once
-#include "../disassembler/registers.h"
+#include "../disassembler/x86/registers.h"
 #include "decompilationStructs.h"
 
 #ifdef __cplusplus

@@ -5,7 +5,7 @@
 #include "oneByteOpcodeMap.h"
 #include "twoByteOpcodeMap.h"
 #include "threeByteOpcodeMaps.h"
-#include "extendedOpcodeMap.h"
+#include "extendedOpcodeMaps.h"
 #include "escapeOpcodeMaps.h"
 
 enum JdcStatus handleOpcode(struct DisassemblyParameters* params)

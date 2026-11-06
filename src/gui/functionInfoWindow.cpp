@@ -1,7 +1,7 @@
 #include "functionInfoWindow.h"
 #include "mainGui.h"
 #include "../decompiler/dataTypes.h"
-#include "../disassembler/registers.h"
+#include "../disassembler/x86/registers.h"
 #include "../jdc-str/jdcStr.h"
 
 wxBEGIN_EVENT_TABLE(FunctionInfoWindow, wxScrolledWindow)

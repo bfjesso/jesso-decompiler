@@ -1,5 +1,5 @@
 #pragma once
-#include "../fileStructs.h"
+#include "../../fileStructs.h"
 
 // this includes NO_SEGMENT
 #define NUM_OF_SEGMENTS 7
