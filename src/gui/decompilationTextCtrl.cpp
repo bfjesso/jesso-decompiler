@@ -426,14 +426,10 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		}
 	}
 
-	// regs/segs that arent variables/arguments
+	// regs that arent variables/arguments
 	for (int32_t i = 0; i < NUM_OF_REGISTERS; i++)
 	{
 		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, false);
-	}
-	for (int32_t i = 0; i < NUM_OF_SEGMENTS; i++)
-	{
-		ColorAllStrs(text, segmentStrs[i], ERROR_DECOMP_COLOR, false);
 	}
 	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, false);
 	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, false);

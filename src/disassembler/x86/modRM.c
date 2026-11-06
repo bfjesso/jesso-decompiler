@@ -68,8 +68,8 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	}
 	else if (selection == REG_SEG_MODRM)
 	{
-		result->type = SEGMENT;
-		result->segment = (params->modRM.reg + ES);
+		result->type = REGISTER;
+		result->reg = (params->modRM.reg + ES);
 		return SUCCESS_JDC;
 	}
 	else if (selection == REG_MMX_MODRM)
@@ -194,7 +194,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	result->type = MEM_ADDRESS;
 	result->memoryAddress.scale = 1;
 	result->memoryAddress.ptrSize = operandSize;
-	result->memoryAddress.segment = segmentOverrideToSegment(params->legPrefixes.group2);
+	result->memoryAddress.regSegment = segmentOverrideToSegment(params->legPrefixes.group2);
 
 	bool usedSIB = false;
 
@@ -349,7 +349,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			case 5:
 				if (ERROR_JDC == readIntFromBytes(params, 4, &result->memoryAddress.constDisplacement)) { return ERROR_JDC; } // disp32
 				if (params->is64BitMode) { result->memoryAddress.reg = RIP; }
-				else { result->memoryAddress.segment = DS; }
+				else { result->memoryAddress.regSegment = DS; }
 				break;
 			case 6:
 				result->memoryAddress.reg = ESI;

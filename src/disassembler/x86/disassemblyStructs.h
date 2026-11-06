@@ -167,7 +167,6 @@ enum OperandType
 {
 	NO_OPERAND,
 
-	SEGMENT,
 	REGISTER,
 	MEM_ADDRESS,
 	IMMEDIATE
@@ -185,7 +184,7 @@ struct ModRM
 struct MemoryAddress
 {
 	int64_t constDisplacement;
-	enum Segment segment;
+	enum Register regSegment;
 	enum Register reg;
 	enum Register regDisplacement;
 	uint16_t constSegment;
@@ -203,7 +202,6 @@ struct Operand
 {
 	union
 	{
-		enum Segment segment;
 		enum Register reg;
 		struct MemoryAddress memoryAddress;
 		struct Immediate immediate;

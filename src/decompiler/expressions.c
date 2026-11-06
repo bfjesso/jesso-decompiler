@@ -54,10 +54,6 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t 
 	{
 		return decompileRegister(params, instructionIndex, operandNum, operand->reg, defaultToReg, 0, result, 0);
 	}
-	else if (operand->type == SEGMENT)
-	{
-		return strcpyJdc(result, segmentStrs[operand->segment]);
-	}
 
 	return ERROR_JDC;
 }

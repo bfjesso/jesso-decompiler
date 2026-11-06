@@ -1,29 +1,14 @@
 #pragma once
 #include "../../fileStructs.h"
 
-// this includes NO_SEGMENT
-#define NUM_OF_SEGMENTS 7
-
 // this includes NO_REG
-#define NUM_OF_REGISTERS 242
+#define NUM_OF_REGISTERS 249
 
 #define NUM_PLATFORM_REG_ARGS_PE 4
 #define NUM_PLATFORM_REG_ARGS_ELF 6
 
 // this is for buffers
 #define MAX_NUM_PLATFORM_REG_ARGS NUM_PLATFORM_REG_ARGS_ELF
-
-enum Segment
-{
-	NO_SEGMENT,
-
-	ES,
-	CS,
-	SS,
-	DS,
-	FS,
-	GS
-};
 
 enum Register
 {
@@ -50,6 +35,8 @@ enum Register
 
 	ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7,
 
+	ES, CS, SS, DS, FS, GS,
+
 	// the control regs are 32 or 64 bits depending on if 64 bit mode is enabled, but the 32 bit version does not actually use a D in the name
 	CR0D, CR1D, CR2D, CR3D, CR4D, CR5D, CR6D, CR7D, CR8D, CR9D, CR10D, CR11D, CR12D, CR13D, CR14D, CR15D,
 	CR0, CR1, CR2, CR3, CR4, CR5, CR6, CR7, CR8, CR9, CR10, CR11, CR12, CR13, CR14, CR15,
@@ -65,8 +52,6 @@ enum Register
 extern "C"
 {
 #endif
-
-	extern const char* segmentStrs[];
 
 	extern const char* registerStrs[];
 

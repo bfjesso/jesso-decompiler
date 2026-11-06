@@ -550,9 +550,9 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 					regStart = loc + regStr.length();
 				}
 
-				if (instruction->operands[i].memoryAddress.segment != NO_SEGMENT)
+				if (instruction->operands[i].memoryAddress.regSegment != NO_REG)
 				{
-					wxString segStr = wxString(segmentStrs[instruction->operands[i].memoryAddress.segment]) + ":";
+					wxString segStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regSegment]) + ":";
 					int32_t loc = asmStr.find(segStr, segStart);
 					StartStyling(pos + loc);
 					SetStyling(segStr.length() - 1, SEGMENT_ASM_COLOR);
@@ -568,14 +568,6 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 					SetStyling(sizeStr.length(), PTR_SIZE_ASM_COLOR);
 					ptrSizeStart = loc + sizeStr.length();
 				}
-			}
-			else if (instruction->operands[i].type == SEGMENT)
-			{
-				wxString segStr = wxString(segmentStrs[instruction->operands[i].segment]);
-				int32_t loc = asmStr.find(segStr, segStart);
-				StartStyling(pos + loc);
-				SetStyling(segStr.length(), SEGMENT_ASM_COLOR);
-				segStart = loc + segStr.length();
 			}
 
 			if (i == 0 && instruction->opmask != NO_REG)

@@ -56,7 +56,7 @@ enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params)
 	return SUCCESS_JDC;
 }
 
-enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
+enum Register segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
 {
 	switch (group2Prefix)
 	{
@@ -74,7 +74,7 @@ enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
 		return GS;
 	}
 
-	return NO_SEGMENT;
+	return NO_REG;
 }
 
 enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params)

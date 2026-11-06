@@ -3,7 +3,7 @@
 
 enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params);
 
-enum Segment segmentOverrideToSegment(enum LegacyPrefix group2Prefix);
+enum Register segmentOverrideToSegment(enum LegacyPrefix group2Prefix);
 
 enum JdcStatus handleREXPrefix(struct DisassemblyParameters* params);
 

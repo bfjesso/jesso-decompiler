@@ -77,28 +77,28 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->reg = DX;
 			break;
 		case ES_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = ES;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = ES;
 			break;
 		case CS_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = CS;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = CS;
 			break;
 		case SS_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = SS;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = SS;
 			break;
 		case DS_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = DS;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = DS;
 			break;
 		case FS_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = FS;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = FS;
 			break;
 		case GS_CODE:
-			currentOperand->type = SEGMENT;
-			currentOperand->segment = GS;
+			currentOperand->type = REGISTER;
+			currentOperand->reg = GS;
 			break;
 		case rAX:
 			currentOperand->type = REGISTER;
@@ -326,42 +326,42 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = ES;
+			currentOperand->memoryAddress.regSegment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = ES;
+			currentOperand->memoryAddress.regSegment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Yz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = ES;
+			currentOperand->memoryAddress.regSegment = ES;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
 			break;
 		case Xb:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = DS;
+			currentOperand->memoryAddress.regSegment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = DS;
+			currentOperand->memoryAddress.regSegment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Xz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = DS;
+			currentOperand->memoryAddress.regSegment = DS;
 			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
 			break;
 		case Jb:
@@ -375,14 +375,14 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Ov:
 			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.segment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Rd:
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -524,14 +524,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			{
 				return ERROR_JDC;
 			}
-			else if (currentOperand->type == SEGMENT && (currentOperand->segment < 0 || currentOperand->segment >= NUM_OF_SEGMENTS))
-			{
-				return ERROR_JDC;
-			}
 			else if (currentOperand->type == MEM_ADDRESS &&
 				(currentOperand->memoryAddress.reg < 0 || currentOperand->memoryAddress.reg >= NUM_OF_REGISTERS ||
 					currentOperand->memoryAddress.regDisplacement < 0 || currentOperand->memoryAddress.regDisplacement >= NUM_OF_REGISTERS ||
-					currentOperand->memoryAddress.segment < 0 || currentOperand->memoryAddress.segment >= NUM_OF_SEGMENTS))
+					currentOperand->memoryAddress.regSegment < 0 || currentOperand->memoryAddress.regSegment >= NUM_OF_REGISTERS))
 			{
 				return ERROR_JDC;
 			}

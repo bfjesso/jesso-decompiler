@@ -913,12 +913,10 @@ bool compareOperands(struct Operand* op1, struct Operand* op2)
 		{
 		case NO_OPERAND:
 			return true;
-		case SEGMENT:
-			return op1->segment == op2->segment;
 		case REGISTER:
 			return op1->reg == op2->reg;
 		case MEM_ADDRESS:
-			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->segment == m2->segment;
+			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->regSegment == m2->regSegment;
 		case IMMEDIATE:
 			return op1->immediate.value == op2->immediate.value;
 		}

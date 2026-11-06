@@ -1,17 +1,5 @@
 #include "registers.h"
 
-extern const char* segmentStrs[NUM_OF_SEGMENTS] =
-{
-	"NO SEGMENT",
-
-	"ES",
-	"CS",
-	"SS",
-	"DS",
-	"FS",
-	"GS"
-};
-
 extern const char* registerStrs[NUM_OF_REGISTERS] =
 {
 	"NO REG",
@@ -36,6 +24,8 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"ZMM16", "ZMM17", "ZMM18", "ZMM19", "ZMM20", "ZMM21", "ZMM22", "ZMM23", "ZMM24", "ZMM25", "ZMM26", "ZMM27", "ZMM28", "ZMM29", "ZMM30", "ZMM31",
 
 	"ST(0)", "ST(1)", "ST(2)", "ST(3)", "ST(4)", "ST(5)", "ST(6)", "ST(7)",
+
+	"ES", "CS", "SS", "DS", "FS", "GS",
 
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
 	"CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8", "CR9", "CR10", "CR11", "CR12", "CR13", "CR14", "CR15",
@@ -248,7 +238,7 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 	{
 		return 1;
 	}
-	else if (reg >= AX && reg <= R15W)
+	else if ((reg >= AX && reg <= R15W) || (reg >= ES && reg <= GS))
 	{
 		return 2;
 	}

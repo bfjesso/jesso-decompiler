@@ -86,11 +86,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
-		if (currentOperand->type == SEGMENT)
-		{
-			strcatJdc(result, segmentStrs[currentOperand->segment]);
-		}
-		else if (currentOperand->type == REGISTER)
+		if (currentOperand->type == REGISTER)
 		{
 			if (evaluateIP && compareRegisters(currentOperand->reg, IP))
 			{
@@ -134,9 +130,9 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 		strcatJdc(result, " ");
 	}
 
-	if (memAddr->segment != NO_SEGMENT)
+	if (memAddr->regSegment != NO_REG)
 	{
-		strcatJdc(result, segmentStrs[memAddr->segment]);
+		strcatJdc(result, registerStrs[memAddr->regSegment]);
 		strcatJdc(result, ":");
 	}
 	else if (memAddr->constSegment != 0)
