@@ -112,15 +112,15 @@ enum JdcStatus getFunctionReturnTypeAndConditions(struct DecompilationParameters
 			{
 				if (!isRegInitialized(params, i, func->firstInstructionIndex, func->returnReg, 0, 0))
 				{
-					if (compareRegisters(func->returnReg, AX))
+					if (compareRegisters(func->returnReg, AX_X86_REG))
 					{
 						canBeAX = false;
 					}
-					else if (compareRegisters(func->returnReg, XMM0))
+					else if (compareRegisters(func->returnReg, XMM0_X86_REG))
 					{
 						canBeXMM0 = false;
 					}
-					else if (compareRegisters(func->returnReg, ST0))
+					else if (compareRegisters(func->returnReg, ST0_X86_REG))
 					{
 						canBeST0 = false;
 					}
@@ -139,7 +139,7 @@ enum JdcStatus getFunctionReturnTypeAndConditions(struct DecompilationParameters
 			struct DataType dataType = { 0 };
 			if (canBeAX)
 			{
-				if (isRegInitialized(params, i, func->firstInstructionIndex, AX, &specificReg, &dataType))
+				if (isRegInitialized(params, i, func->firstInstructionIndex, AX_X86_REG, &specificReg, &dataType))
 				{
 					func->returnType = dataType;
 					func->returnReg = specificReg;
@@ -154,10 +154,10 @@ enum JdcStatus getFunctionReturnTypeAndConditions(struct DecompilationParameters
 
 			if (canBeXMM0)
 			{
-				if (isRegInitialized(params, i, func->firstInstructionIndex, XMM0, 0, &dataType))
+				if (isRegInitialized(params, i, func->firstInstructionIndex, XMM0_X86_REG, 0, &dataType))
 				{
 					func->returnType = dataType;
-					func->returnReg = XMM0;
+					func->returnReg = XMM0_X86_REG;
 					*setReturnType = true;
 					continue;
 				}
@@ -169,10 +169,10 @@ enum JdcStatus getFunctionReturnTypeAndConditions(struct DecompilationParameters
 
 			if (canBeST0)
 			{
-				if (isRegInitialized(params, i, func->firstInstructionIndex, ST0, 0, 0))
+				if (isRegInitialized(params, i, func->firstInstructionIndex, ST0_X86_REG, 0, 0))
 				{
 					func->returnType.primitiveType = FLOAT_TYPE;
-					func->returnReg = ST0;
+					func->returnReg = ST0_X86_REG;
 					*setReturnType = true;
 					continue;
 				}
@@ -240,9 +240,9 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 			continue;
 		}
 
-		for (int32_t reg = RAX; reg < ST0; reg++)
+		for (int32_t reg = RAX_X86_REG; reg < ST0_X86_REG; reg++)
 		{
-			if (reg == RBP || reg == RSP || reg == RIP)
+			if (reg == RBP_X86_REG || reg == RSP_X86_REG || reg == RIP_X86_REG)
 			{
 				continue;
 			}
@@ -612,7 +612,7 @@ static int64_t getStackFrameChange(struct DisassembledInstruction* instruction)
 		return 0;
 	}
 
-	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP))
+	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP_X86_REG))
 	{
 		if (instruction->opcode == SUB_X86)
 		{
@@ -703,7 +703,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instru
 		return false;
 	}
 
-	if (compareRegisters(memAddress->reg, SP))
+	if (compareRegisters(memAddress->reg, SP_X86_REG))
 	{
 		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, instructionIndex); }
 		return true;
@@ -718,7 +718,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instru
 		{
 			if (compareRegisters(instruction->operands[0].reg, memAddress->reg))
 			{
-				if (compareRegisters(instruction->operands[1].reg, SP))
+				if (compareRegisters(instruction->operands[1].reg, SP_X86_REG))
 				{
 					if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement - getStackFrameSizeAtInstruction(params, i); }
 					return true;
@@ -731,7 +731,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instru
 		}
 	}
 
-	if (compareRegisters(memAddress->reg, BP))
+	if (compareRegisters(memAddress->reg, BP_X86_REG))
 	{
 		// if mov BP, SP is not found, the BP is assumed to be the initial SP value
 		if (offsetFromInitSP) { *offsetFromInitSP = memAddress->constDisplacement; }
@@ -925,7 +925,7 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 			{
 				params->currentFunc->callingConvention = __UNKNOWNCALL;
 			}
-			else if (params->currentFunc->numOfRegVars == 1 && compareRegisters(reg, CX))
+			else if (params->currentFunc->numOfRegVars == 1 && compareRegisters(reg, CX_X86_REG))
 			{
 				params->currentFunc->callingConvention = __THISCALL;
 			}

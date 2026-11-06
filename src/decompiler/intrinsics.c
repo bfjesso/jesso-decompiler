@@ -243,7 +243,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 	if (intrinsic->opcode == INT_X86)
 	{
 		struct JdcStr code = initializeJdcStr();
-		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &code, 0))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX_X86_REG, 1, 0, &code, 0))
 		{
 			freeJdcStr(&code);
 			return ERROR_JDC;
@@ -255,7 +255,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 	else if (intrinsic->opcode == MOVS_X86 || intrinsic->opcode == STOS_X86)
 	{
 		struct JdcStr count = initializeJdcStr();
-		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &count, 0))
+		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX_X86_REG, 1, 0, &count, 0))
 		{
 			freeJdcStr(&count);
 			return ERROR_JDC;

@@ -96,7 +96,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 			int32_t pushInstructionIndex = -1;
 			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].offsetFromInitSP, &stackArgContainer, &pushInstructionIndex, 0))
 			{
-				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP] : registerStrs[ESP]);
+				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP_X86_REG] : registerStrs[ESP_X86_REG]);
 				struct JdcStr dataTypeStr = initializeJdcStr();
 				dataTypeToStr(callee->stackVars[i].dataType, params->useStdInt, &dataTypeStr);
 				if (callee->stackVars[i].dataType.pointerLevel > 0)
@@ -194,7 +194,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		for (int32_t i = 0; i < params->currentFunc->numOfRegVars; i++)
 		{
 			struct RegisterVariable* regVar = &params->currentFunc->regVars[i];
-			if (!regVar->isArgument && compareRegisters(regVar->reg, AX) && checkRegVarScope(params, regVar, callInstructionIndex))
+			if (!regVar->isArgument && compareRegisters(regVar->reg, AX_X86_REG) && checkRegVarScope(params, regVar, callInstructionIndex))
 			{
 				sprintfJdc(&decompiledCall, false, "%s = ", regVar->name.buffer);
 				isReturnRegLocalVar = true;

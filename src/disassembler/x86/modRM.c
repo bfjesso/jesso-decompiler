@@ -37,25 +37,25 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		switch (operandSize)
 		{
 		case 1:
-			result->reg = (params->modRM.reg + AL);
+			result->reg = (params->modRM.reg + AL_X86_REG);
 			break;
 		case 2:
-			result->reg = (params->modRM.reg + AX);
+			result->reg = (params->modRM.reg + AX_X86_REG);
 			break;
 		case 4:
-			result->reg = (params->modRM.reg + EAX);
+			result->reg = (params->modRM.reg + EAX_X86_REG);
 			break;
 		case 8:
-			result->reg = (params->modRM.reg + RAX);
+			result->reg = (params->modRM.reg + RAX_X86_REG);
 			break;
 		case 16:
-			result->reg = (params->modRM.reg + XMM0);
+			result->reg = (params->modRM.reg + XMM0_X86_REG);
 			break;
 		case 32:
-			result->reg = (params->modRM.reg + YMM0);
+			result->reg = (params->modRM.reg + YMM0_X86_REG);
 			break;
 		case 64:
-			result->reg = (params->is64BitMode && params->evexPrefix.isValidEVEX && !params->evexPrefix.R_prime) ? (params->modRM.reg + ZMM16) : (params->modRM.reg + ZMM0);
+			result->reg = (params->is64BitMode && params->evexPrefix.isValidEVEX && !params->evexPrefix.R_prime) ? (params->modRM.reg + ZMM16_X86_REG) : (params->modRM.reg + ZMM0_X86_REG);
 			break;
 		}
 
@@ -69,13 +69,13 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	else if (selection == REG_SEG_MODRM)
 	{
 		result->type = REGISTER;
-		result->reg = (params->modRM.reg + ES);
+		result->reg = (params->modRM.reg + ES_X86_REG);
 		return SUCCESS_JDC;
 	}
 	else if (selection == REG_MMX_MODRM)
 	{
 		result->type = REGISTER;
-		result->reg = (params->modRM.reg + MM0);
+		result->reg = (params->modRM.reg + MM0_X86_REG);
 		return SUCCESS_JDC;
 	}
 	else if (selection == REG_CONTROL_MODRM)
@@ -84,10 +84,10 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		switch (operandSize)
 		{
 		case 4:
-			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8D : CR0D));
+			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8D_X86_REG : CR0D_X86_REG));
 			break;
 		case 8:
-			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8 : CR0));
+			result->reg = (params->modRM.reg + (params->rexPrefix.R ? CR8_X86_REG : CR0_X86_REG));
 			break;
 		}
 
@@ -98,11 +98,11 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		result->type = REGISTER;
 		if (params->rexPrefix.R)
 		{
-			result->reg = (params->modRM.reg + DR8);
+			result->reg = (params->modRM.reg + DR8_X86_REG);
 		}
 		else
 		{
-			result->reg = (params->modRM.reg + DR0);
+			result->reg = (params->modRM.reg + DR0_X86_REG);
 		}
 
 		return SUCCESS_JDC;
@@ -113,13 +113,13 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		switch (operandSize)
 		{
 		case 2:
-			result->reg = (params->modRM.rm + AX);
+			result->reg = (params->modRM.rm + AX_X86_REG);
 			break;
 		case 4:
-			result->reg = (params->modRM.rm + EAX);
+			result->reg = (params->modRM.rm + EAX_X86_REG);
 			break;
 		case 8:
-			result->reg = (params->modRM.rm + RAX);
+			result->reg = (params->modRM.rm + RAX_X86_REG);
 			break;
 		}
 
@@ -137,32 +137,32 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 		if (selection == RM_MMX_MODRM || selection == RM_MOD11_MMX_MODRM)
 		{
-			result->reg = (params->modRM.rm + MM0);
+			result->reg = (params->modRM.rm + MM0_X86_REG);
 			return SUCCESS_JDC;
 		}
 
 		switch (operandSize)
 		{
 		case 1:
-			result->reg = (params->modRM.rm + AL);
+			result->reg = (params->modRM.rm + AL_X86_REG);
 			break;
 		case 2:
-			result->reg = (params->modRM.rm + AX);
+			result->reg = (params->modRM.rm + AX_X86_REG);
 			break;
 		case 4:
-			result->reg = (params->modRM.rm + EAX);
+			result->reg = (params->modRM.rm + EAX_X86_REG);
 			break;
 		case 8:
-			result->reg = (params->modRM.rm + RAX);
+			result->reg = (params->modRM.rm + RAX_X86_REG);
 			break;
 		case 16:
-			result->reg = (params->modRM.rm + XMM0);
+			result->reg = (params->modRM.rm + XMM0_X86_REG);
 			break;
 		case 32:
-			result->reg = (params->modRM.rm + YMM0);
+			result->reg = (params->modRM.rm + YMM0_X86_REG);
 			break;
 		case 64:
-			result->reg = (params->is64BitMode && params->evexPrefix.isValidEVEX && !params->evexPrefix.X) ? (params->modRM.rm + ZMM16) : (params->modRM.rm + ZMM0);
+			result->reg = (params->is64BitMode && params->evexPrefix.isValidEVEX && !params->evexPrefix.X) ? (params->modRM.rm + ZMM16_X86_REG) : (params->modRM.rm + ZMM0_X86_REG);
 			break;
 		}
 
@@ -207,32 +207,32 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 4:
-				result->memoryAddress.reg = SI;
+				result->memoryAddress.reg = SI_X86_REG;
 				break;
 			case 5:
-				result->memoryAddress.reg = DI;
+				result->memoryAddress.reg = DI_X86_REG;
 				break;
 			case 6:
 				if (ERROR_JDC == readIntFromBytes(params, 2, &result->memoryAddress.constDisplacement)) { return ERROR_JDC; } // disp16
 				break;
 			case 7:
-				result->memoryAddress.reg = BX;
+				result->memoryAddress.reg = BX_X86_REG;
 				break;
 			}
 
@@ -248,32 +248,32 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 4:
-				result->memoryAddress.reg = SI;
+				result->memoryAddress.reg = SI_X86_REG;
 				break;
 			case 5:
-				result->memoryAddress.reg = DI;
+				result->memoryAddress.reg = DI_X86_REG;
 				break;
 			case 6:
-				result->memoryAddress.reg = BP;
+				result->memoryAddress.reg = BP_X86_REG;
 				break;
 			case 7:
-				result->memoryAddress.reg = BX;
+				result->memoryAddress.reg = BX_X86_REG;
 				break;
 			}
 
@@ -289,32 +289,32 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = BX;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BX_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = SI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = SI_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = BP;
-				result->memoryAddress.regDisplacement = DI;
+				result->memoryAddress.reg = BP_X86_REG;
+				result->memoryAddress.regDisplacement = DI_X86_REG;
 				break;
 			case 4:
-				result->memoryAddress.reg = SI;
+				result->memoryAddress.reg = SI_X86_REG;
 				break;
 			case 5:
-				result->memoryAddress.reg = DI;
+				result->memoryAddress.reg = DI_X86_REG;
 				break;
 			case 6:
-				result->memoryAddress.reg = BP;
+				result->memoryAddress.reg = BP_X86_REG;
 				break;
 			case 7:
-				result->memoryAddress.reg = BX;
+				result->memoryAddress.reg = BX_X86_REG;
 				break;
 			}
 
@@ -331,16 +331,16 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = EAX;
+				result->memoryAddress.reg = EAX_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = ECX;
+				result->memoryAddress.reg = ECX_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = EDX;
+				result->memoryAddress.reg = EDX_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = EBX;
+				result->memoryAddress.reg = EBX_X86_REG;
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, 0, result)) { return ERROR_JDC; }
@@ -348,14 +348,14 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 5:
 				if (ERROR_JDC == readIntFromBytes(params, 4, &result->memoryAddress.constDisplacement)) { return ERROR_JDC; } // disp32
-				if (params->is64BitMode) { result->memoryAddress.reg = RIP; }
-				else { result->memoryAddress.regSegment = DS; }
+				if (params->is64BitMode) { result->memoryAddress.reg = RIP_X86_REG; }
+				else { result->memoryAddress.regSegment = DS_X86_REG; }
 				break;
 			case 6:
-				result->memoryAddress.reg = ESI;
+				result->memoryAddress.reg = ESI_X86_REG;
 				break;
 			case 7:
-				result->memoryAddress.reg = EDI;
+				result->memoryAddress.reg = EDI_X86_REG;
 				break;
 			}
 
@@ -367,29 +367,29 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = EAX;
+				result->memoryAddress.reg = EAX_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = ECX;
+				result->memoryAddress.reg = ECX_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = EDX;
+				result->memoryAddress.reg = EDX_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = EBX;
+				result->memoryAddress.reg = EBX_X86_REG;
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, &gotDisp, result)) { return ERROR_JDC; }
 				usedSIB = true;
 				break;
 			case 5:
-				result->memoryAddress.reg = EBP;
+				result->memoryAddress.reg = EBP_X86_REG;
 				break;
 			case 6:
-				result->memoryAddress.reg = ESI;
+				result->memoryAddress.reg = ESI_X86_REG;
 				break;
 			case 7:
-				result->memoryAddress.reg = EDI;
+				result->memoryAddress.reg = EDI_X86_REG;
 				break;
 			}
 
@@ -406,29 +406,29 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			switch (params->modRM.rm)
 			{
 			case 0:
-				result->memoryAddress.reg = EAX;
+				result->memoryAddress.reg = EAX_X86_REG;
 				break;
 			case 1:
-				result->memoryAddress.reg = ECX;
+				result->memoryAddress.reg = ECX_X86_REG;
 				break;
 			case 2:
-				result->memoryAddress.reg = EDX;
+				result->memoryAddress.reg = EDX_X86_REG;
 				break;
 			case 3:
-				result->memoryAddress.reg = EBX;
+				result->memoryAddress.reg = EBX_X86_REG;
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, &gotDisp, result)) { return ERROR_JDC; }
 				usedSIB = true;
 				break;
 			case 5:
-				result->memoryAddress.reg = EBP;
+				result->memoryAddress.reg = EBP_X86_REG;
 				break;
 			case 6:
-				result->memoryAddress.reg = ESI;
+				result->memoryAddress.reg = ESI_X86_REG;
 				break;
 			case 7:
-				result->memoryAddress.reg = EDI;
+				result->memoryAddress.reg = EDI_X86_REG;
 				break;
 			}
 
@@ -442,7 +442,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		}
 	}
 
-	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP)
+	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP_X86_REG)
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
@@ -535,12 +535,12 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 
 	if (index != 4 || checkFlagX(params)) // ESP cant be the index, but if X is used it can encode R12
 	{
-		result->memoryAddress.reg = (enum Register)(index + EAX);
-		result->memoryAddress.regDisplacement = (enum Register)(base + EAX);
+		result->memoryAddress.reg = (enum Register)(index + EAX_X86_REG);
+		result->memoryAddress.regDisplacement = (enum Register)(base + EAX_X86_REG);
 	}
 	else
 	{
-		result->memoryAddress.reg = (enum Register)(base + EAX);
+		result->memoryAddress.reg = (enum Register)(base + EAX_X86_REG);
 	}
 
 	if (params->is64BitMode)

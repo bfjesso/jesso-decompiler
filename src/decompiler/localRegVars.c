@@ -29,10 +29,10 @@ static enum JdcStatus getLocalRegVarsFromConditionalInstructions(struct Decompil
 	// checking for individual instructions that conditionally modify a reg
 	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
-		for (int32_t modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
+		for (int32_t modifiedReg = RAX_X86_REG; modifiedReg < ST0_X86_REG; modifiedReg++)
 		{
 			struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
-			if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
+			if (modifiedReg == RBP_X86_REG || modifiedReg == RSP_X86_REG || modifiedReg == RIP_X86_REG ||
 				!doesInstructionConditionallyModifyRegister(params, i, modifiedReg))
 			{
 				continue;
@@ -82,9 +82,9 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 					break;
 				}
 
-				for (int32_t k = RAX; k < ST0; k++)
+				for (int32_t k = RAX_X86_REG; k < ST0_X86_REG; k++)
 				{
-					if (k == RBP || k == RSP || k == RIP)
+					if (k == RBP_X86_REG || k == RSP_X86_REG || k == RIP_X86_REG)
 					{
 						continue;
 					}
@@ -97,7 +97,7 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 			}
 
 			// checking if the modified regs are accessed before being overwritten after the condition
-			for (int32_t j = RAX; j < ST0; j++)
+			for (int32_t j = RAX_X86_REG; j < ST0_X86_REG; j++)
 			{
 				if (!modifiedRegs[j])
 				{
@@ -172,11 +172,11 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 			// this is checking for instructions that modify multiple things, and the order that the asignments are decompiled in maters
 			if (checkForAnyAssignments(params, i))
 			{
-				for (int32_t statusFlag = CF; statusFlag <= OF; statusFlag++)
+				for (int32_t statusFlag = CF_X86_REG; statusFlag <= OF_X86_REG; statusFlag++)
 				{
 					enum OpcodeMnemonic opcode = instruction->opcode;
 					if (opcode == ADD_X86 || opcode == SUB_X86 || opcode == CMPXCHG_X86 ||
-						(opcode == NEG_X86 && statusFlag == OF))
+						(opcode == NEG_X86 && statusFlag == OF_X86_REG))
 					{
 						if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, statusFlag, 0, 0))
 						{
@@ -200,19 +200,19 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 			}
 
 			// if a reg is modified using a regVar, and then that regVar is modified before the reg is overwritten again, the reg needs to also be a regVar
-			for (int32_t modifiedReg = RAX; modifiedReg < ST0; modifiedReg++)
+			for (int32_t modifiedReg = RAX_X86_REG; modifiedReg < ST0_X86_REG; modifiedReg++)
 			{
 				struct RegisterVariable* modifiedRegVar = getLocalRegVarByReg(params->currentFunc, modifiedReg);
-				if (modifiedReg == RBP || modifiedReg == RSP || modifiedReg == RIP ||
+				if (modifiedReg == RBP_X86_REG || modifiedReg == RSP_X86_REG || modifiedReg == RIP_X86_REG ||
 					!doesInstructionModifyRegister(params, i, modifiedReg, 0, 0))
 				{
 					continue;
 				}
 
-				for (int32_t accessedReg = RAX; accessedReg < ST0; accessedReg++)
+				for (int32_t accessedReg = RAX_X86_REG; accessedReg < ST0_X86_REG; accessedReg++)
 				{
 					struct RegisterVariable* accessedRegVar = getLocalRegVarByReg(params->currentFunc, accessedReg);
-					if (accessedReg == RBP || accessedReg == RSP || accessedReg == RIP ||
+					if (accessedReg == RBP_X86_REG || accessedReg == RSP_X86_REG || accessedReg == RIP_X86_REG ||
 						!doesInstructionAccessRegister(params, i, accessedReg, 0, 0) || !accessedRegVar || !checkRegVarScope(params, accessedRegVar, i))
 					{
 						continue;

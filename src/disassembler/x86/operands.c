@@ -11,7 +11,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 
 	if (params->evexPrefix.isValidEVEX && params->evexPrefix.aaa != 0)
 	{
-		result->opmask = (params->evexPrefix.aaa + K0);
+		result->opmask = (params->evexPrefix.aaa + K0_X86_REG);
 		result->zeroMasking = params->evexPrefix.z;
 	}
 
@@ -62,171 +62,171 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			break;
 		case AL_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = AL;
+			currentOperand->reg = AL_X86_REG;
 			break;
 		case CL_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = CL;
+			currentOperand->reg = CL_X86_REG;
 			break;
 		case AX_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = AX;
+			currentOperand->reg = AX_X86_REG;
 			break;
 		case DX_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = DX;
+			currentOperand->reg = DX_X86_REG;
 			break;
 		case ES_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ES;
+			currentOperand->reg = ES_X86_REG;
 			break;
 		case CS_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = CS;
+			currentOperand->reg = CS_X86_REG;
 			break;
 		case SS_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = SS;
+			currentOperand->reg = SS_X86_REG;
 			break;
 		case DS_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = DS;
+			currentOperand->reg = DS_X86_REG;
 			break;
 		case FS_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = FS;
+			currentOperand->reg = FS_X86_REG;
 			break;
 		case GS_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = GS;
+			currentOperand->reg = GS_X86_REG;
 			break;
 		case rAX:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RAX : (params->legPrefixes.group3 == OSO ? AX : EAX);
+			currentOperand->reg = is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 == OSO ? AX_X86_REG : EAX_X86_REG);
 			break;
 		case rCX:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RCX : (params->legPrefixes.group3 == OSO ? CX : ECX);
+			currentOperand->reg = is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 == OSO ? CX_X86_REG : ECX_X86_REG);
 			break;
 		case rDX:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RDX : (params->legPrefixes.group3 == OSO ? DX : EDX);
+			currentOperand->reg = is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 == OSO ? DX_X86_REG : EDX_X86_REG);
 			break;
 		case rBX:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RBX : (params->legPrefixes.group3 == OSO ? BX : EBX);
+			currentOperand->reg = is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 == OSO ? BX_X86_REG : EBX_X86_REG);
 			break;
 		case rSP:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RSP : (params->legPrefixes.group3 == OSO ? SP : ESP);
+			currentOperand->reg = is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 == OSO ? SP_X86_REG : ESP_X86_REG);
 			break;
 		case rBP:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RBP : (params->legPrefixes.group3 == OSO ? BP : EBP);
+			currentOperand->reg = is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 == OSO ? BP_X86_REG : EBP_X86_REG);
 			break;
 		case rSI:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RSI : (params->legPrefixes.group3 == OSO ? SI : ESI);
+			currentOperand->reg = is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 == OSO ? SI_X86_REG : ESI_X86_REG);
 			break;
 		case rDI:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RDI : (params->legPrefixes.group3 == OSO ? DI : EDI);
+			currentOperand->reg = is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 == OSO ? DI_X86_REG : EDI_X86_REG);
 			break;
 		case rAX_r8:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8 : R8D) : (is64BitOperandSize ? RAX : (params->legPrefixes.group3 != OSO ? EAX : AX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8_X86_REG : R8D_X86_REG) : (is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 != OSO ? EAX_X86_REG : AX_X86_REG));
 			break;
 		case rCX_r9:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9 : R9D) : (is64BitOperandSize ? RCX : (params->legPrefixes.group3 != OSO ? ECX : CX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9_X86_REG : R9D_X86_REG) : (is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 != OSO ? ECX_X86_REG : CX_X86_REG));
 			break;
 		case rDX_r10:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10 : R10D) : (is64BitOperandSize ? RDX : (params->legPrefixes.group3 != OSO ? EDX : DX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10_X86_REG : R10D_X86_REG) : (is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 != OSO ? EDX_X86_REG : DX_X86_REG));
 			break;
 		case rBX_r11:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11 : R11D) : (is64BitOperandSize ? RBX : (params->legPrefixes.group3 != OSO ? EBX : BX));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11_X86_REG : R11D_X86_REG) : (is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 != OSO ? EBX_X86_REG : BX_X86_REG));
 			break;
 		case rSP_r12:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12 : R12D) : (is64BitOperandSize ? RSP : (params->legPrefixes.group3 != OSO ? ESP : SP));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12_X86_REG : R12D_X86_REG) : (is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 != OSO ? ESP_X86_REG : SP_X86_REG));
 			break;
 		case rBP_r13:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13 : R13D) : (is64BitOperandSize ? RBP : (params->legPrefixes.group3 != OSO ? EBP : BP));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13_X86_REG : R13D_X86_REG) : (is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 != OSO ? EBP_X86_REG : BP_X86_REG));
 			break;
 		case rSI_r14:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14 : R14D) : (is64BitOperandSize ? RSI : (params->legPrefixes.group3 != OSO ? ESI : SI));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14_X86_REG : R14D_X86_REG) : (is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 != OSO ? ESI_X86_REG : SI_X86_REG));
 			break;
 		case rDI_r15:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15 : R15D) : (is64BitOperandSize ? RDI : (params->legPrefixes.group3 != OSO ? EDI : DI));
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15_X86_REG : R15D_X86_REG) : (is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 != OSO ? EDI_X86_REG : DI_X86_REG));
 			break;
 		case AL_R8B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R8B : AL;
+			currentOperand->reg = params->rexPrefix.B ? R8B_X86_REG : AL_X86_REG;
 			break;
 		case CL_R9B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R9B : CL;
+			currentOperand->reg = params->rexPrefix.B ? R9B_X86_REG : CL_X86_REG;
 			break;
 		case DL_R10B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R10B : DL;
+			currentOperand->reg = params->rexPrefix.B ? R10B_X86_REG : DL_X86_REG;
 			break;
 		case BL_R11B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R11B : BL;
+			currentOperand->reg = params->rexPrefix.B ? R11B_X86_REG : BL_X86_REG;
 			break;
 		case AH_R12B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R12B : AH;
+			currentOperand->reg = params->rexPrefix.B ? R12B_X86_REG : AH_X86_REG;
 			break;
 		case CH_R13B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R13B : CH;
+			currentOperand->reg = params->rexPrefix.B ? R13B_X86_REG : CH_X86_REG;
 			break;
 		case DH_R14B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R14B : DH;
+			currentOperand->reg = params->rexPrefix.B ? R14B_X86_REG : DH_X86_REG;
 			break;
 		case BH_R15B:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? R15B : BH;
+			currentOperand->reg = params->rexPrefix.B ? R15B_X86_REG : BH_X86_REG;
 			break;
 		case ST0_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST0;
+			currentOperand->reg = ST0_X86_REG;
 			break;
 		case ST1_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST1;
+			currentOperand->reg = ST1_X86_REG;
 			break;
 		case ST2_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST2;
+			currentOperand->reg = ST2_X86_REG;
 			break;
 		case ST3_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST3;
+			currentOperand->reg = ST3_X86_REG;
 			break;
 		case ST4_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST4;
+			currentOperand->reg = ST4_X86_REG;
 			break;
 		case ST5_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST5;
+			currentOperand->reg = ST5_X86_REG;
 			break;
 		case ST6_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST6;
+			currentOperand->reg = ST6_X86_REG;
 			break;
 		case ST7_CODE:
 			currentOperand->type = REGISTER;
-			currentOperand->reg = ST7;
+			currentOperand->reg = ST7_X86_REG;
 			break;
 		case Eb:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 1, currentOperand)) { return ERROR_JDC; }
@@ -326,43 +326,43 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.regSegment = ES_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case Yv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.regSegment = ES_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case Yz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = ES;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI : EDI) : (params->is64BitMode ? EDI : DI);
+			currentOperand->memoryAddress.regSegment = ES_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case Xb:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.regSegment = DS_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case Xv:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.regSegment = DS_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case Xz:
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = DS;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI : ESI) : (params->is64BitMode ? ESI : SI);
+			currentOperand->memoryAddress.regSegment = DS_X86_REG;
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case Jb:
 			if (ERROR_JDC == getImmediate(params, 1, currentOperand)) { return ERROR_JDC; }
@@ -375,14 +375,14 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Ov:
 			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			currentOperand->type = MEM_ADDRESS;
 			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case Rd:
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -505,7 +505,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == readIntFromBytes(params, 1, &immediateTmp)) { return ERROR_JDC; }
 			immediateTmp = (immediateTmp >> 4) & 0xF; // upper 4 bits
 			currentOperand->type = REGISTER;
-			currentOperand->reg = vectorLength == 32 ? (YMM0 + immediateTmp) : (XMM0 + immediateTmp);
+			currentOperand->reg = vectorLength == 32 ? (YMM0_X86_REG + immediateTmp) : (XMM0_X86_REG + immediateTmp);
 			break;
 		case EVEXvvvv:
 			if (!params->evexPrefix.isValidEVEX) { return ERROR_JDC; }
@@ -625,21 +625,21 @@ static enum JdcStatus getRegFromVVVV(struct DisassemblyParameters* params, uint8
 	switch (regSize)
 	{
 	case 4:
-		result->reg = (R15D - vvvv);
-		if (result->reg <= EIP) { result->reg--; } // the instruction pointer cannot be encoded by vvvv
+		result->reg = (R15D_X86_REG - vvvv);
+		if (result->reg <= EIP_X86_REG) { result->reg--; } // the instruction pointer cannot be encoded by vvvv
 		break;
 	case 8:
-		result->reg = (R15 - vvvv);
-		if (result->reg <= RIP) { result->reg--; }
+		result->reg = (R15_X86_REG - vvvv);
+		if (result->reg <= RIP_X86_REG) { result->reg--; }
 		break;
 	case 16:
-		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (XMM31 - vvvv) : (XMM15 - vvvv);
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (XMM31_X86_REG - vvvv) : (XMM15_X86_REG - vvvv);
 		break;
 	case 32:
-		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (YMM31 - vvvv) : (YMM15 - vvvv);
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (YMM31_X86_REG - vvvv) : (YMM15_X86_REG - vvvv);
 		break;
 	case 64:
-		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (ZMM31 - vvvv) : (ZMM15 - vvvv);
+		result->reg = params->evexPrefix.isValidEVEX && !params->evexPrefix.V_prime ? (ZMM31_X86_REG - vvvv) : (ZMM15_X86_REG - vvvv);
 		break;
 	}
 

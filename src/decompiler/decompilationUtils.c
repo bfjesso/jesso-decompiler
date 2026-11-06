@@ -71,7 +71,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 	else if (operand->type == MEM_ADDRESS)
 	{
 		uint64_t address = 0;
-		if (compareRegisters(operand->memoryAddress.reg, IP)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
+		if (compareRegisters(operand->memoryAddress.reg, IP_X86_REG)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
 			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
@@ -88,7 +88,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		address *= operand->memoryAddress.scale;
 
-		if (compareRegisters(operand->memoryAddress.regDisplacement, IP))
+		if (compareRegisters(operand->memoryAddress.regDisplacement, IP_X86_REG))
 		{
 			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
@@ -154,7 +154,7 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 		return ERROR_JDC;
 	}
 
-	if (compareRegisters(reg, IP))
+	if (compareRegisters(reg, IP_X86_REG))
 	{
 		*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		return SUCCESS_JDC;
@@ -497,7 +497,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 		case CMOVBE_X86:
 		case SETA_X86:
 		case SETBE_X86:
-			return reg == CF || reg == ZF;
+			return reg == CF_X86_REG || reg == ZF_X86_REG;
 		case JB_SHORT_X86:
 		case JNB_SHORT_X86:
 		case CMOVB_X86:
@@ -506,48 +506,48 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 		case SETNB_X86:
 		case ADC_X86:
 		case SBB_X86:
-			return reg == CF;
+			return reg == CF_X86_REG;
 		case JG_SHORT_X86:
 		case JLE_SHORT_X86:
 		case CMOVG_X86:
 		case CMOVLE_X86:
 		case SETG_X86:
 		case SETLE_X86:
-			return reg == ZF || reg == SF || reg == OF;
+			return reg == ZF_X86_REG || reg == SF_X86_REG || reg == OF_X86_REG;
 		case JGE_SHORT_X86:
 		case JL_SHORT_X86:
 		case CMOVGE_X86:
 		case CMOVL_X86:
 		case SETL_X86:
-			return reg == SF || reg == OF;
+			return reg == SF_X86_REG || reg == OF_X86_REG;
 		case JS_SHORT_X86:
 		case JNS_SHORT_X86:
 		case CMOVS_X86:
 		case CMOVNS_X86:
 		case SETS_X86:
 		case SETNS_X86:
-			return reg == SF;
+			return reg == SF_X86_REG;
 		case JNO_SHORT_X86:
 		case JO_SHORT_X86:
 		case CMOVNO_X86:
 		case CMOVO_X86:
 		case SETNO_X86:
 		case SETO_X86:
-			return reg == OF;
+			return reg == OF_X86_REG;
 		case JNP_SHORT_X86:
 		case JP_SHORT_X86:
 		case CMOVNP_X86:
 		case CMOVP_X86:
 		case SETNP_X86:
 		case SETP_X86:
-			return reg == PF;
+			return reg == PF_X86_REG;
 		case JNZ_SHORT_X86:
 		case JZ_SHORT_X86:
 		case CMOVNZ_X86:
 		case CMOVZ_X86:
 		case SETNZ_X86:
 		case SETZ_X86:
-			return reg == ZF;
+			return reg == ZF_X86_REG;
 		}
 
 		return false;
@@ -654,14 +654,14 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 		case AND_X86:
 		case OR_X86:
 		case XOR_X86:
-			return reg != AF;
+			return reg != AF_X86_REG;
 		case BT_X86:
 		case BTS_X86:
 		case BTR_X86:
-			return reg == CF;
+			return reg == CF_X86_REG;
 		case INC_X86:
 		case DEC_X86:
-			return reg != CF;
+			return reg != CF_X86_REG;
 		}
 
 		if (overwrites) { *overwrites = false; }
@@ -670,19 +670,19 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 
 	struct Function* callee = 0;
 	if ((checkForKnownFunctionCall(params, instructionIndex, &callee) && callee && compareRegisters(callee->returnReg, reg)) ||
-		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX)))
+		(checkForUnknownFunctionCall(params, instructionIndex) && compareRegisters(reg, AX_X86_REG)))
 	{
 		if (overwrites) { *overwrites = true; }
 		if (specificReg)
 		{
 			if (callee) { *specificReg = callee->returnReg; }
-			else { *specificReg = params->is64Bit ? RAX : EAX; }
+			else { *specificReg = params->is64Bit ? RAX_X86_REG : EAX_X86_REG; }
 		}
 
 		return true;
 	}
 
-	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
+	if (compareRegisters(reg, AX_X86_REG)) // some opcodes may modify a register even if it isn't an operand
 	{
 		if (opcode == CMPXCHG_X86)
 		{
@@ -692,16 +692,16 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 				switch (size)
 				{
 				case 1:
-					*specificReg = AL;
+					*specificReg = AL_X86_REG;
 					break;
 				case 2:
-					*specificReg = AX;
+					*specificReg = AX_X86_REG;
 					break;
 				case 4:
-					*specificReg = EAX;
+					*specificReg = EAX_X86_REG;
 					break;
 				case 8:
-					*specificReg = RAX;
+					*specificReg = RAX_X86_REG;
 					break;
 				}
 			}
@@ -722,16 +722,16 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 				switch (size)
 				{
 				case 1:
-					*specificReg = AL;
+					*specificReg = AL_X86_REG;
 					break;
 				case 2:
-					*specificReg = AX;
+					*specificReg = AX_X86_REG;
 					break;
 				case 4:
-					*specificReg = EAX;
+					*specificReg = EAX_X86_REG;
 					break;
 				case 8:
-					*specificReg = RAX;
+					*specificReg = RAX_X86_REG;
 					break;
 				}
 			}
@@ -753,13 +753,13 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 				{
 				case 1:
 				case 2:
-					*specificReg = AX;
+					*specificReg = AX_X86_REG;
 					break;
 				case 4:
-					*specificReg = EAX;
+					*specificReg = EAX_X86_REG;
 					break;
 				case 8:
-					*specificReg = RAX;
+					*specificReg = RAX_X86_REG;
 					break;
 				}
 			}
@@ -767,7 +767,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			return true;
 		}
 	}
-	else if (compareRegisters(reg, DX))
+	else if (compareRegisters(reg, DX_X86_REG))
 	{
 		if ((opcode == IMUL_X86 || opcode == MUL_X86 || opcode == IDIV_X86 || opcode == DIV_X86) && instruction->numOfOperands == 1)
 		{
@@ -782,13 +782,13 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 				switch (size)
 				{
 				case 2:
-					*specificReg = DX;
+					*specificReg = DX_X86_REG;
 					break;
 				case 4:
-					*specificReg = EDX;
+					*specificReg = EDX_X86_REG;
 					break;
 				case 8:
-					*specificReg = RDX;
+					*specificReg = RDX_X86_REG;
 					break;
 				}
 			}
@@ -797,12 +797,12 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			return true;
 		}
 	}
-	else if (compareRegisters(reg, ST0))
+	else if (compareRegisters(reg, ST0_X86_REG))
 	{
 		switch (opcode)
 		{
 		case FLD_X86:
-			if (specificReg) { *specificReg = ST0; }
+			if (specificReg) { *specificReg = ST0_X86_REG; }
 			if (overwrites) { *overwrites = true; }
 			return true;
 		}
@@ -831,7 +831,7 @@ bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* 
 
 	// CMOVcc is not checked here because it is decompiled as a ternary operator, so its dst is always set to something
 
-	if (compareRegisters(reg, AX))
+	if (compareRegisters(reg, AX_X86_REG))
 	{
 		return opcode == CMPXCHG_X86;
 	}

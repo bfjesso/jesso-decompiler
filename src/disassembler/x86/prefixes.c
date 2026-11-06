@@ -61,17 +61,17 @@ enum Register segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
 	switch (group2Prefix)
 	{
 	case CSO_BNT:
-		return CS;
+		return CS_X86_REG;
 	case SSO:
-		return SS;
+		return SS_X86_REG;
 	case DSO_BT:
-		return DS;
+		return DS_X86_REG;
 	case ESO:
-		return ES;
+		return ES_X86_REG;
 	case FSO:
-		return FS;
+		return FS_X86_REG;
 	case GSO:
-		return GS;
+		return GS_X86_REG;
 	}
 
 	return NO_REG;

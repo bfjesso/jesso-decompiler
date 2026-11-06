@@ -37,10 +37,10 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 };
 
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9
-const enum Register platformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { RCX, RDX, R8, R9 };
-const enum Register altPlatformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { XMM0, XMM1, XMM2, XMM3 };
+const enum Register platformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { RCX_X86_REG, RDX_X86_REG, R8_X86_REG, R9_X86_REG };
+const enum Register altPlatformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { XMM0_X86_REG, XMM1_X86_REG, XMM2_X86_REG, XMM3_X86_REG };
 
-const enum Register platformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { RDI, RSI, RDX, RCX, R8, R9 };
+const enum Register platformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { RDI_X86_REG, RSI_X86_REG, RDX_X86_REG, RCX_X86_REG, R8_X86_REG, R9_X86_REG };
 const enum Register altPlatformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { NO_REG };
 
 int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat)
@@ -108,93 +108,93 @@ const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat)
 
 bool compareRegisters(enum Register reg1, enum Register reg2)
 {
-	if (reg1 == AL || reg1 == AH || reg1 == AX || reg1 == EAX || reg1 == RAX)
+	if (reg1 == AL_X86_REG || reg1 == AH_X86_REG || reg1 == AX_X86_REG || reg1 == EAX_X86_REG || reg1 == RAX_X86_REG)
 	{
-		if ((reg1 == AL && reg2 == AH) || (reg1 == AH && reg2 == AL))
+		if ((reg1 == AL_X86_REG && reg2 == AH_X86_REG) || (reg1 == AH_X86_REG && reg2 == AL_X86_REG))
 		{
 			return 0;
 		}
 
-		return (reg2 == AL || reg2 == AH || reg2 == AX || reg2 == EAX || reg2 == RAX);
+		return (reg2 == AL_X86_REG || reg2 == AH_X86_REG || reg2 == AX_X86_REG || reg2 == EAX_X86_REG || reg2 == RAX_X86_REG);
 	}
-	else if (reg1 == CL || reg1 == CH || reg1 == CX || reg1 == ECX || reg1 == RCX)
+	else if (reg1 == CL_X86_REG || reg1 == CH_X86_REG || reg1 == CX_X86_REG || reg1 == ECX_X86_REG || reg1 == RCX_X86_REG)
 	{
-		if ((reg1 == CL && reg2 == CH) || (reg1 == CH && reg2 == CL))
+		if ((reg1 == CL_X86_REG && reg2 == CH_X86_REG) || (reg1 == CH_X86_REG && reg2 == CL_X86_REG))
 		{
 			return 0;
 		}
 
-		return (reg2 == CL || reg2 == CH || reg2 == CX || reg2 == ECX || reg2 == RCX);
+		return (reg2 == CL_X86_REG || reg2 == CH_X86_REG || reg2 == CX_X86_REG || reg2 == ECX_X86_REG || reg2 == RCX_X86_REG);
 	}
-	else if (reg1 == DL || reg1 == DH || reg1 == DX || reg1 == EDX || reg1 == RDX)
+	else if (reg1 == DL_X86_REG || reg1 == DH_X86_REG || reg1 == DX_X86_REG || reg1 == EDX_X86_REG || reg1 == RDX_X86_REG)
 	{
-		if ((reg1 == DL && reg2 == DH) || (reg1 == DH && reg2 == DL))
+		if ((reg1 == DL_X86_REG && reg2 == DH_X86_REG) || (reg1 == DH_X86_REG && reg2 == DL_X86_REG))
 		{
 			return 0;
 		}
 
-		return (reg2 == DL || reg2 == DH || reg2 == DX || reg2 == EDX || reg2 == RDX);
+		return (reg2 == DL_X86_REG || reg2 == DH_X86_REG || reg2 == DX_X86_REG || reg2 == EDX_X86_REG || reg2 == RDX_X86_REG);
 	}
-	else if (reg1 == BL || reg1 == BH || reg1 == BX || reg1 == EBX || reg1 == RBX)
+	else if (reg1 == BL_X86_REG || reg1 == BH_X86_REG || reg1 == BX_X86_REG || reg1 == EBX_X86_REG || reg1 == RBX_X86_REG)
 	{
-		if ((reg1 == BL && reg2 == BH) || (reg1 == BH && reg2 == BL))
+		if ((reg1 == BL_X86_REG && reg2 == BH_X86_REG) || (reg1 == BH_X86_REG && reg2 == BL_X86_REG))
 		{
 			return 0;
 		}
 
-		return (reg2 == BL || reg2 == BH || reg2 == BX || reg2 == EBX || reg2 == RBX);
+		return (reg2 == BL_X86_REG || reg2 == BH_X86_REG || reg2 == BX_X86_REG || reg2 == EBX_X86_REG || reg2 == RBX_X86_REG);
 	}
-	else if (reg1 == SP || reg1 == ESP || reg1 == RSP)
+	else if (reg1 == SP_X86_REG || reg1 == ESP_X86_REG || reg1 == RSP_X86_REG)
 	{
-		return (reg2 == SP || reg2 == ESP || reg2 == RSP);
+		return (reg2 == SP_X86_REG || reg2 == ESP_X86_REG || reg2 == RSP_X86_REG);
 	}
-	else if (reg1 == BP || reg1 == EBP || reg1 == RBP)
+	else if (reg1 == BP_X86_REG || reg1 == EBP_X86_REG || reg1 == RBP_X86_REG)
 	{
-		return (reg2 == BP || reg2 == EBP || reg2 == RBP);
+		return (reg2 == BP_X86_REG || reg2 == EBP_X86_REG || reg2 == RBP_X86_REG);
 	}
-	else if (reg1 == SI || reg1 == ESI || reg1 == RSI)
+	else if (reg1 == SI_X86_REG || reg1 == ESI_X86_REG || reg1 == RSI_X86_REG)
 	{
-		return (reg2 == SI || reg2 == ESI || reg2 == RSI);
+		return (reg2 == SI_X86_REG || reg2 == ESI_X86_REG || reg2 == RSI_X86_REG);
 	}
-	else if (reg1 == IP || reg1 == EIP || reg1 == RIP)
+	else if (reg1 == IP_X86_REG || reg1 == EIP_X86_REG || reg1 == RIP_X86_REG)
 	{
-		return (reg2 == IP || reg2 == EIP || reg2 == RIP);
+		return (reg2 == IP_X86_REG || reg2 == EIP_X86_REG || reg2 == RIP_X86_REG);
 	}
-	else if (reg1 == DI || reg1 == EDI || reg1 == RDI)
+	else if (reg1 == DI_X86_REG || reg1 == EDI_X86_REG || reg1 == RDI_X86_REG)
 	{
-		return (reg2 == DI || reg2 == EDI || reg2 == RDI);
+		return (reg2 == DI_X86_REG || reg2 == EDI_X86_REG || reg2 == RDI_X86_REG);
 	}
-	else if (reg1 == R8B || reg1 == R8W || reg1 == R8D || reg1 == R8)
+	else if (reg1 == R8B_X86_REG || reg1 == R8W_X86_REG || reg1 == R8D_X86_REG || reg1 == R8_X86_REG)
 	{
-		return (reg2 == R8B || reg2 == R8W || reg2 == R8D || reg2 == R8);
+		return (reg2 == R8B_X86_REG || reg2 == R8W_X86_REG || reg2 == R8D_X86_REG || reg2 == R8_X86_REG);
 	}
-	else if (reg1 == R9B || reg1 == R9W || reg1 == R9D || reg1 == R9)
+	else if (reg1 == R9B_X86_REG || reg1 == R9W_X86_REG || reg1 == R9D_X86_REG || reg1 == R9_X86_REG)
 	{
-		return (reg2 == R9B || reg2 == R9W || reg2 == R9D || reg2 == R9);
+		return (reg2 == R9B_X86_REG || reg2 == R9W_X86_REG || reg2 == R9D_X86_REG || reg2 == R9_X86_REG);
 	}
-	else if (reg1 == R10B || reg1 == R10W || reg1 == R10D || reg1 == R10)
+	else if (reg1 == R10B_X86_REG || reg1 == R10W_X86_REG || reg1 == R10D_X86_REG || reg1 == R10_X86_REG)
 	{
-		return (reg2 == R10B || reg2 == R10W || reg2 == R10D || reg2 == R10);
+		return (reg2 == R10B_X86_REG || reg2 == R10W_X86_REG || reg2 == R10D_X86_REG || reg2 == R10_X86_REG);
 	}
-	else if (reg1 == R11B || reg1 == R11W || reg1 == R11D || reg1 == R11)
+	else if (reg1 == R11B_X86_REG || reg1 == R11W_X86_REG || reg1 == R11D_X86_REG || reg1 == R11_X86_REG)
 	{
-		return (reg2 == R11B || reg2 == R11W || reg2 == R11D || reg2 == R11);
+		return (reg2 == R11B_X86_REG || reg2 == R11W_X86_REG || reg2 == R11D_X86_REG || reg2 == R11_X86_REG);
 	}
-	else if (reg1 == R12B || reg1 == R12W || reg1 == R12D || reg1 == R12)
+	else if (reg1 == R12B_X86_REG || reg1 == R12W_X86_REG || reg1 == R12D_X86_REG || reg1 == R12_X86_REG)
 	{
-		return (reg2 == R12B || reg2 == R12W || reg2 == R12D || reg2 == R12);
+		return (reg2 == R12B_X86_REG || reg2 == R12W_X86_REG || reg2 == R12D_X86_REG || reg2 == R12_X86_REG);
 	}
-	else if (reg1 == R13B || reg1 == R13W || reg1 == R13D || reg1 == R13)
+	else if (reg1 == R13B_X86_REG || reg1 == R13W_X86_REG || reg1 == R13D_X86_REG || reg1 == R13_X86_REG)
 	{
-		return (reg2 == R13B || reg2 == R13W || reg2 == R13D || reg2 == R13);
+		return (reg2 == R13B_X86_REG || reg2 == R13W_X86_REG || reg2 == R13D_X86_REG || reg2 == R13_X86_REG);
 	}
-	else if (reg1 == R14B || reg1 == R14W || reg1 == R14D || reg1 == R14)
+	else if (reg1 == R14B_X86_REG || reg1 == R14W_X86_REG || reg1 == R14D_X86_REG || reg1 == R14_X86_REG)
 	{
-		return (reg2 == R14B || reg2 == R14W || reg2 == R14D || reg2 == R14);
+		return (reg2 == R14B_X86_REG || reg2 == R14W_X86_REG || reg2 == R14D_X86_REG || reg2 == R14_X86_REG);
 	}
-	else if (reg1 == R15B || reg1 == R15W || reg1 == R15D || reg1 == R15)
+	else if (reg1 == R15B_X86_REG || reg1 == R15W_X86_REG || reg1 == R15D_X86_REG || reg1 == R15_X86_REG)
 	{
-		return (reg2 == R15B || reg2 == R15W || reg2 == R15D || reg2 == R15);
+		return (reg2 == R15B_X86_REG || reg2 == R15W_X86_REG || reg2 == R15D_X86_REG || reg2 == R15_X86_REG);
 	}
 
 	return reg1 == reg2;
@@ -202,17 +202,17 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 
 bool isRegisterPointer(enum Register reg)
 {
-	return compareRegisters(reg, BP) || compareRegisters(reg, SP) || compareRegisters(reg, IP);
+	return compareRegisters(reg, BP_X86_REG) || compareRegisters(reg, SP_X86_REG) || compareRegisters(reg, IP_X86_REG);
 }
 
 bool isRegisterStatusFlag(enum Register reg)
 {
-	return reg >= CF && reg <= OF;
+	return reg >= CF_X86_REG && reg <= OF_X86_REG;
 }
 
 bool isRegisterHighByte(enum Register reg)
 {
-	return reg == AH || reg == CH || reg == DH || reg == BH;
+	return reg == AH_X86_REG || reg == CH_X86_REG || reg == DH_X86_REG || reg == BH_X86_REG;
 }
 
 bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
@@ -234,39 +234,39 @@ bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 
 uint8_t getSizeOfRegister(enum Register reg) // in bytes
 {
-	if ((reg >= AL && reg <= R15B) || isRegisterStatusFlag(reg)) // the status flags are actually single bits in the EFLAGS reg
+	if ((reg >= AL_X86_REG && reg <= R15B_X86_REG) || isRegisterStatusFlag(reg)) // the status flags are actually single bits in the EFLAGS reg
 	{
 		return 1;
 	}
-	else if ((reg >= AX && reg <= R15W) || (reg >= ES && reg <= GS))
+	else if ((reg >= AX_X86_REG && reg <= R15W_X86_REG) || (reg >= ES_X86_REG && reg <= GS_X86_REG))
 	{
 		return 2;
 	}
-	else if (reg >= EAX && reg <= R15D || (reg >= CR0D && reg <= CR15D))
+	else if (reg >= EAX_X86_REG && reg <= R15D_X86_REG || (reg >= CR0D_X86_REG && reg <= CR15D_X86_REG))
 	{
 		return 4;
 	}
-	else if ((reg >= RAX && reg <= R15) ||
-		(reg >= MM0 && reg <= MM7) ||
-		(reg >= CR0 && reg <= CR15) ||
-		(reg >= DR0 && reg <= DR15) ||
-		(reg >= K0 && reg <= K7))
+	else if ((reg >= RAX_X86_REG && reg <= R15_X86_REG) ||
+		(reg >= MM0_X86_REG && reg <= MM7_X86_REG) ||
+		(reg >= CR0_X86_REG && reg <= CR15_X86_REG) ||
+		(reg >= DR0_X86_REG && reg <= DR15_X86_REG) ||
+		(reg >= K0_X86_REG && reg <= K7_X86_REG))
 	{
 		return 8;
 	}
-	else if (reg >= ST0 && reg <= ST7)
+	else if (reg >= ST0_X86_REG && reg <= ST7_X86_REG)
 	{
 		return 10;
 	}
-	else if (reg >= XMM0 && reg <= XMM31)
+	else if (reg >= XMM0_X86_REG && reg <= XMM31_X86_REG)
 	{
 		return 16;
 	}
-	else if (reg >= YMM0 && reg <= YMM31)
+	else if (reg >= YMM0_X86_REG && reg <= YMM31_X86_REG)
 	{
 		return 32;
 	}
-	else if (reg >= ZMM0 && reg <= ZMM31)
+	else if (reg >= ZMM0_X86_REG && reg <= ZMM31_X86_REG)
 	{
 		return 64;
 	}
@@ -276,42 +276,47 @@ uint8_t getSizeOfRegister(enum Register reg) // in bytes
 
 enum Register extendRegister(enum Register reg)
 {
-	if (reg >= AL && reg <= BH)
+	if (reg >= AL_X86_REG && reg <= BH_X86_REG)
 	{
-		return (enum Register)(reg + (R8B - AL));
+		return (enum Register)(reg + (R8B_X86_REG - AL_X86_REG));
 	}
-	else if ((reg >= XMM0 && reg <= XMM7) || (reg >= YMM0 && reg <= YMM7) || (reg >= ZMM0 && reg <= ZMM7) || (reg >= ZMM16 && reg <= ZMM23))
+	else if ((reg >= XMM0_X86_REG && reg <= XMM7_X86_REG) ||
+		(reg >= XMM16_X86_REG && reg <= XMM23_X86_REG) ||
+		(reg >= YMM0_X86_REG && reg <= YMM7_X86_REG) ||
+		(reg >= YMM16_X86_REG && reg <= YMM23_X86_REG) ||
+		(reg >= ZMM0_X86_REG && reg <= ZMM7_X86_REG) ||
+		(reg >= ZMM16_X86_REG && reg <= ZMM23_X86_REG))
 	{
-		return (enum Register)(reg + (XMM8 - XMM0));
+		return (enum Register)(reg + (XMM8_X86_REG - XMM0_X86_REG));
 	}
 	else
 	{
-		return (enum Register)(reg + (R8 - RAX));
+		return (enum Register)(reg + (R8_X86_REG - RAX_X86_REG));
 	}
 }
 
 enum Register increaseRegisterSize(enum Register reg)
 {
-	if (reg >= AL && reg <= BL)
+	if (reg >= AL_X86_REG && reg <= BL_X86_REG)
 	{
-		return (enum Register)(reg + (AX - AL));
+		return (enum Register)(reg + (AX_X86_REG - AL_X86_REG));
 	}
-	else if (reg >= AH && reg <= BH)
+	else if (reg >= AH_X86_REG && reg <= BH_X86_REG)
 	{
-		return (enum Register)(reg + (AX - AH));
+		return (enum Register)(reg + (AX_X86_REG - AH_X86_REG));
 	}
 	else
 	{
-		return (enum Register)(reg + (RAX - EAX));
+		return (enum Register)(reg + (RAX_X86_REG - EAX_X86_REG));
 	}
 }
 
 bool isRegMM(enum Register reg)
 {
-	return reg >= MM0 && reg <= MM7;
+	return reg >= MM0_X86_REG && reg <= MM7_X86_REG;
 }
 
 bool isRegXMM(enum Register reg)
 {
-	return reg >= XMM0 && reg <= XMM15;
+	return reg >= XMM0_X86_REG && reg <= XMM31_X86_REG;
 }

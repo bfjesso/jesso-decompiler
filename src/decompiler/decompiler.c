@@ -216,7 +216,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 		struct Function* callee = 0;
 		if ((checkForKnownFunctionCall(params, i, &callee) && callee && callee->returnType.primitiveType != VOID_TYPE) || checkForUnknownFunctionCall(params, i))
 		{
-			enum Register returnReg = callee ? callee->returnReg : AX;
+			enum Register returnReg = callee ? callee->returnReg : AX_X86_REG;
 			if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, returnReg, 0, 0) ||
 				(checkForReturnStatement(params, i) && params->currentFunc->returnReg == returnReg)) // this is if it is an unknown call that also returns
 			{

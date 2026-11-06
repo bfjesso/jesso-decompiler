@@ -75,7 +75,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	bool hasGotFirstTerm = false;
 
 	uint64_t baseRegVal = 0;
-	if (compareRegisters(memAddress->reg, IP))
+	if (compareRegisters(memAddress->reg, IP_X86_REG))
 	{
 		baseRegVal = (instruction->address + instruction->numOfBytes) * memAddress->scale;
 	}
@@ -120,7 +120,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	bool addedDisplacement = false;
 
 	uint64_t displacementRegVal = 0;
-	if (compareRegisters(memAddress->regDisplacement, IP))
+	if (compareRegisters(memAddress->regDisplacement, IP_X86_REG))
 	{
 		displacementRegVal = instruction->address + instruction->numOfBytes;
 	}
@@ -356,11 +356,11 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (compareRegisters(targetReg, IP))
+	if (compareRegisters(targetReg, IP_X86_REG))
 	{
 		return sprintfJdc(result, false, "0x%llX", instruction->address + instruction->numOfBytes);
 	}
-	else if (compareRegisters(targetReg, SP))
+	else if (compareRegisters(targetReg, SP_X86_REG))
 	{
 		struct StackVariable* stackVar = getStackVarByOffset(params->currentFunc, -getStackFrameSizeAtInstruction(params, instructionIndex));
 		if (stackVar)
@@ -665,7 +665,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 			}
 
 			bool stop = false;
-			for (int32_t j = CF; j <= OF; j++)
+			for (int32_t j = CF_X86_REG; j <= OF_X86_REG; j++)
 			{
 				if (doesInstructionAccessRegister(params, conditionalInstructionIndex, j, 0, 0) && doesInstructionModifyRegister(params, i, j, 0, 0))
 				{
@@ -682,43 +682,43 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 
 	if (cc == JZ_SHORT_X86 || cc == SETZ_X86 || cc == CMOVZ_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, invertOperator, result, 0);
 	}
 	else if (cc == JNZ_SHORT_X86 || cc == SETNZ_X86 || cc == CMOVNZ_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, !invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, !invertOperator, result, 0);
 	}
 	else if (cc == JB_SHORT_X86 || cc == SETB_X86 || cc == CMOVB_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, CF, 1, invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, CF_X86_REG, 1, invertOperator, result, 0);
 	}
 	else if (cc == JNB_SHORT_X86 || cc == SETNB_X86 || cc == CMOVNB_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, CF, 1, !invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, CF_X86_REG, 1, !invertOperator, result, 0);
 	}
 	else if (cc == JO_SHORT_X86 || cc == SETO_X86 || cc == CMOVO_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, invertOperator, result, 0);
 	}
 	else if (cc == JNO_SHORT_X86 || cc == SETNO_X86 || cc == CMOVNO_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, !invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, !invertOperator, result, 0);
 	}
 	else if (cc == JS_SHORT_X86 || cc == SETS_X86 || cc == CMOVS_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, result, 0);
 	}
 	else if (cc == JNS_SHORT_X86 || cc == SETNS_X86 || cc == CMOVNS_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, !invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, !invertOperator, result, 0);
 	}
 	else if (cc == JP_SHORT_X86 || cc == SETP_X86 || cc == CMOVP_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, PF_X86_REG, 1, invertOperator, result, 0);
 	}
 	else if (cc == JNP_SHORT_X86 || cc == SETNP_X86 || cc == CMOVNP_X86)
 	{
-		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, !invertOperator, result, 0);
+		return decompileRegister(params, conditionalInstructionIndex, -1, PF_X86_REG, 1, !invertOperator, result, 0);
 	}
 
 	return ERROR_JDC;

@@ -255,37 +255,37 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 		bool finished = false;
 		if (getAssignment)
 		{
-			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG);
 			if (cfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", cfVar->name.buffer, cfExpression.buffer);
 			}
 
-			struct RegisterVariable* pfVar = doesInstructionAssignToRegVar(params, instructionIndex, PF);
+			struct RegisterVariable* pfVar = doesInstructionAssignToRegVar(params, instructionIndex, PF_X86_REG);
 			if (pfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", pfVar->name.buffer, pfExpression.buffer);
 			}
 
-			struct RegisterVariable* afVar = doesInstructionAssignToRegVar(params, instructionIndex, AF);
+			struct RegisterVariable* afVar = doesInstructionAssignToRegVar(params, instructionIndex, AF_X86_REG);
 			if (afVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", afVar->name.buffer, afExpression.buffer);
 			}
 
-			struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+			struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF_X86_REG);
 			if (zfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", zfVar->name.buffer, zfExpression.buffer);
 			}
 
-			struct RegisterVariable* sfVar = doesInstructionAssignToRegVar(params, instructionIndex, SF);
+			struct RegisterVariable* sfVar = doesInstructionAssignToRegVar(params, instructionIndex, SF_X86_REG);
 			if (sfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", sfVar->name.buffer, sfExpression.buffer);
 			}
 
-			struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF);
+			struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF_X86_REG);
 			if (ofVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", ofVar->name.buffer, ofExpression.buffer);
@@ -295,27 +295,27 @@ static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params
 		{
 			switch (targetReg)
 			{
-			case CF:
+			case CF_X86_REG:
 				strcpyJdc(result, cfExpression.buffer);
 				finished = true;
 				break;
-			case PF:
+			case PF_X86_REG:
 				strcpyJdc(result, pfExpression.buffer);
 				finished = true;
 				break;
-			case AF:
+			case AF_X86_REG:
 				strcpyJdc(result, afExpression.buffer);
 				finished = true;
 				break;
-			case ZF:
+			case ZF_X86_REG:
 				strcpyJdc(result, zfExpression.buffer);
 				finished = true;
 				break;
-			case SF:
+			case SF_X86_REG:
 				strcpyJdc(result, sfExpression.buffer);
 				finished = true;
 				break;
-			case OF:
+			case OF_X86_REG:
 				strcpyJdc(result, ofExpression.buffer);
 				finished = true;
 				break;
@@ -403,31 +403,31 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		bool finished = false;
 		if (getAssignment)
 		{
-			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+			struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG);
 			if (cfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %d;", cfVar->name.buffer, notStatusFlag ? 1 : 0);
 			}
 
-			struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF);
+			struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF_X86_REG);
 			if (ofVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %d;", ofVar->name.buffer, notStatusFlag ? 1 : 0);
 			}
 
-			struct RegisterVariable* pfVar = doesInstructionAssignToRegVar(params, instructionIndex, PF);
+			struct RegisterVariable* pfVar = doesInstructionAssignToRegVar(params, instructionIndex, PF_X86_REG);
 			if (pfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", pfVar->name.buffer, pfExpression.buffer);
 			}
 
-			struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+			struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF_X86_REG);
 			if (zfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", zfVar->name.buffer, zfExpression.buffer);
 			}
 
-			struct RegisterVariable* sfVar = doesInstructionAssignToRegVar(params, instructionIndex, SF);
+			struct RegisterVariable* sfVar = doesInstructionAssignToRegVar(params, instructionIndex, SF_X86_REG);
 			if (sfVar)
 			{
 				addDecompiledLine(params, result, instructionIndex, "%s = %s;", sfVar->name.buffer, sfExpression.buffer);
@@ -437,20 +437,20 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		{
 			switch (targetReg)
 			{
-			case CF:
-			case OF:
+			case CF_X86_REG:
+			case OF_X86_REG:
 				strcpyJdc(result, notStatusFlag ? "1" : "0");
 				finished = true;
 				break;
-			case PF:
+			case PF_X86_REG:
 				strcpyJdc(result, pfExpression.buffer);
 				finished = true;
 				break;
-			case ZF:
+			case ZF_X86_REG:
 				strcpyJdc(result, zfExpression.buffer);
 				finished = true;
 				break;
-			case SF:
+			case SF_X86_REG:
 				strcpyJdc(result, sfExpression.buffer);
 				finished = true;
 				break;
@@ -500,7 +500,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 			addDecompiledLine(params, result, instructionIndex, "%s%s;", decompiledFirstOperand.buffer, isInc ? "++" : "--");
 		}
 
-		struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+		struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF_X86_REG);
 		if (zfVar)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s %s 0;", zfVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "!=" : "==");
@@ -510,7 +510,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 		return SUCCESS_JDC;
 	}
 
-	if (targetReg == ZF)
+	if (targetReg == ZF_X86_REG)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -539,13 +539,13 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 			return ERROR_JDC;
 		}
 
-		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG);
 		if (cfVar)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = (%s) %s 0;", cfVar->name.buffer, decompiledFirstOperand.buffer, notStatusFlag ? "==" : "!=");
 		}
 
-		struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF);
+		struct RegisterVariable* ofVar = doesInstructionAssignToRegVar(params, instructionIndex, OF_X86_REG);
 		if (ofVar)
 		{
 			// NEG is the same as (0 - firstOperand). it will only overflow if the firstOperand is equal to the smallest 2's complement integer
@@ -562,7 +562,7 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 		return SUCCESS_JDC;
 	}
 
-	if (targetReg == CF || targetReg == OF)
+	if (targetReg == CF_X86_REG || targetReg == OF_X86_REG)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
@@ -571,7 +571,7 @@ static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32
 			return ERROR_JDC;
 		}
 
-		if (targetReg == CF)
+		if (targetReg == CF_X86_REG)
 		{
 			sprintfJdc(result, false, "%s %s 0", decompiledFirstOperand.buffer, notStatusFlag ? "==" : "!=");
 		}
@@ -712,7 +712,7 @@ static enum JdcStatus decompileBitTest(struct DecompilationParameters* params, i
 
 	if (getAssignment)
 	{
-		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF);
+		struct RegisterVariable* cfVar = doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG);
 		if (!cfVar)
 		{
 			return ERROR_JDC;
@@ -731,11 +731,11 @@ static enum JdcStatus decompileBitTest(struct DecompilationParameters* params, i
 
 static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result)
 {
-	if (getAssignment && doesInstructionAssignToRegVar(params, instructionIndex, CF))
+	if (getAssignment && doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG))
 	{
 		decompileBitTest(params, instructionIndex, 1, notStatusFlag, result);
 	}
-	else if (!getAssignment && targetReg == CF)
+	else if (!getAssignment && targetReg == CF_X86_REG)
 	{
 		return decompileBitTest(params, instructionIndex, 0, notStatusFlag, result);
 	}
@@ -788,11 +788,11 @@ static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, in
 
 static enum JdcStatus decompileBitReset(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result)
 {
-	if (getAssignment && doesInstructionAssignToRegVar(params, instructionIndex, CF))
+	if (getAssignment && doesInstructionAssignToRegVar(params, instructionIndex, CF_X86_REG))
 	{
 		decompileBitTest(params, instructionIndex, 1, notStatusFlag, result);
 	}
-	else if (!getAssignment && targetReg == CF)
+	else if (!getAssignment && targetReg == CF_X86_REG)
 	{
 		return decompileBitTest(params, instructionIndex, 0, notStatusFlag, result);
 	}
@@ -846,7 +846,7 @@ static enum JdcStatus decompileBitReset(struct DecompilationParameters* params, 
 static enum JdcStatus decompileADC(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result)
 {
 	struct JdcStr decompiledCF = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex, -1, CF, 1, 0, &decompiledCF, 0))
+	if (!decompileRegister(params, instructionIndex, -1, CF_X86_REG, 1, 0, &decompiledCF, 0))
 	{
 		freeJdcStr(&decompiledCF);
 		return ERROR_JDC;
@@ -914,7 +914,7 @@ static enum JdcStatus decompileADC(struct DecompilationParameters* params, int32
 static enum JdcStatus decompileSBB(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result)
 {
 	struct JdcStr decompiledCF = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex, -1, CF, 1, 0, &decompiledCF, 0))
+	if (!decompileRegister(params, instructionIndex, -1, CF_X86_REG, 1, 0, &decompiledCF, 0))
 	{
 		freeJdcStr(&decompiledCF);
 		return ERROR_JDC;
@@ -992,7 +992,7 @@ static enum JdcStatus decompileFLD(struct DecompilationParameters* params, int32
 	if (getAssignment)
 	{
 		struct JdcStr decompiledST0 = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, ST0, 1, 0, &decompiledST0, 0))
+		if (!decompileRegister(params, instructionIndex, -1, ST0_X86_REG, 1, 0, &decompiledST0, 0))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledST0);
@@ -1022,17 +1022,17 @@ static enum JdcStatus decompileIDIV(struct DecompilationParameters* params, int3
 
 	if (getAssignment)
 	{
-		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
+		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX_X86_REG);
 		if (axVar)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s /= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
 
-		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX);
+		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX_X86_REG);
 		if (dxVar)
 		{
 			struct JdcStr decompiledAX = initializeJdcStr();
-			if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+			if (!decompileRegister(params, instructionIndex, -1, AX_X86_REG, 1, 0, &decompiledAX, 0))
 			{
 				freeJdcStr(&decompiledFirstOperand);
 				freeJdcStr(&decompiledAX);
@@ -1048,16 +1048,16 @@ static enum JdcStatus decompileIDIV(struct DecompilationParameters* params, int3
 		return SUCCESS_JDC;
 	}
 
-	if (compareRegisters(targetReg, AX))
+	if (compareRegisters(targetReg, AX_X86_REG))
 	{
 		sprintfJdc(result, false, " / %s", decompiledFirstOperand.buffer);
 		freeJdcStr(&decompiledFirstOperand);
 		return SUCCESS_JDC;
 	}
-	else if (compareRegisters(targetReg, DX))
+	else if (compareRegisters(targetReg, DX_X86_REG))
 	{
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX_X86_REG, 1, 0, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledFirstOperand);
 			freeJdcStr(&decompiledAX);
@@ -1162,17 +1162,17 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 
 	if (getAssignment)
 	{
-		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
+		struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX_X86_REG);
 		if (axVar)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s *= %s;", axVar->name.buffer, decompiledFirstOperand.buffer);
 		}
 
-		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX);
+		struct RegisterVariable* dxVar = doesInstructionAssignToRegVar(params, instructionIndex, DX_X86_REG);
 		if (dxVar)
 		{
 			struct JdcStr decompiledAX = initializeJdcStr();
-			if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+			if (!decompileRegister(params, instructionIndex, -1, AX_X86_REG, 1, 0, &decompiledAX, 0))
 			{
 				freeJdcStr(&decompiledAX);
 				freeJdcStr(&decompiledFirstOperand);
@@ -1188,13 +1188,13 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 		return SUCCESS_JDC;
 	}
 
-	if (compareRegisters(targetReg, AX))
+	if (compareRegisters(targetReg, AX_X86_REG))
 	{
 		sprintfJdc(result, false, " * %s", decompiledFirstOperand.buffer);
 		freeJdcStr(&decompiledFirstOperand);
 		return SUCCESS_JDC;
 	}
-	else if (compareRegisters(targetReg, DX))
+	else if (compareRegisters(targetReg, DX_X86_REG))
 	{
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
 		{
@@ -1203,7 +1203,7 @@ static enum JdcStatus decompileIMUL(struct DecompilationParameters* params, int3
 		}
 
 		struct JdcStr decompiledAX = initializeJdcStr();
-		if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+		if (!decompileRegister(params, instructionIndex, -1, AX_X86_REG, 1, 0, &decompiledAX, 0))
 		{
 			freeJdcStr(&decompiledAX);
 			return ERROR_JDC;
@@ -1439,14 +1439,14 @@ static enum JdcStatus decompileCMPXCHG(struct DecompilationParameters* params, i
 		return ERROR_JDC;
 	}
 
-	struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX);
+	struct RegisterVariable* axVar = doesInstructionAssignToRegVar(params, instructionIndex, AX_X86_REG);
 	if (!axVar)
 	{
 		return ERROR_JDC;
 	}
 
 	struct JdcStr decompiledAX = initializeJdcStr();
-	if (!decompileRegister(params, instructionIndex, -1, AX, 1, 0, &decompiledAX, 0))
+	if (!decompileRegister(params, instructionIndex, -1, AX_X86_REG, 1, 0, &decompiledAX, 0))
 	{
 		freeJdcStr(&decompiledAX);
 		return ERROR_JDC;
@@ -1464,7 +1464,7 @@ static enum JdcStatus decompileCMPXCHG(struct DecompilationParameters* params, i
 	addDecompiledLine(params, result, instructionIndex, "{");
 	params->numOfIndents++;
 
-	struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF);
+	struct RegisterVariable* zfVar = doesInstructionAssignToRegVar(params, instructionIndex, ZF_X86_REG);
 	if (zfVar)
 	{
 		addDecompiledLine(params, result, instructionIndex, "%s = 1;", zfVar->name.buffer);
