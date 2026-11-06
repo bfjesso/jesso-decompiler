@@ -72,7 +72,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		strcatJdc(result, " ");
 	}
 
-	strcatJdc(result, mnemonicStrs[instruction->opcode]);
+	strcatJdc(result, opcodeMnemonicStrs[instruction->opcode]);
 
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
@@ -226,7 +226,7 @@ const char* getPtrSizeStr(int32_t ptrSize)
 const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 {
 	if (instruction->group1Prefix == REPNZ_BND &&
-		(instruction->opcode == CALL_NEAR || instruction->opcode == RET_NEAR || instruction->opcode == JMP_NEAR || isOpcodeJcc(instruction->opcode)))
+		(instruction->opcode == CALL_NEAR_X86 || instruction->opcode == RET_NEAR_X86 || instruction->opcode == JMP_NEAR_X86 || isOpcodeJcc(instruction->opcode)))
 	{
 		return "BND";
 	}
@@ -247,7 +247,7 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint64_t data, uint8_t dataSize)
 {
 	memset(instruction, 0, sizeof(struct DisassembledInstruction));
-	instruction->opcode = DATA;
+	instruction->opcode = DATA_OPCODE;
 	instruction->numOfBytes = dataSize;
 
 	instruction->address = address;

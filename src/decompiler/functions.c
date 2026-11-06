@@ -228,7 +228,7 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 
 		int64_t offsetFromInitSP = 0;
-		if (instruction->opcode == PUSH && instruction->operands[0].type == REGISTER)
+		if (instruction->opcode == PUSH_X86 && instruction->operands[0].type == REGISTER)
 		{
 			continue;
 		}
@@ -527,7 +527,7 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int32_t call
 	if (pushInstructionRef) { *pushInstructionRef = -1; }
 
 	int64_t initialStackFrameSize = getStackFrameSizeAtInstruction(params, callInstructionIndex);
-	if (params->instructions[callInstructionIndex].opcode == CALL_NEAR)
+	if (params->instructions[callInstructionIndex].opcode == CALL_NEAR_X86)
 	{
 		initialStackFrameSize += params->is64Bit ? 8 : 4; // instruction ptr is pushed
 	}
@@ -558,7 +558,7 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int32_t call
 
 		currentStackFrameSize -= getStackFrameChange(instruction);
 
-		if (instruction->opcode == PUSH && initialStackFrameSize - currentStackFrameSize == stackArgOffset)
+		if (instruction->opcode == PUSH_X86 && initialStackFrameSize - currentStackFrameSize == stackArgOffset)
 		{
 			if (pushInstructionRef) { *pushInstructionRef = i; }
 			return true;
@@ -614,20 +614,20 @@ static int64_t getStackFrameChange(struct DisassembledInstruction* instruction)
 
 	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP))
 	{
-		if (instruction->opcode == SUB)
+		if (instruction->opcode == SUB_X86)
 		{
 			return instruction->operands[1].immediate.value;
 		}
-		else if (instruction->opcode == ADD)
+		else if (instruction->opcode == ADD_X86)
 		{
 			return -instruction->operands[1].immediate.value;
 		}
 	}
-	else if (instruction->opcode == PUSH)
+	else if (instruction->opcode == PUSH_X86)
 	{
 		return instruction->operandSizeAttribute;
 	}
-	else if (instruction->opcode == POP)
+	else if (instruction->opcode == POP_X86)
 	{
 		return -instruction->operandSizeAttribute;
 	}
@@ -713,7 +713,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instru
 	for (int32_t i = instructionIndex - 1; i >= params->currentFunc->firstInstructionIndex; i--)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
-		if (instruction->opcode == MOV && instruction->numOfOperands == 2 &&
+		if (instruction->opcode == MOV_X86 && instruction->numOfOperands == 2 &&
 			instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER)
 		{
 			if (compareRegisters(instruction->operands[0].reg, memAddress->reg))

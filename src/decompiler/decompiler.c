@@ -83,7 +83,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 		if (ERROR_JDC == isOpcodeImplementedInDecompiler(currentInstruction->opcode)) // temporary check
 		{
-			sprintfJdc(statusMessage, false, "%s at 0x%llX is not yet handled in the decompiler.", mnemonicStrs[currentInstruction->opcode], currentInstruction->address);
+			sprintfJdc(statusMessage, false, "%s at 0x%llX is not yet handled in the decompiler.", opcodeMnemonicStrs[currentInstruction->opcode], currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}

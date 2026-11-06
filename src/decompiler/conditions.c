@@ -123,7 +123,7 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 				params->currentFunc->numOfConditions++;
 			}
 		}
-		else if (params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST) // the Jccs cant be combined into one condition if there is other code that runs between them.
+		else if (params->currentFunc->numOfConditions > 0 && !isOpcodeCmp(instruction->opcode) && instruction->opcode != TEST_X86) // the Jccs cant be combined into one condition if there is other code that runs between them.
 		{
 			stopCombination = true;
 		}

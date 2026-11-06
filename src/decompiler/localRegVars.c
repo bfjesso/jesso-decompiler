@@ -174,9 +174,9 @@ static enum JdcStatus getTempLocalRegVars(struct DecompilationParameters* params
 			{
 				for (int32_t statusFlag = CF; statusFlag <= OF; statusFlag++)
 				{
-					enum Mnemonic opcode = instruction->opcode;
-					if (opcode == ADD || opcode == SUB || opcode == CMPXCHG ||
-						(opcode == NEG && statusFlag == OF))
+					enum OpcodeMnemonic opcode = instruction->opcode;
+					if (opcode == ADD_X86 || opcode == SUB_X86 || opcode == CMPXCHG_X86 ||
+						(opcode == NEG_X86 && statusFlag == OF))
 					{
 						if (isRegisterAccessedBeforeInit(params, i + 1, params->currentFunc->lastInstructionIndex, statusFlag, 0, 0))
 						{

@@ -157,7 +157,7 @@ enum OpcodeSuperscript
 
 struct Opcode
 {
-	enum Mnemonic mnemonic;
+	enum OpcodeMnemonic mnemonic;
 	int8_t extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
 	enum OperandCode operands[4];
 	enum OpcodeSuperscript opcodeSuperscript;
@@ -229,7 +229,7 @@ struct DisassemblyParameters
 struct DisassembledInstruction
 {
 	enum LegacyPrefix group1Prefix;
-	enum Mnemonic opcode;
+	enum OpcodeMnemonic opcode;
 
 	struct Operand* operands;
 	enum Register opmask;

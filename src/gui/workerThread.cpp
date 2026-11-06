@@ -389,7 +389,7 @@ enum JdcStatus WorkerThread::HandleJmpTables()
 		{
 			mainGui->jumpTables.push_back(jumpTable);
 		}
-		else if (mainGui->disassembledInstructions[i].opcode == CALL_NEAR)
+		else if (mainGui->disassembledInstructions[i].opcode == CALL_NEAR_X86)
 		{
 			int32_t calledInstructionIndex = findInstructionByAddress(mainGui->disassembledInstructions.data(), mainGui->disassembledInstructions.size(), getJmpDst(&mainGui->decompParams, i));
 			if (calledInstructionIndex != -1)
@@ -397,7 +397,7 @@ enum JdcStatus WorkerThread::HandleJmpTables()
 				mainGui->disassembledInstructions[calledInstructionIndex].isCalled = 1;
 			}
 		}
-		else if (mainGui->disassembledInstructions[i].opcode == JMP_NEAR)
+		else if (mainGui->disassembledInstructions[i].opcode == JMP_NEAR_X86)
 		{
 			int32_t dstIndex = findInstructionByAddress(mainGui->disassembledInstructions.data(), mainGui->disassembledInstructions.size(), getJmpDst(&mainGui->decompParams, i));
 			if (dstIndex != -1)

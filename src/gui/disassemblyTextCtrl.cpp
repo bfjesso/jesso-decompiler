@@ -261,7 +261,7 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 		{
 			if (!isOpcodeImplementedInDecompiler(instructions[i].opcode))
 			{
-				mainGui->logTextCtrl->Log(wxString::Format("%s at 0x%llX is not handled in the decompiler.", mnemonicStrs[instructions[i].opcode], instructions[i].address), true);
+				mainGui->logTextCtrl->Log(wxString::Format("%s at 0x%llX is not handled in the decompiler.", opcodeMnemonicStrs[instructions[i].opcode], instructions[i].address), true);
 				areAllHandled = false;
 			}
 		}
@@ -422,7 +422,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}
 
-		if (instructions[i].opcode == NO_MNEMONIC)
+		if (instructions[i].opcode == NO_OPCODE)
 		{
 			asmStr += " ; unrecognized opcode";
 		}
@@ -430,7 +430,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			asmStr += " ; entry point";
 		}
-		else if (mainGui->jumpTables.size() > 0 && instructions[i].opcode == DATA)
+		else if (mainGui->jumpTables.size() > 0 && instructions[i].opcode == DATA_OPCODE)
 		{
 			bool foundIndirectTable = false;
 			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
@@ -502,7 +502,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 
 		StartStyling(pos);
 
-		int32_t opcodeLen = strlen(mnemonicStrs[instruction->opcode]) + 1;
+		int32_t opcodeLen = strlen(opcodeMnemonicStrs[instruction->opcode]) + 1;
 		if (instruction->group1Prefix != NO_PREFIX)
 		{
 			opcodeLen += strlen(getGroup1PrefixStr(instruction)) + 1;

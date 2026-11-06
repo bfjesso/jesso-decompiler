@@ -92,7 +92,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 
 		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
 		{
-			if (instruction->opcode == LEA)
+			if (instruction->opcode == LEA_X86)
 			{
 				sprintfJdc(result, false, "%s", regArgVar->name.buffer);
 			}
@@ -157,19 +157,19 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		{
 			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);
 		}
-		else if (importIndex != -1 && instruction->opcode != LEA)
+		else if (importIndex != -1 && instruction->opcode != LEA_X86)
 		{
 			strcpyJdc(result, params->imports[importIndex].name.buffer); // the import.address is the address of the table entry for the import, so it is like a ptr
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode == LEA && SUCCESS_JDC == getStringFromDataSection(params, totalDisplacement, &memAddrStr))
+		else if (instruction->opcode == LEA_X86 && SUCCESS_JDC == getStringFromDataSection(params, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode != LEA && SUCCESS_JDC == getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		else if (instruction->opcode != LEA_X86 && SUCCESS_JDC == getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
@@ -201,7 +201,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		wrapJdcStrInParentheses(&memAddrStr);
 	}
 
-	if (instruction->opcode != LEA)
+	if (instruction->opcode != LEA_X86)
 	{
 		struct JdcStr typeStr = initializeJdcStr();
 		dataTypeToStr(memAddrType, params->useStdInt, &typeStr);
@@ -237,7 +237,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		return ERROR_JDC;
 	}
 
-	if (instruction->opcode == LEA)
+	if (instruction->opcode == LEA_X86)
 	{
 		if (isDataTypePtr(stackVar->dataType))
 		{
@@ -573,61 +573,61 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32_t conditionalInstructionIndex, bool invertOperator, struct JdcStr* result)
 {
 	struct DisassembledInstruction* conditionalInstruction = &(params->instructions[conditionalInstructionIndex]);
-	enum Mnemonic cc = conditionalInstruction->opcode;
+	enum OpcodeMnemonic cc = conditionalInstruction->opcode;
 
 	char compOperator[3] = { 0 };
 	switch (cc)
 	{
-	case JZ_SHORT:
-	case CMOVZ:
-	case SETZ:
+	case JZ_SHORT_X86:
+	case CMOVZ_X86:
+	case SETZ_X86:
 		if (invertOperator) { strcpy(compOperator, "!="); }
 		else { strcpy(compOperator, "=="); }
 		break;
-	case JNZ_SHORT:
-	case CMOVNZ:
-	case SETNZ:
+	case JNZ_SHORT_X86:
+	case CMOVNZ_X86:
+	case SETNZ_X86:
 		if (invertOperator) { strcpy(compOperator, "=="); }
 		else { strcpy(compOperator, "!="); }
 		break;
-	case JG_SHORT:
-	case JA_SHORT:
-	case CMOVG:
-	case CMOVA:
-	case SETG:
-	case SETA:
+	case JG_SHORT_X86:
+	case JA_SHORT_X86:
+	case CMOVG_X86:
+	case CMOVA_X86:
+	case SETG_X86:
+	case SETA_X86:
 		if (invertOperator) { strcpy(compOperator, "<="); }
 		else { strcpy(compOperator, ">"); }
 		break;
-	case JL_SHORT:
-	case JB_SHORT:
-	case JS_SHORT:
-	case CMOVL:
-	case CMOVB:
-	case CMOVS:
-	case SETL:
-	case SETB:
-	case SETS:
+	case JL_SHORT_X86:
+	case JB_SHORT_X86:
+	case JS_SHORT_X86:
+	case CMOVL_X86:
+	case CMOVB_X86:
+	case CMOVS_X86:
+	case SETL_X86:
+	case SETB_X86:
+	case SETS_X86:
 		if (invertOperator) { strcpy(compOperator, ">="); }
 		else { strcpy(compOperator, "<"); }
 		break;
-	case JLE_SHORT:
-	case JBE_SHORT:
-	case CMOVLE:
-	case CMOVBE:
-	case SETLE:
-	case SETBE:
+	case JLE_SHORT_X86:
+	case JBE_SHORT_X86:
+	case CMOVLE_X86:
+	case CMOVBE_X86:
+	case SETLE_X86:
+	case SETBE_X86:
 		if (invertOperator) { strcpy(compOperator, ">"); }
 		else { strcpy(compOperator, "<="); }
 		break;
-	case JGE_SHORT:
-	case JNB_SHORT:
-	case JNS_SHORT:
-	case CMOVGE:
-	case CMOVNB:
-	case CMOVNS:
-	case SETNB:
-	case SETNS:
+	case JGE_SHORT_X86:
+	case JNB_SHORT_X86:
+	case JNS_SHORT_X86:
+	case CMOVGE_X86:
+	case CMOVNB_X86:
+	case CMOVNS_X86:
+	case SETNB_X86:
+	case SETNS_X86:
 		if (invertOperator) { strcpy(compOperator, "<"); }
 		else { strcpy(compOperator, ">="); }
 		break;
@@ -680,43 +680,43 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 		}
 	}
 
-	if (cc == JZ_SHORT || cc == SETZ || cc == CMOVZ)
+	if (cc == JZ_SHORT_X86 || cc == SETZ_X86 || cc == CMOVZ_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, invertOperator, result, 0);
 	}
-	else if (cc == JNZ_SHORT || cc == SETNZ || cc == CMOVNZ)
+	else if (cc == JNZ_SHORT_X86 || cc == SETNZ_X86 || cc == CMOVNZ_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, ZF, 1, !invertOperator, result, 0);
 	}
-	else if (cc == JB_SHORT || cc == SETB || cc == CMOVB)
+	else if (cc == JB_SHORT_X86 || cc == SETB_X86 || cc == CMOVB_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, CF, 1, invertOperator, result, 0);
 	}
-	else if (cc == JNB_SHORT || cc == SETNB || cc == CMOVNB)
+	else if (cc == JNB_SHORT_X86 || cc == SETNB_X86 || cc == CMOVNB_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, CF, 1, !invertOperator, result, 0);
 	}
-	else if (cc == JO_SHORT || cc == SETO || cc == CMOVO)
+	else if (cc == JO_SHORT_X86 || cc == SETO_X86 || cc == CMOVO_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, invertOperator, result, 0);
 	}
-	else if (cc == JNO_SHORT || cc == SETNO || cc == CMOVNO)
+	else if (cc == JNO_SHORT_X86 || cc == SETNO_X86 || cc == CMOVNO_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, OF, 1, !invertOperator, result, 0);
 	}
-	else if (cc == JS_SHORT || cc == SETS || cc == CMOVS)
+	else if (cc == JS_SHORT_X86 || cc == SETS_X86 || cc == CMOVS_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, invertOperator, result, 0);
 	}
-	else if (cc == JNS_SHORT || cc == SETNS || cc == CMOVNS)
+	else if (cc == JNS_SHORT_X86 || cc == SETNS_X86 || cc == CMOVNS_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, SF, 1, !invertOperator, result, 0);
 	}
-	else if (cc == JP_SHORT || cc == SETP || cc == CMOVP)
+	else if (cc == JP_SHORT_X86 || cc == SETP_X86 || cc == CMOVP_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, invertOperator, result, 0);
 	}
-	else if (cc == JNP_SHORT || cc == SETNP || cc == CMOVNP)
+	else if (cc == JNP_SHORT_X86 || cc == SETNP_X86 || cc == CMOVNP_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, PF, 1, !invertOperator, result, 0);
 	}

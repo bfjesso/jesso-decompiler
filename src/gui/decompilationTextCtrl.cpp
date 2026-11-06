@@ -291,7 +291,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 	}
 	for (int32_t i = 0; i < NUM_OF_VOID_INTRINSICS; i++)
 	{
-		if (voidIntrinsics[i].opcode == DATA)
+		if (voidIntrinsics[i].opcode == DATA_OPCODE)
 		{
 			ColorAllStrs(text, voidIntrinsics[i].name, ERROR_DECOMP_COLOR, false);
 		}

@@ -1,8 +1,9 @@
 #include "mnemonics.h"
 
-extern const char* mnemonicStrs[] =
+extern const char* opcodeMnemonicStrs[] =
 {
 	"ERROR",
+	"DATA",
 
 	// these opcodes overwrite the first operand
 	"MOV", "STOS", "VMOVUPS", "MOVUPS", "VMOVUPD", "MOVUPD", "VMOVSS", "MOVSS", "VMOVSD", "MOVSD", "MOVSX", "VMOVD", "MOVD", "VMOVAPS", "MOVAPS", "VMOVAPD", "MOVAPD", "VMOVLPS", "MOVLPS", "VMOVHLPS", "MOVHLPS", "VMOVLPD", "MOVLPD", "VMOVSLDUP", "MOVSLDUP", "VMOVDDUP", "MOVDDUP", "VMOVHPS", "MOVHPS", "VMOVLHPS", "MOVLHPS", "VMOVHPD", "MOVHPD", "VMOVSHDUP", "MOVSHDUP", "VMOVNTPS", "MOVNTPS", "VMOVNTPD", "MOVNTPD", "VMOVMSKPS", "MOVMSKPS", "VMOVMSKPD", "MOVMSKPD", "MOVS", "MOVSXD", "MOVZX", "VMOVQ", "MOVQ", "VMOVDQA", "MOVDQA", "VMOVDQU", "VMOVDQU8", "VMOVDQU16", "VMOVDQU32", "VMOVDQU64", "MOVDQU", "MOVNTI", "VMOVQ2DQ", "MOVQ2DQ", "VMOVDQ2Q", "MOVDQ2Q", "VPMOVMSKB", "PMOVMSKB", "MOVNTQ", "VMOVNTDQ", "MOVNTDQ", "MASKMOVQ", "VMASKMOVDQU", "MASKMOVDQU",
@@ -89,8 +90,6 @@ extern const char* mnemonicStrs[] =
 	"ENDBR32", "ENDBR64",
 
 	"UD2",
-
-	"DATA",
 	// end of other handled opcodes
 
 	// all opcodes beyond this point are not handled in the decompiler yet
@@ -245,122 +244,122 @@ extern const char* mnemonicStrs[] =
 	"UD0", "UD1"
 };
 
-bool isOpcodeImplementedInDecompiler(enum Mnemonic opcode)
+bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)
 {
-	return opcode >= MOV && opcode <= DATA;
+	return opcode >= MOV_X86 && opcode <= UD2_X86;
 }
 
-bool doesOpcodeOverwriteFirstOperand(enum Mnemonic opcode)
+bool doesOpcodeOverwriteFirstOperand(enum OpcodeMnemonic opcode)
 {
-	return opcode >= MOV && opcode <= AESKEYGENASSIST;
+	return opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86;
 }
 
-bool doesOpcodeModifyFirstOperand(enum Mnemonic opcode)
+bool doesOpcodeModifyFirstOperand(enum OpcodeMnemonic opcode)
 {
-	return opcode >= ADD && opcode <= AESDECLAST;
+	return opcode >= ADD_X86 && opcode <= AESDECLAST_X86;
 }
 
-bool isOpcodeMov(enum Mnemonic opcode)
+bool isOpcodeMov(enum OpcodeMnemonic opcode)
 {
-	return opcode >= MOV && opcode <= MASKMOVDQU;
+	return opcode >= MOV_X86 && opcode <= MASKMOVDQU_X86;
 }
 
-bool isOpcodeAdd(enum Mnemonic opcode)
+bool isOpcodeAdd(enum OpcodeMnemonic opcode)
 {
-	return opcode >= ADD && opcode <= PADDQ;
+	return opcode >= ADD_X86 && opcode <= PADDQ_X86;
 }
 
-bool isOpcodeSub(enum Mnemonic opcode)
+bool isOpcodeSub(enum OpcodeMnemonic opcode)
 {
-	return opcode >= SUB && opcode <= HSUBPS;
+	return opcode >= SUB_X86 && opcode <= HSUBPS_X86;
 }
 
-bool isOpcodeAnd(enum Mnemonic opcode)
+bool isOpcodeAnd(enum OpcodeMnemonic opcode)
 {
-	return opcode >= AND && opcode <= PANDN;
+	return opcode >= AND_X86 && opcode <= PANDN_X86;
 }
 
-bool isOpcodeOr(enum Mnemonic opcode)
+bool isOpcodeOr(enum OpcodeMnemonic opcode)
 {
-	return opcode >= OR && opcode <= ORPD;
+	return opcode >= OR_X86 && opcode <= ORPD_X86;
 }
 
-bool isOpcodeXor(enum Mnemonic opcode)
+bool isOpcodeXor(enum OpcodeMnemonic opcode)
 {
-	return opcode >= XOR && opcode <= PXOR;
+	return opcode >= XOR_X86 && opcode <= PXOR_X86;
 }
 
-bool isOpcodeShl(enum Mnemonic opcode)
+bool isOpcodeShl(enum OpcodeMnemonic opcode)
 {
-	return opcode >= SHL && opcode <= SHLD;
+	return opcode >= SHL_X86 && opcode <= SHLD_X86;
 }
 
-bool isOpcodeShr(enum Mnemonic opcode)
+bool isOpcodeShr(enum OpcodeMnemonic opcode)
 {
-	return opcode >= SHR && opcode <= SHRD;
+	return opcode >= SHR_X86 && opcode <= SHRD_X86;
 }
 
-bool isOpcodeMul(enum Mnemonic opcode) // this is for the opcodes that simply multiply the dst by the src
+bool isOpcodeMul(enum OpcodeMnemonic opcode) // this is for the opcodes that simply multiply the dst by the src
 {
-	return opcode >= MULSS && opcode <= MULSD;
+	return opcode >= MULSS_X86 && opcode <= MULSD_X86;
 }
 
-bool isOpcodeDiv(enum Mnemonic opcode) // this is for the opcodes that simply divide the dst by the src
+bool isOpcodeDiv(enum OpcodeMnemonic opcode) // this is for the opcodes that simply divide the dst by the src
 {
-	return opcode >= DIVSS && opcode <= DIVSD;
+	return opcode >= DIVSS_X86 && opcode <= DIVSD_X86;
 }
 
-bool isOpcodeCvtToDbl(enum Mnemonic opcode)
+bool isOpcodeCvtToDbl(enum OpcodeMnemonic opcode)
 {
-	return opcode >= VCVTPS2PD && opcode <= CVTDQ2PD;
+	return opcode >= VCVTPS2PD_X86 && opcode <= CVTDQ2PD_X86;
 }
 
-bool isOpcodeCvtToFlt(enum Mnemonic opcode)
+bool isOpcodeCvtToFlt(enum OpcodeMnemonic opcode)
 {
-	return opcode >= VCVTPD2PS && opcode <= CVTDQ2PS;
+	return opcode >= VCVTPD2PS_X86 && opcode <= CVTDQ2PS_X86;
 }
 
-bool isOpcodeCall(enum Mnemonic opcode)
+bool isOpcodeCall(enum OpcodeMnemonic opcode)
 {
-	return opcode == CALL_FAR || opcode == CALL_NEAR;
+	return opcode == CALL_FAR_X86 || opcode == CALL_NEAR_X86;
 }
 
-bool isOpcodeReturn(enum Mnemonic opcode)
+bool isOpcodeReturn(enum OpcodeMnemonic opcode)
 {
-	return opcode == RET_NEAR || opcode == RET_FAR;
+	return opcode == RET_NEAR_X86 || opcode == RET_FAR_X86;
 }
 
-bool isOpcodeJmp(enum Mnemonic opcode)
+bool isOpcodeJmp(enum OpcodeMnemonic opcode)
 {
-	return opcode == JMP_SHORT || opcode == JMP_NEAR || opcode == JMP_FAR;
+	return opcode == JMP_SHORT_X86 || opcode == JMP_NEAR_X86 || opcode == JMP_FAR_X86;
 }
 
-bool isOpcodeCmp(enum Mnemonic opcode)
+bool isOpcodeCmp(enum OpcodeMnemonic opcode)
 {
-	return opcode >= CMP && opcode <= COMISD;
+	return opcode >= CMP_X86 && opcode <= COMISD_X86;
 }
 
-bool isOpcodeJcc(enum Mnemonic opcode)
+bool isOpcodeJcc(enum OpcodeMnemonic opcode)
 {
-	return opcode >= JA_SHORT && opcode <= JZ_SHORT;
+	return opcode >= JA_SHORT_X86 && opcode <= JZ_SHORT_X86;
 }
 
-bool isOpcodeCMOVcc(enum Mnemonic opcode)
+bool isOpcodeCMOVcc(enum OpcodeMnemonic opcode)
 {
-	return opcode >= CMOVB && opcode <= CMOVG;
+	return opcode >= CMOVB_X86 && opcode <= CMOVG_X86;
 }
 
-bool isOpcodeSETcc(enum Mnemonic opcode)
+bool isOpcodeSETcc(enum OpcodeMnemonic opcode)
 {
-	return opcode >= SETA && opcode <= SETZ;
+	return opcode >= SETA_X86 && opcode <= SETZ_X86;
 }
 
-bool doesOpcodeUseUnsignedInt(enum Mnemonic opcode)
+bool doesOpcodeUseUnsignedInt(enum OpcodeMnemonic opcode)
 {
 	switch (opcode)
 	{
-	case MUL:
-	case DIV:
+	case MUL_X86:
+	case DIV_X86:
 		return true;
 	}
 

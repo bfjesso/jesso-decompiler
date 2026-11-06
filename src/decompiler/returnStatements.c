@@ -12,7 +12,7 @@ bool checkForReturnStatement(struct DecompilationParameters* params, int32_t ins
 	{
 		if (params->currentFunc->lastInstructionIndex == 0) // this is for when this function is called in findNextFunction
 		{
-			if (instruction->opcode == RET_NEAR && instruction->numOfOperands == 1) // this isn't checked in findNextFunction because this function can return 1 if there is a jmp to a return instruction
+			if (instruction->opcode == RET_NEAR_X86 && instruction->numOfOperands == 1) // this isn't checked in findNextFunction because this function can return 1 if there is a jmp to a return instruction
 			{
 				params->currentFunc->callingConvention = __STDCALL;
 			}
@@ -67,8 +67,8 @@ bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params,
 			return true;
 		}
 
-		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP || instruction->opcode == LEAVE ||
-			(instruction->opcode == ADD && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP)))
+		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP_X86 || instruction->opcode == LEAVE_X86 ||
+			(instruction->opcode == ADD_X86 && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP)))
 		{
 			continue;
 		}

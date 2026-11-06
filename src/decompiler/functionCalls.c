@@ -171,7 +171,7 @@ bool checkForUnknownFunctionCall(struct DecompilationParameters* params, int32_t
 	{
 		return true;
 	}
-	else if (instruction->opcode == JMP_NEAR)
+	else if (instruction->opcode == JMP_NEAR_X86)
 	{
 		uint64_t calleeAddress = resolveJmpChain(params, instructionIndex);
 		return (calleeAddress == 0) || (getImportIndexByAddress(params, calleeAddress) != -1);
@@ -266,7 +266,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			break;
 		}
 
-		if (numOfStackArgs < maxStackArgs && instruction->opcode == PUSH)
+		if (numOfStackArgs < maxStackArgs && instruction->opcode == PUSH_X86)
 		{
 			if (instruction->operands[0].type == REGISTER && isRegisterPointer(instruction->operands[0].reg))
 			{
@@ -349,7 +349,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			return ERROR_JDC;
 		}
 
-		if (callInstruction->opcode == CALL_NEAR && callInstruction->operands[0].type == IMMEDIATE)
+		if (callInstruction->opcode == CALL_NEAR_X86 && callInstruction->operands[0].type == IMMEDIATE)
 		{
 			sprintfJdc(&decompiledCall, true, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
 		}

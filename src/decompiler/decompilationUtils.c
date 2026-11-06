@@ -53,7 +53,7 @@ uint64_t getJmpDst(struct DecompilationParameters* params, int32_t startInstruct
 		return 0;
 	}
 
-	if (instruction->opcode != JMP_FAR && instruction->opcode != CALL_FAR && instruction->operands[0].type == IMMEDIATE)
+	if (instruction->opcode != JMP_FAR_X86 && instruction->opcode != CALL_FAR_X86 && instruction->operands[0].type == IMMEDIATE)
 	{
 		dst += instruction->address + instruction->numOfBytes;
 	}
@@ -105,7 +105,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		address += operand->memoryAddress.constDisplacement;
 
-		if (params->instructions[startInstructionIndex].opcode == LEA ||
+		if (params->instructions[startInstructionIndex].opcode == LEA_X86 ||
 			getImportIndexByAddress(params, address) != -1) // the address that I store for imports is the table entry. when decompiling a function call, this table entry address is needed to check for the import
 		{
 			*result = address;
@@ -163,7 +163,7 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 	int32_t minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
 	for (int32_t i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
-		if ((params->instructions[i].opcode == MOV || params->instructions[i].opcode == LEA) &&
+		if ((params->instructions[i].opcode == MOV_X86 || params->instructions[i].opcode == LEA_X86) &&
 			params->instructions[i].operands[0].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, reg))
 		{
 			int32_t start = i;
@@ -208,7 +208,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 {
 	struct DisassembledInstruction* jmpInstruction = &params->instructions[instructionIndex];
 
-	if (jmpInstruction->opcode != JMP_NEAR)
+	if (jmpInstruction->opcode != JMP_NEAR_X86)
 	{
 		return ERROR_JDC;
 	}
@@ -221,7 +221,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 			struct DisassembledInstruction* instruction = &params->instructions[i];
 
 			// the actual value of targetReg will be an address of some instruction to jmp to, but this code is just looking for the address of the jmp table and not the value of targetReg
-			if (instruction->opcode == MOV &&
+			if (instruction->opcode == MOV_X86 &&
 				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
 				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
 			{
@@ -241,7 +241,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 
 				// checking for indirect table
 				struct DisassembledInstruction* prevInstruction = &params->instructions[i - 1];
-				if (prevInstruction->opcode == MOVZX &&
+				if (prevInstruction->opcode == MOVZX_X86 &&
 					prevInstruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[1].memoryAddress.reg, prevInstruction->operands[0].reg) &&
 					prevInstruction->operands[1].type == MEM_ADDRESS)
 				{
@@ -414,11 +414,11 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 		return false;
 	}
 
-	enum Mnemonic opcode = instruction->opcode;
+	enum OpcodeMnemonic opcode = instruction->opcode;
 
 	if (operandNum == 0)
 	{
-		if ((isOpcodeXor(opcode) || opcode == SBB) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
+		if ((isOpcodeXor(opcode) || opcode == SBB_X86) && compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			if (overwrites != 0) { *overwrites = true; }
 			return true;
@@ -429,7 +429,7 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 			return true;
 		}
 
-		if (opcode == IMUL)
+		if (opcode == IMUL_X86)
 		{
 			if (instruction->numOfOperands == 3)
 			{
@@ -462,12 +462,12 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 	}
 	else if (operandNum == 1)
 	{
-		if (opcode == XCHG)
+		if (opcode == XCHG_X86)
 		{
 			if (overwrites != 0) { *overwrites = true; }
 			return true;
 		}
-		else if (isOpcodeXor(opcode) || opcode == SBB)
+		else if (isOpcodeXor(opcode) || opcode == SBB_X86)
 		{
 			if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 			{
@@ -485,68 +485,68 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg, bool checkUnknownCalls, enum Register* specificReg)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	enum Mnemonic opcode = instruction->opcode;
+	enum OpcodeMnemonic opcode = instruction->opcode;
 
 	if (isRegisterStatusFlag(reg))
 	{
 		switch (opcode)
 		{
-		case JA_SHORT:
-		case JBE_SHORT:
-		case CMOVA:
-		case CMOVBE:
-		case SETA:
-		case SETBE:
+		case JA_SHORT_X86:
+		case JBE_SHORT_X86:
+		case CMOVA_X86:
+		case CMOVBE_X86:
+		case SETA_X86:
+		case SETBE_X86:
 			return reg == CF || reg == ZF;
-		case JB_SHORT:
-		case JNB_SHORT:
-		case CMOVB:
-		case CMOVNB:
-		case SETB:
-		case SETNB:
-		case ADC:
-		case SBB:
+		case JB_SHORT_X86:
+		case JNB_SHORT_X86:
+		case CMOVB_X86:
+		case CMOVNB_X86:
+		case SETB_X86:
+		case SETNB_X86:
+		case ADC_X86:
+		case SBB_X86:
 			return reg == CF;
-		case JG_SHORT:
-		case JLE_SHORT:
-		case CMOVG:
-		case CMOVLE:
-		case SETG:
-		case SETLE:
+		case JG_SHORT_X86:
+		case JLE_SHORT_X86:
+		case CMOVG_X86:
+		case CMOVLE_X86:
+		case SETG_X86:
+		case SETLE_X86:
 			return reg == ZF || reg == SF || reg == OF;
-		case JGE_SHORT:
-		case JL_SHORT:
-		case CMOVGE:
-		case CMOVL:
-		case SETL:
+		case JGE_SHORT_X86:
+		case JL_SHORT_X86:
+		case CMOVGE_X86:
+		case CMOVL_X86:
+		case SETL_X86:
 			return reg == SF || reg == OF;
-		case JS_SHORT:
-		case JNS_SHORT:
-		case CMOVS:
-		case CMOVNS:
-		case SETS:
-		case SETNS:
+		case JS_SHORT_X86:
+		case JNS_SHORT_X86:
+		case CMOVS_X86:
+		case CMOVNS_X86:
+		case SETS_X86:
+		case SETNS_X86:
 			return reg == SF;
-		case JNO_SHORT:
-		case JO_SHORT:
-		case CMOVNO:
-		case CMOVO:
-		case SETNO:
-		case SETO:
+		case JNO_SHORT_X86:
+		case JO_SHORT_X86:
+		case CMOVNO_X86:
+		case CMOVO_X86:
+		case SETNO_X86:
+		case SETO_X86:
 			return reg == OF;
-		case JNP_SHORT:
-		case JP_SHORT:
-		case CMOVNP:
-		case CMOVP:
-		case SETNP:
-		case SETP:
+		case JNP_SHORT_X86:
+		case JP_SHORT_X86:
+		case CMOVNP_X86:
+		case CMOVP_X86:
+		case SETNP_X86:
+		case SETP_X86:
 			return reg == PF;
-		case JNZ_SHORT:
-		case JZ_SHORT:
-		case CMOVNZ:
-		case CMOVZ:
-		case SETNZ:
-		case SETZ:
+		case JNZ_SHORT_X86:
+		case JZ_SHORT_X86:
+		case CMOVNZ_X86:
+		case CMOVZ_X86:
+		case SETNZ_X86:
+		case SETZ_X86:
 			return reg == ZF;
 		}
 
@@ -630,7 +630,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	if (overwrites) { *overwrites = false; }
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	enum Mnemonic opcode = instruction->opcode;
+	enum OpcodeMnemonic opcode = instruction->opcode;
 
 	if (isRegisterStatusFlag(reg))
 	{
@@ -643,24 +643,24 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 
 		switch (opcode)
 		{
-		case ADD:
-		case ADC:
-		case SUB:
-		case SBB:
-		case NEG:
-		case CMPXCHG:
+		case ADD_X86:
+		case ADC_X86:
+		case SUB_X86:
+		case SBB_X86:
+		case NEG_X86:
+		case CMPXCHG_X86:
 			return true;
-		case TEST:
-		case AND:
-		case OR:
-		case XOR:
+		case TEST_X86:
+		case AND_X86:
+		case OR_X86:
+		case XOR_X86:
 			return reg != AF;
-		case BT:
-		case BTS:
-		case BTR:
+		case BT_X86:
+		case BTS_X86:
+		case BTR_X86:
 			return reg == CF;
-		case INC:
-		case DEC:
+		case INC_X86:
+		case DEC_X86:
 			return reg != CF;
 		}
 
@@ -684,7 +684,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 
 	if (compareRegisters(reg, AX)) // some opcodes may modify a register even if it isn't an operand
 	{
-		if (opcode == CMPXCHG)
+		if (opcode == CMPXCHG_X86)
 		{
 			if (specificReg)
 			{
@@ -709,7 +709,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			return true;
 		}
 
-		if (opcode == IDIV || opcode == DIV)
+		if (opcode == IDIV_X86 || opcode == DIV_X86)
 		{
 			if (specificReg)
 			{
@@ -739,7 +739,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			return true;
 		}
 
-		if ((opcode == IMUL || opcode == MUL) && instruction->numOfOperands == 1)
+		if ((opcode == IMUL_X86 || opcode == MUL_X86) && instruction->numOfOperands == 1)
 		{
 			if (specificReg)
 			{
@@ -769,7 +769,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	}
 	else if (compareRegisters(reg, DX))
 	{
-		if ((opcode == IMUL || opcode == MUL || opcode == IDIV || opcode == DIV) && instruction->numOfOperands == 1)
+		if ((opcode == IMUL_X86 || opcode == MUL_X86 || opcode == IDIV_X86 || opcode == DIV_X86) && instruction->numOfOperands == 1)
 		{
 			if (specificReg)
 			{
@@ -801,7 +801,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	{
 		switch (opcode)
 		{
-		case FLD:
+		case FLD_X86:
 			if (specificReg) { *specificReg = ST0; }
 			if (overwrites) { *overwrites = true; }
 			return true;
@@ -827,13 +827,13 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* params, int32_t instructionIndex, enum Register reg)
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
-	enum Mnemonic opcode = instruction->opcode;
+	enum OpcodeMnemonic opcode = instruction->opcode;
 
 	// CMOVcc is not checked here because it is decompiled as a ternary operator, so its dst is always set to something
 
 	if (compareRegisters(reg, AX))
 	{
-		return opcode == CMPXCHG;
+		return opcode == CMPXCHG_X86;
 	}
 
 	return false;
@@ -841,7 +841,7 @@ bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* 
 
 bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 {
-	if (instruction->opcode == NOP)
+	if (instruction->opcode == NOP_X86)
 	{
 		return true;
 	}
@@ -849,7 +849,7 @@ bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 	{
 		return true;
 	}
-	else if (instruction->opcode == LEA &&
+	else if (instruction->opcode == LEA_X86 &&
 		instruction->operands[0].type == REGISTER && instruction->operands[1].type == MEM_ADDRESS &&
 		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) &&
 		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)
@@ -860,7 +860,7 @@ bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 	{
 		return true;
 	}
-	else if ((instruction->opcode == JMP_NEAR || instruction->opcode == JMP_SHORT) && instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0)
+	else if ((instruction->opcode == JMP_NEAR_X86 || instruction->opcode == JMP_SHORT_X86) && instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0)
 	{
 		return true;
 	}
@@ -872,13 +872,13 @@ bool doesInstructionGenerateInterruptOrException(struct DisassembledInstruction*
 {
 	switch (instruction->opcode)
 	{
-	case INT3:
-	case _INT:
-	case HLT:
-	case UD0:
-	case UD1:
-	case UD2:
-	case DATA:
+	case INT3_X86:
+	case INT_X86:
+	case HLT_X86:
+	case UD0_X86:
+	case UD1_X86:
+	case UD2_X86:
+	case DATA_OPCODE:
 		return true;
 	}
 

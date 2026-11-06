@@ -194,10 +194,10 @@ struct DataType getRegisterDataType(struct DisassembledInstruction* instruction,
 		return result;
 	}
 
-	return getOperandDataType(NO_MNEMONIC, &regOperand);
+	return getOperandDataType(NO_OPCODE, &regOperand);
 }
 
-struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress)
+struct DataType getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress)
 {
 	struct Operand memAddrOperand = { 0 };
 	memAddrOperand.type = MEM_ADDRESS;
@@ -206,26 +206,26 @@ struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddr
 	return getOperandDataType(opcode, &memAddrOperand);
 }
 
-struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand)
+struct DataType getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand)
 {
 	struct DataType result = { 0 };
 
 	switch (opcode)
 	{
-	case MOVSS:
-	case MOVUPS:
-	case ADDSS:
-	case CVTPS2PD:
-	case CVTSS2SD:
-	case COMISS:
+	case MOVSS_X86:
+	case MOVUPS_X86:
+	case ADDSS_X86:
+	case CVTPS2PD_X86:
+	case CVTSS2SD_X86:
+	case COMISS_X86:
 		result.primitiveType = FLOAT_TYPE;
 		return result;
-	case MOVSD:
-	case MOVUPD:
-	case ADDSD:
-	case CVTPD2PS:
-	case CVTSD2SS:
-	case COMISD:
+	case MOVSD_X86:
+	case MOVUPD_X86:
+	case ADDSD_X86:
+	case CVTPD2PS_X86:
+	case CVTSD2SS_X86:
+	case COMISD_X86:
 		result.primitiveType = DOUBLE_TYPE;
 		return result;
 	}

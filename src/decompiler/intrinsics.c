@@ -8,47 +8,47 @@
 
 struct Intrinsic returningIntrinsics[NUM_OF_RETURNING_INTRINSICS] =
 {
-	{ AESDEC, SINGLE_IT, "_mm_aesdec" },
-	{ AESDECLAST, SINGLE_IT, "_mm_aesdeclast" },
-	{ AESENC, SINGLE_IT, "_mm_aesenc" },
-	{ AESENCLAST, SINGLE_IT, "_mm_aesenclast" },
-	{ AESIMC, SINGLE_IT, "_mm_aesimc" },
-	{ AESKEYGENASSIST, SINGLE_IT, "_mm_aeskeygenassist" },
+	{ AESDEC_X86, SINGLE_IT, "_mm_aesdec" },
+	{ AESDECLAST_X86, SINGLE_IT, "_mm_aesdeclast" },
+	{ AESENC_X86, SINGLE_IT, "_mm_aesenc" },
+	{ AESENCLAST_X86, SINGLE_IT, "_mm_aesenclast" },
+	{ AESIMC_X86, SINGLE_IT, "_mm_aesimc" },
+	{ AESKEYGENASSIST_X86, SINGLE_IT, "_mm_aeskeygenassist" },
 
-	{ STMXCSR, SINGLE_IT, "_mm_getcsr" },
+	{ STMXCSR_X86, SINGLE_IT, "_mm_getcsr" },
 
-	{ SHUFPD, SINGLE_IT, "_mm_shuffle_pd" },
-	{ SHUFPS, SINGLE_IT, "_mm_shuffle_ps" },
+	{ SHUFPD_X86, SINGLE_IT, "_mm_shuffle_pd" },
+	{ SHUFPS_X86, SINGLE_IT, "_mm_shuffle_ps" },
 
-	{ ROL, SINGLE_IT, "_rotl" },
-	{ ROR, SINGLE_IT, "_rotr" },
+	{ ROL_X86, SINGLE_IT, "_rotl" },
+	{ ROR_X86, SINGLE_IT, "_rotr" },
 
-	{ PUNPCKLBW, MMX_IT, "_m_punpcklbw" },
-	{ PUNPCKLBW, SSE_IT, "_mm_unpacklo_epi8" },
-	{ PUNPCKLWD, MMX_IT, "_m_punpcklwd" },
-	{ PUNPCKLWD, SSE_IT, "_mm_unpacklo_epi16" },
+	{ PUNPCKLBW_X86, MMX_IT, "_m_punpcklbw" },
+	{ PUNPCKLBW_X86, SSE_IT, "_mm_unpacklo_epi8" },
+	{ PUNPCKLWD_X86, MMX_IT, "_m_punpcklwd" },
+	{ PUNPCKLWD_X86, SSE_IT, "_mm_unpacklo_epi16" },
 
-	{ PSRAD, MMX_RM_IT, "_m_psrad" },
-	{ PSRAD, MMX_IMM_IT, "_m_psradi" },
-	{ PSRAD, SSE_RM_IT, "_mm_sra_epi32" },
-	{ PSRAD, SSE_IMM_IT, "_mm_srai_epi32" },
+	{ PSRAD_X86, MMX_RM_IT, "_m_psrad" },
+	{ PSRAD_X86, MMX_IMM_IT, "_m_psradi" },
+	{ PSRAD_X86, SSE_RM_IT, "_mm_sra_epi32" },
+	{ PSRAD_X86, SSE_IMM_IT, "_mm_srai_epi32" },
 
-	{ PADDD, MMX_IT, "_m_paddd" },
-	{ PADDD, SSE_IT, "_mm_add_epi32" },
+	{ PADDD_X86, MMX_IT, "_m_paddd" },
+	{ PADDD_X86, SSE_IT, "_mm_add_epi32" },
 
-	{ PSRLDQ, SINGLE_IT, "_mm_srli_si128" },
+	{ PSRLDQ_X86, SINGLE_IT, "_mm_srli_si128" },
 };
 
 struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 {
-	{ INT3, SINGLE_IT, "__debugbreak" },
-	{ _INT, SINGLE_IT, "__fastfail" }, // this is only when the immediate is 0x29
-	{ UD2, SINGLE_IT, "__ud2" },
-	{ HLT, SINGLE_IT, "__halt" },
-	{ DATA, SINGLE_IT, "DATA" },
-	{ MOVS, REP_IT, "memcpy" },
-	{ STOS, REP_IT, "memset" },
-	{ XCHG, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
+	{ INT3_X86, SINGLE_IT, "__debugbreak" },
+	{ INT_X86, SINGLE_IT, "__fastfail" }, // this is only when the immediate is 0x29
+	{ UD2_X86, SINGLE_IT, "__ud2" },
+	{ HLT_X86, SINGLE_IT, "__halt" },
+	{ DATA_OPCODE, SINGLE_IT, "DATA" },
+	{ MOVS_X86, REP_IT, "memcpy" },
+	{ STOS_X86, REP_IT, "memset" },
+	{ XCHG_X86, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
 };
 
 static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic)
@@ -167,11 +167,11 @@ bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instr
 	{
 		if (instruction->opcode == voidIntrinsics[i].opcode)
 		{
-			if (instruction->opcode == _INT && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29))
+			if (instruction->opcode == INT_X86 && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29))
 			{
 				return false;
 			}
-			else if (instruction->opcode == XCHG)
+			else if (instruction->opcode == XCHG_X86)
 			{
 				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg))
 				{
@@ -209,14 +209,14 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
-		if (intrinsic->opcode == _INT) // the operand identifies the function
+		if (intrinsic->opcode == INT_X86) // the operand identifies the function
 		{
 			break;
 		}
 
 		struct JdcStr decompiledOperand = initializeJdcStr();
 
-		if ((intrinsic->opcode == STOS && i == 0) || intrinsic->opcode == MOVS)
+		if ((intrinsic->opcode == STOS_X86 && i == 0) || intrinsic->opcode == MOVS_X86)
 		{
 			// the REP STOS/MOVS intrinsics take pointer(s) as arguments, so the reg in the mem address shouldnt be dereferenced
 			if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, instruction->operands[i].memoryAddress.reg, 1, 0, &decompiledOperand, 0))
@@ -240,7 +240,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 		}
 	}
 
-	if (intrinsic->opcode == _INT)
+	if (intrinsic->opcode == INT_X86)
 	{
 		struct JdcStr code = initializeJdcStr();
 		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &code, 0))
@@ -252,7 +252,7 @@ enum JdcStatus decompileVoidIntrinsic(struct DecompilationParameters* params, in
 		sprintfJdc(&decompiledCall, true, "%s", code.buffer);
 		freeJdcStr(&code);
 	}
-	else if (intrinsic->opcode == MOVS || intrinsic->opcode == STOS)
+	else if (intrinsic->opcode == MOVS_X86 || intrinsic->opcode == STOS_X86)
 	{
 		struct JdcStr count = initializeJdcStr();
 		if (ERROR_JDC == decompileRegister(params, instructionIndex, -1, CX, 1, 0, &count, 0))

@@ -64,6 +64,6 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 
 struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg);
 
-struct DataType getMemoryAddressDataType(enum Mnemonic opcode, struct MemoryAddress* memAddress);
+struct DataType getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress);
 
-struct DataType getOperandDataType(enum Mnemonic opcode, struct Operand* operand);
+struct DataType getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand);

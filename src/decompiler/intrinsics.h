@@ -18,7 +18,7 @@ enum IntrinsicType
 
 struct Intrinsic
 {
-	enum Mnemonic opcode;
+	enum OpcodeMnemonic opcode;
 	enum IntrinsicType type;
 	const char* name;
 };
