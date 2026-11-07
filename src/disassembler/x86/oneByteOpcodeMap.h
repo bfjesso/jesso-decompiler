@@ -235,18 +235,18 @@ const struct Opcode oneByteOpcodeMap[0x100] = // [byte]
 	{ LOOPZ_X86, -1, IMM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                                  // 0xE1; alternate mnemonics: LOOPE
 	{ LOOP_X86, -1, IMM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                                   // 0xE2
 	{ JRCXZ_X86, -1, IMM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                                  // 0xE3
-	{ _IN_X86, -1, AL_X86_OC, IMM_B_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                 // 0xE4
-	{ _IN_X86, -1, AX_WDQ_X86_OC, IMM_B_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                     // 0xE5
-	{ _OUT_X86, -1, IMM_B_X86_OC, AL_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                // 0xE6
-	{ _OUT_X86, -1, IMM_B_X86_OC, AX_WDQ_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                    // 0xE7
+	{ IN_X86, -1, AL_X86_OC, IMM_B_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                 // 0xE4
+	{ IN_X86, -1, AX_WDQ_X86_OC, IMM_B_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                     // 0xE5
+	{ OUT_X86, -1, IMM_B_X86_OC, AL_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                // 0xE6
+	{ OUT_X86, -1, IMM_B_X86_OC, AX_WDQ_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                    // 0xE7
 	{ CALL_NEAR_X86, -1, IMM_WD_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                              // 0xE8
 	{ JMP_NEAR_X86, -1, IMM_WD_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                               // 0xE9
 	{ JMP_FAR_X86, -1, CONST_SEG_MEM_X86_OC, NONE_OC, NONE_OC, NONE_OC, i64 },                                // 0xEA
 	{ JMP_SHORT_X86, -1, IMM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, f64 },                              // 0xEB
-	{ _IN_X86, -1, AL_X86_OC, DX_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                            // 0xEC
-	{ _IN_X86, -1, AX_WDQ_X86_OC, DX_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                // 0xED
-	{ _OUT_X86, -1, DX_X86_OC, AL_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                           // 0xEE
-	{ _OUT_X86, -1, DX_X86_OC, AX_WDQ_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                               // 0xEF
+	{ IN_X86, -1, AL_X86_OC, DX_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                            // 0xEC
+	{ IN_X86, -1, AX_WDQ_X86_OC, DX_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                                // 0xED
+	{ OUT_X86, -1, DX_X86_OC, AL_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                           // 0xEE
+	{ OUT_X86, -1, DX_X86_OC, AX_WDQ_X86_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },                               // 0xEF
 	{ NO_OPCODE, -1, NONE_OC, NONE_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },          // 0xF0; not an opcode: LOCK prefix
 	{ INT1_X86, -1, NONE_OC, NONE_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },           // 0xF1
 	{ NO_OPCODE, -1, NONE_OC, NONE_OC, NONE_OC, NONE_OC, NO_SUPERSCRIPT },          // 0xF2; not an opcode: REPNZ prefix
