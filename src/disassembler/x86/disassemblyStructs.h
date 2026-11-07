@@ -88,44 +88,151 @@ struct EVEXPrefix
 	uint8_t aaa; // embedded opmask register specifier
 };
 
-// Appendix A: A.2
-// "Operands are identified by a two-character code of the form Zz. The first character, an uppercase letter, specifies
-//	the addressing method; the second character, a lowercase letter, specifies the type of operand."
 enum OperandCode
 {
-	NO_OPERAND_CODE,
+	NONE_OC,
 
-	ONE,
-	AL_CODE, CL_CODE, AX_CODE, DX_CODE,
-	ES_CODE, CS_CODE, SS_CODE, DS_CODE, FS_CODE, GS_CODE,
-	rAX, rCX, rDX, rBX, rSP, rBP, rSI, rDI,
-	rAX_r8, rCX_r9, rDX_r10, rBX_r11, rSP_r12, rBP_r13, rSI_r14, rDI_r15,
-	AL_R8B, CL_R9B, DL_R10B, BL_R11B, AH_R12B, CH_R13B, DH_R14B, BH_R15B,
-	ST0_CODE, ST1_CODE, ST2_CODE, ST3_CODE, ST4_CODE, ST5_CODE, ST6_CODE, ST7_CODE,
-	Eb, Ed, Ev, Ew, Ep, Ey, RM_64MODE_OC, MW_RWDQ_OC,
-	Gb, Gd, Gv, Gz, Gw, Gy, REG_64MODE_OC,
-	By,
-	M, Mb, Mw, Md, Mv, Mp, Ma, Mq, Mt, Mps, Mpd, Mdq, My, Mx,
-	Ib, Iv, Iz, Iw,
-	Yb, Yv, Yz,
-	Xb, Xv, Xz,
-	Jb, Jz,
-	Nq,
-	Ob, Ov,
-	Rd, Ry, Rv,
-	Cd,
-	Dd,
-	Sw,
-	Ap,
-	Pd, Ppi, Pq,
-	Qd, Qpi, Qq,
-	Ups, Upd, Udq, Uq, Ux,
-	Vps, Vpd, Vx, Vss, Vsd, Vdq, Vqq, Vy, Vq,
-	Wps, Wpd, Wss, Wsd, Wdq, Wqq, Wd, Wx, Wq,
-	Hps, Hpd, Hx, Hss, Hsd, Hdq, Hqq, Hq,
-	Lx,
+	ONE_OC, // implied integer value of 1
 
-	EVEXvvvv
+	AL_X86_OC, // implied AL register
+	CL_X86_OC, // implied CL register
+	AX_X86_OC, // implied AX register
+	DX_X86_OC, // implied DX register
+
+	ES_X86_OC, // implied ES register
+	CS_X86_OC, // implied CS register
+	SS_X86_OC, // implied SS register
+	DS_X86_OC, // implied DS register
+	FS_X86_OC, // implied FS register
+	GS_X86_OC, // implied GS register
+
+	AX_WDQ_X86_OC, // implied AX, EAX, or RAX register, depending on operand size
+	CX_WDQ_X86_OC, // implied CX, ECX, or RCX register, depending on operand size
+	DX_WDQ_X86_OC, // implied DX, EDX, or RDX register, depending on operand size
+	BX_WDQ_X86_OC, // implied BX, EBX, or RBX register, depending on operand size
+	SP_WDQ_X86_OC, // implied SP, ESP, or RSP register, depending on operand size
+	BP_WDQ_X86_OC, // implied BP, EBP, or RBP register, depending on operand size
+	SI_WDQ_X86_OC, // implied SI, ESI, or RSI register, depending on operand size
+	DI_WDQ_X86_OC, // implied DI, EDI, or RDI register, depending on operand size
+
+	AX_R8_WDQ_X86_OC, // implied AX, EAX, RAX, R8D, or R8 register, depending on operand size and REX.B
+	CX_R9_WDQ_X86_OC, // implied CX, ECX, RCX, R9D, or R9 register, depending on operand size and REX.B
+	DX_R10_WDQ_X86_OC, // implied DX, EDX, RDX, R10D, or R10 register, depending on operand size and REX.B
+	BX_R11_WDQ_X86_OC, // implied BX, EBX, RBX, R11D, or R11 register, depending on operand size and REX.B
+	SP_R12_WDQ_X86_OC, // implied SP, ESP, RSP, R12D, or R12 register, depending on operand size and REX.B
+	BP_R13_WDQ_X86_OC, // implied BP, EBP, RBP, R13D, or R13 register, depending on operand size and REX.B
+	SI_R14_WDQ_X86_OC, // implied SI, ESI, RSI, R14D, or R14 register, depending on operand size and REX.B
+	DI_R15_WDQ_X86_OC, // implied DI, EDI, RDI, R15D, or R15 register, depending on operand size and REX.B
+
+	AL_R8B_X86_OC, // implied AL or R8B register, depending on REX.B
+	CL_R9B_X86_OC, // implied CL or R9B register, depending on REX.B
+	DL_R10B_X86_OC, // implied DL or R10B register, depending on REX.B
+	BL_R11B_X86_OC, // implied BL or R11B register, depending on REX.B
+	AH_R12B_X86_OC, // implied AH or R12B register, depending on REX.B
+	CH_R13B_X86_OC, // implied CH or R13B register, depending on REX.B
+	DH_R14B_X86_OC, // implied DH or R14B register, depending on REX.B
+	BH_R15B_X86_OC, // implied BH or R15B register, depending on REX.B
+
+	ST0_X86_OC, // implied ST(0) register
+	ST1_X86_OC, // implied ST(1) register
+	ST2_X86_OC, // implied ST(2) register
+	ST3_X86_OC, // implied ST(3) register
+	ST4_X86_OC, // implied ST(4) register
+	ST5_X86_OC, // implied ST(5) register
+	ST6_X86_OC, // implied ST(6) register
+	ST7_X86_OC, // implied ST(7) register
+
+	RM_B_X86_OC, // ModRM:r/m encodes an 8-bit general register or memory address
+	RM_D_X86_OC, // ModRM:r/m encodes a 32-bit general register or memory address
+	RM_WDQ_X86_OC, // ModRM:r/m encodes a 16, 32, or 64-bit general register or memory address, depending on operand size
+	RM_W_X86_OC, // ModRM:r/m encodes a 16-bit general register or memory address
+	RM_DF_X86_OC, // ModRM:r/m encodes a 32 or 48-bit general register or memory address, depending on operand size
+	RM_DQ_X86_OC, // ModRM:r/m encodes a 32 or 64-bit general register or memory address, depending on operand size
+	RM_64MODE_X86_OC, // ModRM:r/m encodes a 32 or 64-bit general register or memory address, depending on 64-bit mode
+
+	REG_B_X86_OC, // ModRM:reg encodes an 8-bit general register
+	REG_D_X86_OC, // ModRM:reg encodes a 32-bit general register
+	REG_WDQ_X86_OC, // ModRM:reg encodes a 16, 32, or 64-bit general register, depending on operand size
+	REG_WD_X86_OC, // ModRM:reg encodes a 16 or 32-bit general register, depending on operand size
+	REG_W_X86_OC, // ModRM:reg encodes a 16-bit general register
+	REG_DQ_X86_OC, // ModRM:reg encodes a 32 or 64-bit general register, depending on operand size
+	REG_64MODE_X86_OC, // ModRM:reg encodes a 32 or 64-bit general register, depending on 64-bit mode
+
+	VEX_VVVV_DQ_X86_OC, // VEX.vvvv encodes a 32 or 64-bit general register, depending on operand size
+
+	M_B_X86_OC, // ModRM:r/m can only encode an 8-bit memory address
+	M_W_X86_OC, // ModRM:r/m can only encode a 16-bit memory address
+	M_D_X86_OC, // ModRM:r/m can only encode a 32-bit memory address
+	M_WDQ_X86_OC, // ModRM:r/m can only encode a 16, 32, or 64-bit memory address, depending on operand size
+	M_OSO_DQ_X86_OC, // ModRM:r/m can only encode a 32 or 64-bit memory address, depending on if operand size override is used
+	M_DF_X86_OC, // ModRM:r/m can only encode a 32 or 48-bit memory address, depending on operand size
+	M_Q_X86_OC, // ModRM:r/m can only encode a 64-bit memory address
+	M_T_X86_OC, // ModRM:r/m can only encode a 80-bit memory address
+	M_XYZ_X86_OC, // ModRM:r/m can only encode a 128, 256, or 512-bit memory address, depending on vector length
+	M_X_X86_OC, // ModRM:r/m can only encode a 128-bit memory address
+	M_DQ_X86_OC, // ModRM:r/m can only encode a 32 or 64-bit memory address, depending on operand size
+
+	IMM_B_X86_OC, // 8-bit immediate
+	IMM_WDQ_X86_OC, // 16, 32, or 64-bit immediate, depending on operand size
+	IMM_WD_X86_OC, // 16 or 32-bit immediate, depending on operand size
+	IMM_W_X86_OC, // 16-bit immediate
+
+	ES_MEM_DI_B_X86_OC, // 8-bit memory address, ES:[rDI]
+	ES_MEM_DI_WDQ_X86_OC, // 16, 32, or 64-bit memory address, ES:[rDI], depending on operand size
+	ES_MEM_DI_WD_X86_OC, // 16 or 32-bit memory address, ES:[rDI], depending on operand size
+
+	DS_MEM_SI_B_X86_OC, // 8-bit memory address, DS:[rSI]
+	DS_MEM_SI_WDQ_X86_OC, // 16, 32, or 64-bit memory address, DS:[rSI], depending on operand size
+	DS_MEM_SI_WD_X86_OC, // 16 or 32-bit memory address, DS:[rSI], depending on operand size
+
+	CONST_MEM_B_X86_OC, // 8-bit memory address, where the address is only a constant displacement. No ModR/M byte.
+	CONST_MEM_WDQ_X86_OC, // 16, 32, or 64-bit memory address, depending on operand size, where the address is only a constant displacement. No ModR/M byte
+
+	RM_REG_64MODE_X86_OC, // ModRM:r/m encodes a 32 or 64-bit general register, depending on 64-bit mode, regardless of ModRM.mod
+	RM_REG_DQ_X86_OC, // ModRM:r/m encodes a 32 or 64-bit general register, depending on operand size, regardless of ModRM.mod
+	RM_REG_WDQ_X86_OC, // ModRM:r/m encodes a 16, 32, or 64-bit general register, depending on operand size, regardless of ModRM.mod
+
+	REG_CTRL_X86_OC, // ModRM:reg encodes a control register
+	REG_DEBUG_X86_OC, // ModRM:reg encodes a debug register
+
+	R_WDQ_M_W_X86_OC, // ModRM:r/m encodes a 16, 32, or 64-bit general register depending on operand size, or a 16-bit memory address
+
+	REG_SEGMENT_X86_OC, // ModRM:reg encodes a segment register
+
+	CONST_SEG_MEM_X86_OC, // direct memory address where the segment is a constant and the address is only a constant displacement. No ModR/M byte
+
+	REG_MMX_X86_OC, // ModRM:reg encodes an MMX register
+
+	RM_MMX_D_X86_OC, // ModRM:r/m encodes an MMX register or a 32-bit memory address
+	RM_MMX_Q_X86_OC, // ModRM:r/m encodes an MMX register or a 64-bit memory address
+
+	RM_MOD11_MMX_X86_OC, // ModRM:r/m encodes an MMX register. ModRM.mod must be 0b11
+
+	RM_MOD11_XYZ_X86_OC, // ModRM:r/m encodes an XMM, YMM, or ZMM register, depending on vector length. ModRM.mod must be 0b11
+	RM_MOD11_X_X86_OC, // ModRM:r/m encodes an XMM register. ModRM.mod must be 0b11
+	RM_MOD11_REQ_X_X86_OC, // ModRM:r/m encodes an XMM register. ModRM.mod must be 0b11 and vector length must be 128-bit
+
+
+	REG_XYZ_X86_OC, // ModRM:reg encodes an XMM, YMM, or ZMM register, depending on vector length
+	REG_REQ_X_X86_OC, // ModRM:reg encodes an XMM register. Vector length must be 128-bit
+	REG_X_X86_OC, // ModRM:reg encodes an XMM register
+	REG_REQ_YZ_X86_OC, // ModRM:reg encodes a YMM or ZMM register. Vector length cannot be 128-bit
+
+
+	RM_XYZ_X86_OC, // ModRM:r/m encodes an XMM, YMM, or ZMM register, or a 128, 256, or 512-bit memory address, depending on vector length
+	RM_REQ_X_X86_OC, // ModRM:r/m encodes an XMM register or a 128-bit memory address. Vector length must be 128-bit
+	R_X_M_D_X86_OC, // ModRM:r/m encodes an XMM register or a 32-bit memory address
+	R_X_M_Q_X86_OC, // ModRM:r/m encodes an XMM register or a 64-bit memory address
+	RM_REQ_YZ_X86_OC, // ModRM:r/m encodes a YMM or ZMM register, or a 256 or 512-bit memory address. Vector length cannot be 128-bit
+
+	VVVV_XYZ_X86_OC, // VEX.vvvv or EVEX.vvvv encodes an XMM, YMM, or ZMM register, depending on vector length
+	VVVV_REQ_X_X86_OC, // VEX.vvvv or EVEX.vvvv encodes an XMM register. Vector length must be 128-bit
+	VVVV_X_X86_OC, // VEX.vvvv or EVEX.vvvv encodes an XMM register
+	VVVV_REQ_YZ_X86_OC, // VEX.vvvv or EVEX.vvvv encodes a YMM or ZMM register. Vector length cannot be 128-bit
+
+	U4_XY_X86_OC, // upper 4 bits of an 8-bit immediate encodes an XMM or YMM register, depending on vector length
+
+	EVEX_VVVV_XYZ_X86_OC, // EVEX.vvvv encodes an XMM, YMM, or ZMM register, depending on vector length
 };
 
 enum OpcodeSuperscript

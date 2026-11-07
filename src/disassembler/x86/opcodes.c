@@ -329,7 +329,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 		for (int32_t i = 0; i < 4; i++)
 		{
-			if (extendedOpcode->operands[i] != NO_OPERAND_CODE)
+			if (extendedOpcode->operands[i] != NONE_OC)
 			{
 				params->opcode.operands[i] = extendedOpcode->operands[i];
 			}
@@ -342,7 +342,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 		if (params->opcode.extensionGroup == 3 && opcodeByte == 0xF7 && params->opcode.mnemonic == TEST_X86)
 		{
-			params->opcode.operands[1] = Iz;
+			params->opcode.operands[1] = IMM_WD_X86_OC;
 		}
 	}
 	else if (escapeToCoprocessor) // escape to coprocessor instruction set
