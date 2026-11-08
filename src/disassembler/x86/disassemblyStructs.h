@@ -265,7 +265,6 @@ enum OpcodeSuperscript
 struct Opcode
 {
 	enum OpcodeMnemonic mnemonic;
-	int8_t extensionGroup; // -1 if the opcode is not an extended one. 0 = Group 1; 1 = Group 1A; from there this number corresponds to the actual group number
 	enum OperandCode operands[4];
 	enum OpcodeSuperscript opcodeSuperscript;
 };

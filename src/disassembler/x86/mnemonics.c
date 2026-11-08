@@ -249,6 +249,11 @@ bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)
 	return opcode >= MOV_X86 && opcode <= UD2_X86;
 }
 
+bool isOpcodeExtendedX86(enum OpcodeMnemonic opcode)
+{
+	return opcode >= EXTENDED_GROUP1_X86 && opcode <= EXTENDED_GROUP17_X86;
+}
+
 bool doesOpcodeOverwriteFirstOperand(enum OpcodeMnemonic opcode)
 {
 	return opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86;

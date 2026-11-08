@@ -163,8 +163,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		return ERROR_JDC;
 	}
 
-	// handle extended opcodes or escape opcodes
-	if (params->opcode.mnemonic == EXTENDED_OPCODE_X86)
+	if (isOpcodeExtendedX86(params->opcode.mnemonic))
 	{
 		if (ERROR_JDC == getModRM(params))
 		{
@@ -173,11 +172,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 		const struct Opcode* extendedOpcode = 0;
 
-		if (params->opcode.extensionGroup < 7)
+		if (params->opcode.mnemonic < EXTENDED_GROUP7_X86)
 		{
-			extendedOpcode = &extendedOpcodeMapThroughGroupSix[params->opcode.extensionGroup][params->modRM.reg];
+			extendedOpcode = &extendedOpcodeMapThroughGroupSix[params->opcode.mnemonic - EXTENDED_GROUP1_X86][params->modRM.reg];
 		}
-		else if (params->opcode.extensionGroup == 7)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP7_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -188,11 +187,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				extendedOpcode = &extendedOpcodeMapGroup7[params->modRM.reg];
 			}
 		}
-		else if (params->opcode.extensionGroup == 8)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP8_X86)
 		{
 			extendedOpcode = &extendedOpcodeMapGroup8[params->modRM.reg];
 		}
-		else if (params->opcode.extensionGroup == 9)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP9_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -229,11 +228,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				}
 			}
 		}
-		else if (params->opcode.extensionGroup == 10)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP10_X86)
 		{
 			extendedOpcode = &extendedOpcodeGroup10;
 		}
-		else if (params->opcode.extensionGroup == 11)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP11_X86)
 		{
 			if (opcodeByte == 0xC6)
 			{
@@ -244,7 +243,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				extendedOpcode = &extendedOpcodeMapGroup11C7[params->modRM.reg];
 			}
 		}
-		else if (params->opcode.extensionGroup == 12)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP12_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -259,7 +258,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				}
 			}
 		}
-		else if (params->opcode.extensionGroup == 13)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP13_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -274,7 +273,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				}
 			}
 		}
-		else if (params->opcode.extensionGroup == 14)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP14_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -289,7 +288,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				}
 			}
 		}
-		else if (params->opcode.extensionGroup == 15)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP15_X86)
 		{
 			if (params->modRM.mod == 0b11)
 			{
@@ -308,14 +307,14 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 				extendedOpcode = &extendedOpcodeMapGroup15[params->modRM.reg];
 			}
 		}
-		else if (params->opcode.extensionGroup == 16)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP16_X86)
 		{
 			if (params->modRM.mod != 0b11)
 			{
 				extendedOpcode = &extendedOpcodeMapGroup16[params->modRM.reg];
 			}
 		}
-		else if (params->opcode.extensionGroup == 17)
+		else if (params->opcode.mnemonic == EXTENDED_GROUP17_X86)
 		{
 			extendedOpcode = &extendedOpcodeMapGroup17[params->modRM.reg];
 		}
@@ -324,8 +323,6 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			return ERROR_JDC;
 		}
-
-		params->opcode.mnemonic = extendedOpcode->mnemonic;
 
 		for (int32_t i = 0; i < 4; i++)
 		{
@@ -340,10 +337,12 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			params->opcode.opcodeSuperscript = extendedOpcode->opcodeSuperscript;
 		}
 
-		if (params->opcode.extensionGroup == 3 && opcodeByte == 0xF7 && params->opcode.mnemonic == TEST_X86)
+		if (params->opcode.mnemonic == EXTENDED_GROUP3_X86 && opcodeByte == 0xF7 && extendedOpcode->mnemonic == TEST_X86)
 		{
 			params->opcode.operands[1] = IMM_WD_X86_OC;
 		}
+
+		params->opcode.mnemonic = extendedOpcode->mnemonic;
 	}
 	else if (escapeToCoprocessor) // escape to coprocessor instruction set
 	{
