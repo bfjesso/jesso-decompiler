@@ -204,7 +204,7 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 		{
 			struct Operand* currentOperand = &instruction->operands[j];
 			int64_t offsetFromInitSP = 0;
-			if (currentOperand->type == MEM_ADDRESS && !doesInstructionModifyOperand(params, i, j, 0) &&
+			if (currentOperand->type == MEMORY_OPERAND && !doesInstructionModifyOperand(params, i, j, 0) &&
 				isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &offsetFromInitSP))
 			{
 				bool isArgument = offsetFromInitSP > 0;
@@ -228,12 +228,12 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 
 		int64_t offsetFromInitSP = 0;
-		if (instruction->opcode == PUSH_X86 && instruction->operands[0].type == REGISTER)
+		if (instruction->opcode == PUSH_X86 && instruction->operands[0].type == REGISTER_OPERAND)
 		{
 			continue;
 		}
 		else if (instruction->numOfOperands > 0 && // checking for stack var that is used as a "PUSH" only to save the reg
-			instruction->operands[0].type == MEM_ADDRESS && doesInstructionModifyOperand(params, i, 0, 0) &&
+			instruction->operands[0].type == MEMORY_OPERAND && doesInstructionModifyOperand(params, i, 0, 0) &&
 			isMemAddressStackVar(params, i, &instruction->operands[0].memoryAddress, &offsetFromInitSP) &&
 			!getStackVarByOffset(func, offsetFromInitSP))
 		{
@@ -346,7 +346,7 @@ enum JdcStatus setFunctionStackVarTypes(struct DecompilationParameters* params, 
 		{
 			struct Operand* operand = &instruction->operands[j];
 			int64_t offsetFromInitSP = 0;
-			if (operand->type == MEM_ADDRESS && isMemAddressStackVar(params, i, &operand->memoryAddress, &offsetFromInitSP))
+			if (operand->type == MEMORY_OPERAND && isMemAddressStackVar(params, i, &operand->memoryAddress, &offsetFromInitSP))
 			{
 				functionStackFrameSize = getStackFrameSizeAtInstruction(params, i);
 
@@ -508,7 +508,7 @@ static bool isStackVarInitialized(struct DecompilationParameters* params, int32_
 			struct Operand* currentOperand = &instruction->operands[j];
 			int64_t currentOffsetFromInitSP = 0;
 			bool overwrites = false;
-			if (currentOperand->type == MEM_ADDRESS &&
+			if (currentOperand->type == MEMORY_OPERAND &&
 				doesInstructionModifyOperand(params, i, j, &overwrites) && overwrites &&
 				isMemAddressStackVar(params, i, &currentOperand->memoryAddress, &currentOffsetFromInitSP) &&
 				currentOffsetFromInitSP == offsetFromInitSP)
@@ -612,7 +612,7 @@ static int64_t getStackFrameChange(struct DisassembledInstruction* instruction)
 		return 0;
 	}
 
-	if (instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP_X86_REG))
+	if (instruction->operands[0].type == REGISTER_OPERAND && compareRegisters(instruction->operands[0].reg, SP_X86_REG))
 	{
 		if (instruction->opcode == SUB_X86)
 		{
@@ -714,7 +714,7 @@ bool isMemAddressStackVar(struct DecompilationParameters* params, int32_t instru
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
 		if (instruction->opcode == MOV_X86 && instruction->numOfOperands == 2 &&
-			instruction->operands[0].type == REGISTER && instruction->operands[1].type == REGISTER)
+			instruction->operands[0].type == REGISTER_OPERAND && instruction->operands[1].type == REGISTER_OPERAND)
 		{
 			if (compareRegisters(instruction->operands[0].reg, memAddress->reg))
 			{
@@ -973,12 +973,12 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 		{
 			struct Operand* operand = &instruction->operands[j];
 			enum Register reg = NO_REG;
-			if (operand->type == REGISTER)
+			if (operand->type == REGISTER_OPERAND)
 			{
 				reg = operand->reg;
 
 			}
-			else if (operand->type == MEM_ADDRESS)
+			else if (operand->type == MEMORY_OPERAND)
 			{
 				reg = operand->memoryAddress.reg;
 				if (!compareRegisters(reg, regVar->reg))
@@ -989,7 +989,7 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 
 			if (compareRegisters(reg, regVar->reg))
 			{
-				if (operand->type == MEM_ADDRESS && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
+				if (operand->type == MEMORY_OPERAND && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
 				{
 					regVar->dataType = getMemoryAddressDataType(instruction->opcode, &operand->memoryAddress);
 					regVar->dataType.pointerLevel = 1;

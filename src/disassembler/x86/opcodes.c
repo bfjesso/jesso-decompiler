@@ -12,7 +12,7 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 {
 	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	uint8_t prefixIndex = params->legPrefixes.group1 == REPNZ_BND ? 3 : params->legPrefixes.group1 == REPZ ? 2 : params->legPrefixes.group3 == OSO ? 1 : 0;
+	uint8_t prefixIndex = params->legPrefixes.group1 == REPNZ_BND_LP ? 3 : params->legPrefixes.group1 == REPZ_LP ? 2 : params->legPrefixes.group3 == OSO_LP ? 1 : 0;
 	uint8_t opcodeByte = 0;
 	bool escapeToCoprocessor = false;
 
@@ -37,11 +37,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 				if (prefixIndex == 3 || prefixIndex == 2)
 				{
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else if (prefixIndex == 1)
 				{
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 			}
 		}
@@ -61,11 +61,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 				if (prefixIndex == 3 || prefixIndex == 2)
 				{
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else if (prefixIndex == 1)
 				{
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 			}
 		}
@@ -85,11 +85,11 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 				if (prefixIndex == 3 || prefixIndex == 2)
 				{
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else if (prefixIndex == 1)
 				{
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 			}
 
@@ -195,10 +195,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			if (params->modRM.mod == 0b11)
 			{
-				if (params->legPrefixes.group1 == REPZ)
+				if (params->legPrefixes.group1 == REPZ_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F311B[params->modRM.reg];
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else
 				{
@@ -207,15 +207,15 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 			}
 			else
 			{
-				if (params->legPrefixes.group3 == OSO)
+				if (params->legPrefixes.group3 == OSO_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup966[params->modRM.reg];
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
-				else if (params->legPrefixes.group1 == REPZ)
+				else if (params->legPrefixes.group1 == REPZ_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup9F3[params->modRM.reg];
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else
 				{
@@ -247,10 +247,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			if (params->modRM.mod == 0b11)
 			{
-				if (params->legPrefixes.group3 == OSO)
+				if (params->legPrefixes.group3 == OSO_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup126611B[params->modRM.reg];
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 				else
 				{
@@ -262,10 +262,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			if (params->modRM.mod == 0b11)
 			{
-				if (params->legPrefixes.group3 == OSO)
+				if (params->legPrefixes.group3 == OSO_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup136611B[params->modRM.reg];
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 				else
 				{
@@ -277,10 +277,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			if (params->modRM.mod == 0b11)
 			{
-				if (params->legPrefixes.group3 == OSO)
+				if (params->legPrefixes.group3 == OSO_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup146611B[params->modRM.reg];
-					params->legPrefixes.group3 = NO_PREFIX;
+					params->legPrefixes.group3 = NONE_LP;
 				}
 				else
 				{
@@ -292,10 +292,10 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 		{
 			if (params->modRM.mod == 0b11)
 			{
-				if (params->legPrefixes.group1 == REPZ)
+				if (params->legPrefixes.group1 == REPZ_LP)
 				{
 					extendedOpcode = &extendedOpcodeMapGroup15F311B[params->modRM.reg];
-					params->legPrefixes.group1 = NO_PREFIX;
+					params->legPrefixes.group1 = NONE_LP;
 				}
 				else
 				{
@@ -326,20 +326,20 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 
 		for (int32_t i = 0; i < 4; i++)
 		{
-			if (extendedOpcode->operands[i] != NONE_OC)
+			if (extendedOpcode->operandCodes[i] != NONE_OC)
 			{
-				params->opcode.operands[i] = extendedOpcode->operands[i];
+				params->opcode.operandCodes[i] = extendedOpcode->operandCodes[i];
 			}
 		}
 
-		if (extendedOpcode->opcodeSuperscript != NO_SUPERSCRIPT)
+		if (extendedOpcode->opcodeProperty != NONE_OP)
 		{
-			params->opcode.opcodeSuperscript = extendedOpcode->opcodeSuperscript;
+			params->opcode.opcodeProperty = extendedOpcode->opcodeProperty;
 		}
 
 		if (params->opcode.mnemonic == EXTENDED_GROUP3_X86 && opcodeByte == 0xF7 && extendedOpcode->mnemonic == TEST_X86)
 		{
-			params->opcode.operands[1] = IMM_WD_X86_OC;
+			params->opcode.operandCodes[1] = IMM_WD_X86_OC;
 		}
 
 		params->opcode.mnemonic = extendedOpcode->mnemonic;
@@ -382,8 +382,8 @@ enum JdcStatus handleOpcode(struct DisassemblyParameters* params)
 	}
 
 	if (params->opcode.mnemonic == NO_OPCODE ||
-		(params->is64BitMode && params->opcode.opcodeSuperscript == i64) ||
-		(!params->is64BitMode && params->opcode.opcodeSuperscript == o64))
+		(params->is64BitMode && params->opcode.opcodeProperty == INVALID_64_MODE_OP) ||
+		(!params->is64BitMode && params->opcode.opcodeProperty == ONLY_64_MODE_OP))
 	{
 		return ERROR_JDC;
 	}
@@ -397,10 +397,10 @@ static void handleAlternateMnemonics(struct DisassemblyParameters* params) // th
 	switch (params->opcode.mnemonic)
 	{
 	case CWDE_X86:
-		params->opcode.mnemonic = params->rexPrefix.W ? CDQE_X86 : params->legPrefixes.group1 == OSO ? CBW_X86 : CWDE_X86;
+		params->opcode.mnemonic = params->rexPrefix.W ? CDQE_X86 : params->legPrefixes.group1 == OSO_LP ? CBW_X86 : CWDE_X86;
 		break;
 	case CDQ_X86:
-		params->opcode.mnemonic = params->rexPrefix.W ? CQO_X86 : params->legPrefixes.group1 == OSO ? CWD_X86 : CDQ_X86;
+		params->opcode.mnemonic = params->rexPrefix.W ? CQO_X86 : params->legPrefixes.group1 == OSO_LP ? CWD_X86 : CDQ_X86;
 		break;
 	case VMOVUPS_X86:
 		params->opcode.mnemonic = !params->vexPrefix.isValidVEX && !params->evexPrefix.isValidEVEX ? MOVUPS_X86 : VMOVUPS_X86;

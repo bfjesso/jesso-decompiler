@@ -18,8 +18,8 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	bool is64BitOperandSize = false;
 	if (params->is64BitMode)
 	{
-		if ((params->opcode.opcodeSuperscript == d64 && params->legPrefixes.group3 != OSO) ||
-			params->opcode.opcodeSuperscript == f64 ||
+		if ((params->opcode.opcodeProperty == DEFAULT_64_SIZE_OP && params->legPrefixes.group3 != OSO_LP) ||
+			params->opcode.opcodeProperty == FORCE_64_SIZE_OP ||
 			checkFlagW(params))
 		{
 			is64BitOperandSize = true;
@@ -30,7 +30,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	{
 		result->operandSizeAttribute = 8;
 	}
-	else if (params->legPrefixes.group3 != OSO)
+	else if (params->legPrefixes.group3 != OSO_LP)
 	{
 		result->operandSizeAttribute = 4;
 	}
@@ -44,7 +44,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 	int32_t operandIndex = 0;
 	for (int32_t i = 0; i < 4; i++)
 	{
-		enum OperandCode currentOperandCode = params->opcode.operands[i];
+		enum OperandCode currentOperandCode = params->opcode.operandCodes[i];
 		struct Operand* currentOperand = &(operands[operandIndex]);
 
 		if (currentOperandCode == NONE_OC)
@@ -56,176 +56,176 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		switch (currentOperandCode)
 		{
 		case ONE_OC:
-			currentOperand->type = IMMEDIATE;
+			currentOperand->type = IMMEDIATE_OPERAND;
 			currentOperand->immediate.value = 1;
 			currentOperand->immediate.size = 1;
 			break;
 		case AL_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = AL_X86_REG;
 			break;
 		case CL_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = CL_X86_REG;
 			break;
 		case AX_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = AX_X86_REG;
 			break;
 		case DX_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = DX_X86_REG;
 			break;
 		case ES_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ES_X86_REG;
 			break;
 		case CS_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = CS_X86_REG;
 			break;
 		case SS_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = SS_X86_REG;
 			break;
 		case DS_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = DS_X86_REG;
 			break;
 		case FS_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = FS_X86_REG;
 			break;
 		case GS_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = GS_X86_REG;
 			break;
 		case AX_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 == OSO ? AX_X86_REG : EAX_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 == OSO_LP ? AX_X86_REG : EAX_X86_REG);
 			break;
 		case CX_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 == OSO ? CX_X86_REG : ECX_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 == OSO_LP ? CX_X86_REG : ECX_X86_REG);
 			break;
 		case DX_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 == OSO ? DX_X86_REG : EDX_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 == OSO_LP ? DX_X86_REG : EDX_X86_REG);
 			break;
 		case BX_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 == OSO ? BX_X86_REG : EBX_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 == OSO_LP ? BX_X86_REG : EBX_X86_REG);
 			break;
 		case SP_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 == OSO ? SP_X86_REG : ESP_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 == OSO_LP ? SP_X86_REG : ESP_X86_REG);
 			break;
 		case BP_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 == OSO ? BP_X86_REG : EBP_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 == OSO_LP ? BP_X86_REG : EBP_X86_REG);
 			break;
 		case SI_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 == OSO ? SI_X86_REG : ESI_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 == OSO_LP ? SI_X86_REG : ESI_X86_REG);
 			break;
 		case DI_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 == OSO ? DI_X86_REG : EDI_X86_REG);
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 == OSO_LP ? DI_X86_REG : EDI_X86_REG);
 			break;
 		case AX_R8_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8_X86_REG : R8D_X86_REG) : (is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 != OSO ? EAX_X86_REG : AX_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R8_X86_REG : R8D_X86_REG) : (is64BitOperandSize ? RAX_X86_REG : (params->legPrefixes.group3 != OSO_LP ? EAX_X86_REG : AX_X86_REG));
 			break;
 		case CX_R9_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9_X86_REG : R9D_X86_REG) : (is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 != OSO ? ECX_X86_REG : CX_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R9_X86_REG : R9D_X86_REG) : (is64BitOperandSize ? RCX_X86_REG : (params->legPrefixes.group3 != OSO_LP ? ECX_X86_REG : CX_X86_REG));
 			break;
 		case DX_R10_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10_X86_REG : R10D_X86_REG) : (is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 != OSO ? EDX_X86_REG : DX_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R10_X86_REG : R10D_X86_REG) : (is64BitOperandSize ? RDX_X86_REG : (params->legPrefixes.group3 != OSO_LP ? EDX_X86_REG : DX_X86_REG));
 			break;
 		case BX_R11_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11_X86_REG : R11D_X86_REG) : (is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 != OSO ? EBX_X86_REG : BX_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R11_X86_REG : R11D_X86_REG) : (is64BitOperandSize ? RBX_X86_REG : (params->legPrefixes.group3 != OSO_LP ? EBX_X86_REG : BX_X86_REG));
 			break;
 		case SP_R12_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12_X86_REG : R12D_X86_REG) : (is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 != OSO ? ESP_X86_REG : SP_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R12_X86_REG : R12D_X86_REG) : (is64BitOperandSize ? RSP_X86_REG : (params->legPrefixes.group3 != OSO_LP ? ESP_X86_REG : SP_X86_REG));
 			break;
 		case BP_R13_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13_X86_REG : R13D_X86_REG) : (is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 != OSO ? EBP_X86_REG : BP_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R13_X86_REG : R13D_X86_REG) : (is64BitOperandSize ? RBP_X86_REG : (params->legPrefixes.group3 != OSO_LP ? EBP_X86_REG : BP_X86_REG));
 			break;
 		case SI_R14_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14_X86_REG : R14D_X86_REG) : (is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 != OSO ? ESI_X86_REG : SI_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R14_X86_REG : R14D_X86_REG) : (is64BitOperandSize ? RSI_X86_REG : (params->legPrefixes.group3 != OSO_LP ? ESI_X86_REG : SI_X86_REG));
 			break;
 		case DI_R15_WDQ_X86_OC:
-			currentOperand->type = REGISTER;
-			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15_X86_REG : R15D_X86_REG) : (is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 != OSO ? EDI_X86_REG : DI_X86_REG));
+			currentOperand->type = REGISTER_OPERAND;
+			currentOperand->reg = params->rexPrefix.B ? (is64BitOperandSize ? R15_X86_REG : R15D_X86_REG) : (is64BitOperandSize ? RDI_X86_REG : (params->legPrefixes.group3 != OSO_LP ? EDI_X86_REG : DI_X86_REG));
 			break;
 		case AL_R8B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R8B_X86_REG : AL_X86_REG;
 			break;
 		case CL_R9B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R9B_X86_REG : CL_X86_REG;
 			break;
 		case DL_R10B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R10B_X86_REG : DL_X86_REG;
 			break;
 		case BL_R11B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R11B_X86_REG : BL_X86_REG;
 			break;
 		case AH_R12B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R12B_X86_REG : AH_X86_REG;
 			break;
 		case CH_R13B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R13B_X86_REG : CH_X86_REG;
 			break;
 		case DH_R14B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R14B_X86_REG : DH_X86_REG;
 			break;
 		case BH_R15B_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = params->rexPrefix.B ? R15B_X86_REG : BH_X86_REG;
 			break;
 		case ST0_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST0_X86_REG;
 			break;
 		case ST1_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST1_X86_REG;
 			break;
 		case ST2_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST2_X86_REG;
 			break;
 		case ST3_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST3_X86_REG;
 			break;
 		case ST4_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST4_X86_REG;
 			break;
 		case ST5_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST5_X86_REG;
 			break;
 		case ST6_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST6_X86_REG;
 			break;
 		case ST7_X86_OC:
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = ST7_X86_REG;
 			break;
 		case RM_B_X86_OC:
@@ -235,13 +235,13 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_WDQ_X86_OC:
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_W_X86_OC:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_DF_X86_OC: // check
-			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MODRM, params->legPrefixes.group3 == OSO_LP ? 4 : 6, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_DQ_X86_OC:
 			if (ERROR_JDC == handleModRM(params, RM_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -256,10 +256,10 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_WDQ_X86_OC:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_WD_X86_OC:
-			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, REG_MODRM, params->legPrefixes.group3 == OSO_LP ? 2 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_W_X86_OC:
 			if (ERROR_JDC == handleModRM(params, REG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
@@ -284,13 +284,13 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case M_WDQ_X86_OC:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case M_OSO_DQ_X86_OC:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO ? 4 : 8, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO_LP ? 4 : 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case M_DF_X86_OC:
-			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO ? 4 : 6, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, M_MODRM, params->legPrefixes.group3 == OSO_LP ? 4 : 6, currentOperand)) { return ERROR_JDC; }
 			break;
 		case M_Q_X86_OC:
 			if (ERROR_JDC == handleModRM(params, M_MODRM, 8, currentOperand)) { return ERROR_JDC; }
@@ -311,69 +311,69 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == getImmediate(params, 1, currentOperand)) { return ERROR_JDC; }
 			break;
 		case IMM_WDQ_X86_OC:
-			if (ERROR_JDC == getImmediate(params, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == getImmediate(params, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case IMM_WD_X86_OC:
-			if (ERROR_JDC == getImmediate(params, params->legPrefixes.group3 == OSO ? 2 : 4, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == getImmediate(params, params->legPrefixes.group3 == OSO_LP ? 2 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case IMM_W_X86_OC:
 			if (ERROR_JDC == getImmediate(params, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case ES_MEM_DI_B_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
+			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = ES_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case ES_MEM_DI_WDQ_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = ES_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case ES_MEM_DI_WD_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO_LP ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = ES_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RDI_X86_REG : EDI_X86_REG) : (params->is64BitMode ? EDI_X86_REG : DI_X86_REG);
 			break;
 		case DS_MEM_SI_B_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
+			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = DS_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case DS_MEM_SI_WDQ_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = DS_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case DS_MEM_SI_WD_X86_OC:
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO ? 2 : 4;
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = params->legPrefixes.group3 == OSO_LP ? 2 : 4;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.regSegment = DS_X86_REG;
-			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
+			currentOperand->memoryAddress.reg = params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? RSI_X86_REG : ESI_X86_REG) : (params->is64BitMode ? ESI_X86_REG : SI_X86_REG);
 			break;
 		case CONST_MEM_B_X86_OC:
-			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
-			currentOperand->type = MEM_ADDRESS;
+			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.ptrSize = 1;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NONE_LP ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case CONST_MEM_WDQ_X86_OC:
-			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
-			currentOperand->type = MEM_ADDRESS;
-			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2;
+			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group4 != ASO_LP ? (params->is64BitMode ? 8 : 4) : (params->is64BitMode ? 4 : 2), &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2;
 			currentOperand->memoryAddress.scale = 1;
-			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NO_PREFIX ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
+			currentOperand->memoryAddress.regSegment = params->legPrefixes.group2 == NONE_LP ? DS_X86_REG : segmentOverrideToSegment(params->legPrefixes.group2);
 			break;
 		case RM_REG_64MODE_X86_OC:
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -382,7 +382,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : 4, currentOperand)) { return ERROR_JDC; }
 			break;
 		case RM_REG_WDQ_X86_OC:
-			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_REG_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_CTRL_X86_OC:
 			if (ERROR_JDC == handleModRM(params, REG_CONTROL_MODRM, params->is64BitMode ? 8 : 4, currentOperand)) { return ERROR_JDC; }
@@ -391,15 +391,15 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			if (ERROR_JDC == handleModRM(params, REG_DEBUG_MODRM, 8, currentOperand)) { return ERROR_JDC; }
 			break;
 		case R_WDQ_M_W_X86_OC:
-			if (ERROR_JDC == handleModRM(params, RM_MW_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO ? 4 : 2, currentOperand)) { return ERROR_JDC; }
+			if (ERROR_JDC == handleModRM(params, RM_MW_MODRM, is64BitOperandSize ? 8 : params->legPrefixes.group3 != OSO_LP ? 4 : 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case REG_SEGMENT_X86_OC:
 			if (ERROR_JDC == handleModRM(params, REG_SEG_MODRM, 2, currentOperand)) { return ERROR_JDC; }
 			break;
 		case CONST_SEG_MEM_X86_OC:
-			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group3 != OSO ? 4 : 2, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+			if (ERROR_JDC == readIntFromBytes(params, params->legPrefixes.group3 != OSO_LP ? 4 : 2, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			if (ERROR_JDC == readIntFromBytes(params, 2, &immediateTmp)) { return ERROR_JDC; }
-			currentOperand->type = MEM_ADDRESS;
+			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.scale = 1;
 			currentOperand->memoryAddress.constSegment = (uint16_t)immediateTmp;
 			break;
@@ -477,7 +477,7 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 		case U4_XY_X86_OC:
 			if (ERROR_JDC == readIntFromBytes(params, 1, &immediateTmp)) { return ERROR_JDC; }
 			immediateTmp = (immediateTmp >> 4) & 0xF; // upper 4 bits
-			currentOperand->type = REGISTER;
+			currentOperand->type = REGISTER_OPERAND;
 			currentOperand->reg = vectorLength == 32 ? (YMM0_X86_REG + immediateTmp) : (XMM0_X86_REG + immediateTmp);
 			break;
 		case EVEX_VVVV_XYZ_X86_OC:
@@ -493,11 +493,11 @@ enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct Disas
 			{
 				return ERROR_JDC;
 			}
-			else if (currentOperand->type == REGISTER && (currentOperand->reg < 0 || currentOperand->reg >= NUM_OF_REGISTERS))
+			else if (currentOperand->type == REGISTER_OPERAND && (currentOperand->reg < 0 || currentOperand->reg >= NUM_OF_REGISTERS))
 			{
 				return ERROR_JDC;
 			}
-			else if (currentOperand->type == MEM_ADDRESS &&
+			else if (currentOperand->type == MEMORY_OPERAND &&
 				(currentOperand->memoryAddress.reg < 0 || currentOperand->memoryAddress.reg >= NUM_OF_REGISTERS ||
 					currentOperand->memoryAddress.regDisplacement < 0 || currentOperand->memoryAddress.regDisplacement >= NUM_OF_REGISTERS ||
 					currentOperand->memoryAddress.regSegment < 0 || currentOperand->memoryAddress.regSegment >= NUM_OF_REGISTERS))
@@ -534,7 +534,7 @@ static enum JdcStatus getImmediate(struct DisassemblyParameters* params, uint8_t
 		return ERROR_JDC;
 	}
 
-	result->type = IMMEDIATE;
+	result->type = IMMEDIATE_OPERAND;
 	result->immediate.size = immediateSize;
 	return SUCCESS_JDC;
 }
@@ -594,7 +594,7 @@ static enum JdcStatus getRegFromVVVV(struct DisassemblyParameters* params, uint8
 		vvvv |= 0b1000; // the most significant bit is ignored if the reg size is 4 or 8, or if EVEX is used
 	}
 
-	result->type = REGISTER;
+	result->type = REGISTER_OPERAND;
 	switch (regSize)
 	{
 	case 4:

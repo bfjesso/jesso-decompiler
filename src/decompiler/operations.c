@@ -617,7 +617,7 @@ static enum JdcStatus decompileNot(struct DecompilationParameters* params, int32
 static enum JdcStatus decompileOr(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result)
 {
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == IMMEDIATE && isImmediateAllOnes(&secondOperand->immediate))
+	if (secondOperand->type == IMMEDIATE_OPERAND && isImmediateAllOnes(&secondOperand->immediate))
 	{
 		if (getAssignment)
 		{
@@ -681,7 +681,7 @@ static enum JdcStatus decompileBitTest(struct DecompilationParameters* params, i
 	struct JdcStr expression = initializeJdcStr();
 
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == IMMEDIATE)
+	if (secondOperand->type == IMMEDIATE_OPERAND)
 	{
 		uint64_t bitMask = (uint64_t)(1) << (uint8_t)(secondOperand->immediate.value);
 		sprintfJdc(&expression, false, "%s & 0x%llX", decompiledFirstOperand.buffer, bitMask);
@@ -748,7 +748,7 @@ static enum JdcStatus decompileBitSet(struct DecompilationParameters* params, in
 	}
 
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == IMMEDIATE)
+	if (secondOperand->type == IMMEDIATE_OPERAND)
 	{
 		uint64_t bitMask = (uint64_t)(1) << (uint8_t)(secondOperand->immediate.value);
 		if (getAssignment)
@@ -805,7 +805,7 @@ static enum JdcStatus decompileBitReset(struct DecompilationParameters* params, 
 	}
 
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == IMMEDIATE)
+	if (secondOperand->type == IMMEDIATE_OPERAND)
 	{
 		uint64_t bitMask = (uint64_t)(1) << (uint8_t)(secondOperand->immediate.value);
 		if (getAssignment)
@@ -853,7 +853,7 @@ static enum JdcStatus decompileADC(struct DecompilationParameters* params, int32
 	}
 
 	struct Operand* secondOperand = &params->instructions[instructionIndex].operands[1];
-	if (secondOperand->type == IMMEDIATE && secondOperand->immediate.value == 0)
+	if (secondOperand->type == IMMEDIATE_OPERAND && secondOperand->immediate.value == 0)
 	{
 		if (getAssignment)
 		{
@@ -1348,7 +1348,7 @@ static enum JdcStatus decompilePop(struct DecompilationParameters* params, int32
 			freeJdcStr(&value);
 			return SUCCESS_JDC;
 		}
-		else if (firstOperand->type == REGISTER)
+		else if (firstOperand->type == REGISTER_OPERAND)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, registerStrs[firstOperand->reg]);
 
@@ -1368,7 +1368,7 @@ static enum JdcStatus decompilePop(struct DecompilationParameters* params, int32
 		freeJdcStr(&value);
 		return SUCCESS_JDC;
 	}
-	else if (firstOperand->type == REGISTER)
+	else if (firstOperand->type == REGISTER_OPERAND)
 	{
 		sprintfJdc(result, false, "%s", registerStrs[firstOperand->reg]);
 		freeJdcStr(&value);
@@ -1400,7 +1400,7 @@ static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int3
 			return ERROR_JDC;
 		}
 
-		if ((firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg)) || firstOperand->type == MEM_ADDRESS)
+		if ((firstOperand->type == REGISTER_OPERAND && compareRegisters(firstOperand->reg, targetReg)) || firstOperand->type == MEMORY_OPERAND)
 		{
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, decompiledSecondOperand.buffer);
 		}
@@ -1414,7 +1414,7 @@ static enum JdcStatus decompileXCHG(struct DecompilationParameters* params, int3
 		return SUCCESS_JDC;
 	}
 
-	if (firstOperand->type == REGISTER && compareRegisters(firstOperand->reg, targetReg))
+	if (firstOperand->type == REGISTER_OPERAND && compareRegisters(firstOperand->reg, targetReg))
 	{
 		if (ERROR_JDC == decompileOperand(params, instructionIndex, 1, 1, result))
 		{

@@ -66,7 +66,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 {
 	strcpyJdc(result, "");
 
-	if (instruction->group1Prefix != NO_PREFIX)
+	if (instruction->group1Prefix != NONE_LP)
 	{
 		strcatJdc(result, getGroup1PrefixStr(instruction));
 		strcatJdc(result, " ");
@@ -86,7 +86,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		}
 
 		struct Operand* currentOperand = &instruction->operands[i];
-		if (currentOperand->type == REGISTER)
+		if (currentOperand->type == REGISTER_OPERAND)
 		{
 			if (evaluateIP && compareRegisters(currentOperand->reg, IP_X86_REG))
 			{
@@ -97,14 +97,14 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 				strcatJdc(result, registerStrs[currentOperand->reg]);
 			}
 		}
-		else if (currentOperand->type == MEM_ADDRESS)
+		else if (currentOperand->type == MEMORY_OPERAND)
 		{
 			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, result) == ERROR_JDC)
 			{
 				return ERROR_JDC;
 			}
 		}
-		else if (currentOperand->type == IMMEDIATE)
+		else if (currentOperand->type == IMMEDIATE_OPERAND)
 		{
 			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
 		}
@@ -225,7 +225,7 @@ const char* getPtrSizeStr(int32_t ptrSize)
 
 const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 {
-	if (instruction->group1Prefix == REPNZ_BND &&
+	if (instruction->group1Prefix == REPNZ_BND_LP &&
 		(instruction->opcode == CALL_NEAR_X86 || instruction->opcode == RET_NEAR_X86 || instruction->opcode == JMP_NEAR_X86 || isOpcodeJcc(instruction->opcode)))
 	{
 		return "BND";
@@ -233,11 +233,11 @@ const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction)
 
 	switch (instruction->group1Prefix)
 	{
-	case LOCK:
+	case LOCK_LP:
 		return "LOCK";
-	case REPNZ_BND:
+	case REPNZ_BND_LP:
 		return "REPNZ";
-	case REPZ:
+	case REPZ_LP:
 		return "REP";
 	}
 
@@ -257,7 +257,7 @@ enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instructi
 		return ERROR_JDC;
 	}
 
-	instruction->operands[0].type = IMMEDIATE;
+	instruction->operands[0].type = IMMEDIATE_OPERAND;
 	instruction->operands[0].immediate.value = data;
 	instruction->operands[0].immediate.size = dataSize;
 	instruction->numOfOperands = 1;

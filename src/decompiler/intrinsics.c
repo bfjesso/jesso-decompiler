@@ -59,10 +59,10 @@ static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction,
 	}
 	else if (intrinsic->type == REP_IT)
 	{
-		return instruction->group1Prefix == REPZ;
+		return instruction->group1Prefix == REPZ_LP;
 	}
 
-	if (instruction->numOfOperands == 0 || instruction->operands[0].type != REGISTER)
+	if (instruction->numOfOperands == 0 || instruction->operands[0].type != REGISTER_OPERAND)
 	{
 		return false;
 	}
@@ -73,19 +73,19 @@ static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction,
 		if (!isRegMM(instruction->operands[0].reg)) { return false; }
 		break;
 	case MMX_RM_IT:
-		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return false; }
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE_OPERAND) { return false; }
 		break;
 	case MMX_IMM_IT:
-		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return false; }
+		if (!isRegMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE_OPERAND) { return false; }
 		break;
 	case SSE_IT:
 		if (!isRegXMM(instruction->operands[0].reg)) { return false; }
 		break;
 	case SSE_RM_IT:
-		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE) { return false; }
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type == IMMEDIATE_OPERAND) { return false; }
 		break;
 	case SSE_IMM_IT:
-		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE) { return false; }
+		if (!isRegXMM(instruction->operands[0].reg) || instruction->numOfOperands < 2 || instruction->operands[1].type != IMMEDIATE_OPERAND) { return false; }
 		break;
 	}
 
@@ -167,17 +167,17 @@ bool checkForVoidIntrinsic(struct DecompilationParameters* params, int32_t instr
 	{
 		if (instruction->opcode == voidIntrinsics[i].opcode)
 		{
-			if (instruction->opcode == INT_X86 && (instruction->operands[0].type != IMMEDIATE || instruction->operands[0].immediate.value != 0x29))
+			if (instruction->opcode == INT_X86 && (instruction->operands[0].type != IMMEDIATE_OPERAND || instruction->operands[0].immediate.value != 0x29))
 			{
 				return false;
 			}
 			else if (instruction->opcode == XCHG_X86)
 			{
-				if (instruction->operands[0].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg))
+				if (instruction->operands[0].type == MEMORY_OPERAND && !getLocalRegVarByReg(params->currentFunc, instruction->operands[1].reg))
 				{
 					return false;
 				}
-				else if (instruction->operands[1].type == MEM_ADDRESS && !getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg))
+				else if (instruction->operands[1].type == MEMORY_OPERAND && !getLocalRegVarByReg(params->currentFunc, instruction->operands[0].reg))
 				{
 					return false;
 				}

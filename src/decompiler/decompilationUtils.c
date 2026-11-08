@@ -53,7 +53,7 @@ uint64_t getJmpDst(struct DecompilationParameters* params, int32_t startInstruct
 		return 0;
 	}
 
-	if (instruction->opcode != JMP_FAR_X86 && instruction->opcode != CALL_FAR_X86 && instruction->operands[0].type == IMMEDIATE)
+	if (instruction->opcode != JMP_FAR_X86 && instruction->opcode != CALL_FAR_X86 && instruction->operands[0].type == IMMEDIATE_OPERAND)
 	{
 		dst += instruction->address + instruction->numOfBytes;
 	}
@@ -63,12 +63,12 @@ uint64_t getJmpDst(struct DecompilationParameters* params, int32_t startInstruct
 
 static enum JdcStatus operandToValue(struct DecompilationParameters* params, int32_t startInstructionIndex, struct Operand* operand, uint64_t* result)
 {
-	if (operand->type == IMMEDIATE)
+	if (operand->type == IMMEDIATE_OPERAND)
 	{
 		*result = operand->immediate.value;
 		return SUCCESS_JDC;
 	}
-	else if (operand->type == MEM_ADDRESS)
+	else if (operand->type == MEMORY_OPERAND)
 	{
 		uint64_t address = 0;
 		if (compareRegisters(operand->memoryAddress.reg, IP_X86_REG)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
@@ -139,7 +139,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		return SUCCESS_JDC;
 	}
-	else if (operand->type == REGISTER)
+	else if (operand->type == REGISTER_OPERAND)
 	{
 		return regToValue(params, startInstructionIndex - 1, operand->reg, result);
 	}
@@ -164,10 +164,10 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 	for (int32_t i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
 		if ((params->instructions[i].opcode == MOV_X86 || params->instructions[i].opcode == LEA_X86) &&
-			params->instructions[i].operands[0].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, reg))
+			params->instructions[i].operands[0].type == REGISTER_OPERAND && compareRegisters(params->instructions[i].operands[0].reg, reg))
 		{
 			int32_t start = i;
-			if (params->instructions[i].operands[1].type == REGISTER && compareRegisters(params->instructions[i].operands[0].reg, params->instructions[i].operands[1].reg))
+			if (params->instructions[i].operands[1].type == REGISTER_OPERAND && compareRegisters(params->instructions[i].operands[0].reg, params->instructions[i].operands[1].reg))
 			{
 				start--;
 			}
@@ -213,7 +213,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 		return ERROR_JDC;
 	}
 
-	if (jmpInstruction->operands[0].type == REGISTER && instructionIndex > 0)
+	if (jmpInstruction->operands[0].type == REGISTER_OPERAND && instructionIndex > 0)
 	{
 		enum Register targetReg = jmpInstruction->operands[0].reg;
 		for (int32_t i = instructionIndex - 1; i >= 0; i--)
@@ -222,8 +222,8 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 
 			// the actual value of targetReg will be an address of some instruction to jmp to, but this code is just looking for the address of the jmp table and not the value of targetReg
 			if (instruction->opcode == MOV_X86 &&
-				instruction->operands[0].type == REGISTER && compareRegisters(targetReg, instruction->operands[0].reg) &&
-				instruction->operands[1].type == MEM_ADDRESS && instruction->operands[1].memoryAddress.scale > 1)
+				instruction->operands[0].type == REGISTER_OPERAND && compareRegisters(targetReg, instruction->operands[0].reg) &&
+				instruction->operands[1].type == MEMORY_OPERAND && instruction->operands[1].memoryAddress.scale > 1)
 			{
 				uint64_t jmpTableAddress = instruction->operands[1].memoryAddress.constDisplacement;
 
@@ -242,8 +242,8 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 				// checking for indirect table
 				struct DisassembledInstruction* prevInstruction = &params->instructions[i - 1];
 				if (prevInstruction->opcode == MOVZX_X86 &&
-					prevInstruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[1].memoryAddress.reg, prevInstruction->operands[0].reg) &&
-					prevInstruction->operands[1].type == MEM_ADDRESS)
+					prevInstruction->operands[0].type == REGISTER_OPERAND && compareRegisters(instruction->operands[1].memoryAddress.reg, prevInstruction->operands[0].reg) &&
+					prevInstruction->operands[1].type == MEMORY_OPERAND)
 				{
 					uint64_t indirectTableAddress = prevInstruction->operands[1].memoryAddress.constDisplacement;
 
@@ -266,7 +266,7 @@ enum JdcStatus getJumpTable(struct DecompilationParameters* params, int32_t inst
 			}
 		}
 	}
-	else if (jmpInstruction->operands[0].type == MEM_ADDRESS && jmpInstruction->operands[0].memoryAddress.scale > 1)
+	else if (jmpInstruction->operands[0].type == MEMORY_OPERAND && jmpInstruction->operands[0].memoryAddress.scale > 1)
 	{
 		uint64_t jmpTableAddress = jmpInstruction->operands[0].memoryAddress.constDisplacement;
 
@@ -409,7 +409,7 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (instruction->group1Prefix != NO_PREFIX) // REPZ instructions are decompiled as void intrinsics and I have not handled the other prefixes yet
+	if (instruction->group1Prefix != NONE_LP) // REPZ instructions are decompiled as void intrinsics and I have not handled the other prefixes yet
 	{
 		return false;
 	}
@@ -423,7 +423,7 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 			if (overwrites != 0) { *overwrites = true; }
 			return true;
 		}
-		else if (isOpcodeOr(opcode) && instruction->operands[1].type == IMMEDIATE)
+		else if (isOpcodeOr(opcode) && instruction->operands[1].type == IMMEDIATE_OPERAND)
 		{
 			if (overwrites != 0) { *overwrites = isImmediateAllOnes(&instruction->operands[1].immediate); }
 			return true;
@@ -589,7 +589,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 	{
 		bool overwrites = false;
 		struct Operand* op = &(instruction->operands[i]);
-		if (op->type == MEM_ADDRESS)
+		if (op->type == MEMORY_OPERAND)
 		{
 			if (compareRegisters(op->memoryAddress.reg, reg))
 			{
@@ -610,7 +610,7 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 				return true;
 			}
 		}
-		else if ((!doesInstructionModifyOperand(params, instructionIndex, i, &overwrites) || !overwrites) && op->type == REGISTER && compareRegisters(op->reg, reg))
+		else if ((!doesInstructionModifyOperand(params, instructionIndex, i, &overwrites) || !overwrites) && op->type == REGISTER_OPERAND && compareRegisters(op->reg, reg))
 		{
 			if (specificReg)
 			{
@@ -714,7 +714,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			if (specificReg)
 			{
 				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
-				if (instruction->operands[0].type == MEM_ADDRESS)
+				if (instruction->operands[0].type == MEMORY_OPERAND)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
 				}
@@ -744,7 +744,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			if (specificReg)
 			{
 				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
-				if (instruction->operands[0].type == MEM_ADDRESS)
+				if (instruction->operands[0].type == MEMORY_OPERAND)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
 				}
@@ -774,7 +774,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 			if (specificReg)
 			{
 				int32_t size = getSizeOfRegister(instruction->operands[0].reg);
-				if (instruction->operands[0].type == MEM_ADDRESS)
+				if (instruction->operands[0].type == MEMORY_OPERAND)
 				{
 					size = instruction->operands[0].memoryAddress.ptrSize;
 				}
@@ -811,7 +811,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	for (int32_t i = 0; i < instruction->numOfOperands; i++)
 	{
 		struct Operand* op = &(instruction->operands[i]);
-		if (op->type == REGISTER && compareRegisters(op->reg, reg))
+		if (op->type == REGISTER_OPERAND && compareRegisters(op->reg, reg))
 		{
 			if (doesInstructionModifyOperand(params, instructionIndex, i, overwrites))
 			{
@@ -850,17 +850,17 @@ bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 		return true;
 	}
 	else if (instruction->opcode == LEA_X86 &&
-		instruction->operands[0].type == REGISTER && instruction->operands[1].type == MEM_ADDRESS &&
+		instruction->operands[0].type == REGISTER_OPERAND && instruction->operands[1].type == MEMORY_OPERAND &&
 		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) &&
 		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)
 	{
 		return true;
 	}
-	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE && instruction->operands[1].immediate.value == 0)
+	else if ((isOpcodeAdd(instruction->opcode) || isOpcodeSub(instruction->opcode)) && instruction->operands[1].type == IMMEDIATE_OPERAND && instruction->operands[1].immediate.value == 0)
 	{
 		return true;
 	}
-	else if ((instruction->opcode == JMP_NEAR_X86 || instruction->opcode == JMP_SHORT_X86) && instruction->operands[0].type == IMMEDIATE && instruction->operands[0].immediate.value == 0)
+	else if ((instruction->opcode == JMP_NEAR_X86 || instruction->opcode == JMP_SHORT_X86) && instruction->operands[0].type == IMMEDIATE_OPERAND && instruction->operands[0].immediate.value == 0)
 	{
 		return true;
 	}
@@ -913,11 +913,11 @@ bool compareOperands(struct Operand* op1, struct Operand* op2)
 		{
 		case NO_OPERAND:
 			return true;
-		case REGISTER:
+		case REGISTER_OPERAND:
 			return op1->reg == op2->reg;
-		case MEM_ADDRESS:
+		case MEMORY_OPERAND:
 			return m1->reg == m2->reg && m1->constDisplacement == m2->constDisplacement && m1->ptrSize == m2->ptrSize && m1->scale == m2->scale && m1->constSegment == m2->constSegment && m1->regDisplacement == m2->regDisplacement && m1->regSegment == m2->regSegment;
-		case IMMEDIATE:
+		case IMMEDIATE_OPERAND:
 			return op1->immediate.value == op2->immediate.value;
 		}
 	}
@@ -927,15 +927,15 @@ bool compareOperands(struct Operand* op1, struct Operand* op2)
 
 uint8_t getSizeOfOperand(struct Operand* operand)
 {
-	if (operand->type == MEM_ADDRESS)
+	if (operand->type == MEMORY_OPERAND)
 	{
 		return operand->memoryAddress.ptrSize;
 	}
-	else if (operand->type == REGISTER)
+	else if (operand->type == REGISTER_OPERAND)
 	{
 		return getSizeOfRegister(operand->reg);
 	}
-	else if (operand->type == IMMEDIATE)
+	else if (operand->type == IMMEDIATE_OPERAND)
 	{
 		return operand->immediate.size;
 	}

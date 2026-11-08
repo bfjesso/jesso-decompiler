@@ -10,23 +10,22 @@ struct DisassemblerOptions
 
 enum LegacyPrefix
 {
-	NO_PREFIX,
+	NONE_LP,
 
-	// group 1
-	LOCK,      // 0xF0
-	REPNZ_BND, // 0xF2
-	REPZ,      // 0xF3
-	// group 2
-	CSO_BNT,   // 0x2E
-	SSO,       // 0x36
-	DSO_BT,    // 0x3E
-	ESO,       // 0x26
-	FSO,       // 0x64
-	GSO,       // 0x65
-	// group 3
-	OSO,       // 0x66
-	// group 4
-	ASO        // 0x67
+	LOCK_LP,      // 0xF0, group 1, ensures exclusive use of shared memory in a multiprocessor environment
+	REPNZ_BND_LP, // 0xF2, group 1, reapat if ZF is 0 or bound
+	REPZ_LP,      // 0xF3, group 1, repeat if ZF is 1
+
+	CSO_BNT_LP,   // 0x2E, group 2, CS segment override or branch not taken
+	SSO_LP,       // 0x36, group 2, SS segment overide
+	DSO_BT_LP,    // 0x3E, group 2, DS segment override or branch taken
+	ESO_LP,       // 0x26, group 2, ES segment override
+	FSO_LP,       // 0x64, group 2, FS segment override
+	GSO_LP,       // 0x65, group 2, GS segment override
+
+	OSO_LP,       // 0x66, group 3, operand-size override
+
+	ASO_LP        // 0x67, group 4, address-size override
 };
 
 struct LegacyPrefixes
@@ -235,16 +234,16 @@ enum OperandCode
 	EVEX_VVVV_XYZ_X86_OC, // EVEX.vvvv encodes an XMM, YMM, or ZMM register, depending on vector length
 };
 
-enum OpcodeSuperscript
+enum OpcodeProperty
 {
-	NO_SUPERSCRIPT,
+	NONE_OP,
 
-	i64,  // invalid in 64-bit mode
-	o64,  // only available in 64-bit mode
-	d64,  // operand size defaults to 64-bit size
-	f64,  // operand size forced to 64-bit size
+	INVALID_64_MODE_OP,  // invalid in 64-bit mode
+	ONLY_64_MODE_OP,  // only available in 64-bit mode
+	DEFAULT_64_SIZE_OP,  // operand size defaults to 64-bit size
+	FORCE_64_SIZE_OP,  // operand size forced to 64-bit size
 
-	// these are tuple types, which are attributes of EVEX encoded instructions. theyre not superscripts in the opcode tables, but im using this field to store it anyway.
+	// these are tuple types, which are attributes of EVEX encoded instructions
 	// the number before "TT" is the input element size. this is used for disp8*N. see Table 2-34 and 2-35.
 	// i still need to go back and fill in the tuple types for most instructions in the maps.
 	FULL_32_TT, FULL_64_TT,
@@ -265,17 +264,17 @@ enum OpcodeSuperscript
 struct Opcode
 {
 	enum OpcodeMnemonic mnemonic;
-	enum OperandCode operands[4];
-	enum OpcodeSuperscript opcodeSuperscript;
+	enum OperandCode operandCodes[4];
+	enum OpcodeProperty opcodeProperty;
 };
 
 enum OperandType
 {
 	NO_OPERAND,
 
-	REGISTER,
-	MEM_ADDRESS,
-	IMMEDIATE
+	REGISTER_OPERAND,
+	MEMORY_OPERAND,
+	IMMEDIATE_OPERAND
 };
 
 struct ModRM

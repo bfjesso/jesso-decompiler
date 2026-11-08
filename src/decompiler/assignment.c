@@ -30,7 +30,7 @@ bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int3
 	struct Operand* operand = &params->instructions[instructionIndex].operands[operandNum];
 	if (doesInstructionModifyOperand(params, instructionIndex, operandNum, 0))
 	{
-		if (operand->type == MEM_ADDRESS)
+		if (operand->type == MEMORY_OPERAND)
 		{
 			int64_t offsetFromInitSP = 0;
 			if (isMemAddressStackVar(params, instructionIndex, &operand->memoryAddress, &offsetFromInitSP) &&
@@ -41,7 +41,7 @@ bool doesInstructionAssignToOperand(struct DecompilationParameters* params, int3
 
 			return true;
 		}
-		else if (operand->type == REGISTER)
+		else if (operand->type == REGISTER_OPERAND)
 		{
 			struct RegisterVariable* regVar = getLocalRegVarByReg(params->currentFunc, operand->reg);
 			return regVar && !regVar->isArgument && checkRegVarScope(params, regVar, instructionIndex);

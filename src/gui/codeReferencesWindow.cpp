@@ -89,7 +89,7 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 		for (int32_t j = 0; j < instruction->numOfOperands; j++)
 		{
 			struct Operand* operand = &instruction->operands[j];
-			if (operand->type == IMMEDIATE)
+			if (operand->type == IMMEDIATE_OPERAND)
 			{
 				if (operand->immediate.value == value)
 				{
@@ -97,7 +97,7 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 					break;
 				}
 			}
-			else if (operand->type == MEM_ADDRESS)
+			else if (operand->type == MEMORY_OPERAND)
 			{
 				if (operand->memoryAddress.constDisplacement == value)
 				{

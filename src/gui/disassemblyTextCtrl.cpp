@@ -503,7 +503,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		StartStyling(pos);
 
 		int32_t opcodeLen = strlen(opcodeMnemonicStrs[instruction->opcode]) + 1;
-		if (instruction->group1Prefix != NO_PREFIX)
+		if (instruction->group1Prefix != NONE_LP)
 		{
 			opcodeLen += strlen(getGroup1PrefixStr(instruction)) + 1;
 		}
@@ -517,7 +517,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		int32_t ptrSizeStart = 0;
 		for (int32_t i = 0; i < instruction->numOfOperands; i++)
 		{
-			if (instruction->operands[i].type == REGISTER)
+			if (instruction->operands[i].type == REGISTER_OPERAND)
 			{
 				if (!evaluateIP || !compareRegisters(instruction->operands[i].reg, IP_X86_REG))
 				{
@@ -528,7 +528,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 					regStart = loc + regStr.length();
 				}
 			}
-			else if (instruction->operands[i].type == MEM_ADDRESS)
+			else if (instruction->operands[i].type == MEMORY_OPERAND)
 			{
 				if (instruction->operands[i].memoryAddress.reg != NO_REG &&
 					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.reg, IP_X86_REG)))

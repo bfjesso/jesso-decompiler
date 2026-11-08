@@ -176,13 +176,13 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg)
 {
 	struct Operand regOperand = { 0 };
-	regOperand.type = REGISTER;
+	regOperand.type = REGISTER_OPERAND;
 	regOperand.reg = reg;
 
 	if (instruction)
 	{
 		struct DataType result = getOperandDataType(instruction->opcode, &regOperand);
-		if (operandNum < 4 && instruction->operands[operandNum].type == MEM_ADDRESS)
+		if (operandNum < 4 && instruction->operands[operandNum].type == MEMORY_OPERAND)
 		{
 			struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
 			if (memAddress->reg == reg && memAddress->constDisplacement < 0x10000) // this is to check that the reg is not being used as a displacement
@@ -200,7 +200,7 @@ struct DataType getRegisterDataType(struct DisassembledInstruction* instruction,
 struct DataType getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress)
 {
 	struct Operand memAddrOperand = { 0 };
-	memAddrOperand.type = MEM_ADDRESS;
+	memAddrOperand.type = MEMORY_OPERAND;
 	memAddrOperand.memoryAddress = *memAddress;
 
 	return getOperandDataType(opcode, &memAddrOperand);

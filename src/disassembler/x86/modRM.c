@@ -32,7 +32,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 	if (selection == REG_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 
 		switch (operandSize)
 		{
@@ -68,19 +68,19 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	}
 	else if (selection == REG_SEG_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 		result->reg = (params->modRM.reg + ES_X86_REG);
 		return SUCCESS_JDC;
 	}
 	else if (selection == REG_MMX_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 		result->reg = (params->modRM.reg + MM0_X86_REG);
 		return SUCCESS_JDC;
 	}
 	else if (selection == REG_CONTROL_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 		switch (operandSize)
 		{
 		case 4:
@@ -95,7 +95,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	}
 	else if (selection == REG_DEBUG_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 		if (params->rexPrefix.R)
 		{
 			result->reg = (params->modRM.reg + DR8_X86_REG);
@@ -109,7 +109,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	}
 	else if (selection == RM_REG_MODRM)
 	{
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 		switch (operandSize)
 		{
 		case 2:
@@ -133,7 +133,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 			return ERROR_JDC;
 		}
 
-		result->type = REGISTER;
+		result->type = REGISTER_OPERAND;
 
 		if (selection == RM_MMX_MODRM || selection == RM_MOD11_MMX_MODRM)
 		{
@@ -191,14 +191,14 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		operandSize = 8;
 	}
 
-	result->type = MEM_ADDRESS;
+	result->type = MEMORY_OPERAND;
 	result->memoryAddress.scale = 1;
 	result->memoryAddress.ptrSize = operandSize;
 	result->memoryAddress.regSegment = segmentOverrideToSegment(params->legPrefixes.group2);
 
 	bool usedSIB = false;
 
-	if (params->legPrefixes.group4 == ASO && !params->is64BitMode)
+	if (params->legPrefixes.group4 == ASO_LP && !params->is64BitMode)
 	{
 		switch (params->modRM.mod)
 		{
@@ -442,7 +442,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		}
 	}
 
-	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP_X86_REG)
+	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO_LP && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP_X86_REG)
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
@@ -459,7 +459,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		uint8_t vectorLength = getVectorLength(params);
 
 		uint8_t N = 1;
-		switch (params->opcode.opcodeSuperscript)
+		switch (params->opcode.opcodeProperty)
 		{
 		case FULL_32_TT:
 			N = params->evexPrefix.b == 0 ? vectorLength : 4;

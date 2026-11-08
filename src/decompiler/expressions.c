@@ -18,7 +18,7 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t 
 	}
 
 	struct Operand* operand = &instruction->operands[operandNum];
-	if (operand->type == IMMEDIATE)
+	if (operand->type == IMMEDIATE_OPERAND)
 	{
 		if (operand->immediate.value > -10 && operand->immediate.value < 0)
 		{
@@ -46,11 +46,11 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t 
 
 		return sprintfJdc(result, false, "0x%llX", operand->immediate.value);
 	}
-	else if (operand->type == MEM_ADDRESS)
+	else if (operand->type == MEMORY_OPERAND)
 	{
 		return decompileMemoryAddress(params, instructionIndex, operandNum, result);
 	}
-	else if (operand->type == REGISTER)
+	else if (operand->type == REGISTER_OPERAND)
 	{
 		return decompileRegister(params, instructionIndex, operandNum, operand->reg, defaultToReg, 0, result, 0);
 	}

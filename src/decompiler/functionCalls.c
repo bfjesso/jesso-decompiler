@@ -268,7 +268,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 
 		if (numOfStackArgs < maxStackArgs && instruction->opcode == PUSH_X86)
 		{
-			if (instruction->operands[0].type == REGISTER && isRegisterPointer(instruction->operands[0].reg))
+			if (instruction->operands[0].type == REGISTER_OPERAND && isRegisterPointer(instruction->operands[0].reg))
 			{
 				continue;
 			}
@@ -349,7 +349,7 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			return ERROR_JDC;
 		}
 
-		if (callInstruction->opcode == CALL_NEAR_X86 && callInstruction->operands[0].type == IMMEDIATE)
+		if (callInstruction->opcode == CALL_NEAR_X86 && callInstruction->operands[0].type == IMMEDIATE_OPERAND)
 		{
 			sprintfJdc(&decompiledCall, true, "(0x%llX + %s)", callInstruction->address, functionPointer.buffer);
 		}

@@ -2,10 +2,10 @@
 
 enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params)
 {
-	params->legPrefixes.group1 = NO_PREFIX;
-	params->legPrefixes.group2 = NO_PREFIX;
-	params->legPrefixes.group3 = NO_PREFIX;
-	params->legPrefixes.group4 = NO_PREFIX;
+	params->legPrefixes.group1 = NONE_LP;
+	params->legPrefixes.group2 = NONE_LP;
+	params->legPrefixes.group3 = NONE_LP;
+	params->legPrefixes.group4 = NONE_LP;
 
 	while (1)
 	{
@@ -14,37 +14,37 @@ enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params)
 		switch (params->bytes[0])
 		{
 		case 0xF0:
-			params->legPrefixes.group1 = LOCK;
+			params->legPrefixes.group1 = LOCK_LP;
 			break;
 		case 0xF2:
-			params->legPrefixes.group1 = REPNZ_BND;
+			params->legPrefixes.group1 = REPNZ_BND_LP;
 			break;
 		case 0xF3:
-			params->legPrefixes.group1 = REPZ;
+			params->legPrefixes.group1 = REPZ_LP;
 			break;
 		case 0x2E:
-			params->legPrefixes.group2 = CSO_BNT;
+			params->legPrefixes.group2 = CSO_BNT_LP;
 			break;
 		case 0x36:
-			params->legPrefixes.group2 = SSO;
+			params->legPrefixes.group2 = SSO_LP;
 			break;
 		case 0x3E:
-			params->legPrefixes.group2 = DSO_BT;
+			params->legPrefixes.group2 = DSO_BT_LP;
 			break;
 		case 0x26:
-			params->legPrefixes.group2 = ESO;
+			params->legPrefixes.group2 = ESO_LP;
 			break;
 		case 0x64:
-			params->legPrefixes.group2 = FSO;
+			params->legPrefixes.group2 = FSO_LP;
 			break;
 		case 0x65:
-			params->legPrefixes.group2 = GSO;
+			params->legPrefixes.group2 = GSO_LP;
 			break;
 		case 0x66:
-			params->legPrefixes.group3 = OSO;
+			params->legPrefixes.group3 = OSO_LP;
 			break;
 		case 0x67:
-			params->legPrefixes.group4 = ASO;
+			params->legPrefixes.group4 = ASO_LP;
 			break;
 		default:
 			return SUCCESS_JDC;
@@ -60,17 +60,17 @@ enum Register segmentOverrideToSegment(enum LegacyPrefix group2Prefix)
 {
 	switch (group2Prefix)
 	{
-	case CSO_BNT:
+	case CSO_BNT_LP:
 		return CS_X86_REG;
-	case SSO:
+	case SSO_LP:
 		return SS_X86_REG;
-	case DSO_BT:
+	case DSO_BT_LP:
 		return DS_X86_REG;
-	case ESO:
+	case ESO_LP:
 		return ES_X86_REG;
-	case FSO:
+	case FSO_LP:
 		return FS_X86_REG;
-	case GSO:
+	case GSO_LP:
 		return GS_X86_REG;
 	}
 
@@ -151,13 +151,13 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 		switch (params->vexPrefix.pp)
 		{
 		case 0b01:
-			params->legPrefixes.group3 = OSO; // 0x66
+			params->legPrefixes.group3 = OSO_LP; // 0x66
 			break;
 		case 0b10:
-			params->legPrefixes.group1 = REPZ; // 0xF3
+			params->legPrefixes.group1 = REPZ_LP; // 0xF3
 			break;
 		case 0b11:
-			params->legPrefixes.group1 = REPNZ_BND; // 0xF2
+			params->legPrefixes.group1 = REPNZ_BND_LP; // 0xF2
 			break;
 		}
 	}
@@ -201,13 +201,13 @@ enum JdcStatus handleEVEXPrefix(struct DisassemblyParameters* params)
 		switch (params->evexPrefix.pp)
 		{
 		case 0b01:
-			params->legPrefixes.group3 = OSO; // 0x66
+			params->legPrefixes.group3 = OSO_LP; // 0x66
 			break;
 		case 0b10:
-			params->legPrefixes.group1 = REPZ; // 0xF3
+			params->legPrefixes.group1 = REPZ_LP; // 0xF3
 			break;
 		case 0b11:
-			params->legPrefixes.group1 = REPNZ_BND; // 0xF2
+			params->legPrefixes.group1 = REPNZ_BND_LP; // 0xF2
 			break;
 		}
 

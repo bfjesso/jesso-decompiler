@@ -68,7 +68,7 @@ bool doesInstructionLeadStraightToReturn(struct DecompilationParameters* params,
 		}
 
 		if (doesInstructionDoNothing(instruction) || instruction->opcode == POP_X86 || instruction->opcode == LEAVE_X86 ||
-			(instruction->opcode == ADD_X86 && instruction->operands[0].type == REGISTER && compareRegisters(instruction->operands[0].reg, SP_X86_REG)))
+			(instruction->opcode == ADD_X86 && instruction->operands[0].type == REGISTER_OPERAND && compareRegisters(instruction->operands[0].reg, SP_X86_REG)))
 		{
 			continue;
 		}
