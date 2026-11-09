@@ -1,6 +1,6 @@
 #pragma once
-#include "../../jdcTypes.h"
-#include "mnemonics.h"
+#include "../jdcTypes.h"
+#include "opcodeMnemonics.h"
 #include "registers.h"
 
 struct DisassemblerOptions

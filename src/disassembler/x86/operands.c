@@ -1,7 +1,7 @@
 #include "operands.h"
 #include "prefixes.h"
 #include "modRM.h"
-#include "registers.h"
+#include "../registers.h"
 
 #include <stdlib.h>
 

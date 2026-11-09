@@ -1,5 +1,5 @@
 #pragma once
-#include "disassemblyStructs.h"
+#include "../disassemblyStructs.h"
 #include "../../jdc-str/jdcStr.h"
 
 #ifdef __cplusplus

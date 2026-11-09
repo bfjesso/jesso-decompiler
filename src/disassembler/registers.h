@@ -1,5 +1,5 @@
 #pragma once
-#include "../../fileStructs.h"
+#include "../fileStructs.h"
 
 // this includes NO_REG
 #define NUM_OF_REGISTERS 249

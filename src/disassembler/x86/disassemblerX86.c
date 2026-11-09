@@ -1,4 +1,4 @@
-#include "disassembler.h"
+#include "disassemblerX86.h"
 #include "prefixes.h"
 #include "opcodes.h"
 #include "operands.h"

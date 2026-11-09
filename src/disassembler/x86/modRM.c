@@ -1,7 +1,7 @@
 #include "modRM.h"
-#include "registers.h"
+#include "../registers.h"
 #include "operands.h"
-#include"prefixes.h"
+#include "prefixes.h"
 
 enum JdcStatus getModRM(struct DisassemblyParameters* params)
 {

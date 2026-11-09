@@ -178,13 +178,13 @@
     <ClCompile Include="src\decompiler\localRegVars.c" />
     <ClCompile Include="src\decompiler\operations.c" />
     <ClCompile Include="src\decompiler\returnStatements.c" />
-    <ClCompile Include="src\disassembler\x86\disassembler.c" />
-    <ClCompile Include="src\disassembler\x86\mnemonics.c" />
+    <ClCompile Include="src\disassembler\opcodeMnemonics.c" />
+    <ClCompile Include="src\disassembler\registers.c" />
+    <ClCompile Include="src\disassembler\x86\disassemblerX86.c" />
     <ClCompile Include="src\disassembler\x86\modRM.c" />
     <ClCompile Include="src\disassembler\x86\opcodes.c" />
     <ClCompile Include="src\disassembler\x86\operands.c" />
     <ClCompile Include="src\disassembler\x86\prefixes.c" />
-    <ClCompile Include="src\disassembler\x86\registers.c" />
     <ClCompile Include="src\elf-handler\elfHandler.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -233,17 +233,17 @@
     <ClInclude Include="src\decompiler\localRegVars.h" />
     <ClInclude Include="src\decompiler\operations.h" />
     <ClInclude Include="src\decompiler\returnStatements.h" />
-    <ClInclude Include="src\disassembler\x86\disassembler.h" />
-    <ClInclude Include="src\disassembler\x86\disassemblyStructs.h" />
+    <ClInclude Include="src\disassembler\disassemblyStructs.h" />
+    <ClInclude Include="src\disassembler\opcodeMnemonics.h" />
+    <ClInclude Include="src\disassembler\registers.h" />
+    <ClInclude Include="src\disassembler\x86\disassemblerX86.h" />
     <ClInclude Include="src\disassembler\x86\escapeOpcodeMaps.h" />
     <ClInclude Include="src\disassembler\x86\extendedOpcodeMaps.h" />
-    <ClInclude Include="src\disassembler\x86\mnemonics.h" />
     <ClInclude Include="src\disassembler\x86\modRM.h" />
     <ClInclude Include="src\disassembler\x86\oneByteOpcodeMap.h" />
     <ClInclude Include="src\disassembler\x86\opcodes.h" />
     <ClInclude Include="src\disassembler\x86\operands.h" />
     <ClInclude Include="src\disassembler\x86\prefixes.h" />
-    <ClInclude Include="src\disassembler\x86\registers.h" />
     <ClInclude Include="src\disassembler\x86\threeByteOpcodeMaps.h" />
     <ClInclude Include="src\disassembler\x86\twoByteOpcodeMap.h" />
     <ClInclude Include="src\elf-handler\elfHandler.h">

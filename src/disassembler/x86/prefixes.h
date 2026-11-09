@@ -1,5 +1,5 @@
 #pragma once
-#include "disassemblyStructs.h"
+#include "../disassemblyStructs.h"
 
 enum JdcStatus handleLegacyPrefixes(struct DisassemblyParameters* params);
 

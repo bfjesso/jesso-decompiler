@@ -1,5 +1,5 @@
 #pragma once
-#include "disassemblyStructs.h"
+#include "../disassemblyStructs.h"
 
 enum JdcStatus handleOperands(struct DisassemblyParameters* params, struct DisassembledInstruction* result);
 

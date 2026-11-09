@@ -1,7 +1,7 @@
 #include "disassemblyTextCtrl.h"
 #include "mainGui.h"
 
-#include "../disassembler/x86/disassembler.h"
+#include "../disassembler/x86/disassemblerX86.h"
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 

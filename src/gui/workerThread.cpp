@@ -1,6 +1,6 @@
 #include "workerThread.h"
 #include "mainGui.h"
-#include "../disassembler/x86/disassembler.h"
+#include "../disassembler/x86/disassemblerX86.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../decompiler/functions.h"
 

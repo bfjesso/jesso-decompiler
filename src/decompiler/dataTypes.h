@@ -1,6 +1,6 @@
 #pragma once
 #include "../jdc-str/jdcStr.h"
-#include "../disassembler/x86/disassemblyStructs.h"
+#include "../disassembler/disassemblyStructs.h"
 
 #define NUM_OF_PRIMITIVE_TYPES 14
 

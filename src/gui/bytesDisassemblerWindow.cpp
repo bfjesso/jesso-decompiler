@@ -1,5 +1,5 @@
 #include "bytesDisassemblerWindow.h"
-#include "../disassembler/x86/disassembler.h"
+#include "../disassembler/x86/disassemblerX86.h"
 #include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)

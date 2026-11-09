@@ -1,6 +1,6 @@
 #include "opcodes.h"
 #include "modRM.h"
-#include "mnemonics.h"
+#include "../opcodeMnemonics.h"
 
 #include "oneByteOpcodeMap.h"
 #include "twoByteOpcodeMap.h"
