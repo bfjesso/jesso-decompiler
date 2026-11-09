@@ -34,6 +34,10 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	"K0", "K1", "K2", "K3", "K4", "K5", "K6", "K7",
 
 	"CF", "PF", "AF", "ZF", "SF", "OF",
+
+
+	// LC3
+	"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",
 };
 
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9

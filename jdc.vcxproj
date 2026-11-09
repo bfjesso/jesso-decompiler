@@ -178,6 +178,7 @@
     <ClCompile Include="src\decompiler\localRegVars.c" />
     <ClCompile Include="src\decompiler\operations.c" />
     <ClCompile Include="src\decompiler\returnStatements.c" />
+    <ClCompile Include="src\disassembler\lc3\disassemblerLC3.c" />
     <ClCompile Include="src\disassembler\opcodeMnemonics.c" />
     <ClCompile Include="src\disassembler\registers.c" />
     <ClCompile Include="src\disassembler\x86\disassemblerX86.c" />
@@ -234,6 +235,8 @@
     <ClInclude Include="src\decompiler\operations.h" />
     <ClInclude Include="src\decompiler\returnStatements.h" />
     <ClInclude Include="src\disassembler\disassemblyStructs.h" />
+    <ClInclude Include="src\disassembler\lc3\disassemblerLC3.h" />
+    <ClInclude Include="src\disassembler\lc3\opcodeMapLC3.h" />
     <ClInclude Include="src\disassembler\opcodeMnemonics.h" />
     <ClInclude Include="src\disassembler\registers.h" />
     <ClInclude Include="src\disassembler\x86\disassemblerX86.h" />

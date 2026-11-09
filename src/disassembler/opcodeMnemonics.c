@@ -242,6 +242,16 @@ extern const char* opcodeMnemonicStrs[] =
 	"VZEROUPPER", "VZEROALL",
 
 	"UD0", "UD1"
+
+
+	// LC3
+	"ADD", "AND",
+	"BR", "JMP", "JSR", "JSRR",
+	"LD", "LDI", "LDR", "LEA",
+	"NOT",
+	"RET", "RTI",
+	"ST", "STI", "STR",
+	"TRAP"
 };
 
 bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)
