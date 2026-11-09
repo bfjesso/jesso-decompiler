@@ -1,15 +1,28 @@
 #include "disassemblerLC3.h"
+#include "opcodeMapLC3.h"
 
-enum JdcStatus disassembleLC3Instruction(uint16_t instructionData, struct DisassembledInstruction* result)
+enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassembledInstruction* result)
 {
+	if (bytes + 1 > maxBytesAddr)
+	{
+		return ERROR_JDC;
+	}
+
+	uint16_t instructionData = *(uint16_t*)bytes;
+
 	memset(result, 0, sizeof(struct DisassembledInstruction));
 
 	uint8_t opcodeBits = (instructionData & 0b1111000000000000) >> 12;
-	struct Opcode* opcode = &opcodeMap[opcodeBits];
+	if (opcodeBits > 0xF)
+	{
+		return ERROR_JDC;
+	}
+
+	const struct Opcode* opcode = &opcodeMapLC3[opcodeBits];
 
 	struct Operand operands[4] = { 0 };
 
-	uint32_t numOfOperands;
+	int32_t numOfOperands;
 	for (numOfOperands = 0; numOfOperands < 3; numOfOperands++)
 	{
 		if (opcode->operandCodes[numOfOperands] == NONE_OC)
@@ -88,12 +101,13 @@ enum JdcStatus disassembleLC3Instruction(uint16_t instructionData, struct Disass
 	}
 
 	result->opcode = opcode->mnemonic;
+	result->numOfOperands = numOfOperands;
 	result->numOfBytes = 2;
 
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8_t numOfBits, int16_t* result)
+static enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8_t numOfBits, int64_t* result)
 {
 	if (!result || numOfBits > 16)
 	{
@@ -103,7 +117,7 @@ enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8_t numO
 	*result = 0xFFFF;
 	for (int32_t i = 0; i < numOfBits; i++)
 	{
-		int16_t mask = (instructionData & (1 << i));
+		int64_t mask = (instructionData & (1 << i));
 		if (!mask)
 		{
 			*result &= (~mask);

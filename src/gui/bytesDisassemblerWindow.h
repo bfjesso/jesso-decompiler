@@ -14,6 +14,7 @@ public:
 
 	wxTextCtrl* bytesTextCtrl = nullptr;
 	wxButton* disassembleButton = nullptr;
+	wxChoice* isaChoice = nullptr;
 	wxCheckBox* is64BitModeCheckBox = nullptr;
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 
@@ -26,6 +27,12 @@ public:
 	enum ids
 	{
 		DisassembleButtonID
+	};
+
+	const char* isaStrs[2]
+	{
+		"x86",
+		"LC-3",
 	};
 
 	void DisassembleBytes(wxCommandEvent& e);

@@ -1,6 +1,6 @@
 #include "workerThread.h"
 #include "mainGui.h"
-#include "../disassembler/x86/disassemblerX86.h"
+#include "../disassembler/disassembler.h"
 #include "../decompiler/decompilationUtils.h"
 #include "../decompiler/functions.h"
 
@@ -203,7 +203,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 			return ERROR_JDC;
 		}
 
-		if (!disassembleInstruction(&mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
+		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
 		{
 			mainGui->errorAddress = currentVirtualAddress;
 			PostLog(wxString::Format("bad instruction at 0x%llX", currentVirtualAddress), LOG_PARAM_ERROR);
@@ -296,7 +296,7 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 			return SUCCESS_JDC;
 		}
 
-		if (!disassembleInstruction(&mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + endFileOffset - 1, options, instructionBuffer) ||
+		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + endFileOffset - 1, options, instructionBuffer) ||
 			currentFileOffset + instructionBuffer->numOfBytes > endFileOffset)
 		{
 			int32_t numOfBytes = instructionBuffer->numOfBytes;

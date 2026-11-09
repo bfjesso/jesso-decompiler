@@ -3,6 +3,12 @@
 #include "opcodeMnemonics.h"
 #include "registers.h"
 
+enum InstructionSetArchitecture
+{
+	X86_ISA,
+	LC3_ISA
+};
+
 struct DisassemblerOptions
 {
 	bool is64BitMode;

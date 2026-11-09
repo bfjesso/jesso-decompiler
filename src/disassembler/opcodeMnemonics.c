@@ -241,7 +241,10 @@ extern const char* opcodeMnemonicStrs[] =
 	"VSHUFI32X4", "VSHUFI64X2",
 	"VZEROUPPER", "VZEROALL",
 
-	"UD0", "UD1"
+	"UD0", "UD1",
+
+	// extended opcodes
+	"ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR", "ERROR",
 
 
 	// LC3

@@ -1,5 +1,5 @@
 #include "bytesDisassemblerWindow.h"
-#include "../disassembler/x86/disassemblerX86.h"
+#include "../disassembler/disassembler.h"
 #include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)
@@ -22,6 +22,11 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
 
+	isaChoice = new wxChoice(this, wxID_ANY, wxPoint(0, 0), wxSize(50, 30), wxArrayString(2, isaStrs));
+	isaChoice->SetSelection(0);
+	isaChoice->SetOwnBackgroundColour(foregroundColor);
+	isaChoice->SetOwnForegroundColour(textColor);
+
 	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
 	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
 
@@ -34,7 +39,8 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	row1Sizer->Add(bytesTextCtrl, 1, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
 
 	row2Sizer->Add(disassembleButton, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
-	row2Sizer->Add(is64BitModeCheckBox, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(isaChoice, 1, wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(is64BitModeCheckBox, 1, wxRIGHT | wxCENTER, 10);
 
 	vSizer->Add(row1Sizer, 0, wxCENTER);
 	vSizer->Add(row2Sizer, 0, wxCENTER);
@@ -55,6 +61,8 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		return;
 	}
 
+	enum InstructionSetArchitecture isa = (enum InstructionSetArchitecture)(isaChoice->GetSelection());
+
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
@@ -62,7 +70,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	while (currentOffset < bytes.size())
 	{
 		struct DisassembledInstruction currentInstruction;
-		if (disassembleInstruction(bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &options, &currentInstruction))
+		if (disassembleInstruction(isa, bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &options, &currentInstruction))
 		{
 			currentInstruction.address = currentOffset;
 			instructions.push_back(currentInstruction);
