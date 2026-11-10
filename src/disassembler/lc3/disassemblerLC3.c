@@ -8,7 +8,7 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 		return ERROR_JDC;
 	}
 
-	uint16_t instructionData = *(uint16_t*)bytes;
+	uint16_t instructionData = (bytes[0] << 8) + bytes[1];
 
 	memset(result, 0, sizeof(struct DisassembledInstruction));
 
@@ -116,18 +116,24 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 
 static enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8_t numOfBits, int64_t* result)
 {
-	if (!result || numOfBits > 16)
+	if (!result || numOfBits > 16 || numOfBits == 0)
 	{
 		return ERROR_JDC;
 	}
 
-	*result = 0xFFFF;
+	bool isNegative = instructionData & (1 << (numOfBits - 1));
+
+	*result = isNegative ? 0xFFFFFFFFFFFFFFFF : 0;
 	for (int32_t i = 0; i < numOfBits; i++)
 	{
-		int64_t mask = (instructionData & (1 << i));
-		if (!mask)
+		int64_t bit = (instructionData & (1 << i));
+		if (isNegative && !bit)
 		{
-			*result &= (~mask);
+			*result &= (~(1 << i));
+		}
+		else if (!isNegative && bit)
+		{
+			*result |= (1 << i);
 		}
 	}
 
