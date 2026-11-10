@@ -430,15 +430,6 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		{
 			asmStr += " ; entry point";
 		}
-		else if (mainGui->jumpTables.size() > 0 && instructions[i].opcode == DATA_OPCODE)
-		{
-			bool foundIndirectTable = false;
-			int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
-			if (jumpTableIndex != -1)
-			{
-				asmStr += wxString::Format(" ; start of %s table. jmp instruction: 0x%llX", foundIndirectTable ? "indirect" : "jump", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
-			}
-		}
 
 		if (mainGui->decompParams.instructions == instructions)
 		{
@@ -446,6 +437,16 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			if (dst != 0)
 			{
 				asmStr += wxString::Format(" ; dst: 0x%llX", dst);
+			}
+
+			if (mainGui->jumpTables.size() > 0 && instructions[i].opcode == DATA_OPCODE)
+			{
+				bool foundIndirectTable = false;
+				int32_t jumpTableIndex = findJumpTableByAddress(mainGui->jumpTables.data(), mainGui->jumpTables.size(), instructions[i].address, &foundIndirectTable);
+				if (jumpTableIndex != -1)
+				{
+					asmStr += wxString::Format(" ; start of %s table. jmp instruction: 0x%llX", foundIndirectTable ? "indirect" : "jump", mainGui->jumpTables[jumpTableIndex].jmpInstructionAddress);
+				}
 			}
 		}
 
