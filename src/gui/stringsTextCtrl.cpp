@@ -88,7 +88,7 @@ void StringsTextCtrl::LoadStrings()
 		struct FileSection* section = &mainGui->decompParams.sections[i];
 		if (section->type != INIT_DATA_FST)
 		{
-			//continue;
+			continue;
 		}
 
 		int32_t startIndex = -1;
