@@ -244,7 +244,7 @@ enum OperandCode
 	SR1_LC3_OC, // bits 8-6 encode a first source register
 	SR2_IMM5_LC3_OC, // bits 5-0 encode either a second source register or a 5-bit immediate, depending on bit 5. if bit 5 is 0, bits 4-3 must be 0
 	PCOFFSET9_LC3_OC, // bits 8-0 encode a 9-bit offset from PC
-	PCOFFSET11_LC3_OC, // bits 10-0 encode an 11-bit offset from PC. bit 11 must be 1
+	BASER_PCOFFSET11_LC3_OC, // bits 10-0 encode an 11-bit offset from PC. bit 11 must be 1, otherwise BASER_LC3_OC
 	BASER_LC3_OC, // bits 8-6 encode a base register. bits 11-9 and 5-0 must be 0
 	BASER_OFFSET6_LC3_OC, // bits 8-6 encode a base register and bits 5-0 encode a 6-bit offset
 	TRAPVECT8_LC3_OC, // bits 7-0 encodes the trapvector. bits 10-8 must be 0

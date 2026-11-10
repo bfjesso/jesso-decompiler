@@ -44,6 +44,10 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 			return ERROR_JDC;
 		}
 	}
+	else if (result->opcode == JSRR_LC3 && (instructionData & (1 << 11)))
+	{
+		result->opcode = JSR_LC3;
+	}
 
 	struct Operand operands[4] = { 0 };
 
@@ -86,11 +90,20 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 			currentOperand->type = IMMEDIATE_OPERAND;
 			currentOperand->immediate.size = 2;
 			break;
-		case PCOFFSET11_LC3_OC:
-			if (!(instructionData & (1 << 11))) { return ERROR_JDC; }
-			if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 11, &currentOperand->immediate.value)) { return ERROR_JDC; }
-			currentOperand->type = IMMEDIATE_OPERAND;
-			currentOperand->immediate.size = 2;
+		case BASER_PCOFFSET11_LC3_OC:
+			if (instructionData & (1 << 11))
+			{
+				if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 11, &currentOperand->immediate.value)) { return ERROR_JDC; }
+				currentOperand->type = IMMEDIATE_OPERAND;
+				currentOperand->immediate.size = 2;
+			}
+			else
+			{
+				if ((instructionData & 0b111000000000) || (instructionData & 0b111111)) { return ERROR_JDC; }
+				currentOperand->type = MEMORY_OPERAND;
+				currentOperand->memoryAddress.reg = (((instructionData & 0b111000000) >> 6) + R0_LC3_REG);
+			}
+
 			break;
 		case BASER_LC3_OC:
 			if ((instructionData & 0b111000000000) || (instructionData & 0b111111)) { return ERROR_JDC; }
