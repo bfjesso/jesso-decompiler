@@ -347,7 +347,7 @@ void DisassemblyTextCtrl::OnUpdateDisassemblyUI(wxStyledTextEvent& e)
 	{
 		uint64_t address = instructions[instructionIndex].address;
 		FileSection* section = 0;
-		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, address - mainGui->decompParams.imageBase, &section);
 		if (section)
 		{
 			dataTextCtrl->HighlightBytes(fileOffset, instructions[instructionIndex].numOfBytes, PURPLE_INDICATOR);
@@ -417,7 +417,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		wxString addressInfoStr = wxString::Format("0x%llX %s\t", instructions[i].address, sectionIndex != -1 ? mainGui->decompParams.sections[sectionIndex].name.buffer : "");
 
 		wxString asmStr = "";
-		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, &instructionStrBuffer))
+		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, mainGui->addressability, &instructionStrBuffer))
 		{
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}

@@ -195,4 +195,6 @@ struct DecompilationParameters
 	bool is64Bit;
 
 	bool useStdInt;
+
+	uint8_t addressability;
 };

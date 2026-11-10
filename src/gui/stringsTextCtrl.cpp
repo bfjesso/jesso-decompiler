@@ -88,7 +88,7 @@ void StringsTextCtrl::LoadStrings()
 		struct FileSection* section = &mainGui->decompParams.sections[i];
 		if (section->type != INIT_DATA_FST)
 		{
-			continue;
+			//continue;
 		}
 
 		int32_t startIndex = -1;
@@ -109,7 +109,7 @@ void StringsTextCtrl::LoadStrings()
 			{
 				if (startIndex != -1 && currentStr.length() > 1)
 				{
-					uint64_t address = mainGui->decompParams.imageBase + section->rva + startIndex;
+					uint64_t address = mainGui->decompParams.imageBase + section->rva + (startIndex / mainGui->addressability);
 					foundAddresses.push_back(address);
 
 					stringsText += wxString::Format("0x%llX\t\"%s\"\n", address, currentStr);

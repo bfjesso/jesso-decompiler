@@ -14,6 +14,7 @@ enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8
 	switch (isa)
 	{
 	case X86_ISA:
+	case X86_64_ISA:
 		return disassembleX86(bytes, maxBytesAddr, disassemblerOptions, result);
 	case LC3_ISA:
 		return disassembleLC3(bytes, maxBytesAddr, result);
@@ -22,7 +23,7 @@ enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8
 	return ERROR_JDC;
 }
 
-enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, struct JdcStr* result) // this will be in intel syntax
+enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, uint8_t addressability, struct JdcStr* result) // this will be in intel syntax
 {
 	strcpyJdc(result, "");
 
@@ -50,7 +51,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		{
 			if (evaluateIP && compareRegisters(currentOperand->reg, IP_X86_REG))
 			{
-				sprintfJdc(result, true, "0x%llX", instruction->address + instruction->numOfBytes);
+				sprintfJdc(result, true, "0x%llX", instruction->address + (instruction->numOfBytes / addressability));
 			}
 			else
 			{
@@ -59,7 +60,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		}
 		else if (currentOperand->type == MEMORY_OPERAND)
 		{
-			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, result) == ERROR_JDC)
+			if (memAddressToStr(instruction, &currentOperand->memoryAddress, evaluateIP, addressability, result) == ERROR_JDC)
 			{
 				return ERROR_JDC;
 			}
@@ -103,7 +104,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 	return SUCCESS_JDC;
 }
 
-static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, struct JdcStr* result)
+static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, uint8_t addressability, struct JdcStr* result)
 {
 	if (memAddr->ptrSize != 0)
 	{
@@ -129,7 +130,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 
 	if (evaluateIP && compareRegisters(memAddr->reg, IP_X86_REG))
 	{
-		totalDisplacement = (instruction->address + instruction->numOfBytes) * memAddr->scale;
+		totalDisplacement = (instruction->address + (instruction->numOfBytes / addressability)) * memAddr->scale;
 	}
 	else if (memAddr->reg != NO_REG)
 	{
@@ -144,7 +145,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 
 	if (evaluateIP && compareRegisters(memAddr->regDisplacement, IP_X86_REG))
 	{
-		totalDisplacement += instruction->address + instruction->numOfBytes;
+		totalDisplacement += instruction->address + (instruction->numOfBytes / addressability);
 	}
 	else if (memAddr->regDisplacement != NO_REG)
 	{

@@ -643,6 +643,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 		logTextCtrl->Log(wxString::Format("file size: %lld (0x%llX) bytes", numOfFileBytes, numOfFileBytes));
 		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)));
 		logTextCtrl->Log("architecture: " + wxString(isaStrs[isa]));
+		logTextCtrl->Log(wxString::Format("addressability: %d bytes per address", addressability));
 		logTextCtrl->Log(wxString::Format("image base: 0x%llX", imageBase));
 		logTextCtrl->Log(wxString::Format("entry point: 0x%llX", entryPoint + imageBase));
 
@@ -702,6 +703,9 @@ enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 		wxMessageBox("Error determining file architecture", "Can't load file");
 		return ERROR_JDC;
 	}
+
+	addressability = 1;
+	isa = is64Bit ? X86_64_ISA : X86_ISA;
 
 	fileBytes = new uint8_t[numOfFileBytes];
 	if (ERROR_JDC == readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
@@ -779,16 +783,21 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 
 	if (isa == LC3_ISA)
 	{
-		entryPoint = 2;
+		if (numOfFileBytes < 2)
+		{
+			return ERROR_JDC;
+		}
 
-		imageBase = ((fileBytes[0] << 8) + fileBytes[1]) - 2;
+		addressability = 2;
+		entryPoint = 0;
+		imageBase = ((fileBytes[0] << 8) + fileBytes[1]); // .ORIG
 
 		numOfSections = 1;
 		sections = new FileSection[1];
 		sections[0].name = initializeJdcStrWithVal("code");
 		sections[0].type = CODE_FST;
 		sections[0].isReadOnly = 1;
-		sections[0].rva = 2;
+		sections[0].rva = 0;
 		sections[0].fileOffset = 2;
 		sections[0].physicalSize = numOfFileBytes - 2;
 
@@ -796,6 +805,8 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 
 		return SUCCESS_JDC;
 	}
+
+	addressability = 1;
 
 	entryPoint = 0;
 	while (1)
@@ -928,6 +939,8 @@ void MainGui::UpdateDecompParams()
 
 	decompParams.fileBytes = fileBytes;
 	decompParams.numOfFileBytes = numOfFileBytes;
+
+	decompParams.addressability = addressability;
 
 	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;

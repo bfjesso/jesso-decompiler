@@ -8,7 +8,7 @@ extern "C"
 
 	enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
 
-	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, struct JdcStr* result);
+	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, uint8_t addressability, struct JdcStr* result);
 
 	const char* getGroup1PrefixStr(struct DisassembledInstruction* instruction);
 
@@ -20,4 +20,4 @@ extern "C"
 }
 #endif
 
-static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, struct JdcStr* result);
+static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instruction, struct MemoryAddress* memAddr, bool evaluateIP, uint8_t addressability, struct JdcStr* result);

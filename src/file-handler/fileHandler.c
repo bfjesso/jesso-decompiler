@@ -419,21 +419,21 @@ enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileForm
 	return ERROR_JDC;
 }
 
-uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint64_t rva, struct FileSection** section)
+uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint8_t addressability, uint64_t rva, struct FileSection** section)
 {
 	if (section) { *section = 0; }
 
 	uint64_t maybeResult = 0;
 	for (int32_t i = 0; i < numOfSections; i++)
 	{
-		if (rva >= sections[i].rva && rva < sections[i].rva + sections[i].physicalSize)
+		if (rva >= sections[i].rva && rva < sections[i].rva + (sections[i].physicalSize / addressability))
 		{
 			if (section) { *section = &sections[i]; }
-			return (rva - sections[i].rva) + sections[i].fileOffset;
+			return ((rva - sections[i].rva) * addressability) + sections[i].fileOffset;
 		}
-		else if (rva == sections[i].rva + sections[i].physicalSize)
+		else if (rva == sections[i].rva + (sections[i].physicalSize / addressability))
 		{
-			maybeResult = (rva - sections[i].rva) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
+			maybeResult = ((rva - sections[i].rva) * addressability) + sections[i].fileOffset; // this may be used as a max file offset even though it is not in the section. it isnt returned immediatley because another section could start here
 		}
 	}
 

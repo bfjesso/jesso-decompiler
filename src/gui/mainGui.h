@@ -49,6 +49,7 @@ public:
 	bool is64Bit = false;
 	uint64_t imageBase = 0;
 	uint64_t entryPoint = 0;
+	uint8_t addressability = 1; // bytes per address
 
 	uint8_t* fileBytes = nullptr;
 	uint64_t numOfFileBytes = 0;

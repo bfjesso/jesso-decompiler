@@ -55,7 +55,7 @@ uint64_t getJmpDst(struct DecompilationParameters* params, int32_t startInstruct
 
 	if (instruction->opcode != JMP_FAR_X86 && instruction->opcode != CALL_FAR_X86 && instruction->operands[0].type == IMMEDIATE_OPERAND)
 	{
-		dst += instruction->address + instruction->numOfBytes;
+		dst += instruction->address + (instruction->numOfBytes / params->addressability);
 	}
 
 	return dst;
@@ -113,7 +113,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		else
 		{
 			struct FileSection* section = 0;
-			uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+			uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, params->addressability, address - params->imageBase, &section);
 
 			if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 			{

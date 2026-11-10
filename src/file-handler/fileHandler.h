@@ -46,7 +46,7 @@ extern "C"
 
 	enum JdcStatus generateFileHeadersInfoStr(const wchar_t* filePath, enum FileFormat fileFormat, struct JdcStr* result);
 
-	uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint64_t rva, struct FileSection** section);
+	uint64_t rvaToFileOffset(struct FileSection* sections, int32_t numOfSections, uint8_t addressability, uint64_t rva, struct FileSection** section);
 
 #ifdef __cplusplus
 }

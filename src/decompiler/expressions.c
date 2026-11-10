@@ -77,7 +77,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	uint64_t baseRegVal = 0;
 	if (compareRegisters(memAddress->reg, IP_X86_REG))
 	{
-		baseRegVal = (instruction->address + instruction->numOfBytes) * memAddress->scale;
+		baseRegVal = (instruction->address + (instruction->numOfBytes / params->addressability)) * memAddress->scale;
 	}
 	else if (memAddress->reg != NO_REG)
 	{
@@ -122,7 +122,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	uint64_t displacementRegVal = 0;
 	if (compareRegisters(memAddress->regDisplacement, IP_X86_REG))
 	{
-		displacementRegVal = instruction->address + instruction->numOfBytes;
+		displacementRegVal = instruction->address + (instruction->numOfBytes / params->addressability);
 	}
 	else if (memAddress->regDisplacement != NO_REG)
 	{
@@ -358,7 +358,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 
 	if (compareRegisters(targetReg, IP_X86_REG))
 	{
-		return sprintfJdc(result, false, "0x%llX", instruction->address + instruction->numOfBytes);
+		return sprintfJdc(result, false, "0x%llX", instruction->address + (instruction->numOfBytes / params->addressability));
 	}
 	else if (compareRegisters(targetReg, SP_X86_REG))
 	{
@@ -732,7 +732,7 @@ static enum JdcStatus getValueFromDataSection(struct DecompilationParameters* pa
 	}
 
 	struct FileSection* section = 0;
-	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, params->addressability, address - params->imageBase, &section);
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{
@@ -770,7 +770,7 @@ static enum JdcStatus getStringFromDataSection(struct DecompilationParameters* p
 	}
 
 	struct FileSection* section = 0;
-	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, address - params->imageBase, &section);
+	uint64_t fileOffset = rvaToFileOffset(params->sections, params->numOfSections, params->addressability, address - params->imageBase, &section);
 
 	if (fileOffset == 0 || fileOffset >= params->numOfFileBytes || !section || section->type != INIT_DATA_FST || !section->isReadOnly)
 	{

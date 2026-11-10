@@ -59,7 +59,7 @@ void DataTextCtrl::ShowGoToVirtualAddressDialog()
 			}
 
 			FileSection* section = 0;
-			uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, address - mainGui->decompParams.imageBase, &section);
+			uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, address - mainGui->decompParams.imageBase, &section);
 			if (!section)
 			{
 				wxMessageBox("Address is not within a section", "Failed to find address");
@@ -227,7 +227,7 @@ void DataTextCtrl::UpdateTextCtrl()
 
 		if (section)
 		{
-			sprintf(lineBuffer, "0x%llX%s (0x%llX)\t", mainGui->decompParams.imageBase + section->rva + (i - section->fileOffset), section->name.buffer, i);
+			sprintf(lineBuffer, "0x%llX %s (0x%llX)\t", mainGui->decompParams.imageBase + section->rva + ((i - section->fileOffset) / mainGui->addressability), section->name.buffer, i);
 		}
 		else
 		{

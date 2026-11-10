@@ -93,13 +93,13 @@ void WorkerThread::Disassemble()
 	PostLogProgress(mainGui->disassembledInstructions[0].address, false);
 
 	uint64_t firstAddress = mainGui->disassembledInstructions[0].address;
-	uint64_t lastAddress = mainGui->disassembledInstructions[mainGui->disassembledInstructions.size() - 1].address + mainGui->disassembledInstructions[mainGui->disassembledInstructions.size() - 1].numOfBytes;
+	uint64_t lastAddress = mainGui->disassembledInstructions[mainGui->disassembledInstructions.size() - 1].address + (mainGui->disassembledInstructions[mainGui->disassembledInstructions.size() - 1].numOfBytes / mainGui->addressability);
 	for (int32_t i = 0; i < mainGui->numOfSections; i++)
 	{
 		if (mainGui->sections[i].type == CODE_FST)
 		{
 			uint64_t sectionStart = mainGui->sections[i].rva + mainGui->imageBase;
-			uint64_t sectionEnd = mainGui->sections[i].rva + mainGui->sections[i].physicalSize + mainGui->imageBase;
+			uint64_t sectionEnd = mainGui->sections[i].rva + (mainGui->sections[i].physicalSize / mainGui->addressability) + mainGui->imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
 				if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
@@ -133,7 +133,7 @@ void WorkerThread::Disassemble()
 	int32_t numOfInstructions = mainGui->disassembledInstructions.size();
 	for (int32_t i = 0; i < numOfInstructions - 1; i++)
 	{
-		uint64_t startVA = mainGui->disassembledInstructions[i].address + mainGui->disassembledInstructions[i].numOfBytes;
+		uint64_t startVA = mainGui->disassembledInstructions[i].address + (mainGui->disassembledInstructions[i].numOfBytes / mainGui->addressability);
 		uint64_t endVA = mainGui->disassembledInstructions[i + 1].address;
 		if (startVA != endVA)
 		{
@@ -168,7 +168,7 @@ void WorkerThread::Disassemble()
 enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, int32_t callNum)
 {
 	struct FileSection* currentSection = 0;
-	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, startVA - mainGui->imageBase, &currentSection);
+	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, startVA - mainGui->imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
 		return SUCCESS_JDC;
@@ -213,7 +213,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 		instructionBuffer->address = currentVirtualAddress;
 
 		currentFileOffset += instructionBuffer->numOfBytes;
-		currentVirtualAddress += instructionBuffer->numOfBytes;
+		currentVirtualAddress += (instructionBuffer->numOfBytes / mainGui->addressability);
 
 		if (storeInstruction) // only the instructions that are jumped to are stored because inserting into the vector takes too much time
 		{
@@ -235,7 +235,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 			if (jmpDst != 0)
 			{
 				struct FileSection* section = 0;
-				currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, jmpDst - mainGui->imageBase, &section);
+				currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, jmpDst - mainGui->imageBase, &section);
 				if (!section || section->type != CODE_FST)
 				{
 					return SUCCESS_JDC;
@@ -272,7 +272,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
 {
 	struct FileSection* currentSection = 0;
-	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, startVA - mainGui->imageBase, &currentSection);
+	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, startVA - mainGui->imageBase, &currentSection);
 	if (!currentSection || currentSection->type != CODE_FST)
 	{
 		return SUCCESS_JDC;
@@ -282,7 +282,7 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 		return ERROR_JDC;
 	}
 
-	uint64_t endFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, endVA - mainGui->imageBase, 0);
+	uint64_t endFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, endVA - mainGui->imageBase, 0);
 	if (endFileOffset > mainGui->numOfFileBytes || endFileOffset == 0)
 	{
 		return ERROR_JDC;
@@ -307,14 +307,14 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 
 			PostLogProgress(currentVirtualAddress, true);
 
-			for (int32_t i = 0; i < numOfBytes; i++)
+			for (int32_t i = 0; i < numOfBytes; i += mainGui->addressability)
 			{
 				if (currentFileOffset >= endFileOffset)
 				{
 					return SUCCESS_JDC;
 				}
 
-				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes[currentFileOffset], 1))
+				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes[currentFileOffset], mainGui->addressability))
 				{
 					return ERROR_JDC;
 				}
@@ -329,7 +329,7 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 			instructionBuffer->address = currentVirtualAddress;
 
 			currentFileOffset += instructionBuffer->numOfBytes;
-			currentVirtualAddress += instructionBuffer->numOfBytes;
+			currentVirtualAddress += (instructionBuffer->numOfBytes / mainGui->addressability);
 			mainGui->disassembledInstructions.push_back(*instructionBuffer);
 		}
 	}
@@ -418,7 +418,7 @@ enum JdcStatus WorkerThread::HandleJmpTables()
 			return SUCCESS_JDC;
 		}
 
-		uint64_t fileOffest = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->jumpTables[i].jmpTableAddress - mainGui->imageBase, 0);
+		uint64_t fileOffest = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, mainGui->jumpTables[i].jmpTableAddress - mainGui->imageBase, 0);
 		int32_t instructionIndex = findInstructionByAddress(mainGui->disassembledInstructions.data(), mainGui->disassembledInstructions.size(), mainGui->jumpTables[i].jmpTableAddress);
 		if (instructionIndex != -1)
 		{
