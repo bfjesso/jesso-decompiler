@@ -13,6 +13,8 @@ public:
 	MainGui* mainGui = nullptr;
 
 	wxTextCtrl* bytesTextCtrl = nullptr;
+	wxChoice* dataInputTypeChoice = nullptr;
+
 	wxButton* disassembleButton = nullptr;
 	wxChoice* isaChoice = nullptr;
 	wxCheckBox* is64BitModeCheckBox = nullptr;
@@ -30,6 +32,18 @@ public:
 	{
 		DisassembleButtonID,
 		ISAChoiceID,
+	};
+
+	enum DataInputType
+	{
+		HEX_DIT,
+		BINARY_DIT,
+	};
+
+	const char* dataInputTypeStrs[2]
+	{
+		"Hexadecimal",
+		"Binary",
 	};
 
 	const char* isaStrs[2]

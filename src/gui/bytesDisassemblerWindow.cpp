@@ -19,6 +19,11 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	bytesTextCtrl->SetOwnForegroundColour(textColor);
 	bytesTextCtrl->SetToolTip("Bytes to disassemble");
 
+	dataInputTypeChoice = new wxChoice(this, wxID_ANY, wxPoint(0, 0), wxSize(125, 30), wxArrayString(2, dataInputTypeStrs));
+	dataInputTypeChoice->SetSelection(0);
+	dataInputTypeChoice->SetOwnBackgroundColour(foregroundColor);
+	dataInputTypeChoice->SetOwnForegroundColour(textColor);
+
 	disassembleButton = new wxButton(this, DisassembleButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
@@ -37,7 +42,8 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	row2Sizer = new wxBoxSizer(wxHORIZONTAL);
 	vSizer = new wxBoxSizer(wxVERTICAL);
 
-	row1Sizer->Add(bytesTextCtrl, 1, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
+	row1Sizer->Add(bytesTextCtrl, 0, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
+	row1Sizer->Add(dataInputTypeChoice, 0, wxTOP | wxRIGHT | wxCENTER, 10);
 
 	row2Sizer->Add(disassembleButton, 0, wxLEFT | wxRIGHT | wxCENTER, 10);
 	row2Sizer->Add(isaChoice, 0, wxRIGHT | wxCENTER, 10);
@@ -94,21 +100,39 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer)
 {
 	str.Replace(" ", "", true);
+	str.Replace(",", "", true);
 	str.Replace("\\x", "", true);
 	str.Replace("\\X", "", true);
 	str.Replace("0x", "", true);
 	str.Replace("0X", "", true);
 
+	enum DataInputType dit = (enum DataInputType)(dataInputTypeChoice->GetSelection());
+	uint8_t digitsPerByte = 0;
+	uint8_t base = 0;
+	switch (dit)
+	{
+	case HEX_DIT:
+		digitsPerByte = 2;
+		base = 16;
+		break;
+	case BINARY_DIT:
+		digitsPerByte = 8;
+		base = 2;
+		break;
+	default:
+		return ERROR_JDC;
+	}
+
 	size_t strLen = str.Length();
-	if (strLen < 2 || strLen % 2 != 0)
+	if (strLen < digitsPerByte || strLen % digitsPerByte != 0)
 	{
 		return ERROR_JDC;
 	}
 
-	for (int32_t i = 0; i < strLen; i += 2)
+	for (int32_t i = 0; i < strLen; i += digitsPerByte)
 	{
 		uint32_t byte = 0;
-		if (!str.SubString(i, i + 1).ToUInt(&byte, 16))
+		if (!str.SubString(i, i + (digitsPerByte - 1)).ToUInt(&byte, base))
 		{
 			return ERROR_JDC;
 		}
