@@ -59,7 +59,28 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		}
 		else if (currentOperand->type == IMMEDIATE_OPERAND)
 		{
-			sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
+			if (currentOperand->immediate.value < 0)
+			{
+				switch (currentOperand->immediate.size)
+				{
+				case 1:
+					sprintfJdc(result, true, "0x%02X", (uint8_t)(currentOperand->immediate.value));
+					break;
+				case 2:
+					sprintfJdc(result, true, "0x%04X", (uint16_t)(currentOperand->immediate.value));
+					break;
+				case 4:
+					sprintfJdc(result, true, "0x%08X", (uint32_t)(currentOperand->immediate.value));
+					break;
+				case 8:
+					sprintfJdc(result, true, "0x%016llX", currentOperand->immediate.value);
+					break;
+				}
+			}
+			else
+			{
+				sprintfJdc(result, true, "0x%llX", currentOperand->immediate.value);
+			}
 		}
 
 		if (i == 0 && instruction->opmask != NO_REG)
