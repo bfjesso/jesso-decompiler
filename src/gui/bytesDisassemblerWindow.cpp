@@ -19,11 +19,11 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	bytesTextCtrl->SetOwnForegroundColour(textColor);
 	bytesTextCtrl->SetToolTip("Bytes to disassemble");
 
-	disassembleButton = new wxButton(this, DisassembleButtonID, "Disassemble", wxPoint(0, 0), wxSize(75, 25));
+	disassembleButton = new wxButton(this, DisassembleButtonID, "Disassemble", wxPoint(0, 0), wxSize(100, 25));
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
 
-	isaChoice = new wxChoice(this, ISAChoiceID, wxPoint(0, 0), wxSize(50, 30), wxArrayString(2, isaStrs));
+	isaChoice = new wxChoice(this, ISAChoiceID, wxPoint(0, 0), wxSize(75, 30), wxArrayString(2, isaStrs));
 	isaChoice->SetSelection(0);
 	isaChoice->SetOwnBackgroundColour(foregroundColor);
 	isaChoice->SetOwnForegroundColour(textColor);
@@ -39,9 +39,9 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 
 	row1Sizer->Add(bytesTextCtrl, 1, wxTOP | wxLEFT | wxRIGHT | wxCENTER, 10);
 
-	row2Sizer->Add(disassembleButton, 1, wxLEFT | wxRIGHT | wxCENTER, 10);
-	row2Sizer->Add(isaChoice, 1, wxRIGHT | wxCENTER, 10);
-	row2Sizer->Add(is64BitModeCheckBox, 1, wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(disassembleButton, 0, wxLEFT | wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(isaChoice, 0, wxRIGHT | wxCENTER, 10);
+	row2Sizer->Add(is64BitModeCheckBox, 0, wxRIGHT | wxCENTER, 10);
 
 	vSizer->Add(row1Sizer, 0, wxCENTER);
 	vSizer->Add(row2Sizer, 0, wxCENTER);
