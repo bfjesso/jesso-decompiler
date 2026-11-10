@@ -3,7 +3,7 @@
 
 enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassembledInstruction* result)
 {
-	if (bytes + 1 > maxBytesAddr)
+	if ((bytes + 1) > maxBytesAddr)
 	{
 		return ERROR_JDC;
 	}
@@ -19,6 +19,13 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 	}
 
 	const struct Opcode* opcode = &opcodeMapLC3[opcodeBits];
+	if (opcode->mnemonic == NO_OPCODE ||
+		(opcode->mnemonic == NOT_LC3 && (instructionData & 0b111111) != 0b111111) ||
+		(opcode->mnemonic == RET_LC3 && (instructionData & 0b111111111111) != 0b000111000000) ||
+		(opcode->mnemonic == RTI_LC3 && (instructionData & 0b111111111111) != 0b000000000000))
+	{
+		return ERROR_JDC;
+	}
 
 	struct Operand operands[4] = { 0 };
 
