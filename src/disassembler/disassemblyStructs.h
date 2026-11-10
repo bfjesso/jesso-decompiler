@@ -3,11 +3,25 @@
 #include "opcodeMnemonics.h"
 #include "registers.h"
 
+#define NUM_OF_ISAS 3
+
 enum InstructionSetArchitecture
 {
 	X86_ISA,
+	X86_64_ISA,
 	LC3_ISA
 };
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	extern const char* isaStrs[];
+
+#ifdef __cplusplus
+}
+#endif
 
 struct DisassemblerOptions
 {

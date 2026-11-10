@@ -20,7 +20,7 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	bytesTextCtrl->SetToolTip("Bytes to disassemble");
 
 	dataInputTypeChoice = new wxChoice(this, wxID_ANY, wxPoint(0, 0), wxSize(125, 30), wxArrayString(2, dataInputTypeStrs));
-	dataInputTypeChoice->SetSelection(0);
+	dataInputTypeChoice->SetSelection(HEX_DIT);
 	dataInputTypeChoice->SetOwnBackgroundColour(foregroundColor);
 	dataInputTypeChoice->SetOwnForegroundColour(textColor);
 
@@ -28,8 +28,8 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
 
-	isaChoice = new wxChoice(this, ISAChoiceID, wxPoint(0, 0), wxSize(75, 30), wxArrayString(2, isaStrs));
-	isaChoice->SetSelection(0);
+	isaChoice = new wxChoice(this, ISAChoiceID, wxPoint(0, 0), wxSize(75, 30), wxArrayString(NUM_OF_ISAS, isaStrs));
+	isaChoice->SetSelection(X86_ISA);
 	isaChoice->SetOwnBackgroundColour(foregroundColor);
 	isaChoice->SetOwnForegroundColour(textColor);
 

@@ -46,12 +46,6 @@ public:
 		"Binary",
 	};
 
-	const char* isaStrs[2]
-	{
-		"x86",
-		"LC-3",
-	};
-
 	void DisassembleBytes(wxCommandEvent& e);
 
 	enum JdcStatus ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer);

@@ -642,7 +642,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 
 		logTextCtrl->Log(wxString::Format("file size: %lld (0x%llX) bytes", numOfFileBytes, numOfFileBytes));
 		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)));
-		logTextCtrl->Log("architecture: " + (wxString)(is64Bit ? "x86-64" : "x86"));
+		logTextCtrl->Log("architecture: " + wxString(isaStrs[isa]));
 		logTextCtrl->Log(wxString::Format("image base: 0x%llX", imageBase));
 		logTextCtrl->Log(wxString::Format("entry point: 0x%llX", entryPoint + imageBase));
 
@@ -767,6 +767,36 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 		return ERROR_JDC;
 	}
 
+	wxSingleChoiceDialog dlg(this, "Choose ISA", "Specify architecture", wxArrayString(NUM_OF_ISAS, isaStrs));
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		isa = (enum InstructionSetArchitecture)(dlg.GetSelection());
+	}
+	else
+	{
+		return ERROR_JDC;
+	}
+
+	if (isa == LC3_ISA)
+	{
+		entryPoint = 2;
+
+		imageBase = ((fileBytes[0] << 8) + fileBytes[1]) - 2;
+
+		numOfSections = 1;
+		sections = new FileSection[1];
+		sections[0].name = initializeJdcStrWithVal("code");
+		sections[0].type = CODE_FST;
+		sections[0].isReadOnly = 1;
+		sections[0].rva = 2;
+		sections[0].fileOffset = 2;
+		sections[0].physicalSize = numOfFileBytes - 2;
+
+		numOfImports = 0;
+
+		return SUCCESS_JDC;
+	}
+
 	entryPoint = 0;
 	while (1)
 	{
@@ -793,8 +823,7 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 		}
 	}
 
-	int32_t ask64Bit = wxMessageBox("Do you want to treat the file as 64-bit?", "Specify architecture", wxYES_NO, this);
-	is64Bit = ask64Bit == wxYES;
+	is64Bit = isa == X86_64_ISA;
 
 	// this is just for formatting in the gui
 	if (numOfFileBytes < 0x10) { imageBase = 0x10; }
