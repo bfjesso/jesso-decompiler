@@ -3,6 +3,7 @@
 #include "mainGui.h"
 
 wxBEGIN_EVENT_TABLE(BytesDisassemblerWindow, wxWindow)
+EVT_CHOICE(ISAChoiceID, BytesDisassemblerWindow::UpdateISA)
 EVT_BUTTON(DisassembleButtonID, BytesDisassemblerWindow::DisassembleBytes)
 wxEND_EVENT_TABLE()
 
@@ -22,7 +23,7 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	disassembleButton->SetOwnBackgroundColour(foregroundColor);
 	disassembleButton->SetOwnForegroundColour(textColor);
 
-	isaChoice = new wxChoice(this, wxID_ANY, wxPoint(0, 0), wxSize(50, 30), wxArrayString(2, isaStrs));
+	isaChoice = new wxChoice(this, ISAChoiceID, wxPoint(0, 0), wxSize(50, 30), wxArrayString(2, isaStrs));
 	isaChoice->SetSelection(0);
 	isaChoice->SetOwnBackgroundColour(foregroundColor);
 	isaChoice->SetOwnForegroundColour(textColor);
@@ -60,8 +61,6 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		wxMessageBox("Failed to parse bytes", "Can't disassemble");
 		return;
 	}
-
-	enum InstructionSetArchitecture isa = (enum InstructionSetArchitecture)(isaChoice->GetSelection());
 
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
@@ -118,4 +117,19 @@ enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vect
 	}
 
 	return SUCCESS_JDC;
+}
+
+void BytesDisassemblerWindow::UpdateISA(wxCommandEvent& e)
+{
+	isa = (enum InstructionSetArchitecture)(isaChoice->GetSelection());
+	if (isa == X86_ISA)
+	{
+		is64BitModeCheckBox->Show();
+	}
+	else
+	{
+		is64BitModeCheckBox->Hide();
+	}
+
+	Layout();
 }

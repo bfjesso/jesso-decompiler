@@ -22,11 +22,14 @@ public:
 	wxBoxSizer* row2Sizer = nullptr;
 	wxBoxSizer* vSizer = nullptr;
 
+	enum InstructionSetArchitecture isa = X86_ISA;
+
 	std::vector<struct DisassembledInstruction> instructions;
 
 	enum ids
 	{
-		DisassembleButtonID
+		DisassembleButtonID,
+		ISAChoiceID,
 	};
 
 	const char* isaStrs[2]
@@ -38,6 +41,8 @@ public:
 	void DisassembleBytes(wxCommandEvent& e);
 
 	enum JdcStatus ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer);
+
+	void UpdateISA(wxCommandEvent& e);
 
 	wxDECLARE_EVENT_TABLE();
 };
