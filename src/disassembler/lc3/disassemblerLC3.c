@@ -18,6 +18,13 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 		result->numOfBytes = 2;
 		return SUCCESS_JDC;
 	}
+	else if (instructionData == 0xF025) // TRAP 0x25
+	{
+		result->opcode = HALT_LC3;
+		result->numOfOperands = 0;
+		result->numOfBytes = 2;
+		return SUCCESS_JDC;
+	}
 
 	uint8_t opcodeBits = (instructionData & 0b1111000000000000) >> 12;
 	if (opcodeBits > 0xF)

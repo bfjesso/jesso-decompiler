@@ -255,7 +255,7 @@ extern const char* opcodeMnemonicStrs[] =
 	"NOT",
 	"RET", "RTI",
 	"ST", "STI", "STR",
-	"TRAP"
+	"TRAP", "HALT",
 };
 
 bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)

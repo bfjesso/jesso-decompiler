@@ -275,7 +275,7 @@ enum OpcodeMnemonic
 	NOT_LC3,
 	RET_LC3, RTI_LC3,
 	ST_LC3, STI_LC3, STR_LC3,
-	TRAP_LC3
+	TRAP_LC3, HALT_LC3,
 };
 
 #ifdef __cplusplus
