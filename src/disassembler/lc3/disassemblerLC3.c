@@ -8,9 +8,16 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 		return ERROR_JDC;
 	}
 
-	uint16_t instructionData = (bytes[0] << 8) + bytes[1];
-
 	memset(result, 0, sizeof(struct DisassembledInstruction));
+
+	uint16_t instructionData = (bytes[0] << 8) + bytes[1];
+	if (instructionData == 0)
+	{
+		result->opcode = NOP_LC3;
+		result->numOfOperands = 0;
+		result->numOfBytes = 2;
+		return SUCCESS_JDC;
+	}
 
 	uint8_t opcodeBits = (instructionData & 0b1111000000000000) >> 12;
 	if (opcodeBits > 0xF)
@@ -25,6 +32,17 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 		(opcode->mnemonic == RTI_LC3 && (instructionData & 0b111111111111) != 0b000000000000))
 	{
 		return ERROR_JDC;
+	}
+
+	result->opcode = opcode->mnemonic;
+
+	if (result->opcode == BRP_LC3)
+	{
+		result->opcode = (((instructionData & 0b111000000000) >> 9) + NOP_LC3);
+		if (result->opcode == NOP_LC3)
+		{
+			return ERROR_JDC;
+		}
 	}
 
 	struct Operand operands[4] = { 0 };
@@ -107,7 +125,6 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 		}
 	}
 
-	result->opcode = opcode->mnemonic;
 	result->numOfOperands = numOfOperands;
 	result->numOfBytes = 2;
 
@@ -129,11 +146,11 @@ static enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8
 		int64_t bit = (instructionData & (1 << i));
 		if (isNegative && !bit)
 		{
-			*result &= (~(1 << i));
+			*result &= (~((unsigned long long)1 << i));
 		}
 		else if (!isNegative && bit)
 		{
-			*result |= (1 << i);
+			*result |= ((unsigned long long)1 << i);
 		}
 	}
 

@@ -3,7 +3,7 @@
 
 const struct Opcode opcodeMapLC3[0x10] = // [bits 15-12]
 {
-	{ BR_LC3, PCOFFSET9_LC3_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },          // 0000
+	{ BRP_LC3, PCOFFSET9_LC3_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },         // 0000; NOP if whole instruction is zero. exact branch instruction is determined by nzp
 	{ ADD_LC3, DRSR_LC3_OC, SR1_LC3_OC, SR2_IMM5_LC3_OC, NONE_OC, NONE_OP },   // 0001
 	{ LD_LC3, DRSR_LC3_OC, PCOFFSET9_LC3_OC, NONE_OC, NONE_OC, NONE_OP },      // 0010
 	{ ST_LC3, DRSR_LC3_OC, PCOFFSET9_LC3_OC, NONE_OC, NONE_OC, NONE_OP },      // 0011

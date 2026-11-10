@@ -249,7 +249,8 @@ extern const char* opcodeMnemonicStrs[] =
 
 	// LC3
 	"ADD", "AND",
-	"BR", "JMP", "JSR", "JSRR",
+	"NOP", "BRP", "BRZ", "BRZP", "BRN", "BRNP", "BRNZ", "BRNZP",
+	"JMP", "JSR", "JSRR",
 	"LD", "LDI", "LDR", "LEA",
 	"NOT",
 	"RET", "RTI",
