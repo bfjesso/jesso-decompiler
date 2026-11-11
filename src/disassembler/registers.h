@@ -1,8 +1,17 @@
 #pragma once
 #include "../fileStructs.h"
 
+#define NUM_OF_ISAS 3
+
+enum InstructionSetArchitecture
+{
+	X86_ISA,
+	X86_64_ISA,
+	LC3_ISA
+};
+
 // this includes NO_REG
-#define NUM_OF_REGISTERS 257
+#define NUM_OF_REGISTERS 260
 
 #define NUM_PLATFORM_REG_ARGS_PE 4
 #define NUM_PLATFORM_REG_ARGS_ELF 6
@@ -50,13 +59,16 @@ enum Register
 
 	// LC3
 	PC_LC3_REG,
-	R0_LC3_REG, R1_LC3_REG, R2_LC3_REG, R3_LC3_REG, R4_LC3_REG, R5_LC3_REG, R6_LC3_REG, R7_LC3_REG
+	R0_LC3_REG, R1_LC3_REG, R2_LC3_REG, R3_LC3_REG, R4_LC3_REG, R5_LC3_REG, R6_LC3_REG, R7_LC3_REG,
+	N_LC3_REG, Z_LC3_REG, P_LC3_REG,
 };
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+	extern const char* isaStrs[];
 
 	extern const char* registerStrs[];
 
@@ -65,6 +77,8 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+enum JdcStatus getArchitectureRegisters(enum InstructionSetArchitecture isa, enum Register* minReg, enum Register* maxReg);
 
 int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat);
 
@@ -77,6 +91,8 @@ bool compareRegisters(enum Register reg1, enum Register reg2);
 bool isRegisterPointer(enum Register reg);
 
 bool isRegisterStatusFlag(enum Register reg);
+
+bool isRegNZP(enum Register reg);
 
 bool isRegisterHighByte(enum Register reg);
 

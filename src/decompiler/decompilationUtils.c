@@ -73,7 +73,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 		uint64_t address = 0;
 		if (isRegisterInstructionPointer(operand->memoryAddress.reg)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
-			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+			address = params->instructions[startInstructionIndex].address + (params->instructions[startInstructionIndex].numOfBytes / params->addressability);
 		}
 		else if (operand->memoryAddress.reg != NO_REG)
 		{
@@ -90,7 +90,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		if (isRegisterInstructionPointer(operand->memoryAddress.regDisplacement))
 		{
-			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
+			address += params->instructions[startInstructionIndex].address + (params->instructions[startInstructionIndex].numOfBytes / params->addressability);
 		}
 		else if (operand->memoryAddress.regDisplacement != NO_REG)
 		{
@@ -105,7 +105,10 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		address += operand->memoryAddress.constDisplacement;
 
-		if (params->instructions[startInstructionIndex].opcode == LEA_X86 ||
+		if (isOpcodeLEA(params->instructions[startInstructionIndex].opcode) ||
+			isOpcodeJmp(params->instructions[startInstructionIndex].opcode) ||
+			isOpcodeJcc(params->instructions[startInstructionIndex].opcode) ||
+			isOpcodeCall(params->instructions[startInstructionIndex].opcode) ||
 			getImportIndexByAddress(params, address) != -1) // the address that I store for imports is the table entry. when decompiling a function call, this table entry address is needed to check for the import
 		{
 			*result = address;
@@ -163,7 +166,7 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 	int32_t minInstructionIndex = params->currentFunc ? params->currentFunc->firstInstructionIndex : startInstructionIndex - 0x1000;
 	for (int32_t i = startInstructionIndex; i >= minInstructionIndex && i >= 0; i--)
 	{
-		if ((params->instructions[i].opcode == MOV_X86 || params->instructions[i].opcode == LEA_X86) &&
+		if ((isOpcodeMov(params->instructions[i].opcode) || isOpcodeLEA(params->instructions[i].opcode)) &&
 			params->instructions[i].operands[0].type == REGISTER_OPERAND && compareRegisters(params->instructions[i].operands[0].reg, reg))
 		{
 			int32_t start = i;
@@ -462,7 +465,7 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 	}
 	else if (operandNum == 1)
 	{
-		if (opcode == XCHG_X86)
+		if (opcode == XCHG_X86 || isOpcodeST(opcode))
 		{
 			if (overwrites != 0) { *overwrites = true; }
 			return true;
@@ -548,6 +551,26 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 		case SETNZ_X86:
 		case SETZ_X86:
 			return reg == ZF_X86_REG;
+		}
+
+		return false;
+	}
+	else if (isRegNZP(reg))
+	{
+		switch (opcode)
+		{
+		case BRP_LC3:
+			return reg == P_LC3_REG;
+		case BRZ_LC3:
+			return reg == Z_LC3_REG;
+		case BRZP_LC3:
+			return reg == Z_LC3_REG || reg == P_LC3_REG;
+		case BRN_LC3:
+			return reg == N_LC3_REG;
+		case BRNP_LC3:
+			return reg == N_LC3_REG || reg == P_LC3_REG;
+		case BRNZ_LC3:
+			return reg == N_LC3_REG || reg == Z_LC3_REG;
 		}
 
 		return false;
@@ -665,6 +688,16 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 		}
 
 		if (overwrites) { *overwrites = false; }
+		return false;
+	}
+	else if (isRegNZP(reg))
+	{
+		if (doesOpcodeOverwriteFirstOperand(opcode)) // opcode should be an LC-3 instruction
+		{
+			if (overwrites) { *overwrites = true; }
+			return true;
+		}
+
 		return false;
 	}
 
@@ -841,7 +874,7 @@ bool doesInstructionConditionallyModifyRegister(struct DecompilationParameters* 
 
 bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 {
-	if (instruction->opcode == NOP_X86)
+	if (isOpcodeNOP(instruction->opcode))
 	{
 		return true;
 	}
@@ -849,7 +882,7 @@ bool doesInstructionDoNothing(struct DisassembledInstruction* instruction)
 	{
 		return true;
 	}
-	else if (instruction->opcode == LEA_X86 &&
+	else if (isOpcodeLEA(instruction->opcode) &&
 		instruction->operands[0].type == REGISTER_OPERAND && instruction->operands[1].type == MEMORY_OPERAND &&
 		compareRegisters(instruction->operands[0].reg, instruction->operands[1].memoryAddress.reg) &&
 		instruction->operands[1].memoryAddress.constDisplacement == 0 && instruction->operands[1].memoryAddress.regDisplacement == NO_REG && instruction->operands[1].memoryAddress.scale == 1)

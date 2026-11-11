@@ -248,11 +248,13 @@ extern const char* opcodeMnemonicStrs[] =
 
 
 	// LC3
-	"ADD", "AND",
-	"NOP", "BRP", "BRZ", "BRZP", "BRN", "BRNP", "BRNZ", "BRNZP",
-	"JMP", "JSR", "JSRR",
-	"LD", "LDI", "LDR", "LEA",
-	"NOT",
+
+	// these overwrite the first operand
+	"ADD", "AND", "NOT", "LD", "LDI", "LDR", "LEA",
+	"NOP",
+	"BRP", "BRZ", "BRZP", "BRN", "BRNP", "BRNZ",
+	"BRNZP", "JMP",
+	"JSR", "JSRR",
 	"RET", "RTI",
 	"ST", "STI", "STR",
 	"TRAP", "HALT",
@@ -260,7 +262,7 @@ extern const char* opcodeMnemonicStrs[] =
 
 bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)
 {
-	return opcode >= MOV_X86 && opcode <= UD2_X86;
+	return (opcode >= MOV_X86 && opcode <= UD2_X86) || (opcode >= ADD_LC3 && opcode <= HALT_LC3);
 }
 
 bool isOpcodeExtendedX86(enum OpcodeMnemonic opcode)
@@ -270,7 +272,7 @@ bool isOpcodeExtendedX86(enum OpcodeMnemonic opcode)
 
 bool doesOpcodeOverwriteFirstOperand(enum OpcodeMnemonic opcode)
 {
-	return opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86;
+	return (opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86) || (opcode >= ADD_LC3 && opcode <= LEA_LC3);
 }
 
 bool doesOpcodeModifyFirstOperand(enum OpcodeMnemonic opcode)
@@ -278,14 +280,34 @@ bool doesOpcodeModifyFirstOperand(enum OpcodeMnemonic opcode)
 	return opcode >= ADD_X86 && opcode <= AESDECLAST_X86;
 }
 
+bool isOpcodeNOP(enum OpcodeMnemonic opcode)
+{
+	return opcode == NOP_X86 || opcode == NOP_LC3;
+}
+
 bool isOpcodeMov(enum OpcodeMnemonic opcode)
 {
 	return opcode >= MOV_X86 && opcode <= MASKMOVDQU_X86;
 }
 
+bool isOpcodeLEA(enum OpcodeMnemonic opcode)
+{
+	return opcode == LEA_X86 || opcode == LEA_LC3;
+}
+
+bool isOpcodeLD(enum OpcodeMnemonic opcode)
+{
+	return opcode >= LD_LC3 && opcode <= LDR_LC3;
+}
+
+bool isOpcodeST(enum OpcodeMnemonic opcode)
+{
+	return opcode >= ST_LC3 && opcode <= STR_LC3;
+}
+
 bool isOpcodeAdd(enum OpcodeMnemonic opcode)
 {
-	return opcode >= ADD_X86 && opcode <= PADDQ_X86;
+	return (opcode >= ADD_X86 && opcode <= PADDQ_X86) || (opcode == ADD_LC3);
 }
 
 bool isOpcodeSub(enum OpcodeMnemonic opcode)
@@ -295,12 +317,17 @@ bool isOpcodeSub(enum OpcodeMnemonic opcode)
 
 bool isOpcodeAnd(enum OpcodeMnemonic opcode)
 {
-	return opcode >= AND_X86 && opcode <= PANDN_X86;
+	return (opcode >= AND_X86 && opcode <= PANDN_X86) || (opcode == AND_LC3);
 }
 
 bool isOpcodeOr(enum OpcodeMnemonic opcode)
 {
 	return opcode >= OR_X86 && opcode <= ORPD_X86;
+}
+
+bool isOpcodeNot(enum OpcodeMnemonic opcode)
+{
+	return opcode == NOT_X86 || opcode == NOT_LC3;
 }
 
 bool isOpcodeXor(enum OpcodeMnemonic opcode)
@@ -340,17 +367,17 @@ bool isOpcodeCvtToFlt(enum OpcodeMnemonic opcode)
 
 bool isOpcodeCall(enum OpcodeMnemonic opcode)
 {
-	return opcode == CALL_FAR_X86 || opcode == CALL_NEAR_X86;
+	return opcode == CALL_FAR_X86 || opcode == CALL_NEAR_X86 || opcode == JSR_LC3 || opcode == JSRR_LC3;
 }
 
 bool isOpcodeReturn(enum OpcodeMnemonic opcode)
 {
-	return opcode == RET_NEAR_X86 || opcode == RET_FAR_X86;
+	return opcode == RET_NEAR_X86 || opcode == RET_FAR_X86 || opcode == RET_LC3 || opcode == RTI_LC3;
 }
 
 bool isOpcodeJmp(enum OpcodeMnemonic opcode)
 {
-	return opcode == JMP_SHORT_X86 || opcode == JMP_NEAR_X86 || opcode == JMP_FAR_X86;
+	return opcode == JMP_SHORT_X86 || opcode == JMP_NEAR_X86 || opcode == JMP_FAR_X86 || opcode == BRNZP_LC3 || opcode == JMP_LC3;
 }
 
 bool isOpcodeCmp(enum OpcodeMnemonic opcode)
@@ -360,7 +387,7 @@ bool isOpcodeCmp(enum OpcodeMnemonic opcode)
 
 bool isOpcodeJcc(enum OpcodeMnemonic opcode)
 {
-	return opcode >= JA_SHORT_X86 && opcode <= JZ_SHORT_X86;
+	return (opcode >= JA_SHORT_X86 && opcode <= JZ_SHORT_X86) || (opcode >= BRP_LC3 && opcode <= BRNZ_LC3);
 }
 
 bool isOpcodeCMOVcc(enum OpcodeMnemonic opcode)

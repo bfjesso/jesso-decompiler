@@ -11,6 +11,12 @@ static enum JdcStatus decompileZF(struct DecompilationParameters* params, bool n
 
 static enum JdcStatus decompileSF(struct DecompilationParameters* params, bool notStatusFlag, const char* instructionResult, uint8_t operandSize, struct JdcStr* flagExpression);
 
+static enum JdcStatus decompileNZP(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, const char* instructionResult, struct JdcStr* result);
+
+static enum JdcStatus decompileLD(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
+
+static enum JdcStatus decompileST(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result);
+
 static enum JdcStatus decompileArithmetic(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
 
 static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result);
@@ -19,7 +25,7 @@ static enum JdcStatus decompileIncDec(struct DecompilationParameters* params, in
 
 static enum JdcStatus decompileNeg(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result, bool* placeOperatorInfront);
 
-static enum JdcStatus decompileNot(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result, bool* placeOperatorInfront);
+static enum JdcStatus decompileNot(struct DecompilationParameters* params, int32_t instructionIndex, enum Register targetReg, bool getAssignment, bool notStatusFlag, struct JdcStr* result, bool* placeOperatorInfront);
 
 static enum JdcStatus decompileOr(struct DecompilationParameters* params, int32_t instructionIndex, bool getAssignment, struct JdcStr* result);
 

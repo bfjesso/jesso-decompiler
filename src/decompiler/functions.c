@@ -222,6 +222,13 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 		}
 	}
 
+	enum Register minReg = NO_REG;
+	enum Register maxReg = NO_REG;
+	if (ERROR_JDC == getArchitectureRegisters(params->isa, &minReg, &maxReg))
+	{
+		return ERROR_JDC;
+	}
+
 	// reg args, this is a separate loop becaues of the PUSH stack var check
 	for (int32_t i = func->firstInstructionIndex; i <= func->lastInstructionIndex; i++)
 	{
@@ -240,9 +247,9 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 			continue;
 		}
 
-		for (int32_t reg = RAX_X86_REG; reg < ST0_X86_REG; reg++)
+		for (int32_t reg = minReg; reg <= maxReg; reg++)
 		{
-			if (reg == RBP_X86_REG || reg == RSP_X86_REG || reg == RIP_X86_REG)
+			if (isRegisterPointer(reg))
 			{
 				continue;
 			}

@@ -2,13 +2,6 @@
 #include "x86/disassemblerX86.h"
 #include "lc3/disassemblerLC3.h"
 
-extern const char* isaStrs[NUM_OF_ISAS] =
-{
-	"x86",
-	"x86-64",
-	"LC-3",
-};
-
 enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
 {
 	switch (isa)

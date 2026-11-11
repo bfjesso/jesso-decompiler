@@ -92,7 +92,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 
 		if (regArgVar && regArgVar->dataType.pointerLevel == 1 && regArgVar->dataType.primitiveType == memAddrType.primitiveType && memAddress->regDisplacement == NO_REG && memAddress->constDisplacement == 0 && memAddress->scale == 1)
 		{
-			if (instruction->opcode == LEA_X86)
+			if (isOpcodeLEA(instruction->opcode))
 			{
 				sprintfJdc(result, false, "%s", regArgVar->name.buffer);
 			}
@@ -157,19 +157,19 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		{
 			strcpyJdc(&memAddrStr, params->functions[calleeIndex].name.buffer);
 		}
-		else if (importIndex != -1 && instruction->opcode != LEA_X86)
+		else if (importIndex != -1 && !isOpcodeLEA(instruction->opcode))
 		{
 			strcpyJdc(result, params->imports[importIndex].name.buffer); // the import.address is the address of the table entry for the import, so it is like a ptr
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode == LEA_X86 && SUCCESS_JDC == getStringFromDataSection(params, totalDisplacement, &memAddrStr))
+		else if (isOpcodeLEA(instruction->opcode) && SUCCESS_JDC == getStringFromDataSection(params, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
 			return SUCCESS_JDC;
 		}
-		else if (instruction->opcode != LEA_X86 && SUCCESS_JDC == getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
+		else if (!isOpcodeLEA(instruction->opcode) && SUCCESS_JDC == getValueFromDataSection(params, memAddrType, totalDisplacement, &memAddrStr))
 		{
 			strcatJdc(result, memAddrStr.buffer);
 			freeJdcStr(&memAddrStr);
@@ -201,7 +201,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		wrapJdcStrInParentheses(&memAddrStr);
 	}
 
-	if (instruction->opcode != LEA_X86)
+	if (!isOpcodeLEA(instruction->opcode))
 	{
 		struct JdcStr typeStr = initializeJdcStr();
 		dataTypeToStr(memAddrType, params->useStdInt, &typeStr);
@@ -237,7 +237,7 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 		return ERROR_JDC;
 	}
 
-	if (instruction->opcode == LEA_X86)
+	if (isOpcodeLEA(instruction->opcode))
 	{
 		if (isDataTypePtr(stackVar->dataType))
 		{
@@ -719,6 +719,69 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 	else if (cc == JNP_SHORT_X86 || cc == SETNP_X86 || cc == CMOVNP_X86)
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, PF_X86_REG, 1, !invertOperator, result, 0);
+	}
+	else if (cc >= BRP_LC3 && cc <= BRNZ_LC3)
+	{
+		int32_t numOfConditions = 0;
+		if (cc == BRN_LC3 || cc == BRNP_LC3 || cc == BRNZ_LC3)
+		{
+			struct JdcStr nExpression = initializeJdcStr();
+			if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, N_LC3_REG, 1, invertOperator, &nExpression, 0))
+			{
+				freeJdcStr(&nExpression);
+				return ERROR_JDC;
+			}
+
+			strcpyJdc(result, nExpression.buffer);
+			freeJdcStr(&nExpression);
+			numOfConditions++;
+		}
+
+		if (cc == BRZ_LC3 || cc == BRZP_LC3 || cc == BRNZ_LC3)
+		{
+			struct JdcStr zExpression = initializeJdcStr();
+			if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, Z_LC3_REG, 1, invertOperator, &zExpression, 0))
+			{
+				freeJdcStr(&zExpression);
+				return ERROR_JDC;
+			}
+
+			if (numOfConditions > 0)
+			{
+				sprintfJdc(result, true, " || %s", zExpression.buffer);
+			}
+			else
+			{
+				strcpyJdc(result, zExpression.buffer);
+			}
+
+			freeJdcStr(&zExpression);
+			numOfConditions++;
+		}
+
+		if (cc == BRP_LC3 || cc == BRZP_LC3 || cc == BRNP_LC3)
+		{
+			struct JdcStr pExpression = initializeJdcStr();
+			if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, P_LC3_REG, 1, invertOperator, &pExpression, 0))
+			{
+				freeJdcStr(&pExpression);
+				return ERROR_JDC;
+			}
+
+			if (numOfConditions > 0)
+			{
+				sprintfJdc(result, true, " || %s", pExpression.buffer);
+			}
+			else
+			{
+				strcpyJdc(result, pExpression.buffer);
+			}
+
+			freeJdcStr(&pExpression);
+			numOfConditions++;
+		}
+
+		return SUCCESS_JDC;
 	}
 
 	return ERROR_JDC;

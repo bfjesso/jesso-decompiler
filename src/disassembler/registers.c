@@ -1,5 +1,12 @@
 #include "registers.h"
 
+extern const char* isaStrs[NUM_OF_ISAS] =
+{
+	"x86",
+	"x86-64",
+	"LC-3",
+};
+
 extern const char* registerStrs[NUM_OF_REGISTERS] =
 {
 	"NO REG",
@@ -39,6 +46,7 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 	// LC3
 	"PC",
 	"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",
+	"N", "Z", "P",
 };
 
 // there should only be 4 reg args max in one function. The XMM regs can take the place of RCX-R9
@@ -47,6 +55,31 @@ const enum Register altPlatformRegArgsPE[NUM_PLATFORM_REG_ARGS_PE] = { XMM0_X86_
 
 const enum Register platformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { RDI_X86_REG, RSI_X86_REG, RDX_X86_REG, RCX_X86_REG, R8_X86_REG, R9_X86_REG };
 const enum Register altPlatformRegArgsELF[NUM_PLATFORM_REG_ARGS_ELF] = { NO_REG };
+
+enum JdcStatus getArchitectureRegisters(enum InstructionSetArchitecture isa, enum Register* minReg, enum Register* maxReg)
+{
+	if (!minReg || !maxReg)
+	{
+		return ERROR_JDC;
+	}
+
+	switch (isa)
+	{
+	case X86_ISA:
+	case X86_64_ISA:
+		*minReg = RAX_X86_REG;
+		*maxReg = OF_X86_REG;
+		break;
+	case LC3_ISA:
+		*minReg = PC_LC3_REG;
+		*maxReg = P_LC3_REG;
+		break;
+	default:
+		return ERROR_JDC;
+	}
+
+	return SUCCESS_JDC;
+}
 
 int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat)
 {
@@ -220,6 +253,11 @@ bool isRegisterStatusFlag(enum Register reg)
 	return reg >= CF_X86_REG && reg <= OF_X86_REG;
 }
 
+bool isRegNZP(enum Register reg)
+{
+	return reg == N_LC3_REG || reg == Z_LC3_REG || reg == P_LC3_REG;
+}
+
 bool isRegisterHighByte(enum Register reg)
 {
 	return reg == AH_X86_REG || reg == CH_X86_REG || reg == DH_X86_REG || reg == BH_X86_REG;
@@ -244,11 +282,14 @@ bool isRegisterPlatformArg(enum Register reg, enum FileFormat fileFormat)
 
 uint8_t getSizeOfRegister(enum Register reg) // in bytes
 {
-	if ((reg >= AL_X86_REG && reg <= R15B_X86_REG) || isRegisterStatusFlag(reg)) // the status flags are actually single bits in the EFLAGS reg
+	if ((reg >= AL_X86_REG && reg <= R15B_X86_REG) ||
+		isRegisterStatusFlag(reg) || isRegNZP(reg)) // the status flags are actually single bits in the EFLAGS reg
 	{
 		return 1;
 	}
-	else if ((reg >= AX_X86_REG && reg <= R15W_X86_REG) || (reg >= ES_X86_REG && reg <= GS_X86_REG))
+	else if ((reg >= AX_X86_REG && reg <= R15W_X86_REG) ||
+		(reg >= ES_X86_REG && reg <= GS_X86_REG) ||
+		(reg >= PC_LC3_REG && reg <= R7_LC3_REG))
 	{
 		return 2;
 	}

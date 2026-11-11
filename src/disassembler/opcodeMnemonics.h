@@ -268,11 +268,13 @@ enum OpcodeMnemonic
 
 
 	// LC3
-	ADD_LC3, AND_LC3,
-	NOP_LC3, BRP_LC3, BRZ_LC3, BRZP_LC3, BRN_LC3, BRNP_LC3, BRNZ_LC3, BRNZP_LC3,
-	JMP_LC3, JSR_LC3, JSRR_LC3,
-	LD_LC3, LDI_LC3, LDR_LC3, LEA_LC3,
-	NOT_LC3,
+
+	// these overwrite the first operand
+	ADD_LC3, AND_LC3, NOT_LC3, LD_LC3, LDI_LC3, LDR_LC3, LEA_LC3,
+	NOP_LC3,
+	BRP_LC3, BRZ_LC3, BRZP_LC3, BRN_LC3, BRNP_LC3, BRNZ_LC3,
+	BRNZP_LC3, JMP_LC3,
+	JSR_LC3, JSRR_LC3,
 	RET_LC3, RTI_LC3,
 	ST_LC3, STI_LC3, STR_LC3,
 	TRAP_LC3, HALT_LC3,
@@ -305,7 +307,15 @@ bool doesOpcodeOverwriteFirstOperand(enum OpcodeMnemonic opcode);
 
 bool doesOpcodeModifyFirstOperand(enum OpcodeMnemonic opcode);
 
+bool isOpcodeNOP(enum OpcodeMnemonic opcode);
+
 bool isOpcodeMov(enum OpcodeMnemonic opcode);
+
+bool isOpcodeLEA(enum OpcodeMnemonic opcode);
+
+bool isOpcodeLD(enum OpcodeMnemonic opcode);
+
+bool isOpcodeST(enum OpcodeMnemonic opcode);
 
 bool isOpcodeAdd(enum OpcodeMnemonic opcode);
 
@@ -314,6 +324,8 @@ bool isOpcodeSub(enum OpcodeMnemonic opcode);
 bool isOpcodeAnd(enum OpcodeMnemonic opcode);
 
 bool isOpcodeOr(enum OpcodeMnemonic opcode);
+
+bool isOpcodeNot(enum OpcodeMnemonic opcode);
 
 bool isOpcodeXor(enum OpcodeMnemonic opcode);
 

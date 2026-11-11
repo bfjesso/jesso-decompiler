@@ -96,31 +96,38 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 			if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 9, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.reg = PC_LC3_REG;
+			currentOperand->memoryAddress.ptrSize = 2;
+			currentOperand->memoryAddress.scale = 1;
 			break;
 		case BASER_PCOFFSET11_LC3_OC:
 			if (instructionData & (1 << 11))
 			{
 				if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 11, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
-				currentOperand->type = MEMORY_OPERAND;
 				currentOperand->memoryAddress.reg = PC_LC3_REG;
 			}
 			else
 			{
 				if ((instructionData & 0b111000000000) || (instructionData & 0b111111)) { return ERROR_JDC; }
-				currentOperand->type = MEMORY_OPERAND;
 				currentOperand->memoryAddress.reg = (((instructionData & 0b111000000) >> 6) + R0_LC3_REG);
 			}
 
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.ptrSize = 2;
+			currentOperand->memoryAddress.scale = 1;
 			break;
 		case BASER_LC3_OC:
 			if ((instructionData & 0b111000000000) || (instructionData & 0b111111)) { return ERROR_JDC; }
 			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.reg = (((instructionData & 0b111000000) >> 6) + R0_LC3_REG);
+			currentOperand->memoryAddress.ptrSize = 2;
+			currentOperand->memoryAddress.scale = 1;
 			break;
 		case BASER_OFFSET6_LC3_OC:
 			if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 6, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
 			currentOperand->type = MEMORY_OPERAND;
 			currentOperand->memoryAddress.reg = (((instructionData & 0b111000000) >> 6) + R0_LC3_REG);
+			currentOperand->memoryAddress.ptrSize = 2;
+			currentOperand->memoryAddress.scale = 1;
 			break;
 		case TRAPVECT8_LC3_OC:
 			if (instructionData & 0b111100000000) { return ERROR_JDC; }

@@ -940,6 +940,8 @@ void MainGui::UpdateDecompParams()
 	decompParams.fileBytes = fileBytes;
 	decompParams.numOfFileBytes = numOfFileBytes;
 
+	decompParams.isa = isa;
+
 	decompParams.addressability = addressability;
 
 	decompParams.is64Bit = is64Bit;
