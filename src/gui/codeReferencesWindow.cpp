@@ -104,7 +104,7 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 					foundInstructions.push_back(*instruction);
 					break;
 				}
-				else if (compareRegisters(operand->memoryAddress.reg, IP_X86_REG) &&
+				else if (isRegisterInstructionPointer(operand->memoryAddress.reg) &&
 					instruction->address + (instruction->numOfBytes / mainGui->addressability) + operand->memoryAddress.constDisplacement == value)
 				{
 					foundInstructions.push_back(*instruction);

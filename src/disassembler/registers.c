@@ -205,9 +205,14 @@ bool compareRegisters(enum Register reg1, enum Register reg2)
 	return reg1 == reg2;
 }
 
+bool isRegisterInstructionPointer(enum Register reg)
+{
+	return compareRegisters(reg, IP_X86_REG) || compareRegisters(reg, PC_LC3_REG);
+}
+
 bool isRegisterPointer(enum Register reg)
 {
-	return compareRegisters(reg, BP_X86_REG) || compareRegisters(reg, SP_X86_REG) || compareRegisters(reg, IP_X86_REG);
+	return compareRegisters(reg, BP_X86_REG) || compareRegisters(reg, SP_X86_REG) || isRegisterInstructionPointer(reg);
 }
 
 bool isRegisterStatusFlag(enum Register reg)

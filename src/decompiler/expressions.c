@@ -75,7 +75,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	bool hasGotFirstTerm = false;
 
 	uint64_t baseRegVal = 0;
-	if (compareRegisters(memAddress->reg, IP_X86_REG))
+	if (isRegisterInstructionPointer(memAddress->reg))
 	{
 		baseRegVal = (instruction->address + (instruction->numOfBytes / params->addressability)) * memAddress->scale;
 	}
@@ -120,7 +120,7 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 	bool addedDisplacement = false;
 
 	uint64_t displacementRegVal = 0;
-	if (compareRegisters(memAddress->regDisplacement, IP_X86_REG))
+	if (isRegisterInstructionPointer(memAddress->regDisplacement))
 	{
 		displacementRegVal = instruction->address + (instruction->numOfBytes / params->addressability);
 	}
@@ -356,7 +356,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 {
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 
-	if (compareRegisters(targetReg, IP_X86_REG))
+	if (isRegisterInstructionPointer(targetReg))
 	{
 		return sprintfJdc(result, false, "0x%llX", instruction->address + (instruction->numOfBytes / params->addressability));
 	}

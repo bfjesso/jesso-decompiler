@@ -49,7 +49,7 @@ enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, boo
 		struct Operand* currentOperand = &instruction->operands[i];
 		if (currentOperand->type == REGISTER_OPERAND)
 		{
-			if (evaluateIP && compareRegisters(currentOperand->reg, IP_X86_REG))
+			if (evaluateIP && isRegisterInstructionPointer(currentOperand->reg))
 			{
 				sprintfJdc(result, true, "0x%llX", instruction->address + (instruction->numOfBytes / addressability));
 			}
@@ -128,7 +128,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 	uint64_t totalDisplacement = 0;
 	bool gotFirstTerm = false;
 
-	if (evaluateIP && compareRegisters(memAddr->reg, IP_X86_REG))
+	if (evaluateIP && isRegisterInstructionPointer(memAddr->reg))
 	{
 		totalDisplacement = (instruction->address + (instruction->numOfBytes / addressability)) * memAddr->scale;
 	}
@@ -143,7 +143,7 @@ static enum JdcStatus memAddressToStr(struct DisassembledInstruction* instructio
 		gotFirstTerm = true;
 	}
 
-	if (evaluateIP && compareRegisters(memAddr->regDisplacement, IP_X86_REG))
+	if (evaluateIP && isRegisterInstructionPointer(memAddr->regDisplacement))
 	{
 		totalDisplacement += instruction->address + (instruction->numOfBytes / addressability);
 	}

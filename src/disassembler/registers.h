@@ -60,7 +60,7 @@ extern "C"
 
 	extern const char* registerStrs[];
 
-	bool compareRegisters(enum Register reg1, enum Register reg2);
+	bool isRegisterInstructionPointer(enum Register reg);
 
 #ifdef __cplusplus
 }
@@ -71,6 +71,8 @@ int32_t getNumOfPlatformRegArgs(enum FileFormat fileFormat);
 const enum Register* getPlatformRegArgs(enum FileFormat fileFormat);
 
 const enum Register* getAltPlatformRegArgs(enum FileFormat fileFormat);
+
+bool compareRegisters(enum Register reg1, enum Register reg2);
 
 bool isRegisterPointer(enum Register reg);
 

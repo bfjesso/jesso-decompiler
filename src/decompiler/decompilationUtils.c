@@ -71,7 +71,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 	else if (operand->type == MEMORY_OPERAND)
 	{
 		uint64_t address = 0;
-		if (compareRegisters(operand->memoryAddress.reg, IP_X86_REG)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
+		if (isRegisterInstructionPointer(operand->memoryAddress.reg)) // this needs to be checked here because of startInstructionIndex - 1 in regToValue call
 		{
 			address = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
@@ -88,7 +88,7 @@ static enum JdcStatus operandToValue(struct DecompilationParameters* params, int
 
 		address *= operand->memoryAddress.scale;
 
-		if (compareRegisters(operand->memoryAddress.regDisplacement, IP_X86_REG))
+		if (isRegisterInstructionPointer(operand->memoryAddress.regDisplacement))
 		{
 			address += params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		}
@@ -154,7 +154,7 @@ static enum JdcStatus regToValue(struct DecompilationParameters* params, int32_t
 		return ERROR_JDC;
 	}
 
-	if (compareRegisters(reg, IP_X86_REG))
+	if (isRegisterInstructionPointer(reg))
 	{
 		*result = params->instructions[startInstructionIndex].address + params->instructions[startInstructionIndex].numOfBytes;
 		return SUCCESS_JDC;

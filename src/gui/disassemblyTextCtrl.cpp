@@ -520,7 +520,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		{
 			if (instruction->operands[i].type == REGISTER_OPERAND)
 			{
-				if (!evaluateIP || !compareRegisters(instruction->operands[i].reg, IP_X86_REG))
+				if (!evaluateIP || !isRegisterInstructionPointer(instruction->operands[i].reg))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].reg]);
 					int32_t loc = asmStr.find(regStr, regStart);
@@ -532,7 +532,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 			else if (instruction->operands[i].type == MEMORY_OPERAND)
 			{
 				if (instruction->operands[i].memoryAddress.reg != NO_REG &&
-					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.reg, IP_X86_REG)))
+					(!evaluateIP || !isRegisterInstructionPointer(instruction->operands[i].memoryAddress.reg)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.reg]);
 					int32_t loc = asmStr.find(regStr, regStart);
@@ -542,7 +542,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 				}
 
 				if (instruction->operands[i].memoryAddress.regDisplacement != NO_REG &&
-					(!evaluateIP || !compareRegisters(instruction->operands[i].memoryAddress.regDisplacement, IP_X86_REG)))
+					(!evaluateIP || !isRegisterInstructionPointer(instruction->operands[i].memoryAddress.regDisplacement)))
 				{
 					wxString regStr = wxString(registerStrs[instruction->operands[i].memoryAddress.regDisplacement]);
 					int32_t loc = asmStr.find(regStr, regStart);
