@@ -37,6 +37,7 @@ extern const char* registerStrs[NUM_OF_REGISTERS] =
 
 
 	// LC3
+	"PC",
 	"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",
 };
 

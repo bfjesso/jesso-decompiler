@@ -93,16 +93,16 @@ enum JdcStatus disassembleLC3(uint8_t* bytes, uint8_t* maxBytesAddr, struct Disa
 
 			break;
 		case PCOFFSET9_LC3_OC:
-			if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 9, &currentOperand->immediate.value)) { return ERROR_JDC; }
-			currentOperand->type = IMMEDIATE_OPERAND;
-			currentOperand->immediate.size = 2;
+			if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 9, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+			currentOperand->type = MEMORY_OPERAND;
+			currentOperand->memoryAddress.reg = PC_LC3_REG;
 			break;
 		case BASER_PCOFFSET11_LC3_OC:
 			if (instructionData & (1 << 11))
 			{
-				if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 11, &currentOperand->immediate.value)) { return ERROR_JDC; }
-				currentOperand->type = IMMEDIATE_OPERAND;
-				currentOperand->immediate.size = 2;
+				if (ERROR_JDC == readSignedIntFromLowerBits(instructionData, 11, &currentOperand->memoryAddress.constDisplacement)) { return ERROR_JDC; }
+				currentOperand->type = MEMORY_OPERAND;
+				currentOperand->memoryAddress.reg = PC_LC3_REG;
 			}
 			else
 			{

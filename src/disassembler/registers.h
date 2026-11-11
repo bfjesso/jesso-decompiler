@@ -2,7 +2,7 @@
 #include "../fileStructs.h"
 
 // this includes NO_REG
-#define NUM_OF_REGISTERS 256
+#define NUM_OF_REGISTERS 257
 
 #define NUM_PLATFORM_REG_ARGS_PE 4
 #define NUM_PLATFORM_REG_ARGS_ELF 6
@@ -49,6 +49,7 @@ enum Register
 
 
 	// LC3
+	PC_LC3_REG,
 	R0_LC3_REG, R1_LC3_REG, R2_LC3_REG, R3_LC3_REG, R4_LC3_REG, R5_LC3_REG, R6_LC3_REG, R7_LC3_REG
 };
 
