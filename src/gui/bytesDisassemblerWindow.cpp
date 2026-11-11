@@ -71,15 +71,23 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	struct DisassemblerOptions options;
 	options.is64BitMode = is64BitModeCheckBox->IsChecked();
 
+	uint8_t addressability = 1;
+	if (isa == LC3_ISA)
+	{
+		addressability = 2;
+	}
+
 	uint64_t currentOffset = 0;
+	uint64_t currentAddress = 0;
 	while (currentOffset < bytes.size())
 	{
 		struct DisassembledInstruction currentInstruction;
 		if (disassembleInstruction(isa, bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &options, &currentInstruction))
 		{
-			currentInstruction.address = currentOffset;
+			currentInstruction.address = currentAddress;
 			instructions.push_back(currentInstruction);
 			currentOffset += currentInstruction.numOfBytes;
+			currentAddress += (currentInstruction.numOfBytes / addressability);
 		}
 		else
 		{
