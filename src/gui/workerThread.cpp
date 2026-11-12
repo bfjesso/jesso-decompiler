@@ -309,18 +309,19 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 
 			for (int32_t i = 0; i < numOfBytes; i += mainGui->addressability)
 			{
-				if (currentFileOffset + (mainGui->addressability - 1) >= endFileOffset)
+				if (currentFileOffset >= endFileOffset)
 				{
 					return SUCCESS_JDC;
 				}
 
-				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes + currentFileOffset, mainGui->addressability))
+				uint8_t numOfDataBytes = currentFileOffset + (mainGui->addressability - 1) < numOfBytes ? mainGui->addressability : 1;
+				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes + currentFileOffset, numOfDataBytes))
 				{
 					return ERROR_JDC;
 				}
 
-				currentFileOffset++;
-				currentVirtualAddress++;
+				currentFileOffset += numOfDataBytes;
+				currentVirtualAddress += (numOfDataBytes / mainGui->addressability);
 				mainGui->disassembledInstructions.push_back(*instructionBuffer);
 			}
 		}

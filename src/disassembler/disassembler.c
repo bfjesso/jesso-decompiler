@@ -237,7 +237,7 @@ enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instructi
 	switch (dataSize)
 	{
 	case 1:
-		instruction->operands[0].immediate.value = *data;
+		instruction->operands[0].immediate.value = *(int8_t*)data;
 		break;
 	case 2:
 		instruction->operands[0].immediate.value = *(int16_t*)data;
