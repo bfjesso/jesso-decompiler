@@ -309,12 +309,12 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 
 			for (int32_t i = 0; i < numOfBytes; i += mainGui->addressability)
 			{
-				if (currentFileOffset >= endFileOffset)
+				if (currentFileOffset + (mainGui->addressability - 1) >= endFileOffset)
 				{
 					return SUCCESS_JDC;
 				}
 
-				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes[currentFileOffset], mainGui->addressability))
+				if (ERROR_JDC == generateDataInstruction(instructionBuffer, currentVirtualAddress, mainGui->fileBytes + currentFileOffset, mainGui->addressability))
 				{
 					return ERROR_JDC;
 				}
@@ -448,23 +448,9 @@ enum JdcStatus WorkerThread::HandleJmpTables()
 					isInIndirectTable = false;
 				}
 
-				uint64_t dataValue = 0;
-				if (isInIndirectTable)
-				{
-					dataValue = *(uint8_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-				else if (mainGui->jumpTables[i].addressSize == 4)
-				{
-					dataValue = *(uint32_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-				else
-				{
-					dataValue = *(uint64_t*)(mainGui->fileBytes + fileOffest + (currentAddress - initialAddress));
-				}
-
 				uint64_t dataSize = isInIndirectTable ? 1 : mainGui->jumpTables[i].addressSize;
 				struct DisassembledInstruction instruction;
-				if (ERROR_JDC == generateDataInstruction(&instruction, currentAddress, dataValue, dataSize))
+				if (ERROR_JDC == generateDataInstruction(&instruction, currentAddress, mainGui->fileBytes + fileOffest + (currentAddress - initialAddress), dataSize))
 				{
 					return ERROR_JDC;
 				}

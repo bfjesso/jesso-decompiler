@@ -14,7 +14,7 @@ extern "C"
 
 	const char* getPtrSizeStr(int32_t ptrSize);
 
-	enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint64_t data, uint8_t dataSize);
+	enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint8_t* data, uint8_t dataSize);
 
 #ifdef __cplusplus
 }

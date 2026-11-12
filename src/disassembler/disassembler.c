@@ -219,7 +219,7 @@ const char* getPtrSizeStr(int32_t ptrSize)
 	return "";
 }
 
-enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint64_t data, uint8_t dataSize)
+enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint8_t* data, uint8_t dataSize)
 {
 	memset(instruction, 0, sizeof(struct DisassembledInstruction));
 	instruction->opcode = DATA_OPCODE;
@@ -233,7 +233,23 @@ enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instructi
 	}
 
 	instruction->operands[0].type = IMMEDIATE_OPERAND;
-	instruction->operands[0].immediate.value = data;
+
+	switch (dataSize)
+	{
+	case 1:
+		instruction->operands[0].immediate.value = *data;
+		break;
+	case 2:
+		instruction->operands[0].immediate.value = *(int16_t*)data;
+		break;
+	case 4:
+		instruction->operands[0].immediate.value = *(int32_t*)data;
+		break;
+	case 8:
+		instruction->operands[0].immediate.value = *(int32_t*)data;
+		break;
+	}
+
 	instruction->operands[0].immediate.size = dataSize;
 	instruction->numOfOperands = 1;
 

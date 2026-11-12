@@ -91,14 +91,16 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		}
 		else
 		{
-			if (ERROR_JDC == generateDataInstruction(&currentInstruction, currentOffset, bytes[currentOffset], 1))
+			uint8_t numOfDataBytes = currentOffset + (addressability - 1) < bytes.size() ? addressability : 1;
+			if (ERROR_JDC == generateDataInstruction(&currentInstruction, currentAddress, bytes.data() + currentOffset, numOfDataBytes))
 			{
 				wxMessageBox("Error disassembling bytes", "Can't disassemble");
 				return;
 			}
 
 			instructions.push_back(currentInstruction);
-			currentOffset++;
+			currentOffset += numOfDataBytes;
+			currentAddress += (numOfDataBytes / addressability);
 		}
 	}
 
