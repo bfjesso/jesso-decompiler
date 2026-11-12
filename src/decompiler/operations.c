@@ -558,6 +558,8 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum OpcodeMnemonic opcode = instruction->opcode;
 
+	bool isAndZero = false;
+
 	if (opcode == AND_X86 || opcode == TEST_X86)
 	{
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
@@ -579,6 +581,11 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		if (compareOperands(&instruction->operands[0], &instruction->operands[1]))
 		{
 			strcpyJdc(&andExpression, decompiledFirstOperand.buffer);
+		}
+		else if (instruction->operands[1].type == IMMEDIATE_OPERAND && instruction->operands[1].immediate.value == 0)
+		{
+			strcpyJdc(&andExpression, "0");
+			isAndZero = true;
 		}
 		else
 		{
@@ -686,7 +693,16 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 		}
 
 		struct JdcStr andExpression = initializeJdcStr();
-		sprintfJdc(&andExpression, false, "%s & %s", decompiledSecondOperand.buffer, decompiledThirdOperand.buffer);
+		if (instruction->operands[2].type == IMMEDIATE_OPERAND && instruction->operands[2].immediate.value == 0)
+		{
+			strcpyJdc(&andExpression, "0");
+			isAndZero = true;
+		}
+		else
+		{
+			sprintfJdc(&andExpression, false, "%s & %s", decompiledSecondOperand.buffer, decompiledThirdOperand.buffer);
+		}
+
 		freeJdcStr(&decompiledSecondOperand);
 		freeJdcStr(&decompiledThirdOperand);
 
@@ -710,6 +726,28 @@ static enum JdcStatus decompileAnd(struct DecompilationParameters* params, int32
 
 	if (isOpcodeAnd(opcode))
 	{
+		if (isAndZero)
+		{
+			if (getAssignment)
+			{
+				struct JdcStr decompiledFirstOperand = initializeJdcStr();
+				if (ERROR_JDC == decompileOperand(params, instructionIndex, 0, 1, &decompiledFirstOperand))
+				{
+					freeJdcStr(&decompiledFirstOperand);
+					return ERROR_JDC;
+				}
+
+				addDecompiledLine(params, result, instructionIndex, "%s = 0;", decompiledFirstOperand.buffer);
+				freeJdcStr(&decompiledFirstOperand);
+			}
+			else
+			{
+				strcpyJdc(result, "0");
+			}
+
+			return SUCCESS_JDC;
+		}
+
 		return decompileBinaryOperation(params, instructionIndex, getAssignment, " & ", " &= ", result);
 	}
 	else if (opcode == TEST_X86)

@@ -431,6 +431,12 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 			if (overwrites != 0) { *overwrites = isImmediateAllOnes(&instruction->operands[1].immediate); }
 			return true;
 		}
+		else if ((isOpcodeAnd(opcode) && instruction->operands[1].type == IMMEDIATE_OPERAND && instruction->operands[1].immediate.value == 0) ||
+			(opcode == AND_LC3 && compareOperands(&instruction->operands[0], &instruction->operands[1]) && instruction->operands[2].type == IMMEDIATE_OPERAND && instruction->operands[2].immediate.value == 0))
+		{
+			if (overwrites != 0) { *overwrites = true; }
+			return true;
+		}
 
 		if (opcode == IMUL_X86)
 		{
@@ -479,6 +485,12 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 			}
 
 			return false;
+		}
+		else if (opcode == AND_LC3 && compareOperands(&instruction->operands[0], &instruction->operands[1]) &&
+			instruction->operands[2].type == IMMEDIATE_OPERAND && instruction->operands[2].immediate.value == 0)
+		{
+			if (overwrites != 0) { *overwrites = true; }
+			return true;
 		}
 	}
 
