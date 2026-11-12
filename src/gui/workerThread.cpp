@@ -197,7 +197,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 		int32_t instructionIndex = findInstructionInsertPoint(mainGui->disassembledInstructions.data(), mainGui->disassembledInstructions.size(), currentVirtualAddress);
 		if (instructionIndex > 0 && instructionIndex < mainGui->disassembledInstructions.size() &&
 			currentVirtualAddress > mainGui->disassembledInstructions[instructionIndex - 1].address &&
-			currentVirtualAddress < mainGui->disassembledInstructions[instructionIndex - 1].address + mainGui->disassembledInstructions[instructionIndex - 1].numOfBytes)
+			currentVirtualAddress < mainGui->disassembledInstructions[instructionIndex - 1].address + (mainGui->disassembledInstructions[instructionIndex - 1].numOfBytes / mainGui->addressability))
 		{
 			PostLog(wxString::Format("instruction overlaps with existing instruction: 0x%llX", currentVirtualAddress), LOG_PARAM_ERROR);
 			return ERROR_JDC;
