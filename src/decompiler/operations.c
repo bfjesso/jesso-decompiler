@@ -899,6 +899,8 @@ static enum JdcStatus decompileNot(struct DecompilationParameters* params, int32
 
 			addDecompiledLine(params, result, instructionIndex, "%s = %s;", decompiledFirstOperand.buffer, notExpression.buffer);
 			freeJdcStr(&decompiledFirstOperand);
+			freeJdcStr(&notExpression);
+			return SUCCESS_JDC;
 		}
 		else if (isRegNZP(targetReg))
 		{
