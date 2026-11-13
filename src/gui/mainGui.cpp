@@ -475,6 +475,16 @@ void MainGui::RefreshVarNames(int32_t functionIndex)
 	}
 }
 
+bool MainGui::GetDisassemblerSetting(enum DisassemblerSetting setting)
+{
+	return settingsWindow->disassemblerSettingsWindow->settings[setting];
+}
+
+bool MainGui::GetDecompilerSetting(enum DecompilerSetting setting)
+{
+	return settingsWindow->decompilerSettingsWindow->settings[setting];
+}
+
 void MainGui::UpdateSettings()
 {
 	UpdateDecompParams();
@@ -953,7 +963,7 @@ void MainGui::UpdateDecompParams()
 	decompParams.functions = functions.data();
 	decompParams.numOfFunctions = functions.size();
 
-	decompParams.useStdInt = settingsWindow->decompilerSettingsWindow->useStdInt;
+	decompParams.useStdInt = GetDecompilerSetting(USE_STD_INT_SETTING);
 
 	decompParams.currentFunc = 0;
 }

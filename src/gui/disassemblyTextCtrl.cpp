@@ -407,7 +407,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		struct FileSection* section = 0;
 		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, instructions[i].address - mainGui->decompParams.imageBase, &section);
 		wxString addressInfoStr = wxString::Format("0x%llX %s ", instructions[i].address, section ? section->name.buffer : "");
-		if (mainGui->settingsWindow->disassemblerSettingsWindow->showInstructionBytes)
+		if (mainGui->GetDisassemblerSetting(SHOW_INSTRUCTION_BYTES_SETTING))
 		{
 			for (int32_t j = 0; j < instructions[i].numOfBytes; j++)
 			{
@@ -417,7 +417,7 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		addressInfoStr[addressInfoStr.Length() - 1] = '\t';
 
 		wxString asmStr = "";
-		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, mainGui->addressability, &instructionStrBuffer))
+		if (instructionToStr(&instructions[i], mainGui->GetDisassemblerSetting(EVALUATE_IP_SETTING), mainGui->addressability, &instructionStrBuffer))
 		{
 			asmStr = wxString(instructionStrBuffer.buffer);
 		}
@@ -510,7 +510,7 @@ void DisassemblyTextCtrl::ApplyAsmHighlighting()
 		}
 		SetStyling(opcodeLen, OPCODE_ASM_COLOR);
 
-		bool evaluateIP = mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP;
+		bool evaluateIP = mainGui->GetDisassemblerSetting(EVALUATE_IP_SETTING);
 
 		// operands
 		int32_t regStart = 0;

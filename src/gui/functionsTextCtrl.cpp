@@ -171,7 +171,7 @@ void FunctionsTextCtrl::OnFunctionsKeyDown(wxKeyEvent& e)
 wxString FunctionsTextCtrl::GenerateFunctionDefinition(int32_t functionIndex, struct JdcStr* functionHeaderBuffer)
 {
 	struct Function* function = &mainGui->decompParams.functions[functionIndex];
-	if (!generateFunctionHeader(function, mainGui->decompParams.useStdInt, functionHeaderBuffer))
+	if (!generateFunctionHeader(function, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING), functionHeaderBuffer))
 	{
 		return "";
 	}
@@ -292,7 +292,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 			}
 
 			StartStyling(lineStart);
-			SetStyling(callingConventionPos - lineStart - numOfPtrs, GetPrimitiveTypeColor(func->returnType.primitiveType, mainGui->decompParams.useStdInt));
+			SetStyling(callingConventionPos - lineStart - numOfPtrs, GetPrimitiveTypeColor(func->returnType.primitiveType, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING)));
 
 			StartStyling(callingConventionPos);
 			SetStyling(functionNamePos - callingConventionPos, PRIMITIVE_DECOMP_COLOR);
@@ -317,7 +317,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 					wxString argName = text.substr(argNamePos + 1, argEndPos - argNamePos - 1);
 
 					StartStyling(argTypePos);
-					SetStyling(argNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, argName.c_str().AsChar()), mainGui->decompParams.useStdInt));
+					SetStyling(argNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, argName.c_str().AsChar()), mainGui->GetDecompilerSetting(USE_STD_INT_SETTING)));
 
 					StartStyling(argNamePos);
 					SetStyling(argEndPos - argNamePos, ARGUMENT_DECOMP_COLOR);
@@ -340,7 +340,7 @@ void FunctionsTextCtrl::ApplyFunctionsHighlighting(int32_t start, int32_t end)
 				wxString lastArgName = text.substr(lastArgNamePos + 1, argsEndPos - lastArgNamePos - 1);
 
 				StartStyling(argTypePos);
-				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, lastArgName.c_str().AsChar()), mainGui->decompParams.useStdInt));
+				SetStyling(lastArgNamePos - argTypePos - numOfPtrs, GetPrimitiveTypeColor(GetArgPrimitiveByName(func, lastArgName.c_str().AsChar()), mainGui->GetDecompilerSetting(USE_STD_INT_SETTING)));
 			}
 
 			int32_t commentStartPos = text.find(";", lineStart) + 1;

@@ -131,6 +131,10 @@ public:
 
 	void RefreshVarNames(int32_t functionIndex);
 
+	bool GetDisassemblerSetting(enum DisassemblerSetting setting);
+
+	bool GetDecompilerSetting(enum DecompilerSetting setting);
+
 	void UpdateSettings();
 
 	void AddMenuItem(wxMenu* menu, int32_t id, const char* name, const std::function<void(wxCommandEvent&)>& function);

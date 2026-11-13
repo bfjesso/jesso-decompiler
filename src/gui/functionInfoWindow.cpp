@@ -38,7 +38,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 	infoGrid->AppendRows(8);
 
 	struct JdcStr dataTypeStr = initializeJdcStr();
-	dataTypeToStr(function->returnType, mainGui->decompParams.useStdInt, &dataTypeStr);
+	dataTypeToStr(function->returnType, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING), &dataTypeStr);
 	infoGrid->SetCellValue(0, 0, "Return type");
 	infoGrid->SetCellValue(0, 1, dataTypeStr.buffer);
 
@@ -91,7 +91,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 	{
 		struct ReturnedVariable* returnedVar = &function->returnedVars[i];
 		returnedVarsGrid->AppendRows(1);
-		dataTypeToStr(returnedVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
+		dataTypeToStr(returnedVar->dataType, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING), &dataTypeStr);
 		returnedVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		returnedVarsGrid->SetCellValue(i, 1, wxString(returnedVar->name.buffer));
 		returnedVarsGrid->SetCellValue(i, 2, wxString::Format("0x%llX", returnedVar->calleeAddress));
@@ -127,7 +127,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 	{
 		struct RegisterVariable* regVar = &function->regVars[i];
 		regVarsGrid->AppendRows(1);
-		dataTypeToStr(regVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
+		dataTypeToStr(regVar->dataType, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING), &dataTypeStr);
 		regVarsGrid->SetCellValue(i, 0, wxString(dataTypeStr.buffer));
 		regVarsGrid->SetCellValue(i, 1, wxString(regVar->name.buffer));
 		regVarsGrid->SetCellValue(i, 2, wxString(registerStrs[regVar->reg]));
@@ -160,7 +160,7 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 	{
 		struct StackVariable* stackVar = &function->stackVars[i];
 		stackVarsGrid->AppendRows(1);
-		dataTypeToStr(stackVar->dataType, mainGui->decompParams.useStdInt, &dataTypeStr);
+		dataTypeToStr(stackVar->dataType, mainGui->GetDecompilerSetting(USE_STD_INT_SETTING), &dataTypeStr);
 		wxString offsetStr = "";
 		if (stackVar->offsetFromInitSP > 0)
 		{

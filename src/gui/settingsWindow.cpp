@@ -38,9 +38,26 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 
 void SettingsWindow::CheckUnappliedChanges()
 {
-	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() ||
-		disassemblerSettingsWindow->showInstructionBytes != disassemblerSettingsWindow->showInstructionBytesCheckBox->GetValue() ||
-		decompilerSettingsWindow->useStdInt != decompilerSettingsWindow->useStdIntCheckBox->GetValue())
+	bool isThereUnsavedChanges = false;
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+	{
+		if (disassemblerSettingsWindow->settings[i] != disassemblerSettingsWindow->checkBoxes[i]->GetValue())
+		{
+			isThereUnsavedChanges = true;
+			break;
+		}
+
+	}
+	for (int32_t i = 0; !isThereUnsavedChanges && i < NUM_OF_DECOMPILER_SETTINGS; i++)
+	{
+		if (decompilerSettingsWindow->settings[i] != decompilerSettingsWindow->checkBoxes[i]->GetValue())
+		{
+			isThereUnsavedChanges = true;
+			break;
+		}
+	}
+
+	if (isThereUnsavedChanges)
 	{
 		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to save and apply them?", "Save changes?", wxYES_NO, this);
 		if (saveAnswer == wxYES)
@@ -49,18 +66,29 @@ void SettingsWindow::CheckUnappliedChanges()
 		}
 		else
 		{
-			disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(disassemblerSettingsWindow->evaluateIP);
-			disassemblerSettingsWindow->showInstructionBytesCheckBox->SetValue(disassemblerSettingsWindow->showInstructionBytes);
-			decompilerSettingsWindow->useStdIntCheckBox->SetValue(decompilerSettingsWindow->useStdInt);
+			for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+			{
+				disassemblerSettingsWindow->checkBoxes[i]->SetValue(disassemblerSettingsWindow->settings[i]);
+			}
+			for (int32_t i = 0; i < NUM_OF_DECOMPILER_SETTINGS; i++)
+			{
+				decompilerSettingsWindow->checkBoxes[i]->SetValue(decompilerSettingsWindow->settings[i]);
+			}
 		}
 	}
 }
 
 void SettingsWindow::SaveAndApplySettings()
 {
-	disassemblerSettingsWindow->evaluateIP = disassemblerSettingsWindow->evaluateIPCheckBox->GetValue();
-	disassemblerSettingsWindow->showInstructionBytes = disassemblerSettingsWindow->showInstructionBytesCheckBox->GetValue();
-	decompilerSettingsWindow->useStdInt = decompilerSettingsWindow->useStdIntCheckBox->GetValue();
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+	{
+		disassemblerSettingsWindow->settings[i] = disassemblerSettingsWindow->checkBoxes[i]->GetValue();
+	}
+	for (int32_t i = 0; i < NUM_OF_DECOMPILER_SETTINGS; i++)
+	{
+		decompilerSettingsWindow->settings[i] = decompilerSettingsWindow->checkBoxes[i]->GetValue();
+	}
+
 	mainGui->UpdateSettings();
 	SavePreferences();
 }
@@ -83,10 +111,22 @@ void SettingsWindow::SavePreferences()
 	cfg.Write("/gui/window-width", mainGui->GetSize().GetWidth());
 	cfg.Write("/gui/window-height", mainGui->GetSize().GetHeight());
 
-	cfg.Write("/disassembler/evaluate-instruction-pointer", disassemblerSettingsWindow->evaluateIP);
-	cfg.Write("/disassembler/show-instruction-bytes", disassemblerSettingsWindow->showInstructionBytes);
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+	{
+		disassemblerSettingsWindow->settings[i] = disassemblerSettingsWindow->checkBoxes[i]->GetValue();
+		wxString settingName = wxString(disassemblerSettingsWindow->settingStrs[i]);
+		settingName.MakeLower().Replace(" ", "-");
 
-	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt);
+		cfg.Write("/disassembler/" + settingName, (bool)(disassemblerSettingsWindow->settings[i]));
+	}
+	for (int32_t i = 0; i < NUM_OF_DECOMPILER_SETTINGS; i++)
+	{
+		decompilerSettingsWindow->settings[i] = decompilerSettingsWindow->checkBoxes[i]->GetValue();
+		wxString settingName = wxString(decompilerSettingsWindow->settingStrs[i]);
+		settingName.MakeLower().Replace(" ", "-");
+
+		cfg.Write("/decompiler/" + settingName, (bool)(decompilerSettingsWindow->settings[i]));
+	}
 
 	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
@@ -138,17 +178,26 @@ void SettingsWindow::LoadPreferences()
 		mainGui->Maximize();
 	}
 
-	bool evaluateIP = false;
-	cfg.Read("/disassembler/evaluate-instruction-pointer", &evaluateIP, false);
-	disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(evaluateIP);
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+	{
+		wxString settingName = wxString(disassemblerSettingsWindow->settingStrs[i]);
+		settingName.MakeLower().Replace(" ", "-");
 
-	bool showInstructionBytes = false;
-	cfg.Read("/disassembler/show-instruction-bytes", &showInstructionBytes, false);
-	disassemblerSettingsWindow->showInstructionBytesCheckBox->SetValue(showInstructionBytes);
+		bool setting = disassemblerSettingsWindow->defaultSettingValues[i];
+		cfg.Read("/disassembler/" + settingName, &setting, disassemblerSettingsWindow->defaultSettingValues[i]);
+		disassemblerSettingsWindow->checkBoxes[i]->SetValue(setting);
+		disassemblerSettingsWindow->settings[i] = setting;
+	}
+	for (int32_t i = 0; i < NUM_OF_DECOMPILER_SETTINGS; i++)
+	{
+		wxString settingName = wxString(decompilerSettingsWindow->settingStrs[i]);
+		settingName.MakeLower().Replace(" ", "-");
 
-	bool useStdInt = false;
-	cfg.Read("/decompiler/use-stdint", &useStdInt, true);
-	decompilerSettingsWindow->useStdIntCheckBox->SetValue(useStdInt);
+		bool setting = decompilerSettingsWindow->defaultSettingValues[i];
+		cfg.Read("/decompiler/" + settingName, &setting, decompilerSettingsWindow->defaultSettingValues[i]);
+		decompilerSettingsWindow->checkBoxes[i]->SetValue(setting);
+		decompilerSettingsWindow->settings[i] = setting;
+	}
 
 	for (int32_t i = 0; i < NUM_OF_DISASSEMBLY_COLORS; i++)
 	{
@@ -194,15 +243,17 @@ DisassemblerSettingsWindow::DisassemblerSettingsWindow(wxWindow* parent) : wxWin
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	evaluateIPCheckBox = new wxCheckBox(this, wxID_ANY, "Evaluate instruction pointer");
-	evaluateIPCheckBox->SetOwnForegroundColour(textColor);
-
-	showInstructionBytesCheckBox = new wxCheckBox(this, wxID_ANY, "Show instruction bytes");
-	showInstructionBytesCheckBox->SetOwnForegroundColour(textColor);
-
 	vSizer = new wxBoxSizer(wxVERTICAL);
-	vSizer->Add(evaluateIPCheckBox, 0, wxALL, 10);
-	vSizer->Add(showInstructionBytesCheckBox, 0, wxLEFT | wxRIGHT | wxDOWN, 10);
+
+	for (int32_t i = 0; i < NUM_OF_DISASSEMBLER_SETTINGS; i++)
+	{
+		checkBoxes.push_back(new wxCheckBox(this, wxID_ANY, settingStrs[i]));
+		checkBoxes[i]->SetOwnForegroundColour(textColor);
+		checkBoxes[i]->SetValue(defaultSettingValues[i]);
+		settings.push_back(defaultSettingValues[i]);
+
+		vSizer->Add(checkBoxes[i], 0, wxALL, 10);
+	}
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
@@ -212,12 +263,17 @@ DecompilerSettingsWindow::DecompilerSettingsWindow(wxWindow* parent) : wxWindow(
 {
 	SetOwnBackgroundColour(backgroundColor);
 
-	useStdIntCheckBox = new wxCheckBox(this, wxID_ANY, "Use stdint.h types");
-	useStdIntCheckBox->SetOwnForegroundColour(textColor);
-	useStdIntCheckBox->SetValue(true);
-
 	vSizer = new wxBoxSizer(wxVERTICAL);
-	vSizer->Add(useStdIntCheckBox, 0, wxALL, 10);
+
+	for (int32_t i = 0; i < NUM_OF_DECOMPILER_SETTINGS; i++)
+	{
+		checkBoxes.push_back(new wxCheckBox(this, wxID_ANY, settingStrs[i]));
+		checkBoxes[i]->SetOwnForegroundColour(textColor);
+		checkBoxes[i]->SetValue(defaultSettingValues[i]);
+		settings.push_back(defaultSettingValues[i]);
+
+		vSizer->Add(checkBoxes[i], 0, wxALL, 10);
+	}
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
