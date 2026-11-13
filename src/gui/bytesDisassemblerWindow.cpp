@@ -33,9 +33,6 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 	isaChoice->SetOwnBackgroundColour(foregroundColor);
 	isaChoice->SetOwnForegroundColour(textColor);
 
-	is64BitModeCheckBox = new wxCheckBox(this, wxID_ANY, "64-bit mode");
-	is64BitModeCheckBox->SetOwnForegroundColour(textColor);
-
 	disassemblyTextCtrl = new DisassemblyTextCtrl(this, mainGui);
 
 	row1Sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -47,7 +44,6 @@ BytesDisassemblerWindow::BytesDisassemblerWindow(wxWindow* parent, MainGui* main
 
 	row2Sizer->Add(disassembleButton, 0, wxLEFT | wxRIGHT | wxCENTER, 10);
 	row2Sizer->Add(isaChoice, 0, wxRIGHT | wxCENTER, 10);
-	row2Sizer->Add(is64BitModeCheckBox, 0, wxRIGHT | wxCENTER, 10);
 
 	vSizer->Add(row1Sizer, 0, wxCENTER);
 	vSizer->Add(row2Sizer, 0, wxCENTER);
@@ -69,7 +65,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	}
 
 	struct DisassemblerOptions options;
-	options.is64BitMode = is64BitModeCheckBox->IsChecked();
+	options.is64BitMode = isa == X86_64_ISA;
 
 	uint8_t addressability = 1;
 	if (isa == LC3_ISA)
@@ -156,14 +152,4 @@ enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vect
 void BytesDisassemblerWindow::UpdateISA(wxCommandEvent& e)
 {
 	isa = (enum InstructionSetArchitecture)(isaChoice->GetSelection());
-	if (isa == X86_ISA)
-	{
-		is64BitModeCheckBox->Show();
-	}
-	else
-	{
-		is64BitModeCheckBox->Hide();
-	}
-
-	Layout();
 }

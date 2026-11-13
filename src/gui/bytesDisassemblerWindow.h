@@ -17,7 +17,6 @@ public:
 
 	wxButton* disassembleButton = nullptr;
 	wxChoice* isaChoice = nullptr;
-	wxCheckBox* is64BitModeCheckBox = nullptr;
 	DisassemblyTextCtrl* disassemblyTextCtrl = nullptr;
 
 	wxBoxSizer* row1Sizer = nullptr;
