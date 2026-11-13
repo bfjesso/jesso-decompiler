@@ -11,6 +11,9 @@ public:
 	wxCheckBox* evaluateIPCheckBox = nullptr;
 	bool evaluateIP = false;
 
+	wxCheckBox* showInstructionBytesCheckBox = nullptr;
+	bool showInstructionBytes = false;
+
 	wxBoxSizer* vSizer = nullptr;
 };
 

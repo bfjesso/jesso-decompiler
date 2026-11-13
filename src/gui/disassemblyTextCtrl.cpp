@@ -395,7 +395,6 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 	SetReadOnly(false);
 	Freeze();
 
-	int32_t sectionIndex = -1;
 	struct JdcStr instructionStrBuffer = initializeJdcStr();
 	for (int32_t i = firstLine; i < lastLine; i++)
 	{
@@ -405,16 +404,17 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 			continue;
 		}
 
-		for (int32_t j = sectionIndex + 1; j < mainGui->decompParams.numOfSections; j++)
+		struct FileSection* section = 0;
+		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, instructions[i].address - mainGui->decompParams.imageBase, &section);
+		wxString addressInfoStr = wxString::Format("0x%llX %s ", instructions[i].address, section ? section->name.buffer : "");
+		if (mainGui->settingsWindow->disassemblerSettingsWindow->showInstructionBytes)
 		{
-			if (mainGui->decompParams.sections[j].type == CODE_FST && instructions[i].address >= mainGui->decompParams.sections[j].rva + mainGui->decompParams.imageBase)
+			for (int32_t j = 0; j < instructions[i].numOfBytes; j++)
 			{
-				sectionIndex = j;
-				break;
+				addressInfoStr += wxString::Format("0x%02X ", mainGui->decompParams.fileBytes[fileOffset + j]);
 			}
 		}
-
-		wxString addressInfoStr = wxString::Format("0x%llX %s\t", instructions[i].address, sectionIndex != -1 ? mainGui->decompParams.sections[sectionIndex].name.buffer : "");
+		addressInfoStr[addressInfoStr.Length() - 1] = '\t';
 
 		wxString asmStr = "";
 		if (instructionToStr(&instructions[i], mainGui->settingsWindow->disassemblerSettingsWindow->evaluateIP, mainGui->addressability, &instructionStrBuffer))

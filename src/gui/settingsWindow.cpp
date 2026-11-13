@@ -39,6 +39,7 @@ SettingsWindow::SettingsWindow(wxWindow* parent, MainGui* mainGuiRef) : wxWindow
 void SettingsWindow::CheckUnappliedChanges()
 {
 	if (disassemblerSettingsWindow->evaluateIP != disassemblerSettingsWindow->evaluateIPCheckBox->GetValue() ||
+		disassemblerSettingsWindow->showInstructionBytes != disassemblerSettingsWindow->showInstructionBytesCheckBox->GetValue() ||
 		decompilerSettingsWindow->useStdInt != decompilerSettingsWindow->useStdIntCheckBox->GetValue())
 	{
 		int32_t saveAnswer = wxMessageBox("You have unsaved changes. Do you want to save and apply them?", "Save changes?", wxYES_NO, this);
@@ -49,6 +50,7 @@ void SettingsWindow::CheckUnappliedChanges()
 		else
 		{
 			disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(disassemblerSettingsWindow->evaluateIP);
+			disassemblerSettingsWindow->showInstructionBytesCheckBox->SetValue(disassemblerSettingsWindow->showInstructionBytes);
 			decompilerSettingsWindow->useStdIntCheckBox->SetValue(decompilerSettingsWindow->useStdInt);
 		}
 	}
@@ -57,6 +59,7 @@ void SettingsWindow::CheckUnappliedChanges()
 void SettingsWindow::SaveAndApplySettings()
 {
 	disassemblerSettingsWindow->evaluateIP = disassemblerSettingsWindow->evaluateIPCheckBox->GetValue();
+	disassemblerSettingsWindow->showInstructionBytes = disassemblerSettingsWindow->showInstructionBytesCheckBox->GetValue();
 	decompilerSettingsWindow->useStdInt = decompilerSettingsWindow->useStdIntCheckBox->GetValue();
 	mainGui->UpdateSettings();
 	SavePreferences();
@@ -81,6 +84,7 @@ void SettingsWindow::SavePreferences()
 	cfg.Write("/gui/window-height", mainGui->GetSize().GetHeight());
 
 	cfg.Write("/disassembler/evaluate-instruction-pointer", disassemblerSettingsWindow->evaluateIP);
+	cfg.Write("/disassembler/show-instruction-bytes", disassemblerSettingsWindow->showInstructionBytes);
 
 	cfg.Write("/decompiler/use-stdint", decompilerSettingsWindow->useStdInt);
 
@@ -135,8 +139,12 @@ void SettingsWindow::LoadPreferences()
 	}
 
 	bool evaluateIP = false;
-	cfg.Read("/disassembler/evaluate-instruction-pointer", &evaluateIP, true);
+	cfg.Read("/disassembler/evaluate-instruction-pointer", &evaluateIP, false);
 	disassemblerSettingsWindow->evaluateIPCheckBox->SetValue(evaluateIP);
+
+	bool showInstructionBytes = false;
+	cfg.Read("/disassembler/show-instruction-bytes", &showInstructionBytes, false);
+	disassemblerSettingsWindow->showInstructionBytesCheckBox->SetValue(showInstructionBytes);
 
 	bool useStdInt = false;
 	cfg.Read("/decompiler/use-stdint", &useStdInt, true);
@@ -189,8 +197,12 @@ DisassemblerSettingsWindow::DisassemblerSettingsWindow(wxWindow* parent) : wxWin
 	evaluateIPCheckBox = new wxCheckBox(this, wxID_ANY, "Evaluate instruction pointer");
 	evaluateIPCheckBox->SetOwnForegroundColour(textColor);
 
+	showInstructionBytesCheckBox = new wxCheckBox(this, wxID_ANY, "Show instruction bytes");
+	showInstructionBytesCheckBox->SetOwnForegroundColour(textColor);
+
 	vSizer = new wxBoxSizer(wxVERTICAL);
 	vSizer->Add(evaluateIPCheckBox, 0, wxALL, 10);
+	vSizer->Add(showInstructionBytesCheckBox, 0, wxLEFT | wxRIGHT | wxDOWN, 10);
 
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
