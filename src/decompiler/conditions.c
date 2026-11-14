@@ -14,9 +14,8 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 		struct DisassembledInstruction* instruction = &(params->instructions[i]);
 		if (isOpcodeJcc(instruction->opcode))
 		{
-			uint64_t dstAddress = getJmpDst(params, i);
-			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, dstAddress);
-			if (dstIndex == -1 || dstIndex == i || dstIndex == i + 1)
+			int32_t dstIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, getJmpDst(params, i));
+			if (dstIndex == -1 || dstIndex == i + 1)
 			{
 				continue;
 			}
