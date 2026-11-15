@@ -270,7 +270,8 @@ enum OpcodeMnemonic
 	// LC3
 
 	// these overwrite the first operand
-	ADD_LC3, AND_LC3, NOT_LC3, LD_LC3, LDI_LC3, LDR_LC3, LEA_LC3,
+	ADD_LC3, AND_LC3, NOT_LC3,
+	LD_LC3, LDI_LC3, LDR_LC3, LEA_LC3,
 	NOP_LC3,
 	BRP_LC3, BRZ_LC3, BRZP_LC3, BRN_LC3, BRNP_LC3, BRNZ_LC3,
 	BRNZP_LC3, JMP_LC3,

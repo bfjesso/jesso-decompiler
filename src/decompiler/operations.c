@@ -212,7 +212,15 @@ static enum JdcStatus decompileBinaryOperation(struct DecompilationParameters* p
 			return ERROR_JDC;
 		}
 
-		sprintfJdc(result, false, "%s%s%s", decompiledSecondOperand.buffer, regularOperator, decompiledThirdOperand.buffer);
+		if (compareOperands(&params->instructions[instructionIndex].operands[0], &params->instructions[instructionIndex].operands[1]))
+		{
+			sprintfJdc(result, false, "%s%s", regularOperator, decompiledThirdOperand.buffer);
+		}
+		else
+		{
+			sprintfJdc(result, false, "%s%s%s", decompiledSecondOperand.buffer, regularOperator, decompiledThirdOperand.buffer);
+		}
+
 		freeJdcStr(&decompiledThirdOperand);
 	}
 	else

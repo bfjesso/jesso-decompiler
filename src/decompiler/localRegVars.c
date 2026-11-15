@@ -74,9 +74,13 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 
 	// checking for registers that are modified in a condition
 	bool modifiedRegs[NUM_OF_REGISTERS] = { 0 };
+	bool initializedRegs[NUM_OF_REGISTERS] = { 0 };
+	int32_t modificationIndexes[NUM_OF_REGISTERS] = { -1 };
 	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		memset(modifiedRegs, false, NUM_OF_REGISTERS);
+		memset(initializedRegs, false, NUM_OF_REGISTERS);
+		memset(modificationIndexes, -1, NUM_OF_REGISTERS);
 
 		struct Condition* condition = &params->currentFunc->conditions[i];
 		if (condition->conditionType != CONDITIONAL_RETURN_CT)
@@ -103,9 +107,12 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 						continue;
 					}
 
-					if (doesInstructionModifyRegister(params, j, k, 0, 0))
+					bool overwrites = 0;
+					if (doesInstructionModifyRegister(params, j, k, 0, &overwrites))
 					{
 						modifiedRegs[k] = true;
+						initializedRegs[k] = overwrites;
+						modificationIndexes[k] = j;
 					}
 				}
 			}
@@ -117,13 +124,17 @@ static enum JdcStatus getLocalRegVarsFromConditions(struct DecompilationParamete
 				{
 					continue;
 				}
+				else if (initializedRegs[j] && condition->conditionType == DO_WHILE_CT) // a do while will run at least once. if the reg is initialized, it does not need to be a reg var
+				{
+					continue;
+				}
 
 				struct RegisterVariable* existingRegVar = getLocalRegVarByReg(params->currentFunc, j);
 
 				if ((condition->conditionType == WHILE_CT || condition->conditionType == DO_WHILE_CT))
 				{
-					// if condition is a loop, it needs to check from the start of it since the code can run more than once
-					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, condition->lastBodyIndex, j, 1, 0))
+					// if condition is a loop, it needs to check from the start of it to where the reg is last modified since the code can run more than once
+					if (isRegisterAccessedBeforeInit(params, condition->firstBodyIndex, modificationIndexes[j] - 1, j, 1, 0))
 					{
 						if (existingRegVar)
 						{

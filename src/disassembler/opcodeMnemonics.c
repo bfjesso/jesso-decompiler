@@ -250,7 +250,8 @@ extern const char* opcodeMnemonicStrs[] =
 	// LC3
 
 	// these overwrite the first operand
-	"ADD", "AND", "NOT", "LD", "LDI", "LDR", "LEA",
+	"ADD", "AND", "NOT",
+	"LD", "LDI", "LDR", "LEA",
 	"NOP",
 	"BRP", "BRZ", "BRZP", "BRN", "BRNP", "BRNZ",
 	"BRNZP", "JMP",
@@ -272,12 +273,12 @@ bool isOpcodeExtendedX86(enum OpcodeMnemonic opcode)
 
 bool doesOpcodeOverwriteFirstOperand(enum OpcodeMnemonic opcode)
 {
-	return (opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86) || (opcode >= ADD_LC3 && opcode <= LEA_LC3);
+	return (opcode >= MOV_X86 && opcode <= AESKEYGENASSIST_X86) || (opcode >= LD_LC3 && opcode <= LEA_LC3);
 }
 
 bool doesOpcodeModifyFirstOperand(enum OpcodeMnemonic opcode)
 {
-	return opcode >= ADD_X86 && opcode <= AESDECLAST_X86;
+	return (opcode >= ADD_X86 && opcode <= AESDECLAST_X86) || (opcode >= ADD_LC3 && opcode <= NOT_LC3);;
 }
 
 bool isOpcodeNOP(enum OpcodeMnemonic opcode)

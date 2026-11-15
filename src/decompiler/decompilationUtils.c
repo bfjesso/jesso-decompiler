@@ -459,7 +459,8 @@ bool doesInstructionModifyOperand(struct DecompilationParameters* params, int32_
 			}
 		}
 
-		if (doesOpcodeOverwriteFirstOperand(opcode))
+		if (doesOpcodeOverwriteFirstOperand(opcode) ||
+			(opcode >= ADD_LC3 && opcode <= NOT_LC3 && !compareOperands(&instruction->operands[0], &instruction->operands[1])))
 		{
 			if (overwrites != 0) { *overwrites = true; }
 			return true;
@@ -704,7 +705,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 	}
 	else if (isRegNZP(reg))
 	{
-		if (doesOpcodeOverwriteFirstOperand(opcode)) // opcode should be an LC-3 instruction
+		if (opcode >= ADD_LC3 && opcode <= LDR_LC3)
 		{
 			if (overwrites) { *overwrites = true; }
 			return true;
