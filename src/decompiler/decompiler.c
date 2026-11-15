@@ -7,7 +7,6 @@
 #include "functionCalls.h"
 #include "intrinsics.h"
 #include "conditions.h"
-#include "directJmps.h"
 #include "dataTypes.h"
 #include "localRegVars.h"
 
@@ -17,12 +16,6 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 
 	if (!params->currentFunc->hasDoneInitialAnalysis)
 	{
-		if (ERROR_JDC == getAllDirectJmps(params))
-		{
-			strcpyJdc(statusMessage, "Error getting all direct jumps.");
-			return ERROR_JDC;
-		}
-
 		if (ERROR_JDC == getAllLocalRegVars(params))
 		{
 			strcpyJdc(statusMessage, "Error getting all local reg vars.");
@@ -91,7 +84,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		if (isInUnreachableState)
 		{
 			struct Condition* cond = getConditionFromDstInstruction(params, i);
-			if (checkForDirectJmpDst(params, i) || cond)
+			if (cond)
 			{
 				if (numOfSkippedInstructions > 0)
 				{
@@ -129,13 +122,6 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 		if (ERROR_JDC == decompileConditionStarts(params, i, result))
 		{
 			sprintfJdc(statusMessage, false, "Error decompiling start of condition at 0x%llX.", currentInstruction->address);
-			if (errorInstructionIndex) { *errorInstructionIndex = i; }
-			return ERROR_JDC;
-		}
-
-		if (ERROR_JDC == decompileDirectJmps(params, i, &isInUnreachableState, result))
-		{
-			sprintfJdc(statusMessage, false, "Error decompiling direct jump at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
 			return ERROR_JDC;
 		}

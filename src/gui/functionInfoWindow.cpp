@@ -251,35 +251,6 @@ FunctionInfoWindow::FunctionInfoWindow(wxWindow* parent, MainGui* mainGuiRef, Di
 		conditionsGrid->SetCellValue(i, 7, wxString(logicalTypeStrs[condition->combinedJccsLogicType]));
 	}
 
-	directJmpsGrid = new wxGrid(this, wxID_ANY, wxPoint(0, 0), wxSize(800, 200));
-	directJmpsGrid->SetLabelBackgroundColour(foregroundColor);
-	directJmpsGrid->SetLabelTextColour(textColor);
-	directJmpsGrid->SetDefaultCellBackgroundColour(gridColor);
-	directJmpsGrid->SetDefaultCellTextColour(textColor);
-	directJmpsGrid->CreateGrid(0, 3);
-	directJmpsGrid->SetScrollRate(10, 10);
-	directJmpsGrid->DisableDragRowSize();
-	directJmpsGrid->EnableEditing(false);
-	directJmpsGrid->SetColLabelValue(0, "Direct jmp type");
-	directJmpsGrid->SetColLabelValue(1, "Jmp index");
-	directJmpsGrid->SetColLabelValue(2, "Dst index");
-	directJmpsGrid->HideRowLabels();
-	directJmpsGrid->SetColSize(0, 150);
-	directJmpsGrid->SetColSize(1, 200);
-	directJmpsGrid->SetColSize(2, 200);
-	directJmpsGrid->SetColLabelAlignment(wxALIGN_LEFT, wxALIGN_CENTER);
-
-	vSizer->Add(directJmpsGrid, 1, wxEXPAND | wxRIGHT | wxLEFT | wxBOTTOM, 10);
-
-	for (int32_t i = 0; i < function->numOfDirectJmps; i++)
-	{
-		struct DirectJmp* directJmp = &function->directJmps[i];
-		directJmpsGrid->AppendRows(1);
-		directJmpsGrid->SetCellValue(i, 0, wxString(directJmpTypeStrs[directJmp->type]));
-		directJmpsGrid->SetCellValue(i, 1, wxString::Format("%d (0x%llX)", directJmp->jmpIndex, instructions[directJmp->jmpIndex].address));
-		directJmpsGrid->SetCellValue(i, 2, wxString::Format("%d (0x%llX)", directJmp->dstIndex, instructions[directJmp->dstIndex].address));
-	}
-
 	SetSizerAndFit(vSizer);
 	SetMinSize(wxSize(200, 200));
 }

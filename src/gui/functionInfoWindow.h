@@ -20,7 +20,6 @@ public:
 	wxGrid* stackVarsGrid = nullptr;
 	wxGrid* returnedVarsGrid = nullptr;
 	wxGrid* conditionsGrid = nullptr;
-	wxGrid* directJmpsGrid = nullptr;
 
 	wxBoxSizer* vSizer = nullptr;
 

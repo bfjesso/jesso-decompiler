@@ -27,9 +27,6 @@
     <ClCompile Include="src\disassembler\disassembler.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\disassembler\opcodes.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\disassembler\registers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -81,25 +78,10 @@
     <ClCompile Include="src\decompiler\returnStatements.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\disassembler\prefixes.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\disassembler\mnemonics.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\disassembler\operands.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\disassembler\modRM.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\gui\importsGrid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decompiler\decompilationUtils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\decompiler\directJmps.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decompiler\intrinsics.c">
@@ -159,6 +141,27 @@
     <ClCompile Include="src\gui\workerThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\disassembler\lc3\disassemblerLC3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\opcodeMnemonics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\x86\disassemblerX86.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\x86\modRM.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\x86\opcodes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\x86\operands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\disassembler\x86\prefixes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -170,22 +173,7 @@
     <ClInclude Include="src\disassembler\disassembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\disassembler\escapeOpcodeMaps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\extendedOpcodeMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\oneByteOpcodeMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\opcodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\disassembler\registers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\twoByteOpcodeMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\elf-handler\elfHandler.h">
@@ -239,21 +227,6 @@
     <ClInclude Include="src\decompiler\returnStatements.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\disassembler\prefixes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\mnemonics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\operands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\modRM.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\disassembler\threeByteOpcodeMaps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decompiler\decompilationStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -261,9 +234,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\decompilationUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decompiler\directJmps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decompiler\intrinsics.h">
@@ -333,6 +303,45 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gui\workerThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\lc3\disassemblerLC3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\lc3\opcodeMapLC3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\opcodeMnemonics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\disassemblerX86.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\escapeOpcodeMaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\extendedOpcodeMaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\modRM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\oneByteOpcodeMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\opcodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\operands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\prefixes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\threeByteOpcodeMaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\disassembler\x86\twoByteOpcodeMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

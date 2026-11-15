@@ -432,7 +432,7 @@ void DecompilationTextCtrl::ApplyDecompilationHighlighting()
 		ColorAllStrs(text, registerStrs[i], ERROR_DECOMP_COLOR, false);
 	}
 	ColorAllStrs(text, "ERROR", ERROR_DECOMP_COLOR, false);
-	ColorAllStrs(text, "jumpTo", ERROR_DECOMP_COLOR, false);
+	ColorAllStrs(text, "jumpOut", ERROR_DECOMP_COLOR, false);
 
 	// decimal numbers
 	const char* numberChars[10] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };

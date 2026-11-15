@@ -177,19 +177,6 @@ static enum JdcStatus writeFunction(FILE* file, const struct Function* func)
 		}
 	}
 
-	if (fwrite(&func->numOfDirectJmps, sizeof(func->numOfDirectJmps), 1, file) != 1)
-	{
-		return ERROR_JDC;
-	}
-
-	for (int32_t i = 0; i < func->numOfDirectJmps; i++)
-	{
-		if (writeDirectJmp(file, &func->directJmps[i]) == ERROR_JDC)
-		{
-			return ERROR_JDC;
-		}
-	}
-
 	if (fwrite(&func->associatedInstructionsBufferLen, sizeof(func->associatedInstructionsBufferLen), 1, file) != 1)
 	{
 		return ERROR_JDC;
@@ -385,26 +372,6 @@ static enum JdcStatus writeCondition(FILE* file, const struct Condition* cond)
 	}
 
 	if (fwrite(&cond->indentLevel, sizeof(cond->indentLevel), 1, file) != 1)
-	{
-		return ERROR_JDC;
-	}
-
-	return SUCCESS_JDC;
-}
-
-static enum JdcStatus writeDirectJmp(FILE* file, const struct DirectJmp* directJmp)
-{
-	if (fwrite(&directJmp->jmpIndex, sizeof(directJmp->jmpIndex), 1, file) != 1)
-	{
-		return ERROR_JDC;
-	}
-
-	if (fwrite(&directJmp->dstIndex, sizeof(directJmp->dstIndex), 1, file) != 1)
-	{
-		return ERROR_JDC;
-	}
-
-	if (fwrite(&directJmp->type, sizeof(directJmp->type), 1, file) != 1)
 	{
 		return ERROR_JDC;
 	}

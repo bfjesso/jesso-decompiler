@@ -603,7 +603,6 @@ void freeFunction(struct Function* function)
 		free(function->conditions[i].combinedJccIndexes);
 	}
 	free(function->conditions);
-	free(function->directJmps);
 
 	for (int32_t i = 0; i < function->numOfLines; i++)
 	{

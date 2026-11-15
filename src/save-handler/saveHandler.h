@@ -30,6 +30,4 @@ static enum JdcStatus writeRegVar(FILE* file, const struct RegisterVariable* reg
 
 static enum JdcStatus writeCondition(FILE* file, const struct Condition* cond);
 
-static enum JdcStatus writeDirectJmp(FILE* file, const struct DirectJmp* directJmp);
-
 static enum JdcStatus writeAssociatedInstructions(FILE* file, const struct AssociatedInstructions* ai);

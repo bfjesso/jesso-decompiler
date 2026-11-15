@@ -242,17 +242,6 @@ enum JdcStatus getAllFunctionsFromJdcSaveFile(const wchar_t* savePath, struct Fu
 			readAndUpdateOffset(file, &cond->indentLevel, sizeof(cond->indentLevel), &currentFileOffset);
 		}
 
-		readAndUpdateOffset(file, &func->numOfDirectJmps, sizeof(func->numOfDirectJmps), &currentFileOffset);
-		func->directJmps = (struct DirectJmp*)calloc(func->numOfDirectJmps, sizeof(struct DirectJmp));
-		for (int32_t j = 0; j < func->numOfDirectJmps; j++)
-		{
-			struct DirectJmp* directJmp = &func->directJmps[j];
-
-			readAndUpdateOffset(file, &directJmp->jmpIndex, sizeof(directJmp->jmpIndex), &currentFileOffset);
-			readAndUpdateOffset(file, &directJmp->dstIndex, sizeof(directJmp->dstIndex), &currentFileOffset);
-			readAndUpdateOffset(file, &directJmp->type, sizeof(directJmp->type), &currentFileOffset);
-		}
-
 		readAndUpdateOffset(file, &func->associatedInstructionsBufferLen, sizeof(func->associatedInstructionsBufferLen), &currentFileOffset);
 		func->associatedInstructions = (struct AssociatedInstructions*)calloc(func->associatedInstructionsBufferLen, sizeof(struct AssociatedInstructions));
 		for (int32_t j = 0; j < func->associatedInstructionsBufferLen; j++)

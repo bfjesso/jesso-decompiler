@@ -575,6 +575,20 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 	struct DisassembledInstruction* conditionalInstruction = &(params->instructions[conditionalInstructionIndex]);
 	enum OpcodeMnemonic cc = conditionalInstruction->opcode;
 
+	if (isOpcodeJmp(cc))
+	{
+		if (invertOperator)
+		{
+			strcpyJdc(result, "0");
+		}
+		else
+		{
+			strcpyJdc(result, "1");
+		}
+
+		return SUCCESS_JDC;
+	}
+
 	char compOperator[3] = { 0 };
 	switch (cc)
 	{

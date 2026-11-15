@@ -62,7 +62,12 @@ enum ConditionType
 	CONDITIONAL_GOTO_CT,
 	CONDITIONAL_RETURN_CT,
 	WHILE_CT,
-	DO_WHILE_CT
+	DO_WHILE_CT,
+
+	UNCONDITIONAL_GOTO_CT,
+	BREAK_CT,
+	CONTINUE_CT,
+	JUMP_OUT_CT
 };
 
 static const char* conditionTypeStrs[] =
@@ -73,7 +78,12 @@ static const char* conditionTypeStrs[] =
 	"CONDITIONAL_GOTO_CT",
 	"CONDITIONAL_RETURN_CT",
 	"WHILE_CT",
-	"DO_WHILE_CT"
+	"DO_WHILE_CT",
+
+	"UNCONDITIONAL_GOTO_CT",
+	"BREAK_CT",
+	"CONTINUE_CT",
+	"JUMP_OUT_CT"
 };
 
 enum LogicalType
@@ -109,31 +119,6 @@ struct Condition
 	int32_t indentLevel; // used to check if the condition was entered at all, and to make sure the conditions are ended in the right order in the case where multiple end at the same address. the order only matters for conditions like do while, where the do and } while(); need to match
 };
 
-enum DirectJmpType
-{
-	NONE_DJT,
-	GO_TO_DJT,
-	BREAK_DJT,
-	CONTINUE_DJT,
-	JUMP_TO_DJT
-};
-
-static const char* directJmpTypeStrs[] =
-{
-	"NONE_DJT",
-	"GO_TO_DJT",
-	"BREAK_DJT",
-	"CONTINUE_DJT",
-	"JUMP_TO_DJT"
-};
-
-struct DirectJmp
-{
-	int32_t jmpIndex;
-	int32_t dstIndex;
-	enum DirectJmpType type;
-};
-
 struct AssociatedInstructions
 {
 	int32_t* indexes;
@@ -162,9 +147,7 @@ struct Function
 	int32_t lastInstructionIndex;
 
 	struct Condition* conditions;
-	struct DirectJmp* directJmps;
 	int32_t numOfConditions;
-	int32_t numOfDirectJmps;
 
 	struct AssociatedInstructions* associatedInstructions; // these are a list of instructions indexes that correspond to each line of the decompilation
 	int32_t numOfLines;
