@@ -974,6 +974,7 @@ void MainGui::ClearData()
 	{
 		delete[] fileBytes;
 		fileBytes = 0;
+		numOfFileBytes = 0;
 	}
 
 	memset(&decompParams, 0, sizeof(decompParams));
@@ -1016,6 +1017,7 @@ void MainGui::ClearData()
 
 		delete[] sections;
 		sections = 0;
+		numOfSections = 0;
 	}
 
 	if (imports)
@@ -1027,6 +1029,7 @@ void MainGui::ClearData()
 
 		delete[] imports;
 		imports = 0;
+		numOfImports = 0;
 	}
 
 	if (libraryNames)
@@ -1037,6 +1040,7 @@ void MainGui::ClearData()
 		}
 
 		delete[] libraryNames;
+		libraryNames = 0;
 		numOfLibraries = 0;
 	}
 
