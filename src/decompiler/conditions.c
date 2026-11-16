@@ -108,6 +108,10 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 			if (dstIndex > 0 && isOpcodeJmp(params->instructions[dstIndex - 1].opcode))
 			{
 				exitIndex = findInstructionByAddress(params->instructions, params->numOfInstructions, resolveJmpChain(params, dstIndex - 1));
+				if (exitIndex < params->currentFunc->firstInstructionIndex || exitIndex > params->currentFunc->lastInstructionIndex)
+				{
+					exitIndex = -1;
+				}
 			}
 
 			struct Condition* lastCondition = 0;
