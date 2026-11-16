@@ -344,11 +344,15 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 						if (unconditionalGoto->dstIndex == cond->firstBodyIndex)
 						{
 							unconditionalGoto->conditionType = CONTINUE_CT;
+							unconditionalGoto->firstBodyIndex = -1;
+							unconditionalGoto->lastBodyIndex = -1;
 							break;
 						}
 						else if (unconditionalGoto->dstIndex == cond->lastBodyIndex + 1)
 						{
 							unconditionalGoto->conditionType = BREAK_CT;
+							unconditionalGoto->firstBodyIndex = -1;
+							unconditionalGoto->lastBodyIndex = -1;
 							break;
 						}
 					}
@@ -724,7 +728,7 @@ struct Condition* getConditionFromFirstBodyInstruction(struct DecompilationParam
 	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
-		if (!isConditionDirectJmp(cond) && instructionIndex == cond->firstBodyIndex)
+		if (instructionIndex == cond->firstBodyIndex)
 		{
 			return cond;
 		}
@@ -738,7 +742,7 @@ struct Condition* getConditionFromLastBodyInstruction(struct DecompilationParame
 	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* cond = &params->currentFunc->conditions[i];
-		if (!isConditionDirectJmp(cond) && instructionIndex == cond->lastBodyIndex)
+		if (instructionIndex == cond->lastBodyIndex)
 		{
 			return cond;
 		}
