@@ -499,7 +499,7 @@ enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, in
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int32_t instructionIndex, struct JdcStr* result)
+enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result)
 {
 	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
@@ -527,6 +527,16 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 				}
 
 				condition->indentLevel = params->numOfIndents;
+
+				switch (condition->conditionType)
+				{
+				case UNCONDITIONAL_GOTO_CT:
+				case BREAK_CT:
+				case CONTINUE_CT:
+				case JUMP_OUT_CT:
+					if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
+					break;
+				}
 			}
 		}
 		else if (instructionIndex == condition->firstBodyIndex)

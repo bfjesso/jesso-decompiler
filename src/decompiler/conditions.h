@@ -13,7 +13,7 @@ static enum JdcStatus handleCombinedJccResize(struct Condition* condition);
 
 enum JdcStatus decompileConditionEnds(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result);
 
-enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int32_t instructionIndex, struct JdcStr* result);
+enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, int32_t instructionIndex, bool* isInUnreachableStateRef, struct JdcStr* result);
 
 static enum JdcStatus decompileCondition(struct DecompilationParameters* params, int32_t conditionIndex, bool decompileStart, struct JdcStr* result);
 

@@ -119,7 +119,7 @@ enum JdcStatus decompileFunction(struct DecompilationParameters* params, struct 
 			}
 		}
 
-		if (ERROR_JDC == decompileConditionStarts(params, i, result))
+		if (ERROR_JDC == decompileConditionStarts(params, i, &isInUnreachableState, result))
 		{
 			sprintfJdc(statusMessage, false, "Error decompiling start of condition at 0x%llX.", currentInstruction->address);
 			if (errorInstructionIndex) { *errorInstructionIndex = i; }
