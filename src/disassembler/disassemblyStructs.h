@@ -3,11 +3,6 @@
 #include "opcodeMnemonics.h"
 #include "registers.h"
 
-struct DisassemblerOptions
-{
-	bool is64BitMode;
-};
-
 enum LegacyPrefix
 {
 	NONE_LP,

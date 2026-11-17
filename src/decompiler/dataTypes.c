@@ -105,9 +105,19 @@ enum PrimitiveType getIntType(uint8_t size, bool isSigned)
 	return VOID_TYPE;
 }
 
-enum PrimitiveType getAddressPrimitive(bool is64Bit)
+enum PrimitiveType getAddressPrimitive(enum InstructionSetArchitecture isa)
 {
-	return is64Bit ? INT64_TYPE : INT32_TYPE;
+	switch (isa)
+	{
+	case X86_ISA:
+		return INT32_TYPE;
+	case X86_64_ISA:
+		return INT64_TYPE;
+	case LC3_ISA:
+		return INT16_TYPE;
+	}
+
+	return INT64_TYPE;
 }
 
 bool isDataTypePtr(struct DataType dataType)
@@ -115,7 +125,7 @@ bool isDataTypePtr(struct DataType dataType)
 	return (dataType.pointerLevel > 0 || dataType.arrayLen > 1);
 }
 
-bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit)
+bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, enum InstructionSetArchitecture isa)
 {
 	bool isT1Ptr = isDataTypePtr(t1);
 	bool isT2Ptr = isDataTypePtr(t2);
@@ -125,7 +135,7 @@ bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64
 		return false;
 	}
 
-	enum PrimitiveType addressPrimitive = getAddressPrimitive(is64Bit);
+	enum PrimitiveType addressPrimitive = getAddressPrimitive(isa);
 	if ((isT1Ptr && t2.primitiveType == addressPrimitive) || (isT2Ptr && t1.primitiveType == addressPrimitive))
 	{
 		return false;
@@ -134,11 +144,11 @@ bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64
 	return (t1.primitiveType != t2.primitiveType || isT1Ptr != isT2Ptr);
 }
 
-uint8_t getDataTypeSize(struct DataType dataType, bool is64Bit)
+uint8_t getDataTypeSize(struct DataType dataType, enum InstructionSetArchitecture isa)
 {
 	if (isDataTypePtr(dataType))
 	{
-		return is64Bit ? 8 : 4;
+		return getPrimitiveTypeSize(getAddressPrimitive(isa));
 	}
 
 	return getPrimitiveTypeSize(dataType.primitiveType);

@@ -26,7 +26,7 @@ struct IMAGE_NT_HEADERS_INFO
 
 enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef);
 
-enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef);
+enum JdcStatus getArchitecturePE(const wchar_t* filePath, enum InstructionSetArchitecture* isaRef);
 
 static enum JdcStatus getImageNTHeadersInfo(FILE* file, bool is64Bit, struct IMAGE_NT_HEADERS_INFO* result);
 

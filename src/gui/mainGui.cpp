@@ -708,14 +708,15 @@ void MainGui::SaveFile()
 
 enum JdcStatus MainGui::LoadKnownFile(wxString filePath)
 {
-	if (ERROR_JDC == isFile64Bit(filePath.c_str().AsWChar(), fileFormat, &is64Bit))
+	if (ERROR_JDC == getFileArchitecture(filePath.c_str().AsWChar(), fileFormat, &isa))
 	{
 		wxMessageBox("Error determining file architecture", "Can't load file");
 		return ERROR_JDC;
 	}
 
 	addressability = 1;
-	isa = is64Bit ? X86_64_ISA : X86_ISA;
+
+	bool is64Bit = isa == X86_64_ISA;
 
 	fileBytes = new uint8_t[numOfFileBytes];
 	if (ERROR_JDC == readFileBytes(filePath.c_str().AsWChar(), fileBytes, numOfFileBytes))
@@ -844,8 +845,6 @@ enum JdcStatus MainGui::LoadUnknownFile(wxString filePath)
 		}
 	}
 
-	is64Bit = isa == X86_64_ISA;
-
 	// this is just for formatting in the gui
 	if (numOfFileBytes < 0x10) { imageBase = 0x10; }
 	else if (numOfFileBytes < 0x1000) { imageBase = 0x1000; }
@@ -954,7 +953,6 @@ void MainGui::UpdateDecompParams()
 
 	decompParams.addressability = addressability;
 
-	decompParams.is64Bit = is64Bit;
 	decompParams.fileFormat = fileFormat;
 
 	decompParams.instructions = disassembledInstructions.data();

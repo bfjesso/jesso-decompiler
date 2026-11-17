@@ -1,12 +1,5 @@
 #include "registers.h"
 
-extern const char* isaStrs[NUM_OF_ISAS] =
-{
-	"x86",
-	"x86-64",
-	"LC-3",
-};
-
 extern const char* registerStrs[NUM_OF_REGISTERS] =
 {
 	"NO REG",

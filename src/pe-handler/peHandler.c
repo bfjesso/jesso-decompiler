@@ -18,10 +18,10 @@ enum JdcStatus isFilePE(const wchar_t* filePath, bool* isPERef)
 	return ERROR_JDC;
 }
 
-enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
+enum JdcStatus getArchitecturePE(const wchar_t* filePath, enum InstructionSetArchitecture* isaRef)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file && is64BitRef)
+	if (file && isaRef)
 	{
 		IMAGE_DOS_HEADER dosHeader = { 0 };
 		seek64(file, 0);
@@ -34,8 +34,15 @@ enum JdcStatus isPEX64(const wchar_t* filePath, bool* is64BitRef)
 
 		fclose(file);
 
-		*is64BitRef = imageNtHeaders.OptionalHeader.Magic == 0x20b; // PE32+
-		return SUCCESS_JDC;
+		switch (imageNtHeaders.FileHeader.Machine)
+		{
+		case IMAGE_FILE_MACHINE_I386:
+			*isaRef = X86_ISA;
+			return SUCCESS_JDC;
+		case IMAGE_FILE_MACHINE_AMD64:
+			*isaRef = X86_64_ISA;
+			return SUCCESS_JDC;
+		}
 	}
 
 	return ERROR_JDC;

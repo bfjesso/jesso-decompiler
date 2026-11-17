@@ -73,11 +73,9 @@ void WorkerThread::Disassemble()
 	PostLog("\tCurrent instruction: ", LOG_PARAM_NONE);
 	PostLogProgress(mainGui->entryPoint + mainGui->imageBase, false);
 
-	struct DisassemblerOptions options = { 0 };
-	options.is64BitMode = mainGui->is64Bit;
 	struct DisassembledInstruction instructionBuffer;
 	bool didErrorOccur = false;
-	if (ERROR_JDC == DisassembleTakingJumps(mainGui->entryPoint + mainGui->imageBase, &instructionBuffer, &options, 0))
+	if (ERROR_JDC == DisassembleTakingJumps(mainGui->entryPoint + mainGui->imageBase, &instructionBuffer, 0))
 	{
 		didErrorOccur = true;
 	}
@@ -102,7 +100,7 @@ void WorkerThread::Disassemble()
 			uint64_t sectionEnd = mainGui->sections[i].rva + (mainGui->sections[i].physicalSize / mainGui->addressability) + mainGui->imageBase;
 			if (sectionEnd < firstAddress || sectionStart > lastAddress)
 			{
-				if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer, &options))
+				if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, sectionEnd, &instructionBuffer))
 				{
 					didErrorOccur = true;
 				}
@@ -111,7 +109,7 @@ void WorkerThread::Disassemble()
 			{
 				if (sectionStart < firstAddress && sectionEnd > firstAddress)
 				{
-					if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer, &options))
+					if (ERROR_JDC == DisassembleBetweenBounds(sectionStart, firstAddress, &instructionBuffer))
 					{
 						didErrorOccur = true;
 					}
@@ -119,7 +117,7 @@ void WorkerThread::Disassemble()
 
 				if (sectionStart < lastAddress && sectionEnd > lastAddress)
 				{
-					if (ERROR_JDC == DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer, &options))
+					if (ERROR_JDC == DisassembleBetweenBounds(lastAddress, sectionEnd, &instructionBuffer))
 					{
 						didErrorOccur = true;
 					}
@@ -137,7 +135,7 @@ void WorkerThread::Disassemble()
 		uint64_t endVA = mainGui->disassembledInstructions[i + 1].address;
 		if (startVA != endVA)
 		{
-			if (ERROR_JDC == DisassembleBetweenBounds(startVA, endVA, &instructionBuffer, &options))
+			if (ERROR_JDC == DisassembleBetweenBounds(startVA, endVA, &instructionBuffer))
 			{
 				didErrorOccur = true;
 			}
@@ -165,7 +163,7 @@ void WorkerThread::Disassemble()
 	PostLog("finished disassembling file", LOG_PARAM_ADD_NEW_LINE);
 }
 
-enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options, int32_t callNum)
+enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct DisassembledInstruction* instructionBuffer, int32_t callNum)
 {
 	struct FileSection* currentSection = 0;
 	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, startVA - mainGui->imageBase, &currentSection);
@@ -203,7 +201,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 			return ERROR_JDC;
 		}
 
-		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, options, instructionBuffer))
+		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + currentSection->fileOffset + currentSection->physicalSize - 1, instructionBuffer))
 		{
 			mainGui->errorAddress = currentVirtualAddress;
 			PostLog(wxString::Format("bad instruction at 0x%llX", currentVirtualAddress), LOG_PARAM_ERROR);
@@ -254,7 +252,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 			uint64_t jmpDst = getJmpDst(&mainGui->decompParams, 0);
 			if (jmpDst != 0)
 			{
-				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, options, callNum + 1))
+				if (ERROR_JDC == DisassembleTakingJumps(jmpDst, instructionBuffer, callNum + 1))
 				{
 					return ERROR_JDC;
 				}
@@ -269,7 +267,7 @@ enum JdcStatus WorkerThread::DisassembleTakingJumps(uint64_t startVA, struct Dis
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer, struct DisassemblerOptions* options)
+enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t endVA, struct DisassembledInstruction* instructionBuffer)
 {
 	struct FileSection* currentSection = 0;
 	uint64_t currentFileOffset = rvaToFileOffset(mainGui->sections, mainGui->numOfSections, mainGui->addressability, startVA - mainGui->imageBase, &currentSection);
@@ -296,7 +294,7 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 			return SUCCESS_JDC;
 		}
 
-		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + endFileOffset - 1, options, instructionBuffer) ||
+		if (!disassembleInstruction(mainGui->isa, &mainGui->fileBytes[currentFileOffset], mainGui->fileBytes + endFileOffset - 1, instructionBuffer) ||
 			currentFileOffset + instructionBuffer->numOfBytes > endFileOffset)
 		{
 			int32_t numOfBytes = instructionBuffer->numOfBytes;
@@ -341,7 +339,7 @@ enum JdcStatus WorkerThread::DisassembleBetweenBounds(uint64_t startVA, uint64_t
 enum JdcStatus WorkerThread::HandleJmpTables()
 {
 	// this is setting called instructions from the RUNTIME_FUNCTION structs in .pdata
-	if (mainGui->fileFormat == PE_FF && mainGui->is64Bit) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
+	if (mainGui->fileFormat == PE_FF && mainGui->isa == X86_64_ISA) // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
 	{
 		for (int32_t i = 0; i < mainGui->numOfSections; i++)
 		{
@@ -596,7 +594,7 @@ void WorkerThread::FindAllFunctions()
 		}
 
 		currentFunction.name = initializeJdcStr();
-		if (!getSymbols || !getSymbolByValue(mainGui->currentFilePath.c_str().AsWChar(), mainGui->fileFormat, mainGui->is64Bit, mainGui->disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
+		if (!getSymbols || !getSymbolByValue(mainGui->currentFilePath.c_str().AsWChar(), mainGui->fileFormat, mainGui->isa == X86_64_ISA, mainGui->disassembledInstructions[currentFunction.firstInstructionIndex].address, &currentFunction.name))
 		{
 			sprintfJdc(&currentFunction.name, false, "func%llX", mainGui->disassembledInstructions[currentFunction.firstInstructionIndex].address - mainGui->imageBase);
 		}

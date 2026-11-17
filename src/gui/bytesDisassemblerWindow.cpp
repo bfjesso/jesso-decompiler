@@ -64,9 +64,6 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		return;
 	}
 
-	struct DisassemblerOptions options;
-	options.is64BitMode = isa == X86_64_ISA;
-
 	uint8_t addressability = 1;
 	if (isa == LC3_ISA)
 	{
@@ -78,7 +75,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 	while (currentOffset < bytes.size())
 	{
 		struct DisassembledInstruction currentInstruction;
-		if (disassembleInstruction(isa, bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &options, &currentInstruction))
+		if (disassembleInstruction(isa, bytes.data() + currentOffset, bytes.data() + bytes.size() - 1, &currentInstruction))
 		{
 			currentInstruction.address = currentAddress;
 			instructions.push_back(currentInstruction);

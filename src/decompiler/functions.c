@@ -536,7 +536,7 @@ bool getStackArgInitializer(struct DecompilationParameters* params, int32_t call
 	int64_t initialStackFrameSize = getStackFrameSizeAtInstruction(params, callInstructionIndex);
 	if (params->instructions[callInstructionIndex].opcode == CALL_NEAR_X86)
 	{
-		initialStackFrameSize += params->is64Bit ? 8 : 4; // instruction ptr is pushed
+		initialStackFrameSize += params->isa == X86_64_ISA ? 8 : 4; // instruction ptr is pushed
 	}
 
 	if (stackFrameSizeRef) { *stackFrameSizeRef = initialStackFrameSize; }
@@ -1003,7 +1003,7 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 				}
 
 				struct DataType dataType = getRegisterDataType(instruction, j, reg);
-				if (getDataTypeSize(dataType, params->is64Bit) > getDataTypeSize(regVar->dataType, params->is64Bit) || !foundFirstInstance) // the type size is set to the largest version of the register used
+				if (getDataTypeSize(dataType, params->isa) > getDataTypeSize(regVar->dataType, params->isa) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
 					regVar->dataType.primitiveType = getIntType(getPrimitiveTypeSize(dataType.primitiveType), !isPrimitiveUnsigned(regVar->dataType.primitiveType));
 					regVar->reg = reg;

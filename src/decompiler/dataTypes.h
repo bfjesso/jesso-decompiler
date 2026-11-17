@@ -52,13 +52,13 @@ bool isPrimitiveUnsigned(enum PrimitiveType primitive);
 
 enum PrimitiveType getIntType(uint8_t size, bool isSigned);
 
-enum PrimitiveType getAddressPrimitive(bool is64Bit);
+enum PrimitiveType getAddressPrimitive(enum InstructionSetArchitecture isa);
 
 bool isDataTypePtr(struct DataType dataType);
 
-bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, bool is64Bit);
+bool doDataTypesRequireCasting(struct DataType t1, struct DataType t2, enum InstructionSetArchitecture isa);
 
-uint8_t getDataTypeSize(struct DataType dataType, bool is64Bit);
+uint8_t getDataTypeSize(struct DataType dataType, enum InstructionSetArchitecture isa);
 
 uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 

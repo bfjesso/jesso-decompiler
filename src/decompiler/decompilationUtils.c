@@ -722,7 +722,7 @@ bool doesInstructionModifyRegister(struct DecompilationParameters* params, int32
 		if (specificReg)
 		{
 			if (callee) { *specificReg = callee->returnReg; }
-			else { *specificReg = params->is64Bit ? RAX_X86_REG : EAX_X86_REG; }
+			else { *specificReg = params->isa == X86_64_ISA ? RAX_X86_REG : EAX_X86_REG; }
 		}
 
 		return true;

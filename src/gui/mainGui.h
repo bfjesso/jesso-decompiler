@@ -46,7 +46,6 @@ public:
 	wxString currentFilePath = "";
 	enum FileFormat fileFormat = UNKNOWN_FF;
 	enum InstructionSetArchitecture isa = X86_ISA;
-	bool is64Bit = false;
 	uint64_t imageBase = 0;
 	uint64_t entryPoint = 0;
 	uint8_t addressability = 1; // bytes per address

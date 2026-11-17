@@ -4,7 +4,7 @@
 enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file)
+	if (file && isELFRef)
 	{
 		uint8_t e_ident[5];
 		fread(e_ident, 1, 5, file);
@@ -17,17 +17,24 @@ enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef)
 	return ERROR_JDC;
 }
 
-enum JdcStatus isELFX64(const wchar_t* filePath, bool* is64BitRef)
+enum JdcStatus getArchitectureELF(const wchar_t* filePath, enum InstructionSetArchitecture* isaRef)
 {
 	FILE* file = openFile(filePath, L"rb");
-	if (file)
+	if (file && isaRef)
 	{
-		uint8_t e_ident[5];
-		fread(e_ident, 1, 5, file);
+		Elf32_Ehdr ehdr;
+		fread(&ehdr, sizeof(Elf32_Ehdr), 1, file);
 		fclose(file);
 
-		*is64BitRef = e_ident[EI_CLASS] == ELFCLASS64;
-		return SUCCESS_JDC;
+		switch (ehdr.e_machine)
+		{
+		case EM_386:
+			*isaRef = X86_ISA;
+			return SUCCESS_JDC;
+		case EM_X86_64:
+			*isaRef = X86_64_ISA;
+			return SUCCESS_JDC;
+		}
 	}
 
 	return ERROR_JDC;

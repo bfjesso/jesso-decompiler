@@ -219,7 +219,7 @@ static enum JdcStatus getAllReturnedVars(struct DecompilationParameters* params)
 				else
 				{
 					struct DataType guessedReturnType = { 0 };
-					guessedReturnType.primitiveType = getAddressPrimitive(params->is64Bit);
+					guessedReturnType.primitiveType = getAddressPrimitive(params->isa);
 
 					int32_t importIndex = getImportIndexByAddress(params, calleeAddress);
 					if (importIndex != -1)
@@ -319,7 +319,7 @@ static enum JdcStatus declareAllLocalVariables(struct DecompilationParameters* p
 			struct RegisterVariable* regArg = getRegArgByReg(params->currentFunc, localRegVar->reg);
 			if (regArg && checkRegVarScope(params, localRegVar, params->currentFunc->firstInstructionIndex))
 			{
-				if (doDataTypesRequireCasting(localRegVar->dataType, regArg->dataType, params->is64Bit))
+				if (doDataTypesRequireCasting(localRegVar->dataType, regArg->dataType, params->isa))
 				{
 					addDecompiledLine(params, result, params->currentFunc->firstInstructionIndex, "%s %s = (%s)%s;", typeStr.buffer, localRegVar->name.buffer, typeStr.buffer, regArg->name.buffer);
 				}

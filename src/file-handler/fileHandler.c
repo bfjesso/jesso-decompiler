@@ -11,6 +11,13 @@
 extern char* __cxa_demangle(const char* mangled_name, char* output_buffer, size_t* length, int32_t* status);
 #endif
 
+extern const char* isaStrs[NUM_OF_ISAS] =
+{
+	"x86",
+	"x86-64",
+	"LC-3"
+};
+
 FILE* openFile(const wchar_t* filePath, const wchar_t* mode)
 {
 #ifdef _WIN32
@@ -249,15 +256,15 @@ const char* fileSectionTypeToStr(enum FileSectionType fileSectionType)
 	return "";
 }
 
-enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, bool* is64BitRef)
+enum JdcStatus getFileArchitecture(const wchar_t* filePath, enum FileFormat fileFormat, enum InstructionSetArchitecture* isaRef)
 {
 	if (fileFormat == PE_FF)
 	{
-		return isPEX64(filePath, is64BitRef);
+		return getArchitecturePE(filePath, isaRef);
 	}
 	else if (fileFormat == ELF_FF)
 	{
-		return isELFX64(filePath, is64BitRef);
+		return getArchitectureELF(filePath, isaRef);
 	}
 
 	return ERROR_JDC;

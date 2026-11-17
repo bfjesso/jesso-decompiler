@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-	enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result);
+	enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassembledInstruction* result);
 
 	enum JdcStatus instructionToStr(struct DisassembledInstruction* instruction, bool evaluateIP, uint8_t addressability, struct JdcStr* result);
 

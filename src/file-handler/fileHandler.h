@@ -18,13 +18,15 @@ extern "C"
 {
 #endif
 
+	extern const char* isaStrs[];
+
 	enum JdcStatus identifyFileFormat(const wchar_t* filePath, enum FileFormat* fileFormat);
 
 	const char* fileFormatToStr(enum FileFormat fileFormat);
 
 	const char* fileSectionTypeToStr(enum FileSectionType fileSectionType);
 
-	enum JdcStatus isFile64Bit(const wchar_t* filePath, enum FileFormat fileFormat, bool* is64BitRef);
+	enum JdcStatus getFileArchitecture(const wchar_t* filePath, enum FileFormat fileFormat, enum InstructionSetArchitecture* isaRef);
 
 	enum JdcStatus getFileImageBase(const wchar_t* filePath, enum FileFormat fileFormat, bool is64Bit, uint64_t* imageBaseRef);
 

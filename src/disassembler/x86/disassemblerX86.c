@@ -3,13 +3,13 @@
 #include "opcodes.h"
 #include "operands.h"
 
-enum JdcStatus disassembleX86(uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
+enum JdcStatus disassembleX86(uint8_t* bytes, uint8_t* maxBytesAddr, bool is64BitMode, struct DisassembledInstruction* result)
 {
 	struct DisassemblyParameters params = { 0 };
 	params.bytes = bytes;
 	params.maxBytesAddr = maxBytesAddr;
 	params.startBytePtr = bytes;
-	params.is64BitMode = disassemblerOptions->is64BitMode;
+	params.is64BitMode = is64BitMode;
 
 	memset(result, 0, sizeof(struct DisassembledInstruction));
 

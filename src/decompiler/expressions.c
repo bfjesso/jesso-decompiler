@@ -397,7 +397,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			}
 
 			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
-			if (doDataTypesRequireCasting(targetType, localRegVar->dataType, params->is64Bit) &&
+			if (doDataTypesRequireCasting(targetType, localRegVar->dataType, params->isa) &&
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
 			{
 				struct JdcStr targetTypeStr = initializeJdcStr();
@@ -502,7 +502,7 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			else
 			{
 				struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
-				if (doDataTypesRequireCasting(targetType, regArg->dataType, params->is64Bit))
+				if (doDataTypesRequireCasting(targetType, regArg->dataType, params->isa))
 				{
 					struct JdcStr targetTypeStr = initializeJdcStr();
 					dataTypeToStr(targetType, params->useStdInt, &targetTypeStr);

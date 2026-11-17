@@ -2,13 +2,14 @@
 #include "x86/disassemblerX86.h"
 #include "lc3/disassemblerLC3.h"
 
-enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassemblerOptions* disassemblerOptions, struct DisassembledInstruction* result)
+enum JdcStatus disassembleInstruction(enum InstructionSetArchitecture isa, uint8_t* bytes, uint8_t* maxBytesAddr, struct DisassembledInstruction* result)
 {
 	switch (isa)
 	{
 	case X86_ISA:
+		return disassembleX86(bytes, maxBytesAddr, false, result);
 	case X86_64_ISA:
-		return disassembleX86(bytes, maxBytesAddr, disassemblerOptions, result);
+		return disassembleX86(bytes, maxBytesAddr, true, result);
 	case LC3_ISA:
 		return disassembleLC3(bytes, maxBytesAddr, result);
 	}

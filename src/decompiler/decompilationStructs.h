@@ -177,7 +177,6 @@ struct DecompilationParameters
 
 	enum FileFormat fileFormat;
 	uint8_t numOfIndents;
-	bool is64Bit;
 
 	bool useStdInt;
 

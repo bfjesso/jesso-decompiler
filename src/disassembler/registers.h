@@ -1,15 +1,6 @@
 #pragma once
 #include "../fileStructs.h"
 
-#define NUM_OF_ISAS 3
-
-enum InstructionSetArchitecture
-{
-	X86_ISA,
-	X86_64_ISA,
-	LC3_ISA
-};
-
 // this includes NO_REG
 #define NUM_OF_REGISTERS 260
 
@@ -67,8 +58,6 @@ enum Register
 extern "C"
 {
 #endif
-
-	extern const char* isaStrs[];
 
 	extern const char* registerStrs[];
 

@@ -4,7 +4,7 @@
 
 enum JdcStatus isFileELF(const wchar_t* filePath, bool* isELFRef);
 
-enum JdcStatus isELFX64(const wchar_t* filePath, bool* is64BitRef);
+enum JdcStatus getArchitectureELF(const wchar_t* filePath, enum InstructionSetArchitecture* isaRef);
 
 static enum JdcStatus readElfEhdr(FILE* file, bool is64Bit, Elf64_Ehdr* result);
 

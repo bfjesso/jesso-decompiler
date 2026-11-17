@@ -96,7 +96,7 @@ enum JdcStatus decompileKnownFunctionCall(struct DecompilationParameters* params
 			int32_t pushInstructionIndex = -1;
 			if (!getStackArgInitializer(params, callInstructionIndex, callee->stackVars[i].offsetFromInitSP, &stackArgContainer, &pushInstructionIndex, 0))
 			{
-				struct JdcStr spStr = initializeJdcStrWithVal(params->is64Bit ? registerStrs[RSP_X86_REG] : registerStrs[ESP_X86_REG]);
+				struct JdcStr spStr = initializeJdcStrWithVal(params->isa == X86_64_ISA ? registerStrs[RSP_X86_REG] : registerStrs[ESP_X86_REG]);
 				struct JdcStr dataTypeStr = initializeJdcStr();
 				dataTypeToStr(callee->stackVars[i].dataType, params->useStdInt, &dataTypeStr);
 				if (callee->stackVars[i].dataType.pointerLevel > 0)
