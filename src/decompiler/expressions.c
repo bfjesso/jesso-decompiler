@@ -30,7 +30,21 @@ enum JdcStatus decompileOperand(struct DecompilationParameters* params, int32_t 
 		}
 		else if (operand->immediate.value < 0)
 		{
-			return sprintfJdc(result, false, "-0x%llX", -operand->immediate.value);
+			switch (operand->immediate.size)
+			{
+			case 1:
+				sprintfJdc(result, false, "0x%02X", (uint8_t)(operand->immediate.value));
+				break;
+			case 2:
+				sprintfJdc(result, false, "0x%04X", (uint16_t)(operand->immediate.value));
+				break;
+			case 4:
+				sprintfJdc(result, false, "0x%08X", (uint32_t)(operand->immediate.value));
+				break;
+			case 8:
+				sprintfJdc(result, false, "0x%016llX", operand->immediate.value);
+				break;
+			}
 		}
 
 		int32_t calleeIndex = findFunctionByAddress(params, (uint64_t)(operand->immediate.value));
