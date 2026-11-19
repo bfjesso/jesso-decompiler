@@ -205,6 +205,7 @@
     <ClCompile Include="src\gui\guiUtils.cpp" />
     <ClCompile Include="src\gui\calculatorWindow.cpp" />
     <ClCompile Include="src\gui\importsGrid.cpp" />
+    <ClCompile Include="src\gui\instructionInfoWindow.cpp" />
     <ClCompile Include="src\gui\jdcTabArt.cpp" />
     <ClCompile Include="src\gui\jdcTextCtrl.cpp" />
     <ClCompile Include="src\gui\logTextCtrl.cpp" />
@@ -269,6 +270,7 @@
     <ClInclude Include="src\gui\guiUtils.h" />
     <ClInclude Include="src\gui\calculatorWindow.h" />
     <ClInclude Include="src\gui\importsGrid.h" />
+    <ClInclude Include="src\gui\instructionInfoWindow.h" />
     <ClInclude Include="src\gui\jdcTabArt.h" />
     <ClInclude Include="src\gui\jdcTextCtrl.h" />
     <ClInclude Include="src\gui\logTextCtrl.h" />

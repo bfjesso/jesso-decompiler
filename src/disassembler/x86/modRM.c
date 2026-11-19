@@ -196,8 +196,6 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 	result->memoryAddress.ptrSize = operandSize;
 	result->memoryAddress.regSegment = segmentOverrideToSegment(params->legPrefixes.group2);
 
-	bool usedSIB = false;
-
 	if (params->legPrefixes.group4 == ASO_LP && !params->is64BitMode)
 	{
 		switch (params->modRM.mod)
@@ -344,7 +342,6 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, 0, result)) { return ERROR_JDC; }
-				usedSIB = true;
 				break;
 			case 5:
 				if (ERROR_JDC == readIntFromBytes(params, 4, &result->memoryAddress.constDisplacement)) { return ERROR_JDC; } // disp32
@@ -380,7 +377,6 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, &gotDisp, result)) { return ERROR_JDC; }
-				usedSIB = true;
 				break;
 			case 5:
 				result->memoryAddress.reg = EBP_X86_REG;
@@ -419,7 +415,6 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 				break;
 			case 4:
 				if (ERROR_JDC == handleSIB(params, &gotDisp, result)) { return ERROR_JDC; }
-				usedSIB = true;
 				break;
 			case 5:
 				result->memoryAddress.reg = EBP_X86_REG;
@@ -442,7 +437,7 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 		}
 	}
 
-	if (!usedSIB && params->is64BitMode && params->legPrefixes.group4 != ASO_LP && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP_X86_REG)
+	if (!params->sib.hasGotSIB && params->is64BitMode && params->legPrefixes.group4 != ASO_LP && result->memoryAddress.reg != NO_REG && result->memoryAddress.reg != RIP_X86_REG)
 	{
 		result->memoryAddress.reg = increaseRegisterSize(result->memoryAddress.reg);
 
@@ -519,28 +514,31 @@ enum JdcStatus handleModRM(struct DisassemblyParameters* params, enum ModRMSelec
 
 static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotDisp, struct Operand* result)
 {
-	if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
+	if (!params->sib.hasGotSIB)
+	{
+		if (params->bytes > params->maxBytesAddr) { return ERROR_JDC; }
 
-	uint8_t sibByte = params->bytes[0];
-	params->bytes++;
+		uint8_t sibByte = params->bytes[0];
+		params->sib.scale = (((sibByte >> 7) & 0x01) * 2) + ((sibByte >> 6) & 0x01);
+		params->sib.index = (((sibByte >> 5) & 0x01) * 4) + (((sibByte >> 4) & 0x01) * 2) + ((sibByte >> 3) & 0x01);
+		params->sib.base = (((sibByte >> 2) & 0x01) * 4) + (((sibByte >> 1) & 0x01) * 2) + ((sibByte >> 0) & 0x01);
+		params->sib.hasGotSIB = true;
+		params->bytes++;
+	}
 
-	uint8_t scale = (((sibByte >> 7) & 0x01) * 2) + ((sibByte >> 6) & 0x01);
-	uint8_t index = (((sibByte >> 5) & 0x01) * 4) + (((sibByte >> 4) & 0x01) * 2) + ((sibByte >> 3) & 0x01);
-	uint8_t base = (((sibByte >> 2) & 0x01) * 4) + (((sibByte >> 1) & 0x01) * 2) + ((sibByte >> 0) & 0x01);
-
-	for (int32_t i = 0; i < scale; i++)
+	for (int32_t i = 0; i < params->sib.scale; i++)
 	{
 		result->memoryAddress.scale *= 2;
 	}
 
-	if (index != 4 || checkFlagX(params)) // ESP cant be the index, but if X is used it can encode R12
+	if (params->sib.index != 4 || checkFlagX(params)) // ESP cant be the index, but if X is used it can encode R12
 	{
-		result->memoryAddress.reg = (enum Register)(index + EAX_X86_REG);
-		result->memoryAddress.regDisplacement = (enum Register)(base + EAX_X86_REG);
+		result->memoryAddress.reg = (enum Register)(params->sib.index + EAX_X86_REG);
+		result->memoryAddress.regDisplacement = (enum Register)(params->sib.base + EAX_X86_REG);
 	}
 	else
 	{
-		result->memoryAddress.reg = (enum Register)(base + EAX_X86_REG);
+		result->memoryAddress.reg = (enum Register)(params->sib.base + EAX_X86_REG);
 	}
 
 	if (params->is64BitMode)
@@ -561,13 +559,13 @@ static enum JdcStatus handleSIB(struct DisassemblyParameters* params, bool* gotD
 		}
 	}
 
-	if (base == 5)
+	if (params->sib.base == 5)
 	{
 		switch (params->modRM.mod)
 		{
 		case 0:
 			if (ERROR_JDC == readIntFromBytes(params, 4, &result->memoryAddress.constDisplacement)) { return ERROR_JDC; } // disp32
-			if (index != 4 || checkFlagX(params)) { result->memoryAddress.regDisplacement = NO_REG; }
+			if (params->sib.index != 4 || checkFlagX(params)) { result->memoryAddress.regDisplacement = NO_REG; }
 			else { result->memoryAddress.reg = NO_REG; }
 			break;
 		case 1:

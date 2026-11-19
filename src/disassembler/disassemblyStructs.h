@@ -44,6 +44,7 @@ struct REXPrefix
 struct VEXPrefix
 {
 	bool isValidVEX;
+	bool isThreeByteForm;
 
 	uint8_t R; // inverted REX.R
 
@@ -291,6 +292,15 @@ struct ModRM
 	uint8_t rm;
 };
 
+struct SIB
+{
+	bool hasGotSIB;
+
+	uint8_t scale;
+	uint8_t index;
+	uint8_t base;
+};
+
 struct MemoryAddress
 {
 	int64_t constDisplacement;
@@ -334,6 +344,7 @@ struct DisassemblyParameters
 	struct EVEXPrefix evexPrefix;
 	struct Opcode opcode;
 	struct ModRM modRM;
+	struct SIB sib;
 };
 
 struct DisassembledInstruction

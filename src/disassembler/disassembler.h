@@ -16,6 +16,8 @@ extern "C"
 
 	enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instruction, uint64_t address, uint8_t* data, uint8_t dataSize);
 
+	enum JdcStatus generateInstructionInfoStr(uint8_t* bytes, uint64_t bytesOffset, struct DisassembledInstruction* instruction, enum InstructionSetArchitecture isa, struct JdcStr* result);
+
 #ifdef __cplusplus
 }
 #endif

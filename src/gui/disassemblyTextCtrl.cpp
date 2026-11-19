@@ -5,13 +5,13 @@
 #include "../decompiler/functions.h"
 #include "../decompiler/decompilationUtils.h"
 
-DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions) : JdcTextCtrl(parent, mainGuiRef, name)
+DisassemblyTextCtrl::DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name, enum InstructionSetArchitecture architecture, uint8_t* instructionBytes, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions) : JdcTextCtrl(parent, mainGuiRef, name)
 {
 	Bind(wxEVT_CONTEXT_MENU, &DisassemblyTextCtrl::DisassemblyRightClickOptions, this);
 	Bind(wxEVT_CHAR_HOOK, &DisassemblyTextCtrl::OnDisassemblyKeyDown, this);
 	Bind(wxEVT_STC_UPDATEUI, &DisassemblyTextCtrl::OnUpdateDisassemblyUI, this);
 
-	Initialize(disassembledInstructions, amountOfInstructions, -1, 0);
+	Initialize(architecture, instructionBytes, disassembledInstructions, amountOfInstructions, -1, 0);
 }
 
 void DisassemblyTextCtrl::ClearData()
@@ -22,7 +22,7 @@ void DisassemblyTextCtrl::ClearData()
 	ClearText();
 }
 
-void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress)
+void DisassemblyTextCtrl::Initialize(enum InstructionSetArchitecture architecture, uint8_t* instructionBytes, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress)
 {
 	if (mainGui->isDisassembling && mainGui->decompParams.instructions == instructions)
 	{
@@ -30,6 +30,8 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 		return;
 	}
 
+	isa = architecture;
+	bytes = instructionBytes;
 	instructions = disassembledInstructions;
 	numOfInstructions = amountOfInstructions;
 
@@ -80,7 +82,7 @@ void DisassemblyTextCtrl::Initialize(struct DisassembledInstruction* disassemble
 
 void DisassemblyTextCtrl::ResetDisassembly()
 {
-	Initialize(instructions, numOfInstructions, GetCurrentLine(), 0);
+	Initialize(isa, bytes, instructions, numOfInstructions, GetCurrentLine(), 0);
 }
 
 void DisassemblyTextCtrl::ShowGoToAddressDialog()
@@ -137,18 +139,28 @@ void DisassemblyTextCtrl::DisassemblyRightClickOptions(wxContextMenuEvent& e)
 	AddDefaultRightClickOptions(&menu);
 
 	const int32_t ID_GO_TO_ADDRESS = 100;
-	const int32_t ID_SET_ASSOCIATED_DECOMPILATION = 101;
-	const int32_t ID_UNASSOCIATE_DECOMPILATION = 102;
-	const int32_t ID_SET_ASSOCIATED_FUNCTIONS = 103;
-	const int32_t ID_UNASSOCIATE_FUNCTIONS = 104;
-	const int32_t ID_SET_ASSOCIATED_DATA = 105;
-	const int32_t ID_UNASSOCIATE_DATA = 106;
-	const int32_t ID_SHOW_UNHANDLED_OPCODES = 107;
+	const int32_t ID_VIEW_INFO = 101;
+	const int32_t ID_SET_ASSOCIATED_DECOMPILATION = 102;
+	const int32_t ID_UNASSOCIATE_DECOMPILATION = 103;
+	const int32_t ID_SET_ASSOCIATED_FUNCTIONS = 104;
+	const int32_t ID_UNASSOCIATE_FUNCTIONS = 105;
+	const int32_t ID_SET_ASSOCIATED_DATA = 106;
+	const int32_t ID_UNASSOCIATE_DATA = 107;
+	const int32_t ID_SHOW_UNHANDLED_OPCODES = 108;
 
 	menu.Append(ID_GO_TO_ADDRESS, "Go to address");
 	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) {
 		ShowGoToAddressDialog();
 		}, ID_GO_TO_ADDRESS);
+
+	uint64_t fileOffset = instructions[GetCurrentLine()].address;
+	if (bytes == mainGui->decompParams.fileBytes)
+	{
+		fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, fileOffset - mainGui->decompParams.imageBase, 0);
+	}
+
+	menu.Append(ID_VIEW_INFO, "View info");
+	menu.Bind(wxEVT_MENU, [&](wxCommandEvent&) { mainGui->AddInstructionInfoWindow(&instructions[GetCurrentLine()], isa, bytes, fileOffset); }, ID_VIEW_INFO);
 
 	if (mainGui->decompParams.instructions != instructions)
 	{

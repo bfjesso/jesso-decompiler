@@ -1,5 +1,6 @@
 #pragma once
 #include "jdcTextCtrl.h"
+#include "../fileStructs.h"
 
 class DecompilationTextCtrl;
 class FunctionsTextCtrl;
@@ -8,7 +9,10 @@ class DataTextCtrl;
 class DisassemblyTextCtrl : public JdcTextCtrl
 {
 public:
-	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name = "", struct DisassembledInstruction* disassembledInstructions = 0, int32_t amountOfInstructions = 0);
+	DisassemblyTextCtrl(wxWindow* parent, MainGui* mainGuiRef, wxString name = "", enum InstructionSetArchitecture architecture = X86_ISA, uint8_t* instructionBytes = 0, struct DisassembledInstruction* disassembledInstructions = 0, int32_t amountOfInstructions = 0);
+
+	enum InstructionSetArchitecture isa;
+	uint8_t* bytes;
 
 	struct DisassembledInstruction* instructions;
 	int32_t numOfInstructions;
@@ -19,7 +23,7 @@ public:
 
 	void ClearData();
 
-	void Initialize(struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress);
+	void Initialize(enum InstructionSetArchitecture architecture, uint8_t* instructionBytes, struct DisassembledInstruction* disassembledInstructions, int32_t amountOfInstructions, int32_t centerInstructionIndex, uint64_t errorAddress);
 
 	void ResetDisassembly();
 

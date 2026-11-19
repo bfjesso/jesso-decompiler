@@ -121,6 +121,6 @@ void CodeReferencesWindow::FindCodeReferences(int64_t value, bool isHex)
 	}
 	else
 	{
-		disassemblyTextCtrl->Initialize(foundInstructions.data(), foundInstructions.size(), -1, 0);
+		disassemblyTextCtrl->Initialize(mainGui->isa, mainGui->fileBytes, foundInstructions.data(), foundInstructions.size(), -1, 0);
 	}
 }

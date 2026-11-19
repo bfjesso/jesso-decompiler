@@ -107,7 +107,7 @@ MainGui::MainGui() : wxFrame(nullptr, wxID_ANY, "Jesso Decompiler x64")
 			logTextCtrl->Log("updating disassembly gui...");
 			for (int32_t i = 0; i < disassemblyTextCtrls.size(); i++)
 			{
-				disassemblyTextCtrls[i]->Initialize(disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
+				disassemblyTextCtrls[i]->Initialize(isa, fileBytes, disassembledInstructions.data(), disassembledInstructions.size(), -1, errorAddress);
 			}
 			logTextCtrl->Log("finished updating disassembly gui");
 		}
@@ -207,7 +207,7 @@ void MainGui::ShowWindowInAUI(int32_t direction, wxWindow* window)
 DisassemblyTextCtrl* MainGui::AddDisassemblyTextCtrl()
 {
 	highestDisassemblyTextCtrlNum++;
-	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + wxString::Format("%d", highestDisassemblyTextCtrlNum), disassembledInstructions.data(), disassembledInstructions.size());
+	DisassemblyTextCtrl* disassemblyTextCtrl = new DisassemblyTextCtrl(this, this, "Disassembly " + wxString::Format("%d", highestDisassemblyTextCtrlNum), isa, fileBytes, disassembledInstructions.data(), disassembledInstructions.size());
 	disassemblyTextCtrls.push_back(disassemblyTextCtrl);
 
 	colorsMenu->AddDisassemblyTextCtrl(disassemblyTextCtrl);
@@ -295,6 +295,20 @@ FunctionInfoWindow* MainGui::AddFunctionInfoWindow(struct Function* function)
 	auiManager.Update();
 
 	return functionInfoWindow;
+}
+
+InstructionInfoWindow* MainGui::AddInstructionInfoWindow(struct DisassembledInstruction* instruction, enum InstructionSetArchitecture isa, uint8_t* bytes, uint64_t bytesOffset)
+{
+	InstructionInfoWindow* instructionInfoWindow = new InstructionInfoWindow(this, this, instruction, isa, bytes, bytesOffset);
+
+	auiManager.AddPane(instructionInfoWindow, wxAuiPaneInfo()
+		.Name(wxString::Format("instruction 0x%llX", instruction->address))
+		.Caption(wxString::Format("Instruction 0x%llX information", instruction->address))
+		.Float()
+		.MinSize(instructionInfoWindow->GetMinSize()));
+	auiManager.Update();
+
+	return instructionInfoWindow;
 }
 
 void MainGui::OnPaneClose(wxAuiManagerEvent& e)

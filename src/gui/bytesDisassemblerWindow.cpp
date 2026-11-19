@@ -97,7 +97,7 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 		}
 	}
 
-	disassemblyTextCtrl->Initialize(instructions.data(), instructions.size(), 0, -1);
+	disassemblyTextCtrl->Initialize(isa, bytes.data(), instructions.data(), instructions.size(), 0, -1);
 }
 
 enum JdcStatus BytesDisassemblerWindow::ParseStringBytes(wxString str, std::vector<uint8_t>& bytesBuffer)

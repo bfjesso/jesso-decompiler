@@ -11,6 +11,7 @@
 #include "logTextCtrl.h"
 #include "codeReferencesWindow.h"
 #include "functionInfoWindow.h"
+#include "instructionInfoWindow.h"
 #include "../file-handler/fileHandler.h"
 #include "../decompiler/decompilationStructs.h"
 
@@ -117,6 +118,8 @@ public:
 	CodeReferencesWindow* AddCodeReferencesWindow();
 
 	FunctionInfoWindow* AddFunctionInfoWindow(struct Function* function);
+
+	InstructionInfoWindow* AddInstructionInfoWindow(struct DisassembledInstruction* instruction, enum InstructionSetArchitecture isa, uint8_t* bytes, uint64_t bytesOffset);
 
 	void OnPaneClose(wxAuiManagerEvent& e);
 

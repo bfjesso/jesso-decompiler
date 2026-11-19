@@ -162,6 +162,9 @@
     <ClCompile Include="src\disassembler\x86\prefixes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui\instructionInfoWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\decompiler\decompiler.h">
@@ -342,6 +345,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\disassembler\x86\twoByteOpcodeMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\instructionInfoWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -256,3 +256,38 @@ enum JdcStatus generateDataInstruction(struct DisassembledInstruction* instructi
 
 	return SUCCESS_JDC;
 }
+
+enum JdcStatus generateInstructionInfoStr(uint8_t* bytes, uint64_t bytesOffset, struct DisassembledInstruction* instruction, enum InstructionSetArchitecture isa, struct JdcStr* result)
+{
+	if (!instruction || !result)
+	{
+		return ERROR_JDC;
+	}
+
+	sprintfJdc(result, false, "Address: 0x%llX\n", instruction->address);
+	sprintfJdc(result, true, "File offset: 0x%llX\n", bytesOffset);
+	sprintfJdc(result, true, "Number of bytes: %d\n", instruction->numOfBytes);
+	strcatJdc(result, "Instruction bytes: ");
+	for (int32_t i = 0; i < instruction->numOfBytes; i++)
+	{
+		sprintfJdc(result, true, "0x%02X ", bytes[bytesOffset + i]);
+	}
+	result->buffer[strlen(result->buffer) - 1] = '\n';
+
+	sprintfJdc(result, true, "Is instruction jumped to: %s\n", instruction->isJmpDst ? "yes" : "no");
+	sprintfJdc(result, true, "Is instruction called: %s\n", instruction->isCalled ? "yes" : "no");
+
+	switch (isa)
+	{
+	case X86_ISA:
+		generateInstructionInfoStrX86(bytes + bytesOffset, instruction->numOfBytes, false, result);
+		break;
+	case X86_64_ISA:
+		generateInstructionInfoStrX86(bytes + bytesOffset, instruction->numOfBytes, true, result);
+		break;
+	default:
+		return ERROR_JDC;
+	}
+
+	return SUCCESS_JDC;
+}

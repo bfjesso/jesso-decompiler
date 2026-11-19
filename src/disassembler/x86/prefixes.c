@@ -107,6 +107,8 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 
 	if (byte0 == 0xC5) // two-byte form
 	{
+		params->vexPrefix.isThreeByteForm = false;
+
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
 		if (!params->is64BitMode && !params->vexPrefix.R)
 		{
@@ -127,6 +129,8 @@ enum JdcStatus handleVEXPrefix(struct DisassemblyParameters* params)
 	}
 	else if (byte0 == 0xC4) // three-byte form
 	{
+		params->vexPrefix.isThreeByteForm = true;
+
 		params->vexPrefix.R = (byte1 >> 7) & 0x01;
 		params->vexPrefix.X = (byte1 >> 6) & 0x01;
 		if (!params->is64BitMode && (!params->vexPrefix.R || !params->vexPrefix.X))
