@@ -24,7 +24,7 @@ public:
 	wxBoxSizer* vSizer = nullptr;
 
 	enum InstructionSetArchitecture isa = X86_ISA;
-
+	std::vector<uint8_t> bytes;
 	std::vector<struct DisassembledInstruction> instructions;
 
 	enum ids

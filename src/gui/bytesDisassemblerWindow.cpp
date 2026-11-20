@@ -56,8 +56,9 @@ void BytesDisassemblerWindow::DisassembleBytes(wxCommandEvent& e)
 {
 	instructions.clear();
 	instructions.shrink_to_fit();
+	bytes.clear();
+	bytes.shrink_to_fit();
 
-	std::vector<uint8_t> bytes;
 	if (ERROR_JDC == ParseStringBytes(bytesTextCtrl->GetValue(), bytes))
 	{
 		wxMessageBox("Failed to parse bytes", "Can't disassemble");
