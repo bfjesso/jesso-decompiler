@@ -417,8 +417,14 @@ void DisassemblyTextCtrl::UpdateTextCtrl()
 		}
 
 		struct FileSection* section = 0;
-		uint64_t fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, instructions[i].address - mainGui->decompParams.imageBase, &section);
+		uint64_t fileOffset = instructions[i].address;
+		if (bytes == mainGui->decompParams.fileBytes)
+		{
+			fileOffset = rvaToFileOffset(mainGui->decompParams.sections, mainGui->decompParams.numOfSections, mainGui->addressability, instructions[i].address - mainGui->decompParams.imageBase, &section);
+		}
+
 		wxString addressInfoStr = wxString::Format("0x%llX %s ", instructions[i].address, section ? section->name.buffer : "");
+
 		if (mainGui->GetDisassemblerSetting(SHOW_INSTRUCTION_BYTES_SETTING))
 		{
 			for (int32_t j = 0; j < instructions[i].numOfBytes; j++)
