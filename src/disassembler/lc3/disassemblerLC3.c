@@ -183,3 +183,110 @@ static enum JdcStatus readSignedIntFromLowerBits(uint16_t instructionData, uint8
 
 	return SUCCESS_JDC;
 }
+
+enum JdcStatus generateInstructionInfoStrLC3(struct DisassembledInstruction* instruction, uint16_t instructionData, struct JdcStr* result)
+{
+	uint8_t opcodeBits = (instructionData & 0b1111000000000000) >> 12;
+	sprintfJdc(result, true, "Opcode bits: %d%d%d%d\n", (opcodeBits & 0b1000) >> 3, (opcodeBits & 0b100) >> 2, (opcodeBits & 0b10) >> 1, opcodeBits & 0b1);
+
+
+	const struct Opcode* opcode = &opcodeMapLC3[opcodeBits];
+	sprintfJdc(result, true, "\tMnemonic: %s\n", opcodeMnemonicStrs[opcode->mnemonic]);
+
+	if (opcode->mnemonic == BRP_LC3)
+	{
+		uint8_t nzp = ((instructionData & 0b111000000000) >> 9);
+		sprintfJdc(result, true, "nzp: %d%d%d\n", (nzp & 0b100) >> 2, (nzp & 0b10) >> 1, nzp & 0b1);
+	}
+
+
+	for (int32_t i = 0; i < 3; i++)
+	{
+		if (opcode->operandCodes[i] == NONE_OC)
+		{
+			break;
+		}
+
+		uint16_t tmp = 0;
+		switch (opcode->operandCodes[i])
+		{
+		case DRSR_LC3_OC:
+			tmp = ((instructionData & 0b111000000000) >> 9);
+			sprintfJdc(result, true, "Destination/source register: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			break;
+		case SR1_LC3_OC:
+			tmp = ((instructionData & 0b111000000) >> 6);
+			sprintfJdc(result, true, "Source register 1: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			break;
+		case SR2_IMM5_LC3_OC:
+			if (instructionData & (1 << 5))
+			{
+				strcatJdc(result, "Bit 5: 1\n");
+				tmp = (instructionData & 0b11111);
+				sprintfJdc(result, true, "5-bit signed immediate: %d%d%d%d%d\n", (tmp & 0b10000) >> 4, (tmp & 0b1000) >> 3, (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			}
+			else
+			{
+				strcatJdc(result, "Bit 5: 0\n");
+				strcatJdc(result, "Bits 4-3: 00\n");
+				tmp = (instructionData & 0b111);
+				sprintfJdc(result, true, "Source register 2: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			}
+
+			break;
+		case PCOFFSET9_LC3_OC:
+			tmp = (instructionData & 0b111111111);
+			sprintfJdc(result, true, "9-bit signed PC offset: %d%d%d%d%d%d%d%d%d\n", (tmp & 0b100000000) >> 8, (tmp & 0b10000000) >> 7, (tmp & 0b1000000) >> 6, (tmp & 0b100000) >> 5, (tmp & 0b10000) >> 4, (tmp & 0b1000) >> 3, (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			break;
+		case BASER_PCOFFSET11_LC3_OC:
+			if (instructionData & (1 << 11))
+			{
+				strcatJdc(result, "Bit 11: 1\n");
+				tmp = (instructionData & 0b11111111111);
+				sprintfJdc(result, true, "11-bit signed PC offset: %d%d%d%d%d%d%d%d%d%d%d\n", (tmp & 0b10000000000) >> 10, (tmp & 0b1000000000) >> 9, (tmp & 0b100000000) >> 8, (tmp & 0b10000000) >> 7, (tmp & 0b1000000) >> 6, (tmp & 0b100000) >> 5, (tmp & 0b10000) >> 4, (tmp & 0b1000) >> 3, (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			}
+			else
+			{
+				strcatJdc(result, "Bit 11: 0\n");
+				strcatJdc(result, "Bits 10-9: 00\n");
+				tmp = ((instructionData & 0b111000000) >> 6);
+				sprintfJdc(result, true, "Base register: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+				strcatJdc(result, "Bits 5-0: 000000\n");
+			}
+			break;
+		case BASER_LC3_OC:
+			strcatJdc(result, "Bits 11-9: 000\n");
+			tmp = ((instructionData & 0b111000000) >> 6);
+			sprintfJdc(result, true, "Base register: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			strcatJdc(result, "Bits 5-0: 000000\n");
+			break;
+		case BASER_OFFSET6_LC3_OC:
+			tmp = ((instructionData & 0b111000000) >> 6);
+			sprintfJdc(result, true, "Base register: %d%d%d\n", (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+
+			tmp = (instructionData & 0b111111);
+			sprintfJdc(result, true, "6-bit signed offset: %d%d%d%d%d%d\n", (tmp & 0b100000) >> 5, (tmp & 0b10000) >> 4, (tmp & 0b1000) >> 3, (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			break;
+		case TRAPVECT8_LC3_OC:
+			strcatJdc(result, "Bits 11-8: 0000\n");
+			tmp = (instructionData & 0b11111111);
+			sprintfJdc(result, true, "TRAP vector: %d%d%d%d%d%d%d%d\n", (tmp & 0b10000000) >> 7, (tmp & 0b1000000) >> 6, (tmp & 0b100000) >> 5, (tmp & 0b10000) >> 4, (tmp & 0b1000) >> 3, (tmp & 0b100) >> 2, (tmp & 0b10) >> 1, tmp & 0b1);
+			break;
+		}
+	}
+
+	switch (opcode->mnemonic)
+	{
+	case NOT_LC3:
+		strcatJdc(result, "Bits 5-0: 111111\n");
+		break;
+	case RET_LC3:
+		strcatJdc(result, "Bits 11-0: 000 111 000000\n");
+		break;
+	case RTI_LC3:
+		strcatJdc(result, "Bits 11-0: 000000000000\n");
+		break;
+	}
+
+	return SUCCESS_JDC;
+}
