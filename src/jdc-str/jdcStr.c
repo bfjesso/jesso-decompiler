@@ -29,7 +29,7 @@ enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr)
 	return ERROR_JDC;
 }
 
-enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr)
+enum JdcStatus replaceAllJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr)
 {
 	if (jdcStr && jdcStr->buffer && oldStr && newStr)
 	{

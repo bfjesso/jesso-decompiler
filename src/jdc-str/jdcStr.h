@@ -34,7 +34,7 @@ extern "C"
 
 enum JdcStatus wrapJdcStrInParentheses(struct JdcStr* jdcStr);
 
-enum JdcStatus replaceJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr);
+enum JdcStatus replaceAllJdc(struct JdcStr* jdcStr, const char* oldStr, const char* newStr);
 
 enum JdcStatus strcatJdc(struct JdcStr* jdcStr, const char* src);
 

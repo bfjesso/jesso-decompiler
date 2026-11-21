@@ -903,6 +903,8 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 
 	regVar->name = initializeJdcStr();
 	sprintfJdc(&regVar->name, false, "%s%s", isArgument ? "arg" : "var", registerStrs[regVar->reg]);
+	replaceAllJdc(&regVar->name, "(", "");
+	replaceAllJdc(&regVar->name, ")", "");
 
 	if (isArgument)
 	{
@@ -1047,7 +1049,7 @@ enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataTyp
 
 	function->returnedVars[function->numOfReturnedVars].name = initializeJdcStr();
 	sprintfJdc(&(function->returnedVars[function->numOfReturnedVars].name), false, "%sRetVal%d", calleeName, callNum);
-	replaceJdc(&(function->returnedVars[function->numOfReturnedVars].name), "::", "_");
+	replaceAllJdc(&(function->returnedVars[function->numOfReturnedVars].name), "::", "_");
 
 	function->returnedVars[function->numOfReturnedVars].calleeAddress = calleeAddress;
 	function->returnedVars[function->numOfReturnedVars].callInstructionAddress = callInstructionAddress;
