@@ -539,19 +539,32 @@ static enum JdcStatus getImmediate(struct DisassemblyParameters* params, uint8_t
 	return SUCCESS_JDC;
 }
 
-enum JdcStatus readIntFromBytes(struct DisassemblyParameters* params, uint8_t sizeOfInt, int64_t* result)
+enum JdcStatus readIntFromBytes(struct DisassemblyParameters* params, uint8_t numOfBytes, int64_t* result)
 {
-	if (!result || sizeOfInt > 8 || (params->bytes + (sizeOfInt - 1)) > params->maxBytesAddr)
+	if (!result || (params->bytes + (numOfBytes - 1)) > params->maxBytesAddr)
 	{
 		return ERROR_JDC;
 	}
 
-	*result = 0;
-	for (int32_t i = 0; i < sizeOfInt; i++)
+	switch (numOfBytes)
 	{
-		*result += (int64_t)(params->bytes[0] << (8 * i));
-		params->bytes++;
+	case 1:
+		*result = *(int8_t*)(params->bytes);
+		break;
+	case 2:
+		*result = *(int16_t*)(params->bytes);
+		break;
+	case 4:
+		*result = *(int32_t*)(params->bytes);
+		break;
+	case 8:
+		*result = *(int64_t*)(params->bytes);
+		break;
+	default:
+		return ERROR_JDC;
 	}
+
+	params->bytes += numOfBytes;
 
 	return SUCCESS_JDC;
 }
