@@ -748,6 +748,158 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 	{
 		return decompileRegister(params, conditionalInstructionIndex, -1, PF_X86_REG, 1, !invertOperator, result, 0);
 	}
+	else if (cc == JA_SHORT_X86 || cc == SETA_X86 || cc == CMOVA_X86)
+	{
+		struct JdcStr cfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, CF_X86_REG, 1, !invertOperator, &cfExpression, 0))
+		{
+			freeJdcStr(&cfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr zfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, !invertOperator, &zfExpression, 0))
+		{
+			freeJdcStr(&zfExpression);
+			freeJdcStr(&cfExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s && %s", cfExpression.buffer, zfExpression.buffer);
+		freeJdcStr(&cfExpression);
+		freeJdcStr(&zfExpression);
+		return SUCCESS_JDC;
+	}
+	else if (cc == JBE_SHORT_X86 || cc == SETBE_X86 || cc == CMOVBE_X86)
+	{
+		struct JdcStr cfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, CF_X86_REG, 1, invertOperator, &cfExpression, 0))
+		{
+			freeJdcStr(&cfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr zfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, invertOperator, &zfExpression, 0))
+		{
+			freeJdcStr(&zfExpression);
+			freeJdcStr(&cfExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s || %s", cfExpression.buffer, zfExpression.buffer);
+		freeJdcStr(&cfExpression);
+		freeJdcStr(&zfExpression);
+		return SUCCESS_JDC;
+	}
+	else if (cc == JG_SHORT_X86 || cc == SETG_X86 || cc == CMOVG_X86)
+	{
+		struct JdcStr zfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, !invertOperator, &zfExpression, 0))
+		{
+			freeJdcStr(&zfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr sfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, &sfExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&zfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr ofExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, invertOperator, &ofExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&zfExpression);
+			freeJdcStr(&ofExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s && (%s == %s)", zfExpression.buffer, sfExpression.buffer, ofExpression.buffer);
+		freeJdcStr(&sfExpression);
+		freeJdcStr(&zfExpression);
+		freeJdcStr(&ofExpression);
+		return SUCCESS_JDC;
+	}
+	else if (cc == JL_SHORT_X86 || cc == SETL_X86 || cc == CMOVL_X86)
+	{
+		struct JdcStr sfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, &sfExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr ofExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, invertOperator, &ofExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&ofExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s != %s", sfExpression.buffer, ofExpression.buffer);
+		freeJdcStr(&sfExpression);
+		freeJdcStr(&ofExpression);
+		return SUCCESS_JDC;
+	}
+	else if (cc == JLE_SHORT_X86 || cc == SETLE_X86 || cc == CMOVLE_X86)
+	{
+		struct JdcStr zfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, ZF_X86_REG, 1, invertOperator, &zfExpression, 0))
+		{
+			freeJdcStr(&zfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr sfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, &sfExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&zfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr ofExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, invertOperator, &ofExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&zfExpression);
+			freeJdcStr(&ofExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s || (%s != %s)", zfExpression.buffer, sfExpression.buffer, ofExpression.buffer);
+		freeJdcStr(&sfExpression);
+		freeJdcStr(&zfExpression);
+		freeJdcStr(&ofExpression);
+		return SUCCESS_JDC;
+	}
+	else if (cc == JGE_SHORT_X86 || cc == CMOVGE_X86)
+	{
+		struct JdcStr sfExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, &sfExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			return ERROR_JDC;
+		}
+
+		struct JdcStr ofExpression = initializeJdcStr();
+		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, OF_X86_REG, 1, invertOperator, &ofExpression, 0))
+		{
+			freeJdcStr(&sfExpression);
+			freeJdcStr(&ofExpression);
+			return ERROR_JDC;
+		}
+
+		sprintfJdc(result, false, "%s == %s", sfExpression.buffer, ofExpression.buffer);
+		freeJdcStr(&sfExpression);
+		freeJdcStr(&ofExpression);
+		return SUCCESS_JDC;
+	}
 	else if (cc >= BRP_LC3 && cc <= BRNZ_LC3)
 	{
 		int32_t numOfConditions = 0;
