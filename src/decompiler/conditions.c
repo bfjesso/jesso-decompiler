@@ -508,6 +508,20 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
 	{
 		struct Condition* condition = &params->currentFunc->conditions[i];
+		if (instructionIndex == condition->firstBodyIndex)
+		{
+			if (ERROR_JDC == decompileCondition(params, i, 1, result))
+			{
+				return ERROR_JDC;
+			}
+
+			condition->indentLevel = params->numOfIndents;
+		}
+	}
+
+	for (int32_t i = 0; i < params->currentFunc->numOfConditions; i++)
+	{
+		struct Condition* condition = &params->currentFunc->conditions[i];
 		if ((condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == UNCONDITIONAL_GOTO_CT) &&
 			instructionIndex == condition->dstIndex)
 		{
@@ -542,15 +556,6 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 					break;
 				}
 			}
-		}
-		else if (instructionIndex == condition->firstBodyIndex)
-		{
-			if (ERROR_JDC == decompileCondition(params, i, 1, result))
-			{
-				return ERROR_JDC;
-			}
-
-			condition->indentLevel = params->numOfIndents;
 		}
 	}
 
