@@ -667,7 +667,7 @@ void MainGui::OpenFileFromPath(wxString filePath)
 		logTextCtrl->Log(wxString::Format("file size: %lld (0x%llX) bytes", numOfFileBytes, numOfFileBytes));
 		logTextCtrl->Log("file format: " + wxString(fileFormatToStr(fileFormat)));
 		logTextCtrl->Log("architecture: " + wxString(isaStrs[isa]));
-		logTextCtrl->Log(wxString::Format("addressability: %d bytes per address", addressability));
+		logTextCtrl->Log(wxString::Format("addressability: %d byte(s) per address", addressability));
 		logTextCtrl->Log(wxString::Format("image base: 0x%llX", imageBase));
 		logTextCtrl->Log(wxString::Format("entry point: 0x%llX", entryPoint + imageBase));
 
