@@ -263,7 +263,7 @@ extern const char* opcodeMnemonicStrs[] =
 
 bool isOpcodeImplementedInDecompiler(enum OpcodeMnemonic opcode)
 {
-	return (opcode >= MOV_X86 && opcode <= UD2_X86) || (opcode >= ADD_LC3 && opcode <= HALT_LC3);
+	return opcode == DATA_OPCODE || (opcode >= MOV_X86 && opcode <= UD2_X86) || (opcode >= ADD_LC3 && opcode <= HALT_LC3);
 }
 
 bool isOpcodeExtendedX86(enum OpcodeMnemonic opcode)
