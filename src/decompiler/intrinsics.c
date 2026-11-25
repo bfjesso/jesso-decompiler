@@ -49,6 +49,8 @@ struct Intrinsic voidIntrinsics[NUM_OF_VOID_INTRINSICS] =
 	{ MOVS_X86, REP_IT, "memcpy" },
 	{ STOS_X86, REP_IT, "memset" },
 	{ XCHG_X86, SINGLE_IT, "__xchg" }, // this intrinsic should only be used when both operands would be decompiled as an assignment
+
+	{ HALT_LC3, SINGLE_IT, "HALT" },
 };
 
 static bool checkValidIntrinsicType(struct DisassembledInstruction* instruction, struct Intrinsic* intrinsic)

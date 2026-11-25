@@ -2,7 +2,7 @@
 #include "decompilationStructs.h"
 
 #define NUM_OF_RETURNING_INTRINSICS 22
-#define NUM_OF_VOID_INTRINSICS 8
+#define NUM_OF_VOID_INTRINSICS 9
 
 enum IntrinsicType
 {
