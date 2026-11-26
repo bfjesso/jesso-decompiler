@@ -21,30 +21,29 @@ enum JdcStatus getAllConditions(struct DecompilationParameters* params)
 			{
 				continue;
 			}
+			else if (dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
+			{
+				if (ERROR_JDC == handleConditionsResize(params))
+				{
+					return ERROR_JDC;
+				}
+
+				struct Condition* currentCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
+				currentCondition->jccIndex = i;
+				currentCondition->dstIndex = dstIndex;
+				currentCondition->firstBodyIndex = -1;
+				currentCondition->lastBodyIndex = -1;
+				currentCondition->connectedUpperConditionIndex = -1;
+				currentCondition->connectedLowerConditionIndex = -1;
+				currentCondition->conditionType = JUMP_OUT_CT;
+				params->currentFunc->numOfConditions++;
+				continue;
+			}
 
 			if (isOpcodeJmp(instruction->opcode))
 			{
 				if (checkForReturnStatement(params, i) || getImportIndexByAddress(params, dstAddress) != -1)
 				{
-					continue;
-				}
-
-				if (dstIndex < params->currentFunc->firstInstructionIndex || dstIndex > params->currentFunc->lastInstructionIndex)
-				{
-					if (ERROR_JDC == handleConditionsResize(params))
-					{
-						return ERROR_JDC;
-					}
-
-					struct Condition* currentCondition = &params->currentFunc->conditions[params->currentFunc->numOfConditions];
-					currentCondition->jccIndex = i;
-					currentCondition->dstIndex = dstIndex;
-					currentCondition->firstBodyIndex = -1;
-					currentCondition->lastBodyIndex = -1;
-					currentCondition->connectedUpperConditionIndex = -1;
-					currentCondition->connectedLowerConditionIndex = -1;
-					currentCondition->conditionType = JUMP_OUT_CT;
-					params->currentFunc->numOfConditions++;
 					continue;
 				}
 
@@ -546,14 +545,9 @@ enum JdcStatus decompileConditionStarts(struct DecompilationParameters* params, 
 
 				condition->indentLevel = params->numOfIndents;
 
-				switch (condition->conditionType)
+				if (isInUnreachableStateRef && isOpcodeJmp(params->instructions[condition->jccIndex].opcode))
 				{
-				case UNCONDITIONAL_GOTO_CT:
-				case BREAK_CT:
-				case CONTINUE_CT:
-				case JUMP_OUT_CT:
-					if (isInUnreachableStateRef) { *isInUnreachableStateRef = true; }
-					break;
+					*isInUnreachableStateRef = true;
 				}
 			}
 		}
@@ -597,7 +591,7 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 			addDecompiledLine(params, result, condition->jccIndex, "break;");
 			return SUCCESS_JDC;
 		}
-		else if (condition->conditionType == JUMP_OUT_CT)
+		else if (condition->conditionType == JUMP_OUT_CT && isOpcodeJmp(params->instructions[condition->jccIndex].opcode))
 		{
 			addDecompiledLine(params, result, condition->jccIndex, "jumpOut(0x%llX);", params->instructions[condition->dstIndex].address);
 			return SUCCESS_JDC;
@@ -671,7 +665,10 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 		}
 	}
 
-	if (condition->conditionType == IF_CT || condition->conditionType == CONDITIONAL_GOTO_CT || condition->conditionType == CONDITIONAL_RETURN_CT)
+	if (condition->conditionType == IF_CT ||
+		condition->conditionType == CONDITIONAL_GOTO_CT ||
+		condition->conditionType == CONDITIONAL_RETURN_CT ||
+		condition->conditionType == JUMP_OUT_CT)
 	{
 		addDecompiledLine(params, result, condition->jccIndex, "if (%s)", conditionExpression.buffer);
 	}
@@ -706,6 +703,12 @@ static enum JdcStatus decompileCondition(struct DecompilationParameters* params,
 	else if (condition->conditionType == CONDITIONAL_GOTO_CT)
 	{
 		addDecompiledLine(params, result, condition->jccIndex, "goto label_%llX;", params->instructions[condition->dstIndex].address - params->imageBase);
+		params->numOfIndents--;
+		addDecompiledLine(params, result, condition->jccIndex, "}");
+	}
+	else if (condition->conditionType == JUMP_OUT_CT)
+	{
+		addDecompiledLine(params, result, condition->jccIndex, "jumpOut(0x%llX);", params->instructions[condition->dstIndex].address);
 		params->numOfIndents--;
 		addDecompiledLine(params, result, condition->jccIndex, "}");
 	}
