@@ -18,7 +18,7 @@ extern const char* opcodeMnemonicStrs[] =
 	"XCHG",
 
 	"CMOVB", "CMOVNB", "CMOVZ", "CMOVNZ", "CMOVBE", "CMOVA", "CMOVS", "CMOVNS", "CMOVL", "CMOVGE", "CMOVLE", "CMOVO", "CMOVNO", "CMOVP", "CMOVNP", "CMOVG",
-	"SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETNL", "SETNS", "SETNZ", "SETS", "SETO", "SETNO", "SETP", "SETNP", "SETZ",
+	"SETA", "SETB", "SETBE", "SETG", "SETL", "SETLE", "SETNB", "SETGE", "SETNS", "SETNZ", "SETS", "SETO", "SETNO", "SETP", "SETNP", "SETZ",
 
 	"STMXCSR",
 

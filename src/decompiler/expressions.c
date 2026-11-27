@@ -654,6 +654,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 	case CMOVGE_X86:
 	case CMOVNB_X86:
 	case CMOVNS_X86:
+	case SETGE_X86:
 	case SETNB_X86:
 	case SETNS_X86:
 		if (invertOperator) { strcpy(compOperator, "<"); }
@@ -878,7 +879,7 @@ enum JdcStatus decompileComparison(struct DecompilationParameters* params, int32
 		freeJdcStr(&ofExpression);
 		return SUCCESS_JDC;
 	}
-	else if (cc == JGE_SHORT_X86 || cc == CMOVGE_X86)
+	else if (cc == JGE_SHORT_X86 || cc == SETGE_X86 || cc == CMOVGE_X86)
 	{
 		struct JdcStr sfExpression = initializeJdcStr();
 		if (ERROR_JDC == decompileRegister(params, conditionalInstructionIndex, -1, SF_X86_REG, 1, invertOperator, &sfExpression, 0))

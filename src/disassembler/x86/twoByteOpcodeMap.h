@@ -459,7 +459,7 @@ const struct Opcode twoByteOpcodeMap[0x100][4] = // [byte][prefix] 0 - no prefix
 	{ SETP_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                         // 0x9A
 	{ SETNP_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                        // 0x9B
 	{ SETL_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                         // 0x9C
-	{ SETNL_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                        // 0x9D
+	{ SETGE_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                        // 0x9D
 	{ SETLE_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                        // 0x9E
 	{ SETG_X86, RM_B_X86_OC, NONE_OC, NONE_OC, NONE_OC, NONE_OP },                         // 0x9F
 	{ PUSH_X86, FS_X86_OC, NONE_OC, NONE_OC, NONE_OC, DEFAULT_64_SIZE_OP },                               // 0xA0
