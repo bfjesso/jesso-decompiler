@@ -166,7 +166,7 @@ static enum JdcStatus decompileBinaryOperation(struct DecompilationParameters* p
 		if (!doesInstructionAssignToOperand(params, instructionIndex, 0))
 		{
 			freeJdcStr(&decompiledSecondOperand);
-			return ERROR_JDC;
+			return SUCCESS_JDC;
 		}
 
 		struct JdcStr decompiledFirstOperand = initializeJdcStr();
