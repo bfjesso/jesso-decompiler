@@ -231,7 +231,13 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 		}
 		else
 		{
-			dataTypeToStr(getRegisterDataType(0, -1, platformRegArgs[i]), params->useStdInt, &regArgTypeStrs[i]);
+			struct DataType dataType = { 0 };
+			if (ERROR_JDC == getRegisterDataType(0, -1, platformRegArgs[i], &dataType))
+			{
+				return ERROR_JDC;
+			}
+
+			dataTypeToStr(dataType, params->useStdInt, &regArgTypeStrs[i]);
 		}
 
 		numOfRegArgs++;
@@ -276,8 +282,14 @@ enum JdcStatus decompileUnknownFunctionCall(struct DecompilationParameters* para
 			decompiledStackArgs[numOfStackArgs] = initializeJdcStr();
 			if (decompileOperand(params, i, 0, 0, &decompiledStackArgs[numOfStackArgs]))
 			{
+				struct DataType dataType = { 0 };
+				if (ERROR_JDC == getOperandDataType(instruction->opcode, &instruction->operands[0], &dataType))
+				{
+					return ERROR_JDC;
+				}
+
 				stackArgTypeStrs[numOfStackArgs] = initializeJdcStr();
-				dataTypeToStr(getOperandDataType(instruction->opcode, &instruction->operands[0]), params->useStdInt, &stackArgTypeStrs[numOfStackArgs]);
+				dataTypeToStr(dataType, params->useStdInt, &stackArgTypeStrs[numOfStackArgs]);
 				numOfStackArgs++;
 				addAssociatedInstruction(params->currentFunc, i);
 			}

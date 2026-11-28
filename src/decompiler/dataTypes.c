@@ -11,6 +11,8 @@ const char* primitiveTypeToStr(enum PrimitiveType primitive, bool useStdInt)
 		return "float";
 	case DOUBLE_TYPE:
 		return "double";
+	case LONG_DOUBLE_TYPE:
+		return "long double";
 	case INT128_TYPE:
 		return "__int128";
 	case INT256_TYPE:
@@ -75,6 +77,11 @@ void dataTypeToStr(struct DataType dataType, bool useStdInt, struct JdcStr* resu
 	{
 		strcatJdc(result, "*");
 	}
+}
+
+bool isPrimitiveInteger(enum PrimitiveType primitive)
+{
+	return primitive >= INT8_TYPE && primitive <= INT512_TYPE;
 }
 
 bool isPrimitiveUnsigned(enum PrimitiveType primitive)
@@ -172,6 +179,8 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 	case UINT64_TYPE:
 	case DOUBLE_TYPE:
 		return 8;
+	case LONG_DOUBLE_TYPE:
+		return 10;
 	case INT128_TYPE:
 		return 16;
 	case INT256_TYPE:
@@ -183,7 +192,7 @@ uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType)
 	return 0;
 }
 
-struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg)
+enum JdcStatus getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg, struct DataType* result)
 {
 	struct Operand regOperand = { 0 };
 	regOperand.type = REGISTER_OPERAND;
@@ -191,34 +200,39 @@ struct DataType getRegisterDataType(struct DisassembledInstruction* instruction,
 
 	if (instruction)
 	{
-		struct DataType result = getOperandDataType(instruction->opcode, &regOperand);
+		if (ERROR_JDC == getOperandDataType(instruction->opcode, &regOperand, result))
+		{
+			return ERROR_JDC;
+		}
+
 		if (operandNum < 4 && instruction->operands[operandNum].type == MEMORY_OPERAND)
 		{
 			struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
 			if (memAddress->reg == reg && memAddress->constDisplacement < 0x10000) // this is to check that the reg is not being used as a displacement
 			{
-				result.pointerLevel = 1;
+				result->pointerLevel = 1;
 			}
 		}
 
-		return result;
+		return SUCCESS_JDC;
 	}
 
-	return getOperandDataType(NO_OPCODE, &regOperand);
+	return getOperandDataType(NO_OPCODE, &regOperand, result);
 }
 
-struct DataType getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress)
+enum JdcStatus getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress, struct DataType* result)
 {
 	struct Operand memAddrOperand = { 0 };
 	memAddrOperand.type = MEMORY_OPERAND;
 	memAddrOperand.memoryAddress = *memAddress;
 
-	return getOperandDataType(opcode, &memAddrOperand);
+	return getOperandDataType(opcode, &memAddrOperand, result);
 }
 
-struct DataType getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand)
+enum JdcStatus getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand, struct DataType* result)
 {
-	struct DataType result = { 0 };
+	result->arrayLen = 1;
+	result->pointerLevel = 0;
 
 	switch (opcode)
 	{
@@ -228,54 +242,58 @@ struct DataType getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* o
 	case CVTPS2PD_X86:
 	case CVTSS2SD_X86:
 	case COMISS_X86:
-		result.primitiveType = FLOAT_TYPE;
-		return result;
+		result->primitiveType = FLOAT_TYPE;
+		return SUCCESS_JDC;
 	case MOVSD_X86:
 	case MOVUPD_X86:
 	case ADDSD_X86:
 	case CVTPD2PS_X86:
 	case CVTSD2SS_X86:
 	case COMISD_X86:
-		result.primitiveType = DOUBLE_TYPE;
-		return result;
+		result->primitiveType = DOUBLE_TYPE;
+		return SUCCESS_JDC;
 	}
 
 	if (!operand)
 	{
-		return result;
+		return result->primitiveType == VOID_TYPE ? ERROR_JDC : SUCCESS_JDC;
 	}
 
 	uint8_t size = getSizeOfOperand(operand);
 	switch (size)
 	{
 	case 1:
-		result.primitiveType = INT8_TYPE;
+		result->primitiveType = INT8_TYPE;
 		break;
 	case 2:
-		result.primitiveType = INT16_TYPE;
+		result->primitiveType = INT16_TYPE;
 		break;
 	case 4:
-		result.primitiveType = INT32_TYPE;
+		result->primitiveType = INT32_TYPE;
 		break;
 	case 8:
-		result.primitiveType = INT64_TYPE;
+		result->primitiveType = INT64_TYPE;
+		break;
+	case 10:
+		result->primitiveType = LONG_DOUBLE_TYPE;
 		break;
 	case 16:
-		result.primitiveType = INT128_TYPE;
+		result->primitiveType = INT128_TYPE;
 		break;
 	case 32:
-		result.primitiveType = INT256_TYPE;
+		result->primitiveType = INT256_TYPE;
 		break;
 	case 64:
-		result.primitiveType = INT512_TYPE;
+		result->primitiveType = INT512_TYPE;
 		break;
+	default:
+		return ERROR_JDC;
 	}
 
 	if (doesOpcodeUseUnsignedInt(opcode))
 	{
-		result.primitiveType = getIntType(getPrimitiveTypeSize(result.primitiveType), false);
-
+		result->primitiveType = getIntType(getPrimitiveTypeSize(result->primitiveType), false);
 	}
 
-	return result;
+	return SUCCESS_JDC;
 }

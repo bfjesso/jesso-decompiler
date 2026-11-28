@@ -57,7 +57,7 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 
 enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int32_t startIndex, int32_t endIndex);
 
-static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
+static enum JdcStatus setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar);
 
 enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataType, uint64_t calleeAddress, uint64_t callInstructionAddress, enum Register returnReg, const char* calleeName);
 

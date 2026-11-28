@@ -83,7 +83,11 @@ static enum JdcStatus decompileMemoryAddress(struct DecompilationParameters* par
 		return decompileStackVar(params, instructionIndex, operandNum, offsetFromInitSP, result);
 	}
 
-	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
+	struct DataType memAddrType = { 0 };
+	if (ERROR_JDC == getMemoryAddressDataType(instruction->opcode, memAddress, &memAddrType))
+	{
+		return ERROR_JDC;
+	}
 
 	struct JdcStr memAddrStr = initializeJdcStr();
 	bool hasGotFirstTerm = false;
@@ -241,7 +245,11 @@ static enum JdcStatus decompileStackVar(struct DecompilationParameters* params, 
 
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	struct MemoryAddress* memAddress = &instruction->operands[operandNum].memoryAddress;
-	struct DataType memAddrType = getMemoryAddressDataType(instruction->opcode, memAddress);
+	struct DataType memAddrType = { 0 };
+	if (ERROR_JDC == getMemoryAddressDataType(instruction->opcode, memAddress, &memAddrType))
+	{
+		return ERROR_JDC;
+	}
 
 	struct JdcStr displacementRegStr = initializeJdcStr();
 	if (memAddress->regDisplacement != NO_REG &&
@@ -410,7 +418,12 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 				return sprintfJdc(result, false, "(%s & 0xF0)", localRegVar->name.buffer);
 			}
 
-			struct DataType targetType = getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg);
+			struct DataType targetType = { 0 };
+			if (ERROR_JDC == getRegisterDataType(&params->instructions[instructionIndex], operandNum, targetReg, &targetType))
+			{
+				return ERROR_JDC;
+			}
+
 			if (doDataTypesRequireCasting(targetType, localRegVar->dataType, params->isa) &&
 				!doesInstructionModifyRegister(params, instructionIndex, targetReg, 0, 0))
 			{
@@ -515,7 +528,12 @@ enum JdcStatus decompileRegister(struct DecompilationParameters* params, int32_t
 			}
 			else
 			{
-				struct DataType targetType = getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg);
+				struct DataType targetType = { 0 };
+				if (ERROR_JDC == getRegisterDataType(&params->instructions[ogInstructionIndex], operandNum, targetReg, &targetType))
+				{
+					return ERROR_JDC;
+				}
+
 				if (doDataTypesRequireCasting(targetType, regArg->dataType, params->isa))
 				{
 					struct JdcStr targetTypeStr = initializeJdcStr();

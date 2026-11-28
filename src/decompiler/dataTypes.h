@@ -2,7 +2,7 @@
 #include "../jdc-str/jdcStr.h"
 #include "../disassembler/disassemblyStructs.h"
 
-#define NUM_OF_PRIMITIVE_TYPES 14
+#define NUM_OF_PRIMITIVE_TYPES 15
 
 enum PrimitiveType
 {
@@ -26,6 +26,7 @@ enum PrimitiveType
 
 	FLOAT_TYPE,
 	DOUBLE_TYPE,
+	LONG_DOUBLE_TYPE,
 };
 
 struct DataType
@@ -48,6 +49,8 @@ extern "C"
 }
 #endif
 
+bool isPrimitiveInteger(enum PrimitiveType primitive);
+
 bool isPrimitiveUnsigned(enum PrimitiveType primitive);
 
 enum PrimitiveType getIntType(uint8_t size, bool isSigned);
@@ -62,8 +65,8 @@ uint8_t getDataTypeSize(struct DataType dataType, enum InstructionSetArchitectur
 
 uint8_t getPrimitiveTypeSize(enum PrimitiveType primitiveType);
 
-struct DataType getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg);
+enum JdcStatus getRegisterDataType(struct DisassembledInstruction* instruction, uint8_t operandNum, enum Register reg, struct DataType* result);
 
-struct DataType getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress);
+enum JdcStatus getMemoryAddressDataType(enum OpcodeMnemonic opcode, struct MemoryAddress* memAddress, struct DataType* result);
 
-struct DataType getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand);
+enum JdcStatus getOperandDataType(enum OpcodeMnemonic opcode, struct Operand* operand, struct DataType* result);

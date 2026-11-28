@@ -213,7 +213,12 @@ enum JdcStatus getFunctionRegArgsAndStackVars(struct DecompilationParameters* pa
 					isArgument = false;
 				}
 
-				struct DataType dataType = getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress);
+				struct DataType dataType = { 0 };
+				if (ERROR_JDC == getMemoryAddressDataType(instruction->opcode, &currentOperand->memoryAddress, &dataType))
+				{
+					return ERROR_JDC;
+				}
+
 				if (ERROR_JDC == addStackVar(func, offsetFromInitSP, isArgument, &dataType))
 				{
 					return ERROR_JDC;
@@ -365,7 +370,13 @@ enum JdcStatus setFunctionStackVarTypes(struct DecompilationParameters* params, 
 
 				if (operand->memoryAddress.ptrSize < getPrimitiveTypeSize(stackVar->dataType.primitiveType)) // the smallest ptr size is used incase this is an array
 				{
-					stackVar->dataType.primitiveType = getOperandDataType(instruction->opcode, operand).primitiveType;
+					struct DataType dataType = { 0 };
+					if (ERROR_JDC == getOperandDataType(instruction->opcode, operand, &dataType))
+					{
+						return ERROR_JDC;
+					}
+
+					stackVar->dataType.primitiveType = dataType.primitiveType;
 				}
 
 				if (doesInstructionModifyOperand(params, i, j, 0) && stackVar->isArgument)
@@ -463,7 +474,11 @@ static bool isRegInitialized(struct DecompilationParameters* params, int32_t sta
 		bool overwrites = false;
 		if (doesInstructionModifyRegister(params, i, reg, specificReg, &overwrites) && overwrites)
 		{
-			if (dataType) { *dataType = getRegisterDataType(&params->instructions[i], -1, specificReg ? *specificReg : reg); }
+			if (dataType)
+			{
+				getRegisterDataType(&params->instructions[i], -1, specificReg ? *specificReg : reg, dataType);
+			}
+
 			return true;
 		}
 	}
@@ -895,11 +910,19 @@ enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType
 
 	if (!dataTypeRef)
 	{
-		setRegVarDataType(params, regVar);
+		if (ERROR_JDC == setRegVarDataType(params, regVar))
+		{
+			return ERROR_JDC;
+		}
 	}
 	else
 	{
 		regVar->dataType = *dataTypeRef;
+	}
+
+	if (regVar->dataType.primitiveType == VOID_TYPE && regVar->dataType.pointerLevel == 0)
+	{
+		return ERROR_JDC;
 	}
 
 	// these are only used for local reg vars
@@ -975,10 +998,19 @@ enum JdcStatus addRegVarScope(struct RegisterVariable* regVar, int32_t startInde
 	return SUCCESS_JDC;
 }
 
-static void setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
+static enum JdcStatus setRegVarDataType(struct DecompilationParameters* params, struct RegisterVariable* regVar)
 {
+	if (ERROR_JDC == getRegisterDataType(0, -1, regVar->reg, &regVar->dataType))
+	{
+		return ERROR_JDC;
+	}
+
+	if (!isPrimitiveInteger(regVar->dataType.primitiveType))
+	{
+		return SUCCESS_JDC;
+	}
+
 	bool foundFirstInstance = false;
-	regVar->dataType = getRegisterDataType(0, -1, regVar->reg);
 	for (int32_t i = params->currentFunc->firstInstructionIndex; i <= params->currentFunc->lastInstructionIndex; i++)
 	{
 		struct DisassembledInstruction* instruction = &params->instructions[i];
@@ -1004,12 +1036,21 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 			{
 				if (operand->type == MEMORY_OPERAND && operand->memoryAddress.constDisplacement == 0 && operand->memoryAddress.regDisplacement == NO_REG)
 				{
-					regVar->dataType = getMemoryAddressDataType(instruction->opcode, &operand->memoryAddress);
+					if (ERROR_JDC == getMemoryAddressDataType(instruction->opcode, &operand->memoryAddress, &regVar->dataType))
+					{
+						return ERROR_JDC;
+					}
+
 					regVar->dataType.pointerLevel = 1;
-					return;
+					return SUCCESS_JDC;
 				}
 
-				struct DataType dataType = getRegisterDataType(instruction, j, reg);
+				struct DataType dataType = { 0 };
+				if (ERROR_JDC == getRegisterDataType(instruction, j, reg, &dataType))
+				{
+					return ERROR_JDC;
+				}
+
 				if (getDataTypeSize(dataType, params->isa) > getDataTypeSize(regVar->dataType, params->isa) || !foundFirstInstance) // the type size is set to the largest version of the register used
 				{
 					regVar->dataType.primitiveType = getIntType(getPrimitiveTypeSize(dataType.primitiveType), !isPrimitiveUnsigned(regVar->dataType.primitiveType));
@@ -1024,6 +1065,8 @@ static void setRegVarDataType(struct DecompilationParameters* params, struct Reg
 			}
 		}
 	}
+
+	return SUCCESS_JDC;
 }
 
 enum JdcStatus addReturnedVar(struct Function* function, struct DataType dataType, uint64_t calleeAddress, uint64_t callInstructionAddress, enum Register returnReg, const char* calleeName)
