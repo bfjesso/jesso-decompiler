@@ -503,6 +503,8 @@ bool doesInstructionAccessRegister(struct DecompilationParameters* params, int32
 	struct DisassembledInstruction* instruction = &params->instructions[instructionIndex];
 	enum OpcodeMnemonic opcode = instruction->opcode;
 
+	if (specificReg) { *specificReg = reg; }
+
 	if (isRegisterStatusFlag(reg))
 	{
 		switch (opcode)

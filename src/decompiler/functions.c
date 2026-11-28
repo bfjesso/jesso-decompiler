@@ -870,6 +870,11 @@ static enum JdcStatus addStackVar(struct Function* function, int64_t offsetFromI
 
 enum JdcStatus addRegVar(struct DecompilationParameters* params, struct DataType* dataTypeRef, bool isArgument, enum Register reg)
 {
+	if (reg == NO_REG)
+	{
+		return ERROR_JDC;
+	}
+
 	if ((isArgument && getRegArgByReg(params->currentFunc, reg)) || (!isArgument && getLocalRegVarByReg(params->currentFunc, reg)))
 	{
 		return SUCCESS_JDC;
